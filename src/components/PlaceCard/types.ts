@@ -1,10 +1,8 @@
-import type { Place, Player } from '@/types';
+import type { Place } from '@/types';
 
 export type PlaceCardProps = {
   place: Place;
   originName: string;
-  /** Joueur dont c'est le tour (parties a plusieurs). */
-  player?: Player;
   /** Option "Aide pays" : affiche le pays sous le nom du lieu. */
   showCountry: boolean;
 };
