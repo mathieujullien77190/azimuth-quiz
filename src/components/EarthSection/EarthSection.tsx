@@ -21,19 +21,27 @@ import {
 import { arcPath, fitZoom, markEnd, sideOf, surfaceAngle } from './helpers';
 import type { EarthMark, EarthSectionProps, Point } from './types';
 
-const createStyles = ({ colors }: Theme) =>
+const createStyles = ({ colors, typography }: Theme) =>
   StyleSheet.create({
     wrap: {
       alignItems: 'center',
     },
-    // Sous le cercle plutot que superposes dessus : a n'importe quelle taille de Terre, jamais de
-    // recouvrement avec les libelles dessines dans le SVG (COUPE DE LA TERRE / ZOOM / horizon).
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      alignSelf: 'stretch',
+      marginBottom: spacing.xs,
+    },
+    caption: {
+      ...typography.label,
+      color: colors.textMuted,
+      fontSize: 11,
+      fontWeight: '700',
+    },
     zoomControls: {
       flexDirection: 'row',
-      justifyContent: 'flex-end',
-      alignSelf: 'stretch',
       gap: spacing.xs,
-      marginTop: spacing.xs,
     },
     zoomButton: {
       width: 28,
@@ -122,6 +130,32 @@ export const EarthSection = ({ size, marks, showStraightLine, zoomControls = fal
 
   return (
     <View style={styles.wrap}>
+      <View style={styles.header}>
+        <Text style={styles.caption}>{(showStraightLine ? CAPTION_STRAIGHT : CAPTION_SURFACE).toUpperCase()}</Text>
+        {zoomControls && (
+          <View style={styles.zoomControls}>
+            <Pressable
+              accessibilityRole="button"
+              disabled={stepIndex === 0}
+              hitSlop={8}
+              onPress={() => setManualIndex(Math.max(0, stepIndex - 1))}
+              style={[styles.zoomButton, stepIndex === 0 && { opacity: 0.4 }]}
+            >
+              <Text style={styles.zoomButtonLabel}>−</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              disabled={stepIndex === ZOOM_STEPS.length - 1}
+              hitSlop={8}
+              onPress={() => setManualIndex(Math.min(ZOOM_STEPS.length - 1, stepIndex + 1))}
+              style={[styles.zoomButton, stepIndex === ZOOM_STEPS.length - 1 && { opacity: 0.4 }]}
+            >
+              <Text style={styles.zoomButtonLabel}>+</Text>
+            </Pressable>
+          </View>
+        )}
+      </View>
+
       <Svg accessibilityLabel={CAPTION_STRAIGHT} height={height} width={size}>
         <Defs>
           <RadialGradient id="earth" cx="50%" cy="40%" r="65%">
@@ -129,30 +163,6 @@ export const EarthSection = ({ size, marks, showStraightLine, zoomControls = fal
             <Stop offset="100%" stopColor={compass.faceOuter} />
           </RadialGradient>
         </Defs>
-
-        <SvgText
-          x={8}
-          y={16}
-          fill={colors.textMuted}
-          fontFamily={typography.label.fontFamily}
-          fontSize={11}
-          fontWeight="700"
-        >
-          {(showStraightLine ? CAPTION_STRAIGHT : CAPTION_SURFACE).toUpperCase()}
-        </SvgText>
-        {zoom > 1 && (
-          <SvgText
-            x={size - 8}
-            y={16}
-            fill={colors.accent}
-            fontFamily={typography.label.fontFamily}
-            fontSize={11}
-            fontWeight="700"
-            textAnchor="end"
-          >
-            {`ZOOM ×${String(zoom).replace('.', ',')}`}
-          </SvgText>
-        )}
 
         <Circle cx={center.x} cy={center.y} r={radius} fill="url(#earth)" stroke={colors.border} strokeWidth={3} />
         <Circle cx={center.x} cy={center.y} r={radius * 0.28} fill="none" stroke={colors.border} strokeWidth={1} strokeDasharray="3 5" />
@@ -196,29 +206,6 @@ export const EarthSection = ({ size, marks, showStraightLine, zoomControls = fal
           {PLAYER_LABEL}
         </SvgText>
       </Svg>
-
-      {zoomControls && (
-        <View style={styles.zoomControls}>
-          <Pressable
-            accessibilityRole="button"
-            disabled={stepIndex === 0}
-            hitSlop={8}
-            onPress={() => setManualIndex(Math.max(0, stepIndex - 1))}
-            style={[styles.zoomButton, stepIndex === 0 && { opacity: 0.4 }]}
-          >
-            <Text style={styles.zoomButtonLabel}>−</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            disabled={stepIndex === ZOOM_STEPS.length - 1}
-            hitSlop={8}
-            onPress={() => setManualIndex(Math.min(ZOOM_STEPS.length - 1, stepIndex + 1))}
-            style={[styles.zoomButton, stepIndex === ZOOM_STEPS.length - 1 && { opacity: 0.4 }]}
-          >
-            <Text style={styles.zoomButtonLabel}>+</Text>
-          </Pressable>
-        </View>
-      )}
     </View>
   );
 };
