@@ -17,7 +17,6 @@ import {
   resolveOrigin,
   saveBestScore,
   scoreRound,
-  shuffle,
 } from '@/helpers';
 import { useSettings } from '@/settings';
 import type { GamePhase, GameSettings, Guess, Origin, Place, Player, RoundRecord } from '@/types';
@@ -44,8 +43,8 @@ export const useGame = () => {
   const [origin, setOrigin] = useState<Origin>(DEFAULT_ORIGIN);
   const [places, setPlaces] = useState<Place[]>([]);
   const [roundIndex, setRoundIndex] = useState(0);
-  // Ordre d'affichage des onglets, tire au sort a chaque nouveau lieu (purement visuel : on peut
-  // choisir n'importe quel onglet dans n'importe quel ordre).
+  // Ordre d'affichage des onglets : par score cumule avant cette manche, le plus haut en premier
+  // (purement visuel : on peut choisir n'importe quel onglet dans n'importe quel ordre).
   const [roundOrder, setRoundOrder] = useState<number[]>([]);
   const [activePlayerIndex, setActivePlayerIndex] = useState(0);
   const [guessesByPlayer, setGuessesByPlayer] = useState<(Guess | undefined)[]>([]);
@@ -95,9 +94,17 @@ export const useGame = () => {
     [activePlayerIndex],
   );
 
-  /** Nouvelle manche (ou nouvelle partie) : chaque joueur repart avec un brouillon vierge. */
-  const startRound = useCallback((playerCount: number) => {
-    const order = shuffle(Array.from({ length: playerCount }, (_, index) => index));
+  /**
+   * Nouvelle manche : chaque joueur repart avec un brouillon vierge, les onglets tries par score
+   * cumule avant cette manche (tri stable : a 0 partout, l'ordre reste 1, 2, 3...). `standingsRecords`
+   * est passe explicitement (plutot que lu depuis l'etat `records`) pour qu'un `start()` qui vient
+   * de reinitialiser les manches precedentes ne trie pas avec les totaux de la partie d'avant.
+   */
+  const startRound = useCallback((playerCount: number, standingsRecords: RoundRecord[]) => {
+    const standings = playerTotals(standingsRecords, playerCount);
+    const order = Array.from({ length: playerCount }, (_, index) => index).sort(
+      (a, b) => standings[b] - standings[a],
+    );
     setRoundOrder(order);
     setActivePlayerIndex(order[0] ?? 0);
     setGuessesByPlayer(new Array(playerCount).fill(undefined));
@@ -121,7 +128,8 @@ export const useGame = () => {
     setBestScore(storedBest);
     setIsNewBest(false);
     setRoundIndex(0);
-    startRound(chosen.playerNames.length);
+    setRecords([]);
+    startRound(chosen.playerNames.length, []);
     setPhase('guess');
   }, [startRound]);
 
@@ -222,7 +230,7 @@ export const useGame = () => {
   const next = useCallback(() => {
     if (roundIndex + 1 < places.length) {
       setRoundIndex(roundIndex + 1);
-      startRound(players.length);
+      startRound(players.length, records);
       setPhase('guess');
       return;
     }
