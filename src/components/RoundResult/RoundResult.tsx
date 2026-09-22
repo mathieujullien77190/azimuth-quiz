@@ -120,16 +120,16 @@ export const RoundResult = ({ record, players, options }: RoundResultProps) => {
           <Text style={styles.truthRowLabel}>{ROW_LABELS.direction}</Text>
           <Text style={styles.truthValue}>{formatBearing(truth.trueBearing)}</Text>
         </View>
+        <View style={styles.truthRow}>
+          <Text style={styles.truthRowLabel}>{ROW_LABELS.distance}</Text>
+          <Text style={styles.truthValue}>{formatDistance(truth.trueSurfaceDistanceKm)}</Text>
+        </View>
         {options.straightLine && (
           <View style={styles.truthRow}>
             <Text style={styles.truthRowLabel}>{ROW_LABELS.inclination}</Text>
             <Text style={styles.truthValue}>{formatInclination(truth.trueInclination)}</Text>
           </View>
         )}
-        <View style={styles.truthRow}>
-          <Text style={styles.truthRowLabel}>{ROW_LABELS.distance}</Text>
-          <Text style={styles.truthValue}>{formatDistance(truth.trueSurfaceDistanceKm)}</Text>
-        </View>
       </View>
 
       {ranked.map(({ result, player }, position) => (
@@ -153,12 +153,6 @@ export const RoundResult = ({ record, players, options }: RoundResultProps) => {
               +{result.score.directionPoints}
             </Text>
           </View>
-          {options.straightLine && (
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>{ROW_LABELS.inclination}</Text>
-              <Text style={styles.rowValue}>{formatInclination(result.guess.inclination)}</Text>
-            </View>
-          )}
           <View style={styles.row}>
             <Text style={styles.rowLabel}>{ROW_LABELS.distance}</Text>
             <Text style={styles.rowValue}>
@@ -173,6 +167,23 @@ export const RoundResult = ({ record, players, options }: RoundResultProps) => {
               +{result.score.distancePoints}
             </Text>
           </View>
+          {options.straightLine && (
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>{ROW_LABELS.inclination}</Text>
+              <Text style={styles.rowValue}>{formatInclination(result.guess.inclination)}</Text>
+              {/* Pas de score propre a l'inclinaison : elle fait partie du meme ecart 3D que la
+                  direction en mode ligne droite (voir helpers/geo.ts directionAngle), donc son
+                  "score" est celui de la direction. */}
+              <Text
+                style={[
+                  styles.rowPoints,
+                  { color: result.score.directionPoints === bestDirectionPoints ? colors.success : colors.text },
+                ]}
+              >
+                +{result.score.directionPoints}
+              </Text>
+            </View>
+          )}
         </View>
       ))}
     </Card>
