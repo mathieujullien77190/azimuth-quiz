@@ -1,4 +1,4 @@
-import type { Category, GameSettings, Origin, ThemeMode, Zone } from '@/types';
+import type { Category, GameSettings, Origin, Zone } from '@/types';
 
 export * from './theme';
 export { PLACES } from './places';
@@ -41,7 +41,6 @@ export const LOCATION_TIMEOUT_MS = 6000;
 
 // --- Stockage ---
 export const BEST_SCORE_STORAGE_KEY = 'fullazimut:best-score';
-export const THEME_MODE_STORAGE_KEY = 'fullazimut:theme-mode';
 export const SETTINGS_STORAGE_KEY = 'fullazimut:settings';
 
 // --- Boussole ---
@@ -61,8 +60,8 @@ export const MIN_PLAYERS = 1;
 export const MAX_PLAYERS = 6;
 export const ROUND_OPTIONS = [5, 10, 15, 20] as const;
 
-// Choisies a distance d'au moins 37° de teinte de l'accent et de la reponse des deux themes
-// (ambre/jaune en Nuit, bleu en Papier), pour qu'aucun joueur ne les prenne par hasard.
+// Choisies a distance d'au moins 37° de teinte de l'accent et de la reponse du theme Nuit
+// (ambre/jaune), pour qu'aucun joueur ne les prenne par hasard.
 export const PLAYER_COLORS = ['#EF4444', '#65A30D', '#22C55E', '#8B5CF6', '#C026D3', '#DB2777'] as const;
 
 export const CATEGORIES: { id: Category; label: string; emoji: string }[] = [
@@ -71,13 +70,6 @@ export const CATEGORIES: { id: Category; label: string; emoji: string }[] = [
   { id: 'landmarks', label: 'Monuments', emoji: '🏛️' },
   { id: 'nature', label: 'Nature', emoji: '🌿' },
 ];
-
-export const THEME_MODES: { id: ThemeMode; label: string; emoji: string }[] = [
-  { id: 'auto', label: 'Auto', emoji: '🌗' },
-  { id: 'light', label: 'Clair', emoji: '☀️' },
-  { id: 'dark', label: 'Sombre', emoji: '🌙' },
-];
-export const DEFAULT_THEME_MODE: ThemeMode = 'auto';
 
 export const ZONES: { id: Zone; label: string; description: string }[] = [
   { id: 'france', label: 'France', description: 'Lyon oui, Cork non' },

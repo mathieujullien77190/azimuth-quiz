@@ -17,8 +17,6 @@ ou Paris par défaut). De 1 à 6 joueurs sur le même téléphone, chacun son to
   permet de répondre dans l'ordre voulu, avec une option pour revenir modifier une
   réponse déjà validée avant la révélation.
 - **Boussole réelle** (mobile) : le nord de la boussole suit le capteur du téléphone.
-- Deux thèmes — **Nuit** (sombre) et **Papier** (clair) — en plus du mode Auto qui
-  suit le système.
 - Score basé sur l'écart de direction et de distance, historique de manches et
   meilleur score mémorisés.
 
@@ -26,7 +24,7 @@ ou Paris par défaut). De 1 à 6 joueurs sur le même téléphone, chacun son to
 
 Expo (SDK 57) + Expo Router, React Native + react-native-web, TypeScript strict,
 `react-native-svg` pour la boussole et le schéma de la Terre, AsyncStorage pour la
-persistance locale (réglages, thème, meilleur score).
+persistance locale (réglages, meilleur score).
 
 ## Lancer en local
 

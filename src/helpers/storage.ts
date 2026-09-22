@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { BEST_SCORE_STORAGE_KEY, DEFAULT_THEME_MODE, SETTINGS_STORAGE_KEY, THEME_MODES, THEME_MODE_STORAGE_KEY } from '@/constants';
-import type { GameSettings, ThemeMode } from '@/types';
+import { BEST_SCORE_STORAGE_KEY, SETTINGS_STORAGE_KEY } from '@/constants';
+import type { GameSettings } from '@/types';
 
 import { sanitizeSettings } from './settings';
 
@@ -23,15 +23,6 @@ export const saveBestScore = async (score: number): Promise<void> => {
   }
 };
 
-export const loadThemeMode = async (): Promise<ThemeMode> => {
-  try {
-    const raw = await AsyncStorage.getItem(THEME_MODE_STORAGE_KEY);
-    return THEME_MODES.find((mode) => mode.id === raw)?.id ?? DEFAULT_THEME_MODE;
-  } catch {
-    return DEFAULT_THEME_MODE;
-  }
-};
-
 export const loadSettings = async (): Promise<GameSettings> => {
   try {
     const raw = await AsyncStorage.getItem(SETTINGS_STORAGE_KEY);
@@ -46,13 +37,5 @@ export const saveSettings = async (settings: GameSettings): Promise<void> => {
     await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   } catch {
     // Reglages non memorises : sans gravite.
-  }
-};
-
-export const saveThemeMode = async (mode: ThemeMode): Promise<void> => {
-  try {
-    await AsyncStorage.setItem(THEME_MODE_STORAGE_KEY, mode);
-  } catch {
-    // Apparence non memorisee : sans gravite.
   }
 };

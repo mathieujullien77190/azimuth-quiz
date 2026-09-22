@@ -1,7 +1,6 @@
 export const SCREEN_TITLE = 'Nouvelle partie';
 export const START_LABEL = 'Lancer la partie';
 export const BACK_LABEL = 'Retour';
-export const APPEARANCE_LABEL = 'Apparence';
 
 /** Placeholders des champs de nom : un prenom au pif plutot que "Joueur 1", "Joueur 2"... */
 export const NAME_PLACEHOLDERS = [

@@ -7,14 +7,13 @@ import {
   MIN_PLAYERS,
   PLAYER_COLORS,
   ROUND_OPTIONS,
-  THEME_MODES,
   ZONES,
   fontSize,
   spacing,
 } from '@/constants';
 import { filterPlaces, initials, shuffle } from '@/helpers';
 import { useSettings } from '@/settings';
-import { useTheme, useThemeSwitcher, useThemedStyles } from '@/themes';
+import { useTheme, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
 import Button from '../ui/Button';
@@ -22,7 +21,7 @@ import Chip from '../ui/Chip';
 import Screen from '../ui/Screen';
 import Section from '../ui/Section';
 import Toggle from '../ui/Toggle';
-import { APPEARANCE_LABEL, BACK_LABEL, NAME_PLACEHOLDERS, SCREEN_TITLE, START_LABEL, TOGGLES } from './constants';
+import { BACK_LABEL, NAME_PLACEHOLDERS, SCREEN_TITLE, START_LABEL, TOGGLES } from './constants';
 import { availabilityLabel, resizeNames, toggleCategory } from './helpers';
 import type { SetupScreenProps } from './types';
 
@@ -85,14 +84,6 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       ...typography.label,
       fontSize: fontSize.caption,
     },
-    appearance: {
-      gap: spacing.sm,
-    },
-    optionLabel: {
-      ...typography.heading,
-      color: colors.text,
-      fontSize: fontSize.body,
-    },
     hint: {
       ...typography.body,
       color: colors.textMuted,
@@ -110,7 +101,6 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
   const { settings, updateSettings } = useSettings();
-  const { mode, setMode } = useThemeSwitcher();
   const playerCount = settings.playerNames.length;
   const available = filterPlaces(settings.categories, settings.zone).length;
   const zone = ZONES.find((candidate) => candidate.id === settings.zone);
@@ -207,20 +197,6 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
       </Section>
 
       <Section title="Options">
-        <View style={styles.appearance}>
-          <Text style={styles.optionLabel}>{APPEARANCE_LABEL}</Text>
-          <View style={styles.chips}>
-            {THEME_MODES.map((candidate) => (
-              <Chip
-                key={candidate.id}
-                emoji={candidate.emoji}
-                label={candidate.label}
-                onPress={() => setMode(candidate.id)}
-                selected={mode === candidate.id}
-              />
-            ))}
-          </View>
-        </View>
         <Toggle
           {...TOGGLES.straightLine}
           onValueChange={(value) => updateSettings({ straightLine: value })}

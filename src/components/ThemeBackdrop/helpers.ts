@@ -1,5 +1,5 @@
 import { STAR_MAX_OPACITY, STAR_MAX_RADIUS, STAR_MIN_OPACITY, STAR_MIN_RADIUS } from './constants';
-import type { GridLines, Star } from './types';
+import type { Star } from './types';
 
 /** Generateur pseudo-aleatoire deterministe (meme graine = memes etoiles, a chaque rendu). */
 const mulberry32 = (seed: number) => {
@@ -23,8 +23,3 @@ export const buildStars = (count: number, seed: number): Star[] => {
     opacity: STAR_MIN_OPACITY + random() * (STAR_MAX_OPACITY - STAR_MIN_OPACITY),
   }));
 };
-
-export const buildGridLines = (width: number, height: number, spacing: number): GridLines => ({
-  vertical: Array.from({ length: Math.ceil(width / spacing) + 1 }, (_, i) => i * spacing),
-  horizontal: Array.from({ length: Math.ceil(height / spacing) + 1 }, (_, i) => i * spacing),
-});

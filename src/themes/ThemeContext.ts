@@ -1,21 +1,11 @@
-import { createContext, useContext, useMemo } from 'react';
+import { useMemo } from 'react';
 
-import type { Theme, ThemeMode } from '@/types';
+import type { Theme } from '@/types';
 
 import { night } from './night';
 
-export type ThemeContextValue = {
-  theme: Theme;
-  mode: ThemeMode;
-  setMode: (mode: ThemeMode) => void;
-};
-
-export const ThemeContext = createContext<ThemeContextValue>({ theme: night, mode: 'auto', setMode: () => {} });
-
-export const useTheme = (): Theme => useContext(ThemeContext).theme;
-
-/** Apparence choisie (auto / clair / sombre) et son setter. */
-export const useThemeSwitcher = (): ThemeContextValue => useContext(ThemeContext);
+/** Un seul theme (Nuit) pour l'instant : pas de contexte a fournir. */
+export const useTheme = (): Theme => night;
 
 /**
  * Styles derives du theme courant. `createStyles` doit etre defini au niveau du module

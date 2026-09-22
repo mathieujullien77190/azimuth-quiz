@@ -87,9 +87,6 @@ export type Rank = {
   emoji: string;
 };
 
-/** Apparence : suit le telephone (auto) ou force clair / sombre. */
-export type ThemeMode = 'auto' | 'light' | 'dark';
-
 export type ThemeColors = {
   background: string;
   surface: string;

@@ -70,16 +70,6 @@ const themes = [
     cardBorder: 0,
     depth: 4,
   },
-  {
-    id: 'paper',
-    name: 'Papier',
-    tagline: 'Minimal, encre et bleu marine',
-    colors: { background: '#FAFAF7', surface: '#FFFFFF', surfaceHigh: '#F0F0EA', border: '#DAD9D2', text: '#111111', textMuted: '#6B6B66', accent: '#142959', accentDark: '#0C1938', onAccent: '#FFFFFF', truth: '#142959', danger: '#E5484D', success: '#2E9E5B' },
-    font: { family: "'Helvetica Neue', Arial, sans-serif", weight: 700, display: 700, label: 600, labelSpacing: 1.4, titleSpacing: 8 },
-    r: { card: 6, button: 2 },
-    cardBorder: 1,
-    depth: 0,
-  },
 ];
 
 // ---------- boussole (une facture par design) ----------
@@ -153,17 +143,7 @@ const compass = (t, cx, cy, r, { guess = null, truth = null } = {}) => {
 
   // aiguilles
   const trueFill = c.truth;
-  if (t.id === 'paper') {
-    if (truth !== null) {
-      const [tx, ty] = polar(cx, cy, r * 0.74, truth);
-      out += `<line x1="${cx}" y1="${cy}" x2="${f(tx)}" y2="${f(ty)}" stroke="${trueFill}" stroke-width="2" stroke-dasharray="4 4"/><circle cx="${f(tx)}" cy="${f(ty)}" r="${f(r * 0.03)}" fill="${trueFill}"/>`;
-    }
-    if (guess !== null) {
-      const [gx, gy] = polar(cx, cy, r * 0.74, guess);
-      const [bx, by] = polar(cx, cy, r * 0.16, guess + 180);
-      out += `<line x1="${f(bx)}" y1="${f(by)}" x2="${f(gx)}" y2="${f(gy)}" stroke="${c.accent}" stroke-width="2.5" stroke-linecap="round"/><circle cx="${f(gx)}" cy="${f(gy)}" r="${f(r * 0.045)}" fill="${c.accent}"/>`;
-    }
-  } else {
+  {
     const glow = t.id === 'neon' ? 'filter="url(#glow)"' : '';
     const round = t.id === 'ocean' ? `stroke-linejoin="round" stroke="${c.accent}" stroke-width="4"` : '';
     if (truth !== null) out += needle(cx, cy, r, truth, trueFill, `opacity="0.9" ${glow}`) + knob(cx, cy, r, truth, trueFill, r * 0.028);
@@ -239,20 +219,6 @@ const decors = {
     out += wave(700, 14, 170, 1.4, '#0E9AA7', 0.22);
     out += wave(752, 12, 240, 2.6, '#0B6E85', 0.3);
     out += wave(800, 8, 150, 0.6, '#0B4F66', 0.35);
-    return out;
-  },
-  paper: () => {
-    let out = `<rect width="${W}" height="${H}" fill="#FAFAF7"/>`;
-    let grid = '';
-    for (let x = 0; x <= W; x += 39) grid += `<line x1="${x}" y1="0" x2="${x}" y2="${H}"/>`;
-    for (let y = 0; y <= H; y += 39) grid += `<line x1="0" y1="${y}" x2="${W}" y2="${y}"/>`;
-    out += `<g stroke="#DAD9D2" stroke-width="0.8" opacity="0.55">${grid}</g>`;
-    out += `<circle cx="195" cy="290" r="176" fill="none" stroke="#111" stroke-width="0.8" opacity="0.25"/>`;
-    out += `<circle cx="195" cy="290" r="150" fill="none" stroke="#111" stroke-width="0.8" stroke-dasharray="2 5" opacity="0.35"/>`;
-    for (const [x, y] of [[14, 46], [W - 14, 46], [14, H - 14], [W - 14, H - 14]]) {
-      out += `<path d="M${x - 8} ${y}H${x + 8}M${x} ${y - 8}V${y + 8}" stroke="#111" stroke-width="1"/><circle cx="${x}" cy="${y}" r="4" fill="none" stroke="#111" stroke-width="1"/>`;
-    }
-    out += `<text x="24" y="${H - 26}" font-size="9" fill="#6B6B66" font-family="Consolas, monospace">48°51′N  002°21′E</text>`;
     return out;
   },
 };
@@ -347,8 +313,8 @@ const screens = (t) => {
 // ---------- assemblage ----------
 const defs = (t) => {
   const c = t.colors;
-  const faceInner = { night: '#1B2842', parchment: '#F8F0DD', neon: '#1A1633', ocean: '#FFFFFF', paper: '#FFFFFF' }[t.id];
-  const faceOuter = { night: '#0B1220', parchment: '#DFC99C', neon: '#07060F', ocean: '#CFEAF4', paper: '#F0F0EA' }[t.id];
+  const faceInner = { night: '#1B2842', parchment: '#F8F0DD', neon: '#1A1633', ocean: '#FFFFFF' }[t.id];
+  const faceOuter = { night: '#0B1220', parchment: '#DFC99C', neon: '#07060F', ocean: '#CFEAF4' }[t.id];
   return `<defs>
   <radialGradient id="face" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="${faceInner}"/><stop offset="1" stop-color="${faceOuter}"/></radialGradient>
   <radialGradient id="bg" cx="50%" cy="30%" r="90%"><stop offset="0" stop-color="${t.id === 'ocean' ? '#BFE6F5' : '#14213D'}"/><stop offset="1" stop-color="${t.id === 'ocean' ? '#E8F5FA' : c.background}"/></radialGradient>
@@ -365,7 +331,7 @@ const defs = (t) => {
 };
 
 // Designs retenus (les autres ont ete ecartes ; leurs palettes restent ci-dessus pour memoire).
-const KEPT = new Set(['night', 'paper']);
+const KEPT = new Set(['night']);
 
 for (const t of themes.filter((candidate) => KEPT.has(candidate.id))) {
   const [home, game, result] = screens(t);

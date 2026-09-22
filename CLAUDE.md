@@ -21,7 +21,7 @@ src/
   constants/           # valeurs partagees (score, geo, stockage, palette...) + constants/places/
   helpers/             # geo.ts, scoring.ts, format.ts, storage.ts, location.ts, places.ts, random.ts, web.ts
   settings/            # contexte React des reglages de partie (GameSettings)
-  themes/              # night.ts (sombre) / paper.ts (clair) / fonts.ts / ThemeContext
+  themes/              # night.ts (seul theme) / fonts.ts / ThemeContext
   types/                # types de domaine partages (Guess, GameSettings, Theme...)
 ```
 
@@ -70,10 +70,11 @@ sur react-native-web s'il n'a pas de `style={{ flexGrow: 0, flexShrink: 0 }}` ex
 
 ## Theme
 
-`night` (sombre, bleu nuit + ambre) et `paper` (clair, encre + bleu marine navy
-`#142959`). Police unique partout, y compris dans le SVG (compas, `EarthSection`) :
+Un seul theme, `night` (sombre, bleu nuit + ambre) — pas de mode clair, pas de
+selecteur d'apparence, `useTheme()` le retourne directement (pas de contexte a
+fournir). Police unique partout, y compris dans le SVG (compas, `EarthSection`) :
 `themes/fonts.ts` exporte `FONT_FAMILY` (stack `"JetBrains Mono", ui-monospace, ...`),
-consomme par les 4 tokens de typographie des deux themes. Un composant SVG doit lire
+consomme par les 4 tokens de typographie du theme. Un composant SVG doit lire
 `typography.<token>.fontFamily` et le passer explicitement a `fontFamily` sur
 `<SvgText>` — `fontFamily` ne se propage pas depuis un `StyleSheet` React Native au SVG.
 

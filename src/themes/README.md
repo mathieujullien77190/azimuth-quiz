@@ -1,16 +1,9 @@
-# Designs (themes)
+# Design (theme)
 
-Deux designs, choisis parmi les maquettes du dossier `designs/` :
+Un seul design, la maquette `designs/night.svg` : bleu nuit + ambre, ciel étoilé,
+réponse en jaune.
 
-| Fichier    | Nom   | Mode   | Ambiance                               |
-| ---------- | ----- | ------ | -------------------------------------- |
-| `night.ts` | Nuit  | sombre | Bleu nuit + ambre, ciel etoile, reponse en jaune |
-| `paper.ts` | Papier| clair  | Minimal, quadrillage, accent et reponse dans le meme bleu marine  |
-
-Le mode se choisit dans « Nouvelle partie > Options > Apparence » : **Auto** (suit le telephone),
-**Clair** (Papier) ou **Sombre** (Nuit). Le choix est memorise.
-
-## Utiliser un theme dans un composant
+## Utiliser le theme dans un composant
 
 ```tsx
 import { useThemedStyles } from '@/themes';

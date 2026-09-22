@@ -4,8 +4,3 @@ export type Star = {
   radius: number;
   opacity: number;
 };
-
-export type GridLines = {
-  vertical: number[];
-  horizontal: number[];
-};
