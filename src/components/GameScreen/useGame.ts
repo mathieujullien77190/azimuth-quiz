@@ -10,6 +10,7 @@ import {
   PLAYER_COLORS,
 } from '@/constants';
 import {
+  applyBestBonus,
   inclinationFromChordKm,
   loadBestScore,
   pickPlaces,
@@ -187,10 +188,12 @@ export const useGame = () => {
       const place = places[roundIndex];
       if (place === undefined) return;
 
-      const results = players.map((_, index) => {
-        const playerGuess = updated[index] as Guess;
-        return { guess: playerGuess, score: scoreRound(origin.coordinates, place, playerGuess, config) };
-      });
+      const results = applyBestBonus(
+        players.map((_, index) => {
+          const playerGuess = updated[index] as Guess;
+          return { guess: playerGuess, score: scoreRound(origin.coordinates, place, playerGuess, config) };
+        }),
+      );
       setRecords((previous) => [...previous, { place, results }]);
       setPhase('reveal');
     },

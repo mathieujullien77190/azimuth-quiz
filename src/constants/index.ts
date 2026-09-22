@@ -7,6 +7,9 @@ export { PLACES } from './places';
 export const MAX_ROUND_POINTS = 1000;
 export const MAX_DIRECTION_POINTS = 500;
 export const MAX_DISTANCE_POINTS = 500;
+// Bonus au(x) joueur(s) le(s) plus proche(s) de la manche (1/5 du max de sa categorie), en
+// multijoueur seulement : personne a battre en solo.
+export const BEST_BONUS_RATIO = 0.2;
 
 // Direction : 0 point a partir de cet ecart (en degres).
 export const DIRECTION_TOLERANCE_DEG = 90;

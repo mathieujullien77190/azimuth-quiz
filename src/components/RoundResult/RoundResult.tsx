@@ -7,6 +7,7 @@ import type { Theme } from '@/types';
 
 import Card from '../ui/Card';
 import { ROW_LABELS, TRUTH_LABEL } from './constants';
+import { formatRowScore } from './helpers';
 import type { RoundResultProps } from './types';
 
 const createStyles = ({ colors, radius, typography }: Theme) =>
@@ -126,10 +127,6 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
     .map((result, index) => ({ result, player: players[index], index }))
     .sort((a, b) => b.result.score.total - a.result.score.total);
 
-  // Meilleur score de chaque categorie, tous joueurs confondus : c'est lui qui ressort en vert.
-  const bestDirectionPoints = Math.max(...record.results.map((result) => result.score.directionPoints));
-  const bestDistancePoints = Math.max(...record.results.map((result) => result.score.distancePoints));
-
   // Le curseur donne la corde (ligne droite) en mode straightLine ; la distance de surface
   // equivalente sert a la fois a l'affichage et au calcul de l'ecart avec la vraie reponse.
   const guessSurfaceKmFor = (result: (typeof record.results)[number]): number =>
@@ -173,13 +170,8 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
             <Text style={styles.rowValue}>
               {formatBearing(result.guess.bearing)} (+{Math.round(result.score.directionError)}°)
             </Text>
-            <Text
-              style={[
-                styles.rowPoints,
-                { color: result.score.directionPoints === bestDirectionPoints ? colors.success : colors.text },
-              ]}
-            >
-              +{result.score.directionPoints}
+            <Text style={[styles.rowPoints, { color: result.score.directionBonus > 0 ? colors.success : colors.text }]}>
+              {formatRowScore(result.score.directionPoints, result.score.directionBonus)}
             </Text>
           </View>
           <View style={styles.row}>
@@ -188,13 +180,8 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
               {formatDistance(guessSurfaceKmFor(result))} (+
               {formatDistance(Math.abs(guessSurfaceKmFor(result) - truth.trueSurfaceDistanceKm))})
             </Text>
-            <Text
-              style={[
-                styles.rowPoints,
-                { color: result.score.distancePoints === bestDistancePoints ? colors.success : colors.text },
-              ]}
-            >
-              +{result.score.distancePoints}
+            <Text style={[styles.rowPoints, { color: result.score.distanceBonus > 0 ? colors.success : colors.text }]}>
+              {formatRowScore(result.score.distancePoints, result.score.distanceBonus)}
             </Text>
           </View>
           {options.straightLine && (
@@ -204,13 +191,8 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
               {/* Meme score que Distance : en mode ligne droite, la corde jugee par distancePoints
                   EST l'inclinaison (l'une determine l'autre) — donc le meme pool de points, gagne
                   et perdu ensemble, independamment du cap. */}
-              <Text
-                style={[
-                  styles.rowPoints,
-                  { color: result.score.distancePoints === bestDistancePoints ? colors.success : colors.text },
-                ]}
-              >
-                +{result.score.distancePoints}
+              <Text style={[styles.rowPoints, { color: result.score.distanceBonus > 0 ? colors.success : colors.text }]}>
+                {formatRowScore(result.score.distancePoints, result.score.distanceBonus)}
               </Text>
             </View>
           )}

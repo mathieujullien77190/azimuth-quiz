@@ -1,4 +1,5 @@
 import {
+  BEST_BONUS_RATIO,
   DIRECTION_TOLERANCE_DEG,
   DISTANCE_TOLERANCE_RATIO,
   MAX_DIRECTION_POINTS,
@@ -6,7 +7,7 @@ import {
   RANKS,
   SCORE_CURVE_EXPONENT,
 } from '@/constants';
-import type { Coordinates, GameSettings, Guess, Place, Rank, RoundScore } from '@/types';
+import type { Coordinates, GameSettings, Guess, Place, PlayerResult, Rank, RoundScore } from '@/types';
 
 import { angleDifference, bearingDeg, distanceKm, inclinationDeg, straightDistanceKm } from './geo';
 
@@ -43,8 +44,38 @@ export const scoreRound = (origin: Coordinates, place: Place, guess: Guess, opti
     directionError,
     directionPoints,
     distancePoints,
+    directionBonus: 0,
+    distanceBonus: 0,
     total: directionPoints + distancePoints,
   };
+};
+
+/**
+ * Bonus du(des) meilleur(s) de la manche : 1/5 du max de chaque categorie, pour le(s) joueur(s)
+ * qui l'a(ont) sur cette categorie (egalite comprise). N'a de sens qu'a plusieurs — en solo,
+ * `results` a un seul element et personne ne peut se distinguer, donc aucun bonus.
+ */
+export const applyBestBonus = (results: PlayerResult[]): PlayerResult[] => {
+  if (results.length < 2) return results;
+
+  const directionBonus = Math.round(MAX_DIRECTION_POINTS * BEST_BONUS_RATIO);
+  const distanceBonus = Math.round(MAX_DISTANCE_POINTS * BEST_BONUS_RATIO);
+  const bestDirectionPoints = Math.max(...results.map((result) => result.score.directionPoints));
+  const bestDistancePoints = Math.max(...results.map((result) => result.score.distancePoints));
+
+  return results.map((result) => {
+    const earnedDirectionBonus = result.score.directionPoints === bestDirectionPoints ? directionBonus : 0;
+    const earnedDistanceBonus = result.score.distancePoints === bestDistancePoints ? distanceBonus : 0;
+    return {
+      ...result,
+      score: {
+        ...result.score,
+        directionBonus: earnedDirectionBonus,
+        distanceBonus: earnedDistanceBonus,
+        total: result.score.directionPoints + result.score.distancePoints + earnedDirectionBonus + earnedDistanceBonus,
+      },
+    };
+  });
 };
 
 export const getRank = (total: number, maxTotal: number): Rank => {

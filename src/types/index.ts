@@ -46,6 +46,10 @@ export type RoundScore = {
   directionError: number;
   directionPoints: number;
   distancePoints: number;
+  /** Bonus (1/5 du max de la categorie) au(x) joueur(s) le(s) plus proche(s) de la manche, sur
+   * chaque categorie separement. Toujours 0 en solo (personne a battre). */
+  directionBonus: number;
+  distanceBonus: number;
   total: number;
 };
 
