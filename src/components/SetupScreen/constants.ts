@@ -3,6 +3,11 @@ export const START_LABEL = 'Lancer la partie';
 export const BACK_LABEL = 'Retour';
 export const APPEARANCE_LABEL = 'Apparence';
 
+/** Placeholders des champs de nom : un prenom au pif plutot que "Joueur 1", "Joueur 2"... */
+export const NAME_PLACEHOLDERS = [
+  'Zoé', 'Max', 'Léo', 'Nina', 'Théo', 'Mia', 'Noa', 'Iris', 'Timéo', 'Luna', 'Gaspard', 'Alba',
+] as const;
+
 export const TOGGLES = {
   straightLine: {
     label: 'Ligne droite à travers la Terre',

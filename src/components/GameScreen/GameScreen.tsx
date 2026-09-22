@@ -248,7 +248,7 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
       <PlaceCard
         originName={game.origin.name}
         place={game.place}
-        player={game.isMultiplayer && !record ? game.currentPlayer : undefined}
+        player={!record ? game.currentPlayer : undefined}
         showCountry={game.config.showCountry}
       />
 

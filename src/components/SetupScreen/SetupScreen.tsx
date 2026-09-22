@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import {
@@ -11,7 +12,7 @@ import {
   fontSize,
   spacing,
 } from '@/constants';
-import { filterPlaces, initials, playerDisplayName } from '@/helpers';
+import { filterPlaces, initials, playerDisplayName, shuffle } from '@/helpers';
 import { useSettings } from '@/settings';
 import { useTheme, useThemeSwitcher, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
@@ -21,7 +22,7 @@ import Chip from '../ui/Chip';
 import Screen from '../ui/Screen';
 import Section from '../ui/Section';
 import Toggle from '../ui/Toggle';
-import { APPEARANCE_LABEL, BACK_LABEL, SCREEN_TITLE, START_LABEL, TOGGLES } from './constants';
+import { APPEARANCE_LABEL, BACK_LABEL, NAME_PLACEHOLDERS, SCREEN_TITLE, START_LABEL, TOGGLES } from './constants';
 import { availabilityLabel, resizeNames, toggleCategory } from './helpers';
 import type { SetupScreenProps } from './types';
 
@@ -105,6 +106,8 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
   const playerCount = settings.playerNames.length;
   const available = filterPlaces(settings.categories, settings.zone).length;
   const zone = ZONES.find((candidate) => candidate.id === settings.zone);
+  // Un ordre different a chaque arrivee sur l'ecran, stable pendant qu'on tape.
+  const placeholderNames = useMemo(() => shuffle([...NAME_PLACEHOLDERS]), []);
 
   return (
     <Screen>
@@ -121,33 +124,31 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
             />
           ))}
         </View>
-        {playerCount > 1 && (
-          <View style={styles.names}>
-            {settings.playerNames.map((name, index) => (
-              <View key={index} style={styles.nameRow}>
-                <View style={[styles.nameDot, { backgroundColor: PLAYER_COLORS[index] }]} />
-                <TextInput
-                  accessibilityLabel={`Nom du joueur ${index + 1}`}
-                  maxLength={14}
-                  onChangeText={(text) =>
-                    updateSettings({
-                      playerNames: settings.playerNames.map((current, i) => (i === index ? text : current)),
-                    })
-                  }
-                  placeholder={`Joueur ${index + 1}`}
-                  placeholderTextColor={colors.textMuted}
-                  style={styles.input}
-                  value={name}
-                />
-                <View style={[styles.initials, { borderColor: PLAYER_COLORS[index] }]}>
-                  <Text style={[styles.initialsText, { color: PLAYER_COLORS[index] }]}>
-                    {initials(playerDisplayName(name, index))}
-                  </Text>
-                </View>
+        <View style={styles.names}>
+          {settings.playerNames.map((name, index) => (
+            <View key={index} style={styles.nameRow}>
+              <View style={[styles.nameDot, { backgroundColor: PLAYER_COLORS[index] }]} />
+              <TextInput
+                accessibilityLabel={`Nom du joueur ${index + 1}`}
+                maxLength={14}
+                onChangeText={(text) =>
+                  updateSettings({
+                    playerNames: settings.playerNames.map((current, i) => (i === index ? text : current)),
+                  })
+                }
+                placeholder={placeholderNames[index % placeholderNames.length]}
+                placeholderTextColor={colors.textMuted}
+                style={styles.input}
+                value={name}
+              />
+              <View style={[styles.initials, { borderColor: PLAYER_COLORS[index] }]}>
+                <Text style={[styles.initialsText, { color: PLAYER_COLORS[index] }]}>
+                  {initials(playerDisplayName(name, index))}
+                </Text>
               </View>
-            ))}
-          </View>
-        )}
+            </View>
+          ))}
+        </View>
       </Section>
 
       <Section title="Catégories">
