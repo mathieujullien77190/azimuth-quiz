@@ -6,8 +6,7 @@ import { useTheme, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
 import Card from '../ui/Card';
-import { ROW_LABELS, ROW_MAX_POINTS, TRUTH_LABEL } from './constants';
-import { feedbackColor } from './helpers';
+import { ROW_LABELS, TRUTH_LABEL } from './constants';
 import type { RoundResultProps } from './types';
 
 const createStyles = ({ colors, radius, typography }: Theme) =>
@@ -109,6 +108,10 @@ export const RoundResult = ({ record, players, options }: RoundResultProps) => {
     .map((result, index) => ({ result, player: players[index] }))
     .sort((a, b) => b.result.score.total - a.result.score.total);
 
+  // Meilleur score de chaque categorie, tous joueurs confondus : c'est lui qui ressort en vert.
+  const bestDirectionPoints = Math.max(...record.results.map((result) => result.score.directionPoints));
+  const bestDistancePoints = Math.max(...record.results.map((result) => result.score.distancePoints));
+
   return (
     <Card style={styles.card}>
       <View style={styles.truth}>
@@ -134,7 +137,7 @@ export const RoundResult = ({ record, players, options }: RoundResultProps) => {
           <View style={styles.playerHead}>
             {!isSolo && <View style={[styles.playerDot, { backgroundColor: player.color }]} />}
             <Text style={styles.playerName}>{isSolo ? 'Ton score' : player.name}</Text>
-            <Text style={styles.playerTotal}>+{result.score.total}</Text>
+            <Text style={styles.playerTotal}>{result.score.total}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>{ROW_LABELS.direction}</Text>
@@ -144,7 +147,7 @@ export const RoundResult = ({ record, players, options }: RoundResultProps) => {
             <Text
               style={[
                 styles.rowPoints,
-                { color: feedbackColor(colors, result.score.directionPoints, ROW_MAX_POINTS.direction) },
+                { color: result.score.directionPoints === bestDirectionPoints ? colors.success : colors.text },
               ]}
             >
               +{result.score.directionPoints}
@@ -164,7 +167,7 @@ export const RoundResult = ({ record, players, options }: RoundResultProps) => {
             <Text
               style={[
                 styles.rowPoints,
-                { color: feedbackColor(colors, result.score.distancePoints, ROW_MAX_POINTS.distance) },
+                { color: result.score.distancePoints === bestDistancePoints ? colors.success : colors.text },
               ]}
             >
               +{result.score.distancePoints}
