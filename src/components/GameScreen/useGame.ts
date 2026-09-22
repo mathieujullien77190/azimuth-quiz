@@ -150,21 +150,15 @@ export const useGame = () => {
   /** Un joueur par index : a-t-il deja valide sa reponse ce tour-ci ? */
   const answeredByPlayer = useMemo(() => guessesByPlayer.map((guess) => guess !== undefined), [guessesByPlayer]);
 
-  /** Change d'onglet : le brouillon de chaque joueur vit deja dans draftsByPlayer, rien a recharger. */
-  const selectPlayer = useCallback(
-    (index: number) => {
-      if (index === activePlayerIndex) return;
-      const locked = guessesByPlayer[index] !== undefined && !config.allowRevision;
-      if (locked) return;
-
-      setActivePlayerIndex(index);
-    },
-    [activePlayerIndex, config.allowRevision, guessesByPlayer],
-  );
-
-  const submit = useCallback(() => {
+  /**
+   * Valide la reponse du joueur actif (a partir de son brouillon courant) et, si c'etait le
+   * dernier joueur qui manquait, calcule les scores et passe en revelation. Renvoie le tableau
+   * des reponses a jour, et si la manche vient de se terminer (pour que l'appelant sache s'il
+   * doit encore changer de joueur actif ou non).
+   */
+  const commitActiveGuess = useCallback((): { updated: (Guess | undefined)[]; roundOver: boolean } => {
     const place = places[roundIndex];
-    if (place === undefined) return;
+    if (place === undefined) return { updated: guessesByPlayer, roundOver: false };
 
     const guess: Guess = {
       bearing,
@@ -175,10 +169,8 @@ export const useGame = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     setGuessesByPlayer(updated);
 
-    const nextUnanswered = roundOrder.find((index) => updated[index] === undefined);
-    if (nextUnanswered !== undefined) {
-      setActivePlayerIndex(nextUnanswered);
-      return;
+    if (roundOrder.some((index) => updated[index] === undefined)) {
+      return { updated, roundOver: false };
     }
 
     const results = players.map((_, index) => {
@@ -187,7 +179,36 @@ export const useGame = () => {
     });
     setRecords((previous) => [...previous, { place, results }]);
     setPhase('reveal');
+    return { updated, roundOver: true };
   }, [activePlayerIndex, bearing, config, distanceKm, guessesByPlayer, origin, places, players, roundIndex, roundOrder]);
+
+  /**
+   * Change d'onglet. Cliquer directement sur un autre joueur valide d'abord la reponse en cours
+   * (comme "Valider"), puis bascule sur le joueur choisi — sauf si cette validation vient de
+   * terminer la manche (revelation), auquel cas il n'y a plus personne a qui basculer.
+   */
+  const selectPlayer = useCallback(
+    (index: number) => {
+      if (index === activePlayerIndex) return;
+      const locked = guessesByPlayer[index] !== undefined && !config.allowRevision;
+      if (locked) return;
+
+      const { roundOver } = commitActiveGuess();
+      if (roundOver) return;
+
+      setActivePlayerIndex(index);
+    },
+    [activePlayerIndex, commitActiveGuess, config.allowRevision, guessesByPlayer],
+  );
+
+  /** Bouton "Valider" : meme validation, puis avance vers le premier joueur qui n'a pas encore repondu. */
+  const submit = useCallback(() => {
+    const { updated, roundOver } = commitActiveGuess();
+    if (roundOver) return;
+
+    const nextUnanswered = roundOrder.find((index) => updated[index] === undefined);
+    if (nextUnanswered !== undefined) setActivePlayerIndex(nextUnanswered);
+  }, [commitActiveGuess, roundOrder]);
 
   const next = useCallback(() => {
     if (roundIndex + 1 < places.length) {
