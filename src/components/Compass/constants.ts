@@ -1,5 +1,4 @@
 export const TICK_STEP_DEG = 5;
-export const HAPTIC_STEP_DEG = 15;
 
 // Proportions relatives au rayon de la boussole.
 export const FACE_RADIUS_RATIO = 0.96;

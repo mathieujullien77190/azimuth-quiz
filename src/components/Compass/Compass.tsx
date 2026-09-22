@@ -1,4 +1,3 @@
-import * as Haptics from 'expo-haptics';
 import { useMemo, useRef } from 'react';
 import { PanResponder, Platform, StyleSheet, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
@@ -8,7 +7,7 @@ import { normalizeBearing } from '@/helpers';
 import { useTheme } from '@/themes';
 
 import { CompassDial } from './CompassDial';
-import { HAPTIC_STEP_DEG, NORTH_MARKER_HEIGHT, NORTH_MARKER_WIDTH } from './constants';
+import { NORTH_MARKER_HEIGHT, NORTH_MARKER_WIDTH } from './constants';
 import { bearingFromTouch } from './helpers';
 import type { CompassNeedle, CompassProps } from './types';
 import { useHeading } from './useHeading';
@@ -35,17 +34,11 @@ export const Compass = ({
 
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
-  const lastHapticStep = useRef<number | null>(null);
 
   const panResponder = useMemo(() => {
     const update = (x: number, y: number) => {
       // Angle a l'ecran, puis retour dans le repere du cadran (nord = 0).
       const next = Math.round(normalizeBearing(bearingFromTouch(x, y, size) + headingRef.current)) % 360;
-      const step = Math.round(next / HAPTIC_STEP_DEG);
-      if (step !== lastHapticStep.current) {
-        lastHapticStep.current = step;
-        Haptics.selectionAsync().catch(() => {});
-      }
       onChangeRef.current?.(next);
     };
 
