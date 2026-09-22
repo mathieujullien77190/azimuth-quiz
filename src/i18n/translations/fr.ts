@@ -143,7 +143,7 @@ export const fr: Translations = {
     languageOptions: { fr: 'Français', en: 'English' },
     aboutTitle: 'À propos',
     author: 'Par Matou.',
-    claudeMention: 'Développé avec l’aide de Claude, qui n’a toujours pas de boussole interne mais code plutôt bien.',
+    claudeMention: 'Fait pour l’apéro entre potes : pas de pub, pas de tracking, juste vous et une boussole récalcitrante. Codé avec l’aide de Claude, qui n’a toujours pas de sens de l’orientation mais s’en sort plutôt bien.',
   },
   indicesSetup: {
     screenTitle: 'Indices',

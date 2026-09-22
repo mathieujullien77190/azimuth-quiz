@@ -143,7 +143,7 @@ export const en: Translations = {
     languageOptions: { fr: 'Français', en: 'English' },
     aboutTitle: 'About',
     author: 'By Matou.',
-    claudeMention: 'Built with help from Claude, who still has no internal compass but codes rather well.',
+    claudeMention: 'Made for drinks with friends: no ads, no tracking, just you and a stubborn compass. Built with help from Claude, who still has no sense of direction but codes rather well.',
   },
   indicesSetup: {
     screenTitle: 'Clues',
