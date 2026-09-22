@@ -212,7 +212,7 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
         </View>
       </Section>
 
-      <Section title="Distance">
+      <Section title="Mode">
         <View style={styles.chips}>
           {DISTANCE_MODES.map((mode) => (
             <Chip
