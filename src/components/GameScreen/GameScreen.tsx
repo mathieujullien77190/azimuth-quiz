@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -33,6 +34,7 @@ import {
   ROUND_OVER_LABEL,
   VALIDATE_LABEL,
   YOUR_ANSWER_LABEL,
+  ZOOM_MULTIPLIERS,
 } from './constants';
 import { compassSizeFor, earthSizeFor, formatRoundProgress } from './helpers';
 import type { GameScreenProps } from './types';
@@ -116,6 +118,29 @@ const createStyles = ({ colors, typography }: Theme) =>
     earthCenter: {
       alignItems: 'center',
     },
+    zoomControls: {
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      flexDirection: 'row',
+      gap: spacing.xs,
+    },
+    zoomButton: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surfaceHigh,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    zoomButtonLabel: {
+      ...typography.heading,
+      color: colors.text,
+      fontSize: fontSize.body,
+      lineHeight: fontSize.body,
+    },
   });
 
 export const GameScreen = ({ onQuit }: GameScreenProps) => {
@@ -123,6 +148,11 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
   const game = useGame();
+  // Zoom manuel (boutons +/-) sur la coupe de la Terre a la revelation : repart a 1 chaque manche.
+  const [zoomIndex, setZoomIndex] = useState(0);
+  useEffect(() => {
+    setZoomIndex(0);
+  }, [game.roundNumber]);
 
   if (game.phase === 'loading' || game.place === undefined || game.currentPlayer === undefined) {
     return (
@@ -289,7 +319,34 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
 
       <Card style={styles.earthCard}>
         <View style={styles.earthCenter}>
-          <EarthSection marks={earthMarks} showStraightLine={straightLine} size={earthSize} />
+          <EarthSection
+            marks={earthMarks}
+            showStraightLine={straightLine}
+            size={earthSize}
+            zoomMultiplier={record ? ZOOM_MULTIPLIERS[zoomIndex] : undefined}
+          />
+          {record && (
+            <View style={styles.zoomControls}>
+              <Pressable
+                accessibilityRole="button"
+                disabled={zoomIndex === 0}
+                hitSlop={8}
+                onPress={() => setZoomIndex((index) => Math.max(0, index - 1))}
+                style={[styles.zoomButton, zoomIndex === 0 && { opacity: 0.4 }]}
+              >
+                <Text style={styles.zoomButtonLabel}>−</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                disabled={zoomIndex === ZOOM_MULTIPLIERS.length - 1}
+                hitSlop={8}
+                onPress={() => setZoomIndex((index) => Math.min(ZOOM_MULTIPLIERS.length - 1, index + 1))}
+                style={[styles.zoomButton, zoomIndex === ZOOM_MULTIPLIERS.length - 1 && { opacity: 0.4 }]}
+              >
+                <Text style={styles.zoomButtonLabel}>+</Text>
+              </Pressable>
+            </View>
+          )}
         </View>
         {!record &&
           (straightLine ? (
@@ -299,7 +356,7 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
           ))}
       </Card>
 
-      {record && <RoundResult options={game.config} players={game.players} record={record} />}
+      {record && <RoundResult options={game.config} players={game.players} record={record} totals={game.totals} />}
     </Screen>
   );
 };

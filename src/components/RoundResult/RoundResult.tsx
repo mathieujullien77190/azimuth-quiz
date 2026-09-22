@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
-import { arcKmFromChordKm, formatBearing, formatDistance, formatInclination } from '@/helpers';
+import { arcKmFromChordKm, formatBearing, formatDistance, formatInclination, formatNumber } from '@/helpers';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
@@ -20,11 +20,21 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       borderRadius: radius.md,
       backgroundColor: colors.surfaceHigh,
     },
-    truthLabel: {
-      ...typography.label,
-      color: colors.textMuted,
-      fontSize: fontSize.caption,
+    truthHead: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
       marginBottom: 2,
+    },
+    truthDot: {
+      width: 14,
+      height: 14,
+      borderRadius: 7,
+    },
+    truthLabel: {
+      ...typography.heading,
+      color: colors.text,
+      fontSize: fontSize.subtitle,
     },
     truthRow: {
       flexDirection: 'row',
@@ -68,10 +78,18 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       color: colors.text,
       fontSize: fontSize.subtitle,
     },
+    scoreBlock: {
+      alignItems: 'flex-end',
+    },
     playerTotal: {
       ...typography.display,
       color: colors.accent,
       fontSize: fontSize.title,
+    },
+    generalScore: {
+      ...typography.body,
+      color: colors.textMuted,
+      fontSize: fontSize.caption,
     },
     row: {
       flexDirection: 'row',
@@ -97,7 +115,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
     },
   });
 
-export const RoundResult = ({ record, players, options }: RoundResultProps) => {
+export const RoundResult = ({ record, players, totals, options }: RoundResultProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
   const { score: truth } = record.results[0];
@@ -105,7 +123,7 @@ export const RoundResult = ({ record, players, options }: RoundResultProps) => {
 
   // Les joueurs sont classes par points sur la manche (le meilleur en premier).
   const ranked = record.results
-    .map((result, index) => ({ result, player: players[index] }))
+    .map((result, index) => ({ result, player: players[index], index }))
     .sort((a, b) => b.result.score.total - a.result.score.total);
 
   // Meilleur score de chaque categorie, tous joueurs confondus : c'est lui qui ressort en vert.
@@ -120,7 +138,10 @@ export const RoundResult = ({ record, players, options }: RoundResultProps) => {
   return (
     <Card style={styles.card}>
       <View style={styles.truth}>
-        <Text style={styles.truthLabel}>{TRUTH_LABEL}</Text>
+        <View style={styles.truthHead}>
+          <View style={[styles.truthDot, { backgroundColor: colors.truth }]} />
+          <Text style={styles.truthLabel}>{TRUTH_LABEL}</Text>
+        </View>
         <View style={styles.truthRow}>
           <Text style={styles.truthRowLabel}>{ROW_LABELS.direction}</Text>
           <Text style={styles.truthValue}>{formatBearing(truth.trueBearing)}</Text>
@@ -137,12 +158,15 @@ export const RoundResult = ({ record, players, options }: RoundResultProps) => {
         )}
       </View>
 
-      {ranked.map(({ result, player }, position) => (
+      {ranked.map(({ result, player, index }, position) => (
         <View key={player.name + position} style={[styles.player, position > 0 && styles.playerBorder]}>
           <View style={styles.playerHead}>
             {!isSolo && <View style={[styles.playerDot, { backgroundColor: player.color }]} />}
             <Text style={styles.playerName}>{isSolo ? 'Ton score' : player.name}</Text>
-            <Text style={styles.playerTotal}>{result.score.total}</Text>
+            <View style={styles.scoreBlock}>
+              <Text style={styles.playerTotal}>{result.score.total}</Text>
+              <Text style={styles.generalScore}>{formatNumber(totals[index])} au total</Text>
+            </View>
           </View>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>{ROW_LABELS.direction}</Text>

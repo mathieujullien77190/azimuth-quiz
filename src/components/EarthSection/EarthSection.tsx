@@ -10,6 +10,7 @@ import {
   EARTH_RADIUS_RATIO,
   HEIGHT_RATIO,
   HORIZON_LABEL,
+  MAX_ZOOM,
   PLAYER_LABEL,
   PLAYER_Y_RATIO,
 } from './constants';
@@ -22,11 +23,13 @@ import type { EarthMark, EarthSectionProps, Point } from './types';
  * (distance de surface). En mode ligne droite, une corde rejoint en plus le meme point d'arrivee :
  * l'inclinaison choisie fixe a la fois l'arc et la corde, la distance de surface n'est qu'une indication.
  * Le cercle zoome en continu sur son sommet pour que les reperes proches restent lisibles : plus
- * les distances de `marks` sont courtes, plus le zoom monte (jusqu'a MAX_ZOOM). La vraie reponse
+ * les distances de `marks` sont courtes, plus le zoom monte (jusqu'a MAX_ZOOM). `zoomMultiplier`
+ * ajoute un zoom manuel par-dessus (boutons +/- a la revelation), toujours plafonne a MAX_ZOOM.
+ * La vraie reponse
  * (isTruth) ne se dessine que par son point cercle : pas d'arc ni de corde, pour ne pas noyer les
  * reponses des joueurs sous ses propres traits.
  */
-export const EarthSection = ({ size, marks, showStraightLine }: EarthSectionProps) => {
+export const EarthSection = ({ size, marks, showStraightLine, zoomMultiplier = 1 }: EarthSectionProps) => {
   const { colors, compass, typography } = useTheme();
   const height = size * HEIGHT_RATIO;
   const baseRadius = size * EARTH_RADIUS_RATIO;
@@ -37,7 +40,8 @@ export const EarthSection = ({ size, marks, showStraightLine }: EarthSectionProp
     const end = markEnd(item, baseCenter, baseRadius);
     return { x: end.x - player.x, y: end.y - player.y };
   });
-  const zoom = fitZoom(offsets, size * AVAILABLE_X_RATIO, height - player.y - BOTTOM_MARGIN);
+  const autoZoom = fitZoom(offsets, size * AVAILABLE_X_RATIO, height - player.y - BOTTOM_MARGIN);
+  const zoom = Math.min(MAX_ZOOM, autoZoom * zoomMultiplier);
 
   const radius = baseRadius * zoom;
   const center: Point = { x: player.x, y: player.y + radius };

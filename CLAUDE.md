@@ -96,6 +96,7 @@ environnement).
 - `npx expo lint` vient d'etre configure (ESLint + eslint-config-expo, premier lancement
   fin 2026-09). Erreurs preexistantes non corrigees (hors scope au moment ou elles ont
   ete trouvees) : regles `react-hooks/set-state-in-effect` et `react-hooks/refs` dans
-  `Compass.tsx`, `useHeading.ts`, `useGame.ts`, `SliderTrack.tsx`.
+  `Compass.tsx`, `useHeading.ts`, `useGame.ts`, `SliderTrack.tsx`, `GameScreen.tsx`
+  (reset du zoom manuel de `EarthSection` a chaque manche).
 - Repo : `mathieujullien77190/full-azimut`, un seul contributeur, commits directs sur
   `master`.

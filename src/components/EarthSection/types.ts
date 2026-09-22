@@ -15,6 +15,8 @@ export type EarthSectionProps = {
   marks: EarthMark[];
   /** Ajoute la corde (ligne droite a travers la Terre) jusqu'a la meme destination que l'arc. */
   showStraightLine: boolean;
+  /** Multiplie le zoom automatique (bouton +/- a la revelation) ; 1 = pas de zoom manuel. */
+  zoomMultiplier?: number;
 };
 
 export type Point = {
