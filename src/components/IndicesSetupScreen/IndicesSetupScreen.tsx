@@ -9,6 +9,7 @@ import {
   MIN_PLAYERS,
   NAME_PLACEHOLDERS,
   PLAYER_COLORS,
+  ROUND_OPTIONS,
   fontSize,
   spacing,
 } from '@/constants';
@@ -181,6 +182,14 @@ export const IndicesSetupScreen = ({ onStart, onBack }: IndicesSetupScreenProps)
               onPress={() => updateSettings({ answerMethod: method.id })}
               selected={settings.answerMethod === method.id}
             />
+          ))}
+        </View>
+      </Section>
+
+      <Section title={t.setup.roundsTitle}>
+        <View style={styles.chips}>
+          {ROUND_OPTIONS.map((rounds) => (
+            <Chip key={rounds} label={String(rounds)} onPress={() => updateSettings({ rounds })} selected={settings.rounds === rounds} />
           ))}
         </View>
       </Section>

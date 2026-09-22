@@ -143,7 +143,7 @@ export const fr: Translations = {
     languageOptions: { fr: 'Français', en: 'English' },
     aboutTitle: 'À propos',
     author: 'Par Matou.',
-    claudeMention: 'Fait pour l’apéro entre potes : pas de pub, pas de tracking, juste vous et une boussole récalcitrante. Codé avec l’aide de Claude, qui n’a toujours pas de sens de l’orientation mais s’en sort plutôt bien.',
+    claudeMention: 'Fait pour l’apéro entre potes : pas de pub, pas de tracking, juste vous et une boussole récalcitrante.',
   },
   indicesSetup: {
     screenTitle: 'Indices',
@@ -184,7 +184,7 @@ export const fr: Translations = {
     guessPlaceholder: 'Nom de la ville…',
     submitGuess: 'Valider',
     wasPlace: 'C’était',
-    replay: 'Rejouer',
+    continueLabel: 'Continuer',
     home: 'Accueil',
     clues: {
       position: 'Position',
@@ -204,5 +204,6 @@ export const fr: Translations = {
     },
     populationUnit: 'hab.',
     letterUnit: 'lettres',
+    finalScoreTitle: 'Classement final',
   },
 };

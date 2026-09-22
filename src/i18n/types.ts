@@ -139,10 +139,11 @@ export type Translations = {
     guessPlaceholder: string;
     submitGuess: string;
     wasPlace: string;
-    replay: string;
+    continueLabel: string;
     home: string;
     clues: Record<IndicesClueId, string>;
     populationUnit: string;
     letterUnit: string;
+    finalScoreTitle: string;
   };
 };

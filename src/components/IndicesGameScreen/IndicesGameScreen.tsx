@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { DEFAULT_ORIGIN, INDICES_CLUE_COSTS, INDICES_CLUE_ORDER, PLAYER_COLORS, fontSize, spacing } from '@/constants';
+import {
+  DEFAULT_ORIGIN,
+  INDICES_CLUE_COSTS,
+  INDICES_CLUE_ORDER,
+  INDICES_FLAG_COLORS_BY_COUNTRY,
+  PLAYER_COLORS,
+  fontSize,
+  spacing,
+} from '@/constants';
 import { bearingDeg, distanceKm, formatNumber, playerDisplayName, resolveOrigin } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useIndicesSettings } from '@/settings';
@@ -18,6 +26,40 @@ import type { IndicesGameScreenProps } from './types';
 
 const createStyles = ({ colors, typography }: Theme) =>
   StyleSheet.create({
+    title: {
+      ...typography.display,
+      color: colors.accent,
+      fontSize: fontSize.title,
+      paddingTop: spacing.sm,
+      textAlign: 'center',
+    },
+    standingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingVertical: spacing.sm,
+    },
+    standingRowBorder: {
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    standingRank: {
+      ...typography.heading,
+      color: colors.textMuted,
+      fontSize: fontSize.body,
+      width: 24,
+    },
+    standingName: {
+      ...typography.heading,
+      color: colors.text,
+      fontSize: fontSize.body,
+      flex: 1,
+    },
+    standingScore: {
+      ...typography.heading,
+      color: colors.accent,
+      fontSize: fontSize.body,
+    },
     header: {
       backgroundColor: colors.background,
       borderBottomWidth: 1,
@@ -162,8 +204,14 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const [verified, setVerified] = useState(false);
   const [guessText, setGuessText] = useState('');
   const [verdict, setVerdict] = useState<'correct' | 'wrong' | 'giveUp' | null>(null);
+  const [roundNumber, setRoundNumber] = useState(1);
+  const [finished, setFinished] = useState(false);
+  // Cumul par joueur sur toute la partie (plusieurs manches) : seul celui qui buzze sur une manche
+  // voit son total bouge, dans un sens ou dans l'autre (voir settle).
+  const [playerTotals, setPlayerTotals] = useState<number[]>(() => players.map(() => 0));
 
   const roundOver = verdict !== null;
+  const isLastRound = roundNumber >= settings.rounds;
   // Score qui MONTE a chaque indice choisi (plus il est facile, plus il coute cher) : c'est celui
   // qui a le score le plus BAS qui gagne, pas le plus haut.
   const score = scoreForRevealed(revealedClueIds);
@@ -175,10 +223,20 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   // L'emoji se devoile en 3 fois (place.emojis est un triplet) : chaque clic supplementaire sur la
   // carte deja revelee compte comme un nouvel indice choisi (cout + tour), jusqu'a epuisement.
   const emojiStage = revealedClueIds.filter((id) => id === 'emoji').length;
+  // Le drapeau se devoile couleur par couleur, meme principe que l'emoji : le nombre de couleurs
+  // varie selon le pays (2 ou 3 en general, voir INDICES_FLAG_COLORS_BY_COUNTRY).
+  const flagColors = INDICES_FLAG_COLORS_BY_COUNTRY[place.country];
+  const flagStage = revealedClueIds.filter((id) => id === 'flagColors').length;
 
   const pickClue = (clueId: IndicesClueId) => {
     if (roundOver) return;
-    if (clueId === 'emoji' ? emojiStage >= 3 : revealedClueIds.includes(clueId)) return;
+    if (clueId === 'emoji') {
+      if (emojiStage >= 3) return;
+    } else if (clueId === 'flagColors') {
+      if (flagStage >= flagColors.length) return;
+    } else if (revealedClueIds.includes(clueId)) {
+      return;
+    }
     setRevealedClueIds((ids) => [...ids, clueId]);
     setTurnIndex((index) => (index + 1) % players.length);
   };
@@ -195,6 +253,12 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const verify = () => setVerified(true);
 
   const settle = (correct: boolean) => {
+    // Le joueur qui buzze voit son total bouger du montant de la manche : en bien si trouve, en
+    // mal (+1) si rate. Personne d'autre n'est touche.
+    const awarded = correct ? score : score + 1;
+    if (buzzedIndex !== null) {
+      setPlayerTotals((totals) => totals.map((total, index) => (index === buzzedIndex ? total + awarded : total)));
+    }
     setVerdict(correct ? 'correct' : 'wrong');
     setBuzzOpen(false);
   };
@@ -211,7 +275,12 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
     setBuzzedIndex(null);
   };
 
-  const restart = () => {
+  const continueRound = () => {
+    if (isLastRound) {
+      setFinished(true);
+      return;
+    }
+    setRoundNumber((n) => n + 1);
     setPlace(randomIndicesPlace(settings.difficulty));
     setRevealedClueIds([]);
     setTurnIndex(0);
@@ -224,11 +293,58 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
 
   const buzzedName = buzzedIndex !== null ? players[buzzedIndex] : undefined;
 
+  if (finished) {
+    const standings = players
+      .map((name, index) => ({ name, total: playerTotals[index] }))
+      .sort((a, b) => a.total - b.total);
+    const lowest = standings[0]?.total ?? 0;
+    const winners = standings.filter((entry) => entry.total === lowest).map((entry) => entry.name);
+
+    return (
+      <Screen>
+        <Text style={styles.title}>{t.indicesGame.finalScoreTitle}</Text>
+        {players.length > 1 && (
+          <Text style={[styles.resultBanner, styles.resultCorrect]}>
+            {winners.length > 1 ? t.endScreen.tie(winners.join(` ${t.endScreen.and} `)) : t.endScreen.winner(winners[0])}
+          </Text>
+        )}
+        <Card>
+          {standings.map((entry, index) => (
+            <View key={entry.name} style={[styles.standingRow, index > 0 && styles.standingRowBorder]}>
+              <Text style={styles.standingRank}>{index + 1}.</Text>
+              <Text style={styles.standingName}>{entry.name}</Text>
+              <Text style={styles.standingScore}>
+                {formatNumber(entry.total)} {t.common.pts}
+              </Text>
+            </View>
+          ))}
+        </Card>
+        <Button label={t.indicesGame.home} onPress={onQuit} />
+      </Screen>
+    );
+  }
+
   return (
     <Screen
       footer={
-        !roundOver &&
-        (buzzOpen ? (
+        roundOver ? (
+          <View style={styles.actions}>
+            <Text style={[styles.resultBanner, verdict === 'correct' ? styles.resultCorrect : styles.resultWrong]}>
+              {verdict === 'correct'
+                ? t.indicesGame.scored(buzzedName ?? '', formatNumber(finalScore))
+                : verdict === 'wrong'
+                  ? t.indicesGame.missed(buzzedName ?? '', formatNumber(finalScore))
+                  : t.indicesGame.noOneFound(formatNumber(finalScore))}
+            </Text>
+            <Text style={styles.revealAnswer}>
+              {t.indicesGame.wasPlace} {place.name}
+              <Text style={styles.revealSub}>{'\n'}{place.country}</Text>
+            </Text>
+            <Button label={isLastRound ? t.game.last : t.indicesGame.continueLabel} onPress={continueRound} />
+            <Button label={t.indicesGame.home} onPress={onQuit} variant="ghost" />
+          </View>
+        ) : (
+          buzzOpen ? (
           <View style={styles.buzzPanel}>
             <Text style={styles.buzzTitle}>
               {buzzedName === undefined
@@ -282,12 +398,13 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
               </>
             )}
           </View>
-        ) : (
-          <View style={styles.buzzRow}>
-            <Button label={t.indicesGame.buzz} onPress={openBuzz} variant="ghost" />
-            <Button label={t.indicesGame.giveUp} onPress={giveUp} variant="ghost" />
-          </View>
-        ))
+          ) : (
+            <View style={styles.buzzRow}>
+              <Button label={t.indicesGame.buzz} onPress={openBuzz} variant="ghost" />
+              <Button label={t.indicesGame.giveUp} onPress={giveUp} variant="ghost" />
+            </View>
+          )
+        )
       }
       header={
         <View style={styles.header}>
@@ -310,7 +427,10 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
         </View>
       }
     >
-      <Text style={styles.hint}>{roundOver ? t.indicesGame.roundOver : t.indicesGame.turnHint(players[turnIndex])}</Text>
+      <Text style={styles.hint}>
+        {roundOver ? t.indicesGame.roundOver : t.indicesGame.turnHint(players[turnIndex])} · {t.game.round} {roundNumber}/
+        {settings.rounds}
+      </Text>
 
       <Card>
         <View style={styles.clueGrid}>
@@ -318,6 +438,9 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
             // A la revelation, tout s'affiche, meme les indices jamais choisis pendant la manche.
             const revealed = roundOver || revealedClueIds.includes(clueId);
             const isEmoji = clueId === 'emoji';
+            const isFlag = clueId === 'flagColors';
+            const moreToReveal =
+              (isEmoji && !roundOver && emojiStage < 3) || (isFlag && !roundOver && flagStage < flagColors.length);
             return (
               <IndicesClueCard
                 bearingDeg={bearing}
@@ -325,9 +448,10 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
                 cost={INDICES_CLUE_COSTS[clueId]}
                 distanceKm={distance}
                 emojiStage={isEmoji ? (roundOver ? 3 : emojiStage) : undefined}
+                flagStage={isFlag ? (roundOver ? flagColors.length : flagStage) : undefined}
                 key={clueId}
                 label={t.indicesGame.clues[clueId]}
-                moreToReveal={isEmoji && !roundOver && emojiStage < 3}
+                moreToReveal={moreToReveal}
                 onPress={roundOver ? undefined : () => pickClue(clueId)}
                 place={place}
                 state={revealed ? 'revealed' : 'locked'}
@@ -336,26 +460,6 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
           })}
         </View>
       </Card>
-
-      {roundOver && (
-        <>
-          <Text style={[styles.resultBanner, verdict === 'correct' ? styles.resultCorrect : styles.resultWrong]}>
-            {verdict === 'correct'
-              ? t.indicesGame.scored(buzzedName ?? '', formatNumber(finalScore))
-              : verdict === 'wrong'
-                ? t.indicesGame.missed(buzzedName ?? '', formatNumber(finalScore))
-                : t.indicesGame.noOneFound(formatNumber(finalScore))}
-          </Text>
-          <Text style={styles.revealAnswer}>
-            {t.indicesGame.wasPlace} {place.name}
-            <Text style={styles.revealSub}>{'\n'}{place.country}</Text>
-          </Text>
-          <View style={styles.actions}>
-            <Button label={t.indicesGame.replay} onPress={restart} />
-            <Button label={t.indicesGame.home} onPress={onQuit} variant="ghost" />
-          </View>
-        </>
-      )}
     </Screen>
   );
 };

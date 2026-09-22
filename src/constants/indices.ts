@@ -791,4 +791,5 @@ export const DEFAULT_INDICES_SETTINGS: IndicesSettings = {
   difficulty: "easy",
   buzzerMode: "anyone",
   answerMethod: "spoken",
+  rounds: 5,
 };

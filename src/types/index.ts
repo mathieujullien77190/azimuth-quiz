@@ -204,6 +204,7 @@ export type IndicesSettings = {
   difficulty: Difficulty;
   buzzerMode: IndicesBuzzerMode;
   answerMethod: IndicesAnswerMethod;
+  rounds: number;
 };
 
 export type Theme = {

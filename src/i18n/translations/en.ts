@@ -143,7 +143,7 @@ export const en: Translations = {
     languageOptions: { fr: 'Français', en: 'English' },
     aboutTitle: 'About',
     author: 'By Matou.',
-    claudeMention: 'Made for drinks with friends: no ads, no tracking, just you and a stubborn compass. Built with help from Claude, who still has no sense of direction but codes rather well.',
+    claudeMention: 'Made for drinks with friends: no ads, no tracking, just you and a stubborn compass.',
   },
   indicesSetup: {
     screenTitle: 'Clues',
@@ -184,7 +184,7 @@ export const en: Translations = {
     guessPlaceholder: 'City name…',
     submitGuess: 'Submit',
     wasPlace: 'It was',
-    replay: 'Play again',
+    continueLabel: 'Continue',
     home: 'Home',
     clues: {
       position: 'Position',
@@ -204,5 +204,6 @@ export const en: Translations = {
     },
     populationUnit: 'pop.',
     letterUnit: 'letters',
+    finalScoreTitle: 'Final standings',
   },
 };

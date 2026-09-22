@@ -67,6 +67,9 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
     bodyEarth: {
       height: EARTH_CLUE_SIZE + spacing.xl,
     },
+    bodyFlag: {
+      height: 78,
+    },
     lockIcon: {
       fontSize: 17,
       opacity: 0.6,
@@ -104,18 +107,28 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       borderRadius: 2,
       backgroundColor: colors.accent,
     },
-    flagRect: {
-      minWidth: 84,
-      paddingHorizontal: spacing.md,
-      height: 36,
-      borderRadius: 10,
-      borderWidth: 2,
+    flagColorList: {
+      gap: spacing.xs,
+      width: '100%',
       alignItems: 'center',
-      justifyContent: 'center',
     },
-    flagPercent: {
+    flagColorRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs + 2,
+    },
+    flagSwatch: {
+      width: 16,
+      height: 16,
+      borderRadius: 4,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+    },
+    flagColorPercent: {
       ...typography.heading,
-      fontSize: fontSize.body,
+      color: colors.accent,
+      fontSize: fontSize.caption + 1,
+      minWidth: 30,
     },
     emojiSlotRow: {
       flexDirection: 'row',
@@ -138,7 +151,8 @@ const revealedBody = (
     bearingDeg,
     distanceKm,
     emojiStage,
-  }: Pick<IndicesClueCardProps, 'clueId' | 'place' | 'bearingDeg' | 'distanceKm' | 'emojiStage'>,
+    flagStage,
+  }: Pick<IndicesClueCardProps, 'clueId' | 'place' | 'bearingDeg' | 'distanceKm' | 'emojiStage' | 'flagStage'>,
   styles: ReturnType<typeof createStyles>,
   units: { population: string; letters: string },
   colors: Theme['colors'],
@@ -196,14 +210,21 @@ const revealedBody = (
     case 'wordCount':
       return <Text style={styles.statValue}>{wordCount(place.name)}</Text>;
     case 'flagColors': {
-      const [main] = INDICES_FLAG_COLORS_BY_COUNTRY[place.country];
-      const hex = main[INDICES_FLAG_COLOR_FIELD.HEX];
-      const percent = main[INDICES_FLAG_COLOR_FIELD.PERCENT];
-      // Blanc sur blanc, illisible : bordure et texte en noir dans ce cas precis, blancs sinon.
-      const isWhite = main[INDICES_FLAG_COLOR_FIELD.COLOR_ID] === 'white';
+      const allColors = INDICES_FLAG_COLORS_BY_COUNTRY[place.country];
+      const stage = flagStage ?? 1;
       return (
-        <View style={[styles.flagRect, { backgroundColor: hex, borderColor: isWhite ? '#000000' : '#FFFFFF' }]}>
-          <Text style={[styles.flagPercent, { color: isWhite ? '#000000' : '#FFFFFF' }]}>{percent}%</Text>
+        <View style={styles.flagColorList}>
+          {allColors.map((row, i) => {
+            const shown = i < stage;
+            const hex = row[INDICES_FLAG_COLOR_FIELD.HEX];
+            const percent = row[INDICES_FLAG_COLOR_FIELD.PERCENT];
+            return (
+              <View key={i} style={styles.flagColorRow}>
+                <View style={[styles.flagSwatch, shown && { backgroundColor: hex }]} />
+                <Text style={styles.flagColorPercent}>{shown ? `${percent}%` : '?'}</Text>
+              </View>
+            );
+          })}
         </View>
       );
     }
@@ -237,6 +258,7 @@ export const IndicesClueCard = ({
   bearingDeg,
   distanceKm,
   emojiStage,
+  flagStage,
 }: IndicesClueCardProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
@@ -264,7 +286,13 @@ export const IndicesClueCard = ({
         <Text style={styles.label}>{label}</Text>
         <View style={[styles.difficultyDot, { backgroundColor: INDICES_DIFFICULTY_COLORS[cost] }]} />
       </View>
-      <View style={[styles.body, wide && (clueId === 'bearing' ? styles.bodyCompass : styles.bodyEarth)]}>
+      <View
+        style={[
+          styles.body,
+          wide && (clueId === 'bearing' ? styles.bodyCompass : styles.bodyEarth),
+          clueId === 'flagColors' && state === 'revealed' && styles.bodyFlag,
+        ]}
+      >
         {state === 'revealed' ? (
           <Animated.View
             style={{
@@ -275,7 +303,7 @@ export const IndicesClueCard = ({
             }}
           >
             {revealedBody(
-              { bearingDeg, clueId, distanceKm, emojiStage, place },
+              { bearingDeg, clueId, distanceKm, emojiStage, flagStage, place },
               styles,
               { letters: t.indicesGame.letterUnit, population: t.indicesGame.populationUnit },
               colors,
