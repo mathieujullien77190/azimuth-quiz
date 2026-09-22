@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
-import { formatDistance } from '@/helpers';
+import { arcKmFromChordKm, formatDistance } from '@/helpers';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
@@ -101,10 +101,7 @@ export const RoundResult = ({ record, players, options, isLastRound, onNext }: R
       <View style={styles.truth}>
         <Text style={styles.truthLabel}>{TRUTH_LABEL}</Text>
         <Text style={styles.truthValue}>{directionText(truth.trueBearing, truth.trueInclination, options.straightLine)}</Text>
-        <Text style={styles.truthValue}>
-          {formatDistance(options.straightLine ? truth.trueStraightDistanceKm : truth.trueSurfaceDistanceKm)}
-          {options.straightLine ? ' (à travers la Terre)' : ''}
-        </Text>
+        <Text style={styles.truthValue}>{formatDistance(truth.trueSurfaceDistanceKm)}</Text>
       </View>
 
       {ranked.map(({ result, player }, position) => (
@@ -132,8 +129,7 @@ export const RoundResult = ({ record, players, options, isLastRound, onNext }: R
           <View style={styles.row}>
             <Text style={styles.rowLabel}>{ROW_LABELS.distance}</Text>
             <Text style={styles.rowValue}>
-              {formatDistance(result.guess.distanceKm)}
-              {options.straightLine ? ' (ligne droite)' : ''}
+              {formatDistance(options.straightLine ? arcKmFromChordKm(result.guess.distanceKm) : result.guess.distanceKm)}
             </Text>
             <Text
               style={[
