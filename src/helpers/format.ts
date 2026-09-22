@@ -14,9 +14,5 @@ export const formatBearing = (degrees: number): string =>
 
 export const formatInclination = (degrees: number): string => `${Math.round(degrees)}°`;
 
-/** Emoji drapeau a partir d'un code pays ISO 3166-1 alpha-2. */
-export const countryCodeToFlag = (code: string): string =>
-  String.fromCodePoint(...code.toUpperCase().split('').map((char) => 0x1f1a5 + char.charCodeAt(0)));
-
 /** Initiales d'un joueur : les 2 premieres lettres de son nom, en majuscules. */
 export const initials = (name: string): string => name.trim().slice(0, 2).toUpperCase();

@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
-import { countryCodeToFlag, formatNumber, getRank } from '@/helpers';
+import { formatNumber, getRank } from '@/helpers';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
@@ -34,12 +34,6 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       color: colors.text,
       fontSize: 64,
       marginTop: spacing.sm,
-    },
-    outOf: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
-      fontWeight: '600',
     },
     best: {
       ...typography.body,
@@ -82,9 +76,6 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       height: 14,
       borderRadius: 7,
     },
-    flag: {
-      fontSize: 28,
-    },
     rowText: {
       flex: 1,
     },
@@ -120,7 +111,6 @@ export const EndScreen = ({ players, records, totals, bestScore, isNewBest, onRe
             <Text style={styles.rankEmoji}>{rank.emoji}</Text>
             <Text style={styles.rankTitle}>{rank.title}</Text>
             <Text style={styles.score}>{formatNumber(totals[0] ?? 0)}</Text>
-            <Text style={styles.outOf}>sur {formatNumber(maxTotal)} points</Text>
             {isNewBest ? (
               <View style={styles.newBest}>
                 <Text style={styles.newBestText}>{NEW_BEST_LABEL}</Text>
@@ -133,7 +123,6 @@ export const EndScreen = ({ players, records, totals, bestScore, isNewBest, onRe
           <>
             <Text style={styles.rankEmoji}>🏆</Text>
             <Text style={styles.rankTitle}>{winnerTitle(ranking)}</Text>
-            <Text style={styles.outOf}>sur {formatNumber(maxTotal)} points possibles</Text>
           </>
         )}
       </Card>
@@ -157,7 +146,6 @@ export const EndScreen = ({ players, records, totals, bestScore, isNewBest, onRe
           const best = record.results[winner];
           return (
             <View key={`${record.place.name}-${index}`} style={[styles.row, index > 0 && styles.rowBorder]}>
-              <Text style={styles.flag}>{countryCodeToFlag(record.place.code)}</Text>
               <View style={styles.rowText}>
                 <Text style={styles.name}>{record.place.name}</Text>
                 <Text style={styles.detail}>{isSolo ? record.place.country : `Meilleur : ${players[winner].name}`}</Text>

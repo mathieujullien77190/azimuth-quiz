@@ -1,5 +1,4 @@
 export {
-  countryCodeToFlag,
   formatBearing,
   formatDistance,
   formatInclination,
