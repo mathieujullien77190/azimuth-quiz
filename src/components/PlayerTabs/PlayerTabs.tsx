@@ -1,11 +1,11 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
 import { initials } from '@/helpers';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
-import { CHECK_MARK } from './constants';
+import { CHECK_MARK, COMPACT_BREAKPOINT } from './constants';
 import { isTabLocked } from './helpers';
 import type { PlayerTabsProps } from './types';
 
@@ -24,6 +24,10 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       paddingTop: spacing.sm,
       paddingBottom: spacing.sm + 2,
     },
+    rowCompact: {
+      gap: spacing.xs,
+      paddingHorizontal: spacing.sm,
+    },
     tab: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -34,6 +38,11 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       borderWidth: 1.5,
       borderColor: colors.border,
       backgroundColor: colors.surfaceHigh,
+    },
+    tabCompact: {
+      gap: spacing.xs - 2,
+      paddingHorizontal: spacing.xs,
+      paddingVertical: spacing.xs,
     },
     active: {
       borderColor: colors.accent,
@@ -47,10 +56,18 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       height: 10,
       borderRadius: 5,
     },
+    dotCompact: {
+      width: 7,
+      height: 7,
+      borderRadius: 3.5,
+    },
     label: {
       ...typography.heading,
       color: colors.text,
       fontSize: fontSize.body - 1,
+    },
+    labelCompact: {
+      fontSize: fontSize.caption,
     },
     labelActive: {
       color: colors.onAccent,
@@ -60,6 +77,9 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       color: colors.success,
       fontSize: fontSize.body - 1,
     },
+    checkCompact: {
+      fontSize: fontSize.caption,
+    },
     checkActive: {
       color: colors.onAccent,
     },
@@ -68,10 +88,12 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
 /** Selecteur de joueur fixe en haut de l'ecran de jeu : on choisit qui repond, sans quitter l'ecran. */
 export const PlayerTabs = ({ players, order, activeIndex, answered, allowRevision, onSelect }: PlayerTabsProps) => {
   const styles = useThemedStyles(createStyles);
+  const { width } = useWindowDimensions();
+  const compact = width < COMPACT_BREAKPOINT;
 
   return (
     <ScrollView
-      contentContainerStyle={styles.row}
+      contentContainerStyle={[styles.row, compact && styles.rowCompact]}
       horizontal
       showsHorizontalScrollIndicator={false}
       style={styles.scroll}
@@ -90,11 +112,17 @@ export const PlayerTabs = ({ players, order, activeIndex, answered, allowRevisio
             accessibilityState={{ selected: isActive, disabled: locked }}
             disabled={locked}
             onPress={() => onSelect(index)}
-            style={[styles.tab, isActive && styles.active, locked && styles.locked]}
+            style={[styles.tab, compact && styles.tabCompact, isActive && styles.active, locked && styles.locked]}
           >
-            <View style={[styles.dot, { backgroundColor: player.color }]} />
-            <Text style={[styles.label, isActive && styles.labelActive]}>{initials(player.name)}</Text>
-            {isAnswered && <Text style={[styles.check, isActive && styles.checkActive]}>{CHECK_MARK}</Text>}
+            <View style={[styles.dot, compact && styles.dotCompact, { backgroundColor: player.color }]} />
+            <Text style={[styles.label, compact && styles.labelCompact, isActive && styles.labelActive]}>
+              {initials(player.name)}
+            </Text>
+            {isAnswered && (
+              <Text style={[styles.check, compact && styles.checkCompact, isActive && styles.checkActive]}>
+                {CHECK_MARK}
+              </Text>
+            )}
           </Pressable>
         );
       })}
