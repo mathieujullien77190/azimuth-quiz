@@ -87,12 +87,6 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       color: colors.textMuted,
       fontSize: fontSize.caption + 1,
     },
-    note: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.caption + 1,
-      textAlign: 'center',
-    },
   });
 
 export const IndicesSetupScreen = ({ onStart, onBack }: IndicesSetupScreenProps) => {
@@ -165,7 +159,7 @@ export const IndicesSetupScreen = ({ onStart, onBack }: IndicesSetupScreenProps)
         </View>
       </Section>
 
-      <Section hint={t.indicesSetup.buzzerModeHint} title={t.indicesSetup.buzzerModeTitle}>
+      <Section title={t.indicesSetup.buzzerModeTitle}>
         <View style={styles.chips}>
           {INDICES_BUZZER_MODES.map((mode) => (
             <Chip
@@ -178,7 +172,7 @@ export const IndicesSetupScreen = ({ onStart, onBack }: IndicesSetupScreenProps)
         </View>
       </Section>
 
-      <Section hint={t.indicesSetup.answerMethodHint} title={t.indicesSetup.answerMethodTitle}>
+      <Section title={t.indicesSetup.answerMethodTitle}>
         <View style={styles.chips}>
           {INDICES_ANSWER_METHODS.map((method) => (
             <Chip
@@ -191,7 +185,6 @@ export const IndicesSetupScreen = ({ onStart, onBack }: IndicesSetupScreenProps)
         </View>
       </Section>
 
-      <Text style={styles.note}>{t.indicesSetup.note}</Text>
       <Button label={t.indicesSetup.start} onPress={onStart} />
       <Button label={t.indicesSetup.back} onPress={onBack} variant="ghost" />
     </Screen>

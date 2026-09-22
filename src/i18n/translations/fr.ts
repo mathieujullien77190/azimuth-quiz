@@ -157,18 +157,15 @@ export const fr: Translations = {
     difficultyTitle: 'Difficulté',
     difficultyHint: 'Notoriété du lieu : détermine dans quelle réserve de villes la manche pioche.',
     buzzerModeTitle: 'Qui peut buzzer',
-    buzzerModeHint: 'Qui a le droit de proposer une réponse une fois un indice choisi.',
     buzzerModes: {
       turnPlayer: 'Celui qui a choisi',
       anyone: 'Tout le monde',
     },
     answerMethodTitle: 'Réponse',
-    answerMethodHint: 'Comment la réponse est vérifiée une fois que quelqu’un a buzzé.',
     answerMethods: {
       spoken: 'À voix haute',
       typed: 'Je tape la ville',
     },
-    note: 'Un lieu est tiré au sort parmi 446 villes du monde, filtrées selon la difficulté choisie ci-dessus. Le score monte à chaque indice utilisé : c’est le score le plus bas qui gagne.',
   },
   indicesGame: {
     turnHint: (name) => `${name} choisit un indice`,

@@ -157,18 +157,15 @@ export const en: Translations = {
     difficultyTitle: 'Difficulty',
     difficultyHint: 'How well-known the place is: sets which pool of cities the round draws from.',
     buzzerModeTitle: 'Who can buzz',
-    buzzerModeHint: 'Who’s allowed to propose an answer once a clue has been chosen.',
     buzzerModes: {
       turnPlayer: 'Whoever picked it',
       anyone: 'Anyone',
     },
     answerMethodTitle: 'Answer',
-    answerMethodHint: 'How the answer is checked once someone has buzzed.',
     answerMethods: {
       spoken: 'Out loud',
       typed: 'Type the city',
     },
-    note: 'A place is drawn at random from 446 cities worldwide, filtered by the difficulty picked above. The score goes up with every clue used: lowest score wins.',
   },
   indicesGame: {
     turnHint: (name) => `${name} picks a clue`,

@@ -118,12 +118,9 @@ export type Translations = {
     difficultyTitle: string;
     difficultyHint: string;
     buzzerModeTitle: string;
-    buzzerModeHint: string;
     buzzerModes: Record<IndicesBuzzerMode, string>;
     answerMethodTitle: string;
-    answerMethodHint: string;
     answerMethods: Record<IndicesAnswerMethod, string>;
-    note: string;
   };
   indicesGame: {
     turnHint: (name: string) => string;
