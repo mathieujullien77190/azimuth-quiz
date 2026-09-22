@@ -24,7 +24,8 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "output": "static"
     },
     "plugins": [
       "expo-router",
@@ -37,7 +38,8 @@
       ]
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "baseUrl": "/full-azimut"
     },
     "description": "Devine la direction et la distance d’un lieu du monde (villes, montagnes, monuments, sites naturels). Seul ou jusqu’à 6 joueurs sur le même téléphone."
   }
