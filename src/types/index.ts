@@ -9,6 +9,9 @@ export type Category = 'cities' | 'mountains' | 'landmarks' | 'nature' | 'kids';
 
 export type Zone = 'france' | 'europe' | 'world';
 
+/** Popularite/notoriete du lieu, du plus connu au plus pointu. */
+export type Difficulty = 'easy' | 'intermediate' | 'hard' | 'master';
+
 export type Place = {
   name: string;
   country: string;
@@ -16,6 +19,7 @@ export type Place = {
   code: string;
   category: Category;
   coordinates: Coordinates;
+  difficulty: Difficulty;
 };
 
 export type Origin = {
@@ -64,6 +68,7 @@ export type RoundRecord = {
 export type GameSettings = {
   playerNames: string[];
   categories: Category[];
+  difficulties: Difficulty[];
   zone: Zone;
   rounds: number;
   /**

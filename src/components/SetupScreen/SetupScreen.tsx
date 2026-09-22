@@ -3,6 +3,7 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import {
   CATEGORIES,
+  DIFFICULTIES,
   MAX_PLAYERS,
   MIN_PLAYERS,
   NAME_PLACEHOLDERS,
@@ -23,7 +24,7 @@ import Screen from '../ui/Screen';
 import Section from '../ui/Section';
 import Toggle from '../ui/Toggle';
 import { BACK_LABEL, DISTANCE_MODES, SCREEN_TITLE, START_LABEL, TOGGLES } from './constants';
-import { availabilityLabel, resizeNames, toggleCategory } from './helpers';
+import { availabilityLabel, resizeNames, toggleSelected } from './helpers';
 import type { SetupScreenProps } from './types';
 
 const createStyles = ({ colors, radius, typography }: Theme) =>
@@ -103,7 +104,7 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
   const { colors } = useTheme();
   const { settings, updateSettings } = useSettings();
   const playerCount = settings.playerNames.length;
-  const available = filterPlaces(settings.categories, settings.zone).length;
+  const available = filterPlaces(settings.categories, settings.difficulties, settings.zone).length;
   const zone = ZONES.find((candidate) => candidate.id === settings.zone);
   // Un ordre different a chaque arrivee sur l'ecran, stable pendant qu'on tape.
   const placeholderNames = useMemo(() => shuffle([...NAME_PLACEHOLDERS]), []);
@@ -163,8 +164,22 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
               key={category.id}
               emoji={category.emoji}
               label={category.label}
-              onPress={() => updateSettings({ categories: toggleCategory(settings.categories, category.id) })}
+              onPress={() => updateSettings({ categories: toggleSelected(settings.categories, category.id) })}
               selected={settings.categories.includes(category.id)}
+            />
+          ))}
+        </View>
+      </Section>
+
+      <Section title="Difficulté" hint="Notoriété du lieu : plus c'est pointu, plus c'est dur.">
+        <View style={styles.chips}>
+          {DIFFICULTIES.map((difficulty) => (
+            <Chip
+              key={difficulty.id}
+              emoji={difficulty.emoji}
+              label={difficulty.label}
+              onPress={() => updateSettings({ difficulties: toggleSelected(settings.difficulties, difficulty.id) })}
+              selected={settings.difficulties.includes(difficulty.id)}
             />
           ))}
         </View>

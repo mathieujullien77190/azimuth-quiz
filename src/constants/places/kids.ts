@@ -1,10 +1,13 @@
 import type { Place } from '@/types';
 
-import { placeFactory } from './helpers';
+import { placeFactory, tier } from './helpers';
 
 const kid = placeFactory('kids');
+// Categorie deja pensee "facile" par nature (lieux tres reconnaissables pour des enfants) :
+// une seule difficulte, pas de repartition en paliers.
+const easy = tier('easy');
 
-export const KIDS: Place[] = [
+export const KIDS: Place[] = easy([
   // Europe
   kid('Tour Eiffel', 'France', 'FR', 48.8584, 2.2945),
   kid('Notre-Dame de Paris', 'France', 'FR', 48.853, 2.3499),
@@ -70,4 +73,19 @@ export const KIDS: Place[] = [
   kid('Île de Pâques', 'Chili', 'CL', -27.1127, -109.3497),
   kid('Bora Bora', 'Polynésie française', 'PF', -16.5004, -151.7415),
   kid('Parc national de Yellowstone', 'États-Unis', 'US', 44.428, -110.5885),
-];
+
+  // Encore
+  kid('Disney World', 'États-Unis', 'US', 28.3852, -81.5639),
+  kid('Grand Canyon', 'États-Unis', 'US', 36.1069, -112.1129),
+  kid('Space Needle', 'États-Unis', 'US', 47.6205, -122.3493),
+  kid('Tour de Tokyo', 'Japon', 'JP', 35.6586, 139.7454),
+  kid('Pain de Sucre', 'Brésil', 'BR', -22.9486, -43.1566),
+  kid('Sydney Harbour Bridge', 'Australie', 'AU', -33.8523, 151.2108),
+  kid('Burj Al Arab', 'Émirats arabes unis', 'AE', 25.1412, 55.1853),
+  kid('Château de Windsor', 'Royaume-Uni', 'GB', 51.4839, -0.6044),
+  kid('Buckingham Palace', 'Royaume-Uni', 'GB', 51.5014, -0.1419),
+  kid('Manneken Pis', 'Belgique', 'BE', 50.8449, 4.3499),
+  kid('Atomium', 'Belgique', 'BE', 50.8949, 4.3415),
+  kid('Pyramide du Louvre', 'France', 'FR', 48.8611, 2.3358),
+  kid('Vésuve', 'Italie', 'IT', 40.8224, 14.4289),
+]);

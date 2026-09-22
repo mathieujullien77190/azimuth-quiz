@@ -1,4 +1,4 @@
-import type { Category, GameSettings, Origin, Zone } from '@/types';
+import type { Category, Difficulty, GameSettings, Origin, Zone } from '@/types';
 
 export * from './theme';
 export { PLACES } from './places';
@@ -80,6 +80,13 @@ export const CATEGORIES: { id: Category; label: string; emoji: string }[] = [
   { id: 'kids', label: 'Enfants', emoji: '🧒' },
 ];
 
+export const DIFFICULTIES: { id: Difficulty; label: string; emoji: string }[] = [
+  { id: 'easy', label: 'Facile', emoji: '🟢' },
+  { id: 'intermediate', label: 'Intermédiaire', emoji: '🟡' },
+  { id: 'hard', label: 'Difficile', emoji: '🟠' },
+  { id: 'master', label: 'Maître', emoji: '🔴' },
+];
+
 export const ZONES: { id: Zone; label: string; description: string }[] = [
   { id: 'france', label: 'France', description: 'Lyon oui, Cork non' },
   { id: 'europe', label: 'Europe', description: 'Du Portugal à Moscou' },
@@ -97,6 +104,7 @@ export const EUROPE_MIN_LATITUDE = 30;
 export const DEFAULT_SETTINGS: GameSettings = {
   playerNames: [''],
   categories: ['cities', 'mountains', 'landmarks', 'nature'],
+  difficulties: ['easy', 'intermediate', 'hard', 'master'],
   zone: 'world',
   rounds: 10,
   straightLine: false,

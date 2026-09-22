@@ -1,13 +1,14 @@
 import {
   CATEGORIES,
   DEFAULT_SETTINGS,
+  DIFFICULTIES,
   MAX_PLAYERS,
   MIN_PLAYERS,
   NAME_PLACEHOLDERS,
   ROUND_OPTIONS,
   ZONES,
 } from '@/constants';
-import type { Category, GameSettings, Zone } from '@/types';
+import type { Category, Difficulty, GameSettings, Zone } from '@/types';
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
@@ -31,6 +32,13 @@ export const sanitizeSettings = (raw: unknown): GameSettings => {
     ? raw.categories.filter((category): category is Category => validCategories.includes(category as Category))
     : [];
 
+  const validDifficulties = DIFFICULTIES.map((difficulty) => difficulty.id);
+  const difficulties = Array.isArray(raw.difficulties)
+    ? raw.difficulties.filter((difficulty): difficulty is Difficulty =>
+        validDifficulties.includes(difficulty as Difficulty),
+      )
+    : [];
+
   const zone = ZONES.some((candidate) => candidate.id === raw.zone) ? (raw.zone as Zone) : DEFAULT_SETTINGS.zone;
   const rounds = ROUND_OPTIONS.some((option) => option === raw.rounds) ? (raw.rounds as number) : DEFAULT_SETTINGS.rounds;
   const flag = (value: unknown, fallback: boolean): boolean => (typeof value === 'boolean' ? value : fallback);
@@ -38,6 +46,7 @@ export const sanitizeSettings = (raw: unknown): GameSettings => {
   return {
     playerNames,
     categories: categories.length > 0 ? categories : DEFAULT_SETTINGS.categories,
+    difficulties: difficulties.length > 0 ? difficulties : DEFAULT_SETTINGS.difficulties,
     zone,
     rounds,
     // Anciens reglages : les deux options "ligne droite" separees deviennent un seul mode.
