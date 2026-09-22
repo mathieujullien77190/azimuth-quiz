@@ -22,7 +22,7 @@ import Chip from '../ui/Chip';
 import Screen from '../ui/Screen';
 import Section from '../ui/Section';
 import Toggle from '../ui/Toggle';
-import { BACK_LABEL, SCREEN_TITLE, START_LABEL, TOGGLES } from './constants';
+import { BACK_LABEL, DISTANCE_MODES, SCREEN_TITLE, START_LABEL, TOGGLES } from './constants';
 import { availabilityLabel, resizeNames, toggleCategory } from './helpers';
 import type { SetupScreenProps } from './types';
 
@@ -197,12 +197,23 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
         </View>
       </Section>
 
+      <Section title="Distance">
+        <View style={styles.chips}>
+          {DISTANCE_MODES.map((mode) => (
+            <Chip
+              key={mode.id}
+              label={mode.label}
+              onPress={() => updateSettings({ straightLine: mode.straightLine })}
+              selected={settings.straightLine === mode.straightLine}
+            />
+          ))}
+        </View>
+        <Text style={styles.hint}>
+          {DISTANCE_MODES.find((mode) => mode.straightLine === settings.straightLine)?.description}
+        </Text>
+      </Section>
+
       <Section title="Options">
-        <Toggle
-          {...TOGGLES.straightLine}
-          onValueChange={(value) => updateSettings({ straightLine: value })}
-          value={settings.straightLine}
-        />
         <Toggle
           {...TOGGLES.liveCompass}
           onValueChange={(value) => updateSettings({ liveCompass: value })}

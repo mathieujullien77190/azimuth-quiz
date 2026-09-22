@@ -2,12 +2,24 @@ export const SCREEN_TITLE = 'Nouvelle partie';
 export const START_LABEL = 'Lancer la partie';
 export const BACK_LABEL = 'Retour';
 
-export const TOGGLES = {
-  straightLine: {
-    label: 'Ligne droite à travers la Terre',
-    description:
-      'Ajoute un second curseur : l’inclinaison sous l’horizon, qui donne la distance en ligne droite. Le dernier curseur touché (distance ou inclinaison) compte pour le score.',
+/** Choix du type de curseur de distance : deux modes du meme reglage `straightLine`. */
+export const DISTANCE_MODES = [
+  {
+    id: 'distance',
+    label: 'Distance',
+    straightLine: false,
+    description: 'Tu estimes directement la distance parcourue à la surface du globe.',
   },
+  {
+    id: 'inclination',
+    label: 'Inclinaison',
+    straightLine: true,
+    description:
+      'Plus dur : tu choisis l’inclinaison sous l’horizon, sans indication de distance. La ligne droite à travers la Terre en découle.',
+  },
+] as const;
+
+export const TOGGLES = {
   liveCompass: {
     label: 'Boussole réelle',
     description: 'Le N de la boussole pointe vers le vrai nord (capteur du téléphone).',
