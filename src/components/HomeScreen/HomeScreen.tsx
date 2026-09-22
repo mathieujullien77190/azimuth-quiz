@@ -27,6 +27,8 @@ const createStyles = ({ colors, typography }: Theme) =>
       position: 'absolute',
       top: spacing.sm,
       right: spacing.lg,
+      zIndex: 10,
+      elevation: 10,
     },
     title: {
       ...typography.display,
