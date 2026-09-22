@@ -25,8 +25,8 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       paddingBottom: spacing.sm + 2,
     },
     rowCompact: {
-      gap: spacing.xs,
-      paddingHorizontal: spacing.xs + 3,
+      gap: spacing.xs + 2,
+      paddingHorizontal: spacing.sm - 1,
     },
     tab: {
       flexDirection: 'row',
@@ -40,9 +40,9 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       backgroundColor: colors.surfaceHigh,
     },
     tabCompact: {
-      gap: spacing.xs + 1,
-      paddingHorizontal: spacing.xs + 3,
-      paddingVertical: spacing.xs + 2,
+      gap: spacing.xs + 2,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs + 3,
     },
     active: {
       borderColor: colors.accent,
