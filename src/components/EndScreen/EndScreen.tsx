@@ -6,7 +6,6 @@ import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
-import Confetti from '../Confetti';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Screen from '../ui/Screen';
@@ -106,7 +105,7 @@ export const EndScreen = ({ players, records, totals, bestScore, isNewBest, onRe
   const rank = getRank(totals[0] ?? 0, maxTotal, t.endScreen.ranks);
 
   return (
-    <Screen header={<Confetti />}>
+    <Screen>
       <Card style={styles.hero}>
         {isSolo ? (
           <>
