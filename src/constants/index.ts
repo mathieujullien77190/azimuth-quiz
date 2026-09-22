@@ -76,6 +76,7 @@ export const CATEGORIES: { id: Category; label: string; emoji: string }[] = [
   { id: 'mountains', label: 'Montagnes', emoji: '⛰️' },
   { id: 'landmarks', label: 'Monuments', emoji: '🏛️' },
   { id: 'nature', label: 'Nature', emoji: '🌿' },
+  { id: 'kids', label: 'Enfants', emoji: '🧒' },
 ];
 
 export const ZONES: { id: Zone; label: string; description: string }[] = [

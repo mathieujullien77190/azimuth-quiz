@@ -5,7 +5,7 @@ export type Coordinates = {
   longitude: number;
 };
 
-export type Category = 'cities' | 'mountains' | 'landmarks' | 'nature';
+export type Category = 'cities' | 'mountains' | 'landmarks' | 'nature' | 'kids';
 
 export type Zone = 'france' | 'europe' | 'world';
 
