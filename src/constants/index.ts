@@ -104,14 +104,14 @@ export const EUROPE_MIN_LATITUDE = 30;
 export const DEFAULT_SETTINGS: GameSettings = {
   playerNames: [''],
   categories: ['cities', 'mountains', 'landmarks', 'nature'],
-  // Choix unique (radio) : Facile par defaut, le plus accessible.
-  difficulties: ['easy'],
+  // Choix unique (radio).
+  difficulties: ['intermediate'],
   zone: 'world',
-  rounds: 10,
+  rounds: 5,
   straightLine: false,
   useGps: true,
-  liveCompass: true,
-  showCountry: true,
-  allowRevision: false,
+  liveCompass: false,
+  showCountry: false,
+  allowRevision: true,
   hideOtherAnswers: false,
 };
