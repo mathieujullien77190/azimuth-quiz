@@ -5,7 +5,7 @@ Deux designs, choisis parmi les maquettes du dossier `designs/` :
 | Fichier    | Nom   | Mode   | Ambiance                               |
 | ---------- | ----- | ------ | -------------------------------------- |
 | `night.ts` | Nuit  | sombre | Bleu nuit + ambre, ciel etoile, reponse en jaune |
-| `paper.ts` | Papier| clair  | Minimal, quadrillage, accent et reponse en bleu  |
+| `paper.ts` | Papier| clair  | Minimal, quadrillage, accent et reponse dans le meme bleu marine  |
 
 Le mode se choisit dans « Nouvelle partie > Options > Apparence » : **Auto** (suit le telephone),
 **Clair** (Papier) ou **Sombre** (Nuit). Le choix est memorise.

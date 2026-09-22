@@ -73,8 +73,8 @@ const themes = [
   {
     id: 'paper',
     name: 'Papier',
-    tagline: 'Minimal, encre et bleu',
-    colors: { background: '#FAFAF7', surface: '#FFFFFF', surfaceHigh: '#F0F0EA', border: '#DAD9D2', text: '#111111', textMuted: '#6B6B66', accent: '#2563EB', accentDark: '#1D4ED8', onAccent: '#FFFFFF', truth: '#0EA5E9', danger: '#E5484D', success: '#2E9E5B' },
+    tagline: 'Minimal, encre et bleu marine',
+    colors: { background: '#FAFAF7', surface: '#FFFFFF', surfaceHigh: '#F0F0EA', border: '#DAD9D2', text: '#111111', textMuted: '#6B6B66', accent: '#142959', accentDark: '#0C1938', onAccent: '#FFFFFF', truth: '#142959', danger: '#E5484D', success: '#2E9E5B' },
     font: { family: "'Helvetica Neue', Arial, sans-serif", weight: 700, display: 700, label: 600, labelSpacing: 1.4, titleSpacing: 8 },
     r: { card: 6, button: 2 },
     cardBorder: 1,

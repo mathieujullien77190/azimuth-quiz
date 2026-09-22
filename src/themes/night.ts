@@ -1,5 +1,7 @@
 import type { Theme } from '@/types';
 
+import { FONT_FAMILY } from './fonts';
+
 /** Bleu nuit + ambre : le design d'origine. Arrondis genereux, textes tres gras. */
 export const night: Theme = {
   id: 'night',
@@ -22,10 +24,10 @@ export const night: Theme = {
   },
   radius: { sm: 10, md: 16, lg: 24, button: 999 },
   typography: {
-    display: { fontWeight: '900', letterSpacing: -0.5 },
-    heading: { fontWeight: '800' },
-    label: { fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
-    body: {},
+    display: { fontFamily: FONT_FAMILY, fontWeight: '900', letterSpacing: -0.5 },
+    heading: { fontFamily: FONT_FAMILY, fontWeight: '800' },
+    label: { fontFamily: FONT_FAMILY, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
+    body: { fontFamily: FONT_FAMILY },
   },
   card: { borderWidth: 1, shadowColor: null, shadowOpacity: 0 },
   buttonDepth: 4,

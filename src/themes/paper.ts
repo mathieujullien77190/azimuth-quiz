@@ -1,10 +1,12 @@
 import type { Theme } from '@/types';
 
-/** Minimal : papier blanc, encre noire, accent et reponse en bleu. Presque sans arrondi. */
+import { FONT_FAMILY } from './fonts';
+
+/** Minimal : papier blanc, encre noire, accent et reponse dans le meme bleu marine. Presque sans arrondi. */
 export const paper: Theme = {
   id: 'paper',
   name: 'Papier',
-  tagline: 'Minimal, encre et bleu',
+  tagline: 'Minimal, encre et bleu marine',
   isDark: false,
   colors: {
     background: '#FAFAF7',
@@ -13,19 +15,20 @@ export const paper: Theme = {
     border: '#DAD9D2',
     text: '#111111',
     textMuted: '#6B6B66',
-    accent: '#2563EB',
-    accentDark: '#1D4ED8',
+    accent: '#142959',
+    accentDark: '#0C1938',
     onAccent: '#FFFFFF',
-    truth: '#0EA5E9',
+    // Meme couleur que l'accent : un seul bleu pour "ta reponse" et pour la vraie reponse.
+    truth: '#142959',
     danger: '#E5484D',
     success: '#2E9E5B',
   },
   radius: { sm: 2, md: 4, lg: 6, button: 2 },
   typography: {
-    display: { fontWeight: '700', letterSpacing: -1 },
-    heading: { fontWeight: '700' },
-    label: { fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase' },
-    body: {},
+    display: { fontFamily: FONT_FAMILY, fontWeight: '700', letterSpacing: -1 },
+    heading: { fontFamily: FONT_FAMILY, fontWeight: '700' },
+    label: { fontFamily: FONT_FAMILY, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase' },
+    body: { fontFamily: FONT_FAMILY },
   },
   card: { borderWidth: 1, shadowColor: null, shadowOpacity: 0 },
   buttonDepth: 0,
