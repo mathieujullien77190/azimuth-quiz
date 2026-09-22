@@ -4,7 +4,8 @@ export const APP_TITLE = 'FULL AZIMUT';
 export const APP_TAGLINE = 'Devine où se trouve un lieu du monde\ndirection, inclinaison, distance ?';
 export const PLAY_LABEL = 'Jouer';
 
-export const DECORATIVE_BEARING = 42;
+// Nord au repos ; l'aiguille reste ensuite libre (Compass interactif, demo pure, pas de score).
+export const DECORATIVE_BEARING = 0;
 export const MAX_COMPASS_SIZE = 280;
 
 export const RULES: Rule[] = [

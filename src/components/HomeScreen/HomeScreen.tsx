@@ -72,6 +72,7 @@ export const HomeScreen = () => {
   const { width } = useWindowDimensions();
   const styles = useThemedStyles(createStyles);
   const [bestScore, setBestScore] = useState(0);
+  const [bearing, setBearing] = useState(DECORATIVE_BEARING);
 
   useFocusEffect(
     useCallback(() => {
@@ -87,7 +88,7 @@ export const HomeScreen = () => {
       </View>
 
       <View style={styles.compass}>
-        <Compass size={compassSizeFor(width)} bearing={DECORATIVE_BEARING} />
+        <Compass size={compassSizeFor(width)} bearing={bearing} onChange={setBearing} />
       </View>
 
       <Card style={styles.rules}>
