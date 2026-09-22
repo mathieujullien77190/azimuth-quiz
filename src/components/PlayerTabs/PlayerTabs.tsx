@@ -25,7 +25,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       paddingBottom: spacing.sm + 2,
     },
     rowCompact: {
-      gap: spacing.xs,
+      gap: spacing.xs + 1,
       paddingHorizontal: spacing.sm,
     },
     tab: {
@@ -40,9 +40,9 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       backgroundColor: colors.surfaceHigh,
     },
     tabCompact: {
-      gap: spacing.xs - 2,
-      paddingHorizontal: spacing.xs,
-      paddingVertical: spacing.xs,
+      gap: spacing.xs,
+      paddingHorizontal: spacing.xs + 2,
+      paddingVertical: spacing.xs + 1,
     },
     active: {
       borderColor: colors.accent,
@@ -57,9 +57,9 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       borderRadius: 5,
     },
     dotCompact: {
-      width: 7,
-      height: 7,
-      borderRadius: 3.5,
+      width: 9,
+      height: 9,
+      borderRadius: 4.5,
     },
     label: {
       ...typography.heading,
@@ -67,7 +67,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       fontSize: fontSize.body - 1,
     },
     labelCompact: {
-      fontSize: fontSize.caption,
+      fontSize: fontSize.caption + 1,
     },
     labelActive: {
       color: colors.onAccent,
@@ -78,7 +78,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       fontSize: fontSize.body - 1,
     },
     checkCompact: {
-      fontSize: fontSize.caption,
+      fontSize: fontSize.caption + 1,
     },
     checkActive: {
       color: colors.onAccent,
