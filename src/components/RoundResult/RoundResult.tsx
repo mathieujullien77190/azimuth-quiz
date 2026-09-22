@@ -87,11 +87,15 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       color: colors.accent,
       fontSize: fontSize.title,
     },
-    // Score de la manche, sous le score general : plus petit, meme alignement a droite.
+    // Score de la manche, sous les lignes detail : meme taille/poids que rowPoints, en blanc.
+    roundTotalRow: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+    },
     roundScore: {
-      ...typography.body,
+      ...typography.heading,
       color: colors.text,
-      fontSize: fontSize.caption - 1,
+      fontSize: fontSize.body,
     },
     row: {
       flexDirection: 'row',
@@ -163,7 +167,6 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
             <Text style={styles.playerName}>{isSolo ? 'Ton score' : player.name}</Text>
             <View style={styles.scoreBlock}>
               <Text style={styles.playerTotal}>{formatNumber(totals[index])}</Text>
-              <Text style={styles.roundScore}>+{formatNumber(result.score.total)}</Text>
             </View>
           </View>
           <View style={styles.row}>
@@ -197,6 +200,9 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
               </Text>
             </View>
           )}
+          <View style={styles.roundTotalRow}>
+            <Text style={styles.roundScore}>+{formatNumber(result.score.total)}</Text>
+          </View>
         </View>
       ))}
     </Card>
