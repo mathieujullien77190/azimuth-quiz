@@ -28,12 +28,14 @@ export const Compass = ({
   const interactive = onChange !== undefined;
 
   // Cap du telephone : le cadran tourne de -cap pour que le N reste sur le vrai nord.
-  const heading = useHeading(live);
+  const { heading, onTouch } = useHeading(live);
   const headingRef = useRef(0);
   headingRef.current = heading ?? 0;
 
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  const onTouchRef = useRef(onTouch);
+  onTouchRef.current = onTouch;
 
   const panResponder = useMemo(() => {
     const update = (x: number, y: number) => {
@@ -48,7 +50,11 @@ export const Compass = ({
       onMoveShouldSetPanResponderCapture: () => onChangeRef.current !== undefined,
       onPanResponderTerminationRequest: () => false,
       onShouldBlockNativeResponder: () => true,
-      onPanResponderGrant: (event) => update(event.nativeEvent.locationX, event.nativeEvent.locationY),
+      onPanResponderGrant: (event) => {
+        // Web : amorce le capteur d'orientation au premier contact (geste requis par iOS Safari).
+        onTouchRef.current();
+        update(event.nativeEvent.locationX, event.nativeEvent.locationY);
+      },
       onPanResponderMove: (event) => update(event.nativeEvent.locationX, event.nativeEvent.locationY),
     });
   }, [size]);

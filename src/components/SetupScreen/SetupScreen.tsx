@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import {
   CATEGORIES,
@@ -202,13 +202,11 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
           onValueChange={(value) => updateSettings({ straightLine: value })}
           value={settings.straightLine}
         />
-        {Platform.OS !== 'web' && (
-          <Toggle
-            {...TOGGLES.liveCompass}
-            onValueChange={(value) => updateSettings({ liveCompass: value })}
-            value={settings.liveCompass}
-          />
-        )}
+        <Toggle
+          {...TOGGLES.liveCompass}
+          onValueChange={(value) => updateSettings({ liveCompass: value })}
+          value={settings.liveCompass}
+        />
         <Toggle
           {...TOGGLES.useGps}
           onValueChange={(value) => updateSettings({ useGps: value })}

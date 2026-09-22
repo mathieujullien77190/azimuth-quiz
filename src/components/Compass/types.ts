@@ -38,3 +38,16 @@ export type CompassDialProps = {
   extraNeedles: CompassNeedle[];
   truthBearing: number | null;
 };
+
+export type UseHeadingResult = {
+  heading: number | null;
+  /** A appeler au premier toucher de la boussole : sur le web, amorce l'ecoute du capteur
+   * (et, sur iOS, la demande de permission, qui exige un geste utilisateur). Sans effet ailleurs. */
+  onTouch: () => void;
+};
+
+/** Evenement d'orientation navigateur, avec le champ non-standard de Safari iOS en plus. */
+export type WebOrientationEvent = DeviceOrientationEvent & {
+  /** Safari iOS uniquement : cap deja absolu (vrai nord), en degres. */
+  webkitCompassHeading?: number;
+};
