@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import LanguageProvider from '@/components/LanguageProvider';
 import SettingsProvider from '@/components/SettingsProvider';
 import { disableTextSelection } from '@/helpers';
 import { useTheme } from '@/themes';
@@ -27,9 +28,11 @@ const RootLayout = () => {
   useEffect(disableTextSelection, []);
 
   return (
-    <SettingsProvider>
-      <ThemedShell />
-    </SettingsProvider>
+    <LanguageProvider>
+      <SettingsProvider>
+        <ThemedShell />
+      </SettingsProvider>
+    </LanguageProvider>
   );
 };
 

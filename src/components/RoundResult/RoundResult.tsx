@@ -2,11 +2,11 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
 import { arcKmFromChordKm, formatBearing, formatDistance, formatInclination, formatNumber } from '@/helpers';
+import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
 import Card from '../ui/Card';
-import { ROW_LABELS, TRUTH_LABEL } from './constants';
 import { formatRowScore } from './helpers';
 import type { RoundResultProps } from './types';
 
@@ -124,6 +124,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
 export const RoundResult = ({ record, players, totals, options }: RoundResultProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
+  const t = useTranslation();
   const { score: truth } = record.results[0];
   const isSolo = players.length === 1;
 
@@ -142,19 +143,19 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
       <View style={styles.truth}>
         <View style={styles.truthHead}>
           <View style={[styles.truthDot, { backgroundColor: colors.truth }]} />
-          <Text style={styles.truthLabel}>{TRUTH_LABEL}</Text>
+          <Text style={styles.truthLabel}>{t.roundResult.truth}</Text>
         </View>
         <View style={styles.truthRow}>
-          <Text style={styles.truthRowLabel}>{ROW_LABELS.direction}</Text>
-          <Text style={styles.truthValue}>{formatBearing(truth.trueBearing)}</Text>
+          <Text style={styles.truthRowLabel}>{t.roundResult.direction}</Text>
+          <Text style={styles.truthValue}>{formatBearing(truth.trueBearing, t.cardinals)}</Text>
         </View>
         <View style={styles.truthRow}>
-          <Text style={styles.truthRowLabel}>{ROW_LABELS.distance}</Text>
+          <Text style={styles.truthRowLabel}>{t.roundResult.distance}</Text>
           <Text style={styles.truthValue}>{formatDistance(truth.trueSurfaceDistanceKm)}</Text>
         </View>
         {options.straightLine && (
           <View style={styles.truthRow}>
-            <Text style={styles.truthRowLabel}>{ROW_LABELS.inclination}</Text>
+            <Text style={styles.truthRowLabel}>{t.roundResult.inclination}</Text>
             <Text style={styles.truthValue}>{formatInclination(truth.trueInclination)}</Text>
           </View>
         )}
@@ -164,22 +165,22 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
         <View key={player.name + position} style={[styles.player, position > 0 && styles.playerBorder]}>
           <View style={styles.playerHead}>
             {!isSolo && <View style={[styles.playerDot, { backgroundColor: player.color }]} />}
-            <Text style={styles.playerName}>{isSolo ? 'Ton score' : player.name}</Text>
+            <Text style={styles.playerName}>{isSolo ? t.roundResult.yourScore : player.name}</Text>
             <View style={styles.scoreBlock}>
               <Text style={styles.playerTotal}>{formatNumber(totals[index])}</Text>
             </View>
           </View>
           <View style={styles.row}>
-            <Text style={styles.rowLabel}>{ROW_LABELS.direction}</Text>
+            <Text style={styles.rowLabel}>{t.roundResult.direction}</Text>
             <Text style={styles.rowValue}>
-              {formatBearing(result.guess.bearing)} (+{Math.round(result.score.directionError)}°)
+              {formatBearing(result.guess.bearing, t.cardinals)} (+{Math.round(result.score.directionError)}°)
             </Text>
             <Text style={[styles.rowPoints, { color: result.score.directionBonus > 0 ? colors.success : colors.text }]}>
               {formatRowScore(result.score.directionPoints, result.score.directionBonus)}
             </Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.rowLabel}>{ROW_LABELS.distance}</Text>
+            <Text style={styles.rowLabel}>{t.roundResult.distance}</Text>
             <Text style={styles.rowValue}>
               {formatDistance(guessSurfaceKmFor(result))} (+
               {formatDistance(Math.abs(guessSurfaceKmFor(result) - truth.trueSurfaceDistanceKm))})
@@ -190,7 +191,7 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
           </View>
           {options.straightLine && (
             <View style={styles.row}>
-              <Text style={styles.rowLabel}>{ROW_LABELS.inclination}</Text>
+              <Text style={styles.rowLabel}>{t.roundResult.inclination}</Text>
               <Text style={styles.rowValue}>{formatInclination(result.guess.inclination)}</Text>
               {/* Meme score que Distance : en mode ligne droite, la corde jugee par distancePoints
                   EST l'inclinaison (l'une determine l'autre) — donc le meme pool de points, gagne

@@ -1,4 +1,5 @@
 import { MAX_ROUND_POINTS } from '@/constants';
+import type { Translations } from '@/i18n';
 import type { Player, RoundRecord } from '@/types';
 
 import type { RankedPlayer } from './types';
@@ -17,9 +18,9 @@ export const rankPlayers = (players: Player[], totals: number[]): RankedPlayer[]
   }));
 };
 
-export const winnerTitle = (ranking: RankedPlayer[]): string => {
+export const winnerTitle = (ranking: RankedPlayer[], t: Translations['endScreen']): string => {
   const winners = ranking.filter((entry) => entry.rank === 1);
-  return winners.length === 1 ? `${winners[0].player.name} gagne !` : `Égalité : ${winners.map((entry) => entry.player.name).join(' et ')}`;
+  return winners.length === 1 ? t.winner(winners[0].player.name) : t.tie(winners.map((entry) => entry.player.name).join(` ${t.and} `));
 };
 
 /** Meilleur joueur d'une manche (le premier en cas d'egalite). */

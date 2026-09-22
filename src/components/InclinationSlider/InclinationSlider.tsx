@@ -1,7 +1,7 @@
 import { formatInclination, inclinationFromChordKm, kmToRatio, ratioToKm } from '@/helpers';
+import { useTranslation } from '@/i18n';
 
 import SliderTrack from '../SliderTrack';
-import { INCLINATION_LABEL } from './constants';
 import { distanceMarks } from './helpers';
 import type { InclinationSliderProps } from './types';
 
@@ -11,11 +11,12 @@ import type { InclinationSliderProps } from './types';
  * inclinaison (le plus difficile des deux).
  */
 export const InclinationSlider = ({ distanceKm, maxKm, onChange }: InclinationSliderProps) => {
+  const t = useTranslation();
   const inclination = inclinationFromChordKm(distanceKm);
 
   return (
     <SliderTrack
-      label={INCLINATION_LABEL}
+      label={t.sliders.inclination}
       marks={distanceMarks(maxKm)}
       onRatioChange={(ratio) => onChange(ratioToKm(ratio, maxKm))}
       ratio={kmToRatio(distanceKm, maxKm)}

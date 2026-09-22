@@ -1,9 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { BEST_SCORE_STORAGE_KEY, SETTINGS_STORAGE_KEY } from '@/constants';
+import { BEST_SCORE_STORAGE_KEY, LANGUAGE_STORAGE_KEY, SETTINGS_STORAGE_KEY } from '@/constants';
+import type { Language } from '@/i18n';
 import type { GameSettings } from '@/types';
 
 import { sanitizeSettings } from './settings';
+
+const isLanguage = (value: unknown): value is Language => value === 'fr' || value === 'en';
 
 export const loadBestScore = async (): Promise<number> => {
   try {
@@ -37,5 +40,22 @@ export const saveSettings = async (settings: GameSettings): Promise<void> => {
     await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   } catch {
     // Reglages non memorises : sans gravite.
+  }
+};
+
+export const loadLanguage = async (): Promise<Language> => {
+  try {
+    const raw = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
+    return isLanguage(raw) ? raw : 'fr';
+  } catch {
+    return 'fr';
+  }
+};
+
+export const saveLanguage = async (language: Language): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+  } catch {
+    // Langue non memorisee : sans gravite, le francais par defaut sera reutilise.
   }
 };

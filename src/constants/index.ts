@@ -38,24 +38,21 @@ export const DEFAULT_ORIGIN: Origin = {
   coordinates: { latitude: 48.8566, longitude: 2.3522 },
   isDevicePosition: false,
 };
-export const DEVICE_ORIGIN_NAME = 'ta position';
 // Au-dela, on demarre depuis DEFAULT_ORIGIN plutot que de bloquer le joueur.
 export const LOCATION_TIMEOUT_MS = 6000;
 
 // --- Stockage ---
 export const BEST_SCORE_STORAGE_KEY = 'fullazimut:best-score';
 export const SETTINGS_STORAGE_KEY = 'fullazimut:settings';
+export const LANGUAGE_STORAGE_KEY = 'fullazimut:language';
 
-// --- Boussole ---
-export const CARDINAL_LABELS = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'] as const;
-
-// --- Rangs (solo) ---
+// --- Rangs (solo) : le titre vient de translations.endScreen.ranks (meme ordre). ---
 export const RANKS = [
-  { minRatio: 0.85, title: 'Maître des vents', emoji: '🧭' },
-  { minRatio: 0.65, title: 'Capitaine', emoji: '⚓' },
-  { minRatio: 0.45, title: 'Navigateur', emoji: '⛵' },
-  { minRatio: 0.25, title: 'Mousse', emoji: '🪢' },
-  { minRatio: 0, title: 'Naufragé', emoji: '🌊' },
+  { minRatio: 0.85, emoji: '🧭' },
+  { minRatio: 0.65, emoji: '⚓' },
+  { minRatio: 0.45, emoji: '⛵' },
+  { minRatio: 0.25, emoji: '🪢' },
+  { minRatio: 0, emoji: '🌊' },
 ] as const;
 
 // --- Options de partie ---
@@ -75,26 +72,23 @@ export const NAME_PLACEHOLDERS = [
 // Nuit (aucune entre 3° et 85°) pour qu'aucun joueur ne les prenne par hasard.
 export const PLAYER_COLORS = ['#EF4444', '#16A34A', '#0891B2', '#2563EB', '#9333EA', '#DB2777'] as const;
 
-export const CATEGORIES: { id: Category; label: string; emoji: string }[] = [
-  { id: 'cities', label: 'Villes', emoji: '🏙️' },
-  { id: 'mountains', label: 'Montagnes', emoji: '⛰️' },
-  { id: 'landmarks', label: 'Monuments', emoji: '🏛️' },
-  { id: 'nature', label: 'Nature', emoji: '🌿' },
-  { id: 'kids', label: 'Enfants', emoji: '🧒' },
+// Label/description : voir translations.setup.categories / .difficulties / .zones (meme id).
+export const CATEGORIES: { id: Category; emoji: string }[] = [
+  { id: 'cities', emoji: '🏙️' },
+  { id: 'mountains', emoji: '⛰️' },
+  { id: 'landmarks', emoji: '🏛️' },
+  { id: 'nature', emoji: '🌿' },
+  { id: 'kids', emoji: '🧒' },
 ];
 
-export const DIFFICULTIES: { id: Difficulty; label: string; emoji: string }[] = [
-  { id: 'easy', label: 'Facile', emoji: '🟢' },
-  { id: 'intermediate', label: 'Intermédiaire', emoji: '🟡' },
-  { id: 'hard', label: 'Difficile', emoji: '🟠' },
-  { id: 'master', label: 'Maître', emoji: '🔴' },
+export const DIFFICULTIES: { id: Difficulty; emoji: string }[] = [
+  { id: 'easy', emoji: '🟢' },
+  { id: 'intermediate', emoji: '🟡' },
+  { id: 'hard', emoji: '🟠' },
+  { id: 'master', emoji: '🔴' },
 ];
 
-export const ZONES: { id: Zone; label: string; description: string }[] = [
-  { id: 'france', label: 'France', description: 'Lyon oui, Cork non' },
-  { id: 'europe', label: 'Europe', description: 'Du Portugal à Moscou' },
-  { id: 'world', label: 'Monde', description: 'Toute la planète' },
-];
+export const ZONES: { id: Zone }[] = [{ id: 'france' }, { id: 'europe' }, { id: 'world' }];
 
 /** Pays d'Europe (le filtre de zone ajoute une borne en longitude pour la Russie et la Turquie). */
 export const EUROPE_CODES: readonly string[] = [

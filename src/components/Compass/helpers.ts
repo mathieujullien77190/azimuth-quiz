@@ -1,6 +1,7 @@
 import { normalizeBearing } from '@/helpers';
 
 import {
+  CARDINAL_BEARINGS,
   HEADING_DEADBAND_DEG,
   HEADING_SMOOTHING,
   TICK_LENGTH_RATIO,
@@ -8,6 +9,14 @@ import {
   TICK_STEP_DEG,
 } from './constants';
 import type { Point, Tick } from './types';
+
+/** N/E/S/O(W) affiches sur le cadran ; seul le label de l'ouest depend de la langue. */
+export const cardinalPoints = (westLabel: string) => [
+  { label: 'N', bearing: CARDINAL_BEARINGS.N },
+  { label: 'E', bearing: CARDINAL_BEARINGS.E },
+  { label: 'S', bearing: CARDINAL_BEARINGS.S },
+  { label: westLabel, bearing: CARDINAL_BEARINGS.W },
+];
 
 /** Point a `radius` du centre dans la direction `bearing` (0 = haut, sens horaire). */
 export const polarToPoint = (center: number, radius: number, bearing: number): Point => {

@@ -9,8 +9,8 @@ export const formatNumber = (value: number): string =>
 
 export const formatDistance = (km: number): string => `${formatNumber(km)}${NARROW_NBSP}km`;
 
-export const formatBearing = (degrees: number): string =>
-  `${bearingToCardinal(degrees)} · ${Math.round(normalizeBearing(degrees)) % 360}°`;
+export const formatBearing = (degrees: number, cardinals: readonly string[]): string =>
+  `${bearingToCardinal(degrees, cardinals)} · ${Math.round(normalizeBearing(degrees)) % 360}°`;
 
 export const formatInclination = (degrees: number): string => `${Math.round(degrees)}°`;
 

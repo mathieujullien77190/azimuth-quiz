@@ -1,4 +1,4 @@
-import { CARDINAL_LABELS, EARTH_RADIUS_KM } from '@/constants';
+import { EARTH_RADIUS_KM } from '@/constants';
 import type { Coordinates } from '@/types';
 
 const toRadians = (degrees: number): number => (degrees * Math.PI) / 180;
@@ -61,8 +61,8 @@ export const angleDifference = (a: number, b: number): number => {
   return diff > 180 ? 360 - diff : diff;
 };
 
-/** Point cardinal (N, NE, E...) le plus proche d'un cap. */
-export const bearingToCardinal = (degrees: number): string => {
-  const index = Math.round(normalizeBearing(degrees) / 45) % CARDINAL_LABELS.length;
-  return CARDINAL_LABELS[index];
+/** Point cardinal (N, NE, E...) le plus proche d'un cap, dans la langue de `labels`. */
+export const bearingToCardinal = (degrees: number, labels: readonly string[]): string => {
+  const index = Math.round(normalizeBearing(degrees) / 45) % labels.length;
+  return labels[index];
 };

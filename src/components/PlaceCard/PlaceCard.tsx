@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
+import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
 import Card from '../ui/Card';
-import { HIDE_DESCRIPTION_LABEL, SHOW_DESCRIPTION_LABEL } from './constants';
 import { categoryEmoji } from './helpers';
 import type { PlaceCardProps } from './types';
 
@@ -56,6 +56,7 @@ const createStyles = ({ colors, typography }: Theme) =>
 /** Repliee par defaut, meme quand `description` est fournie : un clic la deplie. */
 export const PlaceCard = ({ place, originName, showCountry, description }: PlaceCardProps) => {
   const styles = useThemedStyles(createStyles);
+  const t = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -67,12 +68,12 @@ export const PlaceCard = ({ place, originName, showCountry, description }: Place
         {categoryEmoji(place.category)}
         {showCountry ? ` ${place.country}` : ''}
       </Text>
-      <Text style={styles.hint}>Depuis {originName} : quel cap, quelle distance ?</Text>
+      <Text style={styles.hint}>{t.placeCard.hintFrom(originName)}</Text>
 
       {description !== undefined && (
         <>
           <Pressable accessibilityRole="button" hitSlop={8} onPress={() => setExpanded((value) => !value)} style={styles.toggle}>
-            <Text style={styles.toggleLabel}>{expanded ? HIDE_DESCRIPTION_LABEL : SHOW_DESCRIPTION_LABEL}</Text>
+            <Text style={styles.toggleLabel}>{expanded ? t.placeCard.hideDescription : t.placeCard.showDescription}</Text>
           </Pressable>
           {expanded && <Text style={styles.description}>{description}</Text>}
         </>

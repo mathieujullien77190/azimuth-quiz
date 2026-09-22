@@ -1,10 +1,10 @@
 import { memo } from 'react';
 import Svg, { Circle, Defs, G, Line, Polygon, RadialGradient, Stop, Text as SvgText } from 'react-native-svg';
 
+import { useTranslation } from '@/i18n';
 import { useTheme } from '@/themes';
 
 import {
-  CARDINAL_POINTS,
   FACE_RADIUS_RATIO,
   KNOB_RADIUS_RATIO,
   LABEL_RADIUS_RATIO,
@@ -12,15 +12,17 @@ import {
   NEEDLE_LENGTH_RATIO,
   NEEDLE_TAIL_RATIO,
 } from './constants';
-import { buildTicks, needlePoints, polarToPoint } from './helpers';
+import { buildTicks, cardinalPoints, needlePoints, polarToPoint } from './helpers';
 import type { CompassDialProps } from './types';
 
 /**
  * Le dessin de la boussole (cadran + aiguilles), oriente nord en haut.
  * Memoise : quand le capteur fait tourner le cadran, seul le conteneur change.
  */
-export const CompassDial = memo(({ size, bearing, color, extraNeedles, truthBearing }: CompassDialProps) => {
+export const CompassDial = memo(function CompassDial({ size, bearing, color, extraNeedles, truthBearing }: CompassDialProps) {
   const { colors, compass, typography } = useTheme();
+  const t = useTranslation();
+  const points = cardinalPoints(t.compassWestLabel);
   const tickStyle = {
     cardinal: { stroke: colors.text, width: 2.5 },
     intercardinal: { stroke: colors.textMuted, width: 2 },
@@ -60,7 +62,7 @@ export const CompassDial = memo(({ size, bearing, color, extraNeedles, truthBear
         />
       ))}
 
-      {CARDINAL_POINTS.map(({ label, bearing: labelBearing }) => {
+      {points.map(({ label, bearing: labelBearing }) => {
         const { x, y } = polarToPoint(center, radius * LABEL_RADIUS_RATIO, labelBearing);
         const fontSize = size * 0.09;
         return (

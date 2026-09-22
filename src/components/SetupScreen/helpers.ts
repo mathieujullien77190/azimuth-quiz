@@ -42,8 +42,3 @@ export const selectDifficultyFilter = (
   const categories = withoutKids.length > 0 ? withoutKids : DEFAULT_SETTINGS.categories;
   return { categories, difficulties: [difficulty] };
 };
-
-export const availabilityLabel = (available: number, rounds: number): string =>
-  available >= rounds
-    ? `${available} lieux possibles`
-    : `${available} lieux possibles : la partie sera de ${available} manches`;

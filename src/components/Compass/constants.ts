@@ -10,12 +10,8 @@ export const NEEDLE_TAIL_RATIO = 0.18;
 export const NEEDLE_HALF_WIDTH_RATIO = 0.075;
 export const KNOB_RADIUS_RATIO = 0.74;
 
-export const CARDINAL_POINTS = [
-  { label: 'N', bearing: 0 },
-  { label: 'E', bearing: 90 },
-  { label: 'S', bearing: 180 },
-  { label: 'O', bearing: 270 },
-] as const;
+/** N/E/S fixes ; l'ouest depend de la langue (voir Compass/helpers.ts `cardinalPoints`). */
+export const CARDINAL_BEARINGS = { N: 0, E: 90, S: 180, W: 270 } as const;
 
 // Cap du capteur : part du chemin parcourue a chaque mesure (0-1), et seuil en dessous duquel on ignore.
 export const HEADING_SMOOTHING = 0.3;

@@ -78,8 +78,11 @@ export const applyBestBonus = (results: PlayerResult[]): PlayerResult[] => {
   });
 };
 
-export const getRank = (total: number, maxTotal: number): Rank => {
+/** `titles` doit suivre le meme ordre que RANKS (translations.endScreen.ranks). */
+export const getRank = (total: number, maxTotal: number, titles: readonly string[]): Rank => {
   const ratio = maxTotal > 0 ? total / maxTotal : 0;
-  const rank = RANKS.find((candidate) => ratio >= candidate.minRatio) ?? RANKS[RANKS.length - 1];
-  return { title: rank.title, emoji: rank.emoji };
+  const index = RANKS.findIndex((candidate) => ratio >= candidate.minRatio);
+  const rank = index === -1 ? RANKS[RANKS.length - 1] : RANKS[index];
+  const title = index === -1 ? titles[titles.length - 1] : titles[index];
+  return { title, emoji: rank.emoji };
 };

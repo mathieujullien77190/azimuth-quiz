@@ -1,6 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useTranslation } from '@/i18n';
 import {
   DEFAULT_DISTANCE_KM,
   DEFAULT_ORIGIN,
@@ -37,6 +38,12 @@ export const useGame = () => {
   const { settings, ready: settingsReady } = useSettings();
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
+
+  const t = useTranslation();
+  const deviceOriginNameRef = useRef(t.common.yourPosition);
+  useEffect(() => {
+    deviceOriginNameRef.current = t.common.yourPosition;
+  }, [t.common.yourPosition]);
 
   // Reglages figes au lancement : les modifier ailleurs ne change pas la partie en cours.
   const [config, setConfig] = useState<GameSettings>(DEFAULT_SETTINGS);
@@ -118,7 +125,7 @@ export const useGame = () => {
     setPhase('loading');
 
     const [resolvedOrigin, storedBest] = await Promise.all([
-      chosen.useGps ? resolveOrigin() : Promise.resolve(DEFAULT_ORIGIN),
+      chosen.useGps ? resolveOrigin(deviceOriginNameRef.current) : Promise.resolve(DEFAULT_ORIGIN),
       loadBestScore(),
     ]);
     if (id !== startId.current) return;

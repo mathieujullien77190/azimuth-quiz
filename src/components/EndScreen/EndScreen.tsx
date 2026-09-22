@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
 import { formatNumber, getRank } from '@/helpers';
+import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
@@ -9,7 +10,7 @@ import Confetti from '../Confetti';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Screen from '../ui/Screen';
-import { MEDALS, MENU_LABEL, NEW_BEST_LABEL, REPLAY_LABEL } from './constants';
+import { MEDALS } from './constants';
 import { maxTotalScore, rankPlayers, roundWinnerIndex, winnerTitle } from './helpers';
 import type { EndScreenProps } from './types';
 
@@ -98,10 +99,11 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
 
 export const EndScreen = ({ players, records, totals, bestScore, isNewBest, onReplay, onMenu }: EndScreenProps) => {
   const styles = useThemedStyles(createStyles);
+  const t = useTranslation();
   const isSolo = players.length === 1;
   const maxTotal = maxTotalScore(records);
   const ranking = rankPlayers(players, totals);
-  const rank = getRank(totals[0] ?? 0, maxTotal);
+  const rank = getRank(totals[0] ?? 0, maxTotal, t.endScreen.ranks);
 
   return (
     <Screen header={<Confetti />}>
@@ -113,16 +115,16 @@ export const EndScreen = ({ players, records, totals, bestScore, isNewBest, onRe
             <Text style={styles.score}>{formatNumber(totals[0] ?? 0)}</Text>
             {isNewBest ? (
               <View style={styles.newBest}>
-                <Text style={styles.newBestText}>{NEW_BEST_LABEL}</Text>
+                <Text style={styles.newBestText}>{t.endScreen.newBest}</Text>
               </View>
             ) : (
-              <Text style={styles.best}>Record : {formatNumber(bestScore)}</Text>
+              <Text style={styles.best}>{t.common.record(formatNumber(bestScore))}</Text>
             )}
           </>
         ) : (
           <>
             <Text style={styles.rankEmoji}>🏆</Text>
-            <Text style={styles.rankTitle}>{winnerTitle(ranking)}</Text>
+            <Text style={styles.rankTitle}>{winnerTitle(ranking, t.endScreen)}</Text>
           </>
         )}
       </Card>
@@ -148,7 +150,7 @@ export const EndScreen = ({ players, records, totals, bestScore, isNewBest, onRe
             <View key={`${record.place.name}-${index}`} style={[styles.row, index > 0 && styles.rowBorder]}>
               <View style={styles.rowText}>
                 <Text style={styles.name}>{record.place.name}</Text>
-                <Text style={styles.detail}>{isSolo ? record.place.country : `Meilleur : ${players[winner].name}`}</Text>
+                <Text style={styles.detail}>{isSolo ? record.place.country : t.endScreen.roundBest(players[winner].name)}</Text>
               </View>
               <Text style={styles.rowScore}>+{best.score.total}</Text>
             </View>
@@ -156,8 +158,8 @@ export const EndScreen = ({ players, records, totals, bestScore, isNewBest, onRe
         })}
       </Card>
 
-      <Button label={REPLAY_LABEL} onPress={onReplay} />
-      <Button label={MENU_LABEL} onPress={onMenu} variant="ghost" />
+      <Button label={t.endScreen.replay} onPress={onReplay} />
+      <Button label={t.endScreen.menu} onPress={onMenu} variant="ghost" />
     </Screen>
   );
 };

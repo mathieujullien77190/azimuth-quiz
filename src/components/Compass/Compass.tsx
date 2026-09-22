@@ -4,6 +4,7 @@ import type { ViewStyle } from 'react-native';
 import Svg, { Polygon } from 'react-native-svg';
 
 import { normalizeBearing } from '@/helpers';
+import { useTranslation } from '@/i18n';
 import { useTheme } from '@/themes';
 
 import { CompassDial } from './CompassDial';
@@ -25,6 +26,7 @@ export const Compass = ({
   onChange,
 }: CompassProps) => {
   const { colors } = useTheme();
+  const t = useTranslation();
   const interactive = onChange !== undefined;
 
   // Cap du telephone : le cadran tourne de -cap pour que le N reste sur le vrai nord.
@@ -61,7 +63,7 @@ export const Compass = ({
 
   return (
     <View
-      accessibilityLabel="Boussole"
+      accessibilityLabel={t.compassAccessibilityLabel}
       accessibilityRole={interactive ? 'adjustable' : 'image'}
       style={[
         { width: size, height: size },

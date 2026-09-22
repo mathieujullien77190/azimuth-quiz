@@ -14,6 +14,7 @@ import {
   spacing,
 } from '@/constants';
 import { filterPlaces, initials, shuffle } from '@/helpers';
+import { useTranslation } from '@/i18n';
 import { useSettings } from '@/settings';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
@@ -23,8 +24,8 @@ import Chip from '../ui/Chip';
 import Screen from '../ui/Screen';
 import Section from '../ui/Section';
 import Toggle from '../ui/Toggle';
-import { BACK_LABEL, DISTANCE_MODES, SCREEN_TITLE, START_LABEL, TOGGLES } from './constants';
-import { availabilityLabel, resizeNames, selectDifficultyFilter, toggleCategoryFilter } from './helpers';
+import { DISTANCE_MODES } from './constants';
+import { resizeNames, selectDifficultyFilter, toggleCategoryFilter } from './helpers';
 import type { SetupScreenProps } from './types';
 
 const createStyles = ({ colors, radius, typography }: Theme) =>
@@ -102,18 +103,19 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
 export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
+  const t = useTranslation();
   const { settings, updateSettings } = useSettings();
   const playerCount = settings.playerNames.length;
   const available = filterPlaces(settings.categories, settings.difficulties, settings.zone).length;
-  const zone = ZONES.find((candidate) => candidate.id === settings.zone);
+  const zoneDescription = t.setup.zones[settings.zone].description;
   // Un ordre different a chaque arrivee sur l'ecran, stable pendant qu'on tape.
   const placeholderNames = useMemo(() => shuffle([...NAME_PLACEHOLDERS]), []);
 
   return (
     <Screen>
-      <Text style={styles.title}>{SCREEN_TITLE}</Text>
+      <Text style={styles.title}>{t.setup.screenTitle}</Text>
 
-      <Section title="Joueurs" hint="Tout le monde joue sur le même téléphone, chacun son tour.">
+      <Section hint={t.setup.playersSection.hint} title={t.setup.playersSection.title}>
         <View style={styles.chips}>
           {Array.from({ length: MAX_PLAYERS - MIN_PLAYERS + 1 }, (_, i) => MIN_PLAYERS + i).map((count) => (
             <Chip
@@ -133,7 +135,7 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
                 <View style={[styles.nameDot, { backgroundColor: PLAYER_COLORS[index] }]} />
                 <View style={styles.inputWrap}>
                   <TextInput
-                    accessibilityLabel={`Nom du joueur ${index + 1}`}
+                    accessibilityLabel={t.setup.playerNameAccessibility(index + 1)}
                     maxLength={14}
                     onChangeText={(text) =>
                       updateSettings({
@@ -157,13 +159,13 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
         </View>
       </Section>
 
-      <Section title="Catégories">
+      <Section title={t.setup.categoriesTitle}>
         <View style={styles.chips}>
           {CATEGORIES.map((category) => (
             <Chip
               key={category.id}
               emoji={category.emoji}
-              label={category.label}
+              label={t.setup.categories[category.id]}
               onPress={() => updateSettings(toggleCategoryFilter(settings, category.id))}
               selected={settings.categories.includes(category.id)}
             />
@@ -171,13 +173,13 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
         </View>
       </Section>
 
-      <Section title="Difficulté" hint="Notoriété du lieu : plus c'est pointu, plus c'est dur.">
+      <Section hint={t.setup.difficultyHint} title={t.setup.difficultyTitle}>
         <View style={styles.chips}>
           {DIFFICULTIES.map((difficulty) => (
             <Chip
               key={difficulty.id}
               emoji={difficulty.emoji}
-              label={difficulty.label}
+              label={t.setup.difficulties[difficulty.id]}
               onPress={() => updateSettings(selectDifficultyFilter(settings, difficulty.id))}
               selected={settings.difficulties.includes(difficulty.id)}
             />
@@ -185,21 +187,21 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
         </View>
       </Section>
 
-      <Section title="Zone">
+      <Section title={t.setup.zoneTitle}>
         <View style={styles.chips}>
           {ZONES.map((candidate) => (
             <Chip
               key={candidate.id}
-              label={candidate.label}
+              label={t.setup.zones[candidate.id].label}
               onPress={() => updateSettings({ zone: candidate.id })}
               selected={settings.zone === candidate.id}
             />
           ))}
         </View>
-        {zone !== undefined && <Text style={styles.hint}>{zone.description}</Text>}
+        <Text style={styles.hint}>{zoneDescription}</Text>
       </Section>
 
-      <Section title="Nombre de manches">
+      <Section title={t.setup.roundsTitle}>
         <View style={styles.chips}>
           {ROUND_OPTIONS.map((rounds) => (
             <Chip
@@ -212,57 +214,57 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
         </View>
       </Section>
 
-      <Section title="Mode">
+      <Section title={t.setup.modeTitle}>
         <View style={styles.chips}>
           {DISTANCE_MODES.map((mode) => (
             <Chip
               key={mode.id}
-              label={mode.label}
+              label={t.setup.distanceModes[mode.id].label}
               onPress={() => updateSettings({ straightLine: mode.straightLine })}
               selected={settings.straightLine === mode.straightLine}
             />
           ))}
         </View>
         <Text style={styles.hint}>
-          {DISTANCE_MODES.find((mode) => mode.straightLine === settings.straightLine)?.description}
+          {t.setup.distanceModes[settings.straightLine ? 'inclination' : 'distance'].description}
         </Text>
       </Section>
 
-      <Section title="Options">
+      <Section title={t.setup.optionsTitle}>
         <Toggle
-          {...TOGGLES.liveCompass}
+          {...t.setup.toggles.liveCompass}
           onValueChange={(value) => updateSettings({ liveCompass: value })}
           value={settings.liveCompass}
         />
         <Toggle
-          {...TOGGLES.useGps}
+          {...t.setup.toggles.useGps}
           onValueChange={(value) => updateSettings({ useGps: value })}
           value={settings.useGps}
         />
         <Toggle
-          {...TOGGLES.showCountry}
+          {...t.setup.toggles.showCountry}
           onValueChange={(value) => updateSettings({ showCountry: value })}
           value={settings.showCountry}
         />
         {settings.playerNames.length > 1 && (
           <Toggle
-            {...TOGGLES.allowRevision}
+            {...t.setup.toggles.allowRevision}
             onValueChange={(value) => updateSettings({ allowRevision: value })}
             value={settings.allowRevision}
           />
         )}
         {settings.playerNames.length > 1 && (
           <Toggle
-            {...TOGGLES.hideOtherAnswers}
+            {...t.setup.toggles.hideOtherAnswers}
             onValueChange={(value) => updateSettings({ hideOtherAnswers: value })}
             value={settings.hideOtherAnswers}
           />
         )}
       </Section>
 
-      <Text style={styles.availability}>{availabilityLabel(available, settings.rounds)}</Text>
-      <Button disabled={available === 0} label={START_LABEL} onPress={onStart} />
-      <Button label={BACK_LABEL} onPress={onBack} variant="ghost" />
+      <Text style={styles.availability}>{t.setup.availability(available, settings.rounds)}</Text>
+      <Button disabled={available === 0} label={t.setup.start} onPress={onStart} />
+      <Button label={t.setup.back} onPress={onBack} variant="ghost" />
     </Screen>
   );
 };

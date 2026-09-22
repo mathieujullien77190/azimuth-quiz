@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { fontSize, spacing } from '@/constants';
 import { arcKmFromChordKm, formatBearing, formatNumber } from '@/helpers';
+import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { EarthMark } from '../EarthSection';
 import type { Theme } from '@/types';
@@ -20,20 +21,7 @@ import ThemeBackdrop from '../ThemeBackdrop';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Screen from '../ui/Screen';
-import {
-  ANSWERED_OPACITY,
-  LAST_LABEL,
-  LOADING_LABEL,
-  MAX_PROGRESS_DOTS,
-  NEXT_LABEL,
-  QUIT_LABEL,
-  REALITY_LABEL,
-  REVEAL_OPACITY,
-  ROUND_LABEL,
-  ROUND_OVER_LABEL,
-  VALIDATE_LABEL,
-  YOUR_ANSWER_LABEL,
-} from './constants';
+import { ANSWERED_OPACITY, MAX_PROGRESS_DOTS, REVEAL_OPACITY } from './constants';
 import { compassSizeFor, earthSizeFor, formatRoundProgress } from './helpers';
 import type { GameScreenProps } from './types';
 import { useGame } from './useGame';
@@ -122,6 +110,7 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
   const { width } = useWindowDimensions();
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
+  const t = useTranslation();
   const game = useGame();
 
   if (game.phase === 'loading' || game.place === undefined || game.currentPlayer === undefined) {
@@ -129,7 +118,7 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
       <SafeAreaView style={styles.loading}>
         <ThemeBackdrop />
         <ActivityIndicator color={colors.accent} size="large" />
-        <Text style={styles.loadingText}>{LOADING_LABEL}</Text>
+        <Text style={styles.loadingText}>{t.game.loading}</Text>
       </SafeAreaView>
     );
   }
@@ -197,11 +186,11 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
     ? game.isMultiplayer
       ? [
           ...game.players.map((player) => ({ label: player.name, color: player.color })),
-          { label: REALITY_LABEL, color: colors.truth, ring: true },
+          { label: t.game.reality, color: colors.truth, ring: true },
         ]
       : [
-          { label: YOUR_ANSWER_LABEL, color: colors.accent },
-          { label: REALITY_LABEL, color: colors.truth, ring: true },
+          { label: t.game.yourAnswer, color: colors.accent },
+          { label: t.game.reality, color: colors.truth, ring: true },
         ]
     : game.isMultiplayer
       ? answered.map((entry) => ({ label: entry.player.name, color: entry.player.color }))
@@ -209,34 +198,34 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
 
   const scoreLabel = record
     ? game.isMultiplayer
-      ? ROUND_OVER_LABEL
-      : `${formatNumber(game.totals[0])} pts`
-    : `${game.isMultiplayer ? `${game.currentPlayer.name} · ` : ''}${formatNumber(game.totals[game.activePlayerIndex])} pts`;
+      ? t.game.roundOver
+      : `${formatNumber(game.totals[0])} ${t.common.pts}`
+    : `${game.isMultiplayer ? `${game.currentPlayer.name} · ` : ''}${formatNumber(game.totals[game.activePlayerIndex])} ${t.common.pts}`;
 
   return (
     <Screen
       footer={
         record ? (
           <Button
-            label={game.roundNumber === game.totalRounds ? LAST_LABEL : NEXT_LABEL}
+            label={game.roundNumber === game.totalRounds ? t.game.last : t.game.next}
             onPress={game.next}
           />
         ) : (
-          <Button label={VALIDATE_LABEL} onPress={game.submit} />
+          <Button label={t.game.validate} onPress={game.submit} />
         )
       }
       header={
         <View style={styles.header}>
           <View style={styles.topBar}>
             <Pressable accessibilityRole="button" hitSlop={12} onPress={onQuit}>
-              <Text style={styles.quit}>{QUIT_LABEL}</Text>
+              <Text style={styles.quit}>{t.game.quit}</Text>
             </Pressable>
             <Text style={styles.score}>{scoreLabel}</Text>
           </View>
 
           <View style={styles.roundRow}>
             <Text style={styles.roundLabel}>
-              {ROUND_LABEL} {formatRoundProgress(game.roundNumber, game.totalRounds)}
+              {t.game.round} {formatRoundProgress(game.roundNumber, game.totalRounds)}
             </Text>
             {game.totalRounds <= MAX_PROGRESS_DOTS && (
               <View style={styles.progress}>
@@ -291,7 +280,7 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
               onChange={game.setBearing}
               size={compassSizeFor(width)}
             />
-            <Text style={styles.readout}>{formatBearing(game.bearing)}</Text>
+            <Text style={styles.readout}>{formatBearing(game.bearing, t.cardinals)}</Text>
           </>
         )}
         {legendItems.length > 0 && <Legend items={legendItems} />}
