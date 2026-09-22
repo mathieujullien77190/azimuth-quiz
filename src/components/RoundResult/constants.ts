@@ -12,5 +12,3 @@ export const ROW_MAX_POINTS = {
 } as const;
 
 export const TRUTH_LABEL = 'Réponse';
-export const NEXT_LABEL = 'Manche suivante';
-export const LAST_LABEL = 'Voir le score';

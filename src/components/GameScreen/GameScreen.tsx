@@ -22,8 +22,10 @@ import Card from '../ui/Card';
 import Screen from '../ui/Screen';
 import {
   ANSWERED_OPACITY,
+  LAST_LABEL,
   LOADING_LABEL,
   MAX_PROGRESS_DOTS,
+  NEXT_LABEL,
   QUIT_LABEL,
   REALITY_LABEL,
   REVEAL_OPACITY,
@@ -209,7 +211,16 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
 
   return (
     <Screen
-      footer={!record ? <Button label={VALIDATE_LABEL} onPress={game.submit} /> : undefined}
+      footer={
+        record ? (
+          <Button
+            label={game.roundNumber === game.totalRounds ? LAST_LABEL : NEXT_LABEL}
+            onPress={game.next}
+          />
+        ) : (
+          <Button label={VALIDATE_LABEL} onPress={game.submit} />
+        )
+      }
       header={
         <View style={styles.header}>
           <View style={styles.topBar}>
@@ -288,15 +299,7 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
           ))}
       </Card>
 
-      {record && (
-        <RoundResult
-          isLastRound={game.roundNumber === game.totalRounds}
-          onNext={game.next}
-          options={game.config}
-          players={game.players}
-          record={record}
-        />
-      )}
+      {record && <RoundResult options={game.config} players={game.players} record={record} />}
     </Screen>
   );
 };

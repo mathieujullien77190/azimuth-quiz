@@ -5,9 +5,8 @@ import { arcKmFromChordKm, formatBearing, formatDistance, formatInclination } fr
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
-import Button from '../ui/Button';
 import Card from '../ui/Card';
-import { LAST_LABEL, NEXT_LABEL, ROW_LABELS, ROW_MAX_POINTS, TRUTH_LABEL } from './constants';
+import { ROW_LABELS, ROW_MAX_POINTS, TRUTH_LABEL } from './constants';
 import { feedbackColor } from './helpers';
 import type { RoundResultProps } from './types';
 
@@ -39,10 +38,12 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       fontSize: fontSize.caption,
       width: 90,
     },
+    // Meme style que la valeur d'une reponse de joueur (rowValue) : la verite n'a pas a se
+    // distinguer par la couleur ou la taille, seule sa place tout en haut du bloc la signale.
     truthValue: {
-      ...typography.heading,
-      color: colors.truth,
-      fontSize: fontSize.subtitle,
+      ...typography.body,
+      color: colors.text,
+      fontSize: fontSize.body - 1,
     },
     player: {
       gap: spacing.xs,
@@ -97,7 +98,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
     },
   });
 
-export const RoundResult = ({ record, players, options, isLastRound, onNext }: RoundResultProps) => {
+export const RoundResult = ({ record, players, options }: RoundResultProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
   const { score: truth } = record.results[0];
@@ -171,8 +172,6 @@ export const RoundResult = ({ record, players, options, isLastRound, onNext }: R
           </View>
         </View>
       ))}
-
-      <Button label={isLastRound ? LAST_LABEL : NEXT_LABEL} onPress={onNext} />
     </Card>
   );
 };

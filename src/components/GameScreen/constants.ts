@@ -4,6 +4,8 @@ export const MAX_EARTH_SIZE = 240;
 export const LOADING_LABEL = 'Préparation de la partie…';
 export const QUIT_LABEL = '✕  Quitter';
 export const VALIDATE_LABEL = 'Valider';
+export const NEXT_LABEL = 'Manche suivante';
+export const LAST_LABEL = 'Voir le score';
 export const ROUND_LABEL = 'Manche';
 /** Au-dela, les pastilles de progression deviennent illisibles : on ne les affiche plus. */
 export const MAX_PROGRESS_DOTS = 12;

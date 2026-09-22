@@ -5,6 +5,4 @@ export type RoundResultProps = {
   players: Player[];
   /** Modes de la partie : decide si l'ecart/inclinaison en ligne droite s'affiche. */
   options: Pick<GameSettings, 'straightLine'>;
-  isLastRound: boolean;
-  onNext: () => void;
 };
