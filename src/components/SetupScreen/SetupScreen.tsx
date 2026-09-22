@@ -5,6 +5,7 @@ import {
   CATEGORIES,
   MAX_PLAYERS,
   MIN_PLAYERS,
+  NAME_PLACEHOLDERS,
   PLAYER_COLORS,
   ROUND_OPTIONS,
   ZONES,
@@ -21,7 +22,7 @@ import Chip from '../ui/Chip';
 import Screen from '../ui/Screen';
 import Section from '../ui/Section';
 import Toggle from '../ui/Toggle';
-import { BACK_LABEL, NAME_PLACEHOLDERS, SCREEN_TITLE, START_LABEL, TOGGLES } from './constants';
+import { BACK_LABEL, SCREEN_TITLE, START_LABEL, TOGGLES } from './constants';
 import { availabilityLabel, resizeNames, toggleCategory } from './helpers';
 import type { SetupScreenProps } from './types';
 

@@ -2,11 +2,6 @@ export const SCREEN_TITLE = 'Nouvelle partie';
 export const START_LABEL = 'Lancer la partie';
 export const BACK_LABEL = 'Retour';
 
-/** Placeholders des champs de nom : un prenom au pif plutot que "Joueur 1", "Joueur 2"... */
-export const NAME_PLACEHOLDERS = [
-  'Zoé', 'Max', 'Léo', 'Nina', 'Théo', 'Mia', 'Noa', 'Iris', 'Timéo', 'Luna', 'Gaspard', 'Alba',
-] as const;
-
 export const TOGGLES = {
   straightLine: {
     label: 'Ligne droite à travers la Terre',

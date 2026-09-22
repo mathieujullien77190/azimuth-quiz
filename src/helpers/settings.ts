@@ -3,6 +3,7 @@ import {
   DEFAULT_SETTINGS,
   MAX_PLAYERS,
   MIN_PLAYERS,
+  NAME_PLACEHOLDERS,
   ROUND_OPTIONS,
   ZONES,
 } from '@/constants';
@@ -10,8 +11,11 @@ import type { Category, GameSettings, Zone } from '@/types';
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
-/** Nom d'un joueur : celui saisi, sinon "Joueur N". */
-export const playerDisplayName = (name: string, index: number): string => name.trim() || `Joueur ${index + 1}`;
+/** Nom d'un joueur : celui saisi, sinon un prenom de secours choisi par index (stable pour toute
+ * la partie), le meme genre de placeholder que SetupScreen montre pour un champ vide — pas
+ * "Joueur N" pour tout le monde, qui donnerait les memes initiales "JO" a tous les joueurs. */
+export const playerDisplayName = (name: string, index: number): string =>
+  name.trim() || NAME_PLACEHOLDERS[index % NAME_PLACEHOLDERS.length];
 
 /** Reconstruit des reglages valides a partir de donnees stockees (potentiellement anciennes ou abimees). */
 export const sanitizeSettings = (raw: unknown): GameSettings => {

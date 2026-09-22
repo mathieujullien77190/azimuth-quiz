@@ -60,6 +60,13 @@ export const MIN_PLAYERS = 1;
 export const MAX_PLAYERS = 6;
 export const ROUND_OPTIONS = [5, 10, 15, 20] as const;
 
+/** Prenoms de secours pour un champ de nom laisse vide : un prenom au pif plutot que "Joueur 1",
+ * "Joueur 2"... Utilise a la fois par SetupScreen (hint cosmetique, ordre remelange) et par
+ * playerDisplayName (identite stable pendant la partie, choisie par index). */
+export const NAME_PLACEHOLDERS = [
+  'Zoé', 'Max', 'Léo', 'Nina', 'Théo', 'Mia', 'Noa', 'Iris', 'Timéo', 'Luna', 'Gaspard', 'Alba',
+] as const;
+
 // Choisies a distance d'au moins 37° de teinte de l'accent et de la reponse du theme Nuit
 // (ambre/jaune), pour qu'aucun joueur ne les prenne par hasard.
 export const PLAYER_COLORS = ['#EF4444', '#65A30D', '#22C55E', '#8B5CF6', '#C026D3', '#DB2777'] as const;
