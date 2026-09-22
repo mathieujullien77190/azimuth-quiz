@@ -90,7 +90,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
     // Score de la manche, sous le score general : plus petit, meme alignement a droite.
     roundScore: {
       ...typography.body,
-      color: colors.textMuted,
+      color: colors.text,
       fontSize: fontSize.caption - 1,
     },
     row: {
@@ -163,7 +163,7 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
             <Text style={styles.playerName}>{isSolo ? 'Ton score' : player.name}</Text>
             <View style={styles.scoreBlock}>
               <Text style={styles.playerTotal}>{formatNumber(totals[index])}</Text>
-              <Text style={styles.roundScore}>{formatNumber(result.score.total)}</Text>
+              <Text style={styles.roundScore}>+{formatNumber(result.score.total)}</Text>
             </View>
           </View>
           <View style={styles.row}>
