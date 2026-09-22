@@ -1,7 +1,7 @@
 import type { Rule } from './types';
 
 export const APP_TITLE = 'FULL AZIMUT';
-export const APP_TAGLINE = 'Devine où se trouve un lieu du monde : direction, inclinaison, distance ?';
+export const APP_TAGLINE = 'Devine où se trouve un lieu du monde\ndirection, inclinaison, distance ?';
 export const PLAY_LABEL = 'Jouer';
 
 export const DECORATIVE_BEARING = 42;
