@@ -135,10 +135,7 @@ export const fr: Translations = {
     languageTitle: 'Langue',
     languageOptions: { fr: 'Français', en: 'English' },
     aboutTitle: 'À propos',
-    author: 'Par mathieu.',
-    funnyLine:
-      'Aucun pigeon voyageur n’a été consulté pour le développement de ce jeu — leur sens de l’orientation étant jugé trop insultant pour le nôtre.',
-    claudeMention:
-      'Développé avec l’aide de Claude (Anthropic), qui n’a toujours pas de boussole interne mais code plutôt bien.',
+    author: 'Par Matou.',
+    claudeMention: 'Développé avec l’aide de Claude, qui n’a toujours pas de boussole interne mais code plutôt bien.',
   },
 };

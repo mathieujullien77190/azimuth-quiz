@@ -61,7 +61,6 @@ export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
       <Section title={t.settings.aboutTitle}>
         <View style={styles.about}>
           <Text style={styles.aboutLine}>{t.settings.author}</Text>
-          <Text style={styles.aboutLine}>{t.settings.funnyLine}</Text>
           <Text style={styles.aboutLine}>{t.settings.claudeMention}</Text>
         </View>
       </Section>

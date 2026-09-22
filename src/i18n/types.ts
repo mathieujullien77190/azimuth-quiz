@@ -97,7 +97,6 @@ export type Translations = {
     languageOptions: { fr: string; en: string };
     aboutTitle: string;
     author: string;
-    funnyLine: string;
     claudeMention: string;
   };
 };

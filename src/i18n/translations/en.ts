@@ -135,9 +135,7 @@ export const en: Translations = {
     languageTitle: 'Language',
     languageOptions: { fr: 'Français', en: 'English' },
     aboutTitle: 'About',
-    author: 'By mathieu.',
-    funnyLine:
-      'No carrier pigeons were consulted during development — their sense of direction was deemed unfairly good.',
-    claudeMention: 'Built with help from Claude (Anthropic), who still has no internal compass but codes rather well.',
+    author: 'By Matou.',
+    claudeMention: 'Built with help from Claude, who still has no internal compass but codes rather well.',
   },
 };
