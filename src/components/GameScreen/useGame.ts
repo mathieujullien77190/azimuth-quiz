@@ -151,14 +151,15 @@ export const useGame = () => {
   const answeredByPlayer = useMemo(() => guessesByPlayer.map((guess) => guess !== undefined), [guessesByPlayer]);
 
   /**
-   * Valide la reponse du joueur actif (a partir de son brouillon courant) et, si c'etait le
-   * dernier joueur qui manquait, calcule les scores et passe en revelation. Renvoie le tableau
-   * des reponses a jour, et si la manche vient de se terminer (pour que l'appelant sache s'il
-   * doit encore changer de joueur actif ou non).
+   * Enregistre la reponse du joueur actif a partir de son brouillon courant. Renvoie le tableau
+   * des reponses a jour et si tout le monde a maintenant repondu — ne declenche JAMAIS la
+   * revelation elle-meme : ca reste le seul travail de "Valider" (voir `submit`), pour que passer
+   * sur un autre onglet (meme si c'etait la derniere reponse manquante) n'affiche jamais la
+   * reponse tout seul.
    */
-  const commitActiveGuess = useCallback((): { updated: (Guess | undefined)[]; roundOver: boolean } => {
+  const commitActiveGuess = useCallback((): { updated: (Guess | undefined)[]; complete: boolean } => {
     const place = places[roundIndex];
-    if (place === undefined) return { updated: guessesByPlayer, roundOver: false };
+    if (place === undefined) return { updated: guessesByPlayer, complete: false };
 
     const guess: Guess = {
       bearing,
@@ -169,23 +170,30 @@ export const useGame = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     setGuessesByPlayer(updated);
 
-    if (roundOrder.some((index) => updated[index] === undefined)) {
-      return { updated, roundOver: false };
-    }
+    return { updated, complete: !roundOrder.some((index) => updated[index] === undefined) };
+  }, [activePlayerIndex, bearing, config, distanceKm, guessesByPlayer, places, roundIndex, roundOrder]);
 
-    const results = players.map((_, index) => {
-      const playerGuess = updated[index] as Guess;
-      return { guess: playerGuess, score: scoreRound(origin.coordinates, place, playerGuess, config) };
-    });
-    setRecords((previous) => [...previous, { place, results }]);
-    setPhase('reveal');
-    return { updated, roundOver: true };
-  }, [activePlayerIndex, bearing, config, distanceKm, guessesByPlayer, origin, places, players, roundIndex, roundOrder]);
+  /** Calcule les scores et passe en revelation. */
+  const reveal = useCallback(
+    (updated: (Guess | undefined)[]) => {
+      const place = places[roundIndex];
+      if (place === undefined) return;
+
+      const results = players.map((_, index) => {
+        const playerGuess = updated[index] as Guess;
+        return { guess: playerGuess, score: scoreRound(origin.coordinates, place, playerGuess, config) };
+      });
+      setRecords((previous) => [...previous, { place, results }]);
+      setPhase('reveal');
+    },
+    [config, origin, places, players, roundIndex],
+  );
 
   /**
    * Change d'onglet. Cliquer directement sur un autre joueur valide d'abord la reponse en cours
-   * (comme "Valider"), puis bascule sur le joueur choisi — sauf si cette validation vient de
-   * terminer la manche (revelation), auquel cas il n'y a plus personne a qui basculer.
+   * (comme "Valider"), puis bascule sur le joueur choisi — meme si cette validation vient de
+   * repondre au dernier joueur manquant, la revelation n'apparait pas : il faut appuyer sur
+   * "Valider" pour l'obtenir.
    */
   const selectPlayer = useCallback(
     (index: number) => {
@@ -193,22 +201,23 @@ export const useGame = () => {
       const locked = guessesByPlayer[index] !== undefined && !config.allowRevision;
       if (locked) return;
 
-      const { roundOver } = commitActiveGuess();
-      if (roundOver) return;
-
+      commitActiveGuess();
       setActivePlayerIndex(index);
     },
     [activePlayerIndex, commitActiveGuess, config.allowRevision, guessesByPlayer],
   );
 
-  /** Bouton "Valider" : meme validation, puis avance vers le premier joueur qui n'a pas encore repondu. */
+  /** Bouton "Valider" : seul chemin qui revele la reponse, une fois tout le monde repondu. */
   const submit = useCallback(() => {
-    const { updated, roundOver } = commitActiveGuess();
-    if (roundOver) return;
+    const { updated, complete } = commitActiveGuess();
+    if (complete) {
+      reveal(updated);
+      return;
+    }
 
     const nextUnanswered = roundOrder.find((index) => updated[index] === undefined);
     if (nextUnanswered !== undefined) setActivePlayerIndex(nextUnanswered);
-  }, [commitActiveGuess, roundOrder]);
+  }, [commitActiveGuess, reveal, roundOrder]);
 
   const next = useCallback(() => {
     if (roundIndex + 1 < places.length) {
