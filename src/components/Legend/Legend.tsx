@@ -27,7 +27,6 @@ const createStyles = ({ colors, typography }: Theme) =>
     },
     ring: {
       borderWidth: 2,
-      backgroundColor: 'transparent',
     },
     label: {
       ...typography.heading,
@@ -47,7 +46,8 @@ export const Legend = ({ items }: LegendProps) => {
           <View
             style={[
               styles.dot,
-              item.ring ? [styles.ring, { borderColor: item.color }] : { backgroundColor: item.color },
+              { backgroundColor: item.color },
+              item.ring && [styles.ring, { borderColor: item.color }],
             ]}
           />
           <Text style={styles.label}>{item.label}</Text>

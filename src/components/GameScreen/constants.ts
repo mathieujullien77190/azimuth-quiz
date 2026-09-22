@@ -1,9 +1,6 @@
 export const MAX_COMPASS_SIZE = 300;
 export const MAX_EARTH_SIZE = 240;
 
-/** Paliers du zoom manuel (boutons +/-) sur la coupe de la Terre, a la revelation. */
-export const ZOOM_MULTIPLIERS = [1, 1.5, 2, 3, 4, 6] as const;
-
 export const LOADING_LABEL = 'Préparation de la partie…';
 export const QUIT_LABEL = '✕  Quitter';
 export const VALIDATE_LABEL = 'Valider';

@@ -1,6 +1,10 @@
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, G, Line, Path, RadialGradient, Stop, Text as SvgText } from 'react-native-svg';
 
-import { useTheme } from '@/themes';
+import { fontSize, spacing } from '@/constants';
+import { useTheme, useThemedStyles } from '@/themes';
+import type { Theme } from '@/types';
 
 import {
   AVAILABLE_X_RATIO,
@@ -10,12 +14,44 @@ import {
   EARTH_RADIUS_RATIO,
   HEIGHT_RATIO,
   HORIZON_LABEL,
-  MAX_ZOOM,
   PLAYER_LABEL,
   PLAYER_Y_RATIO,
+  ZOOM_STEPS,
 } from './constants';
 import { arcPath, fitZoom, markEnd, sideOf, surfaceAngle } from './helpers';
 import type { EarthMark, EarthSectionProps, Point } from './types';
+
+const createStyles = ({ colors }: Theme) =>
+  StyleSheet.create({
+    wrap: {
+      alignItems: 'center',
+    },
+    // Sous le cercle plutot que superposes dessus : a n'importe quelle taille de Terre, jamais de
+    // recouvrement avec les libelles dessines dans le SVG (COUPE DE LA TERRE / ZOOM / horizon).
+    zoomControls: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      alignSelf: 'stretch',
+      gap: spacing.xs,
+      marginTop: spacing.xs,
+    },
+    zoomButton: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surfaceHigh,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    zoomButtonLabel: {
+      fontSize: fontSize.body,
+      lineHeight: fontSize.body,
+      color: colors.text,
+      fontWeight: '700',
+    },
+  });
 
 /**
  * La Terre vue de cote, le joueur tout en haut. Chaque reponse part du cote de son cap
@@ -23,14 +59,16 @@ import type { EarthMark, EarthSectionProps, Point } from './types';
  * (distance de surface). En mode ligne droite, une corde rejoint en plus le meme point d'arrivee :
  * l'inclinaison choisie fixe a la fois l'arc et la corde, la distance de surface n'est qu'une indication.
  * Le cercle zoome en continu sur son sommet pour que les reperes proches restent lisibles : plus
- * les distances de `marks` sont courtes, plus le zoom monte (jusqu'a MAX_ZOOM). `zoomMultiplier`
- * ajoute un zoom manuel par-dessus (boutons +/- a la revelation), toujours plafonne a MAX_ZOOM.
- * La vraie reponse
- * (isTruth) ne se dessine que par son point cercle : pas d'arc ni de corde, pour ne pas noyer les
- * reponses des joueurs sous ses propres traits.
+ * les distances de `marks` sont courtes, plus le zoom "ideal" (`fitZoom`) monte, parmi `ZOOM_STEPS`.
+ * A la revelation (`zoomControls`), des boutons +/- permettent de s'ecarter de cet ideal : on peut
+ * toujours redescendre jusqu'a 1 (la Terre entiere) ou monter jusqu'au dernier palier. Un `key`
+ * different a chaque manche (cote appelant) remonte le composant et remet ce choix a l'ideal.
+ * La vraie reponse (isTruth) ne se dessine que par son point cercle : pas d'arc ni de corde, pour
+ * ne pas noyer les reponses des joueurs sous ses propres traits.
  */
-export const EarthSection = ({ size, marks, showStraightLine, zoomMultiplier = 1 }: EarthSectionProps) => {
+export const EarthSection = ({ size, marks, showStraightLine, zoomControls = false }: EarthSectionProps) => {
   const { colors, compass, typography } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const height = size * HEIGHT_RATIO;
   const baseRadius = size * EARTH_RADIUS_RATIO;
   const player: Point = { x: size / 2, y: size * PLAYER_Y_RATIO };
@@ -40,8 +78,13 @@ export const EarthSection = ({ size, marks, showStraightLine, zoomMultiplier = 1
     const end = markEnd(item, baseCenter, baseRadius);
     return { x: end.x - player.x, y: end.y - player.y };
   });
-  const autoZoom = fitZoom(offsets, size * AVAILABLE_X_RATIO, height - player.y - BOTTOM_MARGIN);
-  const zoom = Math.min(MAX_ZOOM, autoZoom * zoomMultiplier);
+  const idealZoom = fitZoom(offsets, size * AVAILABLE_X_RATIO, height - player.y - BOTTOM_MARGIN);
+  const idealIndex = ZOOM_STEPS.indexOf(idealZoom as (typeof ZOOM_STEPS)[number]);
+
+  // null = pas de choix manuel : on suit l'ideal. Des qu'on touche +/-, on part de son index.
+  const [manualIndex, setManualIndex] = useState<number | null>(null);
+  const stepIndex = manualIndex ?? idealIndex;
+  const zoom = ZOOM_STEPS[stepIndex];
 
   const radius = baseRadius * zoom;
   const center: Point = { x: player.x, y: player.y + radius };
@@ -78,79 +121,104 @@ export const EarthSection = ({ size, marks, showStraightLine, zoomMultiplier = 1
   };
 
   return (
-    <Svg accessibilityLabel={CAPTION_STRAIGHT} height={height} width={size}>
-      <Defs>
-        <RadialGradient id="earth" cx="50%" cy="40%" r="65%">
-          <Stop offset="0%" stopColor={compass.faceInner} />
-          <Stop offset="100%" stopColor={compass.faceOuter} />
-        </RadialGradient>
-      </Defs>
+    <View style={styles.wrap}>
+      <Svg accessibilityLabel={CAPTION_STRAIGHT} height={height} width={size}>
+        <Defs>
+          <RadialGradient id="earth" cx="50%" cy="40%" r="65%">
+            <Stop offset="0%" stopColor={compass.faceInner} />
+            <Stop offset="100%" stopColor={compass.faceOuter} />
+          </RadialGradient>
+        </Defs>
 
-      <SvgText
-        x={8}
-        y={16}
-        fill={colors.textMuted}
-        fontFamily={typography.label.fontFamily}
-        fontSize={11}
-        fontWeight="700"
-      >
-        {(showStraightLine ? CAPTION_STRAIGHT : CAPTION_SURFACE).toUpperCase()}
-      </SvgText>
-      {zoom > 1 && (
         <SvgText
-          x={size - 8}
+          x={8}
           y={16}
-          fill={colors.accent}
+          fill={colors.textMuted}
           fontFamily={typography.label.fontFamily}
           fontSize={11}
           fontWeight="700"
-          textAnchor="end"
         >
-          {`ZOOM ×${String(zoom).replace('.', ',')}`}
+          {(showStraightLine ? CAPTION_STRAIGHT : CAPTION_SURFACE).toUpperCase()}
         </SvgText>
-      )}
-
-      <Circle cx={center.x} cy={center.y} r={radius} fill="url(#earth)" stroke={colors.border} strokeWidth={3} />
-      <Circle cx={center.x} cy={center.y} r={radius * 0.28} fill="none" stroke={colors.border} strokeWidth={1} strokeDasharray="3 5" />
-
-      {showStraightLine && (
-        <>
-          <Line
-            x1={player.x - horizonReach}
-            y1={player.y}
-            x2={player.x + horizonReach}
-            y2={player.y}
-            stroke={colors.textMuted}
-            strokeWidth={1.5}
-            strokeDasharray="4 5"
-          />
+        {zoom > 1 && (
           <SvgText
-            x={player.x + horizonReach}
-            y={player.y - 6}
-            fill={colors.textMuted}
-            fontFamily={typography.body.fontFamily}
+            x={size - 8}
+            y={16}
+            fill={colors.accent}
+            fontFamily={typography.label.fontFamily}
             fontSize={11}
+            fontWeight="700"
             textAnchor="end"
           >
-            {HORIZON_LABEL}
+            {`ZOOM ×${String(zoom).replace('.', ',')}`}
           </SvgText>
-        </>
+        )}
+
+        <Circle cx={center.x} cy={center.y} r={radius} fill="url(#earth)" stroke={colors.border} strokeWidth={3} />
+        <Circle cx={center.x} cy={center.y} r={radius * 0.28} fill="none" stroke={colors.border} strokeWidth={1} strokeDasharray="3 5" />
+
+        {showStraightLine && (
+          <>
+            <Line
+              x1={player.x - horizonReach}
+              y1={player.y}
+              x2={player.x + horizonReach}
+              y2={player.y}
+              stroke={colors.textMuted}
+              strokeWidth={1.5}
+              strokeDasharray="4 5"
+            />
+            <SvgText
+              x={player.x + horizonReach}
+              y={player.y - 6}
+              fill={colors.textMuted}
+              fontFamily={typography.body.fontFamily}
+              fontSize={11}
+              textAnchor="end"
+            >
+              {HORIZON_LABEL}
+            </SvgText>
+          </>
+        )}
+
+        {marks.map((item, index) => mark(item, `mark-${index}`))}
+
+        <Circle cx={player.x} cy={player.y} r={6} fill={colors.text} stroke={colors.background} strokeWidth={2} />
+        <SvgText
+          x={player.x}
+          y={player.y - 12}
+          fill={colors.text}
+          fontFamily={typography.heading.fontFamily}
+          fontSize={12}
+          fontWeight="800"
+          textAnchor="middle"
+        >
+          {PLAYER_LABEL}
+        </SvgText>
+      </Svg>
+
+      {zoomControls && (
+        <View style={styles.zoomControls}>
+          <Pressable
+            accessibilityRole="button"
+            disabled={stepIndex === 0}
+            hitSlop={8}
+            onPress={() => setManualIndex(Math.max(0, stepIndex - 1))}
+            style={[styles.zoomButton, stepIndex === 0 && { opacity: 0.4 }]}
+          >
+            <Text style={styles.zoomButtonLabel}>−</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            disabled={stepIndex === ZOOM_STEPS.length - 1}
+            hitSlop={8}
+            onPress={() => setManualIndex(Math.min(ZOOM_STEPS.length - 1, stepIndex + 1))}
+            style={[styles.zoomButton, stepIndex === ZOOM_STEPS.length - 1 && { opacity: 0.4 }]}
+          >
+            <Text style={styles.zoomButtonLabel}>+</Text>
+          </Pressable>
+        </View>
       )}
-
-      {marks.map((item, index) => mark(item, `mark-${index}`))}
-
-      <Circle cx={player.x} cy={player.y} r={6} fill={colors.text} stroke={colors.background} strokeWidth={2} />
-      <SvgText
-        x={player.x}
-        y={player.y - 12}
-        fill={colors.text}
-        fontFamily={typography.heading.fontFamily}
-        fontSize={12}
-        fontWeight="800"
-        textAnchor="middle"
-      >
-        {PLAYER_LABEL}
-      </SvgText>
-    </Svg>
+    </View>
   );
 };
