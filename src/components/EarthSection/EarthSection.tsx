@@ -21,26 +21,23 @@ import type { EarthMark, EarthSectionProps, Point } from './types';
  * (cap a l'ouest = a gauche, cap a l'est = a droite) et se dessine en un arc qui suit le cercle
  * (distance de surface). En mode ligne droite, une corde rejoint en plus le meme point d'arrivee :
  * l'inclinaison choisie fixe a la fois l'arc et la corde, la distance de surface n'est qu'une indication.
- * Des que `marks` contient une vraie reponse (isTruth), on zoome sur le haut du cercle pour que les
- * distances courtes restent lisibles. La vraie reponse (isTruth) ne se dessine que par son point
- * cercle : pas d'arc ni de corde, pour ne pas noyer les reponses des joueurs sous ses propres traits.
+ * Le cercle zoome en continu sur son sommet pour que les reperes proches restent lisibles : plus
+ * les distances de `marks` sont courtes, plus le zoom monte (jusqu'a MAX_ZOOM). La vraie reponse
+ * (isTruth) ne se dessine que par son point cercle : pas d'arc ni de corde, pour ne pas noyer les
+ * reponses des joueurs sous ses propres traits.
  */
 export const EarthSection = ({ size, marks, showStraightLine }: EarthSectionProps) => {
   const { colors, compass, typography } = useTheme();
   const height = size * HEIGHT_RATIO;
   const baseRadius = size * EARTH_RADIUS_RATIO;
   const player: Point = { x: size / 2, y: size * PLAYER_Y_RATIO };
-  const reveal = marks.some((mark) => mark.isTruth === true);
 
-  let zoom = 1;
-  if (reveal) {
-    const baseCenter: Point = { x: player.x, y: player.y + baseRadius };
-    const offsets = marks.map((item) => {
-      const end = markEnd(item, baseCenter, baseRadius);
-      return { x: end.x - player.x, y: end.y - player.y };
-    });
-    zoom = fitZoom(offsets, size * AVAILABLE_X_RATIO, height - player.y - BOTTOM_MARGIN);
-  }
+  const baseCenter: Point = { x: player.x, y: player.y + baseRadius };
+  const offsets = marks.map((item) => {
+    const end = markEnd(item, baseCenter, baseRadius);
+    return { x: end.x - player.x, y: end.y - player.y };
+  });
+  const zoom = fitZoom(offsets, size * AVAILABLE_X_RATIO, height - player.y - BOTTOM_MARGIN);
 
   const radius = baseRadius * zoom;
   const center: Point = { x: player.x, y: player.y + radius };

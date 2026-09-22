@@ -14,3 +14,6 @@ export const compassSizeFor = (windowWidth: number): number =>
 
 export const earthSizeFor = (windowWidth: number): number =>
   Math.min(MAX_EARTH_SIZE, windowWidth - spacing.lg * 2 - spacing.md * 2);
+
+export const formatRoundProgress = (roundNumber: number, totalRounds: number): string =>
+  `${roundNumber} / ${totalRounds}`;

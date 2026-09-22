@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { spacing } from '@/constants';
@@ -23,9 +23,17 @@ const createStyles = ({ colors }: Theme) =>
       paddingVertical: spacing.md,
       gap: spacing.md,
     },
+    footer: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.sm,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      backgroundColor: colors.background,
+    },
   });
 
-const Screen = ({ children, header }: ScreenProps) => {
+const Screen = ({ children, header, footer }: ScreenProps) => {
   const styles = useThemedStyles(createStyles);
 
   return (
@@ -40,6 +48,7 @@ const Screen = ({ children, header }: ScreenProps) => {
       >
         {children}
       </ScrollView>
+      {footer && <View style={styles.footer}>{footer}</View>}
     </SafeAreaView>
   );
 };

@@ -23,14 +23,16 @@ import Screen from '../ui/Screen';
 import {
   ANSWERED_OPACITY,
   LOADING_LABEL,
+  MAX_PROGRESS_DOTS,
   QUIT_LABEL,
   REALITY_LABEL,
   REVEAL_OPACITY,
+  ROUND_LABEL,
   ROUND_OVER_LABEL,
   VALIDATE_LABEL,
   YOUR_ANSWER_LABEL,
 } from './constants';
-import { compassSizeFor, earthSizeFor } from './helpers';
+import { compassSizeFor, earthSizeFor, formatRoundProgress } from './helpers';
 import type { GameScreenProps } from './types';
 import { useGame } from './useGame';
 
@@ -48,10 +50,17 @@ const createStyles = ({ colors, typography }: Theme) =>
       color: colors.textMuted,
       fontSize: fontSize.body,
     },
+    header: {
+      backgroundColor: colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
     topBar: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
     },
     quit: {
       ...typography.heading,
@@ -62,6 +71,32 @@ const createStyles = ({ colors, typography }: Theme) =>
       ...typography.heading,
       color: colors.accent,
       fontSize: fontSize.subtitle,
+    },
+    roundRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.sm,
+    },
+    roundLabel: {
+      ...typography.label,
+      color: colors.textMuted,
+      fontSize: fontSize.caption,
+    },
+    progress: {
+      flexDirection: 'row',
+      gap: 4,
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: colors.border,
+    },
+    dotDone: {
+      backgroundColor: colors.accent,
     },
     compass: {
       alignItems: 'center',
@@ -174,33 +209,47 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
 
   return (
     <Screen
+      footer={!record ? <Button label={VALIDATE_LABEL} onPress={game.submit} /> : undefined}
       header={
-        game.isMultiplayer && !record ? (
-          <PlayerTabs
-            activeIndex={game.activePlayerIndex}
-            allowRevision={game.config.allowRevision}
-            answered={game.answeredByPlayer}
-            onSelect={game.selectPlayer}
-            order={game.roundOrder}
-            players={game.players}
-          />
-        ) : undefined
+        <View style={styles.header}>
+          <View style={styles.topBar}>
+            <Pressable accessibilityRole="button" hitSlop={12} onPress={onQuit}>
+              <Text style={styles.quit}>{QUIT_LABEL}</Text>
+            </Pressable>
+            <Text style={styles.score}>{scoreLabel}</Text>
+          </View>
+
+          <View style={styles.roundRow}>
+            <Text style={styles.roundLabel}>
+              {ROUND_LABEL} {formatRoundProgress(game.roundNumber, game.totalRounds)}
+            </Text>
+            {game.totalRounds <= MAX_PROGRESS_DOTS && (
+              <View style={styles.progress}>
+                {Array.from({ length: game.totalRounds }, (_, index) => (
+                  <View key={index} style={[styles.dot, index < game.roundNumber && styles.dotDone]} />
+                ))}
+              </View>
+            )}
+          </View>
+
+          {game.isMultiplayer && !record && (
+            <PlayerTabs
+              activeIndex={game.activePlayerIndex}
+              allowRevision={game.config.allowRevision}
+              answered={game.answeredByPlayer}
+              onSelect={game.selectPlayer}
+              order={game.roundOrder}
+              players={game.players}
+            />
+          )}
+        </View>
       }
     >
-      <View style={styles.topBar}>
-        <Pressable accessibilityRole="button" hitSlop={12} onPress={onQuit}>
-          <Text style={styles.quit}>{QUIT_LABEL}</Text>
-        </Pressable>
-        <Text style={styles.score}>{scoreLabel}</Text>
-      </View>
-
       <PlaceCard
         originName={game.origin.name}
         place={game.place}
         player={game.isMultiplayer && !record ? game.currentPlayer : undefined}
-        roundNumber={game.roundNumber}
         showCountry={game.config.showCountry}
-        totalRounds={game.totalRounds}
       />
 
       <View style={styles.compass}>
@@ -244,7 +293,7 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
           ))}
       </Card>
 
-      {record ? (
+      {record && (
         <RoundResult
           isLastRound={game.roundNumber === game.totalRounds}
           onNext={game.next}
@@ -252,8 +301,6 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
           players={game.players}
           record={record}
         />
-      ) : (
-        <Button label={VALIDATE_LABEL} onPress={game.submit} />
       )}
     </Screen>
   );

@@ -6,7 +6,7 @@ export const HEIGHT_RATIO = 0.98;
 export const AVAILABLE_X_RATIO = 0.44;
 export const BOTTOM_MARGIN = 18;
 
-/** Zooms possibles a la revelation (1 = echelle reelle). */
+/** Zooms possibles sur le cercle (1 = echelle reelle). */
 export const ZOOM_STEPS = [1, 1.5, 2, 3, 4, 6, 8, 12, 20, 30] as const;
 export const MAX_ZOOM = 30;
 
