@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
-import { arcKmFromChordKm, formatBearing, formatDistance, formatInclination } from '@/helpers';
+import { arcKmFromChordKm, formatBearing, formatDistance } from '@/helpers';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
@@ -119,7 +119,7 @@ export const RoundResult = ({ record, players, options, isLastRound, onNext }: R
         {options.straightLine && (
           <View style={styles.truthRow}>
             <Text style={styles.truthRowLabel}>{ROW_LABELS.inclination}</Text>
-            <Text style={styles.truthValue}>{formatInclination(truth.trueInclination)}</Text>
+            <Text style={styles.truthValue}>{Math.round(truth.trueInclination)}°</Text>
           </View>
         )}
         <View style={styles.truthRow}>
