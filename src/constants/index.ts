@@ -1,6 +1,7 @@
 import type { Category, Difficulty, GameSettings, Origin, Zone } from '@/types';
 
 export * from './theme';
+export * from './indices';
 export { PLACES } from './places';
 
 // --- Score ---

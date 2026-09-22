@@ -1,6 +1,6 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
 import { formatNumber, loadBestScore } from '@/helpers';
@@ -8,13 +8,10 @@ import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
-import Compass from '../Compass';
+import GameCard from '../GameCard';
 import UfoButton from '../UfoButton';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
 import Screen from '../ui/Screen';
-import { APP_TITLE, DECORATIVE_BEARING } from './constants';
-import { compassSizeFor } from './helpers';
+import { APP_TITLE } from './constants';
 
 const createStyles = ({ colors, typography }: Theme) =>
   StyleSheet.create({
@@ -22,6 +19,7 @@ const createStyles = ({ colors, typography }: Theme) =>
       alignItems: 'center',
       gap: spacing.xs,
       paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
     },
     ufoButton: {
       position: 'absolute',
@@ -43,52 +41,24 @@ const createStyles = ({ colors, typography }: Theme) =>
       fontSize: fontSize.body,
       textAlign: 'center',
     },
-    compass: {
-      alignItems: 'center',
-      marginVertical: spacing.sm,
-    },
-    rules: {
-      gap: spacing.sm + 2,
-    },
-    rule: {
-      flexDirection: 'row',
-      alignItems: 'center',
+    games: {
       gap: spacing.md,
-    },
-    ruleEmoji: {
-      fontSize: 22,
-    },
-    ruleText: {
-      ...typography.heading,
-      color: colors.text,
-      fontSize: fontSize.body,
-      fontWeight: '600',
-      flex: 1,
-    },
-    best: {
-      ...typography.heading,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
-      textAlign: 'center',
-    },
-    spacer: {
-      flexGrow: 1,
     },
   });
 
 export const HomeScreen = () => {
   const router = useRouter();
-  const { width } = useWindowDimensions();
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
   const [bestScore, setBestScore] = useState(0);
-  const [bearing, setBearing] = useState(DECORATIVE_BEARING);
 
   useFocusEffect(
     useCallback(() => {
       loadBestScore().then(setBestScore);
     }, []),
   );
+
+  const bestScoreNote = bestScore > 0 ? `${t.common.record(formatNumber(bestScore))} ${t.common.pts}` : undefined;
 
   return (
     <Screen>
@@ -100,27 +70,25 @@ export const HomeScreen = () => {
         <Text style={styles.tagline}>{t.home.tagline}</Text>
       </View>
 
-      <View style={styles.compass}>
-        <Compass size={compassSizeFor(width)} bearing={bearing} onChange={setBearing} />
+      <View style={styles.games}>
+        <GameCard
+          ctaLabel={t.home.games.compass.cta}
+          icon="🧭"
+          meta={t.home.games.compass.meta}
+          note={bestScoreNote}
+          onPress={() => router.push('/setup')}
+          tagline={t.home.games.compass.tagline}
+          title={t.home.games.compass.title}
+        />
+        <GameCard
+          ctaLabel={t.home.games.clues.cta}
+          icon="🧩"
+          meta={t.home.games.clues.meta}
+          onPress={() => router.push('/indices-setup')}
+          tagline={t.home.games.clues.tagline}
+          title={t.home.games.clues.title}
+        />
       </View>
-
-      <Card style={styles.rules}>
-        {t.home.rules.map(({ emoji, text }) => (
-          <View key={text} style={styles.rule}>
-            <Text style={styles.ruleEmoji}>{emoji}</Text>
-            <Text style={styles.ruleText}>{text}</Text>
-          </View>
-        ))}
-      </Card>
-
-      {bestScore > 0 && (
-        <Text style={styles.best}>
-          {t.common.record(formatNumber(bestScore))} {t.common.pts}
-        </Text>
-      )}
-
-      <View style={styles.spacer} />
-      <Button label={t.home.play} onPress={() => router.push('/setup')} />
     </Screen>
   );
 };

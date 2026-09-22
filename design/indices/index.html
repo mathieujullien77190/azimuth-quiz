@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Indices — maquette</title>
+<style>
+  :root {
+    --bg: #0B1220;
+    --surface: #141E33;
+    --surface-high: #1B2842;
+    --border: #25334F;
+    --text: #F3F6FC;
+    --text-muted: #93A0BC;
+    --accent: #F5B841;
+    --accent-dark: #C98A12;
+    --truth: #FACC15;
+    --danger: #FF6B6B;
+    --success: #4ADE80;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    display: flex;
+    justify-content: center;
+    padding: 28px 16px 60px;
+  }
+  .phone {
+    width: 390px;
+    max-width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 32px;
+    padding: 18px 18px 24px;
+  }
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 4px 14px;
+  }
+  .quit { color: var(--text-muted); font-size: 14px; font-weight: 800; }
+  .score { color: var(--accent); font-size: 16px; font-weight: 800; transition: color 0.3s ease; }
+  .score.pulse { animation: pulse 0.4s ease; }
+  @keyframes pulse { 0% { transform: scale(1.3); } 100% { transform: scale(1); } }
+
+  .roundrow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 4px 14px;
+  }
+  .roundlabel {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .dots { display: flex; gap: 4px; }
+  .dot { width: 8px; height: 8px; border-radius: 4px; background: var(--border); }
+  .dot.done { background: var(--accent); }
+
+  .hint {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    margin: 0 0 14px;
+  }
+
+  .players { display: flex; gap: 6px; padding: 0 2px 14px; }
+  .chip {
+    flex: 1;
+    text-align: center;
+    padding: 8px 4px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-weight: 800;
+    font-size: 11px;
+    cursor: pointer;
+    transition: border-color 0.25s ease, background 0.25s ease, color 0.25s ease;
+  }
+  .chip.turn { border-color: var(--accent); color: var(--accent); }
+  .chip.turn::before { content: "▸ "; }
+  .chip.picked { background: var(--accent); border-color: var(--accent); color: #1A1203; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+
+  .indiceGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .indiceCard {
+    background: var(--surface-high);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 10px 8px 9px;
+    text-align: center;
+    min-height: 96px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: border-color 0.4s ease, background 0.4s ease, opacity 0.4s ease;
+  }
+  .indiceCard.locked { opacity: 0.45; }
+  .indiceCard.revealed { border-color: var(--accent); background: rgba(245, 184, 65, 0.08); }
+  .indiceCard.next { border-color: var(--border); box-shadow: 0 0 0 1.5px var(--border) inset; animation: hint 1.6s ease-in-out infinite; }
+  @keyframes hint { 0%, 100% { border-color: var(--border); } 50% { border-color: var(--text-muted); } }
+
+  .indiceLabel { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); }
+  .indiceBody { height: 42px; display: flex; align-items: center; justify-content: center; width: 100%; }
+  .lockIcon { font-size: 17px; opacity: 0.6; }
+
+  .countryShape { width: 46px; height: 40px; position: relative; background: var(--surface); border: 1.5px solid var(--border); }
+  .countryShape.paris { clip-path: polygon(50% 0%, 90% 20%, 100% 60%, 70% 100%, 30% 100%, 0% 60%, 10% 20%); }
+  .countryShape.tokyo { clip-path: polygon(15% 90%, 5% 60%, 20% 30%, 45% 10%, 70% 0%, 95% 25%, 80% 45%, 90% 70%, 60% 100%); }
+  .countryShape.rio { clip-path: polygon(20% 0%, 80% 5%, 100% 45%, 85% 90%, 40% 100%, 0% 60%); }
+  .revealed .countryShape { border-color: var(--accent); }
+  .countryDot { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: var(--danger); transform: translate(-50%, -50%); box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.25); }
+
+  .popGauge { width: 90%; height: 10px; border-radius: 6px; background: var(--surface); border: 1px solid var(--border); overflow: hidden; }
+  .popFill { height: 100%; width: 0%; background: var(--accent); border-radius: 6px; transition: width 0.9s cubic-bezier(.2,.8,.2,1); }
+
+  .riverBox { width: 90%; height: 42px; }
+
+  .bigEmoji { font-size: 30px; transform: scale(0.4); opacity: 0; transition: transform 0.45s cubic-bezier(.34,1.6,.5,1), opacity 0.3s ease; }
+  .bigEmoji.shown { transform: scale(1); opacity: 1; }
+
+  .initialLetter { font-size: 30px; font-weight: 900; color: var(--accent); opacity: 0; transition: opacity 0.4s ease; }
+  .initialLetter.shown { opacity: 1; }
+
+  .latGauge { width: 22px; height: 42px; border-radius: 5px; border: 1px solid var(--border); background: var(--surface); position: relative; }
+  .latEquator { position: absolute; left: -3px; right: -3px; top: 50%; height: 1px; background: var(--text-muted); opacity: 0.5; }
+  .latMarker { position: absolute; left: 50%; bottom: 50%; transform: translate(-50%, 50%); font-size: 13px; transition: bottom 0.9s cubic-bezier(.2,.8,.2,1); }
+
+  .nextBtn {
+    width: 100%;
+    min-height: 56px;
+    border-radius: 999px;
+    background: var(--accent);
+    border: none;
+    border-bottom: 4px solid var(--accent-dark);
+    color: #1A1203;
+    font-family: inherit;
+    font-weight: 900;
+    font-size: 14px;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+  .nextBtn:active { transform: translateY(2px); border-bottom-width: 2px; }
+  .nextBtn:disabled {
+    background: var(--surface-high);
+    border-bottom-color: var(--border);
+    color: var(--text-muted);
+    cursor: default;
+  }
+
+  .buzzBtn {
+    width: 100%;
+    min-height: 56px;
+    border-radius: 999px;
+    background: var(--surface-high);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    font-family: inherit;
+    font-weight: 900;
+    font-size: 13.5px;
+    cursor: pointer;
+  }
+  .buzzBtn:disabled { opacity: 0.35; cursor: default; }
+
+  .buzzPanel { margin-top: 12px; padding: 14px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); }
+  .buzzTitle { font-size: 11.5px; font-weight: 800; color: var(--text-muted); text-align: center; margin: 0 0 10px; }
+  .buzzChips { display: flex; gap: 6px; margin-bottom: 10px; }
+  .verdictRow { display: flex; gap: 8px; }
+  .verdictBtn {
+    flex: 1;
+    padding: 11px 4px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--surface-high);
+    font-family: inherit;
+    font-weight: 900;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .verdictBtn.correct { color: var(--success); }
+  .verdictBtn.wrong { color: var(--danger); }
+  .verdictBtn:disabled { opacity: 0.35; cursor: default; }
+
+  .resultBanner { text-align: center; padding: 10px 4px 2px; font-size: 12.5px; font-weight: 800; min-height: 18px; }
+  .resultBanner.correct { color: var(--success); }
+  .resultBanner.wrong { color: var(--danger); }
+
+  .revealAnswer { text-align: center; font-size: 14px; font-weight: 800; color: var(--text); margin: 2px 0 10px; }
+  .revealAnswer .sub { display: block; font-size: 10.5px; color: var(--text-muted); font-weight: 700; margin-top: 2px; }
+
+  .nextRoundBtn {
+    width: 100%;
+    min-height: 52px;
+    border-radius: 999px;
+    background: var(--accent);
+    border: none;
+    border-bottom: 4px solid var(--accent-dark);
+    color: #1A1203;
+    font-family: inherit;
+    font-weight: 900;
+    font-size: 13.5px;
+    cursor: pointer;
+  }
+  .nextRoundBtn:active { transform: translateY(2px); border-bottom-width: 2px; }
+
+  .note { max-width: 390px; margin: 20px auto 0; color: var(--text-muted); font-size: 12px; line-height: 1.6; text-align: center; }
+  .note b { color: var(--text); }
+  .hidden-el { display: none !important; }
+</style>
+</head>
+<body>
+  <div>
+    <div class="phone">
+      <div class="topbar">
+        <span class="quit">✕ Quitter</span>
+        <span class="score" id="scoreValue">500 pts</span>
+      </div>
+      <div class="roundrow">
+        <span class="roundlabel">Manche <span id="roundNum">1</span> / 3</span>
+        <div class="dots" id="dots"></div>
+      </div>
+
+      <p class="hint" id="placeHint">À qui le tour de demander un indice ?</p>
+
+      <div class="players" id="players"></div>
+
+      <div class="card">
+        <div class="indiceGrid" id="indiceGrid"></div>
+      </div>
+
+      <button class="nextBtn" id="nextBtn">Indice suivant</button>
+      <button class="buzzBtn" id="buzzBtn">🔔 J'ai trouvé !</button>
+
+      <div class="buzzPanel hidden-el" id="buzzPanel">
+        <p class="buzzTitle" id="buzzTitle">Qui buzze ?</p>
+        <div class="buzzChips" id="buzzChips"></div>
+        <div class="verdictRow hidden-el" id="verdictRow">
+          <button class="verdictBtn correct" id="verdictCorrect">✓ Bonne réponse</button>
+          <button class="verdictBtn wrong" id="verdictWrong">✕ Faux</button>
+        </div>
+      </div>
+
+      <p class="resultBanner" id="resultBanner"></p>
+      <p class="revealAnswer hidden-el" id="revealAnswer"></p>
+      <button class="nextRoundBtn hidden-el" id="nextRoundBtn">Manche suivante</button>
+    </div>
+
+    <p class="note">
+      <b>Idée :</b> un lieu à deviner, des indices abstraits (jamais de texte qui le nomme).
+      Chacun son tour déclenche l'indice suivant — plus il y en a, moins la manche vaut de
+      points. N'importe qui peut buzzer dès qu'il pense savoir ; la maquette laisse arbitrer
+      "bonne réponse / faux" à la main (pas de vraie carte du monde branchée). Ordre des
+      indices, du plus vague au plus parlant : <b>pays</b> (silhouette + point), <b>population</b>
+      (jauge), <b>rivière</b> (tracé), <b>climat</b>, <b>relief</b>, <b>initiale</b>,
+      <b>monument</b> stylisé, <b>latitude</b> (jauge hémisphère).
+    </p>
+  </div>
+
+<script>
+(function () {
+  var PLAYERS = ['Matou', 'Manou', 'Nina'];
+
+  var PLACES = [
+    { name: 'Paris', country: 'France', shapeClass: 'paris', dot: { left: 46, top: 42 }, popRatio: 0.42, river: true, climate: '🌤️', relief: '➖', initial: 'P', monument: '🗼', lat: 48.9 },
+    { name: 'Tokyo', country: 'Japon', shapeClass: 'tokyo', dot: { left: 55, top: 55 }, popRatio: 0.95, river: true, climate: '☀️', relief: '🌊', initial: 'T', monument: '🗼', lat: 35.7 },
+    { name: 'Rio de Janeiro', country: 'Brésil', shapeClass: 'rio', dot: { left: 70, top: 75 }, popRatio: 0.68, river: false, climate: '⛅', relief: '⛰️', initial: 'R', monument: '⛪', lat: -22.9 },
+  ];
+
+  var INDICE_ORDER = [
+    { id: 'pays', label: 'Pays' },
+    { id: 'population', label: 'Population' },
+    { id: 'riviere', label: 'Rivière' },
+    { id: 'climat', label: 'Climat' },
+    { id: 'relief', label: 'Relief' },
+    { id: 'initiale', label: 'Initiale' },
+    { id: 'monument', label: 'Monument' },
+    { id: 'latitude', label: 'Latitude' },
+  ];
+
+  var SCORE_START = 500;
+  var SCORE_STEP = 60;
+
+  var roundIndex = 0;
+  var place = PLACES[0];
+  var revealedCount = 0;
+  var turnIndex = 0;
+  var buzzedPlayer = null;
+  var roundOver = false;
+
+  var el = {
+    scoreValue: document.getElementById('scoreValue'),
+    roundNum: document.getElementById('roundNum'),
+    dots: document.getElementById('dots'),
+    placeHint: document.getElementById('placeHint'),
+    players: document.getElementById('players'),
+    indiceGrid: document.getElementById('indiceGrid'),
+    nextBtn: document.getElementById('nextBtn'),
+    buzzBtn: document.getElementById('buzzBtn'),
+    buzzPanel: document.getElementById('buzzPanel'),
+    buzzTitle: document.getElementById('buzzTitle'),
+    buzzChips: document.getElementById('buzzChips'),
+    verdictRow: document.getElementById('verdictRow'),
+    verdictCorrect: document.getElementById('verdictCorrect'),
+    verdictWrong: document.getElementById('verdictWrong'),
+    resultBanner: document.getElementById('resultBanner'),
+    revealAnswer: document.getElementById('revealAnswer'),
+    nextRoundBtn: document.getElementById('nextRoundBtn'),
+  };
+
+  function currentScore() { return Math.max(SCORE_START - revealedCount * SCORE_STEP, 20); }
+
+  function renderDots() {
+    el.dots.innerHTML = '';
+    PLACES.forEach(function (_, i) {
+      var d = document.createElement('div');
+      d.className = 'dot' + (i < roundIndex ? ' done' : '');
+      el.dots.appendChild(d);
+    });
+  }
+
+  function renderPlayers() {
+    el.players.innerHTML = '';
+    PLAYERS.forEach(function (name, i) {
+      var chip = document.createElement('div');
+      chip.className = 'chip';
+      if (!roundOver && i === turnIndex) chip.classList.add('turn');
+      if (buzzedPlayer === name) chip.classList.add('picked');
+      chip.textContent = name;
+      el.players.appendChild(chip);
+    });
+  }
+
+  function buildIndiceBody(def, id) {
+    var body = document.createElement('div');
+    body.className = 'indiceBody';
+
+    if (id === 'pays') {
+      var shape = document.createElement('div');
+      shape.className = 'countryShape ' + def.shapeClass;
+      var dot = document.createElement('div');
+      dot.className = 'countryDot';
+      dot.style.left = def.dot.left + '%';
+      dot.style.top = def.dot.top + '%';
+      shape.appendChild(dot);
+      body.appendChild(shape);
+    } else if (id === 'population') {
+      var gauge = document.createElement('div');
+      gauge.className = 'popGauge';
+      var fill = document.createElement('div');
+      fill.className = 'popFill';
+      gauge.appendChild(fill);
+      body.appendChild(gauge);
+      requestAnimationFrame(function () { setTimeout(function () { fill.style.width = (def.popRatio * 100) + '%'; }, 40); });
+    } else if (id === 'riviere') {
+      var box = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      box.setAttribute('viewBox', '0 0 90 42');
+      box.setAttribute('class', 'riverBox');
+      if (def.river) {
+        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', 'M5,8 C25,18 15,26 35,24 C55,22 45,34 85,36');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', '#F5B841');
+        path.setAttribute('stroke-width', '3');
+        path.setAttribute('stroke-linecap', 'round');
+        box.appendChild(path);
+      } else {
+        var dash = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        dash.setAttribute('x1', '20'); dash.setAttribute('y1', '21');
+        dash.setAttribute('x2', '70'); dash.setAttribute('y2', '21');
+        dash.setAttribute('stroke', '#93A0BC'); dash.setAttribute('stroke-width', '2');
+        dash.setAttribute('stroke-dasharray', '4 5');
+        box.appendChild(dash);
+      }
+      body.appendChild(box);
+    } else if (id === 'climat') {
+      var e = document.createElement('div');
+      e.className = 'bigEmoji';
+      e.textContent = def.climate;
+      body.appendChild(e);
+      requestAnimationFrame(function () { setTimeout(function () { e.classList.add('shown'); }, 40); });
+    } else if (id === 'relief') {
+      var r = document.createElement('div');
+      r.className = 'bigEmoji';
+      r.textContent = def.relief;
+      body.appendChild(r);
+      requestAnimationFrame(function () { setTimeout(function () { r.classList.add('shown'); }, 40); });
+    } else if (id === 'initiale') {
+      var letter = document.createElement('div');
+      letter.className = 'initialLetter';
+      letter.textContent = def.initial;
+      body.appendChild(letter);
+      requestAnimationFrame(function () { setTimeout(function () { letter.classList.add('shown'); }, 40); });
+    } else if (id === 'monument') {
+      var m = document.createElement('div');
+      m.className = 'bigEmoji';
+      m.textContent = def.monument;
+      body.appendChild(m);
+      requestAnimationFrame(function () { setTimeout(function () { m.classList.add('shown'); }, 40); });
+    } else if (id === 'latitude') {
+      var lg = document.createElement('div');
+      lg.className = 'latGauge';
+      var eq = document.createElement('div');
+      eq.className = 'latEquator';
+      lg.appendChild(eq);
+      var marker = document.createElement('div');
+      marker.className = 'latMarker';
+      marker.textContent = def.lat >= 0 ? '▲' : '▼';
+      marker.style.bottom = '50%';
+      lg.appendChild(marker);
+      body.appendChild(lg);
+      var fraction = (def.lat + 90) / 180;
+      requestAnimationFrame(function () { setTimeout(function () { marker.style.bottom = (fraction * 100) + '%'; }, 40); });
+    }
+
+    return body;
+  }
+
+  function renderIndices() {
+    el.indiceGrid.innerHTML = '';
+    INDICE_ORDER.forEach(function (def, i) {
+      var card = document.createElement('div');
+      var isRevealed = i < revealedCount;
+      var isNext = i === revealedCount && !roundOver;
+      card.className = 'indiceCard ' + (isRevealed ? 'revealed' : 'locked') + (isNext ? ' next' : '');
+
+      var label = document.createElement('p');
+      label.className = 'indiceLabel';
+      label.textContent = def.label;
+      card.appendChild(label);
+
+      if (isRevealed) {
+        card.appendChild(buildIndiceBody(place, def.id));
+      } else {
+        var lockBody = document.createElement('div');
+        lockBody.className = 'indiceBody';
+        var lock = document.createElement('span');
+        lock.className = 'lockIcon';
+        lock.textContent = '🔒';
+        lockBody.appendChild(lock);
+        card.appendChild(lockBody);
+      }
+
+      el.indiceGrid.appendChild(card);
+    });
+  }
+
+  function pulseScore() {
+    el.scoreValue.textContent = currentScore() + ' pts';
+    el.scoreValue.classList.remove('pulse');
+    void el.scoreValue.offsetWidth;
+    el.scoreValue.classList.add('pulse');
+  }
+
+  function render() {
+    el.roundNum.textContent = String(roundIndex + 1);
+    el.placeHint.textContent = roundOver ? 'Manche terminée' : PLAYERS[turnIndex] + ' demande le prochain indice';
+    el.scoreValue.textContent = currentScore() + ' pts';
+    renderDots();
+    renderPlayers();
+    renderIndices();
+    el.nextBtn.disabled = roundOver || revealedCount >= INDICE_ORDER.length;
+    el.buzzBtn.disabled = roundOver;
+  }
+
+  function revealNext() {
+    if (roundOver || revealedCount >= INDICE_ORDER.length) return;
+    revealedCount += 1;
+    turnIndex = (turnIndex + 1) % PLAYERS.length;
+    render();
+    pulseScore();
+    if (revealedCount >= INDICE_ORDER.length) el.nextBtn.disabled = true;
+  }
+
+  function openBuzzPanel() {
+    if (roundOver) return;
+    el.buzzPanel.classList.remove('hidden-el');
+    el.verdictRow.classList.add('hidden-el');
+    el.buzzTitle.textContent = 'Qui buzze ?';
+    buzzedPlayer = null;
+    el.buzzChips.innerHTML = '';
+    PLAYERS.forEach(function (name) {
+      var chip = document.createElement('div');
+      chip.className = 'chip';
+      chip.textContent = name;
+      chip.addEventListener('click', function () {
+        buzzedPlayer = name;
+        el.buzzTitle.textContent = name + ' buzze — bonne réponse ?';
+        el.verdictRow.classList.remove('hidden-el');
+        Array.prototype.forEach.call(el.buzzChips.children, function (c) {
+          c.classList.toggle('picked', c.textContent === name);
+        });
+      });
+      el.buzzChips.appendChild(chip);
+    });
+    el.nextBtn.disabled = true;
+    el.buzzBtn.disabled = true;
+  }
+
+  function settleRound(correct) {
+    roundOver = true;
+    el.buzzPanel.classList.add('hidden-el');
+    var pts = currentScore();
+
+    if (correct) {
+      el.resultBanner.className = 'resultBanner correct';
+      el.resultBanner.textContent = buzzedPlayer + ' marque ' + pts + ' points !';
+    } else {
+      el.resultBanner.className = 'resultBanner wrong';
+      el.resultBanner.textContent = buzzedPlayer + ' se trompe — manche perdue.';
+    }
+
+    el.revealAnswer.classList.remove('hidden-el');
+    el.revealAnswer.innerHTML = 'C\'était <b>' + place.name + '</b><span class="sub">' + place.country + '</span>';
+
+    revealedCount = INDICE_ORDER.length;
+    renderIndices();
+    el.nextRoundBtn.classList.remove('hidden-el');
+    el.nextBtn.disabled = true;
+    el.buzzBtn.disabled = true;
+  }
+
+  function nextRound() {
+    roundIndex = (roundIndex + 1) % PLACES.length;
+    place = PLACES[roundIndex];
+    revealedCount = 0;
+    turnIndex = 0;
+    buzzedPlayer = null;
+    roundOver = false;
+    el.resultBanner.textContent = '';
+    el.revealAnswer.classList.add('hidden-el');
+    el.nextRoundBtn.classList.add('hidden-el');
+    render();
+  }
+
+  el.nextBtn.addEventListener('click', revealNext);
+  el.buzzBtn.addEventListener('click', openBuzzPanel);
+  el.verdictCorrect.addEventListener('click', function () { settleRound(true); });
+  el.verdictWrong.addEventListener('click', function () { settleRound(false); });
+  el.nextRoundBtn.addEventListener('click', nextRound);
+
+  render();
+})();
+</script>
+</body>
+</html>

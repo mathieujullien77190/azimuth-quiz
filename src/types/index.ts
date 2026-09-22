@@ -12,13 +12,22 @@ export type Zone = 'france' | 'europe' | 'world';
 /** Popularite/notoriete du lieu, du plus connu au plus pointu. */
 export type Difficulty = 'easy' | 'intermediate' | 'hard' | 'master';
 
-export type Place = {
+/**
+ * Base commune aux deux jeux : identite geographique minimale d'un lieu. Boussole (`Place`) et
+ * Indices (`IndicesPlace`) l'etendent chacun avec leurs propres champs de jeu — les deux gardent
+ * des pools de lieux totalement separes (curation, taille et criteres differents), seule cette
+ * forme est partagee.
+ */
+export type GeoPlace = {
   name: string;
   country: string;
+  coordinates: Coordinates;
+};
+
+export type Place = GeoPlace & {
   /** Code pays ISO 3166-1 alpha-2 (drapeau, filtre de zone). */
   code: string;
   category: Category;
-  coordinates: Coordinates;
   difficulty: Difficulty;
   /** Anecdote courte sur le lieu : affichee repliee, seulement a la revelation. Absente pour les
    * lieux pas encore documentes (le composant n'affiche alors rien). */
@@ -126,6 +135,75 @@ export type ThemeTypography = {
   /** Petites etiquettes (majuscules espacees, selon le theme). */
   label: TextStyle;
   body: TextStyle;
+};
+
+// --- Indices : jeu independant de Full Azimut, avec ses propres lieux (voir constants/indices.ts) ---
+
+/** Identifiant d'un indice. Le cout de chacun (voir INDICES_CLUE_COSTS) porte la notion de
+ * difficulte : pas d'ordre impose, chacun choisit librement a son tour (voir IndicesGameScreen). */
+export type IndicesClueId =
+  | 'position'
+  | 'population'
+  | 'climate'
+  | 'emoji'
+  | 'elevation'
+  | 'letterCount'
+  | 'wordCount'
+  | 'flagColors'
+  | 'bearing'
+  | 'distance'
+  | 'localTime'
+  | 'phoneCode'
+  | 'currency'
+  | 'airportCode';
+
+/** Position approximative de la ville dans son pays, sur une grille 3x3. */
+export type IndicesPositionInCountry = 'center' | 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
+
+/** Couleurs generiques utilisees par les drapeaux geres (voir constants/indices.ts). */
+export type IndicesFlagColorId = 'red' | 'blue' | 'white' | 'green' | 'yellow' | 'black';
+
+/** Une couleur du drapeau et sa part de la surface totale (%), couleurs uniques fusionnees et
+ * triees dans leur ordre d'apparition sur le drapeau (l'indice ne revele que la premiere).
+ * Tuple positionnel (voir INDICES_FLAG_COLOR_FIELD dans constants/indices.ts pour qui est qui). */
+export type IndicesFlagColorRow = readonly [colorId: IndicesFlagColorId, hex: string, percent: number];
+
+/** Lieu du jeu Indices : etend `GeoPlace`, mais son pool de lieux reste independant de celui de
+ * Boussole (voir constants/indices.ts vs constants/places/). */
+export type IndicesPlace = GeoPlace & {
+  difficulty: Difficulty;
+  positionInCountry: IndicesPositionInCountry;
+  population: number;
+  /** Tendance climatique generale, en emoji (soleil, pluie, neige, desert...). */
+  climateEmoji: string;
+  elevationMeters: number;
+  /** Identifiant de fuseau horaire IANA (ex. "Europe/Paris"), pour l'indice heure locale. */
+  timezone: string;
+  /** Indicatif telephonique international du pays (ex. "+33"). */
+  phoneCode: string;
+  /** Symbole de la devise du pays (ex. "€", "$") : plusieurs pays peuvent legitimement partager
+   * le meme symbole (zone euro...), l'indice est alors volontairement plus faible. */
+  currency: string;
+  /** Code IATA (3 lettres) du principal aeroport commercial de la ville. */
+  airportCode: string;
+  /** 3 emoji candidats evoquant la ville (monument/culture/nature...) : l'indice en tire un au
+   * hasard a chaque revelation, pas toujours le meme. */
+  emojis: readonly [string, string, string];
+};
+
+/** Qui peut buzzer/proposer une reponse : uniquement celui qui a choisi le dernier indice (pas de
+ * selection a faire), ou n'importe quel joueur (on demande alors qui a buzze). */
+export type IndicesBuzzerMode = 'turnPlayer' | 'anyone';
+
+/** Comment la reponse est verifiee : dite a voix haute (arbitrage manuel bonne/mauvaise reponse),
+ * ou tapee et comparee automatiquement au nom du lieu. */
+export type IndicesAnswerMethod = 'spoken' | 'typed';
+
+export type IndicesSettings = {
+  playerNames: string[];
+  difficulty: Difficulty;
+  buzzerMode: IndicesBuzzerMode;
+  answerMethod: IndicesAnswerMethod;
 };
 
 export type Theme = {

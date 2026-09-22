@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Plus haut / plus bas — maquette v2</title>
+<style>
+  :root {
+    --bg: #0B1220;
+    --surface: #141E33;
+    --surface-high: #1B2842;
+    --border: #25334F;
+    --text: #F3F6FC;
+    --text-muted: #93A0BC;
+    --accent: #F5B841;
+    --accent-dark: #C98A12;
+    --danger: #FF6B6B;
+    --success: #4ADE80;
+    --sky: #24365E;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    display: flex;
+    justify-content: center;
+    padding: 28px 16px 60px;
+  }
+  .phone { width: 390px; max-width: 100%; }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 4px 14px;
+  }
+  .quit { color: var(--text-muted); font-size: 14px; font-weight: 800; }
+  .streak { color: var(--accent); font-size: 16px; font-weight: 800; }
+
+  .tabs { display: flex; gap: 6px; padding: 0 2px 16px; }
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 9px 4px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-weight: 800;
+    font-size: 11.5px;
+    cursor: pointer;
+  }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: #1A1203; }
+
+  .duel { display: flex; align-items: stretch; gap: 8px; }
+  .vsBadge {
+    align-self: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    background: var(--surface-high);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .cardCol { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+
+  .card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 18px;
+    padding: 14px 10px 12px;
+    text-align: center;
+    transition: border-color 0.4s ease, background 0.4s ease;
+  }
+  .card.correct { border-color: var(--success); background: rgba(74, 222, 128, 0.07); }
+  .card.wrong { border-color: var(--danger); background: rgba(255, 107, 107, 0.08); }
+
+  .card .city { font-size: 14px; font-weight: 800; margin: 0; line-height: 1.15; }
+  .card .country { font-size: 10px; color: var(--text-muted); margin: 1px 0 8px; }
+
+  .stage {
+    height: 84px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 8px;
+  }
+
+  /* --- population : skyline qui pousse --- */
+  .skyline { display: flex; align-items: flex-end; gap: 3px; height: 100%; }
+  .bldg {
+    width: 9px;
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+    height: 0px;
+    transition: height 0.9s cubic-bezier(.2,.8,.2,1);
+  }
+  .bldg .win { fill: #1A1203; }
+
+  /* --- altitude : jauge avec marqueur qui monte/descend --- */
+  .altGauge {
+    width: 26px;
+    height: 100%;
+    border-radius: 6px;
+    background:
+      linear-gradient(to bottom, var(--sky) 0%, var(--sky) 30%, var(--surface-high) 30%, var(--surface-high) 100%);
+    position: relative;
+    border: 1px solid var(--border);
+  }
+  .altSea {
+    position: absolute;
+    left: -3px; right: -3px;
+    top: 70%;
+    height: 1px;
+    background: var(--text-muted);
+    opacity: 0.5;
+  }
+  .altMarker {
+    position: absolute;
+    left: 50%;
+    bottom: 70%;
+    transform: translate(-50%, 50%);
+    font-size: 15px;
+    transition: bottom 0.9s cubic-bezier(.2,.8,.2,1);
+  }
+
+  /* --- temperature : icone meteo --- */
+  .weatherIcon { font-size: 40px; line-height: 1; transform: scale(0.4); opacity: 0; transition: transform 0.5s cubic-bezier(.34,1.6,.5,1), opacity 0.3s ease; }
+  .weatherIcon.shown { transform: scale(1); opacity: 1; }
+
+  .value { font-size: 22px; font-weight: 900; color: var(--accent); line-height: 1; }
+  .value.hidden { color: var(--text-muted); }
+  .unit { font-size: 9.5px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+  .pmRow { display: flex; gap: 6px; margin-top: 10px; }
+  .pmBtn {
+    flex: 1;
+    font-family: inherit;
+    font-weight: 900;
+    font-size: 15px;
+    padding: 9px 4px;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: var(--surface-high);
+    color: var(--text);
+  }
+  .pmBtn:hover { border-color: var(--accent); }
+  .pmBtn:disabled { opacity: 0.35; cursor: default; }
+  .pmBtn.plus { color: var(--success); }
+  .pmBtn.minus { color: var(--danger); }
+
+  .resultLine {
+    text-align: center;
+    margin-top: 12px;
+    min-height: 18px;
+    font-size: 12.5px;
+    font-weight: 800;
+  }
+  .resultLine.correct { color: var(--success); }
+  .resultLine.wrong { color: var(--danger); }
+
+  .gameOver { text-align: center; padding: 40px 10px 10px; }
+  .gameOver .big { font-size: 15px; font-weight: 800; color: var(--danger); margin-bottom: 6px; }
+  .gameOver .streakNum { font-size: 56px; font-weight: 900; color: var(--accent); line-height: 1; margin-bottom: 4px; }
+  .gameOver .streakLabel { font-size: 12px; color: var(--text-muted); margin-bottom: 22px; }
+  .replayBtn {
+    width: 100%;
+    padding: 15px;
+    border-radius: 999px;
+    background: var(--accent);
+    border: none;
+    border-bottom: 4px solid var(--accent-dark);
+    color: #1A1203;
+    font-family: inherit;
+    font-weight: 900;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .note {
+    max-width: 390px;
+    margin: 22px auto 0;
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.6;
+    text-align: center;
+  }
+  .note b { color: var(--text); }
+  .hidden-el { display: none; }
+</style>
+</head>
+<body>
+  <div>
+    <div class="phone">
+      <div class="topbar">
+        <span class="quit">✕ Quitter</span>
+        <span class="streak" id="streakTop">Serie : 0</span>
+      </div>
+
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-cat="population">Population</button>
+        <button class="tab" data-cat="altitude">Altitude</button>
+        <button class="tab" data-cat="temperature">Temperature</button>
+      </div>
+
+      <div id="playArea">
+        <div class="duel">
+          <div class="cardCol">
+            <div class="card" id="cardLeft">
+              <p class="city" id="cityLeft">—</p>
+              <p class="country" id="countryLeft">—</p>
+              <div class="stage" id="stageLeft"></div>
+              <p class="value" id="valueLeft">—</p>
+              <p class="unit" id="unitLeft">—</p>
+            </div>
+            <div class="pmRow">
+              <button class="pmBtn minus" id="leftMinus">−</button>
+              <button class="pmBtn plus" id="leftPlus">+</button>
+            </div>
+          </div>
+
+          <span class="vsBadge">VS</span>
+
+          <div class="cardCol">
+            <div class="card" id="cardRight">
+              <p class="city" id="cityRight">—</p>
+              <p class="country" id="countryRight">—</p>
+              <div class="stage" id="stageRight"></div>
+              <p class="value hidden" id="valueRight">?</p>
+              <p class="unit" id="unitRight">—</p>
+            </div>
+            <div class="pmRow">
+              <button class="pmBtn minus" id="rightMinus">−</button>
+              <button class="pmBtn plus" id="rightPlus">+</button>
+            </div>
+          </div>
+        </div>
+
+        <p class="resultLine" id="resultLine"></p>
+      </div>
+
+      <div class="gameOver hidden-el" id="gameOver">
+        <p class="big">Perdu !</p>
+        <p class="streakNum" id="finalStreak">0</p>
+        <p class="streakLabel">bonnes reponses d'affilee</p>
+        <button class="replayBtn" id="replayBtn">Rejouer</button>
+      </div>
+    </div>
+
+    <p class="note">
+      <b>Idee :</b> deux villes cote a cote, la gauche connue, la droite cachee. Tape + sous celle
+      que tu penses la plus grande, ou − sous celle que tu penses la plus petite (les 4 boutons
+      sont equivalents deux a deux). <b>Population</b> : la ville pousse un immeuble a la fois,
+      plus elle grossit plus elle a d'habitants. <b>Altitude</b> : un repere grimpe ou plonge sur
+      une jauge (niveau de la mer marque). <b>Temperature</b> : une icone meteo (soleil, nuage,
+      neige) apparait selon le degre du jour.
+    </p>
+  </div>
+
+<script>
+(function () {
+  var DATA = {
+    population: {
+      unit: 'habitants',
+      format: function (v) { return (v / 1e6).toFixed(v >= 10e6 ? 0 : 1).replace('.', ',') + ' M'; },
+      cities: [
+        { city: 'Shanghai', country: 'Chine', value: 24900000 },
+        { city: 'Lagos', country: 'Nigeria', value: 15400000 },
+        { city: 'Tokyo', country: 'Japon', value: 14000000 },
+        { city: 'Mumbai', country: 'Inde', value: 12400000 },
+        { city: 'Le Caire', country: 'Egypte', value: 10100000 },
+        { city: 'Mexico', country: 'Mexique', value: 9200000 },
+        { city: 'Londres', country: 'Royaume-Uni', value: 9000000 },
+        { city: 'New York', country: 'Etats-Unis', value: 8300000 },
+        { city: 'Paris', country: 'France', value: 2100000 },
+        { city: 'Kathmandu', country: 'Nepal', value: 1400000 },
+        { city: 'La Paz', country: 'Bolivie', value: 800000 },
+        { city: 'Reykjavik', country: 'Islande', value: 130000 },
+      ],
+    },
+    altitude: {
+      unit: 'metres',
+      format: function (v) { return v + ' m'; },
+      cities: [
+        { city: 'La Paz', country: 'Bolivie', value: 3640 },
+        { city: 'Quito', country: 'Equateur', value: 2850 },
+        { city: 'Addis-Abeba', country: 'Ethiopie', value: 2355 },
+        { city: 'Mexico', country: 'Mexique', value: 2240 },
+        { city: 'Nairobi', country: 'Kenya', value: 1795 },
+        { city: 'Denver', country: 'Etats-Unis', value: 1609 },
+        { city: 'Kathmandu', country: 'Nepal', value: 1400 },
+        { city: 'Madrid', country: 'Espagne', value: 667 },
+        { city: 'Reykjavik', country: 'Islande', value: 61 },
+        { city: 'Paris', country: 'France', value: 35 },
+        { city: 'Le Caire', country: 'Egypte', value: 23 },
+        { city: 'Amsterdam', country: 'Pays-Bas', value: -2 },
+      ],
+    },
+    temperature: {
+      unit: 'aujourd’hui',
+      format: function (v) { return (v > 0 ? '+' : '') + v + '°C'; },
+      cities: [
+        { city: 'Dubai', country: 'Emirats arabes unis', value: 38 },
+        { city: 'Bangkok', country: 'Thailande', value: 34 },
+        { city: 'Singapour', country: 'Singapour', value: 31 },
+        { city: 'Le Caire', country: 'Egypte', value: 29 },
+        { city: 'Nairobi', country: 'Kenya', value: 24 },
+        { city: 'Mexico', country: 'Mexique', value: 22 },
+        { city: 'Paris', country: 'France', value: 14 },
+        { city: 'Oslo', country: 'Norvege', value: 5 },
+        { city: 'Reykjavik', country: 'Islande', value: 7 },
+        { city: 'Ushuaia', country: 'Argentine', value: 6 },
+        { city: 'Moscou', country: 'Russie', value: 3 },
+        { city: 'Ottawa', country: 'Canada', value: -2 },
+      ],
+    },
+  };
+
+  var category = 'population';
+  var pool = [];
+  var left = null;   // ville connue
+  var right = null;  // ville cachee (challenger)
+  var streak = 0;
+  var busy = false;
+
+  var el = {
+    cityLeft: document.getElementById('cityLeft'),
+    countryLeft: document.getElementById('countryLeft'),
+    valueLeft: document.getElementById('valueLeft'),
+    unitLeft: document.getElementById('unitLeft'),
+    cardLeft: document.getElementById('cardLeft'),
+    stageLeft: document.getElementById('stageLeft'),
+    cityRight: document.getElementById('cityRight'),
+    countryRight: document.getElementById('countryRight'),
+    valueRight: document.getElementById('valueRight'),
+    unitRight: document.getElementById('unitRight'),
+    cardRight: document.getElementById('cardRight'),
+    stageRight: document.getElementById('stageRight'),
+    resultLine: document.getElementById('resultLine'),
+    streakTop: document.getElementById('streakTop'),
+    playArea: document.getElementById('playArea'),
+    gameOver: document.getElementById('gameOver'),
+    finalStreak: document.getElementById('finalStreak'),
+  };
+
+  var buttons = {
+    leftPlus: document.getElementById('leftPlus'),
+    leftMinus: document.getElementById('leftMinus'),
+    rightPlus: document.getElementById('rightPlus'),
+    rightMinus: document.getElementById('rightMinus'),
+  };
+
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function drawNext() {
+    if (pool.length === 0) pool = shuffle(DATA[category].cities);
+    return pool.pop();
+  }
+
+  function maxValue() {
+    var vs = DATA[category].cities.map(function (c) { return c.value; });
+    return Math.max.apply(null, vs);
+  }
+
+  // --- rendu des "stages" selon la categorie ---
+  function buildStage(container, value, revealed) {
+    container.innerHTML = '';
+    if (category === 'population') {
+      var sky = document.createElement('div');
+      sky.className = 'skyline';
+      var count = 6;
+      var max = maxValue();
+      var ratio = Math.log(value + 1) / Math.log(max + 1);
+      for (var i = 0; i < count; i++) {
+        var b = document.createElement('div');
+        b.className = 'bldg';
+        // hauteurs variees pour un profil de ville, plafonnees par la population (log).
+        var jitter = 0.55 + ((i % 3) * 0.18);
+        var targetH = revealed ? Math.round(84 * ratio * jitter) : 0;
+        b.style.height = '0px';
+        container.appendChild(b);
+        (function (bar, h) {
+          requestAnimationFrame(function () {
+            setTimeout(function () { bar.style.height = h + 'px'; }, 40);
+          });
+        })(b, Math.max(targetH, revealed ? 6 : 0));
+      }
+    } else if (category === 'altitude') {
+      var gauge = document.createElement('div');
+      gauge.className = 'altGauge';
+      var sea = document.createElement('div');
+      sea.className = 'altSea';
+      gauge.appendChild(sea);
+      var marker = document.createElement('div');
+      marker.className = 'altMarker';
+      marker.textContent = '📍';
+      marker.style.bottom = '70%';
+      gauge.appendChild(marker);
+      container.appendChild(gauge);
+      if (revealed) {
+        var norm = Math.max(-100, Math.min(4000, value));
+        var pct = 70 + (norm / 4000) * 60 - (norm < 0 ? (Math.abs(norm) / 100) * 15 : 0);
+        pct = Math.max(4, Math.min(96, pct));
+        requestAnimationFrame(function () {
+          setTimeout(function () { marker.style.bottom = pct + '%'; }, 40);
+        });
+      }
+    } else {
+      var icon = document.createElement('div');
+      icon.className = 'weatherIcon';
+      icon.textContent = revealed ? weatherEmoji(value) : '🌍';
+      if (revealed) {
+        container.appendChild(icon);
+        requestAnimationFrame(function () {
+          setTimeout(function () { icon.classList.add('shown'); }, 40);
+        });
+      } else {
+        icon.classList.add('shown');
+        container.appendChild(icon);
+      }
+    }
+  }
+
+  function weatherEmoji(v) {
+    if (v >= 30) return '☀️';
+    if (v >= 18) return '🌤️';
+    if (v >= 8) return '⛅';
+    if (v >= 0) return '🌧️';
+    return '❄️';
+  }
+
+  function startRound(keepLeft) {
+    var def = DATA[category];
+    if (!keepLeft) left = drawNext();
+
+    el.cityLeft.textContent = left.city;
+    el.countryLeft.textContent = left.country;
+    el.valueLeft.textContent = def.format(left.value);
+    el.valueLeft.className = 'value';
+    el.unitLeft.textContent = def.unit;
+    el.cardLeft.className = 'card';
+    buildStage(el.stageLeft, left.value, true);
+
+    right = drawNext();
+    el.cityRight.textContent = right.city;
+    el.countryRight.textContent = right.country;
+    el.valueRight.textContent = '?';
+    el.valueRight.className = 'value hidden';
+    el.unitRight.textContent = def.unit;
+    el.cardRight.className = 'card';
+    buildStage(el.stageRight, right.value, false);
+
+    el.resultLine.textContent = '';
+    el.resultLine.className = 'resultLine';
+    Object.keys(buttons).forEach(function (k) { buttons[k].disabled = false; });
+    busy = false;
+  }
+
+  function resetGame() {
+    category = document.querySelector('.tab.active').dataset.cat;
+    pool = shuffle(DATA[category].cities);
+    streak = 0;
+    el.streakTop.textContent = 'Serie : 0';
+    el.playArea.classList.remove('hidden-el');
+    el.gameOver.classList.add('hidden-el');
+    startRound(false);
+  }
+
+  function guess(guessRightIsHigher) {
+    if (busy) return;
+    busy = true;
+    Object.keys(buttons).forEach(function (k) { buttons[k].disabled = true; });
+
+    var def = DATA[category];
+    el.valueRight.textContent = def.format(right.value);
+    el.valueRight.className = 'value';
+    buildStage(el.stageRight, right.value, true);
+
+    var rightIsHigher = right.value > left.value;
+    var correct = right.value === left.value ? true : guessRightIsHigher === rightIsHigher;
+
+    if (correct) {
+      streak += 1;
+      el.streakTop.textContent = 'Serie : ' + streak;
+      el.cardRight.className = 'card correct';
+      el.resultLine.className = 'resultLine correct';
+      el.resultLine.textContent = 'Bien joue ! (' + def.format(left.value) + ' → ' + def.format(right.value) + ')';
+      setTimeout(function () {
+        left = right;
+        startRound(true);
+      }, 1300);
+    } else {
+      el.cardRight.className = 'card wrong';
+      el.resultLine.className = 'resultLine wrong';
+      el.resultLine.textContent = 'Rate ! (' + def.format(left.value) + ' → ' + def.format(right.value) + ')';
+      setTimeout(function () {
+        el.playArea.classList.add('hidden-el');
+        el.gameOver.classList.remove('hidden-el');
+        el.finalStreak.textContent = String(streak);
+      }, 1300);
+    }
+  }
+
+  buttons.rightPlus.addEventListener('click', function () { guess(true); });
+  buttons.leftMinus.addEventListener('click', function () { guess(true); });
+  buttons.rightMinus.addEventListener('click', function () { guess(false); });
+  buttons.leftPlus.addEventListener('click', function () { guess(false); });
+
+  document.getElementById('replayBtn').addEventListener('click', resetGame);
+
+  document.getElementById('tabs').addEventListener('click', function (e) {
+    var btn = e.target.closest('.tab');
+    if (!btn) return;
+    document.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
+    btn.classList.add('active');
+    resetGame();
+  });
+
+  resetGame();
+})();
+</script>
+</body>
+</html>

@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import IndicesSettingsProvider from '@/components/IndicesSettingsProvider';
 import LanguageProvider from '@/components/LanguageProvider';
 import SettingsProvider from '@/components/SettingsProvider';
 import { disableTextSelection } from '@/helpers';
@@ -30,7 +31,9 @@ const RootLayout = () => {
   return (
     <LanguageProvider>
       <SettingsProvider>
-        <ThemedShell />
+        <IndicesSettingsProvider>
+          <ThemedShell />
+        </IndicesSettingsProvider>
       </SettingsProvider>
     </LanguageProvider>
   );

@@ -1,6 +1,14 @@
-import type { Category, Difficulty, Zone } from '@/types';
+import type { Category, Difficulty, IndicesAnswerMethod, IndicesBuzzerMode, IndicesClueId, Zone } from '@/types';
 
 export type Language = 'fr' | 'en';
+
+/** Contenu d'une carte jeu sur l'accueil (`HomeScreen` / `GameCard`). */
+export type HomeGameCopy = {
+  title: string;
+  tagline: string;
+  meta: readonly string[];
+  cta: string;
+};
 
 /** Les 8 points cardinaux, dans l'ordre N, NE, E, SE, S, SO/SW, O/W, NO/NW (pas de nord). */
 export type CardinalLabels = readonly [string, string, string, string, string, string, string, string];
@@ -19,9 +27,11 @@ export type Translations = {
   compassAccessibilityLabel: string;
   home: {
     tagline: string;
-    rules: { emoji: string; text: string }[];
-    play: string;
     settingsButtonLabel: string;
+    games: {
+      compass: HomeGameCopy;
+      clues: HomeGameCopy;
+    };
   };
   setup: {
     screenTitle: string;
@@ -98,5 +108,44 @@ export type Translations = {
     aboutTitle: string;
     author: string;
     claudeMention: string;
+  };
+  indicesSetup: {
+    screenTitle: string;
+    back: string;
+    start: string;
+    playersSection: { title: string; hint: string };
+    playerNameAccessibility: (index: number) => string;
+    difficultyTitle: string;
+    difficultyHint: string;
+    buzzerModeTitle: string;
+    buzzerModeHint: string;
+    buzzerModes: Record<IndicesBuzzerMode, string>;
+    answerMethodTitle: string;
+    answerMethodHint: string;
+    answerMethods: Record<IndicesAnswerMethod, string>;
+    note: string;
+  };
+  indicesGame: {
+    turnHint: (name: string) => string;
+    roundOver: string;
+    buzz: string;
+    giveUp: string;
+    noOneFound: (points: string) => string;
+    whoBuzzes: string;
+    buzzedPrompt: (name: string) => string;
+    buzzedPromptTyped: (name: string) => string;
+    verify: string;
+    correct: string;
+    wrong: string;
+    scored: (name: string, points: string) => string;
+    missed: (name: string, points: string) => string;
+    guessPlaceholder: string;
+    submitGuess: string;
+    wasPlace: string;
+    replay: string;
+    home: string;
+    clues: Record<IndicesClueId, string>;
+    populationUnit: string;
+    letterUnit: string;
   };
 };

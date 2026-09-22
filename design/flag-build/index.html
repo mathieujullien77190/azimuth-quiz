@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Drapeau qui se construit — maquette</title>
+<style>
+  :root {
+    --bg: #0B1220;
+    --surface: #141E33;
+    --surface-high: #1B2842;
+    --border: #25334F;
+    --text: #F3F6FC;
+    --text-muted: #93A0BC;
+    --accent: #F5B841;
+    --accent-dark: #C98A12;
+    --success: #4ADE80;
+    --paper: #F3ECDD;
+    --paper-shadow: rgba(0, 0, 0, 0.35);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    color: var(--text);
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+
+  .table {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 50% 40%, #3B2A1E 0%, #241A12 55%, #150F0A 100%);
+  }
+  .table::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(90deg, rgba(0,0,0,0.12) 0 2px, transparent 2px 90px);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .heading {
+    position: relative;
+    text-align: center;
+    padding: 20px 16px 4px;
+  }
+  .heading h1 {
+    margin: 0;
+    font-size: 15px;
+    letter-spacing: 3px;
+    color: var(--accent);
+  }
+  .heading p {
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: #C9B79C;
+  }
+
+  .scene {
+    position: relative;
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    height: 640px;
+  }
+
+  /* --- papiers eparpilles sur la table --- */
+  .paper {
+    position: absolute;
+    min-width: 64px;
+    max-width: 92px;
+    border-radius: 3px;
+    background: var(--paper);
+    box-shadow: 0 3px 8px var(--paper-shadow);
+    padding: 7px 8px;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .paper .name {
+    display: block;
+    color: #241A12;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.25;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .paper.eliminated {
+    opacity: 0;
+    transform: scale(0.5) rotate(var(--rot, 0deg)) translateY(14px);
+    pointer-events: none;
+  }
+  .paper.winner {
+    box-shadow: 0 0 0 2px var(--success), 0 4px 14px rgba(74, 222, 128, 0.5);
+  }
+  .paper.winner::after {
+    content: "✓";
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: var(--success);
+    color: #06240F;
+    font-size: 11px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* --- le telephone, au centre de la table --- */
+  .phone {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 240px;
+    background: var(--bg);
+    border: 6px solid #05070C;
+    border-radius: 30px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+    padding: 14px 14px 18px;
+    z-index: 5;
+  }
+  .phoneHint {
+    text-align: center;
+    font-size: 10.5px;
+    color: var(--text-muted);
+    margin: 0 0 10px;
+    line-height: 1.4;
+  }
+  .flagFrame {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    aspect-ratio: 5 / 3;
+    display: flex;
+    background: var(--surface-high);
+  }
+  .flagFrame .band { transition: flex-basis 0.7s cubic-bezier(.4,0,.2,1); flex-shrink: 0; flex-grow: 0; height: 100%; }
+
+  .counter {
+    text-align: center;
+    margin-top: 12px;
+  }
+  .counter .num {
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1.1;
+  }
+  .counter .label {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 800;
+  }
+  .counter.solved .num { color: var(--success); }
+
+  .controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .btn {
+    flex: 1;
+    font-family: inherit;
+    font-weight: 800;
+    font-size: 12px;
+    padding: 10px 8px;
+    border-radius: 999px;
+    cursor: pointer;
+    border: none;
+  }
+  .btn.primary {
+    background: var(--accent);
+    color: #1A1203;
+    border-bottom: 3px solid var(--accent-dark);
+  }
+  .btn.primary:disabled {
+    background: var(--surface-high);
+    color: var(--text-muted);
+    border-bottom-color: var(--border);
+    cursor: default;
+  }
+  .btn.ghost {
+    background: none;
+    border: 1.5px solid var(--border);
+    color: var(--text);
+  }
+
+  .note {
+    max-width: 640px;
+    margin: 22px auto 40px;
+    padding: 0 16px;
+    color: #C9B79C;
+    font-size: 12px;
+    line-height: 1.7;
+    text-align: center;
+  }
+  .note b { color: var(--text); }
+</style>
+</head>
+<body>
+  <div class="table">
+    <div class="heading">
+      <h1>DRAPEAU QUI SE CONSTRUIT</h1>
+      <p>Le telephone au milieu de la table. Retrouve le bon papier avant les autres.</p>
+    </div>
+
+    <div class="scene" id="scene">
+      <!-- papiers generes en JS -->
+      <div class="phone">
+        <p class="phoneHint">Le drapeau se construit couleur par couleur — pas dans l'ordre final.</p>
+        <div class="flagFrame" id="flagFrame">
+          <div class="band" id="bandBlue" style="flex-basis:0%; background:#3856B8;"></div>
+          <div class="band" id="bandWhite" style="flex-basis:0%; background:#F3F6FC;"></div>
+          <div class="band" id="bandRed" style="flex-basis:0%; background:#D63447;"></div>
+        </div>
+        <div class="counter" id="counter">
+          <div class="num" id="counterNum">16</div>
+          <div class="label" id="counterLabel">papiers possibles</div>
+        </div>
+        <div class="controls">
+          <button class="btn ghost" id="resetBtn">Rejouer</button>
+          <button class="btn primary" id="nextBtn">Etape suivante</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="note">
+      <b>Idee :</b> le drapeau ne se construit pas dans l'ordre final (bleu-blanc-rouge) mais par
+      etapes qui font varier les proportions — d'abord 100% bleu, puis moitie bleu / moitie rouge,
+      puis enfin le tiers-tiers-tiers. Sur la table, un tas de papiers representant des drapeaux
+      candidats s'amenuise a chaque etape : ceux qui ne collent plus au motif affiche disparaissent.
+      Le but n'est pas de "dire la France", mais de mettre la main sur LE papier qui correspond
+      encore avant les autres joueurs.
+    </p>
+  </div>
+
+<script>
+(function () {
+  // 16 papiers candidats : le nom du pays, ecrit sur le papier (pas une pastille couleur).
+  // Chacun a une etape ou il est elimine (1, 2 ou 3) — sauf le gagnant, qui survit a l'etape 3.
+  var papers = [
+    { name: 'Argentine', eliminatedAt: 1 },
+    { name: 'Salvador', eliminatedAt: 1 },
+    { name: 'Honduras', eliminatedAt: 1 },
+    { name: 'Nicaragua', eliminatedAt: 1 },
+    { name: 'Guatemala', eliminatedAt: 1 },
+    { name: 'Somalie', eliminatedAt: 1 },
+
+    { name: 'Chili', eliminatedAt: 2 },
+    { name: 'Cuba', eliminatedAt: 2 },
+    { name: 'Panama', eliminatedAt: 2 },
+    { name: 'Costa Rica', eliminatedAt: 2 },
+    { name: 'Porto Rico', eliminatedAt: 2 },
+    { name: 'Laos', eliminatedAt: 2 },
+    { name: 'Thailande', eliminatedAt: 2 },
+
+    { name: 'Pays-Bas', eliminatedAt: 3 },
+    { name: 'Luxembourg', eliminatedAt: 3 },
+
+    { name: 'France', eliminatedAt: null }, // survit
+  ];
+
+  // Positions eparpillees autour du telephone (en % du conteneur .scene).
+  var positions = [
+    [8, 10, -14], [28, 6, 10], [50, 5, -6], [72, 8, 16], [90, 12, -10],
+    [4, 40, 8], [92, 42, -12],
+    [4, 66, -8], [92, 64, 12],
+    [10, 90, 14], [30, 92, -10], [50, 94, 6], [70, 92, -16], [88, 90, 10],
+    [50, 22, -4], [50, 78, 4],
+  ];
+
+  var scene = document.getElementById('scene');
+  var els = papers.map(function (paper, i) {
+    var el = document.createElement('div');
+    el.className = 'paper';
+    var pos = positions[i % positions.length];
+    el.style.left = pos[0] + '%';
+    el.style.top = pos[1] + '%';
+    el.style.setProperty('--rot', pos[2] + 'deg');
+    el.style.transform = 'rotate(' + pos[2] + 'deg)';
+    var name = document.createElement('span');
+    name.className = 'name';
+    name.textContent = paper.name;
+    el.appendChild(name);
+    scene.insertBefore(el, scene.firstChild);
+    return el;
+  });
+
+  var bandBlue = document.getElementById('bandBlue');
+  var bandWhite = document.getElementById('bandWhite');
+  var bandRed = document.getElementById('bandRed');
+  var counterNum = document.getElementById('counterNum');
+  var counterLabel = document.getElementById('counterLabel');
+  var counterBox = document.getElementById('counter');
+  var nextBtn = document.getElementById('nextBtn');
+  var resetBtn = document.getElementById('resetBtn');
+
+  var steps = [
+    { blue: 0, white: 0, red: 0 },
+    { blue: 100, white: 0, red: 0 },
+    { blue: 50, white: 0, red: 50 },
+    { blue: 34, white: 33, red: 33 },
+  ];
+  var labels = [
+    'papiers possibles',
+    'papiers possibles',
+    'papiers possibles',
+    'c’est la France !',
+  ];
+
+  var step = 0;
+
+  function remainingCount() {
+    return papers.filter(function (p) { return p.eliminatedAt === null || p.eliminatedAt > step; }).length;
+  }
+
+  function render() {
+    var s = steps[step];
+    bandBlue.style.flexBasis = s.blue + '%';
+    bandWhite.style.flexBasis = s.white + '%';
+    bandRed.style.flexBasis = s.red + '%';
+
+    els.forEach(function (el, i) {
+      var paper = papers[i];
+      if (paper.eliminatedAt !== null && paper.eliminatedAt <= step) {
+        el.classList.add('eliminated');
+      } else {
+        el.classList.remove('eliminated');
+      }
+      el.classList.toggle('winner', step === 3 && paper.eliminatedAt === null);
+    });
+
+    counterNum.textContent = step === 3 ? '1' : String(remainingCount());
+    counterLabel.textContent = labels[step];
+    counterBox.classList.toggle('solved', step === 3);
+    nextBtn.disabled = step >= 3;
+    nextBtn.textContent = step >= 3 ? 'Trouve !' : 'Etape suivante';
+  }
+
+  nextBtn.addEventListener('click', function () {
+    if (step < 3) { step += 1; render(); }
+  });
+  resetBtn.addEventListener('click', function () {
+    step = 0;
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

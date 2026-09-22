@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 
-import { DEFAULT_SETTINGS } from '@/constants';
-import type { GameSettings } from '@/types';
+import { DEFAULT_INDICES_SETTINGS, DEFAULT_SETTINGS } from '@/constants';
+import type { GameSettings, IndicesSettings } from '@/types';
 
 export type SettingsContextValue = {
   settings: GameSettings;
@@ -17,3 +17,16 @@ export const SettingsContext = createContext<SettingsContextValue>({
 });
 
 export const useSettings = (): SettingsContextValue => useContext(SettingsContext);
+
+/** Reglages du jeu Indices : contexte independant, jamais melange a `GameSettings` (Boussole). */
+export type IndicesSettingsContextValue = {
+  settings: IndicesSettings;
+  updateSettings: (patch: Partial<IndicesSettings>) => void;
+};
+
+export const IndicesSettingsContext = createContext<IndicesSettingsContextValue>({
+  settings: DEFAULT_INDICES_SETTINGS,
+  updateSettings: () => {},
+});
+
+export const useIndicesSettings = (): IndicesSettingsContextValue => useContext(IndicesSettingsContext);
