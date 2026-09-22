@@ -21,4 +21,8 @@ export const TOGGLES = {
     label: 'Aide pays',
     description: 'Affiche le pays sous le nom du lieu.',
   },
+  allowRevision: {
+    label: 'Modifier après validation',
+    description: 'Autorise à revenir sur la réponse déjà validée d’un joueur, avant la révélation.',
+  },
 } as const;

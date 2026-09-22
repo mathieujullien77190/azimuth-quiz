@@ -1,12 +1,8 @@
-import type { DistanceMode } from '@/types';
-
-/** Une reponse a dessiner sur la Terre. */
+/** Une reponse a dessiner sur la Terre : toujours un arc, et une ligne droite en plus si demande. */
 export type EarthMark = {
   bearing: number;
-  /** En km : distance sur la surface (mode 'surface') ou en ligne droite (mode 'straight'). */
+  /** Distance de surface (longueur de l'arc) : fixe aussi ou la corde arrive, en mode ligne droite. */
   distanceKm: number;
-  /** Angle sous l'horizon, en degres (utilise seulement en mode 'straight'). */
-  inclination: number;
   color: string;
   /** Reponses des autres joueurs pendant que le joueur courant repond : estompees. */
   opacity?: number;
@@ -16,9 +12,9 @@ export type EarthMark = {
 
 export type EarthSectionProps = {
   size: number;
-  /** Un seul schema = un seul mode : arc (surface) ou droite (ligne droite). */
-  mode: DistanceMode;
   marks: EarthMark[];
+  /** Ajoute la corde (ligne droite a travers la Terre) jusqu'a la meme destination que l'arc. */
+  showStraightLine: boolean;
 };
 
 export type Point = {

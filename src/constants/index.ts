@@ -61,8 +61,9 @@ export const MIN_PLAYERS = 1;
 export const MAX_PLAYERS = 6;
 export const ROUND_OPTIONS = [5, 10, 15, 20] as const;
 
-// Ni bleu ni turquoise : ce sont les couleurs de la vraie reponse (Papier / Nuit).
-export const PLAYER_COLORS = ['#FF5A5F', '#F5B841', '#3DDC84', '#A78BFA', '#F472B6', '#FB923C'] as const;
+// Choisies a distance d'au moins 37° de teinte de l'accent et de la reponse des deux themes
+// (ambre/jaune en Nuit, bleu en Papier), pour qu'aucun joueur ne les prenne par hasard.
+export const PLAYER_COLORS = ['#EF4444', '#65A30D', '#22C55E', '#8B5CF6', '#C026D3', '#DB2777'] as const;
 
 export const CATEGORIES: { id: Category; label: string; emoji: string }[] = [
   { id: 'cities', label: 'Villes', emoji: '🏙️' },
@@ -101,4 +102,5 @@ export const DEFAULT_SETTINGS: GameSettings = {
   useGps: true,
   liveCompass: true,
   showCountry: true,
+  allowRevision: false,
 };

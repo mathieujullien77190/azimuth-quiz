@@ -41,5 +41,6 @@ export const sanitizeSettings = (raw: unknown): GameSettings => {
     useGps: flag(raw.useGps, DEFAULT_SETTINGS.useGps),
     liveCompass: flag(raw.liveCompass, DEFAULT_SETTINGS.liveCompass),
     showCountry: flag(raw.showCountry, DEFAULT_SETTINGS.showCountry),
+    allowRevision: flag(raw.allowRevision, DEFAULT_SETTINGS.allowRevision),
   };
 };

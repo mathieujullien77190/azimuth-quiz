@@ -13,30 +13,30 @@ import {
   PLAYER_LABEL,
   PLAYER_Y_RATIO,
 } from './constants';
-import { arcPath, fitZoom, markGeometry } from './helpers';
+import { arcPath, fitZoom, markEnd, sideOf, surfaceAngle } from './helpers';
 import type { EarthMark, EarthSectionProps, Point } from './types';
 
 /**
- * La Terre vue de cote, le joueur tout en haut. Chaque reponse part du cote de son cap :
- * cap a l'ouest = a gauche, cap a l'est = a droite. Un schema = un seul mode :
- * - surface : un arc le long du cercle, de longueur = la distance ;
- * - straight : une droite qui part avec l'inclinaison choisie.
- * Des que `marks` contient une vraie reponse (isTruth), on zoome sur le haut du cercle
- * pour que les distances courtes restent lisibles.
+ * La Terre vue de cote, le joueur tout en haut. Chaque reponse part du cote de son cap
+ * (cap a l'ouest = a gauche, cap a l'est = a droite) et se dessine en un arc qui suit le cercle
+ * (distance de surface). En mode ligne droite, une corde rejoint en plus le meme point d'arrivee :
+ * l'inclinaison choisie fixe a la fois l'arc et la corde, la distance de surface n'est qu'une indication.
+ * Des que `marks` contient une vraie reponse (isTruth), on zoome sur le haut du cercle pour que les
+ * distances courtes restent lisibles. La vraie reponse (isTruth) ne se dessine que par son point
+ * cercle : pas d'arc ni de corde, pour ne pas noyer les reponses des joueurs sous ses propres traits.
  */
-export const EarthSection = ({ size, mode, marks }: EarthSectionProps) => {
+export const EarthSection = ({ size, marks, showStraightLine }: EarthSectionProps) => {
   const { colors, compass, typography } = useTheme();
   const height = size * HEIGHT_RATIO;
   const baseRadius = size * EARTH_RADIUS_RATIO;
   const player: Point = { x: size / 2, y: size * PLAYER_Y_RATIO };
   const reveal = marks.some((mark) => mark.isTruth === true);
 
-  const geometryOf = (item: EarthMark, radius: number) => markGeometry({ item, mode, player, radius });
-
   let zoom = 1;
   if (reveal) {
+    const baseCenter: Point = { x: player.x, y: player.y + baseRadius };
     const offsets = marks.map((item) => {
-      const { end } = geometryOf(item, baseRadius);
+      const end = markEnd(item, baseCenter, baseRadius);
       return { x: end.x - player.x, y: end.y - player.y };
     });
     zoom = fitZoom(offsets, size * AVAILABLE_X_RATIO, height - player.y - BOTTOM_MARGIN);
@@ -47,16 +47,28 @@ export const EarthSection = ({ size, mode, marks }: EarthSectionProps) => {
   const horizonReach = Math.min(radius * 1.15, size * 0.32);
 
   const mark = (item: EarthMark, key: string) => {
-    const { shape, side, end, angle } = geometryOf(item, radius);
+    const side = sideOf(item.bearing);
+    const angle = surfaceAngle(item.distanceKm);
+    const end = markEnd(item, center, radius);
     const color = item.color;
     const opacity = item.opacity ?? 1;
 
     return (
       <G key={key} opacity={opacity}>
-        {shape === 'arc' ? (
+        {item.isTruth !== true && (
           <Path d={arcPath(center, radius, angle, side)} fill="none" stroke={color} strokeLinecap="round" strokeWidth={3.5} />
-        ) : (
-          <Line x1={player.x} y1={player.y} x2={end.x} y2={end.y} stroke={color} strokeLinecap="round" strokeWidth={3.5} />
+        )}
+        {showStraightLine && item.isTruth !== true && (
+          <Line
+            x1={player.x}
+            y1={player.y}
+            x2={end.x}
+            y2={end.y}
+            stroke={color}
+            strokeDasharray="2 5"
+            strokeLinecap="round"
+            strokeWidth={2}
+          />
         )}
         <Circle cx={end.x} cy={end.y} r={5.5} fill={color} stroke={colors.background} strokeWidth={2} />
         {item.isTruth === true && <Circle cx={end.x} cy={end.y} r={11} fill="none" stroke={color} strokeWidth={2} />}
@@ -81,7 +93,7 @@ export const EarthSection = ({ size, mode, marks }: EarthSectionProps) => {
         fontSize={11}
         fontWeight="700"
       >
-        {(mode === 'straight' ? CAPTION_STRAIGHT : CAPTION_SURFACE).toUpperCase()}
+        {(showStraightLine ? CAPTION_STRAIGHT : CAPTION_SURFACE).toUpperCase()}
       </SvgText>
       {zoom > 1 && (
         <SvgText
@@ -100,7 +112,7 @@ export const EarthSection = ({ size, mode, marks }: EarthSectionProps) => {
       <Circle cx={center.x} cy={center.y} r={radius} fill="url(#earth)" stroke={colors.border} strokeWidth={3} />
       <Circle cx={center.x} cy={center.y} r={radius * 0.28} fill="none" stroke={colors.border} strokeWidth={1} strokeDasharray="3 5" />
 
-      {mode === 'straight' && (
+      {showStraightLine && (
         <>
           <Line
             x1={player.x - horizonReach}

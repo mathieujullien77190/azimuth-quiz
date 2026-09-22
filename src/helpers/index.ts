@@ -12,6 +12,8 @@ export {
   centralAngleDeg,
   directionAngle,
   distanceKm,
+  arcKmFromChordKm,
+  arcKmFromInclination,
   inclinationDeg,
   inclinationFromChordKm,
   normalizeBearing,

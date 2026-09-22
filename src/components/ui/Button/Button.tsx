@@ -21,7 +21,7 @@ const createStyles = ({ colors, radius, typography, buttonDepth }: Theme) =>
       borderBottomColor: colors.accentDark,
     },
     ghost: {
-      backgroundColor: 'transparent',
+      backgroundColor: colors.surfaceHigh,
       borderWidth: 1.5,
       borderColor: colors.border,
     },

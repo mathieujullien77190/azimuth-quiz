@@ -24,18 +24,13 @@ export type Origin = {
   isDevicePosition: boolean;
 };
 
-/** Comment la distance a ete estimee : sur la surface (arc), ou en ligne droite via l'inclinaison (corde). */
-export type DistanceMode = 'surface' | 'straight';
-
 export type Guess = {
   /** Cap sur le plan horizontal, 0 = nord. */
   bearing: number;
-  /** Lequel des deux curseurs compte pour le score : le dernier touche. */
-  distanceMode: DistanceMode;
-  /** Distance estimee sur la surface (curseur Distance, toujours renseignee). */
-  surfaceKm: number;
-  /** Distance en ligne droite estimee via l'inclinaison (curseur Inclinaison, 0 hors mode "straight"). */
-  straightKm: number;
+  /** Distance estimee : sur la surface (mode classique), ou en ligne droite (mode "straightLine"). */
+  distanceKm: number;
+  /** Angle sous l'horizon, en degres (0 hors mode "straightLine"). */
+  inclination: number;
 };
 
 export type RoundScore = {
@@ -81,9 +76,11 @@ export type GameSettings = {
   liveCompass: boolean;
   /** Affiche le pays sous le nom du lieu. */
   showCountry: boolean;
+  /** Autorise a revenir modifier la reponse d'un joueur deja validee, avant la revelation. */
+  allowRevision: boolean;
 };
 
-export type GamePhase = 'loading' | 'handoff' | 'guess' | 'reveal' | 'end';
+export type GamePhase = 'loading' | 'guess' | 'reveal' | 'end';
 
 export type Rank = {
   title: string;

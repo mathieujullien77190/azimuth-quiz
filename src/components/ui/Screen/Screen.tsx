@@ -14,6 +14,9 @@ const createStyles = ({ colors }: Theme) =>
       flex: 1,
       backgroundColor: colors.background,
     },
+    scroll: {
+      flex: 1,
+    },
     content: {
       flexGrow: 1,
       paddingHorizontal: spacing.lg,
@@ -22,16 +25,18 @@ const createStyles = ({ colors }: Theme) =>
     },
   });
 
-const Screen = ({ children }: ScreenProps) => {
+const Screen = ({ children, header }: ScreenProps) => {
   const styles = useThemedStyles(createStyles);
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ThemeBackdrop />
+      {header}
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        style={styles.scroll}
       >
         {children}
       </ScrollView>

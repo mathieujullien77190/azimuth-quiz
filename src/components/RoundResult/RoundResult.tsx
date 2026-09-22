@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
-import { formatDistance, inclinationFromChordKm } from '@/helpers';
+import { formatDistance } from '@/helpers';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
@@ -85,13 +85,11 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
     },
   });
 
-export const RoundResult = ({ record, players, isLastRound, onNext }: RoundResultProps) => {
+export const RoundResult = ({ record, players, options, isLastRound, onNext }: RoundResultProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
   const { score: truth } = record.results[0];
   const isSolo = players.length === 1;
-  // Si au moins un joueur a utilise la ligne droite, on donne aussi ces reperes-la en plus de la surface.
-  const usedStraight = record.results.some((result) => result.guess.distanceMode === 'straight');
 
   // Les joueurs sont classes par points sur la manche (le meilleur en premier).
   const ranked = record.results
@@ -102,11 +100,11 @@ export const RoundResult = ({ record, players, isLastRound, onNext }: RoundResul
     <Card style={styles.card}>
       <View style={styles.truth}>
         <Text style={styles.truthLabel}>{TRUTH_LABEL}</Text>
-        <Text style={styles.truthValue}>{directionText(truth.trueBearing, truth.trueInclination, usedStraight ? 'straight' : 'surface')}</Text>
-        <Text style={styles.truthValue}>{formatDistance(truth.trueSurfaceDistanceKm)}</Text>
-        {usedStraight && (
-          <Text style={styles.truthValue}>{formatDistance(truth.trueStraightDistanceKm)} (à travers la Terre)</Text>
-        )}
+        <Text style={styles.truthValue}>{directionText(truth.trueBearing, truth.trueInclination, options.straightLine)}</Text>
+        <Text style={styles.truthValue}>
+          {formatDistance(options.straightLine ? truth.trueStraightDistanceKm : truth.trueSurfaceDistanceKm)}
+          {options.straightLine ? ' (à travers la Terre)' : ''}
+        </Text>
       </View>
 
       {ranked.map(({ result, player }, position) => (
@@ -116,45 +114,36 @@ export const RoundResult = ({ record, players, isLastRound, onNext }: RoundResul
             <Text style={styles.playerName}>{isSolo ? 'Ton score' : player.name}</Text>
             <Text style={styles.playerTotal}>+{result.score.total}</Text>
           </View>
-          {(() => {
-            const isStraight = result.guess.distanceMode === 'straight';
-            const guessDistanceKm = isStraight ? result.guess.straightKm : result.guess.surfaceKm;
-            const guessInclination = isStraight ? inclinationFromChordKm(result.guess.straightKm) : 0;
-            return (
-              <>
-                <View style={styles.row}>
-                  <Text style={styles.rowLabel}>{ROW_LABELS.direction}</Text>
-                  <Text style={styles.rowValue}>
-                    {directionText(result.guess.bearing, guessInclination, result.guess.distanceMode)} (écart{' '}
-                    {Math.round(result.score.directionError)}°)
-                  </Text>
-                  <Text
-                    style={[
-                      styles.rowPoints,
-                      { color: feedbackColor(colors, result.score.directionPoints, ROW_MAX_POINTS.direction) },
-                    ]}
-                  >
-                    +{result.score.directionPoints}
-                  </Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.rowLabel}>{ROW_LABELS.distance}</Text>
-                  <Text style={styles.rowValue}>
-                    {formatDistance(guessDistanceKm)}
-                    {isStraight ? ' (ligne droite)' : ''}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.rowPoints,
-                      { color: feedbackColor(colors, result.score.distancePoints, ROW_MAX_POINTS.distance) },
-                    ]}
-                  >
-                    +{result.score.distancePoints}
-                  </Text>
-                </View>
-              </>
-            );
-          })()}
+          <View style={styles.row}>
+            <Text style={styles.rowLabel}>{ROW_LABELS.direction}</Text>
+            <Text style={styles.rowValue}>
+              {directionText(result.guess.bearing, result.guess.inclination, options.straightLine)} (écart{' '}
+              {Math.round(result.score.directionError)}°)
+            </Text>
+            <Text
+              style={[
+                styles.rowPoints,
+                { color: feedbackColor(colors, result.score.directionPoints, ROW_MAX_POINTS.direction) },
+              ]}
+            >
+              +{result.score.directionPoints}
+            </Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.rowLabel}>{ROW_LABELS.distance}</Text>
+            <Text style={styles.rowValue}>
+              {formatDistance(result.guess.distanceKm)}
+              {options.straightLine ? ' (ligne droite)' : ''}
+            </Text>
+            <Text
+              style={[
+                styles.rowPoints,
+                { color: feedbackColor(colors, result.score.distancePoints, ROW_MAX_POINTS.distance) },
+              ]}
+            >
+              +{result.score.distancePoints}
+            </Text>
+          </View>
         </View>
       ))}
 

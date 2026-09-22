@@ -1,5 +1,5 @@
 import { formatBearing, formatInclination } from '@/helpers';
-import type { DistanceMode, ThemeColors } from '@/types';
+import type { ThemeColors } from '@/types';
 
 /** Couleur de feedback selon la part de points obtenue. */
 export const feedbackColor = (colors: ThemeColors, points: number, maxPoints: number): string => {
@@ -10,5 +10,5 @@ export const feedbackColor = (colors: ThemeColors, points: number, maxPoints: nu
 };
 
 /** "NE · 48°", suivi de l'inclinaison en mode ligne droite. */
-export const directionText = (bearing: number, inclination: number, mode: DistanceMode): string =>
-  mode === 'straight' ? `${formatBearing(bearing)} · ${formatInclination(inclination)}` : formatBearing(bearing);
+export const directionText = (bearing: number, inclination: number, straightLine: boolean): string =>
+  straightLine ? `${formatBearing(bearing)} · ${formatInclination(inclination)}` : formatBearing(bearing);

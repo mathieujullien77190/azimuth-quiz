@@ -42,7 +42,7 @@ const Toggle = ({ label, description, value, onValueChange }: ToggleProps) => {
       <Switch
         accessibilityLabel={label}
         onValueChange={onValueChange}
-        thumbColor={value ? colors.onAccent : colors.textMuted}
+        thumbColor={value ? colors.success : colors.textMuted}
         trackColor={{ false: colors.surfaceHigh, true: colors.accent }}
         value={value}
       />

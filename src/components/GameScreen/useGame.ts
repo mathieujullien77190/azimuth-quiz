@@ -9,9 +9,18 @@ import {
   MAX_SURFACE_DISTANCE_KM,
   PLAYER_COLORS,
 } from '@/constants';
-import { loadBestScore, pickPlaces, playerDisplayName, resolveOrigin, saveBestScore, scoreRound, shuffle } from '@/helpers';
+import {
+  inclinationFromChordKm,
+  loadBestScore,
+  pickPlaces,
+  playerDisplayName,
+  resolveOrigin,
+  saveBestScore,
+  scoreRound,
+  shuffle,
+} from '@/helpers';
 import { useSettings } from '@/settings';
-import type { DistanceMode, GamePhase, GameSettings, Guess, Origin, Place, Player, RoundRecord } from '@/types';
+import type { GamePhase, GameSettings, Guess, Origin, Place, Player, RoundRecord } from '@/types';
 
 import { playerTotals } from './helpers';
 
@@ -29,16 +38,15 @@ export const useGame = () => {
   const [origin, setOrigin] = useState<Origin>(DEFAULT_ORIGIN);
   const [places, setPlaces] = useState<Place[]>([]);
   const [roundIndex, setRoundIndex] = useState(0);
-  // Ordre de passage de la manche (indices des joueurs), tire au sort a chaque nouveau lieu.
+  // Ordre d'affichage des onglets, tire au sort a chaque nouveau lieu (purement visuel : on peut
+  // choisir n'importe quel onglet dans n'importe quel ordre).
   const [roundOrder, setRoundOrder] = useState<number[]>([]);
-  const [turnPosition, setTurnPosition] = useState(0);
+  const [activePlayerIndex, setActivePlayerIndex] = useState(0);
   const [guessesByPlayer, setGuessesByPlayer] = useState<(Guess | undefined)[]>([]);
   const [records, setRecords] = useState<RoundRecord[]>([]);
   const [bearing, setBearing] = useState(DEFAULT_BEARING);
-  // Les deux curseurs gardent chacun leur valeur ; distanceMode dit lequel des deux compte.
-  const [surfaceKm, setSurfaceKm] = useState(DEFAULT_DISTANCE_KM);
-  const [straightKm, setStraightKm] = useState(DEFAULT_DISTANCE_KM);
-  const [distanceMode, setDistanceMode] = useState<DistanceMode>('surface');
+  // Le seul curseur de distance : surface en mode classique, corde (ligne droite) en mode straightLine.
+  const [distanceKm, setDistanceKm] = useState(DEFAULT_DISTANCE_KM);
   const [bestScore, setBestScore] = useState(0);
   const [isNewBest, setIsNewBest] = useState(false);
 
@@ -54,18 +62,24 @@ export const useGame = () => {
     [config.playerNames],
   );
   const isMultiplayer = players.length > 1;
+  const maxDistanceKm = config.straightLine ? MAX_STRAIGHT_DISTANCE_KM : MAX_SURFACE_DISTANCE_KM;
 
-  // A chaque tour (nouveau joueur ou nouvelle manche) : aiguille au nord, curseurs a leur valeur de depart.
+  /** Aiguille au nord, curseur a sa valeur de depart (nouveau joueur non repondu, ou nouvelle manche). */
   const resetDraft = useCallback(() => {
     setBearing(DEFAULT_BEARING);
-    setSurfaceKm(DEFAULT_DISTANCE_KM);
-    setStraightKm(DEFAULT_DISTANCE_KM);
-    setDistanceMode('surface');
+    setDistanceKm(DEFAULT_DISTANCE_KM);
+  }, []);
+
+  /** Recharge la reponse deja donnee par un joueur, pour la modifier (option "Modifier apres validation"). */
+  const loadDraft = useCallback((guess: Guess) => {
+    setBearing(guess.bearing);
+    setDistanceKm(guess.distanceKm);
   }, []);
 
   const startRound = useCallback((playerCount: number) => {
-    setRoundOrder(shuffle(Array.from({ length: playerCount }, (_, index) => index)));
-    setTurnPosition(0);
+    const order = shuffle(Array.from({ length: playerCount }, (_, index) => index));
+    setRoundOrder(order);
+    setActivePlayerIndex(order[0] ?? 0);
     setGuessesByPlayer(new Array(playerCount).fill(undefined));
   }, []);
 
@@ -88,7 +102,7 @@ export const useGame = () => {
     setRoundIndex(0);
     startRound(chosen.playerNames.length);
     resetDraft();
-    setPhase(chosen.playerNames.length > 1 ? 'handoff' : 'guess');
+    setPhase('guess');
   }, [resetDraft, startRound]);
 
   // On attend la lecture des reglages sauvegardes (rechargement direct sur l'ecran de jeu).
@@ -99,69 +113,76 @@ export const useGame = () => {
     };
   }, [settingsReady, start]);
 
-  const ready = useCallback(() => setPhase('guess'), []);
+  const currentPlayer = players[activePlayerIndex];
 
-  /** Curseur Distance (surface, en arc) : le compter pour le score. */
-  const setSurfaceDistance = useCallback((km: number) => {
-    setSurfaceKm(km);
-    setDistanceMode('surface');
-  }, []);
-
-  /** Curseur Inclinaison (ligne droite) : le compter pour le score. */
-  const setStraightDistance = useCallback((km: number) => {
-    setStraightKm(km);
-    setDistanceMode('straight');
-  }, []);
-
-  const currentPlayerIndex = roundOrder[turnPosition] ?? 0;
-  const currentPlayer = players[currentPlayerIndex];
-
-  /** Joueurs qui ont deja repondu ce tour-ci, dans l'ordre ou ils ont joue. */
+  /** Reponses deja validees des AUTRES joueurs (pas celui en cours d'edition) : a montrer en estompe. */
   const answered = useMemo(
     () =>
-      roundOrder
-        .slice(0, turnPosition)
-        .map((index) => ({ player: players[index], guess: guessesByPlayer[index] }))
-        .filter((entry): entry is { player: Player; guess: Guess } => entry.guess !== undefined),
-    [roundOrder, turnPosition, players, guessesByPlayer],
+      players
+        .map((player, index) => ({ player, guess: guessesByPlayer[index], index }))
+        .filter(
+          (entry): entry is { player: Player; guess: Guess; index: number } =>
+            entry.index !== activePlayerIndex && entry.guess !== undefined,
+        ),
+    [players, guessesByPlayer, activePlayerIndex],
+  );
+
+  /** Un joueur par index : a-t-il deja valide sa reponse ce tour-ci ? */
+  const answeredByPlayer = useMemo(() => guessesByPlayer.map((guess) => guess !== undefined), [guessesByPlayer]);
+
+  /** Change d'onglet : recharge la reponse existante si on revient modifier, sinon repart a zero. */
+  const selectPlayer = useCallback(
+    (index: number) => {
+      if (index === activePlayerIndex) return;
+      const existing = guessesByPlayer[index];
+      const locked = existing !== undefined && !config.allowRevision;
+      if (locked) return;
+
+      setActivePlayerIndex(index);
+      if (existing !== undefined) loadDraft(existing);
+      else resetDraft();
+    },
+    [activePlayerIndex, config.allowRevision, guessesByPlayer, loadDraft, resetDraft],
   );
 
   const submit = useCallback(() => {
     const place = places[roundIndex];
     if (place === undefined) return;
 
-    const guess: Guess = { bearing, distanceMode, surfaceKm, straightKm };
-    const updated = guessesByPlayer.map((existing, index) => (index === currentPlayerIndex ? guess : existing));
+    const guess: Guess = {
+      bearing,
+      distanceKm,
+      inclination: config.straightLine ? inclinationFromChordKm(distanceKm) : 0,
+    };
+    const updated = guessesByPlayer.map((existing, index) => (index === activePlayerIndex ? guess : existing));
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    setGuessesByPlayer(updated);
 
-    if (turnPosition + 1 < players.length) {
-      setGuessesByPlayer(updated);
-      setTurnPosition(turnPosition + 1);
+    const nextUnanswered = roundOrder.find((index) => updated[index] === undefined);
+    if (nextUnanswered !== undefined) {
+      setActivePlayerIndex(nextUnanswered);
       resetDraft();
-      setPhase('handoff');
       return;
     }
 
     const results = players.map((_, index) => {
       const playerGuess = updated[index] as Guess;
-      return { guess: playerGuess, score: scoreRound(origin.coordinates, place, playerGuess) };
+      return { guess: playerGuess, score: scoreRound(origin.coordinates, place, playerGuess, config) };
     });
-    setGuessesByPlayer(updated);
     setRecords((previous) => [...previous, { place, results }]);
     setPhase('reveal');
   }, [
+    activePlayerIndex,
     bearing,
-    currentPlayerIndex,
-    distanceMode,
+    config,
+    distanceKm,
     guessesByPlayer,
     origin,
     places,
     players,
     resetDraft,
     roundIndex,
-    straightKm,
-    surfaceKm,
-    turnPosition,
+    roundOrder,
   ]);
 
   const next = useCallback(() => {
@@ -169,7 +190,7 @@ export const useGame = () => {
       setRoundIndex(roundIndex + 1);
       startRound(players.length);
       resetDraft();
-      setPhase(isMultiplayer ? 'handoff' : 'guess');
+      setPhase('guess');
       return;
     }
 
@@ -188,27 +209,25 @@ export const useGame = () => {
     players,
     isMultiplayer,
     currentPlayer,
-    playerIndex: currentPlayerIndex,
+    activePlayerIndex,
+    roundOrder,
     answered,
+    answeredByPlayer,
     origin,
     place: places[roundIndex],
     roundNumber: roundIndex + 1,
     totalRounds: places.length,
     bearing,
-    distanceMode,
-    surfaceKm,
-    straightKm,
-    maxSurfaceKm: MAX_SURFACE_DISTANCE_KM,
-    maxStraightKm: MAX_STRAIGHT_DISTANCE_KM,
+    distanceKm,
+    maxDistanceKm,
     records,
     currentRecord: records[roundIndex],
     totals: playerTotals(records, players.length),
     bestScore,
     isNewBest,
     setBearing,
-    setSurfaceDistance,
-    setStraightDistance,
-    ready,
+    setDistanceKm,
+    selectPlayer,
     submit,
     next,
     restart: start,

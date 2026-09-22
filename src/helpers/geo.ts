@@ -32,6 +32,17 @@ export const inclinationDeg = (from: Coordinates, to: Coordinates): number => ce
 export const inclinationFromChordKm = (chordKm: number): number =>
   toDegrees(Math.asin(Math.min(1, Math.max(0, chordKm / (2 * EARTH_RADIUS_KM)))));
 
+/**
+ * Distance de surface correspondant a une inclinaison : l'angle au centre vaut deux fois
+ * l'inclinaison (voir inclinationDeg), l'arc mesure alors R x cet angle. Purement indicatif :
+ * la ligne droite et l'arc partagent la meme destination, seule l'inclinaison est choisie.
+ */
+export const arcKmFromInclination = (inclinationDeg: number): number =>
+  EARTH_RADIUS_KM * toRadians(2 * inclinationDeg);
+
+/** Meme chose directement depuis une longueur de corde (ligne droite). */
+export const arcKmFromChordKm = (chordKm: number): number => arcKmFromInclination(inclinationFromChordKm(chordKm));
+
 /** Angle 3D entre deux directions locales (cap + angle sous l'horizon), en degres [0, 180]. */
 export const directionAngle = (bearingA: number, inclinationA: number, bearingB: number, inclinationB: number): number => {
   const vector = (bearing: number, inclination: number): [number, number, number] => {

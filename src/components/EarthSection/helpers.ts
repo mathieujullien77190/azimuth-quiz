@@ -1,5 +1,4 @@
 import { EARTH_RADIUS_KM } from '@/constants';
-import type { DistanceMode } from '@/types';
 
 import { MAX_ZOOM, ZOOM_STEPS } from './constants';
 import type { EarthMark, Point, Side } from './types';
@@ -23,46 +22,12 @@ export const arcPath = (center: Point, radius: number, angle: number, side: Side
   return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${angle > Math.PI ? 1 : 0} ${side === 1 ? 1 : 0} ${end.x} ${end.y}`;
 };
 
-export type MarkGeometry = {
-  shape: 'arc' | 'line';
-  side: Side;
-  /** Extremite de la reponse (la ou on pose le point). */
-  end: Point;
-  /** Angle au centre de l'arc (forme 'arc' seulement). */
-  angle: number;
-};
-
-type GeometryInput = {
-  item: Pick<EarthMark, 'bearing' | 'distanceKm' | 'inclination'>;
-  mode: DistanceMode;
-  /** Position du joueur : le sommet du cercle. */
-  player: Point;
-  radius: number;
-};
-
 /**
- * Dessin d'une reponse, selon le mode du schema :
- * - surface : un arc le long du cercle, de longueur = la distance ;
- * - straight : une droite qui part avec l'inclinaison choisie (sa longueur en decoule).
+ * Extremite d'une reponse sur le cercle : l'arc (surface) et la corde (ligne droite) relient les
+ * deux memes points, donc partagent ce point d'arrivee - seule l'inclinaison choisie fixe la distance.
  */
-export const markGeometry = ({ item, mode, player, radius }: GeometryInput): MarkGeometry => {
-  const side = sideOf(item.bearing);
-
-  if (mode === 'surface') {
-    const angle = surfaceAngle(item.distanceKm);
-    const center = { x: player.x, y: player.y + radius };
-    return { shape: 'arc', side, angle, end: surfacePoint(center, radius, side * angle) };
-  }
-
-  const inclination = (item.inclination * Math.PI) / 180;
-  const length = (item.distanceKm * radius) / EARTH_RADIUS_KM;
-  return {
-    shape: 'line',
-    side,
-    angle: 0,
-    end: { x: player.x + side * length * Math.cos(inclination), y: player.y + length * Math.sin(inclination) },
-  };
-};
+export const markEnd = (item: Pick<EarthMark, 'bearing' | 'distanceKm'>, center: Point, radius: number): Point =>
+  surfacePoint(center, radius, sideOf(item.bearing) * surfaceAngle(item.distanceKm));
 
 /**
  * Plus fort zoom (parmi ZOOM_STEPS) qui garde toutes les extremites dans la zone visible.

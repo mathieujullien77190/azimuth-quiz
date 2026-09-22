@@ -8,9 +8,17 @@ const roundDistance = (km: number, maxKm: number): number => {
   return Math.min(maxKm, Math.max(MIN_DISTANCE_KM, Math.round(km / step) * step));
 };
 
-/** Position [0, 1] sur un curseur a echelle logarithmique -> distance en km. */
-export const ratioToKm = (ratio: number, maxKm: number): number =>
-  roundDistance(MIN_DISTANCE_KM * Math.exp(Math.log(maxKm / MIN_DISTANCE_KM) * clamp01(ratio)), maxKm);
+/**
+ * Position [0, 1] sur un curseur a echelle logarithmique -> distance en km.
+ * Aux deux extremites, pas d'arrondi : sinon le pas de 100 km ramenerait par exemple
+ * 12 742 km (inclinaison 90°) a 12 700 km (inclinaison ~85°), rendant 90° inatteignable.
+ */
+export const ratioToKm = (ratio: number, maxKm: number): number => {
+  const clamped = clamp01(ratio);
+  if (clamped >= 1) return maxKm;
+  if (clamped <= 0) return MIN_DISTANCE_KM;
+  return roundDistance(MIN_DISTANCE_KM * Math.exp(Math.log(maxKm / MIN_DISTANCE_KM) * clamped), maxKm);
+};
 
 /** Distance en km -> position [0, 1] sur un curseur a echelle logarithmique. */
 export const kmToRatio = (km: number, maxKm: number): number =>

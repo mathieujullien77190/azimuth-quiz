@@ -2,19 +2,19 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View, useWindowDimensio
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { fontSize, spacing } from '@/constants';
-import { formatBearing, formatNumber, inclinationFromChordKm } from '@/helpers';
+import { arcKmFromChordKm, formatBearing, formatNumber } from '@/helpers';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { EarthMark } from '../EarthSection';
-import type { DistanceMode, Guess, Theme } from '@/types';
+import type { Theme } from '@/types';
 
 import Compass from '../Compass';
 import DistanceSlider from '../DistanceSlider';
 import EarthSection from '../EarthSection';
 import EndScreen from '../EndScreen';
-import HandoffScreen from '../HandoffScreen';
 import InclinationSlider from '../InclinationSlider';
 import Legend from '../Legend';
 import PlaceCard from '../PlaceCard';
+import PlayerTabs from '../PlayerTabs';
 import RoundResult from '../RoundResult';
 import ThemeBackdrop from '../ThemeBackdrop';
 import Button from '../ui/Button';
@@ -25,6 +25,7 @@ import {
   LOADING_LABEL,
   QUIT_LABEL,
   REALITY_LABEL,
+  REVEAL_OPACITY,
   ROUND_OVER_LABEL,
   VALIDATE_LABEL,
   YOUR_ANSWER_LABEL,
@@ -96,18 +97,6 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
     );
   }
 
-  if (game.phase === 'handoff') {
-    return (
-      <HandoffScreen
-        onQuit={onQuit}
-        onReady={game.ready}
-        player={game.currentPlayer}
-        roundNumber={game.roundNumber}
-        totalRounds={game.totalRounds}
-      />
-    );
-  }
-
   if (game.phase === 'end') {
     return (
       <EndScreen
@@ -127,45 +116,41 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
   const playerColor = game.isMultiplayer ? game.currentPlayer.color : undefined;
   const earthSize = earthSizeFor(width);
   const playerColorAt = (index: number) => (game.isMultiplayer ? game.players[index].color : colors.accent);
+  // Le curseur donne la corde (ligne droite) en mode straightLine ; la Terre dessine un arc,
+  // donc il faut la distance au sol equivalente (meme destination, cf. helpers/geo).
+  const earthDistanceKm = (km: number) => (straightLine ? arcKmFromChordKm(km) : km);
 
-  // Deja repondu ce tour-ci (avant le joueur courant) : montre sur la boussole et sur la Terre, en estompe.
+  // Reponses deja validees des autres joueurs : montrees sur la boussole et sur la Terre, en estompe.
   const answeredNeedles = game.answered.map((entry) => ({ bearing: entry.guess.bearing, color: entry.player.color }));
 
-  /** Marques d'un schema (surface ou ligne droite) pendant la saisie : les autres joueurs en estompe, sa propre reponse au premier plan. */
-  const draftMarks = (mode: DistanceMode, valueOf: (guess: Guess) => number, draftKm: number): EarthMark[] => {
-    const inclinationOf = (km: number) => (mode === 'straight' ? inclinationFromChordKm(km) : 0);
-    return [
-      ...game.answered.map((entry) => ({
-        bearing: entry.guess.bearing,
-        distanceKm: valueOf(entry.guess),
-        inclination: inclinationOf(valueOf(entry.guess)),
-        color: entry.player.color,
-        opacity: ANSWERED_OPACITY,
-      })),
-      {
-        bearing: game.bearing,
-        distanceKm: draftKm,
-        inclination: inclinationOf(draftKm),
-        color: playerColor ?? colors.accent,
-      },
-    ];
-  };
-
-  /** Marques d'un schema a la revelation : la vraie reponse (cerclee) puis chaque joueur. */
-  const revealMarks = (mode: DistanceMode, valueOf: (guess: Guess) => number): EarthMark[] => {
-    if (record === undefined) return [];
-    const trueDistanceKm = mode === 'straight' ? record.results[0].score.trueStraightDistanceKm : record.results[0].score.trueSurfaceDistanceKm;
-    const trueInclination = mode === 'straight' ? record.results[0].score.trueInclination : 0;
-    return [
-      { bearing: record.results[0].score.trueBearing, distanceKm: trueDistanceKm, inclination: trueInclination, color: colors.truth, isTruth: true },
-      ...record.results.map((result, index) => ({
-        bearing: result.guess.bearing,
-        distanceKm: valueOf(result.guess),
-        inclination: mode === 'straight' ? inclinationFromChordKm(valueOf(result.guess)) : 0,
-        color: playerColorAt(index),
-      })),
-    ];
-  };
+  const earthMarks: EarthMark[] = record
+    ? [
+        {
+          bearing: record.results[0].score.trueBearing,
+          distanceKm: record.results[0].score.trueSurfaceDistanceKm,
+          color: colors.truth,
+          isTruth: true,
+        },
+        ...record.results.map(
+          (result, index): EarthMark => ({
+            bearing: result.guess.bearing,
+            distanceKm: earthDistanceKm(result.guess.distanceKm),
+            color: playerColorAt(index),
+            opacity: REVEAL_OPACITY,
+          }),
+        ),
+      ]
+    : [
+        ...game.answered.map(
+          (entry): EarthMark => ({
+            bearing: entry.guess.bearing,
+            distanceKm: earthDistanceKm(entry.guess.distanceKm),
+            color: entry.player.color,
+            opacity: ANSWERED_OPACITY,
+          }),
+        ),
+        { bearing: game.bearing, distanceKm: earthDistanceKm(game.distanceKm), color: playerColor ?? colors.accent },
+      ];
 
   const legendItems = record
     ? game.isMultiplayer
@@ -185,10 +170,23 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
     ? game.isMultiplayer
       ? ROUND_OVER_LABEL
       : `${formatNumber(game.totals[0])} pts`
-    : `${game.isMultiplayer ? `${game.currentPlayer.name} · ` : ''}${formatNumber(game.totals[game.playerIndex])} pts`;
+    : `${game.isMultiplayer ? `${game.currentPlayer.name} · ` : ''}${formatNumber(game.totals[game.activePlayerIndex])} pts`;
 
   return (
-    <Screen>
+    <Screen
+      header={
+        game.isMultiplayer && !record ? (
+          <PlayerTabs
+            activeIndex={game.activePlayerIndex}
+            allowRevision={game.config.allowRevision}
+            answered={game.answeredByPlayer}
+            onSelect={game.selectPlayer}
+            order={game.roundOrder}
+            players={game.players}
+          />
+        ) : undefined
+      }
+    >
       <View style={styles.topBar}>
         <Pressable accessibilityRole="button" hitSlop={12} onPress={onQuit}>
           <Text style={styles.quit}>{QUIT_LABEL}</Text>
@@ -236,40 +234,24 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
 
       <Card style={styles.earthCard}>
         <View style={styles.earthCenter}>
-          <EarthSection
-            marks={
-              record
-                ? revealMarks('surface', (guess) => guess.surfaceKm)
-                : draftMarks('surface', (guess) => guess.surfaceKm, game.surfaceKm)
-            }
-            mode="surface"
-            size={earthSize}
-          />
+          <EarthSection marks={earthMarks} showStraightLine={straightLine} size={earthSize} />
         </View>
-        {!record && <DistanceSlider maxKm={game.maxSurfaceKm} onChange={game.setSurfaceDistance} valueKm={game.surfaceKm} />}
+        {!record &&
+          (straightLine ? (
+            <InclinationSlider distanceKm={game.distanceKm} maxKm={game.maxDistanceKm} onChange={game.setDistanceKm} />
+          ) : (
+            <DistanceSlider maxKm={game.maxDistanceKm} onChange={game.setDistanceKm} valueKm={game.distanceKm} />
+          ))}
       </Card>
 
-      {straightLine && (
-        <Card style={styles.earthCard}>
-          <View style={styles.earthCenter}>
-            <EarthSection
-              marks={
-                record
-                  ? revealMarks('straight', (guess) => guess.straightKm)
-                  : draftMarks('straight', (guess) => guess.straightKm, game.straightKm)
-              }
-              mode="straight"
-              size={earthSize}
-            />
-          </View>
-          {!record && (
-            <InclinationSlider distanceKm={game.straightKm} maxKm={game.maxStraightKm} onChange={game.setStraightDistance} />
-          )}
-        </Card>
-      )}
-
       {record ? (
-        <RoundResult isLastRound={game.roundNumber === game.totalRounds} onNext={game.next} players={game.players} record={record} />
+        <RoundResult
+          isLastRound={game.roundNumber === game.totalRounds}
+          onNext={game.next}
+          options={game.config}
+          players={game.players}
+          record={record}
+        />
       ) : (
         <Button label={VALIDATE_LABEL} onPress={game.submit} />
       )}

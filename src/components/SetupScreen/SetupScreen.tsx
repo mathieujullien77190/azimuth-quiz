@@ -210,6 +210,13 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
           onValueChange={(value) => updateSettings({ showCountry: value })}
           value={settings.showCountry}
         />
+        {settings.playerNames.length > 1 && (
+          <Toggle
+            {...TOGGLES.allowRevision}
+            onValueChange={(value) => updateSettings({ allowRevision: value })}
+            value={settings.allowRevision}
+          />
+        )}
       </Section>
 
       <Text style={styles.availability}>{availabilityLabel(available, settings.rounds)}</Text>
