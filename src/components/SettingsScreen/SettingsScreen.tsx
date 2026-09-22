@@ -9,6 +9,7 @@ import Button from '../ui/Button';
 import Chip from '../ui/Chip';
 import Screen from '../ui/Screen';
 import Section from '../ui/Section';
+import { APP_VERSION } from './constants';
 import type { SettingsScreenProps } from './types';
 
 const createStyles = ({ colors, typography }: Theme) =>
@@ -31,6 +32,11 @@ const createStyles = ({ colors, typography }: Theme) =>
       ...typography.body,
       color: colors.textMuted,
       fontSize: fontSize.body,
+    },
+    version: {
+      ...typography.label,
+      color: colors.textMuted,
+      fontSize: fontSize.caption,
     },
   });
 
@@ -62,6 +68,7 @@ export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
         <View style={styles.about}>
           <Text style={styles.aboutLine}>{t.settings.author}</Text>
           <Text style={styles.aboutLine}>{t.settings.claudeMention}</Text>
+          <Text style={styles.version}>{APP_VERSION}</Text>
         </View>
       </Section>
 
