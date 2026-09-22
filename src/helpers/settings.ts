@@ -32,12 +32,13 @@ export const sanitizeSettings = (raw: unknown): GameSettings => {
     ? raw.categories.filter((category): category is Category => validCategories.includes(category as Category))
     : [];
 
+  // Choix unique (radio) : meme d'anciens reglages sauvegardes avec plusieurs difficultes ne
+  // gardent que la premiere valide.
   const validDifficulties = DIFFICULTIES.map((difficulty) => difficulty.id);
-  const difficulties = Array.isArray(raw.difficulties)
-    ? raw.difficulties.filter((difficulty): difficulty is Difficulty =>
-        validDifficulties.includes(difficulty as Difficulty),
-      )
-    : [];
+  const firstValidDifficulty = Array.isArray(raw.difficulties)
+    ? raw.difficulties.find((difficulty): difficulty is Difficulty => validDifficulties.includes(difficulty as Difficulty))
+    : undefined;
+  const difficulties = firstValidDifficulty !== undefined ? [firstValidDifficulty] : DEFAULT_SETTINGS.difficulties;
 
   const zone = ZONES.some((candidate) => candidate.id === raw.zone) ? (raw.zone as Zone) : DEFAULT_SETTINGS.zone;
   const rounds = ROUND_OPTIONS.some((option) => option === raw.rounds) ? (raw.rounds as number) : DEFAULT_SETTINGS.rounds;
@@ -46,7 +47,7 @@ export const sanitizeSettings = (raw: unknown): GameSettings => {
   return {
     playerNames,
     categories: categories.length > 0 ? categories : DEFAULT_SETTINGS.categories,
-    difficulties: difficulties.length > 0 ? difficulties : DEFAULT_SETTINGS.difficulties,
+    difficulties,
     zone,
     rounds,
     // Anciens reglages : les deux options "ligne droite" separees deviennent un seul mode.

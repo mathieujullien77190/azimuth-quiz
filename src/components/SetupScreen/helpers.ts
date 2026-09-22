@@ -27,20 +27,20 @@ export const toggleCategoryFilter = (
 };
 
 /**
- * Choisir une difficulte autre que Facile seule n'a pas de sens pour "Enfants" (pensee facile par
- * nature) : plutot que de la laisser dans un etat incoherent, on la decoche.
+ * Difficulte : choix unique (radio), pas une selection multiple — cliquer une pastille la
+ * selectionne seule, jamais un toggle qui pourrait tout vider. Choisir autre chose que Facile n'a
+ * pas de sens pour "Enfants" (pensee facile par nature) : plutot que de la laisser dans un etat
+ * incoherent, on la decoche.
  */
-export const toggleDifficultyFilter = (
+export const selectDifficultyFilter = (
   settings: Pick<GameSettings, 'categories' | 'difficulties'>,
   difficulty: Difficulty,
 ): Pick<GameSettings, 'categories' | 'difficulties'> => {
-  const difficulties = toggleSelected(settings.difficulties, difficulty);
-  const isEasyOnly = difficulties.length === 1 && difficulties[0] === 'easy';
-  if (isEasyOnly) return { categories: settings.categories, difficulties };
+  if (difficulty === 'easy') return { categories: settings.categories, difficulties: [difficulty] };
 
   const withoutKids = settings.categories.filter((candidate) => candidate !== 'kids');
   const categories = withoutKids.length > 0 ? withoutKids : DEFAULT_SETTINGS.categories;
-  return { categories, difficulties };
+  return { categories, difficulties: [difficulty] };
 };
 
 export const availabilityLabel = (available: number, rounds: number): string =>
