@@ -201,16 +201,16 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
             <View style={styles.row}>
               <Text style={styles.rowLabel}>{ROW_LABELS.inclination}</Text>
               <Text style={styles.rowValue}>{formatInclination(result.guess.inclination)}</Text>
-              {/* Pas de score propre a l'inclinaison : elle fait partie du meme ecart 3D que la
-                  direction en mode ligne droite (voir helpers/geo.ts directionAngle), donc son
-                  "score" est celui de la direction. */}
+              {/* Meme score que Distance : en mode ligne droite, la corde jugee par distancePoints
+                  EST l'inclinaison (l'une determine l'autre) — donc le meme pool de points, gagne
+                  et perdu ensemble, independamment du cap. */}
               <Text
                 style={[
                   styles.rowPoints,
-                  { color: result.score.directionPoints === bestDirectionPoints ? colors.success : colors.text },
+                  { color: result.score.distancePoints === bestDistancePoints ? colors.success : colors.text },
                 ]}
               >
-                +{result.score.directionPoints}
+                +{result.score.distancePoints}
               </Text>
             </View>
           )}

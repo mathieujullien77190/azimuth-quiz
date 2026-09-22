@@ -11,7 +11,6 @@ export {
   bearingDeg,
   bearingToCardinal,
   centralAngleDeg,
-  directionAngle,
   distanceKm,
   arcKmFromChordKm,
   arcKmFromInclination,

@@ -43,18 +43,6 @@ export const arcKmFromInclination = (inclinationDeg: number): number =>
 /** Meme chose directement depuis une longueur de corde (ligne droite). */
 export const arcKmFromChordKm = (chordKm: number): number => arcKmFromInclination(inclinationFromChordKm(chordKm));
 
-/** Angle 3D entre deux directions locales (cap + angle sous l'horizon), en degres [0, 180]. */
-export const directionAngle = (bearingA: number, inclinationA: number, bearingB: number, inclinationB: number): number => {
-  const vector = (bearing: number, inclination: number): [number, number, number] => {
-    const b = toRadians(bearing);
-    const i = toRadians(inclination);
-    return [Math.cos(i) * Math.sin(b), Math.cos(i) * Math.cos(b), -Math.sin(i)];
-  };
-  const [ax, ay, az] = vector(bearingA, inclinationA);
-  const [bx, by, bz] = vector(bearingB, inclinationB);
-  return toDegrees(Math.acos(Math.max(-1, Math.min(1, ax * bx + ay * by + az * bz))));
-};
-
 /** Cap initial de `from` vers `to`, en degres [0, 360[ (0 = nord, 90 = est). */
 export const bearingDeg = (from: Coordinates, to: Coordinates): number => {
   const lat1 = toRadians(from.latitude);

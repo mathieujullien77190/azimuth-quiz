@@ -8,13 +8,18 @@ import {
 } from '@/constants';
 import type { Coordinates, GameSettings, Guess, Place, Rank, RoundScore } from '@/types';
 
-import { angleDifference, bearingDeg, directionAngle, distanceKm, inclinationDeg, straightDistanceKm } from './geo';
+import { angleDifference, bearingDeg, distanceKm, inclinationDeg, straightDistanceKm } from './geo';
 
 export type ScoringOptions = Pick<GameSettings, 'straightLine'>;
 
 const curve = (ratio: number): number => Math.max(0, Math.min(1, ratio)) ** SCORE_CURVE_EXPONENT;
 
-/** Score une reponse. En mode "straightLine", la comparaison se fait en ligne droite (corde + inclinaison en 3D). */
+/**
+ * Score une reponse. Direction (cap) et distance/inclinaison sont deux axes independants, chacun
+ * plafonne a MAX_DIRECTION_POINTS / MAX_DISTANCE_POINTS : un cap parfait donne les 500 points de
+ * direction quelle que soit l'inclinaison choisie, et reciproquement. En mode "straightLine", la
+ * comparaison de distance se fait sur la corde (donc sur l'inclinaison), jamais melangee au cap.
+ */
 export const scoreRound = (origin: Coordinates, place: Place, guess: Guess, options: ScoringOptions): RoundScore => {
   const trueBearing = bearingDeg(origin, place.coordinates);
   const trueInclination = inclinationDeg(origin, place.coordinates);
@@ -22,9 +27,7 @@ export const scoreRound = (origin: Coordinates, place: Place, guess: Guess, opti
   const trueStraightDistanceKm = straightDistanceKm(origin, place.coordinates);
   const trueDistanceForGuess = options.straightLine ? trueStraightDistanceKm : trueSurfaceDistanceKm;
 
-  const directionError = options.straightLine
-    ? directionAngle(guess.bearing, guess.inclination, trueBearing, trueInclination)
-    : angleDifference(guess.bearing, trueBearing);
+  const directionError = angleDifference(guess.bearing, trueBearing);
   const directionPoints = Math.round(MAX_DIRECTION_POINTS * curve(1 - directionError / DIRECTION_TOLERANCE_DEG));
 
   const distanceError = Math.abs(Math.log(guess.distanceKm / trueDistanceForGuess));
