@@ -2,6 +2,7 @@ import { MAX_DIRECTION_POINTS, MAX_DISTANCE_POINTS } from '@/constants';
 
 export const ROW_LABELS = {
   direction: 'Direction',
+  inclination: 'Inclinaison',
   distance: 'Distance',
 } as const;
 

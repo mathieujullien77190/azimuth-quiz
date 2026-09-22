@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
-import { arcKmFromChordKm, formatDistance } from '@/helpers';
+import { arcKmFromChordKm, formatBearing, formatDistance, formatInclination } from '@/helpers';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
@@ -26,6 +26,18 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       ...typography.label,
       color: colors.textMuted,
       fontSize: fontSize.caption,
+      marginBottom: 2,
+    },
+    truthRow: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      gap: spacing.sm,
+    },
+    truthRowLabel: {
+      ...typography.label,
+      color: colors.textMuted,
+      fontSize: fontSize.caption,
+      width: 90,
     },
     truthValue: {
       ...typography.heading,
@@ -100,8 +112,20 @@ export const RoundResult = ({ record, players, options, isLastRound, onNext }: R
     <Card style={styles.card}>
       <View style={styles.truth}>
         <Text style={styles.truthLabel}>{TRUTH_LABEL}</Text>
-        <Text style={styles.truthValue}>{directionText(truth.trueBearing, truth.trueInclination, options.straightLine)}</Text>
-        <Text style={styles.truthValue}>{formatDistance(truth.trueSurfaceDistanceKm)}</Text>
+        <View style={styles.truthRow}>
+          <Text style={styles.truthRowLabel}>{ROW_LABELS.direction}</Text>
+          <Text style={styles.truthValue}>{formatBearing(truth.trueBearing)}</Text>
+        </View>
+        {options.straightLine && (
+          <View style={styles.truthRow}>
+            <Text style={styles.truthRowLabel}>{ROW_LABELS.inclination}</Text>
+            <Text style={styles.truthValue}>{formatInclination(truth.trueInclination)}</Text>
+          </View>
+        )}
+        <View style={styles.truthRow}>
+          <Text style={styles.truthRowLabel}>{ROW_LABELS.distance}</Text>
+          <Text style={styles.truthValue}>{formatDistance(truth.trueSurfaceDistanceKm)}</Text>
+        </View>
       </View>
 
       {ranked.map(({ result, player }, position) => (
