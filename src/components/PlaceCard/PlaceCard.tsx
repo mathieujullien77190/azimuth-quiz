@@ -1,10 +1,12 @@
-import { StyleSheet, Text } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
 import Card from '../ui/Card';
+import { HIDE_DESCRIPTION_LABEL, SHOW_DESCRIPTION_LABEL } from './constants';
 import { categoryEmoji } from './helpers';
 import type { PlaceCardProps } from './types';
 
@@ -34,10 +36,27 @@ const createStyles = ({ colors, typography }: Theme) =>
       marginTop: spacing.sm,
       textAlign: 'center',
     },
+    toggle: {
+      marginTop: spacing.sm,
+    },
+    toggleLabel: {
+      ...typography.label,
+      color: colors.accent,
+      fontSize: fontSize.caption,
+    },
+    description: {
+      ...typography.body,
+      color: colors.textMuted,
+      fontSize: fontSize.body,
+      marginTop: spacing.sm,
+      textAlign: 'center',
+    },
   });
 
-export const PlaceCard = ({ place, originName, showCountry }: PlaceCardProps) => {
+/** Repliee par defaut, meme quand `description` est fournie : un clic la deplie. */
+export const PlaceCard = ({ place, originName, showCountry, description }: PlaceCardProps) => {
   const styles = useThemedStyles(createStyles);
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <Card style={styles.card}>
@@ -49,6 +68,15 @@ export const PlaceCard = ({ place, originName, showCountry }: PlaceCardProps) =>
         {showCountry ? ` ${place.country}` : ''}
       </Text>
       <Text style={styles.hint}>Depuis {originName} : quel cap, quelle distance ?</Text>
+
+      {description !== undefined && (
+        <>
+          <Pressable accessibilityRole="button" hitSlop={8} onPress={() => setExpanded((value) => !value)} style={styles.toggle}>
+            <Text style={styles.toggleLabel}>{expanded ? HIDE_DESCRIPTION_LABEL : SHOW_DESCRIPTION_LABEL}</Text>
+          </Pressable>
+          {expanded && <Text style={styles.description}>{description}</Text>}
+        </>
+      )}
     </Card>
   );
 };

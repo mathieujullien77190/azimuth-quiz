@@ -260,7 +260,13 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
         </View>
       }
     >
-      <PlaceCard originName={game.origin.name} place={game.place} showCountry={game.config.showCountry} />
+      <PlaceCard
+        key={game.roundNumber}
+        description={record ? game.place.description : undefined}
+        originName={game.origin.name}
+        place={game.place}
+        showCountry={game.config.showCountry}
+      />
 
       <View style={styles.compass}>
         {record ? (

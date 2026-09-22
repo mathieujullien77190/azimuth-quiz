@@ -10,7 +10,14 @@ const master = tier('master');
 
 export const CITIES: Place[] = [
   ...easy([
-    city('Paris', 'France', 'FR', 48.8566, 2.3522),
+    city(
+      'Paris',
+      'France',
+      'FR',
+      48.8566,
+      2.3522,
+      'Capitale de la France depuis le Xe siècle, bâtie autour de la Seine. Sa tour Eiffel, achevée en 1889 pour l’Exposition universelle, était à l’origine une construction temporaire.',
+    ),
     city('Londres', 'Royaume-Uni', 'GB', 51.5074, -0.1278),
     city('Berlin', 'Allemagne', 'DE', 52.52, 13.405),
     city('Madrid', 'Espagne', 'ES', 40.4168, -3.7038),

@@ -20,6 +20,9 @@ export type Place = {
   category: Category;
   coordinates: Coordinates;
   difficulty: Difficulty;
+  /** Anecdote courte sur le lieu : affichee repliee, seulement a la revelation. Absente pour les
+   * lieux pas encore documentes (le composant n'affiche alors rien). */
+  description?: string;
 };
 
 export type Origin = {
