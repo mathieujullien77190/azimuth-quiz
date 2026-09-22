@@ -4,14 +4,16 @@ import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
 import { formatNumber, loadBestScore } from '@/helpers';
+import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
 import Compass from '../Compass';
+import UfoButton from '../UfoButton';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Screen from '../ui/Screen';
-import { APP_TAGLINE, APP_TITLE, DECORATIVE_BEARING, PLAY_LABEL, RULES } from './constants';
+import { APP_TITLE, DECORATIVE_BEARING } from './constants';
 import { compassSizeFor } from './helpers';
 
 const createStyles = ({ colors, typography }: Theme) =>
@@ -20,6 +22,11 @@ const createStyles = ({ colors, typography }: Theme) =>
       alignItems: 'center',
       gap: spacing.xs,
       paddingTop: spacing.md,
+    },
+    ufoButton: {
+      position: 'absolute',
+      top: spacing.sm,
+      right: spacing.lg,
     },
     title: {
       ...typography.display,
@@ -71,6 +78,7 @@ export const HomeScreen = () => {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const styles = useThemedStyles(createStyles);
+  const t = useTranslation();
   const [bestScore, setBestScore] = useState(0);
   const [bearing, setBearing] = useState(DECORATIVE_BEARING);
 
@@ -83,8 +91,11 @@ export const HomeScreen = () => {
   return (
     <Screen>
       <View style={styles.header}>
+        <View style={styles.ufoButton}>
+          <UfoButton accessibilityLabel={t.home.settingsButtonLabel} onPress={() => router.push('/settings')} />
+        </View>
         <Text style={styles.title}>{APP_TITLE}</Text>
-        <Text style={styles.tagline}>{APP_TAGLINE}</Text>
+        <Text style={styles.tagline}>{t.home.tagline}</Text>
       </View>
 
       <View style={styles.compass}>
@@ -92,7 +103,7 @@ export const HomeScreen = () => {
       </View>
 
       <Card style={styles.rules}>
-        {RULES.map(({ emoji, text }) => (
+        {t.home.rules.map(({ emoji, text }) => (
           <View key={text} style={styles.rule}>
             <Text style={styles.ruleEmoji}>{emoji}</Text>
             <Text style={styles.ruleText}>{text}</Text>
@@ -100,10 +111,14 @@ export const HomeScreen = () => {
         ))}
       </Card>
 
-      {bestScore > 0 && <Text style={styles.best}>Record : {formatNumber(bestScore)} pts</Text>}
+      {bestScore > 0 && (
+        <Text style={styles.best}>
+          {t.common.record(formatNumber(bestScore))} {t.common.pts}
+        </Text>
+      )}
 
       <View style={styles.spacer} />
-      <Button label={PLAY_LABEL} onPress={() => router.push('/setup')} />
+      <Button label={t.home.play} onPress={() => router.push('/setup')} />
     </Screen>
   );
 };
