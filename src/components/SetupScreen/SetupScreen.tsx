@@ -24,7 +24,7 @@ import Screen from '../ui/Screen';
 import Section from '../ui/Section';
 import Toggle from '../ui/Toggle';
 import { BACK_LABEL, DISTANCE_MODES, SCREEN_TITLE, START_LABEL, TOGGLES } from './constants';
-import { availabilityLabel, resizeNames, toggleSelected } from './helpers';
+import { availabilityLabel, resizeNames, toggleCategoryFilter, toggleDifficultyFilter } from './helpers';
 import type { SetupScreenProps } from './types';
 
 const createStyles = ({ colors, radius, typography }: Theme) =>
@@ -164,7 +164,7 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
               key={category.id}
               emoji={category.emoji}
               label={category.label}
-              onPress={() => updateSettings({ categories: toggleSelected(settings.categories, category.id) })}
+              onPress={() => updateSettings(toggleCategoryFilter(settings, category.id))}
               selected={settings.categories.includes(category.id)}
             />
           ))}
@@ -178,7 +178,7 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
               key={difficulty.id}
               emoji={difficulty.emoji}
               label={difficulty.label}
-              onPress={() => updateSettings({ difficulties: toggleSelected(settings.difficulties, difficulty.id) })}
+              onPress={() => updateSettings(toggleDifficultyFilter(settings, difficulty.id))}
               selected={settings.difficulties.includes(difficulty.id)}
             />
           ))}

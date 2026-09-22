@@ -1,3 +1,6 @@
+import { DEFAULT_SETTINGS } from '@/constants';
+import type { Category, Difficulty, GameSettings } from '@/types';
+
 /** Ajuste la liste des noms au nombre de joueurs, en gardant les noms deja saisis. Les nouvelles
  * places restent vides : le placeholder au pif s'affiche, pas de "Joueur N" ecrit d'office. */
 export const resizeNames = (names: string[], count: number): string[] =>
@@ -8,6 +11,36 @@ export const resizeNames = (names: string[], count: number): string[] =>
 export const toggleSelected = <T>(selected: T[], value: T): T[] => {
   if (!selected.includes(value)) return [...selected, value];
   return selected.length > 1 ? selected.filter((candidate) => candidate !== value) : selected;
+};
+
+/**
+ * Categorie "Enfants" : uniquement des lieux faciles par construction. La cocher force donc la
+ * difficulte a Facile seul (choix unique, pas une selection multiple comme les autres categories).
+ */
+export const toggleCategoryFilter = (
+  settings: Pick<GameSettings, 'categories' | 'difficulties'>,
+  category: Category,
+): Pick<GameSettings, 'categories' | 'difficulties'> => {
+  const categories = toggleSelected(settings.categories, category);
+  const difficulties = category === 'kids' && categories.includes('kids') ? (['easy'] as Difficulty[]) : settings.difficulties;
+  return { categories, difficulties };
+};
+
+/**
+ * Choisir une difficulte autre que Facile seule n'a pas de sens pour "Enfants" (pensee facile par
+ * nature) : plutot que de la laisser dans un etat incoherent, on la decoche.
+ */
+export const toggleDifficultyFilter = (
+  settings: Pick<GameSettings, 'categories' | 'difficulties'>,
+  difficulty: Difficulty,
+): Pick<GameSettings, 'categories' | 'difficulties'> => {
+  const difficulties = toggleSelected(settings.difficulties, difficulty);
+  const isEasyOnly = difficulties.length === 1 && difficulties[0] === 'easy';
+  if (isEasyOnly) return { categories: settings.categories, difficulties };
+
+  const withoutKids = settings.categories.filter((candidate) => candidate !== 'kids');
+  const categories = withoutKids.length > 0 ? withoutKids : DEFAULT_SETTINGS.categories;
+  return { categories, difficulties };
 };
 
 export const availabilityLabel = (available: number, rounds: number): string =>
