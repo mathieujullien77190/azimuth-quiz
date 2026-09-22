@@ -27,6 +27,12 @@ import { playerTotals } from './helpers';
 /** Cap de depart par defaut : le nord, aiguille deja visible et deplacable. */
 const DEFAULT_BEARING = 0;
 
+/** Brouillon d'un joueur (aiguille + distance) avant validation. */
+type Draft = { bearing: number; distanceKm: number };
+
+/** Brouillon de depart : aiguille au nord, distance par defaut. */
+const DEFAULT_DRAFT: Draft = { bearing: DEFAULT_BEARING, distanceKm: DEFAULT_DISTANCE_KM };
+
 export const useGame = () => {
   const { settings, ready: settingsReady } = useSettings();
   const settingsRef = useRef(settings);
@@ -44,9 +50,10 @@ export const useGame = () => {
   const [activePlayerIndex, setActivePlayerIndex] = useState(0);
   const [guessesByPlayer, setGuessesByPlayer] = useState<(Guess | undefined)[]>([]);
   const [records, setRecords] = useState<RoundRecord[]>([]);
-  const [bearing, setBearing] = useState(DEFAULT_BEARING);
-  // Le seul curseur de distance : surface en mode classique, corde (ligne droite) en mode straightLine.
-  const [distanceKm, setDistanceKm] = useState(DEFAULT_DISTANCE_KM);
+  // Brouillon (aiguille + distance, curseur de distance : surface en mode classique, corde en mode
+  // straightLine) de CHAQUE joueur, y compris non valide : change d'onglet via PlayerTabs ne doit
+  // jamais faire perdre une reponse en cours de saisie, meme avant le clic sur "Valider".
+  const [draftsByPlayer, setDraftsByPlayer] = useState<Draft[]>([]);
   const [bestScore, setBestScore] = useState(0);
   const [isNewBest, setIsNewBest] = useState(false);
 
@@ -64,23 +71,37 @@ export const useGame = () => {
   const isMultiplayer = players.length > 1;
   const maxDistanceKm = config.straightLine ? MAX_STRAIGHT_DISTANCE_KM : MAX_SURFACE_DISTANCE_KM;
 
-  /** Aiguille au nord, curseur a sa valeur de depart (nouveau joueur non repondu, ou nouvelle manche). */
-  const resetDraft = useCallback(() => {
-    setBearing(DEFAULT_BEARING);
-    setDistanceKm(DEFAULT_DISTANCE_KM);
-  }, []);
+  /** Brouillon du joueur actif : sa reponse en cours (validee ou non). */
+  const activeDraft = draftsByPlayer[activePlayerIndex] ?? DEFAULT_DRAFT;
+  const bearing = activeDraft.bearing;
+  const distanceKm = activeDraft.distanceKm;
 
-  /** Recharge la reponse deja donnee par un joueur, pour la modifier (option "Modifier apres validation"). */
-  const loadDraft = useCallback((guess: Guess) => {
-    setBearing(guess.bearing);
-    setDistanceKm(guess.distanceKm);
-  }, []);
+  /** Met a jour uniquement le brouillon du joueur actif, sans toucher aux autres. */
+  const setBearing = useCallback(
+    (value: number) => {
+      setDraftsByPlayer((previous) =>
+        previous.map((draft, index) => (index === activePlayerIndex ? { ...draft, bearing: value } : draft)),
+      );
+    },
+    [activePlayerIndex],
+  );
 
+  const setDistanceKm = useCallback(
+    (value: number) => {
+      setDraftsByPlayer((previous) =>
+        previous.map((draft, index) => (index === activePlayerIndex ? { ...draft, distanceKm: value } : draft)),
+      );
+    },
+    [activePlayerIndex],
+  );
+
+  /** Nouvelle manche (ou nouvelle partie) : chaque joueur repart avec un brouillon vierge. */
   const startRound = useCallback((playerCount: number) => {
     const order = shuffle(Array.from({ length: playerCount }, (_, index) => index));
     setRoundOrder(order);
     setActivePlayerIndex(order[0] ?? 0);
     setGuessesByPlayer(new Array(playerCount).fill(undefined));
+    setDraftsByPlayer(new Array(playerCount).fill(DEFAULT_DRAFT));
   }, []);
 
   const start = useCallback(async () => {
@@ -101,9 +122,8 @@ export const useGame = () => {
     setIsNewBest(false);
     setRoundIndex(0);
     startRound(chosen.playerNames.length);
-    resetDraft();
     setPhase('guess');
-  }, [resetDraft, startRound]);
+  }, [startRound]);
 
   // On attend la lecture des reglages sauvegardes (rechargement direct sur l'ecran de jeu).
   useEffect(() => {
@@ -130,19 +150,16 @@ export const useGame = () => {
   /** Un joueur par index : a-t-il deja valide sa reponse ce tour-ci ? */
   const answeredByPlayer = useMemo(() => guessesByPlayer.map((guess) => guess !== undefined), [guessesByPlayer]);
 
-  /** Change d'onglet : recharge la reponse existante si on revient modifier, sinon repart a zero. */
+  /** Change d'onglet : le brouillon de chaque joueur vit deja dans draftsByPlayer, rien a recharger. */
   const selectPlayer = useCallback(
     (index: number) => {
       if (index === activePlayerIndex) return;
-      const existing = guessesByPlayer[index];
-      const locked = existing !== undefined && !config.allowRevision;
+      const locked = guessesByPlayer[index] !== undefined && !config.allowRevision;
       if (locked) return;
 
       setActivePlayerIndex(index);
-      if (existing !== undefined) loadDraft(existing);
-      else resetDraft();
     },
-    [activePlayerIndex, config.allowRevision, guessesByPlayer, loadDraft, resetDraft],
+    [activePlayerIndex, config.allowRevision, guessesByPlayer],
   );
 
   const submit = useCallback(() => {
@@ -161,7 +178,6 @@ export const useGame = () => {
     const nextUnanswered = roundOrder.find((index) => updated[index] === undefined);
     if (nextUnanswered !== undefined) {
       setActivePlayerIndex(nextUnanswered);
-      resetDraft();
       return;
     }
 
@@ -171,25 +187,12 @@ export const useGame = () => {
     });
     setRecords((previous) => [...previous, { place, results }]);
     setPhase('reveal');
-  }, [
-    activePlayerIndex,
-    bearing,
-    config,
-    distanceKm,
-    guessesByPlayer,
-    origin,
-    places,
-    players,
-    resetDraft,
-    roundIndex,
-    roundOrder,
-  ]);
+  }, [activePlayerIndex, bearing, config, distanceKm, guessesByPlayer, origin, places, players, roundIndex, roundOrder]);
 
   const next = useCallback(() => {
     if (roundIndex + 1 < places.length) {
       setRoundIndex(roundIndex + 1);
       startRound(players.length);
-      resetDraft();
       setPhase('guess');
       return;
     }
@@ -201,7 +204,7 @@ export const useGame = () => {
       saveBestScore(soloTotal);
     }
     setPhase('end');
-  }, [bestScore, isMultiplayer, places.length, players.length, records, resetDraft, roundIndex, startRound]);
+  }, [bestScore, isMultiplayer, places.length, players.length, records, roundIndex, startRound]);
 
   return {
     phase,
