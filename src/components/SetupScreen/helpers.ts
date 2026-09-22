@@ -1,8 +1,9 @@
 import type { Category } from '@/types';
 
-/** Ajuste la liste des noms au nombre de joueurs, en gardant les noms deja saisis. */
+/** Ajuste la liste des noms au nombre de joueurs, en gardant les noms deja saisis. Les nouvelles
+ * places restent vides : le placeholder au pif s'affiche, pas de "Joueur N" ecrit d'office. */
 export const resizeNames = (names: string[], count: number): string[] =>
-  Array.from({ length: count }, (_, index) => names[index] ?? `Joueur ${index + 1}`);
+  Array.from({ length: count }, (_, index) => names[index] ?? '');
 
 /** Ajoute ou retire une categorie, sans jamais vider la selection. */
 export const toggleCategory = (categories: Category[], category: Category): Category[] => {

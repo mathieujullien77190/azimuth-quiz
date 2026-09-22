@@ -94,7 +94,7 @@ export const EUROPE_MAX_LONGITUDE = 45;
 export const EUROPE_MIN_LATITUDE = 30;
 
 export const DEFAULT_SETTINGS: GameSettings = {
-  playerNames: ['Joueur 1'],
+  playerNames: [''],
   categories: ['cities', 'mountains', 'landmarks', 'nature'],
   zone: 'world',
   rounds: 10,

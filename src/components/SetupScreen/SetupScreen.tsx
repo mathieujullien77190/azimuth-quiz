@@ -12,7 +12,7 @@ import {
   fontSize,
   spacing,
 } from '@/constants';
-import { filterPlaces, initials, playerDisplayName, shuffle } from '@/helpers';
+import { filterPlaces, initials, shuffle } from '@/helpers';
 import { useSettings } from '@/settings';
 import { useTheme, useThemeSwitcher, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
@@ -133,31 +133,35 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
           ))}
         </View>
         <View style={styles.names}>
-          {settings.playerNames.map((name, index) => (
-            <View key={index} style={styles.nameRow}>
-              <View style={[styles.nameDot, { backgroundColor: PLAYER_COLORS[index] }]} />
-              <View style={styles.inputWrap}>
-                <TextInput
-                  accessibilityLabel={`Nom du joueur ${index + 1}`}
-                  maxLength={14}
-                  onChangeText={(text) =>
-                    updateSettings({
-                      playerNames: settings.playerNames.map((current, i) => (i === index ? text : current)),
-                    })
-                  }
-                  placeholder={placeholderNames[index % placeholderNames.length]}
-                  placeholderTextColor={colors.textMuted}
-                  style={styles.input}
-                  value={name}
-                />
-                <View style={[styles.initials, { borderColor: PLAYER_COLORS[index] }]}>
-                  <Text style={[styles.initialsText, { color: PLAYER_COLORS[index] }]}>
-                    {initials(playerDisplayName(name, index))}
-                  </Text>
+          {settings.playerNames.map((name, index) => {
+            const placeholder = placeholderNames[index % placeholderNames.length];
+
+            return (
+              <View key={index} style={styles.nameRow}>
+                <View style={[styles.nameDot, { backgroundColor: PLAYER_COLORS[index] }]} />
+                <View style={styles.inputWrap}>
+                  <TextInput
+                    accessibilityLabel={`Nom du joueur ${index + 1}`}
+                    maxLength={14}
+                    onChangeText={(text) =>
+                      updateSettings({
+                        playerNames: settings.playerNames.map((current, i) => (i === index ? text : current)),
+                      })
+                    }
+                    placeholder={placeholder}
+                    placeholderTextColor={colors.textMuted}
+                    style={styles.input}
+                    value={name}
+                  />
+                  <View style={[styles.initials, { borderColor: PLAYER_COLORS[index] }]}>
+                    <Text style={[styles.initialsText, { color: PLAYER_COLORS[index] }]}>
+                      {initials(name.trim() || placeholder)}
+                    </Text>
+                  </View>
                 </View>
               </View>
-            </View>
-          ))}
+            );
+          })}
         </View>
       </Section>
 
