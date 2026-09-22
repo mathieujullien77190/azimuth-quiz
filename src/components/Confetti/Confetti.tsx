@@ -5,7 +5,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { PLAYER_COLORS } from '@/constants';
 import { useTheme } from '@/themes';
 
-import { DURATION_MS, PIECE_COUNT, SEED, TICK_MS } from './constants';
+import { BURST_MS, PIECE_COUNT, SEED, TICK_MS } from './constants';
 import { buildPieces, pieceTransform } from './helpers';
 
 // zIndex/elevation pour passer devant le ScrollView du Screen (Confetti est rendu dans le
@@ -18,9 +18,11 @@ const styles = StyleSheet.create({
 });
 
 /**
- * Pluie de confettis en boucle, purement decorative (pointerEvents none). Meme technique que
- * ThemeBackdrop pour l'animation : un seul etat "temps ecoule" pousse par un `setInterval`, pas
- * d'Animated (qui force `collapsable` sur le web et fait rejeter l'attribut par react-native-svg).
+ * Pluie de confettis a passage unique (~5s), purement decorative (pointerEvents none). Meme
+ * technique que ThemeBackdrop pour l'animation : un seul etat "temps ecoule" pousse par un
+ * `setInterval`, pas d'Animated (qui force `collapsable` sur le web et fait rejeter l'attribut
+ * par react-native-svg). Chaque piece tombe une fois puis disparait individuellement des qu'elle
+ * a fini sa chute — pas de coupure nette de toutes les pieces en meme temps.
  */
 export const Confetti = () => {
   const { colors } = useTheme();
@@ -35,8 +37,9 @@ export const Confetti = () => {
     const start = Date.now();
     const id = setInterval(() => {
       const elapsed = Date.now() - start;
-      if (elapsed >= DURATION_MS) {
+      if (elapsed >= BURST_MS) {
         clearInterval(id);
+        setElapsedMs(BURST_MS);
         return;
       }
       setElapsedMs(elapsed);
@@ -44,13 +47,14 @@ export const Confetti = () => {
     return () => clearInterval(id);
   }, []);
 
-  if (elapsedMs >= DURATION_MS) return null;
+  if (elapsedMs >= BURST_MS) return null;
 
   return (
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.front]}>
       <Svg height={height} width={width}>
         {pieces.map((piece, index) => {
-          const { x, y, rotation } = pieceTransform(piece, elapsedMs, width, height);
+          const { x, y, rotation, progress } = pieceTransform(piece, elapsedMs, width, height);
+          if (progress < 0 || progress > 1) return null;
           const transform = `rotate(${rotation} ${x} ${y})`;
           return <Circle key={index} cx={x} cy={y} fill={piece.color} r={piece.size / 2} transform={transform} />;
         })}

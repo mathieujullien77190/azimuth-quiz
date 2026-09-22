@@ -39,22 +39,22 @@ export const buildPieces = (count: number, seed: number, colors: readonly string
 };
 
 /**
- * Position/rotation d'un confetti a l'instant `elapsedMs` : tombe du haut vers le bas en
- * `fallMs`, puis reboucle (chute continue tant que l'ecran reste affiche). Se balance
- * horizontalement de part et d'autre de sa colonne de depart.
+ * Position/rotation d'un confetti a l'instant `elapsedMs` : tombe une seule fois du haut vers
+ * le bas entre `delayMs` et `delayMs + fallMs` (pas de boucle), avec un balancement horizontal
+ * de part et d'autre de sa colonne de depart. `progress` hors de [0, 1] signale que la piece
+ * n'est pas encore lancee ou a deja fini sa chute : l'appelant ne doit alors pas l'afficher.
  */
 export const pieceTransform = (
   piece: ConfettiPiece,
   elapsedMs: number,
   width: number,
   height: number,
-): { x: number; y: number; rotation: number } => {
+): { x: number; y: number; rotation: number; progress: number } => {
   const span = height + piece.size * 4;
-  const progress = ((elapsedMs - piece.delayMs) % piece.fallMs) / piece.fallMs;
-  const fallRatio = ((progress % 1) + 1) % 1;
-  const y = fallRatio * span - piece.size * 2;
+  const progress = (elapsedMs - piece.delayMs) / piece.fallMs;
+  const y = progress * span - piece.size * 2;
   const drift = Math.sin((elapsedMs / piece.driftPeriodMs) * 2 * Math.PI) * piece.driftAmplitude;
   const x = piece.xRatio * width + drift;
   const rotation = (elapsedMs * piece.spinSpeed) % 360;
-  return { x, y, rotation };
+  return { x, y, rotation, progress };
 };
