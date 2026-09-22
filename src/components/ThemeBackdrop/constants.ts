@@ -12,3 +12,5 @@ export const TWINKLE_MIN_OPACITY_RATIO = 0.25;
 export const TWINKLE_MIN_DURATION_MS = 1400;
 export const TWINKLE_MAX_DURATION_MS = 3600;
 export const TWINKLE_MAX_DELAY_MS = 3000;
+// Frequence de rafraichissement du scintillement : pas besoin de 60fps pour un effet aussi lent.
+export const TWINKLE_TICK_MS = 120;

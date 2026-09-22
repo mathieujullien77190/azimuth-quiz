@@ -6,6 +6,7 @@ import {
   TWINKLE_MAX_DELAY_MS,
   TWINKLE_MAX_DURATION_MS,
   TWINKLE_MIN_DURATION_MS,
+  TWINKLE_MIN_OPACITY_RATIO,
 } from './constants';
 import type { Star } from './types';
 
@@ -32,4 +33,17 @@ export const buildStars = (count: number, seed: number): Star[] => {
     duration: TWINKLE_MIN_DURATION_MS + random() * (TWINKLE_MAX_DURATION_MS - TWINKLE_MIN_DURATION_MS),
     delay: random() * TWINKLE_MAX_DELAY_MS,
   }));
+};
+
+/**
+ * Opacite d'une etoile a l'instant `elapsedMs` (depuis le montage) : une onde sinusoidale entre
+ * son creux et son opacite max, dephasee par son propre `delay` et cadencee par sa `duration`.
+ * Pure fonction de l'etoile et du temps : pas besoin d'Animated (et de son cortege de soucis
+ * d'interop web avec react-native-svg).
+ */
+export const twinkleOpacity = (star: Star, elapsedMs: number): number => {
+  const floor = star.opacity * TWINKLE_MIN_OPACITY_RATIO;
+  const phase = ((elapsedMs + star.delay) / star.duration) * Math.PI * 2;
+  const t = (Math.sin(phase) + 1) / 2;
+  return floor + t * (star.opacity - floor);
 };
