@@ -132,7 +132,7 @@ export const EndScreen = ({ players, records, totals, bestScore, isNewBest, onRe
         <Card style={styles.list}>
           {ranking.map(({ player, total, rank: position }, index) => (
             <View key={player.name + index} style={[styles.row, index > 0 && styles.rowBorder]}>
-              <Text style={styles.medal}>{MEDALS[position - 1] ?? `${position}.`}</Text>
+              <Text style={styles.medal}>{MEDALS[position - 1] ?? ''}</Text>
               <View style={[styles.dot, { backgroundColor: player.color }]} />
               <Text style={[styles.name, styles.rowText]}>{player.name}</Text>
               <Text style={styles.rowScore}>{formatNumber(total)}</Text>
