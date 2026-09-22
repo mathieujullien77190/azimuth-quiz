@@ -112,6 +112,11 @@ export const RoundResult = ({ record, players, options }: RoundResultProps) => {
   const bestDirectionPoints = Math.max(...record.results.map((result) => result.score.directionPoints));
   const bestDistancePoints = Math.max(...record.results.map((result) => result.score.distancePoints));
 
+  // Le curseur donne la corde (ligne droite) en mode straightLine ; la distance de surface
+  // equivalente sert a la fois a l'affichage et au calcul de l'ecart avec la vraie reponse.
+  const guessSurfaceKmFor = (result: (typeof record.results)[number]): number =>
+    options.straightLine ? arcKmFromChordKm(result.guess.distanceKm) : result.guess.distanceKm;
+
   return (
     <Card style={styles.card}>
       <View style={styles.truth}>
@@ -142,7 +147,7 @@ export const RoundResult = ({ record, players, options }: RoundResultProps) => {
           <View style={styles.row}>
             <Text style={styles.rowLabel}>{ROW_LABELS.direction}</Text>
             <Text style={styles.rowValue}>
-              {formatBearing(result.guess.bearing)} (écart {Math.round(result.score.directionError)}°)
+              {formatBearing(result.guess.bearing)} (+{Math.round(result.score.directionError)}°)
             </Text>
             <Text
               style={[
@@ -156,7 +161,8 @@ export const RoundResult = ({ record, players, options }: RoundResultProps) => {
           <View style={styles.row}>
             <Text style={styles.rowLabel}>{ROW_LABELS.distance}</Text>
             <Text style={styles.rowValue}>
-              {formatDistance(options.straightLine ? arcKmFromChordKm(result.guess.distanceKm) : result.guess.distanceKm)}
+              {formatDistance(guessSurfaceKmFor(result))} (+
+              {formatDistance(Math.abs(guessSurfaceKmFor(result) - truth.trueSurfaceDistanceKm))})
             </Text>
             <Text
               style={[
