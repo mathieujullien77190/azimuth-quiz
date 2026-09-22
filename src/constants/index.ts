@@ -67,9 +67,10 @@ export const NAME_PLACEHOLDERS = [
   'Zoé', 'Max', 'Léo', 'Nina', 'Théo', 'Mia', 'Noa', 'Iris', 'Timéo', 'Luna', 'Gaspard', 'Alba',
 ] as const;
 
-// Choisies a distance d'au moins 37° de teinte de l'accent et de la reponse du theme Nuit
-// (ambre/jaune), pour qu'aucun joueur ne les prenne par hasard.
-export const PLAYER_COLORS = ['#EF4444', '#65A30D', '#22C55E', '#8B5CF6', '#C026D3', '#DB2777'] as const;
+// Reparties tous les ~50° de teinte (rouge, vert, cyan, bleu, violet, rose) pour rester
+// distinctes entre elles, et a l'ecart de l'ambre/jaune de l'accent et de la reponse du theme
+// Nuit (aucune entre 3° et 85°) pour qu'aucun joueur ne les prenne par hasard.
+export const PLAYER_COLORS = ['#EF4444', '#16A34A', '#0891B2', '#2563EB', '#9333EA', '#DB2777'] as const;
 
 export const CATEGORIES: { id: Category; label: string; emoji: string }[] = [
   { id: 'cities', label: 'Villes', emoji: '🏙️' },
