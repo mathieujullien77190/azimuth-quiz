@@ -1,14 +1,14 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
-import { arcKmFromChordKm, formatBearing, formatDistance } from '@/helpers';
+import { arcKmFromChordKm, formatBearing, formatDistance, formatInclination } from '@/helpers';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import { LAST_LABEL, NEXT_LABEL, ROW_LABELS, ROW_MAX_POINTS, TRUTH_LABEL } from './constants';
-import { directionText, feedbackColor } from './helpers';
+import { feedbackColor } from './helpers';
 import type { RoundResultProps } from './types';
 
 const createStyles = ({ colors, radius, typography }: Theme) =>
@@ -83,7 +83,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       ...typography.label,
       color: colors.textMuted,
       fontSize: fontSize.caption,
-      width: 78,
+      width: 90,
     },
     rowValue: {
       ...typography.body,
@@ -119,7 +119,7 @@ export const RoundResult = ({ record, players, options, isLastRound, onNext }: R
         {options.straightLine && (
           <View style={styles.truthRow}>
             <Text style={styles.truthRowLabel}>{ROW_LABELS.inclination}</Text>
-            <Text style={styles.truthValue}>{Math.round(truth.trueInclination)}°</Text>
+            <Text style={styles.truthValue}>{formatInclination(truth.trueInclination)}</Text>
           </View>
         )}
         <View style={styles.truthRow}>
@@ -138,8 +138,7 @@ export const RoundResult = ({ record, players, options, isLastRound, onNext }: R
           <View style={styles.row}>
             <Text style={styles.rowLabel}>{ROW_LABELS.direction}</Text>
             <Text style={styles.rowValue}>
-              {directionText(result.guess.bearing, result.guess.inclination, options.straightLine)} (écart{' '}
-              {Math.round(result.score.directionError)}°)
+              {formatBearing(result.guess.bearing)} (écart {Math.round(result.score.directionError)}°)
             </Text>
             <Text
               style={[
@@ -150,6 +149,12 @@ export const RoundResult = ({ record, players, options, isLastRound, onNext }: R
               +{result.score.directionPoints}
             </Text>
           </View>
+          {options.straightLine && (
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>{ROW_LABELS.inclination}</Text>
+              <Text style={styles.rowValue}>{formatInclination(result.guess.inclination)}</Text>
+            </View>
+          )}
           <View style={styles.row}>
             <Text style={styles.rowLabel}>{ROW_LABELS.distance}</Text>
             <Text style={styles.rowValue}>

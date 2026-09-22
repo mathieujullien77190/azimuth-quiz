@@ -12,8 +12,7 @@ export const formatDistance = (km: number): string => `${formatNumber(km)}${NARR
 export const formatBearing = (degrees: number): string =>
   `${bearingToCardinal(degrees)} · ${Math.round(normalizeBearing(degrees)) % 360}°`;
 
-export const formatInclination = (degrees: number): string =>
-  degrees < 1 ? 'à l’horizon' : `${Math.round(degrees)}° sous l’horizon`;
+export const formatInclination = (degrees: number): string => `${Math.round(degrees)}°`;
 
 /** Emoji drapeau a partir d'un code pays ISO 3166-1 alpha-2. */
 export const countryCodeToFlag = (code: string): string =>
