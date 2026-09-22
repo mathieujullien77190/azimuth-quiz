@@ -36,4 +36,9 @@ export const TOGGLES = {
     label: 'Modifier après validation',
     description: 'Autorise à revenir sur la réponse déjà validée d’un joueur, avant la révélation.',
   },
+  hideOtherAnswers: {
+    label: 'Cacher les réponses des autres',
+    description:
+      'Pendant la manche, chacun ne voit que sa propre flèche et sa propre distance/inclinaison. Tout s’affiche à la révélation.',
+  },
 } as const;

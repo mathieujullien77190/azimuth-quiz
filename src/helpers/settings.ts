@@ -55,5 +55,6 @@ export const sanitizeSettings = (raw: unknown): GameSettings => {
     liveCompass: flag(raw.liveCompass, DEFAULT_SETTINGS.liveCompass),
     showCountry: flag(raw.showCountry, DEFAULT_SETTINGS.showCountry),
     allowRevision: flag(raw.allowRevision, DEFAULT_SETTINGS.allowRevision),
+    hideOtherAnswers: flag(raw.hideOtherAnswers, DEFAULT_SETTINGS.hideOtherAnswers),
   };
 };

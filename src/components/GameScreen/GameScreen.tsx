@@ -157,8 +157,12 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
   // donc il faut la distance au sol equivalente (meme destination, cf. helpers/geo).
   const earthDistanceKm = (km: number) => (straightLine ? arcKmFromChordKm(km) : km);
 
-  // Reponses deja validees des autres joueurs : montrees sur la boussole et sur la Terre, en estompe.
-  const answeredNeedles = game.answered.map((entry) => ({ bearing: entry.guess.bearing, color: entry.player.color }));
+  // Reponses deja validees des autres joueurs : montrees sur la boussole et sur la Terre, en
+  // estompe, sauf si l'option "Cacher les reponses des autres" est active (chacun ne voit alors
+  // que sa propre fleche/estimation pendant la manche ; la revelation, elle, montre toujours tout).
+  const showOthersWhileGuessing = !game.config.hideOtherAnswers;
+  const answered = showOthersWhileGuessing ? game.answered : [];
+  const answeredNeedles = answered.map((entry) => ({ bearing: entry.guess.bearing, color: entry.player.color }));
 
   const earthMarks: EarthMark[] = record
     ? [
@@ -178,7 +182,7 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
         ),
       ]
     : [
-        ...game.answered.map(
+        ...answered.map(
           (entry): EarthMark => ({
             bearing: entry.guess.bearing,
             distanceKm: earthDistanceKm(entry.guess.distanceKm),
@@ -200,7 +204,7 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
           { label: REALITY_LABEL, color: colors.truth, ring: true },
         ]
     : game.isMultiplayer
-      ? game.answered.map((entry) => ({ label: entry.player.name, color: entry.player.color }))
+      ? answered.map((entry) => ({ label: entry.player.name, color: entry.player.color }))
       : [];
 
   const scoreLabel = record

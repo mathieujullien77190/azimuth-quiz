@@ -251,6 +251,13 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
             value={settings.allowRevision}
           />
         )}
+        {settings.playerNames.length > 1 && (
+          <Toggle
+            {...TOGGLES.hideOtherAnswers}
+            onValueChange={(value) => updateSettings({ hideOtherAnswers: value })}
+            value={settings.hideOtherAnswers}
+          />
+        )}
       </Section>
 
       <Text style={styles.availability}>{availabilityLabel(available, settings.rounds)}</Text>

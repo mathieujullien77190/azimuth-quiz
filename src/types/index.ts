@@ -83,6 +83,9 @@ export type GameSettings = {
   showCountry: boolean;
   /** Autorise a revenir modifier la reponse d'un joueur deja validee, avant la revelation. */
   allowRevision: boolean;
+  /** Pendant la manche, ne montre que sa propre fleche/estimation, jamais celles deja validees
+   * par les autres joueurs (qui restent visibles normalement a la revelation). */
+  hideOtherAnswers: boolean;
 };
 
 export type GamePhase = 'loading' | 'guess' | 'reveal' | 'end';

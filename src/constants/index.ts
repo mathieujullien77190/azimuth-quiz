@@ -112,4 +112,5 @@ export const DEFAULT_SETTINGS: GameSettings = {
   liveCompass: true,
   showCountry: true,
   allowRevision: false,
+  hideOtherAnswers: false,
 };
