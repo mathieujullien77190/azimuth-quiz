@@ -1,4 +1,12 @@
-import { STAR_MAX_OPACITY, STAR_MAX_RADIUS, STAR_MIN_OPACITY, STAR_MIN_RADIUS } from './constants';
+import {
+  STAR_MAX_OPACITY,
+  STAR_MAX_RADIUS,
+  STAR_MIN_OPACITY,
+  STAR_MIN_RADIUS,
+  TWINKLE_MAX_DELAY_MS,
+  TWINKLE_MAX_DURATION_MS,
+  TWINKLE_MIN_DURATION_MS,
+} from './constants';
 import type { Star } from './types';
 
 /** Generateur pseudo-aleatoire deterministe (meme graine = memes etoiles, a chaque rendu). */
@@ -21,5 +29,7 @@ export const buildStars = (count: number, seed: number): Star[] => {
     yRatio: random(),
     radius: STAR_MIN_RADIUS + random() * (STAR_MAX_RADIUS - STAR_MIN_RADIUS),
     opacity: STAR_MIN_OPACITY + random() * (STAR_MAX_OPACITY - STAR_MIN_OPACITY),
+    duration: TWINKLE_MIN_DURATION_MS + random() * (TWINKLE_MAX_DURATION_MS - TWINKLE_MIN_DURATION_MS),
+    delay: random() * TWINKLE_MAX_DELAY_MS,
   }));
 };
