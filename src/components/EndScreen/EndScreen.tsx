@@ -5,6 +5,7 @@ import { countryCodeToFlag, formatNumber, getRank } from '@/helpers';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
+import Confetti from '../Confetti';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Screen from '../ui/Screen';
@@ -112,7 +113,7 @@ export const EndScreen = ({ players, records, totals, bestScore, isNewBest, onRe
   const rank = getRank(totals[0] ?? 0, maxTotal);
 
   return (
-    <Screen>
+    <Screen header={<Confetti />}>
       <Card style={styles.hero}>
         {isSolo ? (
           <>
