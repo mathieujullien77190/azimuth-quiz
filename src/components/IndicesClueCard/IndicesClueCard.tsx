@@ -199,11 +199,11 @@ const revealedBody = (
       const [main] = INDICES_FLAG_COLORS_BY_COUNTRY[place.country];
       const hex = main[INDICES_FLAG_COLOR_FIELD.HEX];
       const percent = main[INDICES_FLAG_COLOR_FIELD.PERCENT];
-      // Blanc sur blanc, illisible : bordure et texte foncés dans ce cas precis, blancs sinon.
+      // Blanc sur blanc, illisible : bordure et texte en noir dans ce cas precis, blancs sinon.
       const isWhite = main[INDICES_FLAG_COLOR_FIELD.COLOR_ID] === 'white';
       return (
-        <View style={[styles.flagRect, { backgroundColor: hex, borderColor: isWhite ? colors.border : '#FFFFFF' }]}>
-          <Text style={[styles.flagPercent, { color: isWhite ? colors.text : '#FFFFFF' }]}>{percent}%</Text>
+        <View style={[styles.flagRect, { backgroundColor: hex, borderColor: isWhite ? '#000000' : '#FFFFFF' }]}>
+          <Text style={[styles.flagPercent, { color: isWhite ? '#000000' : '#FFFFFF' }]}>{percent}%</Text>
         </View>
       );
     }
