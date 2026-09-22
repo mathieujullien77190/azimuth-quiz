@@ -22,7 +22,7 @@ export const en: Translations = {
       clues: {
         title: 'Clues',
         tagline: 'Guess a city from clues revealed one by one.',
-        meta: ['Take turns', '1 to 6 players'],
+        meta: ['1 to 6 players'],
         cta: 'Play',
       },
     },

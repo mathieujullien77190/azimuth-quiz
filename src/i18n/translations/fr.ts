@@ -22,7 +22,7 @@ export const fr: Translations = {
       clues: {
         title: 'Indices',
         tagline: 'Devine une ville grâce à des indices qui se révèlent un par un.',
-        meta: ['Tour par tour', '1 à 6 joueurs'],
+        meta: ['1 à 6 joueurs'],
         cta: 'Jouer',
       },
     },
