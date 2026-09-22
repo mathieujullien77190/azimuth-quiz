@@ -1,6 +1,7 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
+import { initials } from '@/helpers';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
@@ -92,7 +93,7 @@ export const PlayerTabs = ({ players, order, activeIndex, answered, allowRevisio
             style={[styles.tab, isActive && styles.active, locked && styles.locked]}
           >
             <View style={[styles.dot, { backgroundColor: player.color }]} />
-            <Text style={[styles.label, isActive && styles.labelActive]}>{player.name}</Text>
+            <Text style={[styles.label, isActive && styles.labelActive]}>{initials(player.name)}</Text>
             {isAnswered && <Text style={[styles.check, isActive && styles.checkActive]}>{CHECK_MARK}</Text>}
           </Pressable>
         );

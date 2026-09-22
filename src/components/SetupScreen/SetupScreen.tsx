@@ -11,7 +11,7 @@ import {
   fontSize,
   spacing,
 } from '@/constants';
-import { filterPlaces } from '@/helpers';
+import { filterPlaces, initials, playerDisplayName } from '@/helpers';
 import { useSettings } from '@/settings';
 import { useTheme, useThemeSwitcher, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
@@ -62,6 +62,19 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       backgroundColor: colors.surfaceHigh,
       color: colors.text,
       fontSize: fontSize.body,
+    },
+    initials: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      borderWidth: 1.5,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surfaceHigh,
+    },
+    initialsText: {
+      ...typography.label,
+      fontSize: fontSize.caption,
     },
     appearance: {
       gap: spacing.sm,
@@ -126,6 +139,11 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
                   style={styles.input}
                   value={name}
                 />
+                <View style={[styles.initials, { borderColor: PLAYER_COLORS[index] }]}>
+                  <Text style={[styles.initialsText, { color: PLAYER_COLORS[index] }]}>
+                    {initials(playerDisplayName(name, index))}
+                  </Text>
+                </View>
               </View>
             ))}
           </View>

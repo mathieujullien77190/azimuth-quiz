@@ -4,6 +4,7 @@ export {
   formatDistance,
   formatInclination,
   formatNumber,
+  initials,
 } from './format';
 export {
   angleDifference,
