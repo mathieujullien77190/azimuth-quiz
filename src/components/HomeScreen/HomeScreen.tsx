@@ -26,6 +26,7 @@ const createStyles = ({ colors, typography }: Theme) =>
       color: colors.accent,
       fontSize: fontSize.display,
       letterSpacing: 6,
+      textAlign: 'center',
     },
     tagline: {
       ...typography.body,
