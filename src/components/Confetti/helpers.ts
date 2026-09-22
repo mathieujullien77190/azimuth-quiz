@@ -35,7 +35,6 @@ export const buildPieces = (count: number, seed: number, colors: readonly string
     driftAmplitude: MIN_DRIFT_AMPLITUDE + random() * (MAX_DRIFT_AMPLITUDE - MIN_DRIFT_AMPLITUDE),
     driftPeriodMs: MIN_DRIFT_PERIOD_MS + random() * (MAX_DRIFT_PERIOD_MS - MIN_DRIFT_PERIOD_MS),
     spinSpeed: (random() * 2 - 1) * MAX_SPIN_SPEED,
-    shape: random() < 0.5 ? 'rect' : 'circle',
   }));
 };
 

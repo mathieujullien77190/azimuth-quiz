@@ -14,3 +14,6 @@ export const MAX_SPIN_SPEED = 0.25;
 
 // Frequence de rafraichissement : assez pour une chute fluide sans surcharger le rendu SVG.
 export const TICK_MS = 50;
+
+// Duree totale de la pluie de confettis avant qu'elle s'arrete.
+export const DURATION_MS = 5000;

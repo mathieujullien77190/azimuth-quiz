@@ -11,5 +11,4 @@ export type ConfettiPiece = {
   driftPeriodMs: number;
   /** Vitesse de rotation, en degres par ms. */
   spinSpeed: number;
-  shape: 'rect' | 'circle';
 };

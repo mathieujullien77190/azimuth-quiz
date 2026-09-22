@@ -1,12 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
-import Svg, { Circle, Rect } from 'react-native-svg';
+import Svg, { Circle } from 'react-native-svg';
 
 import { PLAYER_COLORS } from '@/constants';
 import { useTheme } from '@/themes';
 
-import { PIECE_COUNT, SEED, TICK_MS } from './constants';
+import { DURATION_MS, PIECE_COUNT, SEED, TICK_MS } from './constants';
 import { buildPieces, pieceTransform } from './helpers';
+
+// zIndex/elevation pour passer devant le ScrollView du Screen (Confetti est rendu dans le
+// slot `header`, donc avant le contenu scrollable dans l'ordre des enfants).
+const styles = StyleSheet.create({
+  front: {
+    zIndex: 10,
+    elevation: 10,
+  },
+});
 
 /**
  * Pluie de confettis en boucle, purement decorative (pointerEvents none). Meme technique que
@@ -24,29 +33,26 @@ export const Confetti = () => {
 
   useEffect(() => {
     const start = Date.now();
-    const id = setInterval(() => setElapsedMs(Date.now() - start), TICK_MS);
+    const id = setInterval(() => {
+      const elapsed = Date.now() - start;
+      if (elapsed >= DURATION_MS) {
+        clearInterval(id);
+        return;
+      }
+      setElapsedMs(elapsed);
+    }, TICK_MS);
     return () => clearInterval(id);
   }, []);
 
+  if (elapsedMs >= DURATION_MS) return null;
+
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.front]}>
       <Svg height={height} width={width}>
         {pieces.map((piece, index) => {
           const { x, y, rotation } = pieceTransform(piece, elapsedMs, width, height);
           const transform = `rotate(${rotation} ${x} ${y})`;
-          return piece.shape === 'circle' ? (
-            <Circle key={index} cx={x} cy={y} fill={piece.color} r={piece.size / 2} transform={transform} />
-          ) : (
-            <Rect
-              key={index}
-              fill={piece.color}
-              height={piece.size}
-              transform={transform}
-              width={piece.size * 0.6}
-              x={x - (piece.size * 0.6) / 2}
-              y={y - piece.size / 2}
-            />
-          );
+          return <Circle key={index} cx={x} cy={y} fill={piece.color} r={piece.size / 2} transform={transform} />;
         })}
       </Svg>
     </View>
