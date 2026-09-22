@@ -267,7 +267,6 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
                 ? record.results.map((result, index) => ({ bearing: result.guess.bearing, color: game.players[index].color }))
                 : []
             }
-            live={game.config.liveCompass}
             size={compassSizeFor(width)}
             truthBearing={record.results[0].score.trueBearing}
           />
@@ -277,7 +276,6 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
               bearing={game.bearing}
               color={playerColor}
               extraNeedles={answeredNeedles}
-              live={game.config.liveCompass}
               onChange={game.setBearing}
               size={compassSizeFor(width)}
             />

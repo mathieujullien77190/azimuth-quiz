@@ -16,9 +16,3 @@ export const CARDINAL_POINTS = [
   { label: 'S', bearing: 180 },
   { label: 'O', bearing: 270 },
 ] as const;
-
-// Cap du capteur : part du chemin parcourue a chaque mesure (0-1), et seuil en dessous duquel on ignore.
-export const HEADING_SMOOTHING = 0.3;
-export const HEADING_DEADBAND_DEG = 0.6;
-export const NORTH_MARKER_WIDTH = 16;
-export const NORTH_MARKER_HEIGHT = 11;

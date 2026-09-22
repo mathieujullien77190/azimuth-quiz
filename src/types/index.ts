@@ -72,8 +72,6 @@ export type GameSettings = {
    */
   straightLine: boolean;
   useGps: boolean;
-  /** Sur mobile, la boussole tourne pour que le N pointe vers le vrai nord. */
-  liveCompass: boolean;
   /** Affiche le pays sous le nom du lieu. */
   showCountry: boolean;
   /** Autorise a revenir modifier la reponse d'un joueur deja validee, avant la revelation. */

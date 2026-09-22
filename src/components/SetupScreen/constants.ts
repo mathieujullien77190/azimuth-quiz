@@ -8,10 +8,6 @@ export const TOGGLES = {
     description:
       'Ajoute un second curseur : l’inclinaison sous l’horizon, qui donne la distance en ligne droite. Le dernier curseur touché (distance ou inclinaison) compte pour le score.',
   },
-  liveCompass: {
-    label: 'Boussole réelle',
-    description: 'Le N de la boussole pointe vers le vrai nord (capteur du téléphone).',
-  },
   useGps: {
     label: 'Utiliser ma position',
     description: 'Sinon, tout part de Paris.',

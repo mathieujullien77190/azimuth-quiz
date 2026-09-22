@@ -100,7 +100,6 @@ export const DEFAULT_SETTINGS: GameSettings = {
   rounds: 10,
   straightLine: false,
   useGps: true,
-  liveCompass: true,
   showCountry: true,
   allowRevision: false,
 };
