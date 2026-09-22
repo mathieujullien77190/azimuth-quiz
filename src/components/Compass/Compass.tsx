@@ -1,6 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { useMemo, useRef } from 'react';
-import { PanResponder, StyleSheet, View } from 'react-native';
+import { PanResponder, Platform, StyleSheet, View } from 'react-native';
+import type { ViewStyle } from 'react-native';
 import Svg, { Polygon } from 'react-native-svg';
 
 import { normalizeBearing } from '@/helpers';
@@ -63,7 +64,12 @@ export const Compass = ({
     <View
       accessibilityLabel="Boussole"
       accessibilityRole={interactive ? 'adjustable' : 'image'}
-      style={{ width: size, height: size }}
+      style={[
+        { width: size, height: size },
+        // Web : sans ca, un glisse vertical sur le cadran fait aussi defiler la ScrollView parente
+        // (le PanResponder capture bien le geste RN, mais le navigateur scrolle quand meme).
+        interactive && Platform.OS === 'web' && ({ touchAction: 'none' } as ViewStyle),
+      ]}
       {...(interactive ? panResponder.panHandlers : {})}
     >
       <View pointerEvents="none" style={heading !== null ? { transform: [{ rotate: `${-heading}deg` }] } : undefined}>
