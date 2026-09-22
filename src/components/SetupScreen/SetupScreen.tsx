@@ -204,6 +204,11 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
           value={settings.straightLine}
         />
         <Toggle
+          {...TOGGLES.liveCompass}
+          onValueChange={(value) => updateSettings({ liveCompass: value })}
+          value={settings.liveCompass}
+        />
+        <Toggle
           {...TOGGLES.useGps}
           onValueChange={(value) => updateSettings({ useGps: value })}
           value={settings.useGps}
