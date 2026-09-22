@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useCallback } from 'react';
+import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
 import { arcKmFromChordKm, formatBearing, formatDistance, formatInclination, formatNumber } from '@/helpers';
@@ -7,11 +8,13 @@ import { useTheme, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
 import Card from '../ui/Card';
+import { COMPACT_FONT_SCALE, COMPACT_MAX_WIDTH } from './constants';
 import { formatRowScore } from './helpers';
 import type { RoundResultProps } from './types';
 
-const createStyles = ({ colors, radius, typography }: Theme) =>
-  StyleSheet.create({
+const createStyles = ({ colors, radius, typography }: Theme, compact: boolean) => {
+  const scale = compact ? COMPACT_FONT_SCALE : 1;
+  return StyleSheet.create({
     card: {
       gap: spacing.md,
     },
@@ -35,7 +38,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
     truthLabel: {
       ...typography.heading,
       color: colors.text,
-      fontSize: fontSize.subtitle,
+      fontSize: fontSize.subtitle * scale,
     },
     truthRow: {
       flexDirection: 'row',
@@ -45,7 +48,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
     truthRowLabel: {
       ...typography.label,
       color: colors.textMuted,
-      fontSize: fontSize.caption,
+      fontSize: fontSize.caption * scale,
       width: 90,
     },
     // Meme style que la valeur d'une reponse de joueur (rowValue) : la verite n'a pas a se
@@ -53,7 +56,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
     truthValue: {
       ...typography.body,
       color: colors.text,
-      fontSize: fontSize.body - 1,
+      fontSize: (fontSize.body - 1) * scale,
     },
     player: {
       gap: spacing.xs,
@@ -77,7 +80,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       ...typography.heading,
       flex: 1,
       color: colors.text,
-      fontSize: fontSize.subtitle,
+      fontSize: fontSize.subtitle * scale,
     },
     scoreBlock: {
       alignItems: 'flex-end',
@@ -85,7 +88,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
     playerTotal: {
       ...typography.display,
       color: colors.accent,
-      fontSize: fontSize.title,
+      fontSize: fontSize.title * scale,
     },
     // Score de la manche, sous les lignes detail : meme taille/poids que rowPoints, en blanc.
     roundTotalRow: {
@@ -95,7 +98,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
     roundScore: {
       ...typography.heading,
       color: colors.text,
-      fontSize: fontSize.body,
+      fontSize: fontSize.body * scale,
     },
     row: {
       flexDirection: 'row',
@@ -106,23 +109,26 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
     rowLabel: {
       ...typography.label,
       color: colors.textMuted,
-      fontSize: fontSize.caption,
+      fontSize: fontSize.caption * scale,
       width: 90,
     },
     rowValue: {
       ...typography.body,
       flex: 1,
       color: colors.text,
-      fontSize: fontSize.body - 1,
+      fontSize: (fontSize.body - 1) * scale,
     },
     rowPoints: {
       ...typography.heading,
-      fontSize: fontSize.body,
+      fontSize: fontSize.body * scale,
     },
   });
+};
 
 export const RoundResult = ({ record, players, totals, options }: RoundResultProps) => {
-  const styles = useThemedStyles(createStyles);
+  const { width } = useWindowDimensions();
+  const compact = width < COMPACT_MAX_WIDTH;
+  const styles = useThemedStyles(useCallback((theme: Theme) => createStyles(theme, compact), [compact]));
   const { colors } = useTheme();
   const t = useTranslation();
   const { score: truth } = record.results[0];
