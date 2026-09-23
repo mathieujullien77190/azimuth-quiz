@@ -26,11 +26,9 @@ export { applyBestBonus, getRank, scoreRound } from './scoring';
 export { playerDisplayName, sanitizeSettings } from './settings';
 export {
   clearAppData,
-  loadBestScore,
   loadLanguage,
   loadSettings,
   loadUfoCaught,
-  saveBestScore,
   saveLanguage,
   saveSettings,
   saveUfoCaught,

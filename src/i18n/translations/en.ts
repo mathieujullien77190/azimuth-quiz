@@ -4,7 +4,6 @@ export const en: Translations = {
   common: {
     yourPosition: 'your location',
     pts: 'pts',
-    record: (score) => `Best: ${score}`,
   },
   cardinals: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
   compassWestLabel: 'W',
@@ -130,7 +129,6 @@ export const en: Translations = {
     yourScore: 'Your score',
   },
   endScreen: {
-    newBest: 'New best!',
     replay: 'Play again',
     menu: 'Home',
     winner: (name) => `${name} wins!`,
@@ -147,8 +145,7 @@ export const en: Translations = {
     author: 'By Matou.',
     claudeMention: 'Made for drinks with friends: no ads, no tracking, just you and a stubborn compass.',
     dataTitle: 'Data',
-    dataHint:
-      'Everything the app saves on this phone: your last Compass game settings (players, difficulty, zone, options), your best score, the chosen language. Nothing is sent anywhere else. This button erases all of it for good.',
+    dataHint: 'Everything the app saves on this phone: your game settings and language. Nothing is sent anywhere else. This button erases it.',
     clearData: 'Clear data',
     dataCleared: 'Data cleared.',
   },

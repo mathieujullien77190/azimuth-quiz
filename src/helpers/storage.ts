@@ -8,24 +8,6 @@ import { sanitizeSettings } from './settings';
 
 const isLanguage = (value: unknown): value is Language => value === 'fr' || value === 'en';
 
-export const loadBestScore = async (): Promise<number> => {
-  try {
-    const raw = await AsyncStorage.getItem(BEST_SCORE_STORAGE_KEY);
-    const value = raw === null ? 0 : Number(raw);
-    return Number.isFinite(value) ? value : 0;
-  } catch {
-    return 0;
-  }
-};
-
-export const saveBestScore = async (score: number): Promise<void> => {
-  try {
-    await AsyncStorage.setItem(BEST_SCORE_STORAGE_KEY, String(score));
-  } catch {
-    // Score non persiste : sans gravite pour le jeu.
-  }
-};
-
 export const loadSettings = async (): Promise<GameSettings> => {
   try {
     const raw = await AsyncStorage.getItem(SETTINGS_STORAGE_KEY);
@@ -76,8 +58,9 @@ export const saveLanguage = async (language: Language): Promise<void> => {
   }
 };
 
-/** Efface tout ce que l'app sauvegarde sur l'appareil : reglages Boussole, meilleur score,
- * langue et etat de la soucoupe. Rien d'autre n'est persiste (Indices n'a pas de sauvegarde). */
+/** Efface tout ce que l'app sauvegarde sur l'appareil : reglages Boussole, langue et etat de la
+ * soucoupe (+ un eventuel "meilleur score" laisse par une version anterieure). Rien d'autre n'est
+ * persiste (Indices n'a pas de sauvegarde, le score de fin de partie n'est plus memorise). */
 export const clearAppData = async (): Promise<void> => {
   try {
     await AsyncStorage.multiRemove([

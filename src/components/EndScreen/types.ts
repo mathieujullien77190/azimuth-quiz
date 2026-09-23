@@ -5,8 +5,6 @@ export type EndScreenProps = {
   records: RoundRecord[];
   /** Total de chaque joueur, dans l'ordre des joueurs. */
   totals: number[];
-  bestScore: number;
-  isNewBest: boolean;
   onReplay: () => void;
   onMenu: () => void;
 };

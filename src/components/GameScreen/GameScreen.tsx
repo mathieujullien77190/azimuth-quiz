@@ -192,8 +192,6 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
   if (game.phase === 'end') {
     return (
       <EndScreen
-        bestScore={game.bestScore}
-        isNewBest={game.isNewBest}
         onMenu={onQuit}
         onReplay={game.restart}
         players={game.players}

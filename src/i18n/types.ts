@@ -18,7 +18,6 @@ export type Translations = {
     /** Nom affiche comme point de depart quand la position de l'appareil est utilisee. */
     yourPosition: string;
     pts: string;
-    record: (score: string) => string;
   };
   /** Les 8 points cardinaux abreges, pour formatBearing (ex. "S · 173°"). */
   cardinals: CardinalLabels;
@@ -95,7 +94,6 @@ export type Translations = {
     yourScore: string;
   };
   endScreen: {
-    newBest: string;
     replay: string;
     menu: string;
     winner: (name: string) => string;

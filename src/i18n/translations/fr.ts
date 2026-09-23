@@ -4,7 +4,6 @@ export const fr: Translations = {
   common: {
     yourPosition: 'ta position',
     pts: 'pts',
-    record: (score) => `Record : ${score}`,
   },
   cardinals: ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'],
   compassWestLabel: 'O',
@@ -130,7 +129,6 @@ export const fr: Translations = {
     yourScore: 'Ton score',
   },
   endScreen: {
-    newBest: 'Nouveau record !',
     replay: 'Rejouer',
     menu: 'Accueil',
     winner: (name) => `${name} gagne !`,
@@ -147,8 +145,7 @@ export const fr: Translations = {
     author: 'Par Matou.',
     claudeMention: 'Fait pour l’apéro entre potes : pas de pub, pas de tracking, juste vous et une boussole récalcitrante.',
     dataTitle: 'Données',
-    dataHint:
-      'Tout ce que l’app sauvegarde sur ce téléphone : les réglages de la dernière partie Boussole (joueurs, difficulté, zone, options), ton meilleur score, la langue choisie. Rien n’est envoyé ailleurs. Ce bouton efface tout ça définitivement.',
+    dataHint: 'Tout ce que l’app sauvegarde sur ce téléphone : les réglages de partie et la langue. Rien n’est envoyé ailleurs. Ce bouton efface cela.',
     clearData: 'Vider les données',
     dataCleared: 'Données effacées.',
   },

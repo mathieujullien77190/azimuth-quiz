@@ -13,7 +13,7 @@ import { MEDALS } from './constants';
 import { maxTotalScore, rankPlayers, roundWinnerIndex, winnerTitle } from './helpers';
 import type { EndScreenProps } from './types';
 
-const createStyles = ({ colors, radius, typography }: Theme) =>
+const createStyles = ({ colors, typography }: Theme) =>
   StyleSheet.create({
     hero: {
       alignItems: 'center',
@@ -34,24 +34,6 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       color: colors.text,
       fontSize: 64,
       marginTop: spacing.sm,
-    },
-    best: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
-      marginTop: spacing.md,
-    },
-    newBest: {
-      backgroundColor: colors.accent,
-      borderRadius: radius.button,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.xs + 2,
-      marginTop: spacing.md,
-    },
-    newBestText: {
-      ...typography.heading,
-      color: colors.onAccent,
-      fontSize: fontSize.body,
     },
     list: {
       paddingVertical: spacing.sm,
@@ -96,7 +78,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
     },
   });
 
-export const EndScreen = ({ players, records, totals, bestScore, isNewBest, onReplay, onMenu }: EndScreenProps) => {
+export const EndScreen = ({ players, records, totals, onReplay, onMenu }: EndScreenProps) => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
   const isSolo = players.length === 1;
@@ -112,13 +94,6 @@ export const EndScreen = ({ players, records, totals, bestScore, isNewBest, onRe
             <Text style={styles.rankEmoji}>{rank.emoji}</Text>
             <Text style={styles.rankTitle}>{rank.title}</Text>
             <Text style={styles.score}>{formatNumber(totals[0] ?? 0)}</Text>
-            {isNewBest ? (
-              <View style={styles.newBest}>
-                <Text style={styles.newBestText}>{t.endScreen.newBest}</Text>
-              </View>
-            ) : (
-              <Text style={styles.best}>{t.common.record(formatNumber(bestScore))}</Text>
-            )}
           </>
         ) : (
           <>

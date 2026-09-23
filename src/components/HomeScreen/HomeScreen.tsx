@@ -1,10 +1,10 @@
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
-import { formatNumber, loadBestScore, loadUfoCaught, saveUfoCaught } from '@/helpers';
+import { loadUfoCaught, saveUfoCaught } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
@@ -58,13 +58,6 @@ export const HomeScreen = () => {
   const router = useRouter();
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
-  const [bestScore, setBestScore] = useState(0);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadBestScore().then(setBestScore);
-    }, []),
-  );
 
   // Tant qu'elle n'a jamais ete cliquee, la soucoupe vole vers une position aleatoire dans la zone
   // du titre (transition animee), attend 3 a 6 sec sur place, tourne sur elle-meme une fois si
@@ -137,8 +130,6 @@ export const HomeScreen = () => {
 
   const ufoSpin = ufoRotation.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
-  const bestScoreNote = bestScore > 0 ? `${t.common.record(formatNumber(bestScore))} ${t.common.pts}` : undefined;
-
   return (
     <Screen>
       <View onLayout={onHeaderLayout} style={styles.header}>
@@ -166,7 +157,6 @@ export const HomeScreen = () => {
           ctaLabel={t.home.games.compass.cta}
           icon="🧭"
           meta={t.home.games.compass.meta}
-          note={bestScoreNote}
           onPress={() => router.push('/setup')}
           tagline={t.home.games.compass.tagline}
           title={t.home.games.compass.title}

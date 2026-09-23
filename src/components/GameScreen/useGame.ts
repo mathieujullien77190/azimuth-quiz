@@ -10,16 +10,7 @@ import {
   MAX_SURFACE_DISTANCE_KM,
   PLAYER_COLORS,
 } from '@/constants';
-import {
-  applyBestBonus,
-  inclinationFromChordKm,
-  loadBestScore,
-  pickPlaces,
-  playerDisplayName,
-  resolveOrigin,
-  saveBestScore,
-  scoreRound,
-} from '@/helpers';
+import { applyBestBonus, inclinationFromChordKm, pickPlaces, playerDisplayName, resolveOrigin, scoreRound } from '@/helpers';
 import { useSettings } from '@/settings';
 import type { GamePhase, GameSettings, Guess, Origin, Place, Player, RoundRecord } from '@/types';
 
@@ -68,8 +59,6 @@ export const useGame = () => {
   // straightLine) de CHAQUE joueur, y compris non valide : change d'onglet via PlayerTabs ne doit
   // jamais faire perdre une reponse en cours de saisie, meme avant le clic sur "Valider".
   const [draftsByPlayer, setDraftsByPlayer] = useState<Draft[]>([]);
-  const [bestScore, setBestScore] = useState(0);
-  const [isNewBest, setIsNewBest] = useState(false);
 
   // Ignore le resultat d'un demarrage obsolete (demontage, ou rejouer avant la fin du chargement).
   const startId = useRef(0);
@@ -137,17 +126,12 @@ export const useGame = () => {
     const chosen = settingsRef.current;
     setPhase('loading');
 
-    const [resolvedOrigin, storedBest] = await Promise.all([
-      chosen.useGps ? resolveOrigin(deviceOriginNameRef.current) : Promise.resolve(DEFAULT_ORIGIN),
-      loadBestScore(),
-    ]);
+    const resolvedOrigin = chosen.useGps ? await resolveOrigin(deviceOriginNameRef.current) : DEFAULT_ORIGIN;
     if (id !== startId.current) return;
 
     setConfig(chosen);
     setOrigin(resolvedOrigin);
     setPlaces(pickPlaces(resolvedOrigin.coordinates, chosen));
-    setBestScore(storedBest);
-    setIsNewBest(false);
     setRoundIndex(0);
     setRecords([]);
     startRound(chosen.playerNames.length, []);
@@ -258,14 +242,8 @@ export const useGame = () => {
       return;
     }
 
-    const soloTotal = playerTotals(records, players.length)[0];
-    if (!isMultiplayer && soloTotal > bestScore) {
-      setBestScore(soloTotal);
-      setIsNewBest(true);
-      saveBestScore(soloTotal);
-    }
     setPhase('end');
-  }, [bestScore, isMultiplayer, places.length, players.length, records, roundIndex, startRound]);
+  }, [places.length, players.length, records, roundIndex, startRound]);
 
   return {
     phase,
@@ -289,8 +267,6 @@ export const useGame = () => {
     records,
     currentRecord: records[roundIndex],
     totals: playerTotals(records, players.length),
-    bestScore,
-    isNewBest,
     setBearing,
     setDistanceKm,
     selectPlayer,
