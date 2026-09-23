@@ -110,9 +110,11 @@ export const en: Translations = {
     roundOver: 'Round over',
     reality: 'Answer',
     yourAnswer: 'Your answer',
+    nextStep: 'Next',
+    previousStep: 'Back',
+    playerTurn: (name) => `${name}'s turn`,
   },
   placeCard: {
-    hintFrom: (originName) => `From ${originName}: what heading, what distance?`,
     showDescription: 'Learn more',
     hideDescription: 'Collapse',
   },
@@ -144,6 +146,11 @@ export const en: Translations = {
     aboutTitle: 'About',
     author: 'By Matou.',
     claudeMention: 'Made for drinks with friends: no ads, no tracking, just you and a stubborn compass.',
+    dataTitle: 'Data',
+    dataHint:
+      'Everything the app saves on this phone: your last Compass game settings (players, difficulty, zone, options), your best score, the chosen language. Nothing is sent anywhere else. This button erases all of it for good.',
+    clearData: 'Clear data',
+    dataCleared: 'Data cleared.',
   },
   indicesSetup: {
     screenTitle: 'Clues',

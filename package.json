@@ -1,6 +1,6 @@
 {
   "name": "full-azimut",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/metro-runtime": "~57.0.16",
@@ -21,9 +21,13 @@
     "react-native-web": "^0.21.2"
   },
   "devDependencies": {
+    "@testing-library/react-native": "^14.0.1",
+    "@types/jest": "29.5.14",
     "@types/react": "~19.2.2",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~57.0.2",
+    "jest": "~29.7.0",
+    "jest-expo": "~57.0.5",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -31,7 +35,33 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test": "jest",
+    "test:coverage": "jest --coverage"
   },
-  "private": true
+  "private": true,
+  "jest": {
+    "preset": "jest-expo",
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    },
+    "setupFiles": [
+      "<rootDir>/jest.setup.js"
+    ],
+    "collectCoverageFrom": [
+      "src/components/Indices**/*.{ts,tsx}",
+      "src/constants/indices.ts",
+      "!src/**/*.d.ts",
+      "!src/**/index.ts",
+      "!src/**/types.ts"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      }
+    }
+  }
 }

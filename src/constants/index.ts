@@ -46,6 +46,8 @@ export const LOCATION_TIMEOUT_MS = 6000;
 export const BEST_SCORE_STORAGE_KEY = 'fullazimut:best-score';
 export const SETTINGS_STORAGE_KEY = 'fullazimut:settings';
 export const LANGUAGE_STORAGE_KEY = 'fullazimut:language';
+/** Une fois la soucoupe de l'accueil attrapee (cliquee), elle arrete de se deplacer pour toujours. */
+export const UFO_CAUGHT_STORAGE_KEY = 'fullazimut:ufo-caught';
 
 // --- Rangs (solo) : le titre vient de translations.endScreen.ranks (meme ordre). ---
 export const RANKS = [
@@ -65,7 +67,7 @@ export const ROUND_OPTIONS = [5, 10, 15, 20] as const;
  * "Joueur 2"... Utilise a la fois par SetupScreen (hint cosmetique, ordre remelange) et par
  * playerDisplayName (identite stable pendant la partie, choisie par index). */
 export const NAME_PLACEHOLDERS = [
-  'Zoé', 'Max', 'Léo', 'Nina', 'Théo', 'Mia', 'Noa', 'Iris', 'Timéo', 'Luna', 'Gaspard', 'Alba',
+  'Zoé', 'Max', 'Léo', 'Nina', 'Théo', 'Mia', 'Noa', 'Iris', 'Timéo', 'Luna', 'Gaspard', 'Chloé',
 ] as const;
 
 // Reparties tous les ~50° de teinte (rouge, vert, cyan, bleu, violet, rose) pour rester

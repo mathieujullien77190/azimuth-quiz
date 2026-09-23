@@ -24,5 +24,15 @@ export { filterPlaces, pickPlaces } from './places';
 export { shuffle } from './random';
 export { applyBestBonus, getRank, scoreRound } from './scoring';
 export { playerDisplayName, sanitizeSettings } from './settings';
-export { loadBestScore, loadLanguage, loadSettings, saveBestScore, saveLanguage, saveSettings } from './storage';
+export {
+  clearAppData,
+  loadBestScore,
+  loadLanguage,
+  loadSettings,
+  loadUfoCaught,
+  saveBestScore,
+  saveLanguage,
+  saveSettings,
+  saveUfoCaught,
+} from './storage';
 export { disableTextSelection } from './web';

@@ -10,4 +10,7 @@ export type PlayerTabsProps = {
   /** Si faux, un onglet deja valide ne s'ouvre pas au second passage. */
   allowRevision: boolean;
   onSelect: (index: number) => void;
+  /** Fourni : l'onglet actif affiche ce texte (ex. "A Matou de jouer") au lieu des initiales.
+   * Les autres onglets restent compacts (initiales) dans tous les cas. */
+  activeLabel?: (name: string) => string;
 };

@@ -1,4 +1,5 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { fontSize, spacing } from '@/constants';
@@ -104,7 +105,60 @@ const createStyles = ({ colors, typography }: Theme) =>
     earthCenter: {
       alignItems: 'center',
     },
+    footerRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    validateFlex: {
+      flex: 1,
+    },
   });
+
+type FooterNavProps = {
+  onGoToCap: () => void;
+  onGoToDistance: () => void;
+  validateDisabled: boolean;
+  onValidate: () => void;
+};
+
+/**
+ * Bouton "Suivant"/"Precedent" (un seul affiche a la fois, selon la section vers laquelle on a
+ * navigue en dernier) a cote de "Valider". Monte avec une `key` differente a chaque manche/joueur
+ * (voir l'appel dans `GameScreen`) : repart donc toujours sur "Suivant" sans effet ni ref-pendant-
+ * le-rendu, juste le remontage standard React quand la key change.
+ */
+const FooterNav = ({ onGoToCap, onGoToDistance, validateDisabled, onValidate }: FooterNavProps) => {
+  const styles = useThemedStyles(createStyles);
+  const t = useTranslation();
+  const [onCap, setOnCap] = useState(false);
+
+  return (
+    <View style={styles.footerRow}>
+      {onCap ? (
+        <Button
+          label={t.game.previousStep}
+          onPress={() => {
+            setOnCap(false);
+            onGoToDistance();
+          }}
+          variant="ghost"
+        />
+      ) : (
+        <Button
+          label={t.game.nextStep}
+          onPress={() => {
+            setOnCap(true);
+            onGoToCap();
+          }}
+          variant="ghost"
+        />
+      )}
+      <View style={styles.validateFlex}>
+        <Button disabled={validateDisabled} label={t.game.validate} onPress={onValidate} />
+      </View>
+    </View>
+  );
+};
 
 export const GameScreen = ({ onQuit }: GameScreenProps) => {
   const { width } = useWindowDimensions();
@@ -112,6 +166,18 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
   const { colors } = useTheme();
   const t = useTranslation();
   const game = useGame();
+
+  // Navigation "Suivant"/"Precedent" : tout en bas (cap souvent hors ecran une fois la distance
+  // affichee) / tout en haut, pas un scroll cible sur une section precise.
+  const scrollRef = useRef<ScrollView>(null);
+  const goToCap = () => scrollRef.current?.scrollToEnd({ animated: true });
+  const goToDistance = () => scrollRef.current?.scrollTo({ animated: true, y: 0 });
+  // Changer de joueur repart en haut de l'ecran : sinon on reste scrolle sur le cap/la distance du
+  // joueur precedent, ce qui n'a plus de sens pour le nouveau.
+  const selectPlayer = (index: number) => {
+    scrollRef.current?.scrollTo({ animated: true, y: 0 });
+    game.selectPlayer(index);
+  };
 
   if (game.phase === 'loading' || game.place === undefined || game.currentPlayer === undefined) {
     return (
@@ -139,9 +205,11 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
 
   const record = game.phase === 'reveal' ? game.currentRecord : undefined;
   const straightLine = game.config.straightLine;
-  const playerColor = game.isMultiplayer ? game.currentPlayer.color : undefined;
+  // Toujours la couleur reelle du joueur (celle choisie a l'ecran de reglages), meme en solo : pas
+  // de repli sur colors.accent qui ne correspondrait plus a ce qui a ete montre a la selection.
+  const playerColor = game.currentPlayer.color;
   const earthSize = earthSizeFor(width);
-  const playerColorAt = (index: number) => (game.isMultiplayer ? game.players[index].color : colors.accent);
+  const playerColorAt = (index: number) => game.players[index].color;
   // Le curseur donne la corde (ligne droite) en mode straightLine ; la Terre dessine un arc,
   // donc il faut la distance au sol equivalente (meme destination, cf. helpers/geo).
   const earthDistanceKm = (km: number) => (straightLine ? arcKmFromChordKm(km) : km);
@@ -179,7 +247,7 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
             opacity: ANSWERED_OPACITY,
           }),
         ),
-        { bearing: game.bearing, distanceKm: earthDistanceKm(game.distanceKm), color: playerColor ?? colors.accent },
+        { bearing: game.bearing, distanceKm: earthDistanceKm(game.distanceKm), color: playerColor },
       ];
 
   const legendItems = record
@@ -189,7 +257,7 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
           { label: t.game.reality, color: colors.truth, ring: true },
         ]
       : [
-          { label: t.game.yourAnswer, color: colors.accent },
+          { label: t.game.yourAnswer, color: game.players[0].color },
           { label: t.game.reality, color: colors.truth, ring: true },
         ]
     : game.isMultiplayer
@@ -211,9 +279,16 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
             onPress={game.next}
           />
         ) : (
-          <Button label={t.game.validate} onPress={game.submit} />
+          <FooterNav
+            key={`${game.roundNumber}-${game.activePlayerIndex}`}
+            onGoToCap={goToCap}
+            onGoToDistance={goToDistance}
+            onValidate={game.submit}
+            validateDisabled={!game.bearingTouched || !game.distanceTouched}
+          />
         )
       }
+      scrollRef={scrollRef}
       header={
         <View style={styles.header}>
           <View style={styles.topBar}>
@@ -239,9 +314,10 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
           {game.isMultiplayer && !record && (
             <PlayerTabs
               activeIndex={game.activePlayerIndex}
+              activeLabel={t.game.playerTurn}
               allowRevision={game.config.allowRevision}
               answered={game.answeredByPlayer}
-              onSelect={game.selectPlayer}
+              onSelect={selectPlayer}
               order={game.roundOrder}
               players={game.players}
             />
@@ -252,15 +328,15 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
       <PlaceCard
         key={game.roundNumber}
         description={record ? game.place.description : undefined}
-        originName={game.origin.name}
         place={game.place}
-        showCountry={game.config.showCountry}
+        showCountry={game.config.showCountry || record !== undefined}
       />
 
       <View style={styles.compass}>
         {record ? (
           <Compass
             bearing={game.isMultiplayer ? null : record.results[0].guess.bearing}
+            color={playerColor}
             extraNeedles={
               game.isMultiplayer
                 ? record.results.map((result, index) => ({ bearing: result.guess.bearing, color: game.players[index].color }))

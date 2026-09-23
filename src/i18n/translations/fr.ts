@@ -110,9 +110,11 @@ export const fr: Translations = {
     roundOver: 'Manche terminée',
     reality: 'Réponse',
     yourAnswer: 'Ta réponse',
+    nextStep: 'Suivant',
+    previousStep: 'Précédent',
+    playerTurn: (name) => `À ${name} de jouer`,
   },
   placeCard: {
-    hintFrom: (originName) => `Depuis ${originName} : quel cap, quelle distance ?`,
     showDescription: 'En savoir plus',
     hideDescription: 'Réduire',
   },
@@ -144,6 +146,11 @@ export const fr: Translations = {
     aboutTitle: 'À propos',
     author: 'Par Matou.',
     claudeMention: 'Fait pour l’apéro entre potes : pas de pub, pas de tracking, juste vous et une boussole récalcitrante.',
+    dataTitle: 'Données',
+    dataHint:
+      'Tout ce que l’app sauvegarde sur ce téléphone : les réglages de la dernière partie Boussole (joueurs, difficulté, zone, options), ton meilleur score, la langue choisie. Rien n’est envoyé ailleurs. Ce bouton efface tout ça définitivement.',
+    clearData: 'Vider les données',
+    dataCleared: 'Données effacées.',
   },
   indicesSetup: {
     screenTitle: 'Indices',

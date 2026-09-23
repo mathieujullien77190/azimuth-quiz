@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
+import type { ScrollView } from 'react-native';
 
 export type ScreenProps = {
   children: ReactNode;
@@ -6,4 +7,6 @@ export type ScreenProps = {
   header?: ReactNode;
   /** Reste fixe en bas, sous la zone qui defile (ex. bouton d'action principal). */
   footer?: ReactNode;
+  /** Optionnel : donne acces au ScrollView interne (ex. scrollTo programmatique). */
+  scrollRef?: Ref<ScrollView>;
 };

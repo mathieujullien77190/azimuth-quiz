@@ -86,7 +86,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
   });
 
 /** Selecteur de joueur fixe en haut de l'ecran de jeu : on choisit qui repond, sans quitter l'ecran. */
-export const PlayerTabs = ({ players, order, activeIndex, answered, allowRevision, onSelect }: PlayerTabsProps) => {
+export const PlayerTabs = ({ players, order, activeIndex, answered, allowRevision, onSelect, activeLabel }: PlayerTabsProps) => {
   const styles = useThemedStyles(createStyles);
   const { width } = useWindowDimensions();
   const compact = width < COMPACT_BREAKPOINT;
@@ -116,7 +116,7 @@ export const PlayerTabs = ({ players, order, activeIndex, answered, allowRevisio
           >
             <View style={[styles.dot, compact && styles.dotCompact, { backgroundColor: player.color }]} />
             <Text style={[styles.label, compact && styles.labelCompact, isActive && styles.labelActive]}>
-              {initials(player.name)}
+              {isActive && activeLabel ? activeLabel(player.name) : initials(player.name)}
             </Text>
             {isAnswered && (
               <Text style={[styles.check, compact && styles.checkCompact, isActive && styles.checkActive]}>

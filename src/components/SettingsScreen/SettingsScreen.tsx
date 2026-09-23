@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
+import { clearAppData } from '@/helpers';
 import { useLanguage, useTranslation, type Language } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
@@ -44,8 +46,14 @@ export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const styles = useThemedStyles(createStyles);
   const { language, setLanguage } = useLanguage();
   const t = useTranslation();
+  const [dataCleared, setDataCleared] = useState(false);
 
   const languages: Language[] = ['fr', 'en'];
+
+  const onClearData = () => {
+    clearAppData();
+    setDataCleared(true);
+  };
 
   return (
     <Screen>
@@ -62,6 +70,15 @@ export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
             />
           ))}
         </View>
+      </Section>
+
+      <Section hint={t.settings.dataHint} title={t.settings.dataTitle}>
+        <Button
+          disabled={dataCleared}
+          label={dataCleared ? t.settings.dataCleared : t.settings.clearData}
+          onPress={onClearData}
+          variant="ghost"
+        />
       </Section>
 
       <Section title={t.settings.aboutTitle}>

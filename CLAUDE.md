@@ -97,5 +97,11 @@ environnement).
   fin 2026-09). Erreurs preexistantes non corrigees (hors scope au moment ou elles ont
   ete trouvees) : regles `react-hooks/set-state-in-effect` et `react-hooks/refs` dans
   `Compass.tsx`, `useHeading.ts`, `useGame.ts`, `SliderTrack.tsx`.
+- `react-hooks/refs` se declenche aussi, de facon attendue et inevitable, partout ou
+  l'API `Animated` de React Native est utilisee (`HomeScreen.tsx` : position/rotation de
+  la soucoupe) — lire `.current` d'un `Animated.Value`/`ValueXY` cree via `useRef` puis
+  l'utiliser dans le style au rendu est le pattern officiel de cette API, incompatible
+  avec cette regle stricte. Meme categorie que les 4 fichiers ci-dessus, pas une erreur a
+  corriger.
 - Repo : `mathieujullien77190/full-azimut`, un seul contributeur, commits directs sur
   `master`.

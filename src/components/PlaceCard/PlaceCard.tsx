@@ -29,13 +29,6 @@ const createStyles = ({ colors, typography }: Theme) =>
       color: colors.accent,
       fontSize: fontSize.subtitle,
     },
-    hint: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
-      marginTop: spacing.sm,
-      textAlign: 'center',
-    },
     toggle: {
       marginTop: spacing.sm,
     },
@@ -54,7 +47,7 @@ const createStyles = ({ colors, typography }: Theme) =>
   });
 
 /** Repliee par defaut, meme quand `description` est fournie : un clic la deplie. */
-export const PlaceCard = ({ place, originName, showCountry, description }: PlaceCardProps) => {
+export const PlaceCard = ({ place, showCountry, description }: PlaceCardProps) => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
   const [expanded, setExpanded] = useState(false);
@@ -68,8 +61,6 @@ export const PlaceCard = ({ place, originName, showCountry, description }: Place
         {categoryEmoji(place.category)}
         {showCountry ? ` ${place.country}` : ''}
       </Text>
-      <Text style={styles.hint}>{t.placeCard.hintFrom(originName)}</Text>
-
       {description !== undefined && (
         <>
           <Pressable accessibilityRole="button" hitSlop={8} onPress={() => setExpanded((value) => !value)} style={styles.toggle}>

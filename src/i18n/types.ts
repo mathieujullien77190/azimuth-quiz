@@ -72,9 +72,14 @@ export type Translations = {
     roundOver: string;
     reality: string;
     yourAnswer: string;
+    /** Navigue vers la section "cap" (boussole) pendant la saisie, sans valider. */
+    nextStep: string;
+    /** Revient vers la section "distance"/"inclinaison" pendant la saisie, sans valider. */
+    previousStep: string;
+    /** Remplace les initiales sur l'onglet du joueur actif ("A Matou de jouer"). */
+    playerTurn: (name: string) => string;
   };
   placeCard: {
-    hintFrom: (originName: string) => string;
     showDescription: string;
     hideDescription: string;
   };
@@ -108,6 +113,11 @@ export type Translations = {
     aboutTitle: string;
     author: string;
     claudeMention: string;
+    dataTitle: string;
+    /** Explique precisement ce que la sauvegarde locale contient, avant le bouton qui l'efface. */
+    dataHint: string;
+    clearData: string;
+    dataCleared: string;
   };
   indicesSetup: {
     screenTitle: string;

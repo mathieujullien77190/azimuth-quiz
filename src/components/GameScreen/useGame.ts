@@ -28,11 +28,18 @@ import { playerTotals } from './helpers';
 /** Cap de depart par defaut : le nord, aiguille deja visible et deplacable. */
 const DEFAULT_BEARING = 0;
 
-/** Brouillon d'un joueur (aiguille + distance) avant validation. */
-type Draft = { bearing: number; distanceKm: number };
+/** Brouillon d'un joueur (aiguille + distance) avant validation. `*Touched` distingue une valeur
+ * vraiment choisie par le joueur d'une valeur restee a son defaut (jamais touchee) : "Valider"
+ * s'appuie dessus pour ne pas enregistrer une reponse au hasard. */
+type Draft = { bearing: number; distanceKm: number; bearingTouched: boolean; distanceTouched: boolean };
 
-/** Brouillon de depart : aiguille au nord, distance par defaut. */
-const DEFAULT_DRAFT: Draft = { bearing: DEFAULT_BEARING, distanceKm: DEFAULT_DISTANCE_KM };
+/** Brouillon de depart : aiguille au nord, distance par defaut, rien encore touche. */
+const DEFAULT_DRAFT: Draft = {
+  bearing: DEFAULT_BEARING,
+  distanceKm: DEFAULT_DISTANCE_KM,
+  bearingTouched: false,
+  distanceTouched: false,
+};
 
 export const useGame = () => {
   const { settings, ready: settingsReady } = useSettings();
@@ -82,12 +89,16 @@ export const useGame = () => {
   const activeDraft = draftsByPlayer[activePlayerIndex] ?? DEFAULT_DRAFT;
   const bearing = activeDraft.bearing;
   const distanceKm = activeDraft.distanceKm;
+  const bearingTouched = activeDraft.bearingTouched;
+  const distanceTouched = activeDraft.distanceTouched;
 
   /** Met a jour uniquement le brouillon du joueur actif, sans toucher aux autres. */
   const setBearing = useCallback(
     (value: number) => {
       setDraftsByPlayer((previous) =>
-        previous.map((draft, index) => (index === activePlayerIndex ? { ...draft, bearing: value } : draft)),
+        previous.map((draft, index) =>
+          index === activePlayerIndex ? { ...draft, bearing: value, bearingTouched: true } : draft,
+        ),
       );
     },
     [activePlayerIndex],
@@ -96,7 +107,9 @@ export const useGame = () => {
   const setDistanceKm = useCallback(
     (value: number) => {
       setDraftsByPlayer((previous) =>
-        previous.map((draft, index) => (index === activePlayerIndex ? { ...draft, distanceKm: value } : draft)),
+        previous.map((draft, index) =>
+          index === activePlayerIndex ? { ...draft, distanceKm: value, distanceTouched: true } : draft,
+        ),
       );
     },
     [activePlayerIndex],
@@ -270,6 +283,8 @@ export const useGame = () => {
     totalRounds: places.length,
     bearing,
     distanceKm,
+    bearingTouched,
+    distanceTouched,
     maxDistanceKm,
     records,
     currentRecord: records[roundIndex],

@@ -136,7 +136,7 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
                 <View style={styles.inputWrap}>
                   <TextInput
                     accessibilityLabel={t.setup.playerNameAccessibility(index + 1)}
-                    maxLength={14}
+                    maxLength={10}
                     onChangeText={(text) =>
                       updateSettings({
                         playerNames: settings.playerNames.map((current, i) => (i === index ? text : current)),

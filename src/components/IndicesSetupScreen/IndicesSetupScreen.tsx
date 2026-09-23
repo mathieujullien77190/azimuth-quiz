@@ -123,7 +123,7 @@ export const IndicesSetupScreen = ({ onStart, onBack }: IndicesSetupScreenProps)
                 <View style={styles.inputWrap}>
                   <TextInput
                     accessibilityLabel={t.indicesSetup.playerNameAccessibility(index + 1)}
-                    maxLength={14}
+                    maxLength={10}
                     onChangeText={(text) =>
                       updateSettings({
                         playerNames: settings.playerNames.map((current, i) => (i === index ? text : current)),

@@ -17,7 +17,7 @@ const createStyles = ({ colors, typography }: Theme) =>
     },
     title: {
       ...typography.label,
-      color: colors.textMuted,
+      color: colors.text,
       fontSize: fontSize.caption,
     },
     hint: {

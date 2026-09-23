@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { BEST_SCORE_STORAGE_KEY, LANGUAGE_STORAGE_KEY, SETTINGS_STORAGE_KEY } from '@/constants';
+import { BEST_SCORE_STORAGE_KEY, LANGUAGE_STORAGE_KEY, SETTINGS_STORAGE_KEY, UFO_CAUGHT_STORAGE_KEY } from '@/constants';
 import type { Language } from '@/i18n';
 import type { GameSettings } from '@/types';
 
@@ -43,6 +43,22 @@ export const saveSettings = async (settings: GameSettings): Promise<void> => {
   }
 };
 
+export const loadUfoCaught = async (): Promise<boolean> => {
+  try {
+    return (await AsyncStorage.getItem(UFO_CAUGHT_STORAGE_KEY)) === 'true';
+  } catch {
+    return false;
+  }
+};
+
+export const saveUfoCaught = async (): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(UFO_CAUGHT_STORAGE_KEY, 'true');
+  } catch {
+    // Non memorise : la soucoupe recommencera a bouger au prochain lancement, sans gravite.
+  }
+};
+
 export const loadLanguage = async (): Promise<Language> => {
   try {
     const raw = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
@@ -57,5 +73,20 @@ export const saveLanguage = async (language: Language): Promise<void> => {
     await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, language);
   } catch {
     // Langue non memorisee : sans gravite, le francais par defaut sera reutilise.
+  }
+};
+
+/** Efface tout ce que l'app sauvegarde sur l'appareil : reglages Boussole, meilleur score,
+ * langue et etat de la soucoupe. Rien d'autre n'est persiste (Indices n'a pas de sauvegarde). */
+export const clearAppData = async (): Promise<void> => {
+  try {
+    await AsyncStorage.multiRemove([
+      BEST_SCORE_STORAGE_KEY,
+      SETTINGS_STORAGE_KEY,
+      LANGUAGE_STORAGE_KEY,
+      UFO_CAUGHT_STORAGE_KEY,
+    ]);
+  } catch {
+    // Rien a faire : au pire les anciennes donnees restent, sans gravite.
   }
 };

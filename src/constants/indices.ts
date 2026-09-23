@@ -192,7 +192,7 @@ export const INDICES_FLAG_COLORS_BY_COUNTRY: Record<string, IndicesFlagColorRow[
   "Suède": [["blue", "#006AA7", 70], ["yellow", "#FECC00", 30]],
   "Suisse": [["red", "#FF0000", 80], ["white", "#FFFFFF", 20]],
   "Suriname": [["green", "#377E3F", 20], ["white", "#FFFFFF", 15], ["red", "#B40A2D", 45], ["yellow", "#FFC910", 20]],
-  "Syrie": [["red", "#CE1126", 33], ["white", "#FFFFFF", 34], ["black", "#000000", 33], ["green", "#007A3D", 0]],
+  "Syrie": [["red", "#CE1126", 33], ["white", "#FFFFFF", 33], ["black", "#000000", 33], ["green", "#007A3D", 1]],
   "Tadjikistan": [["red", "#CC0000", 33], ["white", "#FFFFFF", 33], ["green", "#006600", 33]],
   "Taïwan": [["red", "#FE0000", 70], ["blue", "#000095", 20], ["white", "#FFFFFF", 10]],
   "Tanzanie": [["green", "#1EB53A", 33], ["yellow", "#FCD116", 10], ["black", "#000000", 24], ["blue", "#00A3DD", 33]],

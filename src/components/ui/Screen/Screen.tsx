@@ -33,7 +33,7 @@ const createStyles = ({ colors }: Theme) =>
     },
   });
 
-const Screen = ({ children, header, footer }: ScreenProps) => {
+const Screen = ({ children, header, footer, scrollRef }: ScreenProps) => {
   const styles = useThemedStyles(createStyles);
 
   return (
@@ -43,6 +43,7 @@ const Screen = ({ children, header, footer }: ScreenProps) => {
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        ref={scrollRef}
         showsVerticalScrollIndicator={false}
         style={styles.scroll}
       >

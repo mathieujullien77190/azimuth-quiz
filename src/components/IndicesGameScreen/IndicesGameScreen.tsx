@@ -228,21 +228,17 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const flagColors = INDICES_FLAG_COLORS_BY_COUNTRY[place.country];
   const flagStage = revealedClueIds.filter((id) => id === 'flagColors').length;
 
+  // Tous les garde-fous (manche terminee, indice deja revele, emoji/drapeau epuises) sont assures
+  // en amont par `IndicesClueCard` : `onPress` n'est fourni que si la carte est reellement
+  // pickable (voir `moreToReveal` plus bas et `onPress={roundOver ? undefined : ...}`).
   const pickClue = (clueId: IndicesClueId) => {
-    if (roundOver) return;
-    if (clueId === 'emoji') {
-      if (emojiStage >= 3) return;
-    } else if (clueId === 'flagColors') {
-      if (flagStage >= flagColors.length) return;
-    } else if (revealedClueIds.includes(clueId)) {
-      return;
-    }
     setRevealedClueIds((ids) => [...ids, clueId]);
     setTurnIndex((index) => (index + 1) % players.length);
   };
 
+  // Boutons "J'ai trouve"/"Je ne sais pas" uniquement rendus hors manche terminee (voir le footer
+  // plus bas) : pas besoin de re-verifier `roundOver` ici.
   const openBuzz = () => {
-    if (roundOver) return;
     setBuzzOpen(true);
     setVerified(false);
     setGuessText('');
@@ -252,24 +248,23 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
 
   const verify = () => setVerified(true);
 
+  // Appele uniquement une fois `buzzedIndex` connu (voir les points d'appel : bouton Verifier et
+  // `submitGuess`, tous deux gardes par `buzzedIndex !== null` en amont).
   const settle = (correct: boolean) => {
     // Le joueur qui buzze voit son total bouger du montant de la manche : en bien si trouve, en
     // mal (+1) si rate. Personne d'autre n'est touche.
     const awarded = correct ? score : score + 1;
-    if (buzzedIndex !== null) {
-      setPlayerTotals((totals) => totals.map((total, index) => (index === buzzedIndex ? total + awarded : total)));
-    }
+    setPlayerTotals((totals) => totals.map((total, index) => (index === buzzedIndex ? total + awarded : total)));
     setVerdict(correct ? 'correct' : 'wrong');
     setBuzzOpen(false);
   };
 
+  // Le bouton Valider n'est rendu qu'une fois `buzzedIndex` connu (typage force la comparaison).
   const submitGuess = () => {
-    if (buzzedIndex === null) return;
     settle(normalizePlaceGuess(guessText) === normalizePlaceGuess(place.name));
   };
 
   const giveUp = () => {
-    if (roundOver) return;
     setVerdict('giveUp');
     setBuzzOpen(false);
     setBuzzedIndex(null);
@@ -294,10 +289,11 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const buzzedName = buzzedIndex !== null ? players[buzzedIndex] : undefined;
 
   if (finished) {
+    // Toujours au moins 1 joueur (MIN_PLAYERS = 1) : `standings` n'est jamais vide.
     const standings = players
       .map((name, index) => ({ name, total: playerTotals[index] }))
       .sort((a, b) => a.total - b.total);
-    const lowest = standings[0]?.total ?? 0;
+    const lowest = standings[0].total;
     const winners = standings.filter((entry) => entry.total === lowest).map((entry) => entry.name);
 
     return (
@@ -310,7 +306,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
         )}
         <Card>
           {standings.map((entry, index) => (
-            <View key={entry.name} style={[styles.standingRow, index > 0 && styles.standingRowBorder]}>
+            <View key={entry.name + index} style={[styles.standingRow, index > 0 && styles.standingRowBorder]}>
               <Text style={styles.standingRank}>{index + 1}.</Text>
               <Text style={styles.standingName}>{entry.name}</Text>
               <Text style={styles.standingScore}>
@@ -330,10 +326,11 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
         roundOver ? (
           <View style={styles.actions}>
             <Text style={[styles.resultBanner, verdict === 'correct' ? styles.resultCorrect : styles.resultWrong]}>
+              {/* buzzedName est toujours defini pour 'correct'/'wrong' (settle exige buzzedIndex connu). */}
               {verdict === 'correct'
-                ? t.indicesGame.scored(buzzedName ?? '', formatNumber(finalScore))
+                ? t.indicesGame.scored(buzzedName!, formatNumber(finalScore))
                 : verdict === 'wrong'
-                  ? t.indicesGame.missed(buzzedName ?? '', formatNumber(finalScore))
+                  ? t.indicesGame.missed(buzzedName!, formatNumber(finalScore))
                   : t.indicesGame.noOneFound(formatNumber(finalScore))}
             </Text>
             <Text style={styles.revealAnswer}>
