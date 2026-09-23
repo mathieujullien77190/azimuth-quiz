@@ -17,6 +17,11 @@ export type EarthSectionProps = {
   showStraightLine: boolean;
   /** Affiche les boutons +/- (revelation) : part du zoom ideal, descend jusqu'a 1 (Terre entiere). */
   zoomControls?: boolean;
+  /** Autorise le satellite en orbite a zoom 1 (voir plus bas) independamment des boutons +/- :
+   * par defaut aligne sur `zoomControls` (comportement Boussole inchange), mais un appelant sans
+   * boutons de zoom (la mini-Terre de l'indice "Distance" du jeu Indices, toujours "revelee") peut
+   * l'activer explicitement sans les boutons. */
+  allowSatellite?: boolean;
 };
 
 export type Point = {

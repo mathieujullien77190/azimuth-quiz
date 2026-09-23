@@ -19,6 +19,7 @@ import {
   SATELLITE_CLEARANCE,
   SATELLITE_EMOJI,
   SATELLITE_ORBIT_MS,
+  SATELLITE_QUIP,
   ZOOM_STEPS,
 } from './constants';
 import { arcPath, fitZoom, markEnd, sideOf, surfaceAngle } from './helpers';
@@ -82,6 +83,28 @@ const createStyles = ({ colors, typography }: Theme) =>
       textAlignVertical: 'center',
       transform: [{ rotate: '-35deg' }],
     },
+    // Contre-tourne par rapport a l'orbite (voir satelliteAngle) pour rester lisible quel que soit
+    // l'angle du satellite au moment du clic, plutot que de tourner avec lui.
+    quipWrap: {
+      position: 'absolute',
+      left: 14,
+      top: -14,
+      width: 132,
+    },
+    quipBubble: {
+      backgroundColor: colors.background,
+      borderWidth: 1.5,
+      borderColor: colors.accent,
+      borderRadius: 10,
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.xs + 2,
+    },
+    quipText: {
+      ...typography.body,
+      color: colors.accent,
+      fontSize: 10,
+      textAlign: 'center',
+    },
   });
 
 /**
@@ -97,7 +120,13 @@ const createStyles = ({ colors, typography }: Theme) =>
  * La vraie reponse (isTruth) ne se dessine que par son point cercle : pas d'arc ni de corde, pour
  * ne pas noyer les reponses des joueurs sous ses propres traits.
  */
-export const EarthSection = ({ size, marks, showStraightLine, zoomControls = false }: EarthSectionProps) => {
+export const EarthSection = ({
+  size,
+  marks,
+  showStraightLine,
+  zoomControls = false,
+  allowSatellite = zoomControls,
+}: EarthSectionProps) => {
   const { colors, compass, typography } = useTheme();
   const styles = useThemedStyles(createStyles);
   const height = size * HEIGHT_RATIO;
@@ -121,9 +150,10 @@ export const EarthSection = ({ size, marks, showStraightLine, zoomControls = fal
   const center: Point = { x: player.x, y: player.y + radius };
   const horizonReach = Math.min(radius * 1.15, size * 0.32);
 
-  // Satellite en orbite, juste pour rigoler : uniquement a la revelation, dezoome a l'echelle
-  // reelle (zoom 1, sinon hors champ ou grotesque) — peu importe le mode (distance ou ligne droite).
-  const showSatellite = zoomControls && zoom === 1;
+  // Satellite en orbite, juste pour rigoler : uniquement quand `allowSatellite` (revelation
+  // Boussole, ou mini-Terre toujours-revelee de l'indice "Distance" d'Indices), dezoome a
+  // l'echelle reelle (zoom 1, sinon hors champ ou grotesque) — peu importe le mode.
+  const showSatellite = allowSatellite && zoom === 1;
   const satelliteAngle = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!showSatellite) return undefined;
@@ -148,6 +178,10 @@ export const EarthSection = ({ size, marks, showStraightLine, zoomControls = fal
       satelliteAngle.stopAnimation();
     };
   }, [showSatellite, satelliteAngle]);
+
+  // Blague au clic sur le satellite : reste affichee tant qu'on ne reclique pas dessus (voir le
+  // Pressable plus bas), pas de disparition automatique.
+  const [showQuip, setShowQuip] = useState(false);
 
   const mark = (item: EarthMark, key: string) => {
     const side = sideOf(item.bearing);
@@ -275,7 +309,6 @@ export const EarthSection = ({ size, marks, showStraightLine, zoomControls = fal
 
         {showSatellite && (
           <Animated.View
-            pointerEvents="none"
             style={[
               styles.satelliteAnchor,
               {
@@ -293,7 +326,36 @@ export const EarthSection = ({ size, marks, showStraightLine, zoomControls = fal
               },
             ]}
           >
-            <Text style={styles.satelliteEmoji}>{SATELLITE_EMOJI}</Text>
+            {/* Pas de accessibilityRole="button" ici : EarthSection peut deja etre dans un vrai
+            bouton (carte indice "Distance"), et le web n'accepte pas un <button> imbrique. */}
+            <Pressable hitSlop={10} onPress={() => setShowQuip((v) => !v)}>
+              <Text style={styles.satelliteEmoji}>{SATELLITE_EMOJI}</Text>
+            </Pressable>
+            {showQuip && (
+              // Contre-tourne par rapport au parent pour rester lisible quel que soit l'angle
+              // d'orbite au moment du clic (meme principe que l'ancienne rotation de l'emoji,
+              // reutilise ici pour le texte plutot que pour le satellite lui-meme).
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  styles.quipWrap,
+                  {
+                    transform: [
+                      {
+                        rotate: satelliteAngle.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0deg', '-360deg'],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
+                <View style={styles.quipBubble}>
+                  <Text style={styles.quipText}>{SATELLITE_QUIP}</Text>
+                </View>
+              </Animated.View>
+            )}
           </Animated.View>
         )}
       </View>

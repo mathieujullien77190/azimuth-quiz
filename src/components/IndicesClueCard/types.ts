@@ -23,4 +23,16 @@ export type IndicesClueCardProps = {
   /** Uniquement pour l'indice `distance` : 1 = cap+distance affiches sur le globe mais valeur en
    * km cachee ("?" au milieu, re-cliquable), 2 = km devoiles (meme principe que emoji/flagStage). */
   distanceStage?: number;
+  /** Uniquement pour l'indice `elevation` : 1 = emoji de palier (voir `elevationTierEmoji`), 2 =
+   * altitude exacte devoilee. */
+  elevationStage?: number;
+  /** Uniquement pour l'indice `population` : 1 = jauge a 5 ronds (voir `populationTier`), 2 =
+   * population exacte devoilee. */
+  populationStage?: number;
+  /** Uniquement pour l'indice `currency` : 1 = symbole (`place.currency`), 2 = nom complet de la
+   * devise (voir INDICES_CURRENCY_NAMES). */
+  currencyStage?: number;
+  /** Uniquement pour l'indice `localTime` : 1 = emoji jour/nuit (voir `dayNightEmoji`), 2 = heure
+   * locale exacte devoilee. */
+  localTimeStage?: number;
 };

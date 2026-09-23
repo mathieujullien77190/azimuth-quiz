@@ -21,3 +21,6 @@ export const HORIZON_LABEL = 'horizon';
 export const SATELLITE_EMOJI = '🛰️';
 export const SATELLITE_ORBIT_MS = 28000;
 export const SATELLITE_CLEARANCE = 46;
+/** Blague au clic sur le satellite (voir `EarthSection`) : se cache toute seule apres ce delai, ou
+ * immediatement si on reclique. */
+export const SATELLITE_QUIP = 'La Terre est ronde ? 🤔';

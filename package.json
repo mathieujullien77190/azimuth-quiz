@@ -1,6 +1,6 @@
 {
   "name": "full-azimut",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/metro-runtime": "~57.0.16",

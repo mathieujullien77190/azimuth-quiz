@@ -184,6 +184,7 @@ export const en: Translations = {
     buzzedPrompt: (name) => `${name} buzzes — say it out loud, then verify.`,
     buzzedPromptTyped: (name) => `${name} buzzes — type the city name.`,
     verify: 'Verify',
+    cancel: 'Cancel',
     correct: '✓ Correct',
     wrong: '✕ Wrong',
     scored: (name, points) => `${name} scores ${points} points!`,

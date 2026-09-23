@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { INDICES_FLAG_COLOR_FIELD, INDICES_FLAG_COLORS_BY_COUNTRY, fontSize, spacing } from '@/constants';
+import {
+  INDICES_COUNTRY_CODES,
+  INDICES_CURRENCY_NAMES,
+  INDICES_FLAG_COLOR_FIELD,
+  INDICES_FLAG_COLORS_BY_COUNTRY,
+  fontSize,
+  spacing,
+} from '@/constants';
 import { formatDistance, formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
@@ -10,11 +17,59 @@ import type { Theme } from '@/types';
 import Compass from '../Compass';
 import EarthSection from '../EarthSection';
 import { COMPASS_CLUE_SIZE, EARTH_CLUE_SIZE, POSITION_COORDS } from './constants';
-import { firstLetterOf, letterCount, localTimeFor, wordCount } from './helpers';
+import {
+  dayNightEmoji,
+  elevationTierEmoji,
+  firstLetterOf,
+  letterCount,
+  localTimeFor,
+  populationTier,
+  wordCount,
+} from './helpers';
 import type { IndicesClueCardProps } from './types';
+
+/** Diametres croissants des 5 ronds de la jauge de population (voir `populationTier`). */
+const POPULATION_DOT_SIZES = [6, 10, 14, 18, 22];
 
 /** Indices qui passent en carte pleine largeur une fois reveles (visuel plus grand). */
 const WIDE_CLUE_IDS = new Set(['bearing', 'distance']);
+
+/** "1/2", "2/3"... au-dessus des indices a plusieurs clics — `undefined` pour les indices a un
+ * seul clic (pas de badge dans ce cas, voir l'appel dans le composant). */
+const multiStageProgress = (
+  clueId: IndicesClueCardProps['clueId'],
+  place: IndicesClueCardProps['place'],
+  stages: {
+    emojiStage?: number;
+    flagStage?: number;
+    distanceStage?: number;
+    elevationStage?: number;
+    populationStage?: number;
+    currencyStage?: number;
+    localTimeStage?: number;
+  },
+): { stage: number; max: number } | undefined => {
+  switch (clueId) {
+    case 'emoji':
+      return { stage: Math.min(stages.emojiStage ?? 1, 3), max: 3 };
+    case 'flagColors': {
+      const max = Math.min(3, INDICES_FLAG_COLORS_BY_COUNTRY[place.country].length);
+      return { stage: Math.min(stages.flagStage ?? 1, max), max };
+    }
+    case 'distance':
+      return { stage: Math.min(stages.distanceStage ?? 1, 2), max: 2 };
+    case 'elevation':
+      return { stage: Math.min(stages.elevationStage ?? 1, 2), max: 2 };
+    case 'population':
+      return { stage: Math.min(stages.populationStage ?? 1, 2), max: 2 };
+    case 'currency':
+      return { stage: Math.min(stages.currencyStage ?? 1, 2), max: 2 };
+    case 'localTime':
+      return { stage: Math.min(stages.localTimeStage ?? 1, 2), max: 2 };
+    default:
+      return undefined;
+  }
+};
 
 const createStyles = ({ colors, radius, typography }: Theme) =>
   StyleSheet.create({
@@ -52,6 +107,11 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       color: colors.textMuted,
       fontSize: fontSize.caption - 3,
     },
+    stageBadge: {
+      ...typography.label,
+      color: colors.accent,
+      fontSize: fontSize.caption - 3,
+    },
     body: {
       height: 42,
       width: '100%',
@@ -73,6 +133,14 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
     },
     bigEmoji: {
       fontSize: 28,
+    },
+    populationDotRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      gap: 4,
+    },
+    populationDot: {
+      borderRadius: 999,
     },
     statValue: {
       ...typography.heading,
@@ -180,9 +248,23 @@ const revealedBody = (
     emojiStage,
     flagStage,
     distanceStage,
+    elevationStage,
+    populationStage,
+    currencyStage,
+    localTimeStage,
   }: Pick<
     IndicesClueCardProps,
-    'clueId' | 'place' | 'bearingDeg' | 'distanceKm' | 'emojiStage' | 'flagStage' | 'distanceStage'
+    | 'clueId'
+    | 'place'
+    | 'bearingDeg'
+    | 'distanceKm'
+    | 'emojiStage'
+    | 'flagStage'
+    | 'distanceStage'
+    | 'elevationStage'
+    | 'populationStage'
+    | 'currencyStage'
+    | 'localTimeStage'
   >,
   styles: ReturnType<typeof createStyles>,
   units: { population: string; letters: string },
@@ -197,13 +279,32 @@ const revealedBody = (
         </View>
       );
     }
-    case 'population':
+    case 'population': {
+      const stage = populationStage ?? 1;
+      if (stage < 2) {
+        const tier = populationTier(place.population);
+        return (
+          <View style={styles.populationDotRow}>
+            {POPULATION_DOT_SIZES.map((size, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.populationDot,
+                  { width: size, height: size, borderRadius: size / 2 },
+                  i < tier ? { backgroundColor: colors.accent } : { borderColor: colors.border, borderWidth: 1.5 },
+                ]}
+              />
+            ))}
+          </View>
+        );
+      }
       return (
         <>
           <Text style={styles.statValue}>{formatNumber(place.population)}</Text>
           <Text style={styles.statUnit}>{units.population}</Text>
         </>
       );
+    }
     case 'climate':
       return <Text style={styles.bigEmoji}>{place.climateEmoji}</Text>;
     case 'emoji': {
@@ -224,13 +325,16 @@ const revealedBody = (
         </View>
       );
     }
-    case 'elevation':
+    case 'elevation': {
+      const stage = elevationStage ?? 1;
+      if (stage < 2) return <Text style={styles.bigEmoji}>{elevationTierEmoji(place.elevationMeters)}</Text>;
       return (
         <>
           <Text style={styles.statValue}>{place.elevationMeters}</Text>
           <Text style={styles.statUnit}>m</Text>
         </>
       );
+    }
     case 'letterCount':
       return (
         <>
@@ -245,10 +349,12 @@ const revealedBody = (
     case 'flagColors': {
       const allColors = INDICES_FLAG_COLORS_BY_COUNTRY[place.country];
       const stage = flagStage ?? 1;
+      // 1 couleur au 1er clic, 1 de plus au 2e, tout le reste au 3e clic (jamais plus de 3 clics,
+      // voir IndicesGameScreen) : a partir du 3e, tout est devoile d'un coup.
       return (
         <View style={styles.flagColorList}>
           {allColors.map((row, i) => {
-            const shown = i < stage;
+            const shown = stage >= 3 || i < stage;
             const hex = row[INDICES_FLAG_COLOR_FIELD.HEX];
             const percent = row[INDICES_FLAG_COLOR_FIELD.PERCENT];
             return (
@@ -268,6 +374,7 @@ const revealedBody = (
       return distanceKm !== undefined && bearingDeg !== undefined ? (
         <View style={styles.distanceWrap}>
           <EarthSection
+            allowSatellite
             marks={[{ bearing: bearingDeg, color: colors.accent, distanceKm }]}
             showStraightLine={false}
             size={EARTH_CLUE_SIZE}
@@ -280,12 +387,20 @@ const revealedBody = (
         </View>
       ) : null;
     }
-    case 'localTime':
+    case 'localTime': {
+      const stage = localTimeStage ?? 1;
+      if (stage < 2) return <Text style={styles.bigEmoji}>{dayNightEmoji(place.timezone)}</Text>;
       return <Text style={styles.statValue}>{localTimeFor(place.timezone)}</Text>;
+    }
     case 'phoneCode':
       return <Text style={styles.statValue}>{place.phoneCode}</Text>;
-    case 'currency':
-      return <Text style={styles.statValue}>{place.currency}</Text>;
+    case 'currency': {
+      const stage = currencyStage ?? 1;
+      if (stage < 2) return <Text style={styles.statValue}>{place.currency}</Text>;
+      const code = INDICES_COUNTRY_CODES[place.country];
+      const name = code !== undefined ? INDICES_CURRENCY_NAMES[code] : undefined;
+      return <Text style={styles.statValue}>{name ?? place.currency}</Text>;
+    }
     case 'airportCode':
       return <Text style={styles.statValue}>{place.airportCode}</Text>;
     default:
@@ -303,8 +418,12 @@ export const IndicesClueCard = ({
   bearingDeg,
   distanceKm,
   distanceStage,
+  elevationStage,
   emojiStage,
   flagStage,
+  populationStage,
+  currencyStage,
+  localTimeStage,
 }: IndicesClueCardProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
@@ -312,6 +431,18 @@ export const IndicesClueCard = ({
   const [revealAnim] = useState(() => new Animated.Value(state === 'revealed' ? 1 : 0));
   const pickable = (state === 'locked' || (state === 'revealed' && moreToReveal)) && onPress !== undefined;
   const wide = state === 'revealed' && WIDE_CLUE_IDS.has(clueId);
+  const progress =
+    state === 'revealed'
+      ? multiStageProgress(clueId, place, {
+          currencyStage,
+          distanceStage,
+          elevationStage,
+          emojiStage,
+          flagStage,
+          localTimeStage,
+          populationStage,
+        })
+      : undefined;
 
   useEffect(() => {
     if (state === 'revealed') {
@@ -335,6 +466,11 @@ export const IndicesClueCard = ({
     >
       <View style={styles.header}>
         <Text style={styles.label}>{label}</Text>
+        {progress !== undefined && (
+          <Text style={styles.stageBadge}>
+            {progress.stage}/{progress.max}
+          </Text>
+        )}
       </View>
       <View
         style={[
@@ -353,7 +489,19 @@ export const IndicesClueCard = ({
             }}
           >
             {revealedBody(
-              { bearingDeg, clueId, distanceKm, distanceStage, emojiStage, flagStage, place },
+              {
+                bearingDeg,
+                clueId,
+                currencyStage,
+                distanceKm,
+                distanceStage,
+                elevationStage,
+                emojiStage,
+                flagStage,
+                localTimeStage,
+                place,
+                populationStage,
+              },
               styles,
               { letters: t.indicesGame.letterUnit, population: t.indicesGame.populationUnit },
               colors,

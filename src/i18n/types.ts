@@ -144,6 +144,7 @@ export type Translations = {
     buzzedPrompt: (name: string) => string;
     buzzedPromptTyped: (name: string) => string;
     verify: string;
+    cancel: string;
     correct: string;
     wrong: string;
     scored: (name: string, points: string) => string;

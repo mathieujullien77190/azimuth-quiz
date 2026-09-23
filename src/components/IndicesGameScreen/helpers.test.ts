@@ -4,18 +4,24 @@ import type { Difficulty, IndicesClueId } from '@/types';
 import { maxScoreForRound, nameSkeleton, normalizePlaceGuess, randomIndicesPlace, totalRevealCount } from './helpers';
 
 describe('totalRevealCount', () => {
-  it('matches revealing every clue, including every stage of emoji/flagColors/distance', () => {
+  const TWO_STAGE: IndicesClueId[] = ['distance', 'elevation', 'population', 'currency', 'localTime'];
+
+  it('matches revealing every clue, including every multi-stage one', () => {
     const flagColorCount = 3;
     const allIds: IndicesClueId[] = INDICES_CLUE_ORDER.flatMap((clueId) => {
       const revealCount =
-        clueId === 'emoji' ? 3 : clueId === 'flagColors' ? flagColorCount : clueId === 'distance' ? 2 : 1;
+        clueId === 'emoji' ? 3 : clueId === 'flagColors' ? flagColorCount : TWO_STAGE.includes(clueId) ? 2 : 1;
       return Array<IndicesClueId>(revealCount).fill(clueId);
     });
     expect(totalRevealCount(flagColorCount)).toBe(allIds.length);
   });
 
-  it('grows with the number of flag colors (country-dependent)', () => {
+  it('grows with the number of flag colors, up to 3', () => {
     expect(totalRevealCount(3)).toBe(totalRevealCount(2) + 1);
+  });
+
+  it('caps the flag reveal count at 3 regardless of how many colors the flag actually has', () => {
+    expect(totalRevealCount(5)).toBe(totalRevealCount(3));
   });
 });
 

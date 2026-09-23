@@ -36,8 +36,14 @@ describe('IndicesClueCard — revealed content per clue', () => {
     expect(toJSON()).toBeTruthy();
   });
 
-  it('population: renders the formatted number and unit', async () => {
-    const { getByText } = await renderCard({ clueId: 'population', state: 'revealed' });
+  it('population: stage 1 (default) renders the 5-dot tier gauge, not the number', async () => {
+    const { toJSON, queryByText } = await renderCard({ clueId: 'population', state: 'revealed' });
+    expect(toJSON()).toBeTruthy();
+    expect(queryByText('hab.')).toBeNull();
+  });
+
+  it('population: stage 2 renders the formatted number and unit', async () => {
+    const { getByText } = await renderCard({ clueId: 'population', populationStage: 2, state: 'revealed' });
     expect(getByText('hab.')).toBeTruthy();
   });
 
@@ -46,8 +52,13 @@ describe('IndicesClueCard — revealed content per clue', () => {
     expect(getByText(place.climateEmoji)).toBeTruthy();
   });
 
-  it('elevation: renders the value in meters', async () => {
-    const { getByText } = await renderCard({ clueId: 'elevation', state: 'revealed' });
+  it('elevation: stage 1 (default) renders a tier emoji, not the value', async () => {
+    const { queryByText } = await renderCard({ clueId: 'elevation', state: 'revealed' });
+    expect(queryByText(String(place.elevationMeters))).toBeNull();
+  });
+
+  it('elevation: stage 2 renders the value in meters', async () => {
+    const { getByText } = await renderCard({ clueId: 'elevation', elevationStage: 2, state: 'revealed' });
     expect(getByText(String(place.elevationMeters))).toBeTruthy();
     expect(getByText('m')).toBeTruthy();
   });
@@ -83,9 +94,14 @@ describe('IndicesClueCard — revealed content per clue', () => {
     expect(toJSON()).toBeTruthy();
   });
 
-  it('localTime: renders an HH:mm value', async () => {
-    const { getByText } = await renderCard({ clueId: 'localTime', state: 'revealed' });
-    expect(getByText(/^\d{2}:\d{2}$/)).toBeTruthy();
+  it('localTime: stage 1 (default) renders a day/night emoji, not the time', async () => {
+    const { queryByText } = await renderCard({ clueId: 'localTime', state: 'revealed' });
+    expect(queryByText(/^\d{2}h\d{2}$/)).toBeNull();
+  });
+
+  it('localTime: stage 2 renders an HHhmm value', async () => {
+    const { getByText } = await renderCard({ clueId: 'localTime', localTimeStage: 2, state: 'revealed' });
+    expect(getByText(/^\d{2}h\d{2}$/)).toBeTruthy();
   });
 
   it('phoneCode: renders the phone code', async () => {
@@ -93,9 +109,14 @@ describe('IndicesClueCard — revealed content per clue', () => {
     expect(getByText(place.phoneCode)).toBeTruthy();
   });
 
-  it('currency: renders the currency symbol', async () => {
+  it('currency: stage 1 (default) renders the currency symbol', async () => {
     const { getByText } = await renderCard({ clueId: 'currency', state: 'revealed' });
     expect(getByText(place.currency)).toBeTruthy();
+  });
+
+  it('currency: stage 2 renders the full currency name, with no country name in it', async () => {
+    const { getByText } = await renderCard({ clueId: 'currency', currencyStage: 2, state: 'revealed' });
+    expect(getByText('Euro')).toBeTruthy();
   });
 
   it('airportCode: renders the airport code', async () => {

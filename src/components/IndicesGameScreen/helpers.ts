@@ -1,12 +1,23 @@
 import { INDICES_CLUE_ORDER, INDICES_PLACES } from '@/constants';
 import type { Difficulty, IndicesPlace } from '@/types';
 
+/** Indices qui se devoilent en 2 clics : palier/symbole/jour-nuit au 1er, valeur exacte au 2e. */
+const TWO_STAGE_CLUE_IDS = new Set(['distance', 'elevation', 'population', 'currency', 'localTime']);
+
 /** Nombre total d'indices possibles sur une manche si on les prenait tous, y compris plusieurs
- * fois pour ceux qui se devoilent par etapes (emoji : 3 clics, distance : 2, drapeau : autant de
- * couleurs que le pays en a) — sert de base a `maxScoreForRound`. */
+ * fois pour ceux qui se devoilent par etapes (emoji : 3 clics ; distance/elevation/population/
+ * currency/localTime : 2 ; drapeau : au plus 3 — 1 couleur, puis 1 couleur, puis tout le reste au
+ * 3e clic, meme si le drapeau en a plus) — sert de base a `maxScoreForRound`. */
 export const totalRevealCount = (flagColorCount: number): number =>
   INDICES_CLUE_ORDER.reduce((total, clueId) => {
-    const count = clueId === 'emoji' ? 3 : clueId === 'flagColors' ? flagColorCount : clueId === 'distance' ? 2 : 1;
+    const count =
+      clueId === 'emoji'
+        ? 3
+        : clueId === 'flagColors'
+          ? Math.min(3, flagColorCount)
+          : TWO_STAGE_CLUE_IDS.has(clueId)
+            ? 2
+            : 1;
     return total + count;
   }, 0);
 

@@ -49,20 +49,20 @@ describe('IndicesGameScreen — picking clues', () => {
 
   it('revealing a clue takes 1 point off the remaining score and advances the turn', async () => {
     const { getByText } = await renderGame({ playerNames: ['Zoé', 'Max'] });
-    // Paris/France (3 couleurs de drapeau) : 20 indices possibles au total, deja un multiple de 10.
-    expect(getByText('Zoé · 20 pts')).toBeTruthy();
+    // Paris/France (3 couleurs de drapeau) : 24 indices possibles au total, arrondi a 30.
+    expect(getByText('Zoé · 30 pts')).toBeTruthy();
 
-    await fireEvent.press(getByText('Population'));
+    await fireEvent.press(getByText('Indicatif tél.'));
     expect(getByText('À Max de jouer')).toBeTruthy();
-    expect(getByText('Max · 19 pts')).toBeTruthy();
+    expect(getByText('Max · 29 pts')).toBeTruthy();
   });
 
   it('pressing an already-revealed single-shot clue again does not change the score', async () => {
     const { getByText } = await renderGame({ playerNames: ['Zoé'] });
-    await fireEvent.press(getByText('Population'));
-    expect(getByText('19 pts')).toBeTruthy();
-    await fireEvent.press(getByText('Population'));
-    expect(getByText('19 pts')).toBeTruthy();
+    await fireEvent.press(getByText('Indicatif tél.'));
+    expect(getByText('29 pts')).toBeTruthy();
+    await fireEvent.press(getByText('Indicatif tél.'));
+    expect(getByText('29 pts')).toBeTruthy();
   });
 
   it('pressing a header player tab is a no-op (display-only, unlike the buzz-panel tabs)', async () => {
@@ -111,8 +111,8 @@ describe('IndicesGameScreen — buzz flow (turnPlayer + spoken)', () => {
     expect(getByText(/Zoé buzze/)).toBeTruthy();
     await fireEvent.press(getByText('Vérifier'));
     await fireEvent.press(getByText('✓ Bonne réponse'));
-    // Aucun indice pris : le score restant (donc gagne) est encore au maximum (20).
-    expect(getByText('Zoé marque 20 points !')).toBeTruthy();
+    // Aucun indice pris : le score restant (donc gagne) est encore au maximum (30).
+    expect(getByText('Zoé marque 30 points !')).toBeTruthy();
     expect(getByText('Continuer')).toBeTruthy();
   });
 
@@ -139,7 +139,7 @@ describe('IndicesGameScreen — buzz flow (anyone + spoken)', () => {
     expect(getByText(/Max buzze/)).toBeTruthy();
     await fireEvent.press(getByText('Vérifier'));
     await fireEvent.press(getByText('✓ Bonne réponse'));
-    expect(getByText('Max marque 20 points !')).toBeTruthy();
+    expect(getByText('Max marque 30 points !')).toBeTruthy();
   });
 });
 
@@ -169,7 +169,7 @@ describe('IndicesGameScreen — buzz flow (typed answer)', () => {
     const input = getByPlaceholderText('Nom de la ville…');
     await fireEvent.changeText(input, '  paris  ');
     await fireEvent.press(getByText('Valider'));
-    expect(getByText('Zoé marque 20 points !')).toBeTruthy();
+    expect(getByText('Zoé marque 30 points !')).toBeTruthy();
   });
 });
 
@@ -190,8 +190,8 @@ describe('IndicesGameScreen — round progression', () => {
     await fireEvent.press(getByText('🤷 Je ne sais pas'));
     await fireEvent.press(getByText('Continuer'));
     expect(getByText(/Manche 2 \/ 2/)).toBeTruthy();
-    // Nouvelle manche : le score restant repart du maximum (20), pas de 0.
-    expect(getByText('20 pts')).toBeTruthy();
+    // Nouvelle manche : le score restant repart du maximum (30), pas de 0.
+    expect(getByText('30 pts')).toBeTruthy();
   });
 
   it('shows "Voir le score" on the last round and moves to final standings on press', async () => {

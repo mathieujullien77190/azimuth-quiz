@@ -276,6 +276,12 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   // Meme principe : le cap+distance s'affiche des le 1er choix, mais la valeur en km reste cachee
   // ("?" au milieu) jusqu'a un 2e clic, qui compte donc comme un indice choisi de plus.
   const distanceStage = revealedClueIds.filter((id) => id === 'distance').length;
+  // Meme principe encore : emoji de palier (altitude/population) ou symbole/jour-nuit (devise/heure
+  // locale) au 1er clic, valeur exacte au 2e.
+  const elevationStage = revealedClueIds.filter((id) => id === 'elevation').length;
+  const populationStage = revealedClueIds.filter((id) => id === 'population').length;
+  const currencyStage = revealedClueIds.filter((id) => id === 'currency').length;
+  const localTimeStage = revealedClueIds.filter((id) => id === 'localTime').length;
 
   // Tous les garde-fous (manche terminee, indice deja revele, emoji/drapeau epuises) sont assures
   // en amont par `IndicesClueCard` : `onPress` n'est fourni que si la carte est reellement
@@ -296,6 +302,15 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   };
 
   const verify = () => setVerified(true);
+
+  // Repli si le buzz etait une erreur (mauvais joueur, clic accidentel...) : ferme le panneau sans
+  // toucher au score, comme si on n'avait jamais buzze.
+  const cancelBuzz = () => {
+    setBuzzOpen(false);
+    setVerified(false);
+    setBuzzedIndex(null);
+    setGuessText('');
+  };
 
   // Appele uniquement une fois `buzzedIndex` connu (voir les points d'appel : bouton Verifier et
   // `submitGuess`, tous deux gardes par `buzzedIndex !== null` en amont).
@@ -456,6 +471,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
                     <Text style={styles.verdictLabelWrong}>{t.indicesGame.wrong}</Text>
                   </Pressable>
                 </View>
+                <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
               </>
             )}
           </View>
@@ -513,22 +529,37 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
             const isEmoji = clueId === 'emoji';
             const isFlag = clueId === 'flagColors';
             const isDistance = clueId === 'distance';
+            const isElevation = clueId === 'elevation';
+            const isPopulation = clueId === 'population';
+            const isCurrency = clueId === 'currency';
+            const isLocalTime = clueId === 'localTime';
+            // Drapeau : 1 couleur au 1er clic, 1 de plus au 2e, tout le reste au 3e — jamais plus
+            // de 3 clics, meme si le pays a plus de 3 couleurs (voir IndicesClueCard).
+            const flagMaxStage = Math.min(3, flagColors.length);
             const moreToReveal =
               (isEmoji && !roundOver && emojiStage < 3) ||
-              (isFlag && !roundOver && flagStage < flagColors.length) ||
-              (isDistance && !roundOver && distanceStage < 2);
+              (isFlag && !roundOver && flagStage < flagMaxStage) ||
+              (isDistance && !roundOver && distanceStage < 2) ||
+              (isElevation && !roundOver && elevationStage < 2) ||
+              (isPopulation && !roundOver && populationStage < 2) ||
+              (isCurrency && !roundOver && currencyStage < 2) ||
+              (isLocalTime && !roundOver && localTimeStage < 2);
             return (
               <IndicesClueCard
                 bearingDeg={bearing}
                 clueId={clueId}
+                currencyStage={isCurrency ? (roundOver ? 2 : currencyStage) : undefined}
                 distanceKm={distance}
                 distanceStage={isDistance ? (roundOver ? 2 : distanceStage) : undefined}
+                elevationStage={isElevation ? (roundOver ? 2 : elevationStage) : undefined}
                 emojiStage={isEmoji ? (roundOver ? 3 : emojiStage) : undefined}
                 flagStage={isFlag ? (roundOver ? flagColors.length : flagStage) : undefined}
                 key={clueId}
                 label={t.indicesGame.clues[clueId]}
+                localTimeStage={isLocalTime ? (roundOver ? 2 : localTimeStage) : undefined}
                 moreToReveal={moreToReveal}
                 onPress={roundOver ? undefined : () => pickClue(clueId)}
+                populationStage={isPopulation ? (roundOver ? 2 : populationStage) : undefined}
                 place={place}
                 state={revealed ? 'revealed' : 'locked'}
               />
