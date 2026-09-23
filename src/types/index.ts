@@ -61,6 +61,10 @@ export type RoundScore = {
   trueStraightDistanceKm: number;
   /** Ecart d'angle : sur le plan (mode surface), ou en 3D (mode ligne droite). */
   directionError: number;
+  /** |ln(estimation / vraie distance)| : ecart brut utilise pour departager le bonus "plus proche"
+   * (voir `applyBestBonus`), non plafonne contrairement a `distancePoints` — deux joueurs tous
+   * deux hors tolerance (donc a 0 point) peuvent quand meme avoir des ecarts tres differents. */
+  distanceError: number;
   directionPoints: number;
   distancePoints: number;
   /** Bonus (1/5 du max de la categorie) au(x) joueur(s) le(s) plus proche(s) de la manche, sur

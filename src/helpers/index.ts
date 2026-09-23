@@ -26,5 +26,6 @@ export {
   saveLanguage,
   saveSettings,
   saveUfoCaught,
+  systemLanguage,
 } from './storage';
 export { disableTextSelection } from './web';

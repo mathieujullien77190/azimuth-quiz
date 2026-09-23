@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getLocales } from 'expo-localization';
 
 import {
   BEST_SCORE_STORAGE_KEY,
@@ -12,6 +13,9 @@ import type { GameSettings } from '@/types';
 import { sanitizeSettings } from './settings';
 
 const isLanguage = (value: unknown): value is Language => value === 'fr' || value === 'en';
+
+/** Langue du systeme si l'anglais est detecte, francais par defaut sinon (seules langues gerees). */
+export const systemLanguage = (): Language => (getLocales()[0]?.languageCode === 'en' ? 'en' : 'fr');
 
 export const loadSettings = async (): Promise<GameSettings> => {
   try {
@@ -49,9 +53,9 @@ export const saveUfoCaught = async (): Promise<void> => {
 export const loadLanguage = async (): Promise<Language> => {
   try {
     const raw = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
-    return isLanguage(raw) ? raw : 'fr';
+    return isLanguage(raw) ? raw : systemLanguage();
   } catch {
-    return 'fr';
+    return systemLanguage();
   }
 };
 

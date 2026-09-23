@@ -227,6 +227,12 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
     scrollRef.current?.scrollTo({ animated: true, y: 0 });
     game.submit();
   };
+  // "Manche suivante" repart aussi en haut de l'ecran, plutot que de rester scrolle sur la
+  // revelation precedente.
+  const next = () => {
+    scrollRef.current?.scrollTo({ animated: true, y: 0 });
+    game.next();
+  };
 
   const record = game.phase === 'reveal' ? game.currentRecord : undefined;
   // Tout le monde a valide : la revelation repart en haut de l'ecran, plutot que de rester scrolle
@@ -324,7 +330,7 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
       <Screen
         footer={
           record ? (
-            <Button label={game.roundNumber === game.totalRounds ? t.game.last : t.game.next} onPress={game.next} />
+            <Button label={game.roundNumber === game.totalRounds ? t.game.last : t.game.next} onPress={next} />
           ) : (
             <FooterNav
               key={`${game.roundNumber}-${game.activePlayerIndex}`}

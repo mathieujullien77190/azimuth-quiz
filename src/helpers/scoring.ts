@@ -42,6 +42,7 @@ export const scoreRound = (origin: Coordinates, place: Place, guess: Guess, opti
     trueSurfaceDistanceKm,
     trueStraightDistanceKm,
     directionError,
+    distanceError,
     directionPoints,
     distancePoints,
     directionBonus: 0,
@@ -54,18 +55,21 @@ export const scoreRound = (origin: Coordinates, place: Place, guess: Guess, opti
  * Bonus du(des) meilleur(s) de la manche : 1/5 du max de chaque categorie, pour le(s) joueur(s)
  * qui l'a(ont) sur cette categorie (egalite comprise). N'a de sens qu'a plusieurs — en solo,
  * `results` a un seul element et personne ne peut se distinguer, donc aucun bonus.
+ * Compare les ecarts bruts (`directionError`/`distanceError`), pas les points : ceux-ci sont
+ * plafonnes a 0 des qu'on sort de la tolerance, donc deux joueurs tous deux hors tolerance (et
+ * donc a 0 point) auraient sinon ete consideres a egalite et tous deux "les plus proches".
  */
 export const applyBestBonus = (results: PlayerResult[]): PlayerResult[] => {
   if (results.length < 2) return results;
 
   const directionBonus = Math.round(MAX_DIRECTION_POINTS * BEST_BONUS_RATIO);
   const distanceBonus = Math.round(MAX_DISTANCE_POINTS * BEST_BONUS_RATIO);
-  const bestDirectionPoints = Math.max(...results.map((result) => result.score.directionPoints));
-  const bestDistancePoints = Math.max(...results.map((result) => result.score.distancePoints));
+  const bestDirectionError = Math.min(...results.map((result) => result.score.directionError));
+  const bestDistanceError = Math.min(...results.map((result) => result.score.distanceError));
 
   return results.map((result) => {
-    const earnedDirectionBonus = result.score.directionPoints === bestDirectionPoints ? directionBonus : 0;
-    const earnedDistanceBonus = result.score.distancePoints === bestDistancePoints ? distanceBonus : 0;
+    const earnedDirectionBonus = result.score.directionError === bestDirectionError ? directionBonus : 0;
+    const earnedDistanceBonus = result.score.distanceError === bestDistanceError ? distanceBonus : 0;
     return {
       ...result,
       score: {

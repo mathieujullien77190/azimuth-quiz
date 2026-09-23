@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { loadLanguage, saveLanguage } from '@/helpers';
+import { loadLanguage, saveLanguage, systemLanguage } from '@/helpers';
 import { LanguageContext, type Language } from '@/i18n';
 
 import type { LanguageProviderProps } from './types';
@@ -27,7 +27,7 @@ export const LanguageProvider = ({ children }: LanguageProviderProps) => {
   }, []);
 
   const resetLanguage = useCallback(() => {
-    setLanguageState('fr');
+    setLanguageState(systemLanguage());
   }, []);
 
   const value = useMemo(

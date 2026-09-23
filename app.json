@@ -3,7 +3,7 @@
     "name": "Full Azimut",
     "slug": "full-azimut",
     "scheme": "fullazimut",
-    "version": "1.5.1",
+    "version": "1.6.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -35,7 +35,8 @@
         {
           "locationWhenInUsePermission": "Full Azimut utilise ta position comme point de départ des distances, et l’orientation du téléphone pour que la boussole pointe vers le vrai nord."
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,
