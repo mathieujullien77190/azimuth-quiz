@@ -1,7 +1,7 @@
-import { INDICES_CLUE_COSTS, INDICES_PLACES } from '@/constants';
+import { INDICES_CLUE_COSTS, INDICES_CLUE_ORDER, INDICES_PLACES } from '@/constants';
 import type { Difficulty, IndicesClueId } from '@/types';
 
-import { normalizePlaceGuess, randomIndicesPlace, scoreForRevealed } from './helpers';
+import { maxRoundScore, normalizePlaceGuess, randomIndicesPlace, scoreForRevealed } from './helpers';
 
 describe('scoreForRevealed', () => {
   it('returns 0 for no revealed clues', () => {
@@ -17,6 +17,22 @@ describe('scoreForRevealed', () => {
   it('counts repeated ids (emoji/flagColors multi-reveal) once per occurrence', () => {
     const ids: IndicesClueId[] = ['emoji', 'emoji', 'emoji'];
     expect(scoreForRevealed(ids)).toBe(INDICES_CLUE_COSTS.emoji * 3);
+  });
+});
+
+describe('maxRoundScore', () => {
+  it('matches revealing every clue, including every stage of emoji/flagColors/distance', () => {
+    const flagColorCount = 3;
+    const allIds: IndicesClueId[] = INDICES_CLUE_ORDER.flatMap((clueId) => {
+      const revealCount =
+        clueId === 'emoji' ? 3 : clueId === 'flagColors' ? flagColorCount : clueId === 'distance' ? 2 : 1;
+      return Array<IndicesClueId>(revealCount).fill(clueId);
+    });
+    expect(maxRoundScore(flagColorCount)).toBe(scoreForRevealed(allIds));
+  });
+
+  it('grows with the number of flag colors (country-dependent)', () => {
+    expect(maxRoundScore(3)).toBe(maxRoundScore(2) + INDICES_CLUE_COSTS.flagColors);
   });
 });
 

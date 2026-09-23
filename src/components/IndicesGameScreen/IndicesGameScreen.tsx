@@ -21,7 +21,13 @@ import PlayerTabs from '../PlayerTabs';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Screen from '../ui/Screen';
-import { formatRoundProgress, normalizePlaceGuess, randomIndicesPlace, scoreForRevealed } from './helpers';
+import {
+  formatRoundProgress,
+  maxRoundScore,
+  normalizePlaceGuess,
+  randomIndicesPlace,
+  scoreForRevealed,
+} from './helpers';
 import type { IndicesGameScreenProps } from './types';
 
 /** Au-dela, les pastilles de progression deviennent illisibles : on ne les affiche plus (meme
@@ -235,8 +241,9 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const [verdict, setVerdict] = useState<'correct' | 'wrong' | 'giveUp' | null>(null);
   const [roundNumber, setRoundNumber] = useState(1);
   const [finished, setFinished] = useState(false);
-  // Cumul par joueur sur toute la partie (plusieurs manches) : seul celui qui buzze sur une manche
-  // voit son total bouge, dans un sens ou dans l'autre (voir settle).
+  // Cumul par joueur sur toute la partie (plusieurs manches) : si quelqu'un trouve, lui seul est
+  // credite ; sinon (mauvaise reponse ou abandon), tout le monde prend la meme penalite (voir
+  // `settle`/`giveUp`).
   const [playerTotals, setPlayerTotals] = useState<number[]>(() => players.map(() => 0));
 
   const roundOver = verdict !== null;
@@ -244,17 +251,19 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   // Score qui MONTE a chaque indice choisi (plus il est facile, plus il coute cher) : c'est celui
   // qui a le score le plus BAS qui gagne, pas le plus haut.
   const score = scoreForRevealed(revealedClueIds);
-  // Une mauvaise reponse coute 1 point de plus ; abandonner ("Je ne sais pas") garde le score deja
-  // accumule tel quel, sans penalite ni remise a zero supplementaire.
-  const finalScore = verdict === 'wrong' ? score + 1 : score;
+  // Le drapeau se devoile couleur par couleur : le nombre de couleurs varie selon le pays (2 ou 3
+  // en general, voir INDICES_FLAG_COLORS_BY_COUNTRY) — necessaire ici pour `worstScore` aussi.
+  const flagColors = INDICES_FLAG_COLORS_BY_COUNTRY[place.country];
+  // Penalite si personne ne trouve (mauvaise reponse ou abandon) : le pire score qu'on aurait eu en
+  // revelant vraiment tous les indices, applique a tout le monde (voir `settle`/`giveUp`) — plutot
+  // que le score partiel deja revele, qui recompenserait injustement un abandon precoce.
+  const worstScore = maxRoundScore(flagColors.length);
+  const finalScore = verdict === 'correct' ? score : worstScore;
   const displayScore = roundOver ? finalScore : score;
 
   // L'emoji se devoile en 3 fois (place.emojis est un triplet) : chaque clic supplementaire sur la
   // carte deja revelee compte comme un nouvel indice choisi (cout + tour), jusqu'a epuisement.
   const emojiStage = revealedClueIds.filter((id) => id === 'emoji').length;
-  // Le drapeau se devoile couleur par couleur, meme principe que l'emoji : le nombre de couleurs
-  // varie selon le pays (2 ou 3 en general, voir INDICES_FLAG_COLORS_BY_COUNTRY).
-  const flagColors = INDICES_FLAG_COLORS_BY_COUNTRY[place.country];
   const flagStage = revealedClueIds.filter((id) => id === 'flagColors').length;
   // Meme principe : le cap+distance s'affiche des le 1er choix, mais la valeur en km reste cachee
   // ("?" au milieu) jusqu'a un 2e clic, qui compte donc comme un indice choisi de plus.
@@ -283,10 +292,13 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   // Appele uniquement une fois `buzzedIndex` connu (voir les points d'appel : bouton Verifier et
   // `submitGuess`, tous deux gardes par `buzzedIndex !== null` en amont).
   const settle = (correct: boolean) => {
-    // Le joueur qui buzze voit son total bouger du montant de la manche : en bien si trouve, en
-    // mal (+1) si rate. Personne d'autre n'est touche.
-    const awarded = correct ? score : score + 1;
-    setPlayerTotals((totals) => totals.map((total, index) => (index === buzzedIndex ? total + awarded : total)));
+    if (correct) {
+      // Seul celui qui a trouve voit son total bouger, du cout reel des indices revelees.
+      setPlayerTotals((totals) => totals.map((total, index) => (index === buzzedIndex ? total + score : total)));
+    } else {
+      // Personne n'a trouve : tout le monde prend la penalite max, pas seulement celui qui a buzze.
+      setPlayerTotals((totals) => totals.map((total) => total + worstScore));
+    }
     setVerdict(correct ? 'correct' : 'wrong');
     setBuzzOpen(false);
   };
@@ -297,6 +309,8 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   };
 
   const giveUp = () => {
+    // Meme penalite que pour une mauvaise reponse : abandonner ne doit pas couter moins cher.
+    setPlayerTotals((totals) => totals.map((total) => total + worstScore));
     setVerdict('giveUp');
     setBuzzOpen(false);
     setBuzzedIndex(null);

@@ -115,12 +115,14 @@ describe('IndicesGameScreen — buzz flow (turnPlayer + spoken)', () => {
     expect(getByText('Continuer')).toBeTruthy();
   });
 
-  it('settles a wrong answer with a +1 penalty', async () => {
+  it('settles a wrong answer with the worst-case penalty', async () => {
     const { getByText } = await renderGame({ answerMethod: 'spoken', buzzerMode: 'turnPlayer', playerNames: ['Zoé'] });
     await fireEvent.press(getByText('🔔 J’ai trouvé !'));
     await fireEvent.press(getByText('Vérifier'));
     await fireEvent.press(getByText('✕ Faux'));
-    expect(getByText(/Zoé se trompe — encore \+1 point \(1 au total\)/)).toBeTruthy();
+    // Penalite = cout de tous les indices s'ils avaient tous ete reveles (Paris/France, 3 couleurs
+    // de drapeau) : 43 points, peu importe qu'aucun indice n'ait ete choisi.
+    expect(getByText('Zoé se trompe — tout le monde prend 43 points.')).toBeTruthy();
   });
 });
 
@@ -172,11 +174,12 @@ describe('IndicesGameScreen — buzz flow (typed answer)', () => {
 });
 
 describe('IndicesGameScreen — give up', () => {
-  it('ends the round with no name attached and no +1 penalty', async () => {
+  it('ends the round with no name attached, penalty is the worst case regardless of clues picked', async () => {
     const { getByText } = await renderGame({ playerNames: ['Zoé'] });
     await fireEvent.press(getByText('Population'));
     await fireEvent.press(getByText('🤷 Je ne sais pas'));
-    expect(getByText('Personne n’a trouvé — 3 points au total.')).toBeTruthy();
+    // Meme penalite max (43) qu'une mauvaise reponse, pas le cout du seul indice pris (3).
+    expect(getByText('Personne n’a trouvé — tout le monde prend 43 points.')).toBeTruthy();
     expect(getByText(/C’était/)).toBeTruthy();
   });
 });
@@ -207,11 +210,12 @@ describe('IndicesGameScreen — round progression', () => {
       playerNames: ['Zoé', 'Max'],
       rounds: 2,
     });
-    // Manche 1 : Max buzze et se trompe, son total cumule passe a 1.
+    // Manche 1 : Max revele un indice puis trouve, sa penalite = le cout de cet indice (3).
+    await fireEvent.press(getByText('Population'));
     await fireEvent.press(getByText('🔔 J’ai trouvé !'));
     await fireEvent.press(getAllByLabelText('Max')[1]);
     await fireEvent.press(getByText('Vérifier'));
-    await fireEvent.press(getByText('✕ Faux'));
+    await fireEvent.press(getByText('✓ Bonne réponse'));
     await fireEvent.press(getByText('Continuer'));
     // Manche 2 : Zoé buzze et trouve sans indice, son total cumule reste a 0.
     await fireEvent.press(getByText('🔔 J’ai trouvé !'));
@@ -219,7 +223,7 @@ describe('IndicesGameScreen — round progression', () => {
     await fireEvent.press(getByText('Vérifier'));
     await fireEvent.press(getByText('✓ Bonne réponse'));
     await fireEvent.press(getByText('Voir le score'));
-    // Zoé (0) bat Max (1) : victoire unique, pas d'egalite.
+    // Zoé (0) bat Max (3) : victoire unique, pas d'egalite.
     expect(getByText('Zoé gagne !')).toBeTruthy();
   });
 
