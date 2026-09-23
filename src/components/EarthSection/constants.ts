@@ -19,5 +19,5 @@ export const HORIZON_LABEL = 'horizon';
 // seulement dezoome a l'echelle reelle (zoom 1 = la Terre entiere visible, sinon il serait hors
 // champ ou grotesquement proche).
 export const SATELLITE_EMOJI = '🛰️';
-export const SATELLITE_ORBIT_MS = 7000;
+export const SATELLITE_ORBIT_MS = 28000;
 export const SATELLITE_CLEARANCE = 46;

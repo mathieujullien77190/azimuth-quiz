@@ -127,16 +127,26 @@ export const EarthSection = ({ size, marks, showStraightLine, zoomControls = fal
   const satelliteAngle = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!showSatellite) return undefined;
-    const loop = Animated.loop(
+    // Animated.loop() plante parfois apres un seul tour sur le driver JS de react-native-web
+    // (celui utilise ici, faute de useNativeDriver dispo sur web) : on boucle donc a la main,
+    // en relancant un timing depuis 0 a chaque `finished`, plutot que de compter sur `loop()`.
+    let cancelled = false;
+    const spin = () => {
+      satelliteAngle.setValue(0);
       Animated.timing(satelliteAngle, {
         duration: SATELLITE_ORBIT_MS,
         easing: Easing.linear,
         toValue: 1,
         useNativeDriver: true,
-      }),
-    );
-    loop.start();
-    return () => loop.stop();
+      }).start(({ finished }) => {
+        if (finished && !cancelled) spin();
+      });
+    };
+    spin();
+    return () => {
+      cancelled = true;
+      satelliteAngle.stopAnimation();
+    };
   }, [showSatellite, satelliteAngle]);
 
   const mark = (item: EarthMark, key: string) => {

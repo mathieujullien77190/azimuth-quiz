@@ -22,7 +22,7 @@ import ThemeBackdrop from '../ThemeBackdrop';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Screen from '../ui/Screen';
-import { ANSWERED_OPACITY, MAX_PROGRESS_DOTS, REVEAL_OPACITY, TURN_POPUP_MS } from './constants';
+import { ANSWERED_OPACITY, MAX_PROGRESS_DOTS, REVEAL_OPACITY } from './constants';
 import { compassSizeFor, earthSizeFor, formatRoundProgress } from './helpers';
 import type { GameScreenProps } from './types';
 import { useGame } from './useGame';
@@ -138,21 +138,15 @@ type TurnPopupProps = {
 };
 
 /**
- * Annonce "A X de jouer" plein ecran au debut d'une manche (2e et suivantes, en multijoueur) :
- * se cache tout seul apres TURN_POPUP_MS, ou immediatement si on touche n'importe ou. Monte avec
- * une `key` differente a chaque manche (voir l'appel plus bas) : repart donc toujours visible sans
- * effet qui appellerait setState de facon synchrone dans son corps (le timeout, lui, le fait dans
- * son callback : c'est le seul endroit permis).
+ * Annonce "A X de jouer" plein ecran au debut de chaque manche (multijoueur) : reste affiche
+ * tant qu'on ne touche pas l'ecran, pas de disparition automatique. Monte avec une `key`
+ * differente a chaque manche/joueur (voir l'appel plus bas) : repart donc toujours visible, sans
+ * effet ni ref-pendant-le-rendu, juste le remontage standard React quand la key change.
  */
 const TurnPopup = ({ name }: TurnPopupProps) => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
   const [visible, setVisible] = useState(true);
-
-  useEffect(() => {
-    const id = setTimeout(() => setVisible(false), TURN_POPUP_MS);
-    return () => clearTimeout(id);
-  }, []);
 
   if (!visible) return null;
 
@@ -443,9 +437,7 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
         {record && <RoundResult options={game.config} players={game.players} record={record} totals={game.totals} />}
       </Screen>
 
-      {game.isMultiplayer && game.roundNumber > 1 && !record && (
-        <TurnPopup key={game.roundNumber} name={game.currentPlayer.name} />
-      )}
+      {game.isMultiplayer && !record && <TurnPopup key={game.roundNumber} name={game.currentPlayer.name} />}
     </>
   );
 };
