@@ -49,12 +49,12 @@ describe('IndicesGameScreen — picking clues', () => {
 
   it('revealing a clue adds its cost to the score and advances the turn', async () => {
     const { getByText } = await renderGame({ playerNames: ['Zoé', 'Max'] });
-    expect(getByText('0 pts')).toBeTruthy();
+    expect(getByText('Zoé · 0 pts')).toBeTruthy();
 
     await fireEvent.press(getByText('Population'));
     // Le score a change (indice a 3 points sur les couts par defaut) et le tour est passe a Max.
     expect(getByText('À Max de jouer')).toBeTruthy();
-    expect(getByText('3 pts')).toBeTruthy();
+    expect(getByText('Max · 3 pts')).toBeTruthy();
   });
 
   it('pressing an already-revealed single-shot clue again does not change the score', async () => {

@@ -21,9 +21,10 @@ import RoundResult from '../RoundResult';
 import ThemeBackdrop from '../ThemeBackdrop';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
+import RoundProgress from '../ui/RoundProgress';
 import Screen from '../ui/Screen';
-import { ANSWERED_OPACITY, MAX_PROGRESS_DOTS, REVEAL_OPACITY } from './constants';
-import { compassSizeFor, earthSizeFor, formatRoundProgress } from './helpers';
+import { ANSWERED_OPACITY, REVEAL_OPACITY } from './constants';
+import { compassSizeFor, earthSizeFor } from './helpers';
 import type { GameScreenProps } from './types';
 import { useGame } from './useGame';
 
@@ -62,32 +63,6 @@ const createStyles = ({ colors, typography }: Theme) =>
       ...typography.heading,
       color: colors.accent,
       fontSize: fontSize.subtitle,
-    },
-    roundRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.xs,
-      paddingBottom: spacing.sm,
-    },
-    roundLabel: {
-      ...typography.label,
-      color: colors.textMuted,
-      fontSize: fontSize.caption,
-    },
-    progress: {
-      flexDirection: 'row',
-      gap: 4,
-    },
-    dot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      backgroundColor: colors.border,
-    },
-    dotDone: {
-      backgroundColor: colors.accent,
     },
     compass: {
       alignItems: 'center',
@@ -351,18 +326,7 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
               <Text style={styles.score}>{scoreLabel}</Text>
             </View>
 
-            <View style={styles.roundRow}>
-              <Text style={styles.roundLabel}>
-                {t.game.round} {formatRoundProgress(game.roundNumber, game.totalRounds)}
-              </Text>
-              {game.totalRounds <= MAX_PROGRESS_DOTS && (
-                <View style={styles.progress}>
-                  {Array.from({ length: game.totalRounds }, (_, index) => (
-                    <View key={index} style={[styles.dot, index < game.roundNumber && styles.dotDone]} />
-                  ))}
-                </View>
-              )}
-            </View>
+            <RoundProgress roundNumber={game.roundNumber} totalRounds={game.totalRounds} />
 
             {game.isMultiplayer && !record && (
               <PlayerTabs

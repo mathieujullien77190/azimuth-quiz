@@ -1,7 +1,7 @@
 import { INDICES_CLUE_COSTS, INDICES_CLUE_ORDER, INDICES_PLACES } from '@/constants';
 import type { Difficulty, IndicesClueId } from '@/types';
 
-import { maxRoundScore, normalizePlaceGuess, randomIndicesPlace, scoreForRevealed } from './helpers';
+import { maxRoundScore, nameSkeleton, normalizePlaceGuess, randomIndicesPlace, scoreForRevealed } from './helpers';
 
 describe('scoreForRevealed', () => {
   it('returns 0 for no revealed clues', () => {
@@ -48,6 +48,51 @@ describe('randomIndicesPlace', () => {
   it('falls back to the full pool when the filtered pool is empty', () => {
     const place = randomIndicesPlace('does-not-exist' as Difficulty);
     expect(INDICES_PLACES).toContainEqual(place);
+  });
+});
+
+describe('nameSkeleton', () => {
+  it('one hidden slot per letter, single group when not grouped by word', () => {
+    expect(nameSkeleton('Berlin', { groupByWord: false, revealFirst: false, includeHidden: true })).toEqual([
+      [null, null, null, null, null, null],
+    ]);
+  });
+
+  it('reveals only the very first letter of the whole name', () => {
+    expect(nameSkeleton('Berlin', { groupByWord: false, revealFirst: true, includeHidden: true })).toEqual([
+      ['B', null, null, null, null, null],
+    ]);
+  });
+
+  it('groups by word when groupByWord is set', () => {
+    expect(nameSkeleton('Rio de Janeiro', { groupByWord: true, revealFirst: false, includeHidden: true })).toEqual([
+      [null, null, null],
+      [null, null],
+      [null, null, null, null, null, null, null],
+    ]);
+  });
+
+  it('combines first-letter reveal with word grouping', () => {
+    expect(nameSkeleton('Rio de Janeiro', { groupByWord: true, revealFirst: true, includeHidden: true })).toEqual([
+      ['R', null, null],
+      [null, null],
+      [null, null, null, null, null, null, null],
+    ]);
+  });
+
+  it('ignores spaces/hyphens/apostrophes, keeps accented letters', () => {
+    expect(nameSkeleton("Côte d'Ivoire", { groupByWord: false, revealFirst: false, includeHidden: true })).toEqual([
+      Array<null>(11).fill(null),
+    ]);
+  });
+
+  it('without includeHidden, keeps only the revealed first letter (length stays unknown)', () => {
+    expect(nameSkeleton('Berlin', { groupByWord: false, revealFirst: true, includeHidden: false })).toEqual([['B']]);
+  });
+
+  it('without includeHidden and no revealed letter, returns no groups at all', () => {
+    expect(nameSkeleton('Berlin', { groupByWord: false, revealFirst: false, includeHidden: false })).toEqual([]);
+    expect(nameSkeleton('Rio de Janeiro', { groupByWord: true, revealFirst: false, includeHidden: false })).toEqual([]);
   });
 });
 

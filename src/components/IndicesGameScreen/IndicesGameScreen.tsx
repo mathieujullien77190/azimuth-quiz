@@ -20,19 +20,10 @@ import IndicesClueCard from '../IndicesClueCard';
 import PlayerTabs from '../PlayerTabs';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
+import RoundProgress from '../ui/RoundProgress';
 import Screen from '../ui/Screen';
-import {
-  formatRoundProgress,
-  maxRoundScore,
-  normalizePlaceGuess,
-  randomIndicesPlace,
-  scoreForRevealed,
-} from './helpers';
+import { maxRoundScore, nameSkeleton, normalizePlaceGuess, randomIndicesPlace, scoreForRevealed } from './helpers';
 import type { IndicesGameScreenProps } from './types';
-
-/** Au-dela, les pastilles de progression deviennent illisibles : on ne les affiche plus (meme
- * seuil que Boussole, voir `GameScreen/constants.ts`). */
-const MAX_PROGRESS_DOTS = 12;
 
 const createStyles = ({ colors, typography }: Theme) =>
   StyleSheet.create({
@@ -92,32 +83,6 @@ const createStyles = ({ colors, typography }: Theme) =>
       color: colors.accent,
       fontSize: fontSize.subtitle,
     },
-    roundRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.xs,
-      paddingBottom: spacing.sm,
-    },
-    roundLabel: {
-      ...typography.label,
-      color: colors.textMuted,
-      fontSize: fontSize.caption,
-    },
-    progress: {
-      flexDirection: 'row',
-      gap: 4,
-    },
-    dot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      backgroundColor: colors.border,
-    },
-    dotDone: {
-      backgroundColor: colors.accent,
-    },
     hint: {
       ...typography.body,
       color: colors.textMuted,
@@ -128,6 +93,30 @@ const createStyles = ({ colors, typography }: Theme) =>
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: spacing.sm,
+    },
+    skeletonRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      alignItems: 'flex-end',
+      gap: spacing.md,
+    },
+    skeletonWord: {
+      flexDirection: 'row',
+      gap: spacing.xs,
+    },
+    skeletonSlot: {
+      width: 18,
+      height: 26,
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      borderBottomWidth: 2,
+      borderBottomColor: colors.accent,
+    },
+    skeletonLetter: {
+      ...typography.display,
+      color: colors.accent,
+      fontSize: fontSize.subtitle,
     },
     buzzPanel: {
       gap: spacing.sm + 2,
@@ -260,6 +249,22 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const worstScore = maxRoundScore(flagColors.length);
   const finalScore = verdict === 'correct' ? score : worstScore;
   const displayScore = roundOver ? finalScore : score;
+
+  // Recap "M _ _ _" du nom au-dessus des boutons buzz/abandon, quel que soit l'ordre dans lequel
+  // "Lettres" / "Nombre de mots" / "Premiere lettre" sont reveles : "Lettres" ou "Nombre de mots"
+  // donnent la longueur reelle (donc les cases cachees), "Premiere lettre" devoile la 1ere lettre —
+  // si elle seule est connue, on n'affiche qu'elle, aucune case cachee (longueur encore inconnue).
+  const knowsWordCount = revealedClueIds.includes('wordCount');
+  const knowsLength = revealedClueIds.includes('letterCount') || knowsWordCount;
+  const knowsFirstLetter = revealedClueIds.includes('firstLetter');
+  const skeletonGroups =
+    knowsLength || knowsFirstLetter
+      ? nameSkeleton(place.name, {
+          groupByWord: knowsWordCount,
+          revealFirst: knowsFirstLetter,
+          includeHidden: knowsLength,
+        })
+      : [];
 
   // L'emoji se devoile en 3 fois (place.emojis est un triplet) : chaque clic supplementaire sur la
   // carte deja revelee compte comme un nouvel indice choisi (cout + tour), jusqu'a epuisement.
@@ -454,6 +459,19 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
           </View>
         ) : (
           <View style={styles.buzzRow}>
+            {skeletonGroups.length > 0 && (
+              <View style={styles.skeletonRow}>
+                {skeletonGroups.map((group, groupIndex) => (
+                  <View key={groupIndex} style={styles.skeletonWord}>
+                    {group.map((letter, letterIndex) => (
+                      <View key={letterIndex} style={styles.skeletonSlot}>
+                        {letter !== null && <Text style={styles.skeletonLetter}>{letter}</Text>}
+                      </View>
+                    ))}
+                  </View>
+                ))}
+              </View>
+            )}
             <Button label={t.indicesGame.buzz} onPress={openBuzz} variant="ghost" />
             <Button label={t.indicesGame.giveUp} onPress={giveUp} variant="ghost" />
           </View>
@@ -466,21 +484,11 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
               <Text style={styles.quit}>{t.game.quit}</Text>
             </Pressable>
             <Text style={styles.score}>
+              {players.length > 1 && !roundOver ? `${players[turnIndex]} · ` : ''}
               {formatNumber(displayScore)} {t.common.pts}
             </Text>
           </View>
-          <View style={styles.roundRow}>
-            <Text style={styles.roundLabel}>
-              {t.game.round} {formatRoundProgress(roundNumber, settings.rounds)}
-            </Text>
-            {settings.rounds <= MAX_PROGRESS_DOTS && (
-              <View style={styles.progress}>
-                {Array.from({ length: settings.rounds }, (_, index) => (
-                  <View key={index} style={[styles.dot, index < roundNumber && styles.dotDone]} />
-                ))}
-              </View>
-            )}
-          </View>
+          <RoundProgress roundNumber={roundNumber} totalRounds={settings.rounds} />
           <PlayerTabs
             activeIndex={roundOver ? -1 : turnIndex}
             activeLabel={t.game.playerTurn}

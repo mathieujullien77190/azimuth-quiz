@@ -22,6 +22,3 @@ export const earthSizeFor = (windowWidth: number): number => {
   const size = Math.min(MAX_EARTH_SIZE, windowWidth - spacing.lg * 2 - spacing.md * 2);
   return size > 0 ? size : MAX_EARTH_SIZE;
 };
-
-export const formatRoundProgress = (roundNumber: number, totalRounds: number): string =>
-  `${roundNumber} / ${totalRounds}`;

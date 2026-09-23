@@ -35,5 +35,28 @@ export const normalizePlaceGuess = (value: string): string =>
     .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .trim();
 
-export const formatRoundProgress = (roundNumber: number, totalRounds: number): string =>
-  `${roundNumber} / ${totalRounds}`;
+/** Un groupe (mot) de "slots" du recap au-dessus des boutons buzz/abandon : chaque slot est soit
+ * une lettre deja revelee, soit `null` (case a dessiner comme un trait, pas encore devoilee). */
+export type NameSkeletonSlot = string | null;
+
+/**
+ * Decoupe le nom en groupes de slots pour le recap "M _ _ _" au-dessus des boutons buzz/abandon.
+ * `groupByWord` separe les mots (indice "Nombre de mots" revele) au lieu d'un seul bloc,
+ * `revealFirst` devoile la toute premiere lettre du nom (indice "Premiere lettre" revele).
+ * `includeHidden` doit rester false tant qu'aucun indice ne donne la longueur reelle (ni
+ * "Lettres" ni "Nombre de mots") : sinon les slots caches laisseraient deviner une longueur
+ * jamais payee — dans ce cas seule la lettre effectivement revelee (au plus une) est gardee.
+ */
+export const nameSkeleton = (
+  name: string,
+  options: { groupByWord: boolean; revealFirst: boolean; includeHidden: boolean },
+): NameSkeletonSlot[][] => {
+  const words = options.groupByWord ? name.trim().split(/\s+/) : [name];
+  const groups = words.map((word, wordIndex) =>
+    [...word.replace(/[^\p{L}]/gu, '')].map((letter, letterIndex): NameSkeletonSlot =>
+      options.revealFirst && wordIndex === 0 && letterIndex === 0 ? letter.toUpperCase() : null,
+    ),
+  );
+  if (options.includeHidden) return groups;
+  return groups.map((group) => group.filter((slot) => slot !== null)).filter((group) => group.length > 0);
+};
