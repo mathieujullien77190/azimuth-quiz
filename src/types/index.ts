@@ -168,7 +168,8 @@ export type IndicesClueId =
   | 'localTime'
   | 'phoneCode'
   | 'currency'
-  | 'airportCode';
+  | 'airportCode'
+  | 'firstLetter';
 
 /** Position approximative de la ville dans son pays, sur une grille 3x3. */
 export type IndicesPositionInCountry = 'center' | 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';

@@ -41,9 +41,10 @@ const renderGame = async (overrides: Partial<IndicesSettings> = {}, onQuit = jes
 };
 
 describe('IndicesGameScreen — picking clues', () => {
-  it('shows the turn hint with the round indicator', async () => {
+  it('shows the active player and the round indicator', async () => {
     const { getByText } = await renderGame({ playerNames: ['Zoé', 'Max'], rounds: 5 });
-    expect(getByText(/Zoé choisit un indice · Manche 1\/5/)).toBeTruthy();
+    expect(getByText('À Zoé de jouer')).toBeTruthy();
+    expect(getByText(/Manche 1 \/ 5/)).toBeTruthy();
   });
 
   it('revealing a clue adds its cost to the score and advances the turn', async () => {
@@ -52,7 +53,7 @@ describe('IndicesGameScreen — picking clues', () => {
 
     await fireEvent.press(getByText('Population'));
     // Le score a change (indice a 3 points sur les couts par defaut) et le tour est passe a Max.
-    expect(getByText(/Max choisit un indice/)).toBeTruthy();
+    expect(getByText('À Max de jouer')).toBeTruthy();
     expect(getByText('3 pts')).toBeTruthy();
   });
 
@@ -68,7 +69,7 @@ describe('IndicesGameScreen — picking clues', () => {
     const { getByText, getAllByLabelText } = await renderGame({ playerNames: ['Zoé', 'Max'] });
     await fireEvent.press(getAllByLabelText('Max')[0]);
     // Toujours au tour de Zoé : les onglets du header ne changent pas le joueur actif.
-    expect(getByText(/Zoé choisit un indice/)).toBeTruthy();
+    expect(getByText('À Zoé de jouer')).toBeTruthy();
   });
 
   it('emoji reveals progressively over 3 clicks then locks', async () => {
@@ -186,7 +187,7 @@ describe('IndicesGameScreen — round progression', () => {
     await fireEvent.press(getByText('Population'));
     await fireEvent.press(getByText('🤷 Je ne sais pas'));
     await fireEvent.press(getByText('Continuer'));
-    expect(getByText(/Manche 2\/2/)).toBeTruthy();
+    expect(getByText(/Manche 2 \/ 2/)).toBeTruthy();
     expect(getByText('0 pts')).toBeTruthy();
   });
 

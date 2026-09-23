@@ -177,7 +177,6 @@ export const fr: Translations = {
     },
   },
   indicesGame: {
-    turnHint: (name) => `${name} choisit un indice`,
     roundOver: 'Manche terminée',
     buzz: '🔔 J’ai trouvé !',
     giveUp: '🤷 Je ne sais pas',
@@ -210,6 +209,7 @@ export const fr: Translations = {
       phoneCode: 'Indicatif tél.',
       currency: 'Devise',
       airportCode: 'Code aéroport',
+      firstLetter: 'Première lettre',
     },
     populationUnit: 'hab.',
     letterUnit: 'lettres',

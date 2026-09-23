@@ -136,7 +136,6 @@ export type Translations = {
     answerMethods: Record<IndicesAnswerMethod, string>;
   };
   indicesGame: {
-    turnHint: (name: string) => string;
     roundOver: string;
     buzz: string;
     giveUp: string;

@@ -28,6 +28,7 @@ const ALL_CLUE_IDS: IndicesClueId[] = [
   'phoneCode',
   'currency',
   'airportCode',
+  'firstLetter',
 ];
 
 describe('INDICES_PLACES', () => {

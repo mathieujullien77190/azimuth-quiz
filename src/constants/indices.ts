@@ -9069,7 +9069,7 @@ export const INDICES_PLACES: IndicesPlace[] = INDICES_PLACE_ROWS.map(indicesPlac
 export const INDICES_CLUE_ORDER: IndicesClueId[] = [
   'population',
   'localTime',
-  'currency',
+  'firstLetter',
   'bearing',
   'distance',
   'letterCount',
@@ -9080,6 +9080,7 @@ export const INDICES_CLUE_ORDER: IndicesClueId[] = [
   'position',
   'elevation',
   'airportCode',
+  'currency',
   'phoneCode',
 ];
 
@@ -9099,16 +9100,17 @@ export const INDICES_CLUE_COSTS: Record<IndicesClueId, number> = {
   currency: 3,
   bearing: 3,
   distance: 3,
+  firstLetter: 3,
 };
 
 // Couleur du point de difficulte sur chaque carte indice, du moins cher (viole, le plus dur) au
 // plus cher (jaune, le plus parlant). Le palier 4 n'a plus d'indice pour l'instant (tous replaces
 // en 1-3), la couleur reste definie si on en rajoute un plus tard.
 export const INDICES_DIFFICULTY_COLORS: Record<number, string> = {
-  1: '#A78BFA',
-  2: '#F87171',
-  3: '#FB923C',
-  4: '#FACC15',
+  1: '#8B5CF6',
+  2: '#EF4444',
+  3: '#F97316',
+  4: '#EAB308',
 };
 
 export const INDICES_BUZZER_MODES: { id: IndicesBuzzerMode }[] = [{ id: 'turnPlayer' }, { id: 'anyone' }];

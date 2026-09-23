@@ -8,7 +8,7 @@ import {
   fontSize,
   spacing,
 } from '@/constants';
-import { formatNumber } from '@/helpers';
+import { formatDistance, formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
@@ -16,7 +16,7 @@ import type { Theme } from '@/types';
 import Compass from '../Compass';
 import EarthSection from '../EarthSection';
 import { COMPASS_CLUE_SIZE, EARTH_CLUE_SIZE, POSITION_COORDS } from './constants';
-import { letterCount, localTimeFor, wordCount } from './helpers';
+import { firstLetterOf, letterCount, localTimeFor, wordCount } from './helpers';
 import type { IndicesClueCardProps } from './types';
 
 /** Indices qui passent en carte pleine largeur une fois reveles (visuel plus grand). */
@@ -27,6 +27,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
     card: {
       flexBasis: '48%',
       flexGrow: 1,
+      maxWidth: '48%',
       minHeight: 96,
       borderRadius: radius.md,
       borderWidth: 1.5,
@@ -45,6 +46,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
     },
     wide: {
       flexBasis: '100%',
+      maxWidth: '100%',
     },
     header: {
       flexDirection: 'row',
@@ -57,9 +59,9 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       fontSize: fontSize.caption - 3,
     },
     difficultyDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
+      width: 10,
+      height: 10,
+      borderRadius: 5,
     },
     body: {
       height: 42,
@@ -148,6 +150,36 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       color: colors.textMuted,
       opacity: 0.6,
     },
+    distanceWrap: {
+      width: '100%',
+      alignItems: 'center',
+      position: 'relative',
+    },
+    distanceOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    distanceBadge: {
+      minWidth: 34,
+      minHeight: 26,
+      paddingHorizontal: spacing.xs + 2,
+      borderRadius: 8,
+      backgroundColor: colors.background,
+      borderWidth: 1.5,
+      borderColor: colors.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    distanceBadgeText: {
+      ...typography.heading,
+      color: colors.accent,
+      fontSize: fontSize.caption + 1,
+    },
   });
 
 const revealedBody = (
@@ -158,7 +190,11 @@ const revealedBody = (
     distanceKm,
     emojiStage,
     flagStage,
-  }: Pick<IndicesClueCardProps, 'clueId' | 'place' | 'bearingDeg' | 'distanceKm' | 'emojiStage' | 'flagStage'>,
+    distanceStage,
+  }: Pick<
+    IndicesClueCardProps,
+    'clueId' | 'place' | 'bearingDeg' | 'distanceKm' | 'emojiStage' | 'flagStage' | 'distanceStage'
+  >,
   styles: ReturnType<typeof createStyles>,
   units: { population: string; letters: string },
   colors: Theme['colors'],
@@ -215,6 +251,8 @@ const revealedBody = (
       );
     case 'wordCount':
       return <Text style={styles.statValue}>{wordCount(place.name)}</Text>;
+    case 'firstLetter':
+      return <Text style={styles.statValue}>{firstLetterOf(place.name)}</Text>;
     case 'flagColors': {
       const allColors = INDICES_FLAG_COLORS_BY_COUNTRY[place.country];
       const stage = flagStage ?? 1;
@@ -236,14 +274,23 @@ const revealedBody = (
     }
     case 'bearing':
       return bearingDeg !== undefined ? <Compass bearing={bearingDeg} size={COMPASS_CLUE_SIZE} /> : null;
-    case 'distance':
+    case 'distance': {
+      const stage = distanceStage ?? 1;
       return distanceKm !== undefined && bearingDeg !== undefined ? (
-        <EarthSection
-          marks={[{ bearing: bearingDeg, color: colors.accent, distanceKm }]}
-          showStraightLine={false}
-          size={EARTH_CLUE_SIZE}
-        />
+        <View style={styles.distanceWrap}>
+          <EarthSection
+            marks={[{ bearing: bearingDeg, color: colors.accent, distanceKm }]}
+            showStraightLine={false}
+            size={EARTH_CLUE_SIZE}
+          />
+          <View pointerEvents="none" style={styles.distanceOverlay}>
+            <View style={styles.distanceBadge}>
+              <Text style={styles.distanceBadgeText}>{stage < 2 ? '?' : formatDistance(distanceKm)}</Text>
+            </View>
+          </View>
+        </View>
       ) : null;
+    }
     case 'localTime':
       return <Text style={styles.statValue}>{localTimeFor(place.timezone)}</Text>;
     case 'phoneCode':
@@ -267,6 +314,7 @@ export const IndicesClueCard = ({
   moreToReveal = false,
   bearingDeg,
   distanceKm,
+  distanceStage,
   emojiStage,
   flagStage,
 }: IndicesClueCardProps) => {
@@ -318,7 +366,7 @@ export const IndicesClueCard = ({
             }}
           >
             {revealedBody(
-              { bearingDeg, clueId, distanceKm, emojiStage, flagStage, place },
+              { bearingDeg, clueId, distanceKm, distanceStage, emojiStage, flagStage, place },
               styles,
               { letters: t.indicesGame.letterUnit, population: t.indicesGame.populationUnit },
               colors,

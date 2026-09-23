@@ -22,4 +22,7 @@ export type IndicesClueCardProps = {
   /** Uniquement pour l'indice `flagColors` : combien des couleurs du drapeau sont deja devoilees
    * (1 a `INDICES_FLAG_COLORS_BY_COUNTRY[place.country].length`). */
   flagStage?: number;
+  /** Uniquement pour l'indice `distance` : 1 = cap+distance affiches sur le globe mais valeur en
+   * km cachee ("?" au milieu, re-cliquable), 2 = km devoiles (meme principe que emoji/flagStage). */
+  distanceStage?: number;
 };

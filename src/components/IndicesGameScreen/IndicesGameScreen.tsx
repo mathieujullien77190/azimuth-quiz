@@ -21,8 +21,12 @@ import PlayerTabs from '../PlayerTabs';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Screen from '../ui/Screen';
-import { normalizePlaceGuess, randomIndicesPlace, scoreForRevealed } from './helpers';
+import { formatRoundProgress, normalizePlaceGuess, randomIndicesPlace, scoreForRevealed } from './helpers';
 import type { IndicesGameScreenProps } from './types';
+
+/** Au-dela, les pastilles de progression deviennent illisibles : on ne les affiche plus (meme
+ * seuil que Boussole, voir `GameScreen/constants.ts`). */
+const MAX_PROGRESS_DOTS = 12;
 
 const createStyles = ({ colors, typography }: Theme) =>
   StyleSheet.create({
@@ -71,7 +75,6 @@ const createStyles = ({ colors, typography }: Theme) =>
       justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.sm,
-      paddingBottom: spacing.sm,
     },
     quit: {
       ...typography.heading,
@@ -82,6 +85,32 @@ const createStyles = ({ colors, typography }: Theme) =>
       ...typography.heading,
       color: colors.accent,
       fontSize: fontSize.subtitle,
+    },
+    roundRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.sm,
+    },
+    roundLabel: {
+      ...typography.label,
+      color: colors.textMuted,
+      fontSize: fontSize.caption,
+    },
+    progress: {
+      flexDirection: 'row',
+      gap: 4,
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: colors.border,
+    },
+    dotDone: {
+      backgroundColor: colors.accent,
     },
     hint: {
       ...typography.body,
@@ -227,6 +256,9 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   // varie selon le pays (2 ou 3 en general, voir INDICES_FLAG_COLORS_BY_COUNTRY).
   const flagColors = INDICES_FLAG_COLORS_BY_COUNTRY[place.country];
   const flagStage = revealedClueIds.filter((id) => id === 'flagColors').length;
+  // Meme principe : le cap+distance s'affiche des le 1er choix, mais la valeur en km reste cachee
+  // ("?" au milieu) jusqu'a un 2e clic, qui compte donc comme un indice choisi de plus.
+  const distanceStage = revealedClueIds.filter((id) => id === 'distance').length;
 
   // Tous les garde-fous (manche terminee, indice deja revele, emoji/drapeau epuises) sont assures
   // en amont par `IndicesClueCard` : `onPress` n'est fourni que si la carte est reellement
@@ -423,8 +455,21 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
               {formatNumber(displayScore)} {t.common.pts}
             </Text>
           </View>
+          <View style={styles.roundRow}>
+            <Text style={styles.roundLabel}>
+              {t.game.round} {formatRoundProgress(roundNumber, settings.rounds)}
+            </Text>
+            {settings.rounds <= MAX_PROGRESS_DOTS && (
+              <View style={styles.progress}>
+                {Array.from({ length: settings.rounds }, (_, index) => (
+                  <View key={index} style={[styles.dot, index < roundNumber && styles.dotDone]} />
+                ))}
+              </View>
+            )}
+          </View>
           <PlayerTabs
             activeIndex={roundOver ? -1 : turnIndex}
+            activeLabel={t.game.playerTurn}
             allowRevision
             answered={noneAnswered}
             onSelect={() => {}}
@@ -434,10 +479,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
         </View>
       }
     >
-      <Text style={styles.hint}>
-        {roundOver ? t.indicesGame.roundOver : t.indicesGame.turnHint(players[turnIndex])} · {t.game.round}{' '}
-        {roundNumber}/{settings.rounds}
-      </Text>
+      {roundOver && <Text style={styles.hint}>{t.indicesGame.roundOver}</Text>}
 
       <Card>
         <View style={styles.clueGrid}>
@@ -446,14 +488,18 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
             const revealed = roundOver || revealedClueIds.includes(clueId);
             const isEmoji = clueId === 'emoji';
             const isFlag = clueId === 'flagColors';
+            const isDistance = clueId === 'distance';
             const moreToReveal =
-              (isEmoji && !roundOver && emojiStage < 3) || (isFlag && !roundOver && flagStage < flagColors.length);
+              (isEmoji && !roundOver && emojiStage < 3) ||
+              (isFlag && !roundOver && flagStage < flagColors.length) ||
+              (isDistance && !roundOver && distanceStage < 2);
             return (
               <IndicesClueCard
                 bearingDeg={bearing}
                 clueId={clueId}
                 cost={INDICES_CLUE_COSTS[clueId]}
                 distanceKm={distance}
+                distanceStage={isDistance ? (roundOver ? 2 : distanceStage) : undefined}
                 emojiStage={isEmoji ? (roundOver ? 3 : emojiStage) : undefined}
                 flagStage={isFlag ? (roundOver ? flagColors.length : flagStage) : undefined}
                 key={clueId}

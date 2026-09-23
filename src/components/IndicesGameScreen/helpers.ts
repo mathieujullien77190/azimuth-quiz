@@ -23,3 +23,6 @@ export const normalizePlaceGuess = (value: string): string =>
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .trim();
+
+export const formatRoundProgress = (roundNumber: number, totalRounds: number): string =>
+  `${roundNumber} / ${totalRounds}`;

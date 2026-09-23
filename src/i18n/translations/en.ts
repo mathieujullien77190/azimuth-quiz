@@ -176,7 +176,6 @@ export const en: Translations = {
     },
   },
   indicesGame: {
-    turnHint: (name) => `${name} picks a clue`,
     roundOver: 'Round over',
     buzz: '🔔 I know it!',
     giveUp: '🤷 No idea',
@@ -209,6 +208,7 @@ export const en: Translations = {
       phoneCode: 'Phone code',
       currency: 'Currency',
       airportCode: 'Airport code',
+      firstLetter: 'First letter',
     },
     populationUnit: 'pop.',
     letterUnit: 'letters',
