@@ -9084,35 +9084,6 @@ export const INDICES_CLUE_ORDER: IndicesClueId[] = [
   'phoneCode',
 ];
 
-// Cout en points de chaque indice : plus il est facile (parlant), plus il coute cher.
-export const INDICES_CLUE_COSTS: Record<IndicesClueId, number> = {
-  position: 1,
-  elevation: 1,
-  airportCode: 1,
-  phoneCode: 1,
-  letterCount: 2,
-  wordCount: 2,
-  climate: 2,
-  emoji: 2,
-  flagColors: 2,
-  population: 3,
-  localTime: 3,
-  currency: 3,
-  bearing: 3,
-  distance: 3,
-  firstLetter: 3,
-};
-
-// Couleur du point de difficulte sur chaque carte indice, du moins cher (viole, le plus dur) au
-// plus cher (jaune, le plus parlant). Le palier 4 n'a plus d'indice pour l'instant (tous replaces
-// en 1-3), la couleur reste definie si on en rajoute un plus tard.
-export const INDICES_DIFFICULTY_COLORS: Record<number, string> = {
-  1: '#8B5CF6',
-  2: '#EF4444',
-  3: '#F97316',
-  4: '#EAB308',
-};
-
 export const INDICES_BUZZER_MODES: { id: IndicesBuzzerMode }[] = [{ id: 'turnPlayer' }, { id: 'anyone' }];
 
 export const INDICES_ANSWER_METHODS: { id: IndicesAnswerMethod }[] = [{ id: 'spoken' }, { id: 'typed' }];

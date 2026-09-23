@@ -4,9 +4,7 @@ import {
   DEFAULT_INDICES_SETTINGS,
   INDICES_ANSWER_METHODS,
   INDICES_BUZZER_MODES,
-  INDICES_CLUE_COSTS,
   INDICES_CLUE_ORDER,
-  INDICES_DIFFICULTY_COLORS,
   INDICES_FLAG_COLOR_FIELD,
   INDICES_FLAG_COLORS_BY_COUNTRY,
   INDICES_PLACES,
@@ -118,21 +116,9 @@ describe('INDICES_FLAG_COLORS_BY_COUNTRY', () => {
   });
 });
 
-describe('INDICES_CLUE_ORDER / INDICES_CLUE_COSTS', () => {
-  it('INDICES_CLUE_ORDER lists every clue id exactly once', () => {
+describe('INDICES_CLUE_ORDER', () => {
+  it('lists every clue id exactly once', () => {
     expect([...INDICES_CLUE_ORDER].sort()).toEqual([...ALL_CLUE_IDS].sort());
-  });
-
-  it('INDICES_CLUE_COSTS defines a cost for every clue id', () => {
-    for (const id of ALL_CLUE_IDS) {
-      expect(typeof INDICES_CLUE_COSTS[id]).toBe('number');
-    }
-  });
-
-  it('every cost has a matching difficulty color', () => {
-    for (const cost of Object.values(INDICES_CLUE_COSTS)) {
-      expect(INDICES_DIFFICULTY_COLORS[cost]).toBeDefined();
-    }
   });
 });
 

@@ -1,13 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import {
-  INDICES_DIFFICULTY_COLORS,
-  INDICES_FLAG_COLOR_FIELD,
-  INDICES_FLAG_COLORS_BY_COUNTRY,
-  fontSize,
-  spacing,
-} from '@/constants';
+import { INDICES_FLAG_COLOR_FIELD, INDICES_FLAG_COLORS_BY_COUNTRY, fontSize, spacing } from '@/constants';
 import { formatDistance, formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
@@ -57,11 +51,6 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       ...typography.label,
       color: colors.textMuted,
       fontSize: fontSize.caption - 3,
-    },
-    difficultyDot: {
-      width: 10,
-      height: 10,
-      borderRadius: 5,
     },
     body: {
       height: 42,
@@ -309,7 +298,6 @@ export const IndicesClueCard = ({
   label,
   place,
   state,
-  cost,
   onPress,
   moreToReveal = false,
   bearingDeg,
@@ -347,7 +335,6 @@ export const IndicesClueCard = ({
     >
       <View style={styles.header}>
         <Text style={styles.label}>{label}</Text>
-        <View style={[styles.difficultyDot, { backgroundColor: INDICES_DIFFICULTY_COLORS[cost] }]} />
       </View>
       <View
         style={[

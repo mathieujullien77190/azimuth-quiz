@@ -152,8 +152,8 @@ export type ThemeTypography = {
 
 // --- Indices : jeu independant de Full Azimut, avec ses propres lieux (voir constants/indices.ts) ---
 
-/** Identifiant d'un indice. Le cout de chacun (voir INDICES_CLUE_COSTS) porte la notion de
- * difficulte : pas d'ordre impose, chacun choisit librement a son tour (voir IndicesGameScreen). */
+/** Identifiant d'un indice : tous ont le meme "cout" (1 point sur le compte a rebours du score,
+ * voir IndicesGameScreen), pas d'ordre impose, chacun choisit librement a son tour. */
 export type IndicesClueId =
   | 'position'
   | 'population'

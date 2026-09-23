@@ -139,7 +139,7 @@ export type Translations = {
     roundOver: string;
     buzz: string;
     giveUp: string;
-    noOneFound: (points: string) => string;
+    noOneFound: string;
     whoBuzzes: string;
     buzzedPrompt: (name: string) => string;
     buzzedPromptTyped: (name: string) => string;

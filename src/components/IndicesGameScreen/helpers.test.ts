@@ -1,26 +1,9 @@
-import { INDICES_CLUE_COSTS, INDICES_CLUE_ORDER, INDICES_PLACES } from '@/constants';
+import { INDICES_CLUE_ORDER, INDICES_PLACES } from '@/constants';
 import type { Difficulty, IndicesClueId } from '@/types';
 
-import { maxRoundScore, nameSkeleton, normalizePlaceGuess, randomIndicesPlace, scoreForRevealed } from './helpers';
+import { maxScoreForRound, nameSkeleton, normalizePlaceGuess, randomIndicesPlace, totalRevealCount } from './helpers';
 
-describe('scoreForRevealed', () => {
-  it('returns 0 for no revealed clues', () => {
-    expect(scoreForRevealed([])).toBe(0);
-  });
-
-  it('sums the cost of every revealed clue', () => {
-    const ids: IndicesClueId[] = ['position', 'population', 'letterCount'];
-    const expected = ids.reduce((total, id) => total + INDICES_CLUE_COSTS[id], 0);
-    expect(scoreForRevealed(ids)).toBe(expected);
-  });
-
-  it('counts repeated ids (emoji/flagColors multi-reveal) once per occurrence', () => {
-    const ids: IndicesClueId[] = ['emoji', 'emoji', 'emoji'];
-    expect(scoreForRevealed(ids)).toBe(INDICES_CLUE_COSTS.emoji * 3);
-  });
-});
-
-describe('maxRoundScore', () => {
+describe('totalRevealCount', () => {
   it('matches revealing every clue, including every stage of emoji/flagColors/distance', () => {
     const flagColorCount = 3;
     const allIds: IndicesClueId[] = INDICES_CLUE_ORDER.flatMap((clueId) => {
@@ -28,11 +11,20 @@ describe('maxRoundScore', () => {
         clueId === 'emoji' ? 3 : clueId === 'flagColors' ? flagColorCount : clueId === 'distance' ? 2 : 1;
       return Array<IndicesClueId>(revealCount).fill(clueId);
     });
-    expect(maxRoundScore(flagColorCount)).toBe(scoreForRevealed(allIds));
+    expect(totalRevealCount(flagColorCount)).toBe(allIds.length);
   });
 
   it('grows with the number of flag colors (country-dependent)', () => {
-    expect(maxRoundScore(3)).toBe(maxRoundScore(2) + INDICES_CLUE_COSTS.flagColors);
+    expect(totalRevealCount(3)).toBe(totalRevealCount(2) + 1);
+  });
+});
+
+describe('maxScoreForRound', () => {
+  it('rounds up to the next multiple of ten', () => {
+    expect(maxScoreForRound(26)).toBe(30);
+    expect(maxScoreForRound(21)).toBe(30);
+    expect(maxScoreForRound(20)).toBe(20);
+    expect(maxScoreForRound(1)).toBe(10);
   });
 });
 
@@ -52,28 +44,28 @@ describe('randomIndicesPlace', () => {
 });
 
 describe('nameSkeleton', () => {
-  it('one hidden slot per letter, single group when not grouped by word', () => {
-    expect(nameSkeleton('Berlin', { groupByWord: false, revealFirst: false, includeHidden: true })).toEqual([
+  it('one hidden slot per letter, single group when not grouped by word and length known', () => {
+    expect(nameSkeleton('Berlin', { groupByWord: false, revealFirst: false, lengthKnown: true })).toEqual([
       [null, null, null, null, null, null],
     ]);
   });
 
   it('reveals only the very first letter of the whole name', () => {
-    expect(nameSkeleton('Berlin', { groupByWord: false, revealFirst: true, includeHidden: true })).toEqual([
+    expect(nameSkeleton('Berlin', { groupByWord: false, revealFirst: true, lengthKnown: true })).toEqual([
       ['B', null, null, null, null, null],
     ]);
   });
 
-  it('groups by word when groupByWord is set', () => {
-    expect(nameSkeleton('Rio de Janeiro', { groupByWord: true, revealFirst: false, includeHidden: true })).toEqual([
+  it('groups by the real per-word letter count when both word count and length are known', () => {
+    expect(nameSkeleton('Rio de Janeiro', { groupByWord: true, revealFirst: false, lengthKnown: true })).toEqual([
       [null, null, null],
       [null, null],
       [null, null, null, null, null, null, null],
     ]);
   });
 
-  it('combines first-letter reveal with word grouping', () => {
-    expect(nameSkeleton('Rio de Janeiro', { groupByWord: true, revealFirst: true, includeHidden: true })).toEqual([
+  it('combines first-letter reveal with real word grouping', () => {
+    expect(nameSkeleton('Rio de Janeiro', { groupByWord: true, revealFirst: true, lengthKnown: true })).toEqual([
       ['R', null, null],
       [null, null],
       [null, null, null, null, null, null, null],
@@ -81,18 +73,33 @@ describe('nameSkeleton', () => {
   });
 
   it('ignores spaces/hyphens/apostrophes, keeps accented letters', () => {
-    expect(nameSkeleton("Côte d'Ivoire", { groupByWord: false, revealFirst: false, includeHidden: true })).toEqual([
+    expect(nameSkeleton("Côte d'Ivoire", { groupByWord: false, revealFirst: false, lengthKnown: true })).toEqual([
       Array<null>(11).fill(null),
     ]);
   });
 
-  it('without includeHidden, keeps only the revealed first letter (length stays unknown)', () => {
-    expect(nameSkeleton('Berlin', { groupByWord: false, revealFirst: true, includeHidden: false })).toEqual([['B']]);
+  it('without lengthKnown or groupByWord, keeps only the revealed first letter', () => {
+    expect(nameSkeleton('Berlin', { groupByWord: false, revealFirst: true, lengthKnown: false })).toEqual([['B']]);
   });
 
-  it('without includeHidden and no revealed letter, returns no groups at all', () => {
-    expect(nameSkeleton('Berlin', { groupByWord: false, revealFirst: false, includeHidden: false })).toEqual([]);
-    expect(nameSkeleton('Rio de Janeiro', { groupByWord: true, revealFirst: false, includeHidden: false })).toEqual([]);
+  it('without lengthKnown or groupByWord and no revealed letter, returns no groups at all', () => {
+    expect(nameSkeleton('Berlin', { groupByWord: false, revealFirst: false, lengthKnown: false })).toEqual([]);
+  });
+
+  it('word count known but not length: generic 4-slot groups, not the real per-word length', () => {
+    expect(nameSkeleton('Rio de Janeiro', { groupByWord: true, revealFirst: false, lengthKnown: false })).toEqual([
+      [null, null, null, null],
+      [null, null, null, null],
+      [null, null, null, null],
+    ]);
+  });
+
+  it('word count known but not length, with first letter revealed', () => {
+    expect(nameSkeleton('Rio de Janeiro', { groupByWord: true, revealFirst: true, lengthKnown: false })).toEqual([
+      ['R', null, null, null],
+      [null, null, null, null],
+      [null, null, null, null],
+    ]);
   });
 });
 

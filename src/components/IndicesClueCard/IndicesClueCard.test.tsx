@@ -8,7 +8,7 @@ import IndicesClueCard from '.';
 const place: IndicesPlace = INDICES_PLACES.find((p) => p.country === 'France')!;
 
 const renderCard = async (props: Partial<React.ComponentProps<typeof IndicesClueCard>> & { clueId: IndicesClueId }) =>
-  render(<IndicesClueCard cost={1} label="Label" place={place} state="locked" {...props} />);
+  render(<IndicesClueCard label="Label" place={place} state="locked" {...props} />);
 
 describe('IndicesClueCard — locked state', () => {
   it('shows a lock icon and no revealed content', async () => {

@@ -3,7 +3,6 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import {
   DEFAULT_ORIGIN,
-  INDICES_CLUE_COSTS,
   INDICES_CLUE_ORDER,
   INDICES_FLAG_COLORS_BY_COUNTRY,
   PLAYER_COLORS,
@@ -22,7 +21,8 @@ import Button from '../ui/Button';
 import Card from '../ui/Card';
 import RoundProgress from '../ui/RoundProgress';
 import Screen from '../ui/Screen';
-import { maxRoundScore, nameSkeleton, normalizePlaceGuess, randomIndicesPlace, scoreForRevealed } from './helpers';
+import { WRONG_ANSWER_PENALTY } from './constants';
+import { maxScoreForRound, nameSkeleton, normalizePlaceGuess, randomIndicesPlace, totalRevealCount } from './helpers';
 import type { IndicesGameScreenProps } from './types';
 
 const createStyles = ({ colors, typography }: Theme) =>
@@ -230,39 +230,42 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const [verdict, setVerdict] = useState<'correct' | 'wrong' | 'giveUp' | null>(null);
   const [roundNumber, setRoundNumber] = useState(1);
   const [finished, setFinished] = useState(false);
-  // Cumul par joueur sur toute la partie (plusieurs manches) : si quelqu'un trouve, lui seul est
-  // credite ; sinon (mauvaise reponse ou abandon), tout le monde prend la meme penalite (voir
-  // `settle`/`giveUp`).
+  // Cumul par joueur sur toute la partie (plusieurs manches) : seul celui qui buzze voit son total
+  // bouger, en bien s'il trouve (le score restant de la manche) ou en mal s'il se trompe
+  // (`WRONG_ANSWER_PENALTY`) — abandonner ne coute rien a personne (voir `settle`/`giveUp`).
   const [playerTotals, setPlayerTotals] = useState<number[]>(() => players.map(() => 0));
 
   const roundOver = verdict !== null;
   const isLastRound = roundNumber >= settings.rounds;
-  // Score qui MONTE a chaque indice choisi (plus il est facile, plus il coute cher) : c'est celui
-  // qui a le score le plus BAS qui gagne, pas le plus haut.
-  const score = scoreForRevealed(revealedClueIds);
   // Le drapeau se devoile couleur par couleur : le nombre de couleurs varie selon le pays (2 ou 3
-  // en general, voir INDICES_FLAG_COLORS_BY_COUNTRY) — necessaire ici pour `worstScore` aussi.
+  // en general, voir INDICES_FLAG_COLORS_BY_COUNTRY) — necessaire ici pour `maxScore` aussi.
   const flagColors = INDICES_FLAG_COLORS_BY_COUNTRY[place.country];
-  // Penalite si personne ne trouve (mauvaise reponse ou abandon) : le pire score qu'on aurait eu en
-  // revelant vraiment tous les indices, applique a tout le monde (voir `settle`/`giveUp`) — plutot
-  // que le score partiel deja revele, qui recompenserait injustement un abandon precoce.
-  const worstScore = maxRoundScore(flagColors.length);
-  const finalScore = verdict === 'correct' ? score : worstScore;
-  const displayScore = roundOver ? finalScore : score;
+  // Score de la manche : un compte a rebours, pas un cumul de cout. Part d'un chiffre rond (le
+  // nombre total d'indices possibles arrondi a la dizaine superieure, ex. 26 -> 30) et descend de
+  // 1 a chaque indice choisi, tous indices confondus (plus de niveaux de difficulte). Trouver vite
+  // (peu d'indices utilises) laisse donc un score restant eleve — c'est lui que gagne celui qui
+  // trouve (voir `settle`).
+  const maxScore = maxScoreForRound(totalRevealCount(flagColors.length));
+  const remaining = maxScore - revealedClueIds.length;
+  // A la revelation : ce que le buzzeur a vraiment gagne/perdu cette manche (le score restant s'il
+  // a trouve, -WRONG_ANSWER_PENALTY s'il s'est trompe, 0 si personne n'a essaye) — voir `settle`/
+  // `giveUp`, qui appliquent exactement cette meme valeur aux totaux des joueurs.
+  const roundDelta = verdict === 'correct' ? remaining : verdict === 'wrong' ? -WRONG_ANSWER_PENALTY : 0;
+  const displayScore = roundOver ? roundDelta : remaining;
 
   // Recap "M _ _ _" du nom au-dessus des boutons buzz/abandon, quel que soit l'ordre dans lequel
-  // "Lettres" / "Nombre de mots" / "Premiere lettre" sont reveles : "Lettres" ou "Nombre de mots"
-  // donnent la longueur reelle (donc les cases cachees), "Premiere lettre" devoile la 1ere lettre —
-  // si elle seule est connue, on n'affiche qu'elle, aucune case cachee (longueur encore inconnue).
+  // "Lettres" / "Nombre de mots" / "Premiere lettre" sont reveles : "Nombre de mots" seul donne
+  // des cases generiques (pas la vraie longueur), "Lettres" donne la vraie longueur (par mot si
+  // "Nombre de mots" est aussi connu), "Premiere lettre" seule n'affiche que la lettre, sans case.
   const knowsWordCount = revealedClueIds.includes('wordCount');
-  const knowsLength = revealedClueIds.includes('letterCount') || knowsWordCount;
+  const knowsLength = revealedClueIds.includes('letterCount');
   const knowsFirstLetter = revealedClueIds.includes('firstLetter');
   const skeletonGroups =
-    knowsLength || knowsFirstLetter
+    knowsWordCount || knowsLength || knowsFirstLetter
       ? nameSkeleton(place.name, {
           groupByWord: knowsWordCount,
           revealFirst: knowsFirstLetter,
-          includeHidden: knowsLength,
+          lengthKnown: knowsLength,
         })
       : [];
 
@@ -297,13 +300,10 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   // Appele uniquement une fois `buzzedIndex` connu (voir les points d'appel : bouton Verifier et
   // `submitGuess`, tous deux gardes par `buzzedIndex !== null` en amont).
   const settle = (correct: boolean) => {
-    if (correct) {
-      // Seul celui qui a trouve voit son total bouger, du cout reel des indices revelees.
-      setPlayerTotals((totals) => totals.map((total, index) => (index === buzzedIndex ? total + score : total)));
-    } else {
-      // Personne n'a trouve : tout le monde prend la penalite max, pas seulement celui qui a buzze.
-      setPlayerTotals((totals) => totals.map((total) => total + worstScore));
-    }
+    // Seul celui qui a buzze voit son total bouger : le score restant s'il a trouve, une penalite
+    // fixe s'il s'est trompe (sinon buzzer au hasard serait sans risque).
+    const delta = correct ? remaining : -WRONG_ANSWER_PENALTY;
+    setPlayerTotals((totals) => totals.map((total, index) => (index === buzzedIndex ? total + delta : total)));
     setVerdict(correct ? 'correct' : 'wrong');
     setBuzzOpen(false);
   };
@@ -313,9 +313,9 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
     settle(normalizePlaceGuess(guessText) === normalizePlaceGuess(place.name));
   };
 
+  // Abandonner ne coute rien a personne (0 point) : ni le gain d'une bonne reponse, ni la penalite
+  // d'une mauvaise — juste passer la manche.
   const giveUp = () => {
-    // Meme penalite que pour une mauvaise reponse : abandonner ne doit pas couter moins cher.
-    setPlayerTotals((totals) => totals.map((total) => total + worstScore));
     setVerdict('giveUp');
     setBuzzOpen(false);
     setBuzzedIndex(null);
@@ -340,12 +340,14 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const buzzedName = buzzedIndex !== null ? players[buzzedIndex] : undefined;
 
   if (finished) {
-    // Toujours au moins 1 joueur (MIN_PLAYERS = 1) : `standings` n'est jamais vide.
+    // Toujours au moins 1 joueur (MIN_PLAYERS = 1) : `standings` n'est jamais vide. Le score est
+    // maintenant un compte a rebours qu'on gagne (voir `remaining`/`settle`) : le plus HAUT total
+    // gagne, pas le plus bas.
     const standings = players
       .map((name, index) => ({ name, total: playerTotals[index] }))
-      .sort((a, b) => a.total - b.total);
-    const lowest = standings[0].total;
-    const winners = standings.filter((entry) => entry.total === lowest).map((entry) => entry.name);
+      .sort((a, b) => b.total - a.total);
+    const highest = standings[0].total;
+    const winners = standings.filter((entry) => entry.total === highest).map((entry) => entry.name);
 
     return (
       <Screen>
@@ -381,10 +383,10 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
             <Text style={[styles.resultBanner, verdict === 'correct' ? styles.resultCorrect : styles.resultWrong]}>
               {/* buzzedName est toujours defini pour 'correct'/'wrong' (settle exige buzzedIndex connu). */}
               {verdict === 'correct'
-                ? t.indicesGame.scored(buzzedName!, formatNumber(finalScore))
+                ? t.indicesGame.scored(buzzedName!, formatNumber(remaining))
                 : verdict === 'wrong'
-                  ? t.indicesGame.missed(buzzedName!, formatNumber(finalScore))
-                  : t.indicesGame.noOneFound(formatNumber(finalScore))}
+                  ? t.indicesGame.missed(buzzedName!, formatNumber(WRONG_ANSWER_PENALTY))
+                  : t.indicesGame.noOneFound}
             </Text>
             <Text style={styles.revealAnswer}>
               {t.indicesGame.wasPlace} {place.name}
@@ -519,7 +521,6 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
               <IndicesClueCard
                 bearingDeg={bearing}
                 clueId={clueId}
-                cost={INDICES_CLUE_COSTS[clueId]}
                 distanceKm={distance}
                 distanceStage={isDistance ? (roundOver ? 2 : distanceStage) : undefined}
                 emojiStage={isEmoji ? (roundOver ? 3 : emojiStage) : undefined}

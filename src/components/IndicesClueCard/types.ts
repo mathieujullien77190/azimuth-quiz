@@ -7,8 +7,6 @@ export type IndicesClueCardProps = {
   label: string;
   place: IndicesPlace;
   state: IndicesClueState;
-  /** Cout en points de cet indice : toujours visible, meme verrouille (choix informe). */
-  cost: number;
   /** Verrouille + fournie : la carte devient pressable pour choisir cet indice. */
   onPress?: () => void;
   /** Autorise a re-cliquer une carte deja revelee (indices `emoji`/`flagColors`, tant qu'il reste
