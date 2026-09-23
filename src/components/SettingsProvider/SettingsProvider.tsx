@@ -31,7 +31,14 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
     });
   }, []);
 
-  const value = useMemo(() => ({ settings, ready, updateSettings }), [settings, ready, updateSettings]);
+  const resetSettings = useCallback(() => {
+    setSettings(DEFAULT_SETTINGS);
+  }, []);
+
+  const value = useMemo(
+    () => ({ settings, ready, updateSettings, resetSettings }),
+    [settings, ready, updateSettings, resetSettings],
+  );
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 };

@@ -4,18 +4,29 @@ import type { Category, Difficulty, Place } from '@/types';
 type UnratedPlace = Omit<Place, 'difficulty'>;
 
 /**
- * Fabrique un constructeur de lieux pour une categorie : place('Lyon', 'France', 'FR', lat, lon),
- * avec une anecdote optionnelle en dernier argument : place(..., lat, lon, 'Capitale des Gaules...').
+ * Fabrique un constructeur de lieux pour une categorie : place('Lyon', 'FR', lat, lon), avec une
+ * anecdote optionnelle : place(..., lat, lon, 'Capitale des Gaules...'), puis les fins d'URL
+ * Wikipedia fr/en (pas l'URL complete) : place(..., description, 'Lyon', 'Lyon'). Le nom du pays
+ * n'est pas stocke : `code` suffit, `countryName()` le traduit a l'affichage.
  */
 export const placeFactory =
   (category: Category) =>
-  (name: string, country: string, code: string, latitude: number, longitude: number, description?: string): UnratedPlace => ({
+  (
+    name: string,
+    code: string,
+    latitude: number,
+    longitude: number,
+    description?: string,
+    wikiFr?: string,
+    wikiEn?: string,
+  ): UnratedPlace => ({
     name,
-    country,
     code,
     category,
     coordinates: { latitude, longitude },
     ...(description !== undefined && { description }),
+    ...(wikiFr !== undefined && { wikiFr }),
+    ...(wikiEn !== undefined && { wikiEn }),
   });
 
 /** Assigne une difficulte a tout un groupe de lieux d'un coup (plutot qu'un argument par ligne). */

@@ -1,5 +1,5 @@
-import { useCallback } from 'react';
-import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useCallback, useState } from 'react';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
 import { arcKmFromChordKm, formatBearing, formatDistance, formatInclination, formatNumber } from '@/helpers';
@@ -39,6 +39,22 @@ const createStyles = ({ colors, radius, typography }: Theme, compact: boolean) =
       ...typography.heading,
       color: colors.text,
       fontSize: fontSize.subtitle * scale,
+    },
+    scoringToggle: {
+      alignItems: 'center',
+      marginTop: spacing.md,
+    },
+    scoringToggleText: {
+      ...typography.label,
+      color: colors.accent,
+      fontSize: fontSize.caption * scale,
+    },
+    scoringInfo: {
+      ...typography.body,
+      color: colors.textMuted,
+      fontSize: (fontSize.caption + 1) * scale,
+      marginTop: spacing.xs,
+      textAlign: 'center',
     },
     truthRow: {
       flexDirection: 'row',
@@ -133,6 +149,7 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
   const t = useTranslation();
   const { score: truth } = record.results[0];
   const isSolo = players.length === 1;
+  const [showScoringInfo, setShowScoringInfo] = useState(false);
 
   // Les joueurs sont classes par points sur la manche (le meilleur en premier).
   const ranked = record.results
@@ -165,6 +182,15 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
             <Text style={styles.truthValue}>{formatInclination(truth.trueInclination)}</Text>
           </View>
         )}
+        <Pressable
+          accessibilityRole="button"
+          hitSlop={8}
+          onPress={() => setShowScoringInfo((value) => !value)}
+          style={styles.scoringToggle}
+        >
+          <Text style={styles.scoringToggleText}>{t.roundResult.scoringInfoLabel}</Text>
+        </Pressable>
+        {showScoringInfo && <Text style={styles.scoringInfo}>{t.roundResult.scoringInfo}</Text>}
       </View>
 
       {ranked.map(({ result, player, index }, position) => (
@@ -202,7 +228,9 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
               {/* Meme score que Distance : en mode ligne droite, la corde jugee par distancePoints
                   EST l'inclinaison (l'une determine l'autre) — donc le meme pool de points, gagne
                   et perdu ensemble, independamment du cap. */}
-              <Text style={[styles.rowPoints, { color: result.score.distanceBonus > 0 ? colors.success : colors.text }]}>
+              <Text
+                style={[styles.rowPoints, { color: result.score.distanceBonus > 0 ? colors.success : colors.text }]}
+              >
                 {formatRowScore(result.score.distancePoints, result.score.distanceBonus)}
               </Text>
             </View>

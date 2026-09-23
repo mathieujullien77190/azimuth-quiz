@@ -94,6 +94,7 @@ export const fr: Translations = {
           'Pendant la manche, chacun ne voit que sa propre flèche et sa propre distance/inclinaison. Tout s’affiche à la révélation.',
       },
     },
+    customOrigin: { latitude: 'Latitude', longitude: 'Longitude' },
     availability: (available, rounds) =>
       available >= rounds
         ? `${available} lieux possibles`
@@ -114,8 +115,7 @@ export const fr: Translations = {
     playerTurn: (name) => `À ${name} de jouer`,
   },
   placeCard: {
-    showDescription: 'En savoir plus',
-    hideDescription: 'Réduire',
+    wikiLabel: 'Voir sur Wikipedia',
   },
   sliders: {
     distance: 'Distance estimée',
@@ -127,6 +127,9 @@ export const fr: Translations = {
     distance: 'Distance',
     inclination: 'Inclinaison',
     yourScore: 'Ton score',
+    scoringInfoLabel: 'Comment les points sont calculés',
+    scoringInfo:
+      'Cap et distance rapportent chacun jusqu’à 500 points, selon la précision de l’estimation. +100 points bonus sur chaque catégorie pour le(s) meilleur(s) de la manche (à plusieurs seulement).',
   },
   endScreen: {
     replay: 'Rejouer',
@@ -143,9 +146,11 @@ export const fr: Translations = {
     languageOptions: { fr: 'Français', en: 'English' },
     aboutTitle: 'À propos',
     author: 'Par Matou.',
-    claudeMention: 'Fait pour l’apéro entre potes : pas de pub, pas de tracking, juste vous et une boussole récalcitrante.',
+    claudeMention:
+      'Fait pour l’apéro entre potes : pas de pub, pas de tracking, juste vous et une boussole récalcitrante.',
     dataTitle: 'Données',
-    dataHint: 'Tout ce que l’app sauvegarde sur ce téléphone : les réglages de partie et la langue. Rien n’est envoyé ailleurs. Ce bouton efface cela.',
+    dataHint:
+      'Tout ce que l’app sauvegarde sur ce téléphone : les réglages de partie et la langue. Rien n’est envoyé ailleurs. Ce bouton efface cela.',
     clearData: 'Vider les données',
     dataCleared: 'Données effacées.',
   },

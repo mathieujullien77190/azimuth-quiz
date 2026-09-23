@@ -9,3 +9,6 @@ export const ANSWERED_OPACITY = 0.35;
 
 /** A la revelation, les reponses des joueurs sont legerement estompees pour faire ressortir la vraie reponse. */
 export const REVEAL_OPACITY = 0.8;
+
+/** Duree d'affichage du popup "A X de jouer" en debut de manche (2e et suivantes, en multijoueur). */
+export const TURN_POPUP_MS = 3000;

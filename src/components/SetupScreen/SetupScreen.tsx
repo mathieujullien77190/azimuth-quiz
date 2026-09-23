@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import {
@@ -98,13 +98,92 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       fontSize: fontSize.caption + 1,
       textAlign: 'center',
     },
+    coordRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    coordField: {
+      flex: 1,
+      gap: spacing.xs,
+    },
+    coordLabel: {
+      ...typography.label,
+      color: colors.textMuted,
+      fontSize: fontSize.caption,
+    },
+    coordInput: {
+      ...typography.heading,
+      minHeight: 44,
+      paddingHorizontal: spacing.md,
+      borderRadius: radius.md,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      backgroundColor: colors.surfaceHigh,
+      color: colors.text,
+      fontSize: fontSize.body,
+    },
   });
+
+type CustomOriginInputsProps = {
+  latitude: number;
+  longitude: number;
+  onChange: (patch: { customLatitude?: number; customLongitude?: number }) => void;
+};
+
+/**
+ * Champs latitude/longitude controles localement (texte libre pendant la saisie, y compris "-"
+ * ou "3." en cours de frappe) : ne pousse un nombre valide vers les reglages qu'une fois qu'il
+ * parse vraiment, plutot que de faire sauter le champ a chaque caractere invalide.
+ */
+const CustomOriginInputs = ({ latitude, longitude, onChange }: CustomOriginInputsProps) => {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+  const t = useTranslation();
+  const [latText, setLatText] = useState(() => String(latitude));
+  const [lonText, setLonText] = useState(() => String(longitude));
+
+  const onLatChange = (text: string) => {
+    setLatText(text);
+    const value = Number(text.replace(',', '.'));
+    if (Number.isFinite(value) && value >= -90 && value <= 90) onChange({ customLatitude: value });
+  };
+  const onLonChange = (text: string) => {
+    setLonText(text);
+    const value = Number(text.replace(',', '.'));
+    if (Number.isFinite(value) && value >= -180 && value <= 180) onChange({ customLongitude: value });
+  };
+
+  return (
+    <View style={styles.coordRow}>
+      <View style={styles.coordField}>
+        <Text style={styles.coordLabel}>{t.setup.customOrigin.latitude}</Text>
+        <TextInput
+          keyboardType="numbers-and-punctuation"
+          onChangeText={onLatChange}
+          placeholderTextColor={colors.textMuted}
+          style={styles.coordInput}
+          value={latText}
+        />
+      </View>
+      <View style={styles.coordField}>
+        <Text style={styles.coordLabel}>{t.setup.customOrigin.longitude}</Text>
+        <TextInput
+          keyboardType="numbers-and-punctuation"
+          onChangeText={onLonChange}
+          placeholderTextColor={colors.textMuted}
+          style={styles.coordInput}
+          value={lonText}
+        />
+      </View>
+    </View>
+  );
+};
 
 export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
   const t = useTranslation();
-  const { settings, updateSettings } = useSettings();
+  const { settings, ready, updateSettings } = useSettings();
   const playerCount = settings.playerNames.length;
   const available = filterPlaces(settings.categories, settings.difficulties, settings.zone).length;
   const zoneDescription = t.setup.zones[settings.zone].description;
@@ -241,6 +320,14 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
           onValueChange={(value) => updateSettings({ useGps: value })}
           value={settings.useGps}
         />
+        {!settings.useGps && (
+          <CustomOriginInputs
+            key={ready ? 'ready' : 'loading'}
+            latitude={settings.customLatitude}
+            longitude={settings.customLongitude}
+            onChange={updateSettings}
+          />
+        )}
         <Toggle
           {...t.setup.toggles.showCountry}
           onValueChange={(value) => updateSettings({ showCountry: value })}

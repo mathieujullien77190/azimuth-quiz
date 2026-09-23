@@ -1,6 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { BEST_SCORE_STORAGE_KEY, LANGUAGE_STORAGE_KEY, SETTINGS_STORAGE_KEY, UFO_CAUGHT_STORAGE_KEY } from '@/constants';
+import {
+  BEST_SCORE_STORAGE_KEY,
+  LANGUAGE_STORAGE_KEY,
+  SETTINGS_STORAGE_KEY,
+  UFO_CAUGHT_STORAGE_KEY,
+} from '@/constants';
 import type { Language } from '@/i18n';
 import type { GameSettings } from '@/types';
 

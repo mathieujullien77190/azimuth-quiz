@@ -10,7 +10,14 @@ import {
   MAX_SURFACE_DISTANCE_KM,
   PLAYER_COLORS,
 } from '@/constants';
-import { applyBestBonus, inclinationFromChordKm, pickPlaces, playerDisplayName, resolveOrigin, scoreRound } from '@/helpers';
+import {
+  applyBestBonus,
+  inclinationFromChordKm,
+  pickPlaces,
+  playerDisplayName,
+  resolveOrigin,
+  scoreRound,
+} from '@/helpers';
 import { useSettings } from '@/settings';
 import type { GamePhase, GameSettings, Guess, Origin, Place, Player, RoundRecord } from '@/types';
 
@@ -112,9 +119,7 @@ export const useGame = () => {
    */
   const startRound = useCallback((playerCount: number, standingsRecords: RoundRecord[]) => {
     const standings = playerTotals(standingsRecords, playerCount);
-    const order = Array.from({ length: playerCount }, (_, index) => index).sort(
-      (a, b) => standings[b] - standings[a],
-    );
+    const order = Array.from({ length: playerCount }, (_, index) => index).sort((a, b) => standings[b] - standings[a]);
     setRoundOrder(order);
     setActivePlayerIndex(order[0] ?? 0);
     setGuessesByPlayer(new Array(playerCount).fill(undefined));
@@ -126,7 +131,9 @@ export const useGame = () => {
     const chosen = settingsRef.current;
     setPhase('loading');
 
-    const resolvedOrigin = chosen.useGps ? await resolveOrigin(deviceOriginNameRef.current) : DEFAULT_ORIGIN;
+    const resolvedOrigin = chosen.useGps
+      ? await resolveOrigin(deviceOriginNameRef.current)
+      : { ...DEFAULT_ORIGIN, coordinates: { latitude: chosen.customLatitude, longitude: chosen.customLongitude } };
     if (id !== startId.current) return;
 
     setConfig(chosen);

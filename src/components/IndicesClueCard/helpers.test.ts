@@ -6,7 +6,7 @@ describe('letterCount', () => {
   });
 
   it('excludes hyphens and apostrophes', () => {
-    expect(letterCount("Saint-Étienne")).toBe(12);
+    expect(letterCount('Saint-Étienne')).toBe(12);
     expect(letterCount("Côte d'Ivoire")).toBe(11);
   });
 });

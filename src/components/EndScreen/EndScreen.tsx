@@ -1,8 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
+import { countryName } from '@/constants/places/countries';
 import { formatNumber, getRank } from '@/helpers';
-import { useTranslation } from '@/i18n';
+import { useLanguage, useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
@@ -81,6 +82,7 @@ const createStyles = ({ colors, typography }: Theme) =>
 export const EndScreen = ({ players, records, totals, onReplay, onMenu }: EndScreenProps) => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
+  const { language } = useLanguage();
   const isSolo = players.length === 1;
   const maxTotal = maxTotalScore(records);
   const ranking = rankPlayers(players, totals);
@@ -124,7 +126,9 @@ export const EndScreen = ({ players, records, totals, onReplay, onMenu }: EndScr
             <View key={`${record.place.name}-${index}`} style={[styles.row, index > 0 && styles.rowBorder]}>
               <View style={styles.rowText}>
                 <Text style={styles.name}>{record.place.name}</Text>
-                <Text style={styles.detail}>{isSolo ? record.place.country : t.endScreen.roundBest(players[winner].name)}</Text>
+                <Text style={styles.detail}>
+                  {isSolo ? countryName(record.place.code, language) : t.endScreen.roundBest(players[winner].name)}
+                </Text>
               </View>
               <Text style={styles.rowScore}>+{best.score.total}</Text>
             </View>

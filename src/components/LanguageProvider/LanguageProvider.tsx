@@ -26,7 +26,14 @@ export const LanguageProvider = ({ children }: LanguageProviderProps) => {
     saveLanguage(next);
   }, []);
 
-  const value = useMemo(() => ({ language, ready, setLanguage }), [language, ready, setLanguage]);
+  const resetLanguage = useCallback(() => {
+    setLanguageState('fr');
+  }, []);
+
+  const value = useMemo(
+    () => ({ language, ready, setLanguage, resetLanguage }),
+    [language, ready, setLanguage, resetLanguage],
+  );
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 };

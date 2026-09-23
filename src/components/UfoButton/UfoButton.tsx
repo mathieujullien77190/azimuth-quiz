@@ -49,4 +49,3 @@ export const UfoButton = ({ onPress, accessibilityLabel }: UfoButtonProps) => {
     </Pressable>
   );
 };
-

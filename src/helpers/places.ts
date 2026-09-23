@@ -1,10 +1,4 @@
-import {
-  EUROPE_CODES,
-  EUROPE_MAX_LONGITUDE,
-  EUROPE_MIN_LATITUDE,
-  MIN_PLACE_DISTANCE_KM,
-  PLACES,
-} from '@/constants';
+import { EUROPE_CODES, EUROPE_MAX_LONGITUDE, EUROPE_MIN_LATITUDE, MIN_PLACE_DISTANCE_KM, PLACES } from '@/constants';
 import type { Category, Coordinates, Difficulty, GameSettings, Place, Zone } from '@/types';
 
 import { distanceKm } from './geo';
@@ -22,8 +16,7 @@ const isInZone = (place: Place, zone: Zone): boolean => {
 /** Lieux d'une partie : bonnes categories, bonnes difficultes, dans la zone choisie. */
 export const filterPlaces = (categories: Category[], difficulties: Difficulty[], zone: Zone): Place[] =>
   PLACES.filter(
-    (place) =>
-      categories.includes(place.category) && difficulties.includes(place.difficulty) && isInZone(place, zone),
+    (place) => categories.includes(place.category) && difficulties.includes(place.difficulty) && isInZone(place, zone),
   );
 
 /**

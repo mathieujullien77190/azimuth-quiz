@@ -37,8 +37,7 @@ export const inclinationFromChordKm = (chordKm: number): number =>
  * l'inclinaison (voir inclinationDeg), l'arc mesure alors R x cet angle. Purement indicatif :
  * la ligne droite et l'arc partagent la meme destination, seule l'inclinaison est choisie.
  */
-export const arcKmFromInclination = (inclinationDeg: number): number =>
-  EARTH_RADIUS_KM * toRadians(2 * inclinationDeg);
+export const arcKmFromInclination = (inclinationDeg: number): number => EARTH_RADIUS_KM * toRadians(2 * inclinationDeg);
 
 /** Meme chose directement depuis une longueur de corde (ligne droite). */
 export const arcKmFromChordKm = (chordKm: number): number => arcKmFromInclination(inclinationFromChordKm(chordKm));

@@ -189,7 +189,12 @@ export const IndicesSetupScreen = ({ onStart, onBack }: IndicesSetupScreenProps)
       <Section title={t.setup.roundsTitle}>
         <View style={styles.chips}>
           {ROUND_OPTIONS.map((rounds) => (
-            <Chip key={rounds} label={String(rounds)} onPress={() => updateSettings({ rounds })} selected={settings.rounds === rounds} />
+            <Chip
+              key={rounds}
+              label={String(rounds)}
+              onPress={() => updateSettings({ rounds })}
+              selected={settings.rounds === rounds}
+            />
           ))}
         </View>
       </Section>

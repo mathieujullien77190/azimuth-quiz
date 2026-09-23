@@ -301,7 +301,9 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
         <Text style={styles.title}>{t.indicesGame.finalScoreTitle}</Text>
         {players.length > 1 && (
           <Text style={[styles.resultBanner, styles.resultCorrect]}>
-            {winners.length > 1 ? t.endScreen.tie(winners.join(` ${t.endScreen.and} `)) : t.endScreen.winner(winners[0])}
+            {winners.length > 1
+              ? t.endScreen.tie(winners.join(` ${t.endScreen.and} `))
+              : t.endScreen.winner(winners[0])}
           </Text>
         )}
         <Card>
@@ -335,13 +337,15 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
             </Text>
             <Text style={styles.revealAnswer}>
               {t.indicesGame.wasPlace} {place.name}
-              <Text style={styles.revealSub}>{'\n'}{place.country}</Text>
+              <Text style={styles.revealSub}>
+                {'\n'}
+                {place.country}
+              </Text>
             </Text>
             <Button label={isLastRound ? t.game.last : t.indicesGame.continueLabel} onPress={continueRound} />
             <Button label={t.indicesGame.home} onPress={onQuit} variant="ghost" />
           </View>
-        ) : (
-          buzzOpen ? (
+        ) : buzzOpen ? (
           <View style={styles.buzzPanel}>
             <Text style={styles.buzzTitle}>
               {buzzedName === undefined
@@ -372,7 +376,11 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
                   style={styles.guessInput}
                   value={guessText}
                 />
-                <Button disabled={guessText.trim().length === 0} label={t.indicesGame.submitGuess} onPress={submitGuess} />
+                <Button
+                  disabled={guessText.trim().length === 0}
+                  label={t.indicesGame.submitGuess}
+                  onPress={submitGuess}
+                />
               </>
             )}
             {buzzedIndex !== null && settings.answerMethod === 'spoken' && !verified && (
@@ -382,7 +390,10 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
               <>
                 <Text style={styles.revealAnswer}>
                   {t.indicesGame.wasPlace} {place.name}
-                  <Text style={styles.revealSub}>{'\n'}{place.country}</Text>
+                  <Text style={styles.revealSub}>
+                    {'\n'}
+                    {place.country}
+                  </Text>
                 </Text>
                 <View style={styles.verdictRow}>
                   <Pressable accessibilityRole="button" onPress={() => settle(true)} style={styles.verdictBtn}>
@@ -395,12 +406,11 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
               </>
             )}
           </View>
-          ) : (
-            <View style={styles.buzzRow}>
-              <Button label={t.indicesGame.buzz} onPress={openBuzz} variant="ghost" />
-              <Button label={t.indicesGame.giveUp} onPress={giveUp} variant="ghost" />
-            </View>
-          )
+        ) : (
+          <View style={styles.buzzRow}>
+            <Button label={t.indicesGame.buzz} onPress={openBuzz} variant="ghost" />
+            <Button label={t.indicesGame.giveUp} onPress={giveUp} variant="ghost" />
+          </View>
         )
       }
       header={
@@ -425,8 +435,8 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
       }
     >
       <Text style={styles.hint}>
-        {roundOver ? t.indicesGame.roundOver : t.indicesGame.turnHint(players[turnIndex])} · {t.game.round} {roundNumber}/
-        {settings.rounds}
+        {roundOver ? t.indicesGame.roundOver : t.indicesGame.turnHint(players[turnIndex])} · {t.game.round}{' '}
+        {roundNumber}/{settings.rounds}
       </Text>
 
       <Card>

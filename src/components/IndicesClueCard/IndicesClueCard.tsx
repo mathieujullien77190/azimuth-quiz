@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { INDICES_DIFFICULTY_COLORS, INDICES_FLAG_COLOR_FIELD, INDICES_FLAG_COLORS_BY_COUNTRY, fontSize, spacing } from '@/constants';
+import {
+  INDICES_DIFFICULTY_COLORS,
+  INDICES_FLAG_COLOR_FIELD,
+  INDICES_FLAG_COLORS_BY_COUNTRY,
+  fontSize,
+  spacing,
+} from '@/constants';
 import { formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
@@ -232,7 +238,11 @@ const revealedBody = (
       return bearingDeg !== undefined ? <Compass bearing={bearingDeg} size={COMPASS_CLUE_SIZE} /> : null;
     case 'distance':
       return distanceKm !== undefined && bearingDeg !== undefined ? (
-        <EarthSection marks={[{ bearing: bearingDeg, color: colors.accent, distanceKm }]} showStraightLine={false} size={EARTH_CLUE_SIZE} />
+        <EarthSection
+          marks={[{ bearing: bearingDeg, color: colors.accent, distanceKm }]}
+          showStraightLine={false}
+          size={EARTH_CLUE_SIZE}
+        />
       ) : null;
     case 'localTime':
       return <Text style={styles.statValue}>{localTimeFor(place.timezone)}</Text>;
@@ -280,7 +290,12 @@ export const IndicesClueCard = ({
       accessibilityRole={pickable ? 'button' : undefined}
       disabled={!pickable}
       onPress={pickable ? onPress : undefined}
-      style={[styles.card, state === 'locked' && styles.locked, state === 'revealed' && styles.revealed, wide && styles.wide]}
+      style={[
+        styles.card,
+        state === 'locked' && styles.locked,
+        state === 'revealed' && styles.revealed,
+        wide && styles.wide,
+      ]}
     >
       <View style={styles.header}>
         <Text style={styles.label}>{label}</Text>

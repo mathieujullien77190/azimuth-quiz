@@ -50,8 +50,9 @@ export const useHeading = (enabled: boolean): UseHeadingResult => {
       webListener.current = { eventName, handler };
     };
 
-    const requestPermission = (window as typeof window & { DeviceOrientationEvent?: { requestPermission?: () => Promise<string> } })
-      .DeviceOrientationEvent?.requestPermission;
+    const requestPermission = (
+      window as typeof window & { DeviceOrientationEvent?: { requestPermission?: () => Promise<string> } }
+    ).DeviceOrientationEvent?.requestPermission;
     if (typeof requestPermission === 'function') {
       requestPermission()
         .then((result) => {

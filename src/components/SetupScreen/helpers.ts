@@ -22,7 +22,8 @@ export const toggleCategoryFilter = (
   category: Category,
 ): Pick<GameSettings, 'categories' | 'difficulties'> => {
   const categories = toggleSelected(settings.categories, category);
-  const difficulties = category === 'kids' && categories.includes('kids') ? (['easy'] as Difficulty[]) : settings.difficulties;
+  const difficulties =
+    category === 'kids' && categories.includes('kids') ? (['easy'] as Difficulty[]) : settings.difficulties;
   return { categories, difficulties };
 };
 

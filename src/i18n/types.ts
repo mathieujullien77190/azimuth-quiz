@@ -59,6 +59,8 @@ export type Translations = {
       allowRevision: { label: string; description: string };
       hideOtherAnswers: { label: string; description: string };
     };
+    /** Latitude/longitude saisies a la main quand "Utiliser ma position" est desactive. */
+    customOrigin: { latitude: string; longitude: string };
     availability: (available: number, rounds: number) => string;
   };
   game: {
@@ -79,8 +81,8 @@ export type Translations = {
     playerTurn: (name: string) => string;
   };
   placeCard: {
-    showDescription: string;
-    hideDescription: string;
+    /** Accessibilite du badge "W" qui ouvre la page Wikipedia du lieu (revelation seulement). */
+    wikiLabel: string;
   };
   sliders: {
     distance: string;
@@ -92,6 +94,9 @@ export type Translations = {
     distance: string;
     inclination: string;
     yourScore: string;
+    /** Accessibilite du bouton ⓘ qui affiche/cache scoringInfo. */
+    scoringInfoLabel: string;
+    scoringInfo: string;
   };
   endScreen: {
     replay: string;

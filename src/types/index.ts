@@ -24,14 +24,19 @@ export type GeoPlace = {
   coordinates: Coordinates;
 };
 
-export type Place = GeoPlace & {
-  /** Code pays ISO 3166-1 alpha-2 (drapeau, filtre de zone). */
+export type Place = Omit<GeoPlace, 'country'> & {
+  /** Code pays ISO 3166-1 alpha-2 : source du drapeau, du filtre de zone, ET du nom affiche
+   * (voir `constants/places/countries.ts`) — pas de nom de pays stocke par lieu. */
   code: string;
   category: Category;
   difficulty: Difficulty;
   /** Anecdote courte sur le lieu : affichee repliee, seulement a la revelation. Absente pour les
    * lieux pas encore documentes (le composant n'affiche alors rien). */
   description?: string;
+  /** Fin de l'URL Wikipedia (apres "https://fr.wikipedia.org/wiki/" ou ".../en.wikipedia.org/wiki/"),
+   * pas l'URL complete. Absent si personne ne l'a encore renseigne pour ce lieu. */
+  wikiFr?: string;
+  wikiEn?: string;
 };
 
 export type Origin = {
@@ -93,6 +98,10 @@ export type GameSettings = {
    */
   straightLine: boolean;
   useGps: boolean;
+  /** Point de depart quand `useGps` est desactive : latitude/longitude saisies a la main,
+   * Paris par defaut. Ignore quand `useGps` est actif (position de l'appareil utilisee). */
+  customLatitude: number;
+  customLongitude: number;
   /** Sur mobile, la boussole tourne pour que le N pointe vers le vrai nord. */
   liveCompass: boolean;
   /** Affiche le pays sous le nom du lieu. */

@@ -94,6 +94,7 @@ export const en: Translations = {
           'During the round, each player only sees their own arrow and their own distance/tilt. Everything shows at the reveal.',
       },
     },
+    customOrigin: { latitude: 'Latitude', longitude: 'Longitude' },
     availability: (available, rounds) =>
       available >= rounds
         ? `${available} places available`
@@ -114,8 +115,7 @@ export const en: Translations = {
     playerTurn: (name) => `${name}'s turn`,
   },
   placeCard: {
-    showDescription: 'Learn more',
-    hideDescription: 'Collapse',
+    wikiLabel: 'View on Wikipedia',
   },
   sliders: {
     distance: 'Estimated distance',
@@ -127,6 +127,9 @@ export const en: Translations = {
     distance: 'Distance',
     inclination: 'Tilt',
     yourScore: 'Your score',
+    scoringInfoLabel: 'How points are calculated',
+    scoringInfo:
+      'Direction and distance each earn up to 500 points, based on how close your guess was. +100 bonus points on each category for whoever did best this round (multiplayer only).',
   },
   endScreen: {
     replay: 'Play again',
@@ -145,7 +148,8 @@ export const en: Translations = {
     author: 'By Matou.',
     claudeMention: 'Made for drinks with friends: no ads, no tracking, just you and a stubborn compass.',
     dataTitle: 'Data',
-    dataHint: 'Everything the app saves on this phone: your game settings and language. Nothing is sent anywhere else. This button erases it.',
+    dataHint:
+      'Everything the app saves on this phone: your game settings and language. Nothing is sent anywhere else. This button erases it.',
     clearData: 'Clear data',
     dataCleared: 'Data cleared.',
   },

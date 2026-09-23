@@ -20,9 +20,14 @@ export const rankPlayers = (players: Player[], totals: number[]): RankedPlayer[]
 
 export const winnerTitle = (ranking: RankedPlayer[], t: Translations['endScreen']): string => {
   const winners = ranking.filter((entry) => entry.rank === 1);
-  return winners.length === 1 ? t.winner(winners[0].player.name) : t.tie(winners.map((entry) => entry.player.name).join(` ${t.and} `));
+  return winners.length === 1
+    ? t.winner(winners[0].player.name)
+    : t.tie(winners.map((entry) => entry.player.name).join(` ${t.and} `));
 };
 
 /** Meilleur joueur d'une manche (le premier en cas d'egalite). */
 export const roundWinnerIndex = (record: RoundRecord): number =>
-  record.results.reduce((best, result, index) => (result.score.total > record.results[best].score.total ? index : best), 0);
+  record.results.reduce(
+    (best, result, index) => (result.score.total > record.results[best].score.total ? index : best),
+    0,
+  );

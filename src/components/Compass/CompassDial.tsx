@@ -19,7 +19,13 @@ import type { CompassDialProps } from './types';
  * Le dessin de la boussole (cadran + aiguilles), oriente nord en haut.
  * Memoise : quand le capteur fait tourner le cadran, seul le conteneur change.
  */
-export const CompassDial = memo(function CompassDial({ size, bearing, color, extraNeedles, truthBearing }: CompassDialProps) {
+export const CompassDial = memo(function CompassDial({
+  size,
+  bearing,
+  color,
+  extraNeedles,
+  truthBearing,
+}: CompassDialProps) {
   const { colors, compass, typography } = useTheme();
   const t = useTranslation();
   const points = cardinalPoints(t.compassWestLabel);
@@ -46,8 +52,23 @@ export const CompassDial = memo(function CompassDial({ size, bearing, color, ext
         </RadialGradient>
       </Defs>
 
-      <Circle cx={center} cy={center} r={radius * FACE_RADIUS_RATIO} fill="url(#face)" stroke={colors.border} strokeWidth={3} />
-      <Circle cx={center} cy={center} r={radius * 0.5} fill="none" stroke={colors.border} strokeWidth={1} strokeDasharray="3 6" />
+      <Circle
+        cx={center}
+        cy={center}
+        r={radius * FACE_RADIUS_RATIO}
+        fill="url(#face)"
+        stroke={colors.border}
+        strokeWidth={3}
+      />
+      <Circle
+        cx={center}
+        cy={center}
+        r={radius * 0.5}
+        fill="none"
+        stroke={colors.border}
+        strokeWidth={1}
+        strokeDasharray="3 6"
+      />
 
       {ticks.map(({ key, from, to, kind }) => (
         <Line

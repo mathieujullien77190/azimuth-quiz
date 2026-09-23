@@ -67,7 +67,18 @@ export const ROUND_OPTIONS = [5, 10, 15, 20] as const;
  * "Joueur 2"... Utilise a la fois par SetupScreen (hint cosmetique, ordre remelange) et par
  * playerDisplayName (identite stable pendant la partie, choisie par index). */
 export const NAME_PLACEHOLDERS = [
-  'Zoé', 'Max', 'Léo', 'Nina', 'Théo', 'Mia', 'Noa', 'Iris', 'Timéo', 'Luna', 'Gaspard', 'Chloé',
+  'Zoé',
+  'Max',
+  'Léo',
+  'Nina',
+  'Théo',
+  'Mia',
+  'Noa',
+  'Iris',
+  'Timéo',
+  'Luna',
+  'Gaspard',
+  'Chloé',
 ] as const;
 
 // Reparties tous les ~50° de teinte (rouge, vert, cyan, bleu, violet, rose) pour rester
@@ -95,8 +106,30 @@ export const ZONES: { id: Zone }[] = [{ id: 'france' }, { id: 'europe' }, { id: 
 
 /** Pays d'Europe (le filtre de zone ajoute une borne en longitude pour la Russie et la Turquie). */
 export const EUROPE_CODES: readonly string[] = [
-  'FR', 'GB', 'DE', 'ES', 'IT', 'PT', 'NL', 'BE', 'CH', 'AT', 'CZ', 'PL', 'HU', 'RO', 'GR',
-  'DK', 'SE', 'NO', 'FI', 'IS', 'IE', 'TR', 'RU', 'UA',
+  'FR',
+  'GB',
+  'DE',
+  'ES',
+  'IT',
+  'PT',
+  'NL',
+  'BE',
+  'CH',
+  'AT',
+  'CZ',
+  'PL',
+  'HU',
+  'RO',
+  'GR',
+  'DK',
+  'SE',
+  'NO',
+  'FI',
+  'IS',
+  'IE',
+  'TR',
+  'RU',
+  'UA',
 ];
 export const EUROPE_MAX_LONGITUDE = 45;
 export const EUROPE_MIN_LATITUDE = 30;
@@ -110,6 +143,9 @@ export const DEFAULT_SETTINGS: GameSettings = {
   rounds: 5,
   straightLine: false,
   useGps: true,
+  // Paris par defaut, comme DEFAULT_ORIGIN (voir plus haut).
+  customLatitude: DEFAULT_ORIGIN.coordinates.latitude,
+  customLongitude: DEFAULT_ORIGIN.coordinates.longitude,
   liveCompass: false,
   showCountry: false,
   allowRevision: true,

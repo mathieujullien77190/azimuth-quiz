@@ -86,7 +86,15 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
   });
 
 /** Selecteur de joueur fixe en haut de l'ecran de jeu : on choisit qui repond, sans quitter l'ecran. */
-export const PlayerTabs = ({ players, order, activeIndex, answered, allowRevision, onSelect, activeLabel }: PlayerTabsProps) => {
+export const PlayerTabs = ({
+  players,
+  order,
+  activeIndex,
+  answered,
+  allowRevision,
+  onSelect,
+  activeLabel,
+}: PlayerTabsProps) => {
   const styles = useThemedStyles(createStyles);
   const { width } = useWindowDimensions();
   const compact = width < COMPACT_BREAKPOINT;

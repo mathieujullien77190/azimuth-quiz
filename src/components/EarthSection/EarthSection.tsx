@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, G, Line, Path, RadialGradient, Stop, Text as SvgText } from 'react-native-svg';
 
 import { fontSize, spacing } from '@/constants';
@@ -16,6 +16,9 @@ import {
   HORIZON_LABEL,
   PLAYER_LABEL,
   PLAYER_Y_RATIO,
+  SATELLITE_CLEARANCE,
+  SATELLITE_EMOJI,
+  SATELLITE_ORBIT_MS,
   ZOOM_STEPS,
 } from './constants';
 import { arcPath, fitZoom, markEnd, sideOf, surfaceAngle } from './helpers';
@@ -59,6 +62,26 @@ const createStyles = ({ colors, typography }: Theme) =>
       color: colors.text,
       fontWeight: '700',
     },
+    svgWrap: {
+      position: 'relative',
+    },
+    // Point d'ancrage sans taille au centre de la Terre : la rotation puis le translateY qui
+    // suivent placent le satellite en orbite, sans affecter sa propre position de centrage.
+    satelliteAnchor: {
+      position: 'absolute',
+      width: 0,
+      height: 0,
+    },
+    satelliteEmoji: {
+      width: 20,
+      height: 20,
+      marginLeft: -10,
+      marginTop: -10,
+      fontSize: 16,
+      textAlign: 'center',
+      textAlignVertical: 'center',
+      transform: [{ rotate: '-35deg' }],
+    },
   });
 
 /**
@@ -98,6 +121,24 @@ export const EarthSection = ({ size, marks, showStraightLine, zoomControls = fal
   const center: Point = { x: player.x, y: player.y + radius };
   const horizonReach = Math.min(radius * 1.15, size * 0.32);
 
+  // Satellite en orbite, juste pour rigoler : uniquement a la revelation, en mode distance (pas
+  // ligne droite), dezoome a l'echelle reelle (zoom 1, sinon hors champ ou grotesque).
+  const showSatellite = zoomControls && !showStraightLine && zoom === 1;
+  const satelliteAngle = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!showSatellite) return undefined;
+    const loop = Animated.loop(
+      Animated.timing(satelliteAngle, {
+        duration: SATELLITE_ORBIT_MS,
+        easing: Easing.linear,
+        toValue: 1,
+        useNativeDriver: true,
+      }),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [showSatellite, satelliteAngle]);
+
   const mark = (item: EarthMark, key: string) => {
     const side = sideOf(item.bearing);
     const angle = surfaceAngle(item.distanceKm);
@@ -108,7 +149,13 @@ export const EarthSection = ({ size, marks, showStraightLine, zoomControls = fal
     return (
       <G key={key} opacity={opacity}>
         {item.isTruth !== true && (
-          <Path d={arcPath(center, radius, angle, side)} fill="none" stroke={color} strokeLinecap="round" strokeWidth={3.5} />
+          <Path
+            d={arcPath(center, radius, angle, side)}
+            fill="none"
+            stroke={color}
+            strokeLinecap="round"
+            strokeWidth={3.5}
+          />
         )}
         {showStraightLine && item.isTruth !== true && (
           <Line
@@ -156,56 +203,90 @@ export const EarthSection = ({ size, marks, showStraightLine, zoomControls = fal
         )}
       </View>
 
-      <Svg accessibilityLabel={CAPTION_STRAIGHT} height={height} width={size}>
-        <Defs>
-          <RadialGradient id="earth" cx="50%" cy="40%" r="65%">
-            <Stop offset="0%" stopColor={compass.faceInner} />
-            <Stop offset="100%" stopColor={compass.faceOuter} />
-          </RadialGradient>
-        </Defs>
+      <View style={styles.svgWrap}>
+        <Svg accessibilityLabel={CAPTION_STRAIGHT} height={height} width={size}>
+          <Defs>
+            <RadialGradient id="earth" cx="50%" cy="40%" r="65%">
+              <Stop offset="0%" stopColor={compass.faceInner} />
+              <Stop offset="100%" stopColor={compass.faceOuter} />
+            </RadialGradient>
+          </Defs>
 
-        <Circle cx={center.x} cy={center.y} r={radius} fill="url(#earth)" stroke={colors.border} strokeWidth={3} />
-        <Circle cx={center.x} cy={center.y} r={radius * 0.28} fill="none" stroke={colors.border} strokeWidth={1} strokeDasharray="3 5" />
+          <Circle cx={center.x} cy={center.y} r={radius} fill="url(#earth)" stroke={colors.border} strokeWidth={3} />
+          <Circle
+            cx={center.x}
+            cy={center.y}
+            r={radius * 0.28}
+            fill="none"
+            stroke={colors.border}
+            strokeWidth={1}
+            strokeDasharray="3 5"
+          />
 
-        {showStraightLine && (
-          <>
-            <Line
-              x1={player.x - horizonReach}
-              y1={player.y}
-              x2={player.x + horizonReach}
-              y2={player.y}
-              stroke={colors.textMuted}
-              strokeWidth={1.5}
-              strokeDasharray="4 5"
-            />
-            <SvgText
-              x={player.x + horizonReach}
-              y={player.y - 6}
-              fill={colors.textMuted}
-              fontFamily={typography.body.fontFamily}
-              fontSize={11}
-              textAnchor="end"
-            >
-              {HORIZON_LABEL}
-            </SvgText>
-          </>
+          {showStraightLine && (
+            <>
+              <Line
+                x1={player.x - horizonReach}
+                y1={player.y}
+                x2={player.x + horizonReach}
+                y2={player.y}
+                stroke={colors.textMuted}
+                strokeWidth={1.5}
+                strokeDasharray="4 5"
+              />
+              <SvgText
+                x={player.x + horizonReach}
+                y={player.y - 6}
+                fill={colors.textMuted}
+                fontFamily={typography.body.fontFamily}
+                fontSize={11}
+                textAnchor="end"
+              >
+                {HORIZON_LABEL}
+              </SvgText>
+            </>
+          )}
+
+          {marks.map((item, index) => mark(item, `mark-${index}`))}
+
+          <Circle cx={player.x} cy={player.y} r={6} fill={colors.text} stroke={colors.background} strokeWidth={2} />
+          <SvgText
+            x={player.x}
+            y={player.y - 12}
+            fill={colors.text}
+            fontFamily={typography.heading.fontFamily}
+            fontSize={12}
+            fontWeight="800"
+            textAnchor="middle"
+          >
+            {PLAYER_LABEL}
+          </SvgText>
+        </Svg>
+
+        {showSatellite && (
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.satelliteAnchor,
+              {
+                left: center.x,
+                top: center.y,
+                transform: [
+                  {
+                    rotate: satelliteAngle.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0deg', '360deg'],
+                    }),
+                  },
+                  { translateY: -(radius + SATELLITE_CLEARANCE) },
+                ],
+              },
+            ]}
+          >
+            <Text style={styles.satelliteEmoji}>{SATELLITE_EMOJI}</Text>
+          </Animated.View>
         )}
-
-        {marks.map((item, index) => mark(item, `mark-${index}`))}
-
-        <Circle cx={player.x} cy={player.y} r={6} fill={colors.text} stroke={colors.background} strokeWidth={2} />
-        <SvgText
-          x={player.x}
-          y={player.y - 12}
-          fill={colors.text}
-          fontFamily={typography.heading.fontFamily}
-          fontSize={12}
-          fontWeight="800"
-          textAnchor="middle"
-        >
-          {PLAYER_LABEL}
-        </SvgText>
-      </Svg>
+      </View>
     </View>
   );
 };

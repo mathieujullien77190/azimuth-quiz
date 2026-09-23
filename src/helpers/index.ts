@@ -1,10 +1,4 @@
-export {
-  formatBearing,
-  formatDistance,
-  formatInclination,
-  formatNumber,
-  initials,
-} from './format';
+export { formatBearing, formatDistance, formatInclination, formatNumber, initials } from './format';
 export {
   angleDifference,
   bearingDeg,

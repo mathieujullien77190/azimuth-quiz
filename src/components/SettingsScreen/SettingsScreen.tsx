@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { fontSize, spacing } from '@/constants';
 import { clearAppData } from '@/helpers';
 import { useLanguage, useTranslation, type Language } from '@/i18n';
+import { useSettings } from '@/settings';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
@@ -44,14 +45,19 @@ const createStyles = ({ colors, typography }: Theme) =>
 
 export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const styles = useThemedStyles(createStyles);
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, resetLanguage } = useLanguage();
+  const { resetSettings } = useSettings();
   const t = useTranslation();
   const [dataCleared, setDataCleared] = useState(false);
 
   const languages: Language[] = ['fr', 'en'];
 
+  // Vide le stockage ET remet les contextes en memoire aux defauts : sinon l'app garderait les
+  // anciennes valeurs (reglages Boussole, langue) tant qu'elle n'est pas relancee.
   const onClearData = () => {
     clearAppData();
+    resetSettings();
+    resetLanguage();
     setDataCleared(true);
   };
 
@@ -72,13 +78,16 @@ export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
         </View>
       </Section>
 
-      <Section hint={t.settings.dataHint} title={t.settings.dataTitle}>
-        <Button
-          disabled={dataCleared}
-          label={dataCleared ? t.settings.dataCleared : t.settings.clearData}
-          onPress={onClearData}
-          variant="ghost"
-        />
+      <Section title={t.settings.dataTitle}>
+        <View style={styles.about}>
+          <Text style={styles.aboutLine}>{t.settings.dataHint}</Text>
+          <Button
+            disabled={dataCleared}
+            label={dataCleared ? t.settings.dataCleared : t.settings.clearData}
+            onPress={onClearData}
+            variant="ghost"
+          />
+        </View>
       </Section>
 
       <Section title={t.settings.aboutTitle}>
