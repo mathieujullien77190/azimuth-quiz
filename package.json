@@ -1,6 +1,6 @@
 {
   "name": "full-azimut",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/metro-runtime": "~57.0.16",
@@ -51,11 +51,11 @@
       "<rootDir>/jest.setup.js"
     ],
     "collectCoverageFrom": [
-      "src/components/Indices**/*.{ts,tsx}",
-      "src/constants/indices.ts",
+      "src/**/*.{ts,tsx}",
       "!src/**/*.d.ts",
       "!src/**/index.ts",
-      "!src/**/types.ts"
+      "!src/**/types.ts",
+      "!src/app/**"
     ],
     "coverageThreshold": {
       "global": {

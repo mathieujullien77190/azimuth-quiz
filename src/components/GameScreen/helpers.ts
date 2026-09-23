@@ -9,6 +9,12 @@ export const playerTotals = (records: RoundRecord[], playerCount: number): numbe
     records.reduce((total, record) => total + (record.results[playerIndex]?.score.total ?? 0), 0),
   );
 
+/** Ordre des onglets (et du premier a jouer) pour une manche : rotation pure a partir du joueur
+ * `roundIndex % playerCount`, pour que chacun commence a tour de role au fil des manches — pas
+ * un tri par score, qui ferait toujours commencer le(s) meme(s) joueur(s) en tete. */
+export const rotatedOrder = (roundIndex: number, playerCount: number): number[] =>
+  Array.from({ length: playerCount }, (_, i) => (roundIndex + i) % playerCount);
+
 // Au tout premier rendu de l'export web statique, `useWindowDimensions` peut renvoyer 0 (valeur
 // figee au rendu serveur, jamais corrigee sans redimensionnement reel) : sans garde-fou, boussole
 // et Terre se retrouveraient avec une taille negative, donc invisibles. On retombe sur leur

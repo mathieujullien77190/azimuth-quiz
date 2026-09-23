@@ -21,7 +21,7 @@ import {
 import { useSettings } from '@/settings';
 import type { GamePhase, GameSettings, Guess, Origin, Place, Player, RoundRecord } from '@/types';
 
-import { playerTotals } from './helpers';
+import { playerTotals, rotatedOrder } from './helpers';
 
 /** Cap de depart par defaut : le nord, aiguille deja visible et deplacable. */
 const DEFAULT_BEARING = 0;
@@ -112,14 +112,11 @@ export const useGame = () => {
   );
 
   /**
-   * Nouvelle manche : chaque joueur repart avec un brouillon vierge, les onglets tries par score
-   * cumule avant cette manche (tri stable : a 0 partout, l'ordre reste 1, 2, 3...). `standingsRecords`
-   * est passe explicitement (plutot que lu depuis l'etat `records`) pour qu'un `start()` qui vient
-   * de reinitialiser les manches precedentes ne trie pas avec les totaux de la partie d'avant.
+   * Nouvelle manche : chaque joueur repart avec un brouillon vierge, les onglets en rotation pure
+   * (voir `rotatedOrder`) pour que le premier a jouer change a chaque manche, equitablement.
    */
-  const startRound = useCallback((playerCount: number, standingsRecords: RoundRecord[]) => {
-    const standings = playerTotals(standingsRecords, playerCount);
-    const order = Array.from({ length: playerCount }, (_, index) => index).sort((a, b) => standings[b] - standings[a]);
+  const startRound = useCallback((playerCount: number, roundIdx: number) => {
+    const order = rotatedOrder(roundIdx, playerCount);
     setRoundOrder(order);
     setActivePlayerIndex(order[0] ?? 0);
     setGuessesByPlayer(new Array(playerCount).fill(undefined));
@@ -141,7 +138,7 @@ export const useGame = () => {
     setPlaces(pickPlaces(resolvedOrigin.coordinates, chosen));
     setRoundIndex(0);
     setRecords([]);
-    startRound(chosen.playerNames.length, []);
+    startRound(chosen.playerNames.length, 0);
     setPhase('guess');
   }, [startRound]);
 
@@ -244,13 +241,13 @@ export const useGame = () => {
   const next = useCallback(() => {
     if (roundIndex + 1 < places.length) {
       setRoundIndex(roundIndex + 1);
-      startRound(players.length, records);
+      startRound(players.length, roundIndex + 1);
       setPhase('guess');
       return;
     }
 
     setPhase('end');
-  }, [places.length, players.length, records, roundIndex, startRound]);
+  }, [places.length, players.length, roundIndex, startRound]);
 
   return {
     phase,

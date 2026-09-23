@@ -14,13 +14,13 @@ export const fr: Translations = {
     games: {
       compass: {
         title: 'Boussole',
-        tagline: 'Un lieu s’affiche. Vise son cap et estime sa distance depuis ton point de départ.',
+        tagline: 'Un lieu s’affiche. Vise son cap et estime sa distance depuis ta position.',
         meta: ['1 à 6 joueurs'],
         cta: 'Jouer',
       },
       clues: {
         title: 'Indices',
-        tagline: 'Devine une ville grâce à des indices qui se révèlent un par un.',
+        tagline: 'Devine une ville, et en dessous des indices qui se révèlent petit à petit.',
         meta: ['1 à 6 joueurs'],
         cta: 'Jouer',
       },
