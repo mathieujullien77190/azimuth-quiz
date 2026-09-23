@@ -99,7 +99,7 @@ const createStyles = ({ colors, typography }: Theme) =>
       flexWrap: 'wrap',
       justifyContent: 'center',
       alignItems: 'flex-end',
-      gap: spacing.md,
+      gap: spacing.xl,
     },
     skeletonWord: {
       flexDirection: 'row',

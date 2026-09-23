@@ -38,9 +38,10 @@ export const normalizePlaceGuess = (value: string): string =>
  * une lettre deja revelee, soit `null` (case a dessiner comme un trait, pas encore devoilee). */
 export type NameSkeletonSlot = string | null;
 
-/** Nombre de cases generiques par mot quand "Nombre de mots" est connu mais pas "Lettres" : ne
- * reflete pas la vraie longueur (qu'on ne connait pas encore), juste une forme indicative. */
-const GENERIC_WORD_SLOTS = 4;
+/** Nombre de cases generiques par mot quand "Nombre de mots" est connu mais pas "Lettres" : 1 seul
+ * trait par mot (pas la vraie longueur, qu'on ne connait pas encore) — juste de quoi distinguer
+ * les mots entre eux, espaces largement (voir `skeletonRow` dans IndicesGameScreen). */
+const GENERIC_WORD_SLOTS = 1;
 
 /**
  * Decoupe le nom en groupes de slots pour le recap "M _ _ _" au-dessus des boutons buzz/abandon.

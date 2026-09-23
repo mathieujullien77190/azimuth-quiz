@@ -86,19 +86,19 @@ describe('nameSkeleton', () => {
     expect(nameSkeleton('Berlin', { groupByWord: false, revealFirst: false, lengthKnown: false })).toEqual([]);
   });
 
-  it('word count known but not length: generic 4-slot groups, not the real per-word length', () => {
+  it('word count known but not length: one generic slot per word, not the real per-word length', () => {
     expect(nameSkeleton('Rio de Janeiro', { groupByWord: true, revealFirst: false, lengthKnown: false })).toEqual([
-      [null, null, null, null],
-      [null, null, null, null],
-      [null, null, null, null],
+      [null],
+      [null],
+      [null],
     ]);
   });
 
   it('word count known but not length, with first letter revealed', () => {
     expect(nameSkeleton('Rio de Janeiro', { groupByWord: true, revealFirst: true, lengthKnown: false })).toEqual([
-      ['R', null, null, null],
-      [null, null, null, null],
-      [null, null, null, null],
+      ['R'],
+      [null],
+      [null],
     ]);
   });
 });

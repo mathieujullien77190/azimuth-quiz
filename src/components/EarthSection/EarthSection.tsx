@@ -121,9 +121,9 @@ export const EarthSection = ({ size, marks, showStraightLine, zoomControls = fal
   const center: Point = { x: player.x, y: player.y + radius };
   const horizonReach = Math.min(radius * 1.15, size * 0.32);
 
-  // Satellite en orbite, juste pour rigoler : uniquement a la revelation, en mode distance (pas
-  // ligne droite), dezoome a l'echelle reelle (zoom 1, sinon hors champ ou grotesque).
-  const showSatellite = zoomControls && !showStraightLine && zoom === 1;
+  // Satellite en orbite, juste pour rigoler : uniquement a la revelation, dezoome a l'echelle
+  // reelle (zoom 1, sinon hors champ ou grotesque) — peu importe le mode (distance ou ligne droite).
+  const showSatellite = zoomControls && zoom === 1;
   const satelliteAngle = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!showSatellite) return undefined;
