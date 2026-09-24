@@ -146,9 +146,6 @@ export const PlacesView = () => {
     return <div className="empty">Chargement…</div>;
   }
 
-  const boussoleCount = rows.filter((r) => r.boussole).length;
-  const indicesCount = rows.filter((r) => r.indices).length;
-
   return (
     <>
       <div className="panel">
@@ -421,13 +418,6 @@ export const PlacesView = () => {
           </div>
         ))}
       </div>
-
-      <Pagination page={page} totalPages={totalPages} onChange={setPage} />
-
-      <footer>
-        {rows.length} lieux — {boussoleCount} dans Boussole, {indicesCount} dans Indices — modifications écrites directement dans places.json. Le pays
-        (nom, drapeau, devise, indicatif) s'édite dans l'onglet Pays.
-      </footer>
     </>
   );
 };

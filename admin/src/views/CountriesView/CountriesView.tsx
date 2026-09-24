@@ -180,8 +180,6 @@ export const CountriesView = () => {
         ))}
       </div>
 
-      <Pagination page={page} totalPages={totalPages} onChange={setPage} />
-
       <footer>{countries.length} pays — modifications écrites directement dans countries.json.</footer>
     </>
   );
