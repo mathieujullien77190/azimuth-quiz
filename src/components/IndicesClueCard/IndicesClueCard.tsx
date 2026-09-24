@@ -99,10 +99,19 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       color: colors.textMuted,
       fontSize: fontSize.caption - 3,
     },
-    stageBadge: {
-      ...typography.label,
-      color: colors.accent,
-      fontSize: fontSize.caption - 3,
+    stageDots: {
+      flexDirection: 'row',
+      gap: 4,
+    },
+    stageDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      borderWidth: 1.5,
+      borderColor: colors.accent,
+    },
+    stageDotFilled: {
+      backgroundColor: colors.accent,
     },
     body: {
       height: 42,
@@ -507,9 +516,11 @@ export const IndicesClueCard = ({
       <View style={styles.header}>
         <Text style={styles.label}>{label}</Text>
         {progress !== undefined && (
-          <Text style={styles.stageBadge}>
-            {progress.stage}/{progress.max}
-          </Text>
+          <View accessibilityLabel={`${progress.stage}/${progress.max}`} style={styles.stageDots}>
+            {Array.from({ length: progress.max }, (_, i) => (
+              <View key={i} style={[styles.stageDot, i < progress.stage && styles.stageDotFilled]} />
+            ))}
+          </View>
         )}
       </View>
       <View
