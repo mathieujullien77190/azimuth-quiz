@@ -231,10 +231,10 @@ describe('IndicesGameScreen — buzz flow (spoken)', () => {
     expect(getByText('Continuer')).toBeTruthy();
   });
 
-  it('settles a wrong answer with a fixed penalty, but keeps the round open for another buzz', async () => {
-    const { getByText, getAllByLabelText, queryByText } = await renderGame({
+  it('settles a wrong answer with a fixed penalty and ends the round (Vérifier already revealed the place)', async () => {
+    const { getByText, getAllByLabelText } = await renderGame({
       answerMethod: 'spoken',
-      playerNames: ['Zoé', 'Max'],
+      playerNames: ['Zoé'],
     });
     await fireEvent.press(getByText('🔔 J’ai trouvé !'));
     await fireEvent.press(getAllByLabelText('Zoé')[1]);
@@ -242,14 +242,9 @@ describe('IndicesGameScreen — buzz flow (spoken)', () => {
     await fireEvent.press(getByText('✕ Faux'));
     // Fixed penalty (WRONG_ANSWER_PENALTY = 10), regardless of how many clues had been taken.
     expect(getByText('Zoé se trompe — perd 10 points.')).toBeTruthy();
-    // No reveal, no "Continuer" — the round stays open, anyone (including Zoé again) can re-buzz.
-    expect(queryByText('Continuer')).toBeNull();
-    expect(queryByText(PARIS.name)).toBeNull();
-    await fireEvent.press(getByText('🔔 J’ai trouvé !'));
-    await fireEvent.press(getAllByLabelText('Max')[1]);
-    await fireEvent.press(getByText('Vérifier'));
-    await fireEvent.press(getByText('✓ Bonne réponse'));
-    expect(getByText('Max marque 30 points !')).toBeTruthy();
+    // Round over: pretending it's still a mystery would be pointless, Vérifier already showed it.
+    expect(getByText(new RegExp(PARIS.name))).toBeTruthy();
+    expect(getByText('Continuer')).toBeTruthy();
   });
 
   it('cancels a buzz (wrong player, accidental click...) without touching the score', async () => {
@@ -260,26 +255,6 @@ describe('IndicesGameScreen — buzz flow (spoken)', () => {
     await fireEvent.press(getByText('Annuler'));
     expect(queryByText('✓ Bonne réponse')).toBeNull();
     expect(getByText('🔔 J’ai trouvé !')).toBeTruthy();
-  });
-
-  it('keeps the miss banner and letter recap visible while picking who buzzes next (only the button itself is replaced)', async () => {
-    const { getByText, getAllByText, getAllByLabelText } = await renderGame({
-      answerMethod: 'spoken',
-      playerNames: ['Zoé', 'Max'],
-    });
-    await fireEvent.press(getAllByText('Lettres')[0]);
-    await fireEvent.press(getByText('🔔 J’ai trouvé !'));
-    await fireEvent.press(getAllByLabelText('Zoé')[1]);
-    await fireEvent.press(getByText('Vérifier'));
-    await fireEvent.press(getByText('✕ Faux'));
-    expect(getByText('Zoé se trompe — perd 10 points.')).toBeTruthy();
-    expect(getAllByText('P').length).toBeGreaterThan(0);
-
-    await fireEvent.press(getByText('🔔 J’ai trouvé !'));
-    expect(getByText('Qui buzze ?')).toBeTruthy();
-    // The button is gone, but the miss banner and letter recap from before are still there.
-    expect(getByText('Zoé se trompe — perd 10 points.')).toBeTruthy();
-    expect(getAllByText('P').length).toBeGreaterThan(0);
   });
 
   it('asks who buzzes and lets any player be selected before verifying', async () => {
@@ -309,6 +284,35 @@ describe('IndicesGameScreen — buzz flow (typed answer)', () => {
     await fireEvent.changeText(input, 'Berlin');
     await fireEvent.press(getByText('Valider'));
     expect(getByText(/Zoé se trompe/)).toBeTruthy();
+  });
+
+  it('keeps the round open and the miss banner/letter recap visible after a wrong typed guess (no reveal, unlike spoken mode)', async () => {
+    const { getByText, getAllByText, getAllByLabelText, queryByText, getByPlaceholderText } = await renderGame({
+      answerMethod: 'typed',
+      playerNames: ['Zoé', 'Max'],
+    });
+    await fireEvent.press(getAllByText('Lettres')[0]);
+    await fireEvent.press(getByText('🔔 J’ai trouvé !'));
+    await fireEvent.press(getAllByLabelText('Zoé')[1]);
+    await fireEvent.changeText(getByPlaceholderText('Nom de la ville…'), 'Berlin');
+    await fireEvent.press(getByText('Valider'));
+    expect(getByText('Zoé se trompe — perd 10 points.')).toBeTruthy();
+    expect(getAllByText('P').length).toBeGreaterThan(0);
+    // No reveal, no "Continuer" — the round stays open, anyone (including Zoé again) can re-buzz.
+    expect(queryByText('Continuer')).toBeNull();
+    expect(queryByText(PARIS.name)).toBeNull();
+
+    await fireEvent.press(getByText('🔔 J’ai trouvé !'));
+    expect(getByText('Qui buzze ?')).toBeTruthy();
+    // The button is gone, but the miss banner and letter recap from before are still there.
+    expect(getByText('Zoé se trompe — perd 10 points.')).toBeTruthy();
+    expect(getAllByText('P').length).toBeGreaterThan(0);
+
+    await fireEvent.press(getAllByLabelText('Max')[1]);
+    await fireEvent.changeText(getByPlaceholderText('Nom de la ville…'), 'Paris');
+    await fireEvent.press(getByText('Valider'));
+    // 1 clue picked (Lettres) before the buzz sequence: max score is 29, not 30.
+    expect(getByText('Max marque 29 points !')).toBeTruthy();
   });
 
   it('the text input only appears after a player is picked, correct guess scores correctly', async () => {

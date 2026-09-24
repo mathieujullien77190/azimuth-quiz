@@ -292,7 +292,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const [buzzedIndex, setBuzzedIndex] = useState<number | null>(null);
   const [verified, setVerified] = useState(false);
   const [guessText, setGuessText] = useState('');
-  const [verdict, setVerdict] = useState<'correct' | 'giveUp' | null>(null);
+  const [verdict, setVerdict] = useState<'correct' | 'wrong' | 'giveUp' | null>(null);
   const [lastWrong, setLastWrong] = useState<string | null>(null);
   const [roundNumber, setRoundNumber] = useState(1);
   const [finished, setFinished] = useState(false);
@@ -390,8 +390,16 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
       setBuzzOpen(false);
       return;
     }
-    // A wrong guess only knocks out the player who buzzed (penalty already applied above): the
-    // round stays open so anyone (including them again) can buzz and try — no reveal, no round end.
+    // Spoken mode already reveals the place on "Vérifier" (see the `verified` block below), so
+    // there's nothing left to hide once someone's wrong there — ending the round avoids
+    // pretending it's still a mystery everyone in the room just saw spelled out.
+    if (settings.answerMethod === 'spoken') {
+      setVerdict('wrong');
+      setBuzzOpen(false);
+      return;
+    }
+    // Typed mode never reveals the answer on a miss (just "that's not it"): the round stays
+    // open so anyone (including them again) can buzz and try.
     // buzzedName is always defined here too (settle requires buzzedIndex to be known, see above).
     setLastWrong(buzzedName as string);
     setBuzzOpen(false);
@@ -488,10 +496,13 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
           {roundOver ? (
             <View style={styles.actions}>
               <Text style={[styles.resultBanner, verdict === 'correct' ? styles.resultCorrect : styles.resultWrong]}>
-                {/* buzzedName is always defined for 'correct' (settle requires buzzedIndex to be known). */}
+                {/* buzzedName is always defined for 'correct'/'wrong' (settle requires buzzedIndex
+                    to be known). */}
                 {verdict === 'correct'
                   ? t.indicesGame.scored(buzzedName!, formatNumber(remaining))
-                  : t.indicesGame.noOneFound}
+                  : verdict === 'wrong'
+                    ? t.indicesGame.missed(buzzedName!, formatNumber(WRONG_ANSWER_PENALTY))
+                    : t.indicesGame.noOneFound}
               </Text>
               <Text style={styles.revealAnswer}>
                 {t.indicesGame.wasPlace} {place.name}
