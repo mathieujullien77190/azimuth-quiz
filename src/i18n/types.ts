@@ -39,6 +39,7 @@ export type Translations = {
     playersSection: { title: string; hint: string };
     playerNameAccessibility: (index: number) => string;
     categoriesTitle: string;
+    categoriesAvailability: (available: number) => string;
     categories: Record<Category, string>;
     difficultyTitle: string;
     difficultyHint: string;

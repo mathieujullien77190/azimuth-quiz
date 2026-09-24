@@ -237,7 +237,7 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
         </View>
       </Section>
 
-      <Section title={t.setup.categoriesTitle}>
+      <Section hint={t.setup.categoriesAvailability(available)} title={t.setup.categoriesTitle}>
         <View style={styles.chips}>
           {CATEGORIES.map((category) => (
             <Chip

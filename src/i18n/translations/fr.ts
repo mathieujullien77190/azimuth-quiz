@@ -36,6 +36,7 @@ export const fr: Translations = {
     },
     playerNameAccessibility: (index) => `Nom du joueur ${index}`,
     categoriesTitle: 'Catégories',
+    categoriesAvailability: (available) => `${available} lieux possibles`,
     categories: {
       cities: 'Villes',
       capital: 'Capitales',
