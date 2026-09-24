@@ -75,6 +75,10 @@ export type RoundScore = {
   /** Bonus for guessing the exact heading, to the nearest degree (see EXACT_DIRECTION_BONUS).
    * Independent of `directionBonus`: everyone who nails it gets it, not just the round's best. */
   directionExactBonus: number;
+  /** Bonus for guessing the exact distance, to the nearest step the slider can actually land on
+   * at that magnitude (see EXACT_DISTANCE_BONUS/`roundDistance`). Independent of `distanceBonus`:
+   * everyone who nails it gets it, not just the round's best. */
+  distanceExactBonus: number;
   total: number;
 };
 

@@ -12,7 +12,7 @@ export {
   normalizeBearing,
   straightDistanceKm,
 } from './geo';
-export { kmToRatio, ratioToKm } from './distanceScale';
+export { kmToRatio, ratioToKm, roundDistance } from './distanceScale';
 export {
   clearIndicesHistory,
   getCachedIndicesHistory,

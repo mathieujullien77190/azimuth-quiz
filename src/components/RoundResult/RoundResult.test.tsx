@@ -34,6 +34,7 @@ const scoreFixture = {
   directionBonus: 100,
   distanceBonus: 0,
   directionExactBonus: 0,
+  distanceExactBonus: 0,
   total: 850,
 };
 
@@ -144,6 +145,21 @@ describe('RoundResult — score bonus colouring', () => {
     expect(getByText('PERFECT')).toBeTruthy();
     expect(queryByText('(+10°)')).toBeNull();
     expect(getByText('+500')).toBeTruthy();
+  });
+
+  it('shows "PERFECT" instead of the km gap, and folds the bonus into the points, on an exact distance', async () => {
+    const exactDistanceRecord: RoundRecord = {
+      place,
+      results: [
+        { guess: { bearing: 80, distanceKm: 950, inclination: 25 }, score: { ...scoreFixture, distanceBonus: 0, distanceExactBonus: 100 } },
+      ],
+    };
+    const { getByText, queryByText } = await render(
+      <RoundResult options={{ straightLine: false }} players={soloPlayers} record={exactDistanceRecord} totals={[850]} />,
+    );
+    expect(getByText('PERFECT')).toBeTruthy();
+    expect(queryByText(/^\(\+.*km\)$/)).toBeNull();
+    expect(getByText('+450')).toBeTruthy();
   });
 });
 

@@ -13,6 +13,9 @@ export const MAX_DISTANCE_POINTS = 500;
 export const BEST_BONUS_RATIO = 0.2;
 // Bonus for guessing the exact heading (to the nearest degree), on top of MAX_DIRECTION_POINTS.
 export const EXACT_DIRECTION_BONUS = 100;
+// Bonus for guessing the exact distance (to the nearest step the slider can actually reach at
+// that magnitude, see `roundDistance`), on top of MAX_DISTANCE_POINTS.
+export const EXACT_DISTANCE_BONUS = 100;
 
 // Direction: 0 points starting from this error (in degrees).
 export const DIRECTION_TOLERANCE_DEG = 90;

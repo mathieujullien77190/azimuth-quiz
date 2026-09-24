@@ -2,8 +2,10 @@ import { MIN_DISTANCE_KM } from '@/constants';
 
 const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
 
-/** Rounds to a readable step: the bigger the distance, the bigger the step. */
-const roundDistance = (km: number, maxKm: number): number => {
+/** Rounds to a readable step: the bigger the distance, the bigger the step. Also the finest
+ * precision the distance slider can actually reach at that magnitude (see `ratioToKm`) — reused
+ * by `scoreRound` to know what counts as an exact guess. */
+export const roundDistance = (km: number, maxKm: number): number => {
   const step = km < 100 ? 5 : km < 1000 ? 10 : km < 10000 ? 50 : 100;
   return Math.min(maxKm, Math.max(MIN_DISTANCE_KM, Math.round(km / step) * step));
 };

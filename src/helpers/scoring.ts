@@ -3,14 +3,18 @@ import {
   DIRECTION_TOLERANCE_DEG,
   DISTANCE_TOLERANCE_RATIO,
   EXACT_DIRECTION_BONUS,
+  EXACT_DISTANCE_BONUS,
   MAX_DIRECTION_POINTS,
   MAX_DISTANCE_POINTS,
+  MAX_STRAIGHT_DISTANCE_KM,
+  MAX_SURFACE_DISTANCE_KM,
   RANKS,
   SCORE_CURVE_EXPONENT,
 } from '@/constants';
 import type { Coordinates, GameSettings, Guess, Place, PlayerResult, Rank, RoundScore } from '@/types';
 
 import { angleDifference, bearingDeg, distanceKm, inclinationDeg, straightDistanceKm } from './geo';
+import { roundDistance } from './distanceScale';
 
 export type ScoringOptions = Pick<GameSettings, 'straightLine'>;
 
@@ -28,6 +32,7 @@ export const scoreRound = (origin: Coordinates, place: Place, guess: Guess, opti
   const trueSurfaceDistanceKm = distanceKm(origin, place.coordinates);
   const trueStraightDistanceKm = straightDistanceKm(origin, place.coordinates);
   const trueDistanceForGuess = options.straightLine ? trueStraightDistanceKm : trueSurfaceDistanceKm;
+  const maxDistanceKm = options.straightLine ? MAX_STRAIGHT_DISTANCE_KM : MAX_SURFACE_DISTANCE_KM;
 
   const directionError = angleDifference(guess.bearing, trueBearing);
   const directionPoints = Math.round(MAX_DIRECTION_POINTS * curve(1 - directionError / DIRECTION_TOLERANCE_DEG));
@@ -37,6 +42,10 @@ export const scoreRound = (origin: Coordinates, place: Place, guess: Guess, opti
   const distancePoints = Math.round(
     MAX_DISTANCE_POINTS * curve(1 - distanceError / Math.log(DISTANCE_TOLERANCE_RATIO)),
   );
+  // Exact bonus at the slider's own precision: the bigger the true distance, the coarser the
+  // step it can actually be set to (see `roundDistance`), so "exact" means landing on the
+  // closest reachable step, not matching the true value bit-for-bit.
+  const distanceExactBonus = roundDistance(trueDistanceForGuess, maxDistanceKm) === guess.distanceKm ? EXACT_DISTANCE_BONUS : 0;
 
   return {
     trueBearing,
@@ -50,7 +59,8 @@ export const scoreRound = (origin: Coordinates, place: Place, guess: Guess, opti
     directionBonus: 0,
     distanceBonus: 0,
     directionExactBonus,
-    total: directionPoints + distancePoints + directionExactBonus,
+    distanceExactBonus,
+    total: directionPoints + distancePoints + directionExactBonus + distanceExactBonus,
   };
 };
 
@@ -84,7 +94,8 @@ export const applyBestBonus = (results: PlayerResult[]): PlayerResult[] => {
           result.score.distancePoints +
           earnedDirectionBonus +
           earnedDistanceBonus +
-          result.score.directionExactBonus,
+          result.score.directionExactBonus +
+          result.score.distanceExactBonus,
       },
     };
   });

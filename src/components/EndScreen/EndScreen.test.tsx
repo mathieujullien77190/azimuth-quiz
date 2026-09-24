@@ -27,6 +27,7 @@ const result = (total: number): PlayerResult => ({
     directionBonus: 0,
     distanceBonus: 0,
     directionExactBonus: 0,
+    distanceExactBonus: 0,
     total,
   },
 });

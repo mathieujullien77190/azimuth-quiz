@@ -224,11 +224,20 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
           <View style={styles.row}>
             <Text style={styles.rowLabel}>{t.roundResult.distance}</Text>
             <Text style={styles.rowValue}>
-              {formatDistance(guessSurfaceKmFor(result))} (+
-              {formatDistance(Math.abs(guessSurfaceKmFor(result) - truth.trueSurfaceDistanceKm))})
+              {formatDistance(guessSurfaceKmFor(result))}{' '}
+              {result.score.distanceExactBonus > 0 ? (
+                <Text style={{ color: colors.success }}>{t.roundResult.perfect}</Text>
+              ) : (
+                `(+${formatDistance(Math.abs(guessSurfaceKmFor(result) - truth.trueSurfaceDistanceKm))})`
+              )}
             </Text>
-            <Text style={[styles.rowPoints, { color: result.score.distanceBonus > 0 ? colors.success : colors.text }]}>
-              {formatRowScore(result.score.distancePoints, result.score.distanceBonus)}
+            <Text
+              style={[
+                styles.rowPoints,
+                { color: result.score.distanceBonus > 0 || result.score.distanceExactBonus > 0 ? colors.success : colors.text },
+              ]}
+            >
+              {formatRowScore(result.score.distancePoints, result.score.distanceBonus + result.score.distanceExactBonus)}
             </Text>
           </View>
           {options.straightLine && (
@@ -239,9 +248,12 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
                   IS the inclination (one determines the other) — so the same points pool, won
                   and lost together, independent of the heading. */}
               <Text
-                style={[styles.rowPoints, { color: result.score.distanceBonus > 0 ? colors.success : colors.text }]}
+                style={[
+                  styles.rowPoints,
+                  { color: result.score.distanceBonus > 0 || result.score.distanceExactBonus > 0 ? colors.success : colors.text },
+                ]}
               >
-                {formatRowScore(result.score.distancePoints, result.score.distanceBonus)}
+                {formatRowScore(result.score.distancePoints, result.score.distanceBonus + result.score.distanceExactBonus)}
               </Text>
             </View>
           )}

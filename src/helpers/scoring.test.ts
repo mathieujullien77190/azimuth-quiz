@@ -1,8 +1,9 @@
-import { EXACT_DIRECTION_BONUS, MAX_DIRECTION_POINTS, MAX_DISTANCE_POINTS, RANKS } from '@/constants';
+import { EXACT_DIRECTION_BONUS, EXACT_DISTANCE_BONUS, MAX_DIRECTION_POINTS, MAX_DISTANCE_POINTS, MAX_SURFACE_DISTANCE_KM, RANKS } from '@/constants';
 import type { Coordinates, Guess, Place, PlayerResult } from '@/types';
 
-import { applyBestBonus, getRank, scoreRound } from './scoring';
+import { roundDistance } from './distanceScale';
 import { bearingDeg, distanceKm } from './geo';
+import { applyBestBonus, getRank, scoreRound } from './scoring';
 
 const origin: Coordinates = { latitude: 48.8566, longitude: 2.3522 };
 const place: Place = {
@@ -23,7 +24,24 @@ describe('scoreRound', () => {
     expect(score.directionPoints).toBe(MAX_DIRECTION_POINTS);
     expect(score.distancePoints).toBe(MAX_DISTANCE_POINTS);
     expect(score.directionExactBonus).toBe(EXACT_DIRECTION_BONUS);
+    // The raw true distance essentially never lands exactly on a slider-reachable step.
+    expect(score.distanceExactBonus).toBe(0);
     expect(score.total).toBe(MAX_DIRECTION_POINTS + MAX_DISTANCE_POINTS + EXACT_DIRECTION_BONUS);
+  });
+
+  it('awards the exact-distance bonus when the guess lands on the closest step the slider can reach', () => {
+    const onStepGuess = roundDistance(trueSurfaceKm, MAX_SURFACE_DISTANCE_KM);
+    const guess: Guess = { bearing: trueBearing, distanceKm: onStepGuess, inclination: 0 };
+    const score = scoreRound(origin, place, guess, { straightLine: false });
+    expect(score.distanceExactBonus).toBe(EXACT_DISTANCE_BONUS);
+    expect(score.total).toBe(score.directionPoints + score.distancePoints + score.directionExactBonus + EXACT_DISTANCE_BONUS);
+  });
+
+  it('does not award the exact-distance bonus for a guess one step off', () => {
+    const onStepGuess = roundDistance(trueSurfaceKm, MAX_SURFACE_DISTANCE_KM);
+    const guess: Guess = { bearing: trueBearing, distanceKm: onStepGuess * 1.5, inclination: 0 };
+    const score = scoreRound(origin, place, guess, { straightLine: false });
+    expect(score.distanceExactBonus).toBe(0);
   });
 
   it('awards 0 direction points for a guess opposite the true bearing', () => {
@@ -77,6 +95,7 @@ describe('applyBestBonus', () => {
       directionBonus: 0,
       distanceBonus: 0,
       directionExactBonus: 0,
+      distanceExactBonus: 0,
       total: 0,
     },
   });
