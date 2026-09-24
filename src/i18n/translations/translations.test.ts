@@ -45,10 +45,4 @@ describe('translations', () => {
   it('every en leaf is a non-empty string, array or working template function', () => {
     walk(en, '');
   });
-
-  it('setup.availability covers both branches (enough places vs. not enough) in fr and en', () => {
-    expect(fr.setup.availability(20, 10)).toBe('20 lieux possibles');
-    expect(fr.setup.availability(5, 10)).toBe('5 lieux possibles : la partie sera de 5 manches');
-    expect(en.setup.availability(20, 10)).not.toBe(en.setup.availability(5, 10));
-  });
 });

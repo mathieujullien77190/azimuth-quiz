@@ -114,6 +114,13 @@ export const DIFFICULTIES: { id: Difficulty; emoji: string }[] = [
   { id: 'hard', emoji: '🔴' },
 ];
 
+// "Moyen" selected would otherwise use the generic theme accent (also amber/gold), which washes
+// out against its own yellow emoji — a true orange stands out instead. Easy/hard don't need this,
+// their green/red is already distinct from the accent.
+export const DIFFICULTY_SELECTED_COLOR: Partial<Record<Difficulty, string>> = {
+  intermediate: '#F97316',
+};
+
 export const DEFAULT_SETTINGS: GameSettings = {
   playerNames: [''],
   categories: ['cities', 'capital', 'citiesFr', 'mountains', 'landmarks', 'nature'],

@@ -145,11 +145,6 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       textAlign: 'center',
       marginBottom: spacing.xs,
     },
-    whoBuzzesRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-    },
     // Same pill look as the active tab in PlayerTabs (see its `active`/`labelActive` styles):
     // reads as "this is the player who's currently doing something", same as up there.
     buzzerBadge: {
@@ -628,17 +623,14 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
                 </View>
               )}
               {buzzOpen ? (
-                <View style={styles.whoBuzzesRow}>
-                  <Text style={styles.buzzTitle}>{t.indicesGame.whoBuzzes}</Text>
-                  <PlayerTabs
-                    activeIndex={-1}
-                    allowRevision
-                    answered={noneAnswered}
-                    onSelect={setBuzzedIndex}
-                    order={playerOrder}
-                    players={playerTabs}
-                  />
-                </View>
+                <PlayerTabs
+                  activeIndex={-1}
+                  allowRevision
+                  answered={noneAnswered}
+                  onSelect={setBuzzedIndex}
+                  order={playerOrder}
+                  players={playerTabs}
+                />
               ) : (
                 <Button label={t.indicesGame.buzz} onPress={openBuzz} variant="ghost" />
               )}

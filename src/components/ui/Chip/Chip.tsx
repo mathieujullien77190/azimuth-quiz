@@ -33,7 +33,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
     },
   });
 
-const Chip = ({ label, emoji, selected, onPress }: ChipProps) => {
+const Chip = ({ label, emoji, selected, onPress, color }: ChipProps) => {
   const styles = useThemedStyles(createStyles);
 
   return (
@@ -41,7 +41,7 @@ const Chip = ({ label, emoji, selected, onPress }: ChipProps) => {
       accessibilityRole="button"
       accessibilityState={{ selected }}
       onPress={onPress}
-      style={[styles.chip, selected && styles.selected]}
+      style={[styles.chip, selected && styles.selected, selected && color !== undefined && { backgroundColor: color, borderColor: color }]}
     >
       {emoji !== undefined && <Text>{emoji}</Text>}
       <Text style={[styles.label, selected && styles.labelSelected]}>{label}</Text>

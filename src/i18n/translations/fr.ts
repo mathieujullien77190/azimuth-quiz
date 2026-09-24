@@ -91,10 +91,6 @@ export const fr: Translations = {
       },
     },
     customOrigin: { latitude: 'Latitude', longitude: 'Longitude' },
-    availability: (available, rounds) =>
-      available >= rounds
-        ? `${available} lieux possibles`
-        : `${available} lieux possibles : la partie sera de ${available} manches`,
   },
   game: {
     loading: 'Préparation de la partie…',
@@ -181,7 +177,6 @@ export const fr: Translations = {
     buzz: '🔔 J’ai trouvé !',
     giveUp: '🤷 Je ne sais pas',
     noOneFound: 'Personne n’a trouvé — 0 point, on tourne la page.',
-    whoBuzzes: 'Qui buzze ?',
     buzzedPrompt: (name) => `${name} buzze`,
     verify: 'Vérifier',
     cancel: 'Annuler',

@@ -4,6 +4,7 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 import {
   CATEGORIES,
   DIFFICULTIES,
+  DIFFICULTY_SELECTED_COLOR,
   MAX_PLAYERS,
   MIN_PLAYERS,
   NAME_PLACEHOLDERS,
@@ -90,12 +91,6 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       ...typography.body,
       color: colors.textMuted,
       fontSize: fontSize.caption + 1,
-    },
-    availability: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.caption + 1,
-      textAlign: 'center',
     },
     coordRow: {
       flexDirection: 'row',
@@ -256,6 +251,7 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
           {DIFFICULTIES.map((difficulty) => (
             <Chip
               key={difficulty.id}
+              color={DIFFICULTY_SELECTED_COLOR[difficulty.id]}
               emoji={difficulty.emoji}
               label={t.setup.difficulties[difficulty.id]}
               onPress={() => updateSettings(selectDifficultyFilter(settings, difficulty.id))}
@@ -334,7 +330,6 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
         )}
       </Section>
 
-      <Text style={styles.availability}>{t.setup.availability(available, settings.rounds)}</Text>
       <Button disabled={available === 0} label={t.setup.start} onPress={onStart} />
       <Button label={t.setup.back} onPress={onBack} variant="ghost" />
     </Screen>

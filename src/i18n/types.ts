@@ -60,7 +60,6 @@ export type Translations = {
     };
     /** Latitude/longitude entered by hand when "Use my position" is off. */
     customOrigin: { latitude: string; longitude: string };
-    availability: (available: number, rounds: number) => string;
   };
   game: {
     loading: string;
@@ -145,7 +144,6 @@ export type Translations = {
     buzz: string;
     giveUp: string;
     noOneFound: string;
-    whoBuzzes: string;
     buzzedPrompt: (name: string) => string;
     verify: string;
     cancel: string;
