@@ -52,10 +52,11 @@ export const BEST_SCORE_STORAGE_KEY = 'fullazimut:best-score';
 export const SETTINGS_STORAGE_KEY = 'fullazimut:settings';
 export const LANGUAGE_STORAGE_KEY = 'fullazimut:language';
 export const THEME_STORAGE_KEY = 'fullazimut:theme';
-/** Once the home screen's helicopter is caught (clicked), it stops moving forever. The key's
- * string value is unchanged from the earlier UFO version (renaming it would silently reset
- * every existing player's "caught" state — see the "Azimuth Quiz" rename for the same call). */
-export const HELICOPTER_CAUGHT_STORAGE_KEY = 'fullazimut:ufo-caught';
+/** Once the home screen's mascot (UFO by night, helicopter by day) is caught (clicked), it stops
+ * moving forever. The key's string value is unchanged from the earlier UFO-only version (renaming
+ * it would silently reset every existing player's "caught" state — see the "Azimuth Quiz" rename
+ * for the same call). */
+export const MASCOT_CAUGHT_STORAGE_KEY = 'fullazimut:ufo-caught';
 /** How many times each Indices place has been drawn, across every game — lets rounds avoid
  * repeats (see helpers/indicesHistory.ts). */
 export const INDICES_HISTORY_STORAGE_KEY = 'fullazimut:indices-history';

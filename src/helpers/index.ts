@@ -30,12 +30,12 @@ export { applyBestBonus, getRank, scoreRound } from './scoring';
 export { playerDisplayName, sanitizeSettings } from './settings';
 export {
   clearAppData,
-  loadHelicopterCaught,
   loadLanguage,
+  loadMascotCaught,
   loadSettings,
   loadThemeId,
-  saveHelicopterCaught,
   saveLanguage,
+  saveMascotCaught,
   saveSettings,
   saveThemeId,
   systemLanguage,

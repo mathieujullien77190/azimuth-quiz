@@ -21,7 +21,7 @@ src/
   constants/           # valeurs partagees (score, geo, stockage, palette...) + constants/places/
   helpers/             # geo.ts, scoring.ts, format.ts, storage.ts, location.ts, places.ts, random.ts, web.ts
   settings/            # contexte React des reglages de partie (GameSettings)
-  themes/              # night.ts (seul theme) / fonts.ts / ThemeContext
+  themes/              # night.ts / day.ts / fonts.ts / ThemeContext
   types/                # types de domaine partages (Guess, GameSettings, Theme...)
 ```
 
@@ -71,10 +71,13 @@ sur react-native-web s'il n'a pas de `style={{ flexGrow: 0, flexShrink: 0 }}` ex
 ## Theme
 
 Deux themes, `night` (sombre, bleu nuit + ambre, ciel etoile) et `day` (clair, ciel
-bleu + ambre, nuages qui derivent — meme `ThemeBackdrop`, branche sur `theme.isDark`).
+bleu + orange, nuages qui derivent — meme `ThemeBackdrop`, branche sur `theme.isDark`).
 Choix persiste (`ThemeProvider`/`ThemeSettingsContext`, cle `fullazimut:theme`),
 selecteur dans `SettingsScreen`. `useTheme()` lit le theme courant via le contexte ;
-`useThemeSettings()` donne `{ themeId, ready, setThemeId, resetThemeId }`. Police unique
+`useThemeSettings()` donne `{ themeId, ready, setThemeId, resetThemeId }`. Quelques
+elements suivent `isDark` directement plutot qu'un token de couleur : la mascotte du
+`HomeScreen` (`MascotButton` : soucoupe la nuit, helicoptere le jour) et l'objet en
+orbite d'`EarthSection` (satellite la nuit, avion le jour). Police unique
 partout, y compris dans le SVG (compas, `EarthSection`) :
 `themes/fonts.ts` exporte `FONT_FAMILY` (stack `"JetBrains Mono", ui-monospace, ...`),
 consomme par les 4 tokens de typographie du theme. Un composant SVG doit lire
@@ -102,7 +105,8 @@ environnement).
   `Compass.tsx`, `useHeading.ts`, `useGame.ts`, `SliderTrack.tsx`.
 - `react-hooks/refs` se declenche aussi, de facon attendue et inevitable, partout ou
   l'API `Animated` de React Native est utilisee (`HomeScreen.tsx` : position/rotation de
-  l'helicoptere ; `EarthSection.tsx` : orbite du satellite) — lire `.current` d'un
+  la mascotte, soucoupe la nuit ou helicoptere le jour — voir `MascotButton` ;
+  `EarthSection.tsx` : orbite du satellite/avion) — lire `.current` d'un
   `Animated.Value`/`ValueXY` cree via `useRef` puis l'utiliser dans le style au rendu est
   le pattern officiel de cette API, incompatible
   avec cette regle stricte. Meme categorie que les 4 fichiers ci-dessus, pas une erreur a

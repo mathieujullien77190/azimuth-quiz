@@ -4,16 +4,16 @@ import type { LayoutChangeEvent } from 'react-native';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
-import { loadHelicopterCaught, saveHelicopterCaught } from '@/helpers';
+import { loadMascotCaught, saveMascotCaught } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
 import GameCard from '../GameCard';
-import HelicopterButton from '../HelicopterButton';
+import MascotButton from '../MascotButton';
 import Screen from '../ui/Screen';
-import { APP_TITLE, HELICOPTER_MOVE_DURATION_MS, HELICOPTER_SPIN_DURATION_MS, HELICOPTER_SPIN_PAUSE_S } from './constants';
-import { randomHelicopterPauseSeconds, randomHelicopterPosition } from './helpers';
+import { APP_TITLE, MASCOT_MOVE_DURATION_MS, MASCOT_SPIN_DURATION_MS, MASCOT_SPIN_PAUSE_S } from './constants';
+import { randomMascotPauseSeconds, randomMascotPosition } from './helpers';
 
 const createStyles = ({ colors, typography }: Theme) =>
   StyleSheet.create({
@@ -23,16 +23,16 @@ const createStyles = ({ colors, typography }: Theme) =>
       paddingTop: spacing.md,
       paddingBottom: spacing.sm,
     },
-    helicopterButton: {
+    mascotButton: {
       position: 'absolute',
       zIndex: 10,
       elevation: 10,
     },
-    helicopterButtonDefault: {
+    mascotButtonDefault: {
       top: spacing.sm,
       right: spacing.lg,
     },
-    helicopterButtonRoaming: {
+    mascotButtonRoaming: {
       top: 0,
       left: 0,
     },
@@ -59,50 +59,51 @@ export const HomeScreen = () => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
 
-  // As long as it's never been clicked, the helicopter flies to a random position within the
-  // title zone (animated transition), waits 3 to 6 sec in place, does a pirouette in place once
-  // if that pause lands on 6 sec, then moves on. Once caught (clicked, remembered forever), it
-  // stays fixed at its default position (top right, `helicopterButtonDefault`).
-  const [helicopterCaught, setHelicopterCaught] = useState(true);
-  const [helicopterZone, setHelicopterZone] = useState({ width: 0, height: 0 });
-  const helicopterAnim = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
-  const helicopterRotation = useRef(new Animated.Value(0)).current;
+  // As long as it's never been clicked, the mascot (UFO by night, helicopter by day — see
+  // MascotButton) flies to a random position within the title zone (animated transition),
+  // waits 3 to 6 sec in place, spins in place once if that pause lands on 6 sec, then moves on.
+  // Once caught (clicked, remembered forever), it stays fixed at its default position (top
+  // right, `mascotButtonDefault`).
+  const [mascotCaught, setMascotCaught] = useState(true);
+  const [mascotZone, setMascotZone] = useState({ width: 0, height: 0 });
+  const mascotAnim = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const mascotRotation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    loadHelicopterCaught().then(setHelicopterCaught);
+    loadMascotCaught().then(setMascotCaught);
   }, []);
 
-  const roaming = !helicopterCaught && helicopterZone.width > 0 && helicopterZone.height > 0;
+  const roaming = !mascotCaught && mascotZone.width > 0 && mascotZone.height > 0;
 
   useEffect(() => {
     if (!roaming) return undefined;
     let active = true;
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-    const start = randomHelicopterPosition(helicopterZone.width, helicopterZone.height);
-    helicopterAnim.setValue({ x: start.left, y: start.top });
+    const start = randomMascotPosition(mascotZone.width, mascotZone.height);
+    mascotAnim.setValue({ x: start.left, y: start.top });
 
     // No `active` guard needed here: the only two call sites are the initial synchronous call
     // below and the recursive one inside the move's callback (scheduled via `timeoutId`), and
     // cleanup always clears `timeoutId` in the same tick it sets `active = false` — so this can
     // never run again after unmount.
     const scheduleNextMove = () => {
-      const target = randomHelicopterPosition(helicopterZone.width, helicopterZone.height);
-      Animated.timing(helicopterAnim, {
-        duration: HELICOPTER_MOVE_DURATION_MS,
+      const target = randomMascotPosition(mascotZone.width, mascotZone.height);
+      Animated.timing(mascotAnim, {
+        duration: MASCOT_MOVE_DURATION_MS,
         toValue: { x: target.left, y: target.top },
         useNativeDriver: true,
       }).start(({ finished }) => {
         if (!active || !finished) return;
-        const pauseS = randomHelicopterPauseSeconds();
-        if (pauseS === HELICOPTER_SPIN_PAUSE_S) {
-          helicopterRotation.setValue(0);
-          Animated.timing(helicopterRotation, {
-            duration: HELICOPTER_SPIN_DURATION_MS,
+        const pauseS = randomMascotPauseSeconds();
+        if (pauseS === MASCOT_SPIN_PAUSE_S) {
+          mascotRotation.setValue(0);
+          Animated.timing(mascotRotation, {
+            duration: MASCOT_SPIN_DURATION_MS,
             toValue: 1,
             useNativeDriver: true,
           }).start(({ finished: spun }) => {
-            if (spun) helicopterRotation.setValue(0);
+            if (spun) mascotRotation.setValue(0);
           });
         }
         timeoutId = setTimeout(scheduleNextMove, pauseS * 1000);
@@ -114,24 +115,24 @@ export const HomeScreen = () => {
     return () => {
       active = false;
       if (timeoutId !== undefined) clearTimeout(timeoutId);
-      helicopterAnim.stopAnimation();
-      helicopterRotation.stopAnimation();
+      mascotAnim.stopAnimation();
+      mascotRotation.stopAnimation();
     };
-  }, [roaming, helicopterZone, helicopterAnim, helicopterRotation]);
+  }, [roaming, mascotZone, mascotAnim, mascotRotation]);
 
   const onHeaderLayout = (event: LayoutChangeEvent) => {
-    setHelicopterZone({ width: event.nativeEvent.layout.width, height: event.nativeEvent.layout.height });
+    setMascotZone({ width: event.nativeEvent.layout.width, height: event.nativeEvent.layout.height });
   };
 
-  const onHelicopterPress = () => {
-    if (!helicopterCaught) {
-      setHelicopterCaught(true);
-      saveHelicopterCaught();
+  const onMascotPress = () => {
+    if (!mascotCaught) {
+      setMascotCaught(true);
+      saveMascotCaught();
     }
     router.push('/settings');
   };
 
-  const helicopterSpin = helicopterRotation.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+  const mascotSpin = mascotRotation.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
   return (
     <Screen>
@@ -139,16 +140,16 @@ export const HomeScreen = () => {
         {roaming ? (
           <Animated.View
             style={[
-              styles.helicopterButton,
-              styles.helicopterButtonRoaming,
-              { transform: [...helicopterAnim.getTranslateTransform(), { rotate: helicopterSpin }] },
+              styles.mascotButton,
+              styles.mascotButtonRoaming,
+              { transform: [...mascotAnim.getTranslateTransform(), { rotate: mascotSpin }] },
             ]}
           >
-            <HelicopterButton accessibilityLabel={t.home.settingsButtonLabel} onPress={onHelicopterPress} />
+            <MascotButton accessibilityLabel={t.home.settingsButtonLabel} onPress={onMascotPress} />
           </Animated.View>
         ) : (
-          <View style={[styles.helicopterButton, styles.helicopterButtonDefault]}>
-            <HelicopterButton accessibilityLabel={t.home.settingsButtonLabel} onPress={onHelicopterPress} />
+          <View style={[styles.mascotButton, styles.mascotButtonDefault]}>
+            <MascotButton accessibilityLabel={t.home.settingsButtonLabel} onPress={onMascotPress} />
           </View>
         )}
         <Text style={styles.title}>{APP_TITLE}</Text>

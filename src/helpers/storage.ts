@@ -3,7 +3,7 @@ import { getLocales } from 'expo-localization';
 
 import {
   BEST_SCORE_STORAGE_KEY,
-  HELICOPTER_CAUGHT_STORAGE_KEY,
+  MASCOT_CAUGHT_STORAGE_KEY,
   LANGUAGE_STORAGE_KEY,
   SETTINGS_STORAGE_KEY,
   THEME_STORAGE_KEY,
@@ -37,19 +37,19 @@ export const saveSettings = async (settings: GameSettings): Promise<void> => {
   }
 };
 
-export const loadHelicopterCaught = async (): Promise<boolean> => {
+export const loadMascotCaught = async (): Promise<boolean> => {
   try {
-    return (await AsyncStorage.getItem(HELICOPTER_CAUGHT_STORAGE_KEY)) === 'true';
+    return (await AsyncStorage.getItem(MASCOT_CAUGHT_STORAGE_KEY)) === 'true';
   } catch {
     return false;
   }
 };
 
-export const saveHelicopterCaught = async (): Promise<void> => {
+export const saveMascotCaught = async (): Promise<void> => {
   try {
-    await AsyncStorage.setItem(HELICOPTER_CAUGHT_STORAGE_KEY, 'true');
+    await AsyncStorage.setItem(MASCOT_CAUGHT_STORAGE_KEY, 'true');
   } catch {
-    // Not saved: the helicopter will start moving again on next launch, not critical.
+    // Not saved: the mascot will start moving again on next launch, not critical.
   }
 };
 
@@ -88,7 +88,7 @@ export const saveThemeId = async (themeId: ThemeId): Promise<void> => {
 };
 
 /** Clears everything the app saves on the device: Boussole settings, language, theme, whether
- * the home screen's helicopter has been caught, and Indices' draw history (+ a possible "best
+ * the home screen's mascot has been caught, and Indices' draw history (+ a possible "best
  * score" left over from an earlier version). Indices' own settings aren't persisted in the
  * first place (reset every launch). */
 export const clearAppData = async (): Promise<void> => {
@@ -99,7 +99,7 @@ export const clearAppData = async (): Promise<void> => {
       SETTINGS_STORAGE_KEY,
       LANGUAGE_STORAGE_KEY,
       THEME_STORAGE_KEY,
-      HELICOPTER_CAUGHT_STORAGE_KEY,
+      MASCOT_CAUGHT_STORAGE_KEY,
     ]);
   } catch {
     // Nothing to do: at worst the old data sticks around, not critical.
