@@ -162,7 +162,6 @@ export type Translations = {
     isCapitalYes: string;
     isCapitalNo: string;
     populationUnit: string;
-    letterUnit: string;
     finalScoreTitle: string;
   };
 };

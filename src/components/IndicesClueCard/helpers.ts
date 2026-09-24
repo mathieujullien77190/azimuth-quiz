@@ -1,12 +1,3 @@
-/** Number of letters in the name, spaces/dashes/apostrophes excluded (e.g. "Rio de Janeiro" -> 13). */
-export const letterCount = (name: string): number => name.replace(/[^\p{L}]/gu, '').length;
-
-/** Number of words in the name (e.g. "San Francisco" -> 2, "Rio de Janeiro" -> 3). */
-export const wordCount = (name: string): number => name.trim().split(/\s+/).filter(Boolean).length;
-
-/** First letter of the name, uppercase (e.g. "Rio de Janeiro" -> "R"). */
-export const firstLetterOf = (name: string): string => name.trim().charAt(0).toUpperCase();
-
 /** Every vowel in the name, in order, accents stripped and uppercased, space-separated (e.g.
  * "São Paulo" -> "A O A U O"). */
 export const vowelsOf = (name: string): string =>

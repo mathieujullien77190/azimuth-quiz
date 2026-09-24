@@ -3,7 +3,7 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, isCapitalPlace, spacing } from '@/constants';
 import { countryCurrencyName, countryFlagColors, flagEmoji, FLAG_COLOR_FIELD } from '@/constants/places/countries';
-import { formatDistance, formatNumber } from '@/helpers';
+import { formatDistance, formatNumber, nameSkeleton } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
 import { FLAG_FONT_FAMILY } from '@/themes/fonts';
@@ -12,16 +12,7 @@ import type { Theme } from '@/types';
 import Compass from '../Compass';
 import EarthSection from '../EarthSection';
 import { COMPASS_CLUE_SIZE, EARTH_CLUE_SIZE, POSITION_COORDS } from './constants';
-import {
-  dayNightEmoji,
-  elevationTierEmoji,
-  firstLetterOf,
-  letterCount,
-  localTimeFor,
-  populationTier,
-  vowelsOf,
-  wordCount,
-} from './helpers';
+import { dayNightEmoji, elevationTierEmoji, localTimeFor, populationTier, vowelsOf } from './helpers';
 import type { IndicesClueCardProps } from './types';
 
 /** Increasing diameters for the 5 dots of the population gauge (see `populationTier`). */
@@ -43,6 +34,7 @@ const multiStageProgress = (
     populationStage?: number;
     currencyStage?: number;
     localTimeStage?: number;
+    letterStage?: number;
   },
 ): { stage: number; max: number } | undefined => {
   switch (clueId) {
@@ -62,6 +54,8 @@ const multiStageProgress = (
       return { stage: Math.min(stages.currencyStage ?? 1, 2), max: 2 };
     case 'localTime':
       return { stage: Math.min(stages.localTimeStage ?? 1, 2), max: 2 };
+    case 'letter':
+      return { stage: Math.min(stages.letterStage ?? 1, 2), max: 2 };
     default:
       return undefined;
   }
@@ -148,6 +142,15 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       ...typography.heading,
       color: colors.accent,
       fontSize: fontSize.subtitle,
+      textAlign: 'center',
+    },
+    // Smaller/letter-spaced sibling of statValue: the "letter" clue's text (e.g. "S__ _________")
+    // can get long for multi-word names, unlike every other clue's short value.
+    letterValue: {
+      ...typography.heading,
+      color: colors.accent,
+      fontSize: fontSize.body,
+      letterSpacing: 1,
       textAlign: 'center',
     },
     statUnit: {
@@ -254,6 +257,7 @@ const revealedBody = (
     populationStage,
     currencyStage,
     localTimeStage,
+    letterStage,
   }: Pick<
     IndicesClueCardProps,
     | 'clueId'
@@ -267,9 +271,10 @@ const revealedBody = (
     | 'populationStage'
     | 'currencyStage'
     | 'localTimeStage'
+    | 'letterStage'
   >,
   styles: ReturnType<typeof createStyles>,
-  units: { population: string; letters: string },
+  units: { population: string },
   colors: Theme['colors'],
   isCapitalLabels: { yes: string; no: string },
 ) => {
@@ -340,17 +345,12 @@ const revealedBody = (
         </>
       );
     }
-    case 'letterCount':
-      return (
-        <>
-          <Text style={styles.statValue}>{letterCount(place.name)}</Text>
-          <Text style={styles.statUnit}>{units.letters}</Text>
-        </>
-      );
-    case 'wordCount':
-      return <Text style={styles.statValue}>{wordCount(place.name)}</Text>;
-    case 'firstLetter':
-      return <Text style={styles.statValue}>{firstLetterOf(place.name)}</Text>;
+    case 'letter': {
+      const stage = letterStage ?? 1;
+      const groups = nameSkeleton(place.name, { lengthKnown: stage >= 2 });
+      const text = groups.map((group) => group.map((slot) => slot ?? '_').join('')).join(' ');
+      return <Text style={styles.letterValue}>{text}</Text>;
+    }
     case 'vowels':
       return <Text style={styles.statValue}>{vowelsOf(place.name)}</Text>;
     case 'flagColors': {
@@ -432,6 +432,7 @@ export const IndicesClueCard = ({
   populationStage,
   currencyStage,
   localTimeStage,
+  letterStage,
 }: IndicesClueCardProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
@@ -447,6 +448,7 @@ export const IndicesClueCard = ({
           elevationStage,
           emojiStage,
           flagStage,
+          letterStage,
           localTimeStage,
           populationStage,
         })
@@ -506,12 +508,13 @@ export const IndicesClueCard = ({
                 elevationStage,
                 emojiStage,
                 flagStage,
+                letterStage,
                 localTimeStage,
                 place,
                 populationStage,
               },
               styles,
-              { letters: t.indicesGame.letterUnit, population: t.indicesGame.populationUnit },
+              { population: t.indicesGame.populationUnit },
               colors,
               { no: t.indicesGame.isCapitalNo, yes: t.indicesGame.isCapitalYes },
             )}

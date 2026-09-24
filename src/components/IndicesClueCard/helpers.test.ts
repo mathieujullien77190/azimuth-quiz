@@ -1,15 +1,4 @@
-import { dayNightEmoji, elevationTierEmoji, letterCount, localTimeFor, populationTier, vowelsOf, wordCount } from './helpers';
-
-describe('letterCount', () => {
-  it('counts letters only, excluding spaces', () => {
-    expect(letterCount('Rio de Janeiro')).toBe(12);
-  });
-
-  it('excludes hyphens and apostrophes', () => {
-    expect(letterCount('Saint-Étienne')).toBe(12);
-    expect(letterCount("Côte d'Ivoire")).toBe(11);
-  });
-});
+import { dayNightEmoji, elevationTierEmoji, localTimeFor, populationTier, vowelsOf } from './helpers';
 
 describe('vowelsOf', () => {
   it('extracts every vowel in order, uppercased', () => {
@@ -22,21 +11,6 @@ describe('vowelsOf', () => {
 
   it('returns an empty string when the name has no vowels', () => {
     expect(vowelsOf('Krk')).toBe('');
-  });
-});
-
-describe('wordCount', () => {
-  it('counts single-word names as 1', () => {
-    expect(wordCount('Paris')).toBe(1);
-  });
-
-  it('counts space-separated words', () => {
-    expect(wordCount('San Francisco')).toBe(2);
-    expect(wordCount('Rio de Janeiro')).toBe(3);
-  });
-
-  it('collapses repeated whitespace and trims', () => {
-    expect(wordCount('  New   York  ')).toBe(2);
   });
 });
 

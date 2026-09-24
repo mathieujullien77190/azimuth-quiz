@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { DEFAULT_ORIGIN, INDICES_CLUE_ORDER, PLAYER_COLORS, fontSize, spacing } from '@/constants';
-import { bearingDeg, distanceKm, formatNumber, playerDisplayName, resolveOrigin } from '@/helpers';
+import { bearingDeg, distanceKm, formatNumber, nameSkeleton, playerDisplayName, resolveOrigin } from '@/helpers';
 import { getCachedIndicesHistory, recordIndicesDraw } from '@/helpers/indicesHistory';
 import { useLanguage, useTranslation } from '@/i18n';
 import { useIndicesSettings } from '@/settings';
@@ -16,7 +16,7 @@ import Card from '../ui/Card';
 import RoundProgress from '../ui/RoundProgress';
 import Screen from '../ui/Screen';
 import { WRONG_ANSWER_PENALTY } from './constants';
-import { maxScoreForRound, nameSkeleton, normalizePlaceGuess, randomIndicesPlace, totalRevealCount } from './helpers';
+import { maxScoreForRound, normalizePlaceGuess, randomIndicesPlace, totalRevealCount } from './helpers';
 import type { IndicesGameScreenProps } from './types';
 
 const createStyles = ({ colors, typography }: Theme) =>
@@ -221,7 +221,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const bearing = bearingDeg(origin.coordinates, place.coordinates);
   const distance = distanceKm(origin.coordinates, place.coordinates);
 
-  const [revealedClueIds, setRevealedClueIds] = useState<IndicesClueId[]>(() => (settings.startWithFirstLetter ? ['firstLetter'] : []));
+  const [revealedClueIds, setRevealedClueIds] = useState<IndicesClueId[]>(() => (settings.startWithFirstLetter ? ['letter'] : []));
   const [turnIndex, setTurnIndex] = useState(0);
   const [buzzOpen, setBuzzOpen] = useState(false);
   const [buzzedIndex, setBuzzedIndex] = useState<number | null>(null);
@@ -257,23 +257,6 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const roundDelta = verdict === 'correct' ? remaining : 0;
   const displayScore = roundOver ? roundDelta : remaining;
 
-  // "M _ _ _" name recap above the buzz/give-up buttons, regardless of the order in which
-  // "Letters" / "Word count" / "First letter" are revealed: "Word count" alone gives
-  // generic boxes (not the real length), "Letters" gives the real length (per word if
-  // "Word count" is also known), "First letter" alone only shows the letter, no box.
-  const knowsWordCount = revealedClueIds.includes('wordCount');
-  const knowsLength = revealedClueIds.includes('letterCount');
-  const knowsFirstLetter = revealedClueIds.includes('firstLetter');
-  const skeletonGroups =
-    knowsWordCount || knowsLength || knowsFirstLetter || vowelsRevealed
-      ? nameSkeleton(place.name, {
-          groupByWord: knowsWordCount || vowelsRevealed,
-          revealFirst: knowsFirstLetter,
-          lengthKnown: knowsLength || vowelsRevealed,
-          revealVowels: vowelsRevealed,
-        })
-      : [];
-
   // The emoji reveals in 3 steps (place.emojis is a triplet): each extra click on the
   // already-revealed card counts as a newly picked clue (cost + turn), until exhausted.
   const emojiStage = revealedClueIds.filter((id) => id === 'emoji').length;
@@ -287,6 +270,15 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const populationStage = revealedClueIds.filter((id) => id === 'population').length;
   const currencyStage = revealedClueIds.filter((id) => id === 'currency').length;
   const localTimeStage = revealedClueIds.filter((id) => id === 'localTime').length;
+  // 1st click on "letter": first letter + word count (generic slots). 2nd click: real
+  // per-word length too.
+  const letterStage = revealedClueIds.filter((id) => id === 'letter').length;
+
+  // "M _ _ _" name recap above the buzz/give-up buttons: nothing shown until "letter" has
+  // been picked at least once (word count + first letter, together, see above); a 2nd click
+  // swaps the generic boxes for the real per-word length.
+  const skeletonGroups =
+    letterStage >= 1 ? nameSkeleton(place.name, { lengthKnown: letterStage >= 2 || vowelsRevealed, revealVowels: vowelsRevealed }) : [];
 
   // All the guards (round over, clue already revealed, emoji/flag exhausted) are enforced
   // upstream by `IndicesClueCard`: `onPress` is only provided if the card is genuinely
@@ -365,7 +357,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
     const nextPlace = randomIndicesPlace(settings.difficulty, settings.categories, language, getCachedIndicesHistory()!);
     recordIndicesDraw(nextPlace);
     setPlace(nextPlace);
-    setRevealedClueIds(settings.startWithFirstLetter ? ['firstLetter'] : []);
+    setRevealedClueIds(settings.startWithFirstLetter ? ['letter'] : []);
     setTurnIndex(0);
     setBuzzOpen(false);
     setBuzzedIndex(null);
@@ -558,6 +550,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
             const isPopulation = clueId === 'population';
             const isCurrency = clueId === 'currency';
             const isLocalTime = clueId === 'localTime';
+            const isLetter = clueId === 'letter';
             // Flag: always exactly 3 clicks regardless of how many colors the flag actually has
             // — 1 color, then every color, then the actual flag (see IndicesClueCard).
             const flagMaxStage = 3;
@@ -568,7 +561,8 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
               (isElevation && !roundOver && elevationStage < 2) ||
               (isPopulation && !roundOver && populationStage < 2) ||
               (isCurrency && !roundOver && currencyStage < 2) ||
-              (isLocalTime && !roundOver && localTimeStage < 2);
+              (isLocalTime && !roundOver && localTimeStage < 2) ||
+              (isLetter && !roundOver && letterStage < 2);
             return (
               <IndicesClueCard
                 bearingDeg={bearing}
@@ -581,6 +575,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
                 flagStage={isFlag ? (roundOver ? flagMaxStage : flagStage) : undefined}
                 key={clueId}
                 label={t.indicesGame.clues[clueId]}
+                letterStage={isLetter ? (roundOver ? 2 : letterStage) : undefined}
                 localTimeStage={isLocalTime ? (roundOver ? 2 : localTimeStage) : undefined}
                 moreToReveal={moreToReveal}
                 onPress={roundOver ? undefined : () => pickClue(clueId)}

@@ -24,12 +24,10 @@ export const INDICES_PLACES: IndicesPlace[] = decodeIndicesPlaces(placesData as 
 export const INDICES_CLUE_ORDER: IndicesClueId[] = [
   'population',
   'localTime',
-  'firstLetter',
+  'letter',
   'isCapital',
   'bearing',
   'distance',
-  'letterCount',
-  'wordCount',
   'climate',
   'emoji',
   'flagColors',

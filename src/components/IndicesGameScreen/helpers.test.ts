@@ -1,10 +1,10 @@
 import { INDICES_CLUE_ORDER, INDICES_PLACES, isCapitalPlace, isFrenchCityPlace } from '@/constants';
 import type { Difficulty, IndicesClueId } from '@/types';
 
-import { maxScoreForRound, nameSkeleton, normalizePlaceGuess, randomIndicesPlace, totalRevealCount } from './helpers';
+import { maxScoreForRound, normalizePlaceGuess, randomIndicesPlace, totalRevealCount } from './helpers';
 
 describe('totalRevealCount', () => {
-  const TWO_STAGE: IndicesClueId[] = ['distance', 'elevation', 'population', 'currency', 'localTime'];
+  const TWO_STAGE: IndicesClueId[] = ['distance', 'elevation', 'population', 'currency', 'localTime', 'letter'];
 
   it('matches revealing every clue, including every multi-stage one', () => {
     const allIds: IndicesClueId[] = INDICES_CLUE_ORDER.flatMap((clueId) => {
@@ -71,70 +71,6 @@ describe('randomIndicesPlace', () => {
       const place = randomIndicesPlace('easy', ['cities', 'capital'], 'en');
       if (place.code === 'FR') expect(place.difficulty).not.toBe('easy');
     }
-  });
-});
-
-describe('nameSkeleton', () => {
-  it('one hidden slot per letter, single group when not grouped by word and length known', () => {
-    expect(nameSkeleton('Berlin', { groupByWord: false, revealFirst: false, lengthKnown: true })).toEqual([
-      [null, null, null, null, null, null],
-    ]);
-  });
-
-  it('reveals only the very first letter of the whole name', () => {
-    expect(nameSkeleton('Berlin', { groupByWord: false, revealFirst: true, lengthKnown: true })).toEqual([
-      ['B', null, null, null, null, null],
-    ]);
-  });
-
-  it('groups by the real per-word letter count when both word count and length are known', () => {
-    expect(nameSkeleton('Rio de Janeiro', { groupByWord: true, revealFirst: false, lengthKnown: true })).toEqual([
-      [null, null, null],
-      [null, null],
-      [null, null, null, null, null, null, null],
-    ]);
-  });
-
-  it('combines first-letter reveal with real word grouping', () => {
-    expect(nameSkeleton('Rio de Janeiro', { groupByWord: true, revealFirst: true, lengthKnown: true })).toEqual([
-      ['R', null, null],
-      [null, null],
-      [null, null, null, null, null, null, null],
-    ]);
-  });
-
-  it('ignores spaces/hyphens/apostrophes, keeps accented letters', () => {
-    expect(nameSkeleton("Côte d'Ivoire", { groupByWord: false, revealFirst: false, lengthKnown: true })).toEqual([
-      Array<null>(11).fill(null),
-    ]);
-  });
-
-  it('without lengthKnown or groupByWord, keeps only the revealed first letter', () => {
-    expect(nameSkeleton('Berlin', { groupByWord: false, revealFirst: true, lengthKnown: false })).toEqual([['B']]);
-  });
-
-  it('without lengthKnown or groupByWord and no revealed letter, returns no groups at all', () => {
-    expect(nameSkeleton('Berlin', { groupByWord: false, revealFirst: false, lengthKnown: false })).toEqual([]);
-  });
-
-  it('falls back to no first letter when the name has no letters at all', () => {
-    expect(nameSkeleton('42', { groupByWord: true, revealFirst: true, lengthKnown: false })).toEqual([[null]]);
-  });
-
-  it('word count known but not length: one generic slot per word, not the real per-word length', () => {
-    expect(nameSkeleton('Rio de Janeiro', { groupByWord: true, revealFirst: false, lengthKnown: false })).toEqual([
-      [null],
-      [null],
-      [null],
-    ]);
-  });
-
-  it('word count known but not length, with first letter revealed', () => {
-    expect(nameSkeleton('Rio de Janeiro', { groupByWord: true, revealFirst: true, lengthKnown: false })).toEqual([
-      ['R'],
-      [null],
-      [null],
-    ]);
   });
 });
 

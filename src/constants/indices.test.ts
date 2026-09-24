@@ -9,8 +9,7 @@ const ALL_CLUE_IDS: IndicesClueId[] = [
   'climate',
   'emoji',
   'elevation',
-  'letterCount',
-  'wordCount',
+  'letter',
   'flagColors',
   'bearing',
   'distance',
@@ -18,7 +17,6 @@ const ALL_CLUE_IDS: IndicesClueId[] = [
   'phoneCode',
   'currency',
   'airportCode',
-  'firstLetter',
   'isCapital',
 ];
 

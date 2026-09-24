@@ -21,6 +21,8 @@ export {
   pickLeastDrawn,
   recordIndicesDraw,
 } from './indicesHistory';
+export { nameSkeleton } from './indicesSkeleton';
+export type { NameSkeletonSlot } from './indicesSkeleton';
 export { resolveOrigin } from './location';
 export { filterPlaces, pickPlaces } from './places';
 export { shuffle } from './random';

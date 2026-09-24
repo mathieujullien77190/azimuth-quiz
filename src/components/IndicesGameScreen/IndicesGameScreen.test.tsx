@@ -101,8 +101,15 @@ describe('IndicesGameScreen — picking clues', () => {
 
   it('shows the revealed first letter in the word-recap skeleton above the buzz row', async () => {
     const { getAllByText } = await renderGame({ playerNames: ['Zoé'] });
-    await fireEvent.press(getAllByText('Première lettre')[0]);
+    await fireEvent.press(getAllByText('Lettres')[0]);
     expect(getAllByText('P').length).toBeGreaterThan(0);
+  });
+
+  it('letter: 2nd click swaps the generic slot for the real length in both the card and the skeleton', async () => {
+    const { getAllByText } = await renderGame({ playerNames: ['Zoé'] });
+    await fireEvent.press(getAllByText('Lettres')[0]);
+    await fireEvent.press(getAllByText('P')[0]);
+    expect(getAllByText('P____').length).toBeGreaterThan(0);
   });
 
   it('startWithFirstLetter: the first letter is already revealed (and already costs 1 point) at round start', async () => {
@@ -116,6 +123,12 @@ describe('IndicesGameScreen — picking clues', () => {
     await fireEvent.press(getByText('🤷 Je ne sais pas'));
     await fireEvent.press(getByText('Continuer'));
     expect(getByText('29 pts')).toBeTruthy();
+  });
+
+  it('startWithFirstLetter: still just stage 1 (generic slot), a 2nd click on "letter" reveals the real length', async () => {
+    const { getAllByText } = await renderGame({ playerNames: ['Zoé'], startWithFirstLetter: true });
+    await fireEvent.press(getAllByText('P')[0]);
+    expect(getAllByText('P____').length).toBeGreaterThan(0);
   });
 
   it('flag colors reveal one click, then the actual flag, then locks', async () => {
@@ -144,12 +157,10 @@ describe('IndicesGameScreen — vowels bonus clue', () => {
   const ALL_OTHER_LABELS = [
     'Population',
     'Heure locale',
-    'Première lettre',
+    'Lettres',
     'Capitale',
     'Cap',
     'Distance',
-    'Lettres',
-    'Nombre de mots',
     'Climat',
     'Emoji',
     'Drapeau',
@@ -178,7 +189,7 @@ describe('IndicesGameScreen — vowels bonus clue', () => {
     for (const label of ALL_OTHER_LABELS) {
       await fireEvent.press(getByText(label));
     }
-    // 16 real clues picked, score still comfortably above 1.
+    // 14 real clues picked, score still comfortably above 1.
     expect(getByText(/pts$/).props.children.join('')).not.toBe('1 pts');
 
     await fireEvent.press(getByText('Voyelles'));

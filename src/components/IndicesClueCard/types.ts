@@ -35,4 +35,7 @@ export type IndicesClueCardProps = {
   /** Only for the `localTime` clue: 1 = day/night emoji (see `dayNightEmoji`), 2 = exact
    * local time revealed. */
   localTimeStage?: number;
+  /** Only for the `letter` clue: 1 = first letter + word count (generic slots), 2 = every
+   * letter's slot, real length per word. */
+  letterStage?: number;
 };

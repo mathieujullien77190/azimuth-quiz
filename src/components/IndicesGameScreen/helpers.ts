@@ -5,12 +5,12 @@ import type { Language } from '@/i18n';
 import type { Difficulty, IndicesCategory, IndicesPlace } from '@/types';
 
 /** Clues that reveal in 2 clicks: tier/symbol/day-night on the 1st, exact value on the 2nd. */
-const TWO_STAGE_CLUE_IDS = new Set(['distance', 'elevation', 'population', 'currency', 'localTime']);
+const TWO_STAGE_CLUE_IDS = new Set(['distance', 'elevation', 'population', 'currency', 'localTime', 'letter']);
 
 /** Total number of possible clues in a round if all were taken, counted multiple times
  * for the ones that reveal in stages (emoji: 3 clicks; distance/elevation/population/
- * currency/localTime: 2; flag: always 3 — 1 color, then every color regardless of how many the
- * flag actually has, then the actual flag) — used as the base for `maxScoreForRound`. */
+ * currency/localTime/letter: 2; flag: always 3 — 1 color, then every color regardless of how many
+ * the flag actually has, then the actual flag) — used as the base for `maxScoreForRound`. */
 export const totalRevealCount = (): number =>
   INDICES_CLUE_ORDER.reduce((total, clueId) => {
     const count = clueId === 'emoji' || clueId === 'flagColors' ? 3 : TWO_STAGE_CLUE_IDS.has(clueId) ? 2 : 1;
@@ -56,58 +56,3 @@ export const normalizePlaceGuess = (value: string): string =>
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]+/gu, '');
-
-/** A group (word) of "slots" in the recap above the buzz/give-up buttons: each slot is either
- * an already-revealed letter, or `null` (a box to draw as a dash, not revealed yet). */
-export type NameSkeletonSlot = string | null;
-
-/** Number of generic boxes per word when "Word count" is known but not "Letters": just 1
- * dash per word (not the real length, which isn't known yet) — just enough to tell the
- * words apart, spaced widely (see `skeletonRow` in IndicesGameScreen). */
-const GENERIC_WORD_SLOTS = 1;
-
-const isVowel = (letter: string): boolean =>
-  /[AEIOU]/.test(
-    letter
-      .normalize('NFD')
-      .replace(/[̀-ͯ]/g, '')
-      .toUpperCase(),
-  );
-
-/**
- * Splits the name into groups of slots for the "M _ _ _" recap above the buzz/give-up buttons.
- * `groupByWord` separates the words (the "Word count" clue revealed) instead of a single block,
- * `revealFirst` reveals the very first letter of the name (the "First letter" clue revealed),
- * `lengthKnown` (the "Letters" clue revealed) gives the real length of each box, `revealVowels`
- * (the "Vowels" bonus clue revealed) fills in every vowel of the name on top of whatever else is
- * known:
- * - neither known: no boxes, only the revealed letter (at most one) is kept;
- * - words known without the length: `GENERIC_WORD_SLOTS` boxes per word (indicative shape, not
- *   the real length);
- * - length known (words grouped or not): the real number of letters, per word if grouped.
- */
-export const nameSkeleton = (
-  name: string,
-  options: { groupByWord: boolean; revealFirst: boolean; lengthKnown: boolean; revealVowels?: boolean },
-): NameSkeletonSlot[][] => {
-  const words = options.groupByWord ? name.trim().split(/\s+/) : [name];
-  const firstLetter = name.replace(/[^\p{L}]/gu, '')[0]?.toUpperCase() ?? null;
-
-  if (options.groupByWord && !options.lengthKnown) {
-    return words.map((_, wordIndex) =>
-      Array.from({ length: GENERIC_WORD_SLOTS }, (_, letterIndex): NameSkeletonSlot =>
-        options.revealFirst && wordIndex === 0 && letterIndex === 0 ? firstLetter : null,
-      ),
-    );
-  }
-
-  const groups = words.map((word, wordIndex) =>
-    [...word.replace(/[^\p{L}]/gu, '')].map((letter, letterIndex): NameSkeletonSlot =>
-      (options.revealFirst && wordIndex === 0 && letterIndex === 0) || (options.revealVowels && isVowel(letter))
-        ? letter.toUpperCase()
-        : null,
-    ),
-  );
-  if (options.lengthKnown) return groups;
-  return groups.map((group) => group.filter((slot) => slot !== null)).filter((group) => group.length > 0);
-};

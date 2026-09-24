@@ -166,8 +166,7 @@ export type IndicesClueId =
   | 'climate'
   | 'emoji'
   | 'elevation'
-  | 'letterCount'
-  | 'wordCount'
+  | 'letter'
   | 'flagColors'
   | 'bearing'
   | 'distance'
@@ -175,7 +174,6 @@ export type IndicesClueId =
   | 'phoneCode'
   | 'currency'
   | 'airportCode'
-  | 'firstLetter'
   | 'isCapital'
   | 'vowels';
 

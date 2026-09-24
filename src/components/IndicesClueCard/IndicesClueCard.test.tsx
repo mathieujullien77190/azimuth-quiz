@@ -79,14 +79,14 @@ describe('IndicesClueCard — revealed content per clue', () => {
     expect(getByText('m')).toBeTruthy();
   });
 
-  it('letterCount: renders the letter count and unit', async () => {
-    const { getByText } = await renderCard({ clueId: 'letterCount', state: 'revealed' });
-    expect(getByText('lettres')).toBeTruthy();
+  it('letter: stage 1 (default) shows only the first letter, no boxes ("Paris" -> "P")', async () => {
+    const { getByText } = await renderCard({ clueId: 'letter', state: 'revealed' });
+    expect(getByText('P')).toBeTruthy();
   });
 
-  it('wordCount: renders the word count', async () => {
-    const { toJSON } = await renderCard({ clueId: 'wordCount', state: 'revealed' });
-    expect(toJSON()).toBeTruthy();
+  it('letter: stage 2 shows the real length ("Paris" -> "P____")', async () => {
+    const { getByText } = await renderCard({ clueId: 'letter', letterStage: 2, state: 'revealed' });
+    expect(getByText('P____')).toBeTruthy();
   });
 
   it('bearing: renders the compass when bearingDeg is provided', async () => {
