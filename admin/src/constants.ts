@@ -1,3 +1,4 @@
+import { CATEGORIES } from '@/constants';
 import { countryName } from '@/constants/places/countries';
 import type { Category, Difficulty, IndicesPositionInCountry } from '@/types';
 
@@ -13,10 +14,14 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   kids: 'Enfants',
 };
 
+export const CATEGORY_EMOJIS: Record<Category, string> = Object.fromEntries(CATEGORIES.map((c) => [c.id, c.emoji])) as Record<Category, string>;
+
+// citiesFr uses a distinctly different hue from cities (warm orange vs. cool blue) so a French
+// city can never be mistaken for a "regular" one at a glance.
 export const CATEGORY_COLORS: Record<Category, string> = {
   cities: '#60A5FA',
   capital: '#FBBF24',
-  citiesFr: '#38BDF8',
+  citiesFr: '#FB923C',
   mountains: '#A78BFA',
   landmarks: '#F5B841',
   nature: '#4ADE80',

@@ -10,6 +10,7 @@ import { Pagination, pageCount, paginate } from '../../components/Pagination';
 import { WikiLinks } from '../../components/WikiLinks';
 import {
   CATEGORY_COLORS,
+  CATEGORY_EMOJIS,
   CATEGORY_LABELS,
   CATEGORY_ORDER,
   countryFor,
@@ -231,6 +232,11 @@ export const PlacesView = () => {
                 <span className="place-meta" title={countryFor(row.code)}>
                   {countryFor(row.code)} ({row.code})
                 </span>
+                {row.boussole && (
+                  <span className="category-badge" style={{ '--tier-color': CATEGORY_COLORS[row.boussole.category] } as React.CSSProperties}>
+                    {CATEGORY_EMOJIS[row.boussole.category]} {CATEGORY_LABELS[row.boussole.category]}
+                  </span>
+                )}
               </div>
               <div className="place-coords">
                 <span className="coord">{fmtCoord(row.coordinates.latitude, 'N', 'S')}</span>
