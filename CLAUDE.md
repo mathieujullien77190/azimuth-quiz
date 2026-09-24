@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# Full Azimut
+# Azimuth Quiz
 
 Jeu de geographie : un lieu s'affiche, le joueur vise son cap a la boussole et estime
 la distance depuis un point de depart (position GPS ou Paris par defaut). 1 a 6 joueurs

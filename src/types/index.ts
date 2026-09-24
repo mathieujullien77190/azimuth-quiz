@@ -157,7 +157,7 @@ export type ThemeTypography = {
   body: TextStyle;
 };
 
-// --- Indices: game independent from Full Azimut, with its own places (see constants/indices.ts) ---
+// --- Indices: game independent from Azimuth Quiz, with its own places (see constants/indices.ts) ---
 
 /** A clue's identifier: they all have the same "cost" (1 point off the score countdown,
  * see IndicesGameScreen), no imposed order, each player freely picks on their turn. `vowels`

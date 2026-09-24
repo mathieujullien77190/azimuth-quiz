@@ -14,6 +14,6 @@ export const POSITION_COORDS: Record<IndicesPositionInCountry, { left: number; t
 };
 
 // 'bearing'/'distance' clues: switch to a full-width card once revealed, to give the
-// compass / Earth (components reused as-is from Full Azimut) room to breathe.
+// compass / Earth (components reused as-is from Azimuth Quiz) room to breathe.
 export const COMPASS_CLUE_SIZE = 140;
 export const EARTH_CLUE_SIZE = 170;

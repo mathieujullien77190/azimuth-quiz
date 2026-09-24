@@ -63,7 +63,7 @@ export const App = () => {
       <header className="top">
         <div className="top-inner">
           <h1>
-            Admin <span className="dim">— Full Azimut v{appConfig.expo.version}</span>
+            Admin <span className="dim">— Azimuth Quiz v{appConfig.expo.version}</span>
           </h1>
           <div className="tabs">
             <button type="button" className="chip game-chip" aria-pressed={tab === 'places'} onClick={() => setTab('places')}>

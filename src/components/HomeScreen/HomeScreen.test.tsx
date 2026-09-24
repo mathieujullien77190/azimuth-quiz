@@ -30,7 +30,7 @@ beforeEach(() => {
 describe('HomeScreen — content', () => {
   it('shows the title, tagline, and both game cards', async () => {
     const { getByText, getAllByText } = await render(<HomeScreen />);
-    expect(getByText('FULL AZIMUT')).toBeTruthy();
+    expect(getByText('AZIMUTH QUIZ')).toBeTruthy();
     expect(getByText('Choisis ton jeu de géographie')).toBeTruthy();
     expect(getByText('Boussole')).toBeTruthy();
     expect(getByText('Indices')).toBeTruthy();
@@ -76,7 +76,7 @@ describe('HomeScreen — UFO settings button', () => {
     await flushMicrotasks();
 
     // The header must have a non-zero size for the UFO to start moving.
-    await fireEvent(getByText('FULL AZIMUT').parent!, 'layout', {
+    await fireEvent(getByText('AZIMUTH QUIZ').parent!, 'layout', {
       nativeEvent: { layout: { width: 300, height: 120, x: 0, y: 0 } },
     });
 
@@ -102,7 +102,7 @@ describe('HomeScreen — UFO settings button', () => {
     const { getByText, unmount } = await render(<HomeScreen />);
     await waitFor(() => expect(mockedLoadUfoCaught).toHaveBeenCalled());
     await flushMicrotasks();
-    await fireEvent(getByText('FULL AZIMUT').parent!, 'layout', {
+    await fireEvent(getByText('AZIMUTH QUIZ').parent!, 'layout', {
       nativeEvent: { layout: { width: 300, height: 120, x: 0, y: 0 } },
     });
 
@@ -123,7 +123,7 @@ describe('HomeScreen — UFO settings button', () => {
     const { getByText, unmount } = await render(<HomeScreen />);
     await waitFor(() => expect(mockedLoadUfoCaught).toHaveBeenCalled());
     await flushMicrotasks();
-    await fireEvent(getByText('FULL AZIMUT').parent!, 'layout', {
+    await fireEvent(getByText('AZIMUTH QUIZ').parent!, 'layout', {
       nativeEvent: { layout: { width: 300, height: 120, x: 0, y: 0 } },
     });
 
@@ -154,7 +154,7 @@ describe('HomeScreen — UFO settings button', () => {
     const { getByText, unmount } = await render(<HomeScreen />);
     await waitFor(() => expect(mockedLoadUfoCaught).toHaveBeenCalled());
     await flushMicrotasks();
-    await fireEvent(getByText('FULL AZIMUT').parent!, 'layout', {
+    await fireEvent(getByText('AZIMUTH QUIZ').parent!, 'layout', {
       nativeEvent: { layout: { width: 300, height: 120, x: 0, y: 0 } },
     });
 
@@ -177,7 +177,7 @@ describe('HomeScreen — UFO settings button', () => {
     const { getByText, unmount } = await render(<HomeScreen />);
     await waitFor(() => expect(mockedLoadUfoCaught).toHaveBeenCalled());
     await flushMicrotasks();
-    await fireEvent(getByText('FULL AZIMUT').parent!, 'layout', {
+    await fireEvent(getByText('AZIMUTH QUIZ').parent!, 'layout', {
       nativeEvent: { layout: { width: 300, height: 120, x: 0, y: 0 } },
     });
 

@@ -1,4 +1,4 @@
-# Full Azimut
+# Azimuth Quiz
 
 🔗 **[Jouer dans le navigateur](https://mathieujullien77190.github.io/full-azimut/)**
 

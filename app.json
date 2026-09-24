@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Full Azimut",
+    "name": "Azimuth Quiz",
     "slug": "full-azimut",
     "scheme": "fullazimut",
     "version": "2.9.0",
@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Full Azimut utilise ta position comme point de départ des distances, et l’orientation du téléphone pour que la boussole pointe vers le vrai nord."
+        "NSLocationWhenInUseUsageDescription": "Azimuth Quiz utilise ta position comme point de départ des distances, et l’orientation du téléphone pour que la boussole pointe vers le vrai nord."
       }
     },
     "android": {
@@ -33,7 +33,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Full Azimut utilise ta position comme point de départ des distances, et l’orientation du téléphone pour que la boussole pointe vers le vrai nord."
+          "locationWhenInUsePermission": "Azimuth Quiz utilise ta position comme point de départ des distances, et l’orientation du téléphone pour que la boussole pointe vers le vrai nord."
         }
       ],
       "expo-localization"

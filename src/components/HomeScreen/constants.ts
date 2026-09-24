@@ -1,4 +1,4 @@
-export const APP_TITLE = 'FULL AZIMUT';
+export const APP_TITLE = 'AZIMUTH QUIZ';
 
 // Approximate footprint of the UFO button (dome + ring), to keep it fully visible
 // as it randomly moves within the title zone.
