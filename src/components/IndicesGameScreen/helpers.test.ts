@@ -92,6 +92,10 @@ describe('nameSkeleton', () => {
     expect(nameSkeleton('Berlin', { groupByWord: false, revealFirst: false, lengthKnown: false })).toEqual([]);
   });
 
+  it('falls back to no first letter when the name has no letters at all', () => {
+    expect(nameSkeleton('42', { groupByWord: true, revealFirst: true, lengthKnown: false })).toEqual([[null]]);
+  });
+
   it('word count known but not length: one generic slot per word, not the real per-word length', () => {
     expect(nameSkeleton('Rio de Janeiro', { groupByWord: true, revealFirst: false, lengthKnown: false })).toEqual([
       [null],

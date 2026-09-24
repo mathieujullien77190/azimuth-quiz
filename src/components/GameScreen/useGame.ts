@@ -23,15 +23,15 @@ import type { GamePhase, GameSettings, Guess, Origin, Place, Player, RoundRecord
 
 import { playerTotals, rotatedOrder } from './helpers';
 
-/** Cap de depart par defaut : le nord, aiguille deja visible et deplacable. */
+/** Default starting heading: north, needle already visible and movable. */
 const DEFAULT_BEARING = 0;
 
-/** Brouillon d'un joueur (aiguille + distance) avant validation. `*Touched` distingue une valeur
- * vraiment choisie par le joueur d'une valeur restee a son defaut (jamais touchee) : "Valider"
- * s'appuie dessus pour ne pas enregistrer une reponse au hasard. */
+/** A player's draft (needle + distance) before submitting. `*Touched` distinguishes a value
+ * genuinely chosen by the player from one left at its default (never touched): "Submit"
+ * relies on this to avoid recording a random answer. */
 type Draft = { bearing: number; distanceKm: number; bearingTouched: boolean; distanceTouched: boolean };
 
-/** Brouillon de depart : aiguille au nord, distance par defaut, rien encore touche. */
+/** Starting draft: needle at north, default distance, nothing touched yet. */
 const DEFAULT_DRAFT: Draft = {
   bearing: DEFAULT_BEARING,
   distanceKm: DEFAULT_DISTANCE_KM,
@@ -50,24 +50,24 @@ export const useGame = () => {
     deviceOriginNameRef.current = t.common.yourPosition;
   }, [t.common.yourPosition]);
 
-  // Reglages figes au lancement : les modifier ailleurs ne change pas la partie en cours.
+  // Settings frozen at launch: changing them elsewhere doesn't affect the ongoing game.
   const [config, setConfig] = useState<GameSettings>(DEFAULT_SETTINGS);
   const [phase, setPhase] = useState<GamePhase>('loading');
   const [origin, setOrigin] = useState<Origin>(DEFAULT_ORIGIN);
   const [places, setPlaces] = useState<Place[]>([]);
   const [roundIndex, setRoundIndex] = useState(0);
-  // Ordre d'affichage des onglets : par score cumule avant cette manche, le plus haut en premier
-  // (purement visuel : on peut choisir n'importe quel onglet dans n'importe quel ordre).
+  // Tab display order: by cumulative score before this round, highest first
+  // (purely visual: any tab can be picked in any order).
   const [roundOrder, setRoundOrder] = useState<number[]>([]);
   const [activePlayerIndex, setActivePlayerIndex] = useState(0);
   const [guessesByPlayer, setGuessesByPlayer] = useState<(Guess | undefined)[]>([]);
   const [records, setRecords] = useState<RoundRecord[]>([]);
-  // Brouillon (aiguille + distance, curseur de distance : surface en mode classique, corde en mode
-  // straightLine) de CHAQUE joueur, y compris non valide : change d'onglet via PlayerTabs ne doit
-  // jamais faire perdre une reponse en cours de saisie, meme avant le clic sur "Valider".
+  // Draft (needle + distance, distance slider: surface in classic mode, chord in
+  // straightLine mode) for EVERY player, including unsubmitted: switching tabs via PlayerTabs must
+  // never lose an in-progress answer, even before clicking "Submit".
   const [draftsByPlayer, setDraftsByPlayer] = useState<Draft[]>([]);
 
-  // Ignore le resultat d'un demarrage obsolete (demontage, ou rejouer avant la fin du chargement).
+  // Ignores the result of a stale start (unmount, or replaying before loading finished).
   const startId = useRef(0);
 
   const players: Player[] = useMemo(
@@ -81,14 +81,14 @@ export const useGame = () => {
   const isMultiplayer = players.length > 1;
   const maxDistanceKm = config.straightLine ? MAX_STRAIGHT_DISTANCE_KM : MAX_SURFACE_DISTANCE_KM;
 
-  /** Brouillon du joueur actif : sa reponse en cours (validee ou non). */
+  /** The active player's draft: their in-progress answer (submitted or not). */
   const activeDraft = draftsByPlayer[activePlayerIndex] ?? DEFAULT_DRAFT;
   const bearing = activeDraft.bearing;
   const distanceKm = activeDraft.distanceKm;
   const bearingTouched = activeDraft.bearingTouched;
   const distanceTouched = activeDraft.distanceTouched;
 
-  /** Met a jour uniquement le brouillon du joueur actif, sans toucher aux autres. */
+  /** Updates only the active player's draft, without touching the others. */
   const setBearing = useCallback(
     (value: number) => {
       setDraftsByPlayer((previous) =>
@@ -112,8 +112,8 @@ export const useGame = () => {
   );
 
   /**
-   * Nouvelle manche : chaque joueur repart avec un brouillon vierge, les onglets en rotation pure
-   * (voir `rotatedOrder`) pour que le premier a jouer change a chaque manche, equitablement.
+   * New round: each player starts over with a blank draft, tabs in pure rotation
+   * (see `rotatedOrder`) so the first player to answer changes fairly every round.
    */
   const startRound = useCallback((playerCount: number, roundIdx: number) => {
     const order = rotatedOrder(roundIdx, playerCount);
@@ -142,7 +142,7 @@ export const useGame = () => {
     setPhase('guess');
   }, [startRound]);
 
-  // On attend la lecture des reglages sauvegardes (rechargement direct sur l'ecran de jeu).
+  // Waits for the saved settings to be read (direct reload on the game screen).
   useEffect(() => {
     if (settingsReady) start();
     return () => {
@@ -152,7 +152,7 @@ export const useGame = () => {
 
   const currentPlayer = players[activePlayerIndex];
 
-  /** Reponses deja validees des AUTRES joueurs (pas celui en cours d'edition) : a montrer en estompe. */
+  /** Already-submitted answers of the OTHER players (not the one being edited): to show faded out. */
   const answered = useMemo(
     () =>
       players
@@ -164,15 +164,14 @@ export const useGame = () => {
     [players, guessesByPlayer, activePlayerIndex],
   );
 
-  /** Un joueur par index : a-t-il deja valide sa reponse ce tour-ci ? */
+  /** One player per index: have they already submitted their answer this round? */
   const answeredByPlayer = useMemo(() => guessesByPlayer.map((guess) => guess !== undefined), [guessesByPlayer]);
 
   /**
-   * Enregistre la reponse du joueur actif a partir de son brouillon courant. Renvoie le tableau
-   * des reponses a jour et si tout le monde a maintenant repondu — ne declenche JAMAIS la
-   * revelation elle-meme : ca reste le seul travail de "Valider" (voir `submit`), pour que passer
-   * sur un autre onglet (meme si c'etait la derniere reponse manquante) n'affiche jamais la
-   * reponse tout seul.
+   * Records the active player's answer from their current draft. Returns the up-to-date
+   * answers array and whether everyone has now answered — NEVER triggers the reveal
+   * itself: that stays the sole job of "Submit" (see `submit`), so switching to another
+   * tab (even if it was the last missing answer) never shows the reveal by itself.
    */
   const commitActiveGuess = useCallback((): { updated: (Guess | undefined)[]; complete: boolean } => {
     const place = places[roundIndex];
@@ -190,11 +189,12 @@ export const useGame = () => {
     return { updated, complete: !roundOrder.some((index) => updated[index] === undefined) };
   }, [activePlayerIndex, bearing, config, distanceKm, guessesByPlayer, places, roundIndex, roundOrder]);
 
-  /** Calcule les scores et passe en revelation. */
+  /** Computes the scores and switches to the reveal phase. */
   const reveal = useCallback(
     (updated: (Guess | undefined)[]) => {
+      // Only ever called from `submit` right after `commitActiveGuess` confirmed `complete`,
+      // which itself requires `places[roundIndex]` to already be defined — so this is never `undefined`.
       const place = places[roundIndex];
-      if (place === undefined) return;
 
       const results = applyBestBonus(
         players.map((_, index) => {
@@ -209,10 +209,10 @@ export const useGame = () => {
   );
 
   /**
-   * Change d'onglet. Cliquer directement sur un autre joueur valide d'abord la reponse en cours
-   * (comme "Valider"), puis bascule sur le joueur choisi — meme si cette validation vient de
-   * repondre au dernier joueur manquant, la revelation n'apparait pas : il faut appuyer sur
-   * "Valider" pour l'obtenir.
+   * Switches tabs. Clicking directly on another player first submits the in-progress answer
+   * (like "Submit"), then switches to the chosen player — even if that submission just
+   * answered the last missing player, the reveal doesn't appear: you have to press
+   * "Submit" to get it.
    */
   const selectPlayer = useCallback(
     (index: number) => {
@@ -226,7 +226,7 @@ export const useGame = () => {
     [activePlayerIndex, commitActiveGuess, config.allowRevision, guessesByPlayer],
   );
 
-  /** Bouton "Valider" : seul chemin qui revele la reponse, une fois tout le monde repondu. */
+  /** "Submit" button: the only path that reveals the answer, once everyone has answered. */
   const submit = useCallback(() => {
     const { updated, complete } = commitActiveGuess();
     if (complete) {
@@ -234,8 +234,9 @@ export const useGame = () => {
       return;
     }
 
-    const nextUnanswered = roundOrder.find((index) => updated[index] === undefined);
-    if (nextUnanswered !== undefined) setActivePlayerIndex(nextUnanswered);
+    // `complete` is false, so at least one player in `roundOrder` still has no guess in `updated`.
+    const nextUnanswered = roundOrder.find((index) => updated[index] === undefined) as number;
+    setActivePlayerIndex(nextUnanswered);
   }, [commitActiveGuess, reveal, roundOrder]);
 
   const next = useCallback(() => {

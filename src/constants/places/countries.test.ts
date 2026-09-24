@@ -1,6 +1,16 @@
 import { PLACES } from '@/constants';
 
-import { COUNTRY_NAMES, countryCurrencyName, countryFlagColors, countryName, FLAG_COLOR_FIELD } from './countries';
+import type { CountryRow } from './countries';
+import {
+  COUNTRY_NAMES,
+  countryCurrencyName,
+  countryFlagColors,
+  countryName,
+  decodeCountry,
+  encodeCountry,
+  FLAG_COLOR_FIELD,
+  serializeCountries,
+} from './countries';
 
 describe('COUNTRY_NAMES', () => {
   it('gives both fr and en names for every entry', () => {
@@ -54,5 +64,36 @@ describe('countryCurrencyName', () => {
 
   it('returns undefined for a country with no currency data', () => {
     expect(countryCurrencyName('XX')).toBeUndefined();
+  });
+});
+
+describe('decodeCountry / encodeCountry', () => {
+  const row: CountryRow = ['France', 'France', [['blue', '#0055A4', 33]], 'Euro', '€', '+33'];
+
+  it('decodeCountry turns a positional row into a named entry', () => {
+    expect(decodeCountry(row)).toEqual({
+      fr: 'France',
+      en: 'France',
+      flag: [['blue', '#0055A4', 33]],
+      currency: 'Euro',
+      currencySymbol: '€',
+      phoneCode: '+33',
+    });
+  });
+
+  it('encodeCountry is the inverse of decodeCountry', () => {
+    expect(encodeCountry(decodeCountry(row))).toEqual(row);
+  });
+});
+
+describe('serializeCountries', () => {
+  it('sorts by code and prints one entry per line', () => {
+    const countries: Record<string, CountryRow> = {
+      GB: ['Royaume-Uni', 'United Kingdom', null, null, null, '+44'],
+      FR: ['France', 'France', null, null, null, '+33'],
+    };
+    expect(serializeCountries(countries)).toBe(
+      '{\n' + '  "FR": ["France","France",null,null,null,"+33"],\n' + '  "GB": ["Royaume-Uni","United Kingdom",null,null,null,"+44"]\n' + '}\n',
+    );
   });
 });

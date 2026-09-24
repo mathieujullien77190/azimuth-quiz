@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, userEvent } from '@testing-library/react-native';
 
 import Button from '.';
 
@@ -25,12 +25,11 @@ describe('Button', () => {
     expect(onPress).not.toHaveBeenCalled();
   });
 
-  it('resolves a non-empty style for both the pressed and the resting state', async () => {
-    const { getByRole } = await render(<Button label="Go" onPress={jest.fn()} />);
-    expect(getByRole('button').props.style).toBeTruthy();
-    fireEvent(getByRole('button'), 'pressIn');
-    expect(getByRole('button').props.style).toBeTruthy();
-    fireEvent(getByRole('button'), 'pressOut');
-    expect(getByRole('button').props.style).toBeTruthy();
+  it('goes through a real pressIn/pressOut cycle (exercises the pressed style)', async () => {
+    const onPress = jest.fn();
+    const user = userEvent.setup();
+    const { getByRole } = await render(<Button label="Go" onPress={onPress} />);
+    await user.press(getByRole('button'));
+    expect(onPress).toHaveBeenCalledTimes(1);
   });
 });

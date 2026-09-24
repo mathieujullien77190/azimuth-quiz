@@ -16,9 +16,9 @@ describe('UfoButton', () => {
     const { unmount } = await render(<UfoButton accessibilityLabel="Reglages" onPress={jest.fn()} />);
     await act(() => jest.advanceTimersByTimeAsync(TICK_MS * 10));
     unmount();
-    // Plus d'avancee de timer censee toucher un composant demonte : si l'intervalle n'etait pas
-    // nettoye, ce serait une fuite (pas forcement une erreur ici), mais on verifie au moins
-    // l'absence de crash post-demontage.
+    // No more timer advancement should reach an unmounted component: if the interval weren't
+    // cleaned up, it would be a leak (not necessarily an error here), but we at least verify
+    // there's no crash after unmount.
     await act(() => jest.advanceTimersByTimeAsync(TICK_MS * 10));
     jest.useRealTimers();
   });

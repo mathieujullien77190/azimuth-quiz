@@ -60,7 +60,7 @@ describe('SetupScreen — multiplayer-only toggles', () => {
 describe('SetupScreen — categories / difficulty / zone / rounds / mode', () => {
   it('toggles a category filter', async () => {
     const { getByText, updateSettings } = await renderSetup();
-    // Montagnes est deja selectionnee par defaut : cliquer la deselectionne.
+    // Mountains is already selected by default: clicking it deselects it.
     await fireEvent.press(getByText('Montagnes'));
     expect(updateSettings).toHaveBeenCalledWith({
       categories: DEFAULT_SETTINGS.categories.filter((category) => category !== 'mountains'),
@@ -136,6 +136,14 @@ describe('SetupScreen — custom origin inputs', () => {
     const { getByDisplayValue } = await renderSetup({ useGps: false, customLatitude: 48.8566, customLongitude: 2.3522 });
     expect(getByDisplayValue('48.8566')).toBeTruthy();
     expect(getByDisplayValue('2.3522')).toBeTruthy();
+  });
+
+  it('still shows the custom origin inputs while settings are loading (not ready yet)', async () => {
+    const { getByDisplayValue } = await renderSetup(
+      { useGps: false, customLatitude: 48.8566, customLongitude: 2.3522 },
+      false,
+    );
+    expect(getByDisplayValue('48.8566')).toBeTruthy();
   });
 
   it('pushes a valid latitude/longitude to settings as it is typed', async () => {

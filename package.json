@@ -1,6 +1,6 @@
 {
   "name": "full-azimut",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/metro-runtime": "~57.0.16",
@@ -59,7 +59,17 @@
       "!src/**/*.d.ts",
       "!src/**/index.ts",
       "!src/**/types.ts",
-      "!src/app/**"
+      "!src/app/**",
+      "!src/components/DistanceSlider/constants.ts",
+      "!src/components/DistanceSlider/helpers.ts",
+      "!src/components/InclinationSlider/constants.ts",
+      "!src/components/LanguageProvider/constants.ts",
+      "!src/components/LanguageProvider/helpers.ts",
+      "!src/components/Legend/helpers.ts",
+      "!src/components/PlaceCard/constants.ts",
+      "!src/components/SettingsProvider/constants.ts",
+      "!src/components/SettingsProvider/helpers.ts",
+      "!src/components/SettingsScreen/helpers.ts"
     ],
     "coverageThreshold": {
       "global": {

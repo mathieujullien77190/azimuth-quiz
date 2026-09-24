@@ -2,8 +2,8 @@ import type { GameSettings, Place } from '@/types';
 
 import { filterPlaces, pickPlaces } from './places';
 
-// Le factory de jest.mock ne peut pas referencer de variables externes (hoiste au-dessus des
-// imports par Babel) : les lieux factices sont donc des litteraux inline ici...
+// The jest.mock factory can't reference outside variables (hoisted above the
+// imports by Babel): the fake places are therefore inline literals here...
 jest.mock('@/constants', () => {
   const actual = jest.requireActual('@/constants');
   return {
@@ -11,16 +11,16 @@ jest.mock('@/constants', () => {
     PLACES: [
       { name: 'Paris', code: 'FR', coordinates: { latitude: 48.8566, longitude: 2.3522 }, category: 'cities', difficulty: 'easy' },
       { name: 'Berlin', code: 'DE', coordinates: { latitude: 52.52, longitude: 13.405 }, category: 'cities', difficulty: 'easy' },
-      // Russie : dans EUROPE_CODES mais hors bornes de longitude (>45) -> exclue de la zone Europe.
+      // Russia: in EUROPE_CODES but outside the longitude bounds (>45) -> excluded from the Europe zone.
       { name: 'Vladivostok', code: 'RU', coordinates: { latitude: 43.1, longitude: 131.9 }, category: 'cities', difficulty: 'hard' },
       { name: 'Tokyo', code: 'JP', coordinates: { latitude: 35.6762, longitude: 139.6503 }, category: 'landmarks', difficulty: 'master' },
-      // A moins de MIN_PLACE_DISTANCE_KM (150km) de Paris.
+      // Less than MIN_PLACE_DISTANCE_KM (150km) from Paris.
       { name: 'Rouen', code: 'FR', coordinates: { latitude: 49.4431, longitude: 1.0993 }, category: 'mountains', difficulty: 'intermediate' },
     ],
   };
 });
 
-// ...et re-declares ici, en dehors du factory, pour les assertions (egalite structurelle, pas de reference).
+// ...and re-declared here, outside the factory, for the assertions (structural equality, not reference).
 const paris: Place = {
   name: 'Paris',
   code: 'FR',

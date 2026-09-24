@@ -39,7 +39,7 @@ describe('EndScreen — solo', () => {
       <EndScreen onMenu={jest.fn()} onReplay={jest.fn()} players={[alice]} records={records} totals={[900]} />,
     );
     expect(getByText(formatNumber(900))).toBeTruthy();
-    // Detail de manche solo : nom du pays, pas "Meilleur : ..."
+    // Solo round detail: country name, not "Best: ..."
     expect(queryByText(/Meilleur/)).toBeNull();
   });
 
@@ -78,9 +78,9 @@ describe('EndScreen — multiplayer', () => {
     expect(getByText('Bob gagne !')).toBeTruthy();
     expect(getByText(formatNumber(800))).toBeTruthy();
     expect(getByText(formatNumber(600))).toBeTruthy();
-    // Manche 1 : Bob gagne (500 > 300).
+    // Round 1: Bob wins (500 > 300).
     expect(getByText('Meilleur : Bob')).toBeTruthy();
-    // Manche 2 : egalite -> premier joueur (Alice) gagne par convention.
+    // Round 2: tie -> first player (Alice) wins by convention.
     expect(getByText('Meilleur : Alice')).toBeTruthy();
   });
 

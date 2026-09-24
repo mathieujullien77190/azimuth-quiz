@@ -52,12 +52,12 @@ describe('Compass — interactive (onChange provided)', () => {
     expect(config.onPanResponderTerminationRequest?.({} as never, {} as never)).toBe(false);
     expect(config.onShouldBlockNativeResponder?.({} as never, {} as never)).toBe(true);
 
-    // Touche en haut du cadran : cap 0 (le heading du capteur, null ici, vaut 0).
+    // Touch at the top of the dial: heading 0 (the sensor's heading, null here, counts as 0).
     config.onPanResponderGrant?.({ nativeEvent: { locationX: 100, locationY: 0 } } as never, {} as never);
     expect(onTouch).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenCalledWith(0);
 
-    // Glisse vers la droite, mi-hauteur : cap 90.
+    // Drag to the right, mid-height: heading 90.
     config.onPanResponderMove?.({ nativeEvent: { locationX: 200, locationY: 100 } } as never, {} as never);
     expect(onChange).toHaveBeenCalledWith(90);
   });

@@ -143,9 +143,9 @@ describe('useHeading — web (deviceorientation)', () => {
   });
 
   afterEach(async () => {
-    // Le nettoyage local (et notamment la suppression de `window`) doit se produire avant le
-    // cleanup automatique de testing-library : sinon le demontage des hooks encore montes,
-    // declenche par ce cleanup global, tombe sur `window` deja supprime.
+    // The local cleanup (in particular deleting `window`) must happen before
+    // testing-library's automatic cleanup: otherwise unmounting still-mounted hooks,
+    // triggered by that global cleanup, hits an already-deleted `window`.
     await cleanup();
     Platform.OS = originalOS;
     delete (globalThis as { window?: unknown }).window;

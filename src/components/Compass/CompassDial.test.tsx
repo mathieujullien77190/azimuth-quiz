@@ -9,13 +9,13 @@ import type { CompassDialProps } from './types';
 
 const baseProps: CompassDialProps = { size: 100, bearing: null, extraNeedles: [], truthBearing: null };
 
-// react-native-svg rend chaque primitive comme un host component natif (RNSVGLine, RNSVGPath
-// pour <Polygon>...) et transforme ses couleurs en entier ARGB : on interroge par nom de tag natif
-// et on decode l'entier attendu plutot que de comparer une chaine hex.
+// react-native-svg renders each primitive as a native host component (RNSVGLine, RNSVGPath
+// for <Polygon>...) and turns its colors into an ARGB integer: we query by native tag name
+// and decode the expected integer rather than comparing a hex string.
 const byType = (root: TestInstance | null, type: string) =>
   root?.queryAll((instance) => instance.type === type) ?? [];
-// Un <G> explicite du JSX apparait toujours sous le RNSVGGroup implicite que Svg insere pour tout
-// le monde : on ne compte que les groupes dont le parent est deja un groupe.
+// An explicit <G> from the JSX always appears under the implicit RNSVGGroup that Svg inserts for
+// everything: we only count groups whose parent is already a group.
 const explicitGroups = (root: TestInstance | null) =>
   root?.queryAll((instance) => instance.type === 'RNSVGGroup' && instance.parent?.type === 'RNSVGGroup') ?? [];
 const toColorPayload = (hex: string) => (0xff000000 | parseInt(hex.slice(1), 16)) >>> 0;

@@ -1,5 +1,5 @@
-import { fireEvent, render } from '@testing-library/react-native';
-import * as RN from 'react-native';
+import { act, fireEvent, render } from '@testing-library/react-native';
+import { Dimensions } from 'react-native';
 
 import type { Player } from '@/types';
 
@@ -9,6 +9,15 @@ const players: Player[] = [
   { name: 'Zoé', color: '#EF4444' },
   { name: 'Max', color: '#16A34A' },
 ];
+
+// `useWindowDimensions` reads from the real `Dimensions` module (mocking the hook itself doesn't
+// reach components in other files — see `RoundResult.test.tsx` for the same technique).
+const originalWindow = Dimensions.get('window');
+const setWindowWidth = (width: number) => act(async () => Dimensions.set({ window: { ...originalWindow, width } }));
+
+afterEach(async () => {
+  await setWindowWidth(originalWindow.width);
+});
 
 describe('PlayerTabs', () => {
   it('shows initials for every tab when no activeLabel is given, and a checkmark for answered players', async () => {
@@ -24,7 +33,7 @@ describe('PlayerTabs', () => {
     );
     expect(getByText('ZO')).toBeTruthy();
     expect(getByText('MA')).toBeTruthy();
-    // Seul Max (index 1) a deja repondu : une seule coche.
+    // Only Max (index 1) has already answered: a single check mark.
     expect(queryAllByText('✓')).toHaveLength(1);
   });
 
@@ -96,7 +105,7 @@ describe('PlayerTabs', () => {
   });
 
   it('renders the compact layout under the compact breakpoint', async () => {
-    const spy = jest.spyOn(RN, 'useWindowDimensions').mockReturnValue({ width: 300, height: 600, scale: 2, fontScale: 1 });
+    await setWindowWidth(300);
     const { getByText } = await render(
       <PlayerTabs
         activeIndex={0}
@@ -108,7 +117,21 @@ describe('PlayerTabs', () => {
       />,
     );
     expect(getByText('ZO')).toBeTruthy();
-    spy.mockRestore();
+  });
+
+  it('shows a checkmark on the active tab when it is also answered, compact layout included', async () => {
+    await setWindowWidth(300);
+    const { getByText } = await render(
+      <PlayerTabs
+        activeIndex={1}
+        allowRevision={false}
+        answered={[false, true]}
+        onSelect={jest.fn()}
+        order={[0, 1]}
+        players={players}
+      />,
+    );
+    expect(getByText('✓')).toBeTruthy();
   });
 
   it('renders using the order array rather than raw player index order', async () => {

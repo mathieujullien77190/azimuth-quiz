@@ -78,7 +78,7 @@ describe('LanguageProvider', () => {
 
     await fireEvent.press(getByTestId('reset'));
     expect(getByTestId('language').props.children).toBe('fr');
-    // Rien n'est ecrit dans le stockage par resetLanguage (voir doc de la fonction).
+    // Nothing is written to storage by resetLanguage (see the function's doc comment).
     expect(await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('en');
   });
 
@@ -93,8 +93,8 @@ describe('LanguageProvider', () => {
       </LanguageProvider>,
     );
     await unmount();
-    // Resout apres le demontage : si le flag `cancelled` ne fonctionnait pas, React logguerait un
-    // avertissement de mise a jour d'etat sur un composant demonte.
+    // Resolves after unmount: if the `cancelled` flag didn't work, React would log a
+    // warning about a state update on an unmounted component.
     await act(async () => {
       resolveGetItem('en');
     });

@@ -38,7 +38,7 @@ describe('IndicesSettingsProvider', () => {
     );
     await fireEvent.press(getByTestId('bump'));
     expect(getByTestId('difficulty').props.children).toBe('hard');
-    // Le reste des reglages est preserve (merge partiel, pas un remplacement).
+    // The rest of the settings are preserved (partial merge, not a replacement).
     expect(getByTestId('rounds').props.children).toBe(DEFAULT_INDICES_SETTINGS.rounds);
   });
 });

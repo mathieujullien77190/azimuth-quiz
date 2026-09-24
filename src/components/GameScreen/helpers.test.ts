@@ -15,6 +15,11 @@ describe('playerTotals', () => {
   it('returns 0 for every player when there are no records yet', () => {
     expect(playerTotals([], 3)).toEqual([0, 0, 0]);
   });
+
+  it('treats a missing result for a player index as 0 (fewer results than players)', () => {
+    const records = [{ place: {} as never, results: [{ score: { total: 100 } } as never] }] as RoundRecord[];
+    expect(playerTotals(records, 2)).toEqual([100, 0]);
+  });
 });
 
 describe('rotatedOrder', () => {

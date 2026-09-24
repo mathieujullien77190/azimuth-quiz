@@ -31,7 +31,7 @@ describe('formatBearing', () => {
   });
 
   it('normalizes negative or out-of-range degrees', () => {
-    // -10 normalise a 350°, plus proche de N (360=0) que de NO (315).
+    // -10 normalizes to 350°, closer to N (360=0) than to NW (315).
     expect(formatBearing(-10, cardinals)).toBe('N · 350°');
     expect(formatBearing(370, cardinals)).toBe('N · 10°');
   });

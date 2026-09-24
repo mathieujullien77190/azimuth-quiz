@@ -65,9 +65,9 @@ describe('loadSettings / saveSettings', () => {
   });
 
   it('loadSettings tolerates a storage read failure', async () => {
-    // AsyncStorage.getItem est deja un jest.fn() (mock manuel, voir async-storage-mock) : on
-    // configure directement un rejet pour LE PROCHAIN appel, sans jest.spyOn — spyOn+mockRestore
-    // sur un mock deja existant ne restaure pas la vraie implementation (mockRestore la vide).
+    // AsyncStorage.getItem is already a jest.fn() (manual mock, see async-storage-mock): we
+    // configure a rejection directly for THE NEXT call, without jest.spyOn — spyOn+mockRestore
+    // on an already-existing mock doesn't restore the real implementation (mockRestore empties it).
     (AsyncStorage.getItem as jest.Mock).mockRejectedValueOnce(new Error('boom'));
     const settings = await loadSettings();
     expect(settings.rounds).toBe(5);

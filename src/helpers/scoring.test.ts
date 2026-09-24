@@ -41,7 +41,7 @@ describe('scoreRound', () => {
     const guess: Guess = { bearing: trueBearing, distanceKm: trueSurfaceKm, inclination: 0 };
     const surfaceScore = scoreRound(origin, place, guess, { straightLine: false });
     const straightScore = scoreRound(origin, place, guess, { straightLine: true });
-    // Meme cap, meme distance devinee, mais comparee a une verite differente (corde != surface).
+    // Same heading, same guessed distance, but compared against a different truth (chord != surface).
     expect(straightScore.distancePoints).not.toBe(surfaceScore.distancePoints);
     expect(straightScore.trueStraightDistanceKm).toBeLessThanOrEqual(straightScore.trueSurfaceDistanceKm);
   });

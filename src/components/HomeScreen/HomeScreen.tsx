@@ -59,10 +59,10 @@ export const HomeScreen = () => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
 
-  // Tant qu'elle n'a jamais ete cliquee, la soucoupe vole vers une position aleatoire dans la zone
-  // du titre (transition animee), attend 3 a 6 sec sur place, tourne sur elle-meme une fois si
-  // cette pause tombe sur 6 sec, puis repart. Une fois attrapee (cliquee, memorise pour toujours),
-  // elle reste fixe a sa position par defaut (haut droite, `ufoButtonDefault`).
+  // As long as it's never been clicked, the UFO flies to a random position within the title
+  // zone (animated transition), waits 3 to 6 sec in place, spins in place once if that
+  // pause lands on 6 sec, then moves on. Once caught (clicked, remembered forever),
+  // it stays fixed at its default position (top right, `ufoButtonDefault`).
   const [ufoCaught, setUfoCaught] = useState(true);
   const [ufoZone, setUfoZone] = useState({ width: 0, height: 0 });
   const ufoAnim = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
@@ -82,8 +82,11 @@ export const HomeScreen = () => {
     const start = randomUfoPosition(ufoZone.width, ufoZone.height);
     ufoAnim.setValue({ x: start.left, y: start.top });
 
+    // No `active` guard needed here: the only two call sites are the initial synchronous call
+    // below and the recursive one inside the move's callback (scheduled via `timeoutId`), and
+    // cleanup always clears `timeoutId` in the same tick it sets `active = false` — so this can
+    // never run again after unmount.
     const scheduleNextMove = () => {
-      if (!active) return;
       const target = randomUfoPosition(ufoZone.width, ufoZone.height);
       Animated.timing(ufoAnim, {
         duration: UFO_MOVE_DURATION_MS,

@@ -1,12 +1,34 @@
 import {
   decodeBoussolePlace,
+  decodeBoussolePlaces,
   decodeIndicesPlace,
+  decodeIndicesPlaces,
   encodeBoussoleRow,
   encodeIndicesRow,
+  serializeMergedPlaces,
   type BoussoleRow,
   type CommonRow,
   type IndicesRow,
+  type MergedPlaces,
 } from './codec';
+
+describe('serializeMergedPlaces', () => {
+  it('prints one entry per line, matching the source JSON shape', () => {
+    const entries: MergedPlaces = [
+      [['Testville', 'FR', 1.5, -2.5], ['C', 'E', null, null, null], null],
+      [['Otherville', 'DE', 3, 4], null, ['H', 'n', 1000, '☀️', 10, 'gb', 'BER', '🏰', '🎡', '🍺']],
+    ];
+    expect(serializeMergedPlaces(entries)).toBe(
+      '[\n' +
+        '  ' +
+        JSON.stringify(entries[0]) +
+        ',\n' +
+        '  ' +
+        JSON.stringify(entries[1]) +
+        '\n]\n',
+    );
+  });
+});
 
 describe('decodeBoussolePlace / encodeBoussoleRow', () => {
   const common: CommonRow = ['Testville', 'FR', 1.5, -2.5];
@@ -36,6 +58,30 @@ describe('decodeBoussolePlace / encodeBoussoleRow', () => {
     expect(place.description).toBeUndefined();
     expect(place.wikiFr).toBeUndefined();
     expect(place.wikiEn).toBeUndefined();
+  });
+
+  it('encodeBoussoleRow turns missing optional fields into null', () => {
+    const place = decodeBoussolePlace(common, ['M', 'H', null, null, null]);
+    expect(encodeBoussoleRow(place)).toEqual(['M', 'H', null, null, null]);
+  });
+});
+
+describe('decodeBoussolePlaces / decodeIndicesPlaces', () => {
+  const entries: MergedPlaces = [
+    [['Testville', 'FR', 1.5, -2.5], ['C', 'E', null, null, null], null],
+    [['Otherville', 'DE', 3, 4], null, ['H', 'n', 1000, '☀️', 10, 'gb', 'BER', '🏰', '🎡', '🍺']],
+  ];
+
+  it('decodeBoussolePlaces skips entries with no boussole row', () => {
+    const places = decodeBoussolePlaces(entries);
+    expect(places).toHaveLength(1);
+    expect(places[0].name).toBe('Testville');
+  });
+
+  it('decodeIndicesPlaces skips entries with no indices row', () => {
+    const places = decodeIndicesPlaces(entries);
+    expect(places).toHaveLength(1);
+    expect(places[0].name).toBe('Otherville');
   });
 });
 
@@ -72,5 +118,12 @@ describe('decodeIndicesPlace / encodeIndicesRow', () => {
     const place = decodeIndicesPlace(common, unmappedRow);
     expect(place.timezone).toBe('Europe/Nowhere');
     expect(encodeIndicesRow(place)).toEqual(unmappedRow);
+  });
+
+  it('falls back to an empty phone code and currency for an unknown country', () => {
+    const unknownCommon: CommonRow = ['Testville', 'XX', 1.5, -2.5];
+    const place = decodeIndicesPlace(unknownCommon, row);
+    expect(place.phoneCode).toBe('');
+    expect(place.currency).toBe('');
   });
 });
