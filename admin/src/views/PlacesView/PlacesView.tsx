@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { flagEmoji } from '@/constants/places/countries';
-import { FLAG_FONT_FAMILY } from '@/themes/fonts';
-
 import { deletePlace, fetchPlaces, saveBoussole, saveDifficulty, saveIndices, type BoussolePatch, type IndicesPatch, type PlaceRow } from '../../api/places';
 import { ChipGroup, toggleInSet } from '../../components/ChipGroup';
 import { DeleteX } from '../../components/DeleteX';
@@ -230,7 +227,6 @@ export const PlacesView = () => {
             <div className="place-header">
               <div className="place-identity">
                 <span className="place-name">{row.name}</span>
-                <span style={{ fontFamily: FLAG_FONT_FAMILY }}>{flagEmoji(row.code)}</span>
                 <span className="place-meta" title={countryFor(row.code)}>
                   {countryFor(row.code)} ({row.code})
                 </span>
