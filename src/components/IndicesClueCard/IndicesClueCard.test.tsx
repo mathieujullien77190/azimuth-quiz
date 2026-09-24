@@ -42,6 +42,11 @@ describe('IndicesClueCard — revealed content per clue', () => {
     expect(getByText('Non')).toBeTruthy();
   });
 
+  it('vowels: shows every vowel in the name, space-separated', async () => {
+    const { getByText } = await renderCard({ clueId: 'vowels', place, state: 'revealed' });
+    expect(getByText('A I')).toBeTruthy();
+  });
+
   it('position: renders a dot positioned per positionInCountry', async () => {
     const { toJSON } = await renderCard({ clueId: 'position', state: 'revealed' });
     expect(toJSON()).toBeTruthy();

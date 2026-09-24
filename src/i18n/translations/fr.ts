@@ -214,6 +214,7 @@ export const fr: Translations = {
       airportCode: 'Code aéroport',
       firstLetter: 'Première lettre',
       isCapital: 'Capitale',
+      vowels: 'Voyelles',
     },
     isCapitalYes: 'Oui',
     isCapitalNo: 'Non',

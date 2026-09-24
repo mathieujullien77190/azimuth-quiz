@@ -156,7 +156,10 @@ export type ThemeTypography = {
 // --- Indices: game independent from Full Azimut, with its own places (see constants/indices.ts) ---
 
 /** A clue's identifier: they all have the same "cost" (1 point off the score countdown,
- * see IndicesGameScreen), no imposed order, each player freely picks on their turn. */
+ * see IndicesGameScreen), no imposed order, each player freely picks on their turn. `vowels`
+ * is the exception — a hidden bonus clue, absent from `INDICES_CLUE_ORDER`, that only appears
+ * once every other clue has been picked, and drops the round's score to 1 instead of the usual
+ * -1 (see IndicesGameScreen). */
 export type IndicesClueId =
   | 'position'
   | 'population'
@@ -173,7 +176,8 @@ export type IndicesClueId =
   | 'currency'
   | 'airportCode'
   | 'firstLetter'
-  | 'isCapital';
+  | 'isCapital'
+  | 'vowels';
 
 /** Approximate position of the city within its country, on a 3x3 grid. */
 export type IndicesPositionInCountry = 'center' | 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';

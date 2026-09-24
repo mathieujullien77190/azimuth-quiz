@@ -139,6 +139,66 @@ describe('IndicesGameScreen — picking clues', () => {
   });
 });
 
+describe('IndicesGameScreen — vowels bonus clue', () => {
+  // One label per entry of INDICES_CLUE_ORDER, in order — a single press each is enough to
+  // "touch" every real clue without needing to exhaust any multi-stage one.
+  const ALL_OTHER_LABELS = [
+    'Population',
+    'Heure locale',
+    'Première lettre',
+    'Capitale',
+    'Cap',
+    'Distance',
+    'Lettres',
+    'Nombre de mots',
+    'Climat',
+    'Emoji',
+    'Drapeau',
+    'Position',
+    'Altitude',
+    'Code aéroport',
+    'Devise',
+    'Indicatif tél.',
+  ];
+
+  it('stays hidden until every other clue has been picked at least once', async () => {
+    const { getByText, queryByText } = await renderGame({ playerNames: ['Zoé'] });
+    expect(queryByText('Voyelles')).toBeNull();
+
+    for (const label of ALL_OTHER_LABELS.slice(0, -1)) {
+      await fireEvent.press(getByText(label));
+    }
+    expect(queryByText('Voyelles')).toBeNull();
+
+    await fireEvent.press(getByText(ALL_OTHER_LABELS[ALL_OTHER_LABELS.length - 1]));
+    expect(getByText('Voyelles')).toBeTruthy();
+  });
+
+  it('shows every vowel and drops the score to 1 (not up) when picked', async () => {
+    const { getByText } = await renderGame({ playerNames: ['Zoé'] });
+    for (const label of ALL_OTHER_LABELS) {
+      await fireEvent.press(getByText(label));
+    }
+    // 16 real clues picked, score still comfortably above 1.
+    expect(getByText(/pts$/).props.children.join('')).not.toBe('1 pts');
+
+    await fireEvent.press(getByText('Voyelles'));
+    expect(getByText('A I')).toBeTruthy();
+    expect(getByText('1 pts')).toBeTruthy();
+  });
+
+  it('stays visible but display-only once the round is over', async () => {
+    const { getByText, queryByRole } = await renderGame({ playerNames: ['Zoé'] });
+    for (const label of ALL_OTHER_LABELS) {
+      await fireEvent.press(getByText(label));
+    }
+    await fireEvent.press(getByText('🤷 Je ne sais pas'));
+
+    expect(getByText('Voyelles')).toBeTruthy();
+    expect(queryByRole('button', { name: /Voyelles/ })).toBeNull();
+  });
+});
+
 describe('IndicesGameScreen — buzz flow (spoken)', () => {
   it('lets the buzzing player be picked, verified, and settled correct', async () => {
     const { getByText, getAllByLabelText } = await renderGame({ answerMethod: 'spoken', playerNames: ['Zoé'] });

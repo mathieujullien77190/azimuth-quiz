@@ -213,6 +213,7 @@ export const en: Translations = {
       airportCode: 'Airport code',
       firstLetter: 'First letter',
       isCapital: 'Capital',
+      vowels: 'Vowels',
     },
     isCapitalYes: 'Yes',
     isCapitalNo: 'No',

@@ -244,7 +244,13 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   // (few clues used) thus leaves a high remaining score — that's what the finder wins
   // (see `settle`).
   const maxScore = maxScoreForRound(totalRevealCount());
-  const remaining = maxScore - revealedClueIds.length;
+  // `vowels` isn't a normal clue (see its own doc comment in types/index.ts): it's excluded from
+  // the linear countdown and instead drops the round straight to 1, if it was still above that.
+  const vowelsRevealed = revealedClueIds.includes('vowels');
+  const countdownRemaining = maxScore - revealedClueIds.filter((id) => id !== 'vowels').length;
+  const remaining = vowelsRevealed ? Math.min(countdownRemaining, 1) : countdownRemaining;
+  // `vowels` only appears once every other clue has been picked at least once.
+  const vowelsUnlocked = INDICES_CLUE_ORDER.every((id) => revealedClueIds.includes(id));
   // On reveal: what the buzzer actually won/lost this round (the remaining score if they
   // found it, -WRONG_ANSWER_PENALTY if wrong, 0 if nobody tried) — see `settle`/
   // `giveUp`, which apply this exact same value to the players' totals.
@@ -583,6 +589,17 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
               />
             );
           })}
+          {vowelsUnlocked && (
+            <IndicesClueCard
+              clueId="vowels"
+              key="vowels"
+              label={t.indicesGame.clues.vowels}
+              moreToReveal={false}
+              onPress={roundOver ? undefined : () => pickClue('vowels')}
+              place={place}
+              state={roundOver || vowelsRevealed ? 'revealed' : 'locked'}
+            />
+          )}
         </View>
       </Card>
     </Screen>

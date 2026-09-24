@@ -1,4 +1,4 @@
-import { dayNightEmoji, elevationTierEmoji, letterCount, localTimeFor, populationTier, wordCount } from './helpers';
+import { dayNightEmoji, elevationTierEmoji, letterCount, localTimeFor, populationTier, vowelsOf, wordCount } from './helpers';
 
 describe('letterCount', () => {
   it('counts letters only, excluding spaces', () => {
@@ -8,6 +8,20 @@ describe('letterCount', () => {
   it('excludes hyphens and apostrophes', () => {
     expect(letterCount('Saint-Étienne')).toBe(12);
     expect(letterCount("Côte d'Ivoire")).toBe(11);
+  });
+});
+
+describe('vowelsOf', () => {
+  it('extracts every vowel in order, uppercased', () => {
+    expect(vowelsOf('Paris')).toBe('A I');
+  });
+
+  it('strips accents before matching (é counts as E)', () => {
+    expect(vowelsOf('São Paulo')).toBe('A O A U O');
+  });
+
+  it('returns an empty string when the name has no vowels', () => {
+    expect(vowelsOf('Krk')).toBe('');
   });
 });
 

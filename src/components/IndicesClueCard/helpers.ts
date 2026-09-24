@@ -7,6 +7,17 @@ export const wordCount = (name: string): number => name.trim().split(/\s+/).filt
 /** First letter of the name, uppercase (e.g. "Rio de Janeiro" -> "R"). */
 export const firstLetterOf = (name: string): string => name.trim().charAt(0).toUpperCase();
 
+/** Every vowel in the name, in order, accents stripped and uppercased, space-separated (e.g.
+ * "São Paulo" -> "A O A U O"). */
+export const vowelsOf = (name: string): string =>
+  name
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toUpperCase()
+    .replace(/[^AEIOU]/g, '')
+    .split('')
+    .join(' ');
+
 // Local hour/minute via `formatToParts` rather than `format()`: the latter can include a
 // literal letter ("18 h" in fr-FR for hour-only), which breaks a naive `Number(...)` on the
 // text — `formatToParts` isolates the numeric value of each part, reliable regardless of the

@@ -19,6 +19,7 @@ import {
   letterCount,
   localTimeFor,
   populationTier,
+  vowelsOf,
   wordCount,
 } from './helpers';
 import type { IndicesClueCardProps } from './types';
@@ -350,6 +351,8 @@ const revealedBody = (
       return <Text style={styles.statValue}>{wordCount(place.name)}</Text>;
     case 'firstLetter':
       return <Text style={styles.statValue}>{firstLetterOf(place.name)}</Text>;
+    case 'vowels':
+      return <Text style={styles.statValue}>{vowelsOf(place.name)}</Text>;
     case 'flagColors': {
       const allColors = countryFlagColors(place.code) ?? [];
       const stage = flagStage ?? 1;
