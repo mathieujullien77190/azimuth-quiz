@@ -28,7 +28,7 @@ import { compassSizeFor, earthSizeFor } from './helpers';
 import type { GameScreenProps } from './types';
 import { useGame } from './useGame';
 
-const createStyles = ({ colors, typography }: Theme) =>
+const createStyles = ({ colors, isDark, typography }: Theme) =>
   StyleSheet.create({
     loading: {
       flex: 1,
@@ -43,7 +43,9 @@ const createStyles = ({ colors, typography }: Theme) =>
       fontSize: fontSize.body,
     },
     header: {
-      backgroundColor: colors.background,
+      // White by day rather than the page's own light-blue background (see Screen's footer,
+      // same fix): a fixed bar reads better as its own surface than a washed-out page extension.
+      backgroundColor: isDark ? colors.background : colors.surface,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
     },

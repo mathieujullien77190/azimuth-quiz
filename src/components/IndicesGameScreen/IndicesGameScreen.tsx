@@ -26,7 +26,7 @@ import {
 } from './helpers';
 import type { IndicesGameScreenProps } from './types';
 
-const createStyles = ({ colors, radius, typography }: Theme) =>
+const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
   StyleSheet.create({
     title: {
       ...typography.display,
@@ -63,7 +63,9 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       fontSize: fontSize.body,
     },
     header: {
-      backgroundColor: colors.background,
+      // White by day rather than the page's own light-blue background (see Screen's footer,
+      // same fix): a fixed bar reads better as its own surface than a washed-out page extension.
+      backgroundColor: isDark ? colors.background : colors.surface,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
     },

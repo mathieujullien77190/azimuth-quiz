@@ -1,6 +1,7 @@
 import { fireEvent, render } from '@testing-library/react-native';
 
 import { DEFAULT_SETTINGS } from '@/constants';
+import { ThemeSettingsContext, day } from '@/themes';
 import type { GamePhase, Guess, Place, Player, RoundRecord } from '@/types';
 
 import GameScreen from '.';
@@ -262,5 +263,18 @@ describe('GameScreen — reveal phase', () => {
     const { getAllByText } = await render(<GameScreen onQuit={jest.fn()} />);
     expect(getAllByText('Zoé').length).toBeGreaterThan(0);
     expect(getAllByText('Max').length).toBeGreaterThan(0);
+  });
+});
+
+describe('GameScreen — theme', () => {
+  it('gives the header a white background by day instead of the page background', async () => {
+    const { toJSON } = await render(
+      <ThemeSettingsContext.Provider
+        value={{ themeId: 'day', ready: true, setThemeId: jest.fn(), resetThemeId: jest.fn() }}
+      >
+        <GameScreen onQuit={jest.fn()} />
+      </ThemeSettingsContext.Provider>,
+    );
+    expect(JSON.stringify(toJSON())).toContain(day.colors.surface);
   });
 });

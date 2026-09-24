@@ -8,7 +8,7 @@ import type { Theme } from '@/types';
 import ThemeBackdrop from '../../ThemeBackdrop';
 import type { ScreenProps } from './types';
 
-const createStyles = ({ colors }: Theme) =>
+const createStyles = ({ colors, isDark }: Theme) =>
   StyleSheet.create({
     safeArea: {
       flex: 1,
@@ -29,7 +29,11 @@ const createStyles = ({ colors }: Theme) =>
       paddingBottom: spacing.sm,
       borderTopWidth: 1,
       borderTopColor: colors.border,
-      backgroundColor: colors.background,
+      // White by day rather than the page's own light-blue background: it reads as a
+      // washed-out extension of the page instead of a distinct fixed bar (see Screen's header
+      // in GameScreen/IndicesGameScreen, same fix). Night keeps colors.background, already dark
+      // enough to read as its own bar against the starry backdrop.
+      backgroundColor: isDark ? colors.background : colors.surface,
     },
   });
 

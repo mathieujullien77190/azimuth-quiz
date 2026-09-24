@@ -3,6 +3,7 @@ import { fireEvent, render } from '@testing-library/react-native';
 import { DEFAULT_INDICES_SETTINGS, INDICES_PLACES } from '@/constants';
 import { resolveOrigin } from '@/helpers/location';
 import { IndicesSettingsContext } from '@/settings';
+import { ThemeSettingsContext, day } from '@/themes';
 import type { IndicesSettings } from '@/types';
 
 import IndicesGameScreen from '.';
@@ -460,5 +461,21 @@ describe('IndicesGameScreen — origin resolution cleanup', () => {
     // Resolves AFTER unmount: the effect's `cancelled` must prevent any setState.
     resolvePending({ coordinates: { latitude: 0, longitude: 0 }, isDevicePosition: true, name: 'device' });
     await Promise.resolve();
+  });
+});
+
+describe('IndicesGameScreen — theme', () => {
+  it('gives the header a white background by day instead of the page background', async () => {
+    const settings: IndicesSettings = { ...DEFAULT_INDICES_SETTINGS, startWithFirstLetter: false };
+    const { toJSON } = await render(
+      <ThemeSettingsContext.Provider
+        value={{ themeId: 'day', ready: true, setThemeId: jest.fn(), resetThemeId: jest.fn() }}
+      >
+        <IndicesSettingsContext.Provider value={{ settings, updateSettings: jest.fn() }}>
+          <IndicesGameScreen onQuit={jest.fn()} />
+        </IndicesSettingsContext.Provider>
+      </ThemeSettingsContext.Provider>,
+    );
+    expect(JSON.stringify(toJSON())).toContain(day.colors.surface);
   });
 });
