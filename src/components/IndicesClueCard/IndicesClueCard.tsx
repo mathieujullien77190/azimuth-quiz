@@ -67,10 +67,12 @@ const multiStageProgress = (
 
 const createStyles = ({ colors, radius, typography }: Theme) =>
   StyleSheet.create({
+    // No maxWidth cap: flexGrow needs to be free to stretch a card that ends up alone on its
+    // row (e.g. right before a `wide` card, which forces a line break) to fill that empty space,
+    // instead of leaving a half-empty row.
     card: {
       flexBasis: '48%',
       flexGrow: 1,
-      maxWidth: '48%',
       minHeight: 96,
       borderRadius: radius.md,
       borderWidth: 1.5,
