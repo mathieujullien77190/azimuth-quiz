@@ -501,7 +501,6 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
                 </Text>
               </Text>
               <Button label={isLastRound ? t.game.last : t.indicesGame.continueLabel} onPress={continueRound} />
-              <Button label={t.indicesGame.home} onPress={onQuit} variant="ghost" />
             </View>
           ) : buzzedIndex !== null ? (
             <View style={styles.buzzPanel}>
