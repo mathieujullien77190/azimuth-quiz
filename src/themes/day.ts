@@ -2,8 +2,9 @@ import type { Theme } from '@/types';
 
 import { FONT_FAMILY } from './fonts';
 
-/** Sky blue + amber: same amber accent as Night, but a bright daytime sky instead of stars
- * (see ThemeBackdrop, which switches to drifting clouds when `isDark` is false). */
+/** Sky blue + orange: a daytime sky instead of stars (see ThemeBackdrop, which switches to
+ * drifting clouds when `isDark` is false). A true orange accent rather than Night's amber —
+ * amber/yellow washes out against the light blue background. */
 export const day: Theme = {
   id: 'day',
   name: 'Jour',
@@ -16,8 +17,8 @@ export const day: Theme = {
     border: '#B9DDEE',
     text: '#132033',
     textMuted: '#4C6178',
-    accent: '#F5B841',
-    accentDark: '#C98A12',
+    accent: '#F97316',
+    accentDark: '#C2410C',
     onAccent: '#1A1203',
     truth: '#7C3AED',
     danger: '#DC2626',
