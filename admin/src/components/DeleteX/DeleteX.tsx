@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-/** Suppression immediate, sans confirmation. */
+/** Immediate deletion, no confirmation. */
 export const DeleteX = ({ name, onDelete }: { name: string; onDelete: () => Promise<void> }) => {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);

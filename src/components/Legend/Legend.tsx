@@ -35,7 +35,7 @@ const createStyles = ({ colors, typography }: Theme) =>
     },
   });
 
-/** Qui est quelle couleur, sur la boussole et sur la Terre. */
+/** Who is which color, on the compass and on the Earth. */
 export const Legend = ({ items }: LegendProps) => {
   const styles = useThemedStyles(createStyles);
 

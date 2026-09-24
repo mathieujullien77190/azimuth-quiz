@@ -1,6 +1,6 @@
 export type UfoIdleFrame = {
   bobY: number;
-  /** Deux phases de clignotement en alternance (l'une haute pendant que l'autre est basse). */
+  /** Two blink phases alternating (one high while the other is low). */
   blinkOpacityA: number;
   blinkOpacityB: number;
 };

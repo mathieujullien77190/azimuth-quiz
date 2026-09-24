@@ -13,15 +13,15 @@ const isInZone = (place: Place, zone: Zone): boolean => {
   return true;
 };
 
-/** Lieux d'une partie : bonnes categories, bonnes difficultes, dans la zone choisie. */
+/** Places for a game: matching categories, matching difficulties, within the chosen zone. */
 export const filterPlaces = (categories: Category[], difficulties: Difficulty[], zone: Zone): Place[] =>
   PLACES.filter(
     (place) => categories.includes(place.category) && difficulties.includes(place.difficulty) && isInZone(place, zone),
   );
 
 /**
- * Tire les lieux de la partie, en evitant ceux trop proches du point de depart
- * (sauf s'il n'en reste aucun : mieux vaut un lieu proche que pas de partie).
+ * Draws the game's places, avoiding ones too close to the starting point
+ * (unless none are left: better a nearby place than no game at all).
  */
 export const pickPlaces = (origin: Coordinates, settings: GameSettings): Place[] => {
   const candidates = filterPlaces(settings.categories, settings.difficulties, settings.zone);

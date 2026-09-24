@@ -2,9 +2,9 @@ import type { Place } from '@/types';
 
 export type PlaceCardProps = {
   place: Place;
-  /** Option "Aide pays" : affiche le pays sous le nom du lieu. */
+  /** "Country hint" option: shows the country under the place's name. */
   showCountry: boolean;
-  /** Anecdote sur le lieu, repliee par defaut : fournie seulement a la revelation (jamais
-   * pendant qu'on devine), absente si le lieu n'en a pas encore. */
+  /** Trivia about the place, collapsed by default: only provided on reveal (never
+   * while guessing), absent if the place doesn't have one yet. */
   description?: string;
 };

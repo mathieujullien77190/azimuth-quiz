@@ -6,9 +6,9 @@ import { smoothHeading } from './helpers';
 import type { UseHeadingResult, WebOrientationEvent } from './types';
 
 /**
- * Cap tire d'un evenement d'orientation navigateur : `webkitCompassHeading` (Safari iOS, deja le
- * vrai nord) sinon `alpha` d'un evenement absolu (Chrome/Android), converti du sens trigo au sens
- * horaire. `null` si l'evenement ne contient rien d'exploitable.
+ * Heading derived from a browser orientation event: `webkitCompassHeading` (Safari iOS, already
+ * true north) otherwise `alpha` from an absolute event (Chrome/Android), converted from
+ * trigonometric to clockwise direction. `null` if the event has nothing usable.
  */
 const readWebHeading = (event: WebOrientationEvent): number | null => {
   if (typeof event.webkitCompassHeading === 'number') return event.webkitCompassHeading;
@@ -17,15 +17,15 @@ const readWebHeading = (event: WebOrientationEvent): number | null => {
 };
 
 /**
- * Cap du telephone en degres (0 = le haut de l'ecran pointe vers le nord), ou null si la
- * boussole reelle est desactivee / indisponible (refus de permission, pas de capteur).
- * Utilise le vrai nord ; a defaut de position, le nord magnetique.
+ * Phone heading in degrees (0 = top of the screen points to north), or null if the
+ * live compass is disabled / unavailable (permission denied, no sensor).
+ * Uses true north; falls back to magnetic north without a position.
  *
- * Sur le web, `expo-location` ne supporte pas le cap (voir `ExpoLocation.web.ts`) : on ecoute
- * directement l'API navigateur `deviceorientation(absolute)`. Safari iOS n'autorise cette
- * ecoute qu'apres un `requestPermission()` declenche par un vrai geste utilisateur — impossible
- * de le demander tout seul au montage. `onTouch` (appele au premier toucher de la boussole) sert
- * cette demande ; sans ca (Android, ou navigateur sans cette restriction), l'ecoute demarre direct.
+ * On web, `expo-location` doesn't support heading (see `ExpoLocation.web.ts`): we listen
+ * directly to the browser's `deviceorientation(absolute)` API. Safari iOS only allows this
+ * listener after a `requestPermission()` triggered by a real user gesture — impossible
+ * to request it on its own on mount. `onTouch` (called on the compass's first touch) serves
+ * this request; without that (Android, or a browser without this restriction), listening starts right away.
  */
 export const useHeading = (enabled: boolean): UseHeadingResult => {
   const [heading, setHeading] = useState<number | null>(null);
@@ -86,7 +86,7 @@ export const useHeading = (enabled: boolean): UseHeadingResult => {
         });
         if (cancelled) subscription.remove();
       } catch {
-        // Capteur indisponible : la boussole reste orientee vers le haut, comme avant.
+        // Sensor unavailable: the compass stays oriented upward, as before.
       }
     })();
 

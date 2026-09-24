@@ -4,15 +4,15 @@ import type { IndicesFlagColorRow } from '@/types';
 import countriesData from './countries.json';
 
 /**
- * Donnees par pays (code ISO 3166-1 alpha-2, cle de l'objet), partagees par Boussole et Indices :
- * chaque pays est stocke comme un tuple positionnel `[fr, en, flag, currency, currencySymbol,
- * phoneCode]` plutot qu'un objet a champs nommes (196 pays x 6 champs : les noms de propriete
- * repetes pesaient lourd pour rien — meme raisonnement que `places.json`, voir `codec.ts`).
- * `flag`/`currency`/`currencySymbol`/`phoneCode` valent `null` si pas encore renseignes (un pays
- * peut exister sans qu'aucun lieu l'utilise encore dans Indices). Les lieux ne stockent que
- * `code` : le reste s'en deduit ici, evitant de le repeter (et de le desynchroniser) par lieu —
- * devise/indicatif ne varient jamais au sein d'un meme pays, contrairement a la difficulte ou
- * l'anecdote qui sont propres a chaque lieu.
+ * Per-country data (ISO 3166-1 alpha-2 code, the object's key), shared by Boussole and Indices:
+ * each country is stored as a positional tuple `[fr, en, flag, currency, currencySymbol,
+ * phoneCode]` rather than an object with named fields (196 countries x 6 fields: the repeated
+ * property names weighed a lot for nothing — same reasoning as `places.json`, see `codec.ts`).
+ * `flag`/`currency`/`currencySymbol`/`phoneCode` are `null` when not filled in yet (a country
+ * can exist without any place using it yet in Indices). Places only store `code`: everything
+ * else is derived from here, avoiding repeating it (and desyncing it) per place — currency/phone
+ * code never vary within a given country, unlike difficulty or the trivia, which are specific
+ * to each place.
  */
 export type CountryRow = readonly [
   fr: string,
@@ -51,7 +51,7 @@ export const countryName = (code: string, language: Language): string => {
   return language === 'fr' ? row[0] : row[1];
 };
 
-/** Index des champs d'une ligne de `flag` (tuple positionnel, voir `IndicesFlagColorRow`). */
+/** Field indexes of a `flag` row (positional tuple, see `IndicesFlagColorRow`). */
 export const FLAG_COLOR_FIELD = {
   COLOR_ID: 0,
   HEX: 1,
@@ -60,20 +60,20 @@ export const FLAG_COLOR_FIELD = {
 
 export const countryFlagColors = (code: string): IndicesFlagColorRow[] | undefined => COUNTRIES[code]?.[2] ?? undefined;
 
-/** Nom generique de la devise (jamais l'adjectif de nationalite : "Dollar", pas "Dollar
- * zimbabween" ni "Dollar americain" — ça reviendrait a donner le pays). */
+/** Generic currency name (never the nationality adjective: "Dollar", not "Zimbabwean
+ * Dollar" or "American Dollar" — that would amount to giving away the country). */
 export const countryCurrencyName = (code: string): string | undefined => COUNTRIES[code]?.[3] ?? undefined;
 
-/** Symbole/code de la devise (ex. "€", "AED") : plusieurs pays peuvent legitimement le partager
- * (zone euro...). */
+/** Currency symbol/code (e.g. "€", "AED"): several countries can legitimately share
+ * one (euro zone...). */
 export const countryCurrencySymbol = (code: string): string | undefined => COUNTRIES[code]?.[4] ?? undefined;
 
-/** Indicatif telephonique international (ex. "+33"). */
+/** International phone code (e.g. "+33"). */
 export const countryPhoneCode = (code: string): string | undefined => COUNTRIES[code]?.[5] ?? undefined;
 
-/** Une entree par ligne (au lieu du multi-ligne par defaut de `JSON.stringify(_, null, 2)`) : un
- * `git diff` sur un seul pays modifie touche une seule ligne. Utilise par `admin/vite.config.ts`
- * pour reecrire `countries.json` apres une edition. */
+/** One entry per line (instead of the multi-line default of `JSON.stringify(_, null, 2)`): a
+ * `git diff` touching a single country's data only touches one line. Used by `admin/vite.config.ts`
+ * to rewrite `countries.json` after an edit. */
 export const serializeCountries = (countries: Record<string, CountryRow>): string => {
   const lines = Object.keys(countries)
     .sort()

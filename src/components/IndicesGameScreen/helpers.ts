@@ -1,13 +1,13 @@
 import { INDICES_CLUE_ORDER, INDICES_PLACES } from '@/constants';
 import type { Difficulty, IndicesPlace } from '@/types';
 
-/** Indices qui se devoilent en 2 clics : palier/symbole/jour-nuit au 1er, valeur exacte au 2e. */
+/** Clues that reveal in 2 clicks: tier/symbol/day-night on the 1st, exact value on the 2nd. */
 const TWO_STAGE_CLUE_IDS = new Set(['distance', 'elevation', 'population', 'currency', 'localTime']);
 
-/** Nombre total d'indices possibles sur une manche si on les prenait tous, y compris plusieurs
- * fois pour ceux qui se devoilent par etapes (emoji : 3 clics ; distance/elevation/population/
- * currency/localTime : 2 ; drapeau : au plus 3 — 1 couleur, puis 1 couleur, puis tout le reste au
- * 3e clic, meme si le drapeau en a plus) — sert de base a `maxScoreForRound`. */
+/** Total number of possible clues in a round if all were taken, counted multiple times
+ * for the ones that reveal in stages (emoji: 3 clicks; distance/elevation/population/
+ * currency/localTime: 2; flag: at most 3 — 1 color, then 1 color, then all the rest on the
+ * 3rd click, even if the flag has more) — used as the base for `maxScoreForRound`. */
 export const totalRevealCount = (flagColorCount: number): number =>
   INDICES_CLUE_ORDER.reduce((total, clueId) => {
     const count =
@@ -21,22 +21,22 @@ export const totalRevealCount = (flagColorCount: number): number =>
     return total + count;
   }, 0);
 
-/** Score de depart de la manche : `totalReveals` arrondi a la dizaine superieure (ex. 26 indices
- * possibles -> 30), un chiffre rond plutot que de dependre du detail des indices actuels. Descend
- * de 1 a chaque indice choisi (tous ont le meme "cout" desormais) : trouver vite (peu d'indices
- * utilises) laisse donc un score restant — et donc gagne — plus eleve. */
+/** Round's starting score: `totalReveals` rounded up to the nearest ten (e.g. 26 possible
+ * clues -> 30), a round number rather than depending on the exact current clues. Goes down
+ * by 1 for each clue picked (they all have the same "cost" now): finding it fast (few clues
+ * used) leaves a higher — and thus more won — remaining score. */
 export const maxScoreForRound = (totalReveals: number): number => Math.ceil(totalReveals / 10) * 10;
 
-/** Lieu de la manche : tire au sort parmi les lieux de la difficulte choisie (repli sur tout le
- * pool si le filtre est vide, ce qui ne devrait pas arriver avec 446 lieux repartis sur 4 paliers). */
+/** Round's place: drawn at random among places of the chosen difficulty (falls back to the
+ * whole pool if the filter is empty, which shouldn't happen with 446 places spread over 4 tiers). */
 export const randomIndicesPlace = (difficulty: Difficulty): IndicesPlace => {
   const pool = INDICES_PLACES.filter((place) => place.difficulty === difficulty);
   const source = pool.length > 0 ? pool : INDICES_PLACES;
   return source[Math.floor(Math.random() * source.length)];
 };
 
-/** Normalise un nom de lieu pour comparaison (mode "je tape la ville") : minuscules, accents et
- * ponctuation retires, espaces multiples reduits. */
+/** Normalizes a place name for comparison ("I type the city" mode): lowercased, accents and
+ * punctuation stripped, multiple spaces collapsed. */
 export const normalizePlaceGuess = (value: string): string =>
   value
     .normalize('NFD')
@@ -45,24 +45,24 @@ export const normalizePlaceGuess = (value: string): string =>
     .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .trim();
 
-/** Un groupe (mot) de "slots" du recap au-dessus des boutons buzz/abandon : chaque slot est soit
- * une lettre deja revelee, soit `null` (case a dessiner comme un trait, pas encore devoilee). */
+/** A group (word) of "slots" in the recap above the buzz/give-up buttons: each slot is either
+ * an already-revealed letter, or `null` (a box to draw as a dash, not revealed yet). */
 export type NameSkeletonSlot = string | null;
 
-/** Nombre de cases generiques par mot quand "Nombre de mots" est connu mais pas "Lettres" : 1 seul
- * trait par mot (pas la vraie longueur, qu'on ne connait pas encore) — juste de quoi distinguer
- * les mots entre eux, espaces largement (voir `skeletonRow` dans IndicesGameScreen). */
+/** Number of generic boxes per word when "Word count" is known but not "Letters": just 1
+ * dash per word (not the real length, which isn't known yet) — just enough to tell the
+ * words apart, spaced widely (see `skeletonRow` in IndicesGameScreen). */
 const GENERIC_WORD_SLOTS = 1;
 
 /**
- * Decoupe le nom en groupes de slots pour le recap "M _ _ _" au-dessus des boutons buzz/abandon.
- * `groupByWord` separe les mots (indice "Nombre de mots" revele) au lieu d'un seul bloc,
- * `revealFirst` devoile la toute premiere lettre du nom (indice "Premiere lettre" revele),
- * `lengthKnown` (indice "Lettres" revele) donne la vraie longueur de chaque case :
- * - ni l'un ni l'autre connus : aucune case, seule la lettre revelee (au plus une) est gardee ;
- * - mots connus sans la longueur : `GENERIC_WORD_SLOTS` cases par mot (forme indicative, pas la
- *   vraie longueur) ;
- * - longueur connue (mots groupes ou non) : le vrai nombre de lettres, par mot si groupe.
+ * Splits the name into groups of slots for the "M _ _ _" recap above the buzz/give-up buttons.
+ * `groupByWord` separates the words (the "Word count" clue revealed) instead of a single block,
+ * `revealFirst` reveals the very first letter of the name (the "First letter" clue revealed),
+ * `lengthKnown` (the "Letters" clue revealed) gives the real length of each box:
+ * - neither known: no boxes, only the revealed letter (at most one) is kept;
+ * - words known without the length: `GENERIC_WORD_SLOTS` boxes per word (indicative shape, not
+ *   the real length);
+ * - length known (words grouped or not): the real number of letters, per word if grouped.
  */
 export const nameSkeleton = (
   name: string,

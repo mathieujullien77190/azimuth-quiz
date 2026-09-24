@@ -52,8 +52,8 @@ export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
 
   const languages: Language[] = ['fr', 'en'];
 
-  // Vide le stockage ET remet les contextes en memoire aux defauts : sinon l'app garderait les
-  // anciennes valeurs (reglages Boussole, langue) tant qu'elle n'est pas relancee.
+  // Clears storage AND resets the in-memory contexts to defaults: otherwise the app would keep
+  // the old values (Boussole settings, language) until it's relaunched.
   const onClearData = () => {
     clearAppData();
     resetSettings();

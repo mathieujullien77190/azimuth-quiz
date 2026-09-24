@@ -13,7 +13,7 @@ import { bearingFromTouch } from './helpers';
 import type { CompassNeedle, CompassProps } from './types';
 import { useHeading } from './useHeading';
 
-// Reference stable : sinon la memoisation du cadran serait cassee a chaque rendu.
+// Stable reference: otherwise the dial's memoization would be broken on every render.
 const NO_NEEDLES: CompassNeedle[] = [];
 
 export const Compass = ({
@@ -29,7 +29,7 @@ export const Compass = ({
   const t = useTranslation();
   const interactive = onChange !== undefined;
 
-  // Cap du telephone : le cadran tourne de -cap pour que le N reste sur le vrai nord.
+  // Phone heading: the dial rotates by -heading so N stays on true north.
   const { heading, onTouch } = useHeading(live);
   const headingRef = useRef(0);
   headingRef.current = heading ?? 0;
@@ -41,7 +41,7 @@ export const Compass = ({
 
   const panResponder = useMemo(() => {
     const update = (x: number, y: number) => {
-      // Angle a l'ecran, puis retour dans le repere du cadran (nord = 0).
+      // Angle on screen, then converted back into the dial's frame (north = 0).
       const next = Math.round(normalizeBearing(bearingFromTouch(x, y, size) + headingRef.current)) % 360;
       onChangeRef.current?.(next);
     };
@@ -53,7 +53,7 @@ export const Compass = ({
       onPanResponderTerminationRequest: () => false,
       onShouldBlockNativeResponder: () => true,
       onPanResponderGrant: (event) => {
-        // Web : amorce le capteur d'orientation au premier contact (geste requis par iOS Safari).
+        // Web: kicks off the orientation sensor on the first touch (gesture required by iOS Safari).
         onTouchRef.current();
         update(event.nativeEvent.locationX, event.nativeEvent.locationY);
       },
@@ -67,8 +67,8 @@ export const Compass = ({
       accessibilityRole={interactive ? 'adjustable' : 'image'}
       style={[
         { width: size, height: size },
-        // Web : sans ca, un glisse vertical sur le cadran fait aussi defiler la ScrollView parente
-        // (le PanResponder capture bien le geste RN, mais le navigateur scrolle quand meme).
+        // Web: without this, a vertical drag on the dial also scrolls the parent ScrollView
+        // (the PanResponder does capture the RN gesture, but the browser scrolls anyway).
         interactive && Platform.OS === 'web' && ({ touchAction: 'none' } as ViewStyle),
       ]}
       {...(interactive ? panResponder.panHandlers : {})}
@@ -84,7 +84,7 @@ export const Compass = ({
       </View>
 
       {heading !== null && (
-        // Repere fixe : le haut du telephone, face auquel le cadran tourne.
+        // Fixed marker: the top of the phone, which the dial rotates against.
         <View pointerEvents="none" style={styles.marker}>
           <Svg height={NORTH_MARKER_HEIGHT} width={NORTH_MARKER_WIDTH}>
             <Polygon

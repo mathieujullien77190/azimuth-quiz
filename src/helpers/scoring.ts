@@ -16,10 +16,10 @@ export type ScoringOptions = Pick<GameSettings, 'straightLine'>;
 const curve = (ratio: number): number => Math.max(0, Math.min(1, ratio)) ** SCORE_CURVE_EXPONENT;
 
 /**
- * Score une reponse. Direction (cap) et distance/inclinaison sont deux axes independants, chacun
- * plafonne a MAX_DIRECTION_POINTS / MAX_DISTANCE_POINTS : un cap parfait donne les 500 points de
- * direction quelle que soit l'inclinaison choisie, et reciproquement. En mode "straightLine", la
- * comparaison de distance se fait sur la corde (donc sur l'inclinaison), jamais melangee au cap.
+ * Scores an answer. Direction (heading) and distance/inclination are two independent axes, each
+ * capped at MAX_DIRECTION_POINTS / MAX_DISTANCE_POINTS: a perfect heading gives the full 500
+ * direction points regardless of the chosen inclination, and vice versa. In "straightLine" mode,
+ * the distance comparison is done on the chord (so on the inclination), never mixed with the heading.
  */
 export const scoreRound = (origin: Coordinates, place: Place, guess: Guess, options: ScoringOptions): RoundScore => {
   const trueBearing = bearingDeg(origin, place.coordinates);
@@ -52,12 +52,12 @@ export const scoreRound = (origin: Coordinates, place: Place, guess: Guess, opti
 };
 
 /**
- * Bonus du(des) meilleur(s) de la manche : 1/5 du max de chaque categorie, pour le(s) joueur(s)
- * qui l'a(ont) sur cette categorie (egalite comprise). N'a de sens qu'a plusieurs — en solo,
- * `results` a un seul element et personne ne peut se distinguer, donc aucun bonus.
- * Compare les ecarts bruts (`directionError`/`distanceError`), pas les points : ceux-ci sont
- * plafonnes a 0 des qu'on sort de la tolerance, donc deux joueurs tous deux hors tolerance (et
- * donc a 0 point) auraient sinon ete consideres a egalite et tous deux "les plus proches".
+ * Bonus for the best of the round: 1/5 of each category's max, for the player(s)
+ * who has it on that category (ties included). Only makes sense with several players — solo,
+ * `results` has a single element and no one can stand out, so no bonus.
+ * Compares the raw errors (`directionError`/`distanceError`), not the points: those are
+ * capped at 0 as soon as you're out of tolerance, so two players both out of tolerance (and
+ * thus at 0 points) would otherwise be considered tied and both "the closest".
  */
 export const applyBestBonus = (results: PlayerResult[]): PlayerResult[] => {
   if (results.length < 2) return results;
@@ -82,7 +82,7 @@ export const applyBestBonus = (results: PlayerResult[]): PlayerResult[] => {
   });
 };
 
-/** `titles` doit suivre le meme ordre que RANKS (translations.endScreen.ranks). */
+/** `titles` must follow the same order as RANKS (translations.endScreen.ranks). */
 export const getRank = (total: number, maxTotal: number, titles: readonly string[]): Rank => {
   const ratio = maxTotal > 0 ? total / maxTotal : 0;
   const index = RANKS.findIndex((candidate) => ratio >= candidate.minRatio);

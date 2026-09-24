@@ -3,8 +3,8 @@ export type Star = {
   yRatio: number;
   radius: number;
   opacity: number;
-  /** Duree d'un aller (creux -> plein) du scintillement, en ms. */
+  /** Duration of one leg (dim -> full) of the twinkle, in ms. */
   duration: number;
-  /** Delai avant le tout premier cycle, en ms : evite que toutes les etoiles clignotent en phase. */
+  /** Delay before the very first cycle, in ms: prevents all stars from twinkling in phase. */
   delay: number;
 };

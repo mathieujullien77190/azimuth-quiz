@@ -3,8 +3,8 @@ import type { IndicesPlace, Place } from '@/types';
 
 import { del, getJson, putJson } from './http';
 
-/** Une carte lieu : l'identite commune, plus les donnees de chaque jeu quand ce lieu y figure
- * (l'un des deux peut etre absent — voir `codec.ts`). */
+/** A place card: the common identity, plus each game's data when this place is in it
+ * (either one can be absent — see `codec.ts`). */
 export type PlaceRow = {
   index: number;
   name: string;

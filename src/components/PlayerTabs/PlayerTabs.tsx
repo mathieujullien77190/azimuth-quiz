@@ -11,7 +11,7 @@ import type { PlayerTabsProps } from './types';
 
 const createStyles = ({ colors, radius, typography }: Theme) =>
   StyleSheet.create({
-    // Sans ca, le ScrollView horizontal s'etire pour remplir la hauteur restante du Screen.
+    // Without this, the horizontal ScrollView stretches to fill the Screen's remaining height.
     scroll: {
       flexGrow: 0,
       flexShrink: 0,
@@ -85,7 +85,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
     },
   });
 
-/** Selecteur de joueur fixe en haut de l'ecran de jeu : on choisit qui repond, sans quitter l'ecran. */
+/** Player selector fixed at the top of the game screen: pick who's answering, without leaving the screen. */
 export const PlayerTabs = ({
   players,
   order,

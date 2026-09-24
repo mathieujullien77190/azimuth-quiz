@@ -3,13 +3,13 @@ import type { Category, Difficulty, IndicesPlace, IndicesPositionInCountry, Plac
 import { countryName, countryPhoneCode, countryCurrencySymbol } from './countries';
 
 /**
- * `places.json` est la source commune des lieux de Boussole ET d'Indices : un tableau de lieux, et
- * chaque lieu est lui-meme `[commun, boussole, indices]`. `commun` existe toujours ; `boussole` est
- * `null` si ce lieu n'est pas dans le pool Boussole, `indices` est `null` s'il n'est pas dans le
- * pool Indices (un lieu peut n'etre que dans l'un des deux). Chaque jeu garde sa propre difficulte
- * (elles divergent volontairement). `decodeBoussolePlaces`/`decodeIndicesPlaces` sont le seul
- * endroit qui connait l'ordre des colonnes : `src/constants/places/index.ts`, `src/constants/
- * indices.ts` et `admin/vite.config.ts` importent tous d'ici plutot que de le recoder.
+ * `places.json` is the shared source of places for BOTH Boussole and Indices: an array of places,
+ * and each place is itself `[common, boussole, indices]`. `common` always exists; `boussole` is
+ * `null` if this place isn't in the Boussole pool, `indices` is `null` if it isn't in the
+ * Indices pool (a place can be in only one of the two). Each game keeps its own difficulty
+ * (they diverge on purpose). `decodeBoussolePlaces`/`decodeIndicesPlaces` are the only
+ * place that knows the column order: `src/constants/places/index.ts`, `src/constants/
+ * indices.ts` and `admin/vite.config.ts` all import from here rather than re-encoding it.
  */
 
 export const CATEGORY_CODES: Record<Category, string> = {
@@ -27,9 +27,9 @@ export const DIFFICULTY_CODES: Record<Difficulty, string> = {
   master: 'M',
 };
 
-/** Fuseau horaire IANA (ex. "Europe/Madrid") -> code 2 lettres, arbitraire mais stable (ordre
- * alphabetique des fusaux effectivement utilises). Repete sur 446 lieux Indices, une chaine
- * "Europe/Copenhagen" pese lourd pour rien face a "gh". */
+/** IANA timezone (e.g. "Europe/Madrid") -> 2-letter code, arbitrary but stable (alphabetical
+ * order of the timezones actually used). Repeated across 446 Indices places, a string like
+ * "Europe/Copenhagen" weighs a lot for nothing next to "gh". */
 export const TIMEZONE_CODES: Record<string, string> = {
   'Africa/Abidjan': 'aa',
   'Africa/Accra': 'ab',
@@ -282,8 +282,8 @@ export type IndicesRow = readonly [
   emoji3: string,
 ];
 
-/** Un lieu : commun + ses deux parts specifiques, l'une ou l'autre (jamais les deux) pouvant etre
- * `null` si ce lieu n'existe pas dans ce jeu. */
+/** A place: common data + its two game-specific parts, either one (never both) can be
+ * `null` if this place doesn't exist in that game. */
 export type PlaceEntry = readonly [common: CommonRow, boussole: BoussoleRow | null, indices: IndicesRow | null];
 
 export type MergedPlaces = readonly PlaceEntry[];
@@ -363,7 +363,7 @@ export const decodeIndicesPlaces = (entries: MergedPlaces): IndicesPlace[] => {
   return places;
 };
 
-/** Un lieu par ligne (au lieu du multi-ligne par defaut de `JSON.stringify(_, null, 2)`) : un
- * `git diff` sur un seul champ modifie touche une seule ligne. */
+/** One place per line (instead of the multi-line default of `JSON.stringify(_, null, 2)`): a
+ * `git diff` touching a single modified field only touches one line. */
 export const serializeMergedPlaces = (entries: MergedPlaces): string =>
   '[\n' + entries.map((entry) => '  ' + JSON.stringify(entry)).join(',\n') + '\n]\n';

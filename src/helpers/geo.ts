@@ -4,7 +4,7 @@ import type { Coordinates } from '@/types';
 const toRadians = (degrees: number): number => (degrees * Math.PI) / 180;
 const toDegrees = (radians: number): number => (radians * 180) / Math.PI;
 
-/** Distance grand cercle en km (formule de haversine). */
+/** Great-circle distance in km (haversine formula). */
 export const distanceKm = (from: Coordinates, to: Coordinates): number => {
   const dLat = toRadians(to.latitude - from.latitude);
   const dLon = toRadians(to.longitude - from.longitude);
@@ -14,35 +14,35 @@ export const distanceKm = (from: Coordinates, to: Coordinates): number => {
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.min(1, Math.sqrt(a)));
 };
 
-/** Angle au centre de la Terre entre deux points, en degres [0, 180]. */
+/** Central angle of the Earth between two points, in degrees [0, 180]. */
 export const centralAngleDeg = (from: Coordinates, to: Coordinates): number =>
   toDegrees(distanceKm(from, to) / EARTH_RADIUS_KM);
 
-/** Distance en ligne droite a travers la Terre (corde), en km. */
+/** Straight-line distance through the Earth (chord), in km. */
 export const straightDistanceKm = (from: Coordinates, to: Coordinates): number =>
   2 * EARTH_RADIUS_KM * Math.sin(toRadians(centralAngleDeg(from, to)) / 2);
 
 /**
- * Angle sous l'horizon local pour viser `to` en ligne droite, en degres [0, 90].
- * La corde fait avec la tangente un angle egal a la moitie de l'angle au centre.
+ * Angle below the local horizon to aim at `to` in a straight line, in degrees [0, 90].
+ * The chord makes an angle with the tangent equal to half the central angle.
  */
 export const inclinationDeg = (from: Coordinates, to: Coordinates): number => centralAngleDeg(from, to) / 2;
 
-/** Inclinaison (degres sous l'horizon) d'une ligne droite de longueur `chordKm` : la corde vaut 2R sin(inclinaison). */
+/** Inclination (degrees below the horizon) of a straight line of length `chordKm`: the chord equals 2R sin(inclination). */
 export const inclinationFromChordKm = (chordKm: number): number =>
   toDegrees(Math.asin(Math.min(1, Math.max(0, chordKm / (2 * EARTH_RADIUS_KM)))));
 
 /**
- * Distance de surface correspondant a une inclinaison : l'angle au centre vaut deux fois
- * l'inclinaison (voir inclinationDeg), l'arc mesure alors R x cet angle. Purement indicatif :
- * la ligne droite et l'arc partagent la meme destination, seule l'inclinaison est choisie.
+ * Surface distance corresponding to an inclination: the central angle equals twice
+ * the inclination (see inclinationDeg), the arc then measures R x that angle. Purely
+ * indicative: the straight line and the arc share the same destination, only the inclination is chosen.
  */
 export const arcKmFromInclination = (inclinationDeg: number): number => EARTH_RADIUS_KM * toRadians(2 * inclinationDeg);
 
-/** Meme chose directement depuis une longueur de corde (ligne droite). */
+/** Same thing directly from a chord length (straight line). */
 export const arcKmFromChordKm = (chordKm: number): number => arcKmFromInclination(inclinationFromChordKm(chordKm));
 
-/** Cap initial de `from` vers `to`, en degres [0, 360[ (0 = nord, 90 = est). */
+/** Initial heading from `from` to `to`, in degrees [0, 360[ (0 = north, 90 = east). */
 export const bearingDeg = (from: Coordinates, to: Coordinates): number => {
   const lat1 = toRadians(from.latitude);
   const lat2 = toRadians(to.latitude);
@@ -54,13 +54,13 @@ export const bearingDeg = (from: Coordinates, to: Coordinates): number => {
 
 export const normalizeBearing = (degrees: number): number => ((degrees % 360) + 360) % 360;
 
-/** Ecart angulaire le plus court entre deux caps, dans [0, 180]. */
+/** Shortest angular difference between two headings, in [0, 180]. */
 export const angleDifference = (a: number, b: number): number => {
   const diff = Math.abs(normalizeBearing(a) - normalizeBearing(b));
   return diff > 180 ? 360 - diff : diff;
 };
 
-/** Point cardinal (N, NE, E...) le plus proche d'un cap, dans la langue de `labels`. */
+/** Cardinal point (N, NE, E...) closest to a heading, in the language of `labels`. */
 export const bearingToCardinal = (degrees: number, labels: readonly string[]): string => {
   const index = Math.round(normalizeBearing(degrees) / 45) % labels.length;
   return labels[index];

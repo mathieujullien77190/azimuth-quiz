@@ -10,7 +10,7 @@ import {
 } from './constants';
 import type { Star } from './types';
 
-/** Generateur pseudo-aleatoire deterministe (meme graine = memes etoiles, a chaque rendu). */
+/** Deterministic pseudo-random generator (same seed = same stars, every render). */
 const mulberry32 = (seed: number) => {
   let state = seed;
   return () => {
@@ -22,7 +22,7 @@ const mulberry32 = (seed: number) => {
   };
 };
 
-/** Position en ratio [0, 1] : reste stable, se redimensionne juste avec l'ecran. */
+/** Position as a ratio [0, 1]: stays stable, just resizes with the screen. */
 export const buildStars = (count: number, seed: number): Star[] => {
   const random = mulberry32(seed);
   return Array.from({ length: count }, () => ({
@@ -36,10 +36,10 @@ export const buildStars = (count: number, seed: number): Star[] => {
 };
 
 /**
- * Opacite d'une etoile a l'instant `elapsedMs` (depuis le montage) : une onde sinusoidale entre
- * son creux et son opacite max, dephasee par son propre `delay` et cadencee par sa `duration`.
- * Pure fonction de l'etoile et du temps : pas besoin d'Animated (et de son cortege de soucis
- * d'interop web avec react-native-svg).
+ * A star's opacity at instant `elapsedMs` (since mount): a sine wave between
+ * its dim floor and its max opacity, phase-shifted by its own `delay` and paced by its `duration`.
+ * A pure function of the star and time: no need for Animated (and its host of
+ * web interop headaches with react-native-svg).
  */
 export const twinkleOpacity = (star: Star, elapsedMs: number): number => {
   const floor = star.opacity * TWINKLE_MIN_OPACITY_RATIO;

@@ -1,7 +1,7 @@
 export type InclinationSliderProps = {
-  /** Longueur de la ligne droite : c'est elle qui fixe l'inclinaison (corde = 2R sin(inclinaison)). */
+  /** Straight-line length: it's what determines the inclination (chord = 2R sin(inclination)). */
   distanceKm: number;
   maxKm: number;
-  /** Nouvelle longueur de ligne droite, deduite de l'inclinaison choisie. */
+  /** New straight-line length, derived from the chosen inclination. */
   onChange: (distanceKm: number) => void;
 };

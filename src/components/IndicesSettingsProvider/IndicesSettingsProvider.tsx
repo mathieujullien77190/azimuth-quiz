@@ -6,8 +6,8 @@ import type { IndicesSettings } from '@/types';
 
 import type { IndicesSettingsProviderProps } from './types';
 
-/** Pas de persistance pour l'instant (contrairement a `SettingsProvider`/Boussole) : reglages
- * remis a zero a chaque lancement, le temps que le jeu ait plus d'un lieu a proposer. */
+/** No persistence for now (unlike `SettingsProvider`/Boussole): settings reset on every
+ * launch, until the game has more than one place pool to offer. */
 export const IndicesSettingsProvider = ({ children }: IndicesSettingsProviderProps) => {
   const [settings, setSettings] = useState<IndicesSettings>(DEFAULT_INDICES_SETTINGS);
 

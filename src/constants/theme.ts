@@ -1,4 +1,4 @@
-// Tokens communs a tous les themes. Couleurs, arrondis et typo : voir src/themes/.
+// Tokens shared by all themes. Colors, radii and typography: see src/themes/.
 export const spacing = {
   xs: 4,
   sm: 8,

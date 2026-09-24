@@ -54,8 +54,8 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       height: 16,
       borderRadius: 8,
     },
-    // Conteneur de l'input : positionne les initiales en son sein, jamais comme voisin qui peut
-    // pousser la ligne hors de l'ecran.
+    // Input container: positions the initials within it, never as a sibling that could
+    // push the row off-screen.
     inputWrap: {
       flex: 1,
       justifyContent: 'center',
@@ -187,7 +187,7 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
   const playerCount = settings.playerNames.length;
   const available = filterPlaces(settings.categories, settings.difficulties, settings.zone).length;
   const zoneDescription = t.setup.zones[settings.zone].description;
-  // Un ordre different a chaque arrivee sur l'ecran, stable pendant qu'on tape.
+  // A different order every time the screen loads, stable while typing.
   const placeholderNames = useMemo(() => shuffle([...NAME_PLACEHOLDERS]), []);
 
   return (

@@ -14,7 +14,7 @@ import { sanitizeSettings } from './settings';
 
 const isLanguage = (value: unknown): value is Language => value === 'fr' || value === 'en';
 
-/** Langue du systeme si l'anglais est detecte, francais par defaut sinon (seules langues gerees). */
+/** System language if English is detected, French by default otherwise (only languages supported). */
 export const systemLanguage = (): Language => (getLocales()[0]?.languageCode === 'en' ? 'en' : 'fr');
 
 export const loadSettings = async (): Promise<GameSettings> => {
@@ -30,7 +30,7 @@ export const saveSettings = async (settings: GameSettings): Promise<void> => {
   try {
     await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   } catch {
-    // Reglages non memorises : sans gravite.
+    // Settings not saved: not critical.
   }
 };
 
@@ -46,7 +46,7 @@ export const saveUfoCaught = async (): Promise<void> => {
   try {
     await AsyncStorage.setItem(UFO_CAUGHT_STORAGE_KEY, 'true');
   } catch {
-    // Non memorise : la soucoupe recommencera a bouger au prochain lancement, sans gravite.
+    // Not saved: the UFO will start moving again on next launch, not critical.
   }
 };
 
@@ -63,13 +63,13 @@ export const saveLanguage = async (language: Language): Promise<void> => {
   try {
     await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, language);
   } catch {
-    // Langue non memorisee : sans gravite, le francais par defaut sera reutilise.
+    // Language not saved: not critical, French will be used as the default again.
   }
 };
 
-/** Efface tout ce que l'app sauvegarde sur l'appareil : reglages Boussole, langue et etat de la
- * soucoupe (+ un eventuel "meilleur score" laisse par une version anterieure). Rien d'autre n'est
- * persiste (Indices n'a pas de sauvegarde, le score de fin de partie n'est plus memorise). */
+/** Clears everything the app saves on the device: Boussole settings, language and UFO
+ * state (+ a possible "best score" left over from an earlier version). Nothing else is
+ * persisted (Indices has no save, the end-of-game score is no longer stored). */
 export const clearAppData = async (): Promise<void> => {
   try {
     await AsyncStorage.multiRemove([
@@ -79,6 +79,6 @@ export const clearAppData = async (): Promise<void> => {
       UFO_CAUGHT_STORAGE_KEY,
     ]);
   } catch {
-    // Rien a faire : au pire les anciennes donnees restent, sans gravite.
+    // Nothing to do: at worst the old data sticks around, not critical.
   }
 };

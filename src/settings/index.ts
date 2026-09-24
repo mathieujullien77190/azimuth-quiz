@@ -5,12 +5,12 @@ import type { GameSettings, IndicesSettings } from '@/types';
 
 export type SettingsContextValue = {
   settings: GameSettings;
-  /** Faux tant que les reglages sauvegardes ne sont pas lus (les defauts sont alors renvoyes). */
+  /** False until the saved settings have been read (defaults are returned until then). */
   ready: boolean;
   updateSettings: (patch: Partial<GameSettings>) => void;
-  /** Remet les reglages en memoire aux defauts, sans rien re-ecrire dans le stockage (utilise
-   * apres "Vider les donnees" : sinon l'ecran garde les valeurs en memoire jusqu'au prochain
-   * lancement de l'app, meme si le stockage est deja vide). */
+  /** Resets the in-memory settings to defaults without rewriting storage (used
+   * after "Clear data": otherwise the screen keeps the in-memory values until the app's
+   * next launch, even though storage is already empty). */
   resetSettings: () => void;
 };
 
@@ -23,7 +23,7 @@ export const SettingsContext = createContext<SettingsContextValue>({
 
 export const useSettings = (): SettingsContextValue => useContext(SettingsContext);
 
-/** Reglages du jeu Indices : contexte independant, jamais melange a `GameSettings` (Boussole). */
+/** Indices game settings: independent context, never mixed with `GameSettings` (Boussole). */
 export type IndicesSettingsContextValue = {
   settings: IndicesSettings;
   updateSettings: (patch: Partial<IndicesSettings>) => void;

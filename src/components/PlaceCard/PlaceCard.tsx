@@ -58,11 +58,11 @@ export const PlaceCard = ({ place, showCountry, description }: PlaceCardProps) =
   const { language } = useLanguage();
   const t = useTranslation();
   const revealed = description !== undefined;
-  // L'anecdote n'existe qu'en francais (jamais traduite) : on ne l'affiche pas en anglais plutot
-  // que de montrer un texte dans la mauvaise langue. Le lien Wikipedia, lui, reste bilingue.
+  // The trivia only exists in French (never translated): we don't show it in English rather
+  // than displaying text in the wrong language. The Wikipedia link, though, stays bilingual.
   const showDescription = revealed && language === 'fr';
-  // Le lien Wikipedia n'a de sens qu'a la revelation (jamais pendant qu'on devine) : meme garde
-  // que la revelation elle-meme, plutot qu'un prop separe a synchroniser.
+  // The Wikipedia link only makes sense on reveal (never while guessing): same guard
+  // as the reveal itself, rather than a separate prop to keep in sync.
   const url = revealed ? wikiUrl(place, language) : undefined;
 
   return (

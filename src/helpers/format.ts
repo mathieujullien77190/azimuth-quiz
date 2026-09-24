@@ -14,5 +14,5 @@ export const formatBearing = (degrees: number, cardinals: readonly string[]): st
 
 export const formatInclination = (degrees: number): string => `${Math.round(degrees)}°`;
 
-/** Initiales d'un joueur : les 2 premieres lettres de son nom, en majuscules. */
+/** A player's initials: the first 2 letters of their name, uppercase. */
 export const initials = (name: string): string => name.trim().slice(0, 2).toUpperCase();

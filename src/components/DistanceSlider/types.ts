@@ -1,6 +1,6 @@
 export type DistanceSliderProps = {
   valueKm: number;
-  /** Borne haute de la piste (depend du mode : surface ou ligne droite). */
+  /** Upper bound of the track (depends on the mode: surface or straight line). */
   maxKm: number;
   onChange: (km: number) => void;
 };

@@ -1,7 +1,7 @@
 export type LegendItem = {
   label: string;
   color: string;
-  /** Pastille cerclee : c'est la vraie reponse. */
+  /** Circled dot: this is the true answer. */
   ring?: boolean;
 };
 

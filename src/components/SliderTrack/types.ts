@@ -1,5 +1,5 @@
 export type SliderMark = {
-  /** Position sur la piste, de 0 a 1. */
+  /** Position on the track, from 0 to 1. */
   ratio: number;
   label: string;
 };
@@ -7,9 +7,9 @@ export type SliderMark = {
 export type SliderTrackProps = {
   label: string;
   valueText: string;
-  /** Petite ligne sous l'en-tete (valeur secondaire). */
+  /** Small line below the header (secondary value). */
   caption?: string;
-  /** Position de la poignee, de 0 a 1. */
+  /** Thumb position, from 0 to 1. */
   ratio: number;
   marks: SliderMark[];
   onRatioChange: (ratio: number) => void;

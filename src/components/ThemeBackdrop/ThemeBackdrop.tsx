@@ -7,13 +7,13 @@ import { useTheme } from '@/themes';
 import { STAR_COUNT, STAR_SEED, TWINKLE_TICK_MS } from './constants';
 import { buildStars, twinkleOpacity } from './helpers';
 
-/** Decor de fond derriere l'ecran : un ciel etoile qui scintille. Purement decoratif (pointerEvents none). */
+/** Background décor behind the screen: a twinkling starry sky. Purely decorative (pointerEvents none). */
 export const ThemeBackdrop = () => {
   const { colors } = useTheme();
   const { width, height } = useWindowDimensions();
   const stars = useMemo(() => buildStars(STAR_COUNT, STAR_SEED), []);
-  // Temps ecoule depuis le montage : 0 au premier rendu (export statique compris, pas de decalage
-  // d'hydratation), incremente ensuite via un minuteur cote client uniquement.
+  // Time elapsed since mount: 0 on first render (static export included, no hydration
+  // mismatch), then incremented via a client-side-only timer.
   const [elapsedMs, setElapsedMs] = useState(0);
 
   useEffect(() => {

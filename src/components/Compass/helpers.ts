@@ -10,7 +10,7 @@ import {
 } from './constants';
 import type { Point, Tick } from './types';
 
-/** N/E/S/O(W) affiches sur le cadran ; seul le label de l'ouest depend de la langue. */
+/** N/E/S/O(W) shown on the dial; only the west label depends on the language. */
 export const cardinalPoints = (westLabel: string) => [
   { label: 'N', bearing: CARDINAL_BEARINGS.N },
   { label: 'E', bearing: CARDINAL_BEARINGS.E },
@@ -18,20 +18,20 @@ export const cardinalPoints = (westLabel: string) => [
   { label: westLabel, bearing: CARDINAL_BEARINGS.W },
 ];
 
-/** Point a `radius` du centre dans la direction `bearing` (0 = haut, sens horaire). */
+/** Point at `radius` from the center in direction `bearing` (0 = up, clockwise). */
 export const polarToPoint = (center: number, radius: number, bearing: number): Point => {
   const radians = (bearing * Math.PI) / 180;
   return { x: center + radius * Math.sin(radians), y: center - radius * Math.cos(radians) };
 };
 
-/** Cap (entier, [0, 360[) correspondant a un toucher a (x, y) dans un carre de cote `size`. */
+/** Heading (integer, [0, 360[) corresponding to a touch at (x, y) in a `size`-sided square. */
 export const bearingFromTouch = (x: number, y: number, size: number): number => {
   const half = size / 2;
   const degrees = (Math.atan2(x - half, half - y) * 180) / Math.PI;
   return Math.round(normalizeBearing(degrees)) % 360;
 };
 
-/** Losange effile pointant vers `bearing`, au format `points` de <Polygon>. */
+/** Tapered diamond pointing toward `bearing`, in <Polygon>'s `points` format. */
 export const needlePoints = (
   center: number,
   bearing: number,
@@ -66,8 +66,8 @@ export const buildTicks = (size: number): Tick[] => {
 };
 
 /**
- * Lissage du cap du capteur (tres nerveux) : on avance d'une fraction du plus court chemin,
- * ce qui gere le passage 359° -> 0°. Les variations minuscules sont ignorees.
+ * Smoothing for the sensor's heading (very jittery): advances by a fraction of the shortest path,
+ * which handles the 359° -> 0° wraparound. Tiny variations are ignored.
  */
 export const smoothHeading = (previous: number | null, next: number): number => {
   if (previous === null) return normalizeBearing(next);

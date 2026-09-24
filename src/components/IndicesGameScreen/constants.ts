@@ -1,4 +1,4 @@
-/** Penalite fixe pour celui qui buzze et se trompe : contrairement a une manche non trouvee
- * (0 point, voir `giveUp`), se tromper coute vraiment quelque chose — sinon buzzer au hasard
- * serait toujours sans risque. */
+/** Fixed penalty for buzzing in and being wrong: unlike an unfound round
+ * (0 points, see `giveUp`), being wrong genuinely costs something — otherwise buzzing at
+ * random would always be risk-free. */
 export const WRONG_ANSWER_PENALTY = 10;

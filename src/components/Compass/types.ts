@@ -1,16 +1,16 @@
 export type CompassProps = {
   size: number;
-  /** Cap choisi par le joueur (null = pas encore choisi). */
+  /** Heading chosen by the player (null = not chosen yet). */
   bearing: number | null;
-  /** Couleur de l'aiguille du joueur (par defaut : accent du design). */
+  /** Color of the player's needle (default: design accent). */
   color?: string;
-  /** Aiguilles supplementaires (reponses des autres joueurs a la revelation). */
+  /** Extra needles (other players' answers on reveal). */
   extraNeedles?: CompassNeedle[];
-  /** Vrai cap, affiche a la revelation. */
+  /** True heading, shown on reveal. */
   truthBearing?: number | null;
-  /** Sur mobile : le cadran tourne pour que le N pointe vers le vrai nord (capteur du telephone). */
+  /** On mobile: the dial rotates so N points to true north (phone sensor). */
   live?: boolean;
-  /** Absent = boussole decorative, non interactive. */
+  /** Absent = decorative, non-interactive compass. */
   onChange?: (bearing: number) => void;
 };
 
@@ -41,13 +41,13 @@ export type CompassDialProps = {
 
 export type UseHeadingResult = {
   heading: number | null;
-  /** A appeler au premier toucher de la boussole : sur le web, amorce l'ecoute du capteur
-   * (et, sur iOS, la demande de permission, qui exige un geste utilisateur). Sans effet ailleurs. */
+  /** Call on the compass's first touch: on web, kicks off listening to the sensor
+   * (and, on iOS, the permission request, which requires a user gesture). No effect elsewhere. */
   onTouch: () => void;
 };
 
-/** Evenement d'orientation navigateur, avec le champ non-standard de Safari iOS en plus. */
+/** Browser orientation event, plus Safari iOS's non-standard field. */
 export type WebOrientationEvent = DeviceOrientationEvent & {
-  /** Safari iOS uniquement : cap deja absolu (vrai nord), en degres. */
+  /** Safari iOS only: already-absolute heading (true north), in degrees. */
   webkitCompassHeading?: number;
 };

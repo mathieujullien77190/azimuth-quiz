@@ -67,8 +67,8 @@ const createStyles = ({ colors, radius, typography }: Theme, compact: boolean) =
       fontSize: fontSize.caption * scale,
       width: 90,
     },
-    // Meme style que la valeur d'une reponse de joueur (rowValue) : la verite n'a pas a se
-    // distinguer par la couleur ou la taille, seule sa place tout en haut du bloc la signale.
+    // Same style as a player's answer value (rowValue): the truth doesn't need to
+    // stand out by color or size, only its place at the very top of the block signals it.
     truthValue: {
       ...typography.body,
       color: colors.text,
@@ -106,7 +106,7 @@ const createStyles = ({ colors, radius, typography }: Theme, compact: boolean) =
       color: colors.accent,
       fontSize: fontSize.title * scale,
     },
-    // Score de la manche, sous les lignes detail : meme taille/poids que rowPoints, en blanc.
+    // Round score, below the detail rows: same size/weight as rowPoints, in white.
     roundTotalRow: {
       flexDirection: 'row',
       justifyContent: 'flex-end',
@@ -151,13 +151,13 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
   const isSolo = players.length === 1;
   const [showScoringInfo, setShowScoringInfo] = useState(false);
 
-  // Les joueurs sont classes par points sur la manche (le meilleur en premier).
+  // Players are ranked by points on the round (best first).
   const ranked = record.results
     .map((result, index) => ({ result, player: players[index], index }))
     .sort((a, b) => b.result.score.total - a.result.score.total);
 
-  // Le curseur donne la corde (ligne droite) en mode straightLine ; la distance de surface
-  // equivalente sert a la fois a l'affichage et au calcul de l'ecart avec la vraie reponse.
+  // The slider gives the chord (straight line) in straightLine mode; the equivalent
+  // surface distance is used both for display and to compute the gap with the true answer.
   const guessSurfaceKmFor = (result: (typeof record.results)[number]): number =>
     options.straightLine ? arcKmFromChordKm(result.guess.distanceKm) : result.guess.distanceKm;
 
@@ -225,9 +225,9 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
             <View style={styles.row}>
               <Text style={styles.rowLabel}>{t.roundResult.inclination}</Text>
               <Text style={styles.rowValue}>{formatInclination(result.guess.inclination)}</Text>
-              {/* Meme score que Distance : en mode ligne droite, la corde jugee par distancePoints
-                  EST l'inclinaison (l'une determine l'autre) — donc le meme pool de points, gagne
-                  et perdu ensemble, independamment du cap. */}
+              {/* Same score as Distance: in straight-line mode, the chord judged by distancePoints
+                  IS the inclination (one determines the other) — so the same points pool, won
+                  and lost together, independent of the heading. */}
               <Text
                 style={[styles.rowPoints, { color: result.score.distanceBonus > 0 ? colors.success : colors.text }]}
               >

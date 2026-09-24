@@ -1,3 +1,3 @@
-/** Un onglet deja valide ne se rouvre que si les revisions sont autorisees. */
+/** An already-submitted tab only reopens if revisions are allowed. */
 export const isTabLocked = (isActive: boolean, isAnswered: boolean, allowRevision: boolean): boolean =>
   !isActive && isAnswered && !allowRevision;

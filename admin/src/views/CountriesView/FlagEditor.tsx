@@ -6,9 +6,9 @@ const FLAG_COLOR_IDS: IndicesFlagColorId[] = ['red', 'blue', 'white', 'green', '
 
 const sameFlag = (a: IndicesFlagColorRow[], b: IndicesFlagColorRow[]): boolean => JSON.stringify(a) === JSON.stringify(b);
 
-/** Liste de couleurs (id + hex + %) editable ligne par ligne, avec ajout/suppression — pas le
- * meme principe de clic-pour-editer que les autres champs : un drapeau est une petite liste
- * structuree, ça se manipule mieux comme un mini-formulaire toujours ouvert. */
+/** List of colors (id + hex + %) editable row by row, with add/remove — not the
+ * same click-to-edit pattern as the other fields: a flag is a small structured list,
+ * it's easier to handle as an always-open mini-form. */
 export const FlagEditor = ({
   value,
   saveFlag,

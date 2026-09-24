@@ -1,21 +1,21 @@
 import { DEFAULT_SETTINGS } from '@/constants';
 import type { Category, Difficulty, GameSettings } from '@/types';
 
-/** Ajuste la liste des noms au nombre de joueurs, en gardant les noms deja saisis. Les nouvelles
- * places restent vides : le placeholder au pif s'affiche, pas de "Joueur N" ecrit d'office. */
+/** Resizes the name list to the player count, keeping already-entered names. New
+ * slots stay empty: the random placeholder shows, no "Player N" written by default. */
 export const resizeNames = (names: string[], count: number): string[] =>
   Array.from({ length: count }, (_, index) => names[index] ?? '');
 
-/** Ajoute ou retire une valeur d'une selection multiple (categories, difficultes...), sans jamais
- * la vider entierement. */
+/** Adds or removes a value from a multi-select (categories, difficulties...), never
+ * emptying it entirely. */
 export const toggleSelected = <T>(selected: T[], value: T): T[] => {
   if (!selected.includes(value)) return [...selected, value];
   return selected.length > 1 ? selected.filter((candidate) => candidate !== value) : selected;
 };
 
 /**
- * Categorie "Enfants" : uniquement des lieux faciles par construction. La cocher force donc la
- * difficulte a Facile seul (choix unique, pas une selection multiple comme les autres categories).
+ * "Kids" category: only easy places by construction. Checking it therefore forces the
+ * difficulty to Easy alone (single choice, not a multi-select like the other categories).
  */
 export const toggleCategoryFilter = (
   settings: Pick<GameSettings, 'categories' | 'difficulties'>,
@@ -30,10 +30,10 @@ export const toggleCategoryFilter = (
 };
 
 /**
- * Difficulte : choix unique (radio), pas une selection multiple — cliquer une pastille la
- * selectionne seule, jamais un toggle qui pourrait tout vider. Choisir autre chose que Facile n'a
- * pas de sens pour "Enfants" (pensee facile par nature) : plutot que de la laisser dans un etat
- * incoherent, on la decoche.
+ * Difficulty: single choice (radio), not a multi-select — clicking a chip selects it
+ * alone, never a toggle that could empty everything. Choosing anything other than Easy makes
+ * no sense for "Kids" (designed to be easy by nature): rather than leaving it in an
+ * inconsistent state, we uncheck it.
  */
 export const selectDifficultyFilter = (
   settings: Pick<GameSettings, 'categories' | 'difficulties'>,

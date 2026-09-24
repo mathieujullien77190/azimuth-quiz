@@ -27,7 +27,7 @@ const createStyles = ({ colors, typography }: Theme) =>
     },
   });
 
-/** Carte titree : regroupe les champs d'un meme sujet. */
+/** Titled card: groups the fields of a single subject. */
 const Section = ({ title, hint, children }: SectionProps) => {
   const styles = useThemedStyles(createStyles);
 

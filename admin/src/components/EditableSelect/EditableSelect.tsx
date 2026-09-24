@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-/** Meme principe que `EditableValue` mais pour une valeur enumeree : le clic ouvre un `<select>`
- * au lieu d'un `<input>`. */
+/** Same idea as `EditableValue` but for an enum value: clicking opens a `<select>`
+ * instead of an `<input>`. */
 export const EditableSelect = <T extends string,>({
   value,
   options,

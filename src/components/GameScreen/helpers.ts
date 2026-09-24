@@ -3,22 +3,22 @@ import type { RoundRecord } from '@/types';
 
 import { MAX_COMPASS_SIZE, MAX_EARTH_SIZE } from './constants';
 
-/** Total de points de chaque joueur, dans l'ordre des joueurs. */
+/** Each player's point total, in player order. */
 export const playerTotals = (records: RoundRecord[], playerCount: number): number[] =>
   Array.from({ length: playerCount }, (_, playerIndex) =>
     records.reduce((total, record) => total + (record.results[playerIndex]?.score.total ?? 0), 0),
   );
 
-/** Ordre des onglets (et du premier a jouer) pour une manche : rotation pure a partir du joueur
- * `roundIndex % playerCount`, pour que chacun commence a tour de role au fil des manches — pas
- * un tri par score, qui ferait toujours commencer le(s) meme(s) joueur(s) en tete. */
+/** Tab order (and who plays first) for a round: pure rotation starting from player
+ * `roundIndex % playerCount`, so everyone takes turns going first across rounds — not
+ * a sort by score, which would always put the same player(s) at the front. */
 export const rotatedOrder = (roundIndex: number, playerCount: number): number[] =>
   Array.from({ length: playerCount }, (_, i) => (roundIndex + i) % playerCount);
 
-// Au tout premier rendu de l'export web statique, `useWindowDimensions` peut renvoyer 0 (valeur
-// figee au rendu serveur, jamais corrigee sans redimensionnement reel) : sans garde-fou, boussole
-// et Terre se retrouveraient avec une taille negative, donc invisibles. On retombe sur leur
-// taille max plutot que de les faire disparaitre.
+// On the very first render of the static web export, `useWindowDimensions` can return 0 (a
+// value frozen at server render, never corrected without a real resize): without a safeguard,
+// the compass and Earth would end up with a negative size, so invisible. We fall back to their
+// max size instead of letting them disappear.
 export const compassSizeFor = (windowWidth: number): number => {
   const size = Math.min(MAX_COMPASS_SIZE, windowWidth - spacing.lg * 2);
   return size > 0 ? size : MAX_COMPASS_SIZE;

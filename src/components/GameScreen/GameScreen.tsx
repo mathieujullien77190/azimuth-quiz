@@ -185,33 +185,33 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
   const t = useTranslation();
   const game = useGame();
 
-  // Navigation "Suivant"/"Precedent" : tout en bas (cap souvent hors ecran une fois la distance
-  // affichee) / tout en haut, pas un scroll cible sur une section precise.
+  // "Next"/"Previous" navigation: all the way down (heading often off-screen once the distance
+  // is shown) / all the way up, not a scroll targeted at a specific section.
   const scrollRef = useRef<ScrollView>(null);
   const goToCap = () => scrollRef.current?.scrollToEnd({ animated: true });
   const goToDistance = () => scrollRef.current?.scrollTo({ animated: true, y: 0 });
-  // Changer de joueur repart en haut de l'ecran : sinon on reste scrolle sur le cap/la distance du
-  // joueur precedent, ce qui n'a plus de sens pour le nouveau.
+  // Switching players scrolls back to the top: otherwise we'd stay scrolled on the previous
+  // player's heading/distance, which no longer makes sense for the new one.
   const selectPlayer = (index: number) => {
     scrollRef.current?.scrollTo({ animated: true, y: 0 });
     game.selectPlayer(index);
   };
-  // "Valider" passe au joueur suivant (ou revele si c'etait le dernier) : dans les deux cas on
-  // repart en haut de l'ecran plutot que de rester scrolle sur le cap/la distance de celui d'avant.
+  // "Submit" moves to the next player (or reveals if it was the last one): either way we
+  // scroll back to the top instead of staying scrolled on the previous player's heading/distance.
   const submit = () => {
     scrollRef.current?.scrollTo({ animated: true, y: 0 });
     game.submit();
   };
-  // "Manche suivante" repart aussi en haut de l'ecran, plutot que de rester scrolle sur la
-  // revelation precedente.
+  // "Next round" also scrolls back to the top, instead of staying scrolled on the
+  // previous reveal.
   const next = () => {
     scrollRef.current?.scrollTo({ animated: true, y: 0 });
     game.next();
   };
 
   const record = game.phase === 'reveal' ? game.currentRecord : undefined;
-  // Tout le monde a valide : la revelation repart en haut de l'ecran, plutot que de rester scrolle
-  // sur la section ou le dernier joueur avait valide.
+  // Everyone has submitted: the reveal scrolls back to the top, instead of staying scrolled
+  // on the section where the last player submitted.
   useEffect(() => {
     if (record) scrollRef.current?.scrollTo({ animated: true, y: 0 });
   }, [record]);
@@ -239,18 +239,18 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
   }
 
   const straightLine = game.config.straightLine;
-  // Toujours la couleur reelle du joueur (celle choisie a l'ecran de reglages), meme en solo : pas
-  // de repli sur colors.accent qui ne correspondrait plus a ce qui a ete montre a la selection.
+  // Always the player's real color (the one chosen on the settings screen), even solo: no
+  // fallback to colors.accent that would no longer match what was shown at selection.
   const playerColor = game.currentPlayer.color;
   const earthSize = earthSizeFor(width);
   const playerColorAt = (index: number) => game.players[index].color;
-  // Le curseur donne la corde (ligne droite) en mode straightLine ; la Terre dessine un arc,
-  // donc il faut la distance au sol equivalente (meme destination, cf. helpers/geo).
+  // The slider gives the chord (straight line) in straightLine mode; the Earth draws an arc,
+  // so we need the equivalent ground distance (same destination, cf. helpers/geo).
   const earthDistanceKm = (km: number) => (straightLine ? arcKmFromChordKm(km) : km);
 
-  // Reponses deja validees des autres joueurs : montrees sur la boussole et sur la Terre, en
-  // estompe, sauf si l'option "Cacher les reponses des autres" est active (chacun ne voit alors
-  // que sa propre fleche/estimation pendant la manche ; la revelation, elle, montre toujours tout).
+  // Other players' already-submitted answers: shown on the compass and on the Earth, faded
+  // out, unless the "Hide other players' answers" option is on (each player then only sees
+  // their own arrow/estimate during the round; the reveal always shows everything either way).
   const showOthersWhileGuessing = !game.config.hideOtherAnswers;
   const answered = showOthersWhileGuessing ? game.answered : [];
   const answeredNeedles = answered.map((entry) => ({ bearing: entry.guess.bearing, color: entry.player.color }));

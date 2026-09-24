@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
-/** Valeur affichee comme texte simple, qui devient un `<input>` au clic — seul le blur ou Entree
- * enregistre, Echap annule. */
+/** Value shown as plain text, which becomes an `<input>` on click — only blur or Enter
+ * saves, Escape cancels. */
 export const EditableValue = ({
   value,
   saveFlag,

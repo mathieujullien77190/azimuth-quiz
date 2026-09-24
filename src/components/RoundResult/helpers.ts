@@ -1,2 +1,2 @@
-/** Points d'une categorie, bonus "meilleur de la manche" deja inclus (pas de detail du calcul). */
+/** A category's points, "best of the round" bonus already included (no breakdown shown). */
 export const formatRowScore = (points: number, bonus: number): string => `+${points + bonus}`;

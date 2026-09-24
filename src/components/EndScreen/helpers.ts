@@ -6,7 +6,7 @@ import type { RankedPlayer } from './types';
 
 export const maxTotalScore = (records: RoundRecord[]): number => records.length * MAX_ROUND_POINTS;
 
-/** Classement : meilleur total en premier, les ex aequo partagent le meme rang. */
+/** Ranking: best total first, tied players share the same rank. */
 export const rankPlayers = (players: Player[], totals: number[]): RankedPlayer[] => {
   const sorted = players
     .map((player, index) => ({ player, total: totals[index] ?? 0 }))
@@ -25,7 +25,7 @@ export const winnerTitle = (ranking: RankedPlayer[], t: Translations['endScreen'
     : t.tie(winners.map((entry) => entry.player.name).join(` ${t.and} `));
 };
 
-/** Meilleur joueur d'une manche (le premier en cas d'egalite). */
+/** Best player of a round (the first one in case of a tie). */
 export const roundWinnerIndex = (record: RoundRecord): number =>
   record.results.reduce(
     (best, result, index) => (result.score.total > record.results[best].score.total ? index : best),

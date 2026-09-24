@@ -1,4 +1,4 @@
 export const CHECK_MARK = '✓';
 
-/** En dessous de cette largeur d'ecran, les onglets retrecissent pour que 6 tiennent sans scroll. */
+/** Below this screen width, tabs shrink so 6 fit without scrolling. */
 export const COMPACT_BREAKPOINT = 450;

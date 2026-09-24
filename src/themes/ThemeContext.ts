@@ -4,7 +4,7 @@ import type { Theme } from '@/types';
 
 import { night } from './night';
 
-/** Un seul theme (Nuit) pour l'instant : pas de contexte a fournir. */
+/** Only one theme (Night) for now: no context to provide. */
 export const useTheme = (): Theme => night;
 
 /**

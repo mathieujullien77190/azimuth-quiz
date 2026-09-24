@@ -30,10 +30,10 @@ const requiredNumber = (value: unknown, label: string): number => {
 
 const readEntries = (): PlaceEntry[] => JSON.parse(readFileSync(placesPath, 'utf-8'));
 
-/** Petite API locale : lit/ecrit `places.json` directement, pas de base de donnees pour un outil
- * mono-utilisateur. Montee sur `/api/places` par le serveur de dev Vite, absente du build. `GET`
- * renvoie le fichier brut (un lieu par entree `[commun, boussole, indices]`) : le front decode
- * lui-meme avec les memes `decodeBoussolePlace`/`decodeIndicesPlace` que les deux jeux, pas de
+/** Small local API: reads/writes `places.json` directly, no database for a
+ * single-user tool. Mounted on `/api/places` by the Vite dev server, absent from the build. `GET`
+ * returns the raw file (one place per `[common, boussole, indices]` entry): the frontend decodes
+ * it itself with the same `decodeBoussolePlace`/`decodeIndicesPlace` as both games, no
  * duplication. */
 const placesApi = (): Plugin => ({
   name: 'places-api',
@@ -161,9 +161,9 @@ const placesApi = (): Plugin => ({
   },
 });
 
-/** Meme principe que `placesApi` pour `countries.json` : `GET` renvoie le fichier brut, `PUT`
- * modifie un pays (nom fr/en, drapeau, devise, indicatif) — pas de suppression, un pays n'est
- * jamais "en trop". */
+/** Same idea as `placesApi` for `countries.json`: `GET` returns the raw file, `PUT`
+ * edits a country (fr/en name, flag, currency, phone code) — no deletion, a country is
+ * never "surplus". */
 const countriesApi = (): Plugin => ({
   name: 'countries-api',
   configureServer(server) {

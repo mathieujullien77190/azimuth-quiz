@@ -2,15 +2,15 @@ import type { Player } from '@/types';
 
 export type PlayerTabsProps = {
   players: Player[];
-  /** Ordre d'affichage des onglets (indices dans `players`) : tire au sort a chaque manche. */
+  /** Tab display order (indexes into `players`): drawn at random each round. */
   order: number[];
   activeIndex: number;
-  /** Reponse deja validee, par index de joueur. */
+  /** Already-submitted answer, by player index. */
   answered: boolean[];
-  /** Si faux, un onglet deja valide ne s'ouvre pas au second passage. */
+  /** If false, an already-submitted tab doesn't reopen on a second visit. */
   allowRevision: boolean;
   onSelect: (index: number) => void;
-  /** Fourni : l'onglet actif affiche ce texte (ex. "A Matou de jouer") au lieu des initiales.
-   * Les autres onglets restent compacts (initiales) dans tous les cas. */
+  /** Provided: the active tab shows this text (e.g. "Matou's turn") instead of the initials.
+   * Other tabs always stay compact (initials) regardless. */
   activeLabel?: (name: string) => string;
 };
