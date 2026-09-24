@@ -16,7 +16,14 @@ import Card from '../ui/Card';
 import RoundProgress from '../ui/RoundProgress';
 import Screen from '../ui/Screen';
 import { WRONG_ANSWER_PENALTY } from './constants';
-import { maxScoreForRound, normalizePlaceGuess, overlayTypedLetters, randomIndicesPlace, skeletonLetterCount, totalRevealCount } from './helpers';
+import {
+  maxScoreForRound,
+  normalizePlaceGuess,
+  overlayTypedLetters,
+  randomIndicesPlace,
+  skeletonLetterCount,
+  totalRevealCount,
+} from './helpers';
 import type { IndicesGameScreenProps } from './types';
 
 const createStyles = ({ colors, radius, typography }: Theme) =>
@@ -128,6 +135,15 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       color: colors.textMuted,
       fontSize: fontSize.caption + 1,
       textAlign: 'center',
+    },
+    // The round's own live/countdown score (see `remaining`): distinct from the top-right
+    // header, which now shows each player's real cumulative total instead.
+    pointsAtStake: {
+      ...typography.body,
+      color: colors.textMuted,
+      fontSize: fontSize.caption + 1,
+      textAlign: 'center',
+      marginBottom: spacing.xs,
     },
     whoBuzzesRow: {
       flexDirection: 'row',
@@ -256,14 +272,21 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   }, []);
 
   const [place, setPlace] = useState(() => {
-    const drawn = randomIndicesPlace(settings.difficulty, settings.categories, language, getCachedIndicesHistory() ?? {});
+    const drawn = randomIndicesPlace(
+      settings.difficulty,
+      settings.categories,
+      language,
+      getCachedIndicesHistory() ?? {},
+    );
     recordIndicesDraw(drawn);
     return drawn;
   });
   const bearing = bearingDeg(origin.coordinates, place.coordinates);
   const distance = distanceKm(origin.coordinates, place.coordinates);
 
-  const [revealedClueIds, setRevealedClueIds] = useState<IndicesClueId[]>(() => (settings.startWithFirstLetter ? ['letter'] : []));
+  const [revealedClueIds, setRevealedClueIds] = useState<IndicesClueId[]>(() =>
+    settings.startWithFirstLetter ? ['letter'] : [],
+  );
   const [turnIndex, setTurnIndex] = useState(0);
   const [buzzOpen, setBuzzOpen] = useState(false);
   const [buzzedIndex, setBuzzedIndex] = useState<number | null>(null);
@@ -293,11 +316,6 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const remaining = vowelsRevealed ? Math.min(countdownRemaining, 1) : countdownRemaining;
   // `vowels` only appears once every other clue has been picked at least once.
   const vowelsUnlocked = INDICES_CLUE_ORDER.every((id) => revealedClueIds.includes(id));
-  // On reveal: what the buzzer actually won/lost this round (the remaining score if they
-  // found it, -WRONG_ANSWER_PENALTY if wrong, 0 if nobody tried) — see `settle`/
-  // `giveUp`, which apply this exact same value to the players' totals.
-  const roundDelta = verdict === 'correct' ? remaining : 0;
-  const displayScore = roundOver ? roundDelta : remaining;
 
   // The emoji reveals in 3 steps (place.emojis is a triplet): each extra click on the
   // already-revealed card counts as a newly picked clue (cost + turn), until exhausted.
@@ -323,7 +341,11 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const skeletonLengthKnown = letterStage >= 3 || vowelsRevealed;
   const skeletonGroups =
     letterStage >= 1
-      ? nameSkeleton(place.name, { groupByWord: letterStage >= 2 || vowelsRevealed, lengthKnown: skeletonLengthKnown, revealVowels: vowelsRevealed })
+      ? nameSkeleton(place.name, {
+          groupByWord: letterStage >= 2 || vowelsRevealed,
+          lengthKnown: skeletonLengthKnown,
+          revealVowels: vowelsRevealed,
+        })
       : [];
 
   // All the guards (round over, clue already revealed, emoji/flag exhausted) are enforced
@@ -400,7 +422,12 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
     // Never null here (unlike the initial draw above): recordIndicesDraw already populated the
     // module-level cache synchronously for this very place pool, on mount, before any round
     // could finish and reach this point.
-    const nextPlace = randomIndicesPlace(settings.difficulty, settings.categories, language, getCachedIndicesHistory()!);
+    const nextPlace = randomIndicesPlace(
+      settings.difficulty,
+      settings.categories,
+      language,
+      getCachedIndicesHistory()!,
+    );
     recordIndicesDraw(nextPlace);
     setPlace(nextPlace);
     setRevealedClueIds(settings.startWithFirstLetter ? ['letter'] : []);
@@ -454,137 +481,161 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   return (
     <Screen
       footer={
-        roundOver ? (
-          <View style={styles.actions}>
-            <Text style={[styles.resultBanner, verdict === 'correct' ? styles.resultCorrect : styles.resultWrong]}>
-              {/* buzzedName is always defined for 'correct' (settle requires buzzedIndex to be known). */}
-              {verdict === 'correct' ? t.indicesGame.scored(buzzedName!, formatNumber(remaining)) : t.indicesGame.noOneFound}
-            </Text>
-            <Text style={styles.revealAnswer}>
-              {t.indicesGame.wasPlace} {place.name}
-              <Text style={styles.revealSub}>
-                {'\n'}
-                {place.country}
+        <>
+          {!roundOver && (
+            <Text style={styles.pointsAtStake}>{t.indicesGame.pointsAtStake(formatNumber(remaining))}</Text>
+          )}
+          {roundOver ? (
+            <View style={styles.actions}>
+              <Text style={[styles.resultBanner, verdict === 'correct' ? styles.resultCorrect : styles.resultWrong]}>
+                {/* buzzedName is always defined for 'correct' (settle requires buzzedIndex to be known). */}
+                {verdict === 'correct'
+                  ? t.indicesGame.scored(buzzedName!, formatNumber(remaining))
+                  : t.indicesGame.noOneFound}
               </Text>
-            </Text>
-            <Button label={isLastRound ? t.game.last : t.indicesGame.continueLabel} onPress={continueRound} />
-            <Button label={t.indicesGame.home} onPress={onQuit} variant="ghost" />
-          </View>
-        ) : buzzedIndex !== null ? (
-          <View style={styles.buzzPanel}>
-            {settings.answerMethod === 'typed' ? (
-              <>
-                {skeletonLengthKnown && (
-                  <View style={styles.skeletonRow}>
-                    {overlayTypedLetters(skeletonGroups, guessText).map((group, groupIndex) => (
-                      <View key={groupIndex} style={styles.skeletonWord}>
-                        {group.map((letter, letterIndex) => (
-                          <View key={letterIndex} style={styles.skeletonSlot}>
-                            {letter !== null && (
-                              <Text style={skeletonGroups[groupIndex][letterIndex] === null ? styles.skeletonLetterTyped : styles.skeletonLetter}>
-                                {letter}
-                              </Text>
-                            )}
-                          </View>
-                        ))}
-                      </View>
-                    ))}
+              <Text style={styles.revealAnswer}>
+                {t.indicesGame.wasPlace} {place.name}
+                <Text style={styles.revealSub}>
+                  {'\n'}
+                  {place.country}
+                </Text>
+              </Text>
+              <Button label={isLastRound ? t.game.last : t.indicesGame.continueLabel} onPress={continueRound} />
+              <Button label={t.indicesGame.home} onPress={onQuit} variant="ghost" />
+            </View>
+          ) : buzzedIndex !== null ? (
+            <View style={styles.buzzPanel}>
+              {settings.answerMethod === 'typed' ? (
+                <>
+                  {skeletonLengthKnown && (
+                    <View style={styles.skeletonRow}>
+                      {overlayTypedLetters(skeletonGroups, guessText).map((group, groupIndex) => (
+                        <View key={groupIndex} style={styles.skeletonWord}>
+                          {group.map((letter, letterIndex) => (
+                            <View key={letterIndex} style={styles.skeletonSlot}>
+                              {letter !== null && (
+                                <Text
+                                  style={
+                                    skeletonGroups[groupIndex][letterIndex] === null
+                                      ? styles.skeletonLetterTyped
+                                      : styles.skeletonLetter
+                                  }
+                                >
+                                  {letter}
+                                </Text>
+                              )}
+                            </View>
+                          ))}
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                  <View style={styles.buzzInputRow}>
+                    <View style={styles.buzzerBadge}>
+                      <View style={[styles.buzzerBadgeDot, { backgroundColor: PLAYER_COLORS[buzzedIndex] }]} />
+                      <Text style={styles.buzzerBadgeText}>{t.indicesGame.buzzedPrompt(buzzedName!)}</Text>
+                    </View>
+                    <TextInput
+                      autoCapitalize="words"
+                      onChangeText={(next) => {
+                        // Once the real length is known, block typing past it (letters only —
+                        // spaces/punctuation don't count, the player may type either).
+                        if (
+                          skeletonLengthKnown &&
+                          [...next.replace(/[^\p{L}]/gu, '')].length > skeletonLetterCount(skeletonGroups)
+                        )
+                          return;
+                        setGuessText(next);
+                      }}
+                      onSubmitEditing={submitGuess}
+                      placeholder={t.indicesGame.guessPlaceholder}
+                      placeholderTextColor={colors.textMuted}
+                      returnKeyType="done"
+                      style={[styles.guessInput, styles.guessInputFlex]}
+                      value={guessText}
+                    />
                   </View>
-                )}
-                <View style={styles.buzzInputRow}>
+                  <Button
+                    disabled={guessText.trim().length === 0}
+                    label={t.indicesGame.submitGuess}
+                    onPress={submitGuess}
+                  />
+                  <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
+                </>
+              ) : (
+                <>
                   <View style={styles.buzzerBadge}>
                     <View style={[styles.buzzerBadgeDot, { backgroundColor: PLAYER_COLORS[buzzedIndex] }]} />
                     <Text style={styles.buzzerBadgeText}>{t.indicesGame.buzzedPrompt(buzzedName!)}</Text>
                   </View>
-                  <TextInput
-                    autoCapitalize="words"
-                    onChangeText={(next) => {
-                      // Once the real length is known, block typing past it (letters only —
-                      // spaces/punctuation don't count, the player may type either).
-                      if (skeletonLengthKnown && [...next.replace(/[^\p{L}]/gu, '')].length > skeletonLetterCount(skeletonGroups)) return;
-                      setGuessText(next);
-                    }}
-                    onSubmitEditing={submitGuess}
-                    placeholder={t.indicesGame.guessPlaceholder}
-                    placeholderTextColor={colors.textMuted}
-                    returnKeyType="done"
-                    style={[styles.guessInput, styles.guessInputFlex]}
-                    value={guessText}
+                  {!verified && (
+                    <>
+                      <Button label={t.indicesGame.verify} onPress={verify} />
+                      <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
+                    </>
+                  )}
+                  {verified && (
+                    <>
+                      <Text style={styles.revealAnswer}>
+                        {t.indicesGame.wasPlace} {place.name}
+                        <Text style={styles.revealSub}>
+                          {'\n'}
+                          {place.country}
+                        </Text>
+                      </Text>
+                      <View style={styles.verdictRow}>
+                        <Pressable accessibilityRole="button" onPress={() => settle(true)} style={styles.verdictBtn}>
+                          <Text style={styles.verdictLabelCorrect}>{t.indicesGame.correct}</Text>
+                        </Pressable>
+                        <Pressable accessibilityRole="button" onPress={() => settle(false)} style={styles.verdictBtn}>
+                          <Text style={styles.verdictLabelWrong}>{t.indicesGame.wrong}</Text>
+                        </Pressable>
+                      </View>
+                      <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
+                    </>
+                  )}
+                </>
+              )}
+            </View>
+          ) : (
+            <View style={styles.buzzRow}>
+              {lastWrong !== null && (
+                <Text style={[styles.resultBanner, styles.resultWrong]}>
+                  {t.indicesGame.missed(lastWrong, formatNumber(WRONG_ANSWER_PENALTY))}
+                </Text>
+              )}
+              {skeletonGroups.length > 0 && (
+                <View style={styles.skeletonRow}>
+                  {skeletonGroups.map((group, groupIndex) => (
+                    <View key={groupIndex} style={styles.skeletonWord}>
+                      {group.map((letter, letterIndex) => (
+                        <View key={letterIndex} style={styles.skeletonSlot}>
+                          {letter !== null && <Text style={styles.skeletonLetter}>{letter}</Text>}
+                        </View>
+                      ))}
+                    </View>
+                  ))}
+                </View>
+              )}
+              {buzzOpen ? (
+                <View style={styles.whoBuzzesRow}>
+                  <Text style={styles.buzzTitle}>{t.indicesGame.whoBuzzes}</Text>
+                  <PlayerTabs
+                    activeIndex={-1}
+                    allowRevision
+                    answered={noneAnswered}
+                    onSelect={setBuzzedIndex}
+                    order={playerOrder}
+                    players={playerTabs}
                   />
                 </View>
-                <Button
-                  disabled={guessText.trim().length === 0}
-                  label={t.indicesGame.submitGuess}
-                  onPress={submitGuess}
-                />
-                <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
-              </>
-            ) : (
-              <>
-                <View style={styles.buzzerBadge}>
-                  <View style={[styles.buzzerBadgeDot, { backgroundColor: PLAYER_COLORS[buzzedIndex] }]} />
-                  <Text style={styles.buzzerBadgeText}>{t.indicesGame.buzzedPrompt(buzzedName!)}</Text>
-                </View>
-                {!verified && (
-                  <>
-                    <Button label={t.indicesGame.verify} onPress={verify} />
-                    <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
-                  </>
-                )}
-                {verified && (
-                  <>
-                    <Text style={styles.revealAnswer}>
-                      {t.indicesGame.wasPlace} {place.name}
-                      <Text style={styles.revealSub}>
-                        {'\n'}
-                        {place.country}
-                      </Text>
-                    </Text>
-                    <View style={styles.verdictRow}>
-                      <Pressable accessibilityRole="button" onPress={() => settle(true)} style={styles.verdictBtn}>
-                        <Text style={styles.verdictLabelCorrect}>{t.indicesGame.correct}</Text>
-                      </Pressable>
-                      <Pressable accessibilityRole="button" onPress={() => settle(false)} style={styles.verdictBtn}>
-                        <Text style={styles.verdictLabelWrong}>{t.indicesGame.wrong}</Text>
-                      </Pressable>
-                    </View>
-                    <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
-                  </>
-                )}
-              </>
-            )}
-          </View>
-        ) : (
-          <View style={styles.buzzRow}>
-            {lastWrong !== null && (
-              <Text style={[styles.resultBanner, styles.resultWrong]}>
-                {t.indicesGame.missed(lastWrong, formatNumber(WRONG_ANSWER_PENALTY))}
-              </Text>
-            )}
-            {skeletonGroups.length > 0 && (
-              <View style={styles.skeletonRow}>
-                {skeletonGroups.map((group, groupIndex) => (
-                  <View key={groupIndex} style={styles.skeletonWord}>
-                    {group.map((letter, letterIndex) => (
-                      <View key={letterIndex} style={styles.skeletonSlot}>
-                        {letter !== null && <Text style={styles.skeletonLetter}>{letter}</Text>}
-                      </View>
-                    ))}
-                  </View>
-                ))}
-              </View>
-            )}
-            {buzzOpen ? (
-              <View style={styles.whoBuzzesRow}>
-                <Text style={styles.buzzTitle}>{t.indicesGame.whoBuzzes}</Text>
-                <PlayerTabs activeIndex={-1} allowRevision answered={noneAnswered} onSelect={setBuzzedIndex} order={playerOrder} players={playerTabs} />
-              </View>
-            ) : (
-              <Button label={t.indicesGame.buzz} onPress={openBuzz} variant="ghost" />
-            )}
-            <Button label={t.indicesGame.giveUp} onPress={giveUp} variant="ghost" />
-          </View>
-        )
+              ) : (
+                <Button label={t.indicesGame.buzz} onPress={openBuzz} variant="ghost" />
+              )}
+              <Button label={t.indicesGame.giveUp} onPress={giveUp} variant="ghost" />
+            </View>
+          )}
+        </>
       }
       header={
         <View style={styles.header}>
@@ -593,7 +644,8 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
               <Text style={styles.quit}>{t.game.quit}</Text>
             </Pressable>
             <Text style={styles.score}>
-              {formatNumber(displayScore)} {t.common.pts}
+              {players.length > 1 ? `${players[turnIndex]} · ` : ''}
+              {formatNumber(playerTotals[turnIndex])} {t.common.pts}
             </Text>
           </View>
           <RoundProgress difficulties={[settings.difficulty]} roundNumber={roundNumber} totalRounds={settings.rounds} />

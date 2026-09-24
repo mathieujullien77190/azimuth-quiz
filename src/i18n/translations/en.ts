@@ -176,6 +176,7 @@ export const en: Translations = {
   },
   indicesGame: {
     roundOver: 'Round over',
+    pointsAtStake: (points) => `${points} pts at stake`,
     buzz: '🔔 I know it!',
     giveUp: '🤷 No idea',
     noOneFound: 'No one found it — 0 points, moving on.',

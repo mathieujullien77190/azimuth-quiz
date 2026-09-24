@@ -141,6 +141,7 @@ export type Translations = {
   };
   indicesGame: {
     roundOver: string;
+    pointsAtStake: (points: string) => string;
     buzz: string;
     giveUp: string;
     noOneFound: string;

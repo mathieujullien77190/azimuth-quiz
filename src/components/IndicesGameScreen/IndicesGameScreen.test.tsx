@@ -53,19 +53,19 @@ describe('IndicesGameScreen — picking clues', () => {
   it('revealing a clue takes 1 point off the remaining score and advances the turn', async () => {
     const { getByText } = await renderGame({ playerNames: ['Zoé', 'Max'] });
     // Paris/France (3 flag colors): 25 possible clues in total, rounded up to 30.
-    expect(getByText('30 pts')).toBeTruthy();
+    expect(getByText('30 pts en jeu')).toBeTruthy();
 
     await fireEvent.press(getByText('Indicatif tél.'));
     expect(getByText('À Max de jouer')).toBeTruthy();
-    expect(getByText('29 pts')).toBeTruthy();
+    expect(getByText('29 pts en jeu')).toBeTruthy();
   });
 
   it('pressing an already-revealed single-shot clue again does not change the score', async () => {
     const { getByText } = await renderGame({ playerNames: ['Zoé'] });
     await fireEvent.press(getByText('Indicatif tél.'));
-    expect(getByText('29 pts')).toBeTruthy();
+    expect(getByText('29 pts en jeu')).toBeTruthy();
     await fireEvent.press(getByText('Indicatif tél.'));
-    expect(getByText('29 pts')).toBeTruthy();
+    expect(getByText('29 pts en jeu')).toBeTruthy();
   });
 
   it('pressing a header player tab is a no-op (display-only, unlike the buzz-panel tabs)', async () => {
@@ -87,16 +87,16 @@ describe('IndicesGameScreen — picking clues', () => {
     await fireEvent.press(getByText(PARIS.emojis[1]));
     expect(getByText(PARIS.emojis[2])).toBeTruthy();
 
-    const scoreBefore = getByText(/pts$/).props.children.join('');
+    const scoreBefore = getByText(/pts en jeu$/).props.children;
     // 4th click: nothing left to reveal, the score must not move anymore.
     await fireEvent.press(getByText(PARIS.emojis[2]));
-    expect(getByText(/pts$/).props.children.join('')).toBe(scoreBefore);
+    expect(getByText(/pts en jeu$/).props.children).toBe(scoreBefore);
   });
 
   it('handles a place whose country has no flag color data (empty flag, no crash)', async () => {
     mockNextPlace = { ...PARIS, code: 'XX' };
     const { getByText } = await renderGame({ playerNames: ['Zoé'] });
-    expect(getByText(/pts/)).toBeTruthy();
+    expect(getByText(/pts en jeu/)).toBeTruthy();
   });
 
   it('shows the revealed first letter in the word-recap skeleton above the buzz row', async () => {
@@ -121,7 +121,7 @@ describe('IndicesGameScreen — picking clues', () => {
 
   it('startWithFirstLetter: the first letter is already revealed (and already costs 1 point) at round start', async () => {
     const { getAllByText, getByText } = await renderGame({ playerNames: ['Zoé'], startWithFirstLetter: true });
-    expect(getByText('29 pts')).toBeTruthy();
+    expect(getByText('29 pts en jeu')).toBeTruthy();
     expect(getAllByText('P').length).toBeGreaterThan(0);
   });
 
@@ -129,7 +129,7 @@ describe('IndicesGameScreen — picking clues', () => {
     const { getByText } = await renderGame({ playerNames: ['Zoé'], rounds: 2, startWithFirstLetter: true });
     await fireEvent.press(getByText('🤷 Je ne sais pas'));
     await fireEvent.press(getByText('Continuer'));
-    expect(getByText('29 pts')).toBeTruthy();
+    expect(getByText('29 pts en jeu')).toBeTruthy();
   });
 
   it('startWithFirstLetter: 2 more clicks (word count then real length) reach the full skeleton', async () => {
@@ -153,9 +153,9 @@ describe('IndicesGameScreen — picking clues', () => {
     expect(getByText('🇫🇷')).toBeTruthy();
 
     // 4th click: nothing left to reveal, the score must not move anymore.
-    const scoreBefore = getByText(/pts$/).props.children.join('');
+    const scoreBefore = getByText(/pts en jeu$/).props.children;
     await fireEvent.press(getByText('🇫🇷'));
-    expect(getByText(/pts$/).props.children.join('')).toBe(scoreBefore);
+    expect(getByText(/pts en jeu$/).props.children).toBe(scoreBefore);
   });
 });
 
@@ -198,11 +198,11 @@ describe('IndicesGameScreen — vowels bonus clue', () => {
       await fireEvent.press(getByText(label));
     }
     // 14 real clues picked, score still comfortably above 1.
-    expect(getByText(/pts$/).props.children.join('')).not.toBe('1 pts');
+    expect(getByText(/pts en jeu$/).props.children).not.toBe('1 pts en jeu');
 
     await fireEvent.press(getByText('Voyelles'));
     expect(getByText('A I')).toBeTruthy();
-    expect(getByText('1 pts')).toBeTruthy();
+    expect(getByText('1 pts en jeu')).toBeTruthy();
   });
 
   it('stays visible but display-only once the round is over', async () => {
@@ -378,7 +378,7 @@ describe('IndicesGameScreen — round progression', () => {
     await fireEvent.press(getByText('Continuer'));
     expect(getByText(/Manche 2 \/ 2/)).toBeTruthy();
     // New round: the remaining score starts back at the maximum (30), not 0.
-    expect(getByText('30 pts')).toBeTruthy();
+    expect(getByText('30 pts en jeu')).toBeTruthy();
   });
 
   it('shows "Voir le score" on the last round and moves to final standings on press', async () => {

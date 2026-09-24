@@ -177,6 +177,7 @@ export const fr: Translations = {
   },
   indicesGame: {
     roundOver: 'Manche terminée',
+    pointsAtStake: (points) => `${points} pts en jeu`,
     buzz: '🔔 J’ai trouvé !',
     giveUp: '🤷 Je ne sais pas',
     noOneFound: 'Personne n’a trouvé — 0 point, on tourne la page.',
