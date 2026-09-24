@@ -2,29 +2,41 @@
 
 🔗 **[Jouer dans le navigateur](https://mathieujullien77190.github.io/full-azimut/)**
 
-Un lieu du monde s'affiche (ville, montagne, monument ou site naturel) : oriente la
-boussole vers lui et estime la distance depuis ton point de départ (ta position GPS,
-ou Paris par défaut). De 1 à 6 joueurs sur le même téléphone, chacun son tour.
+Deux jeux de géographie, choisis depuis l'écran d'accueil :
+
+- **Boussole** : un lieu du monde s'affiche (ville, montagne, monument ou site
+  naturel) — oriente la boussole vers lui et estime la distance depuis ton point de
+  départ (ta position GPS, ou Paris par défaut).
+- **Indices** : devine une ville à partir d'indices qui se révèlent progressivement
+  (drapeau, population, monnaie, description...).
+
+De 1 à 6 joueurs sur le même téléphone, chacun son tour, jusqu'à 20 manches.
 
 ## Fonctionnalités
 
-- **Catégories** : villes, montagnes, monuments, nature — combinables.
+- **Catégories** (Boussole) : villes, montagnes, monuments, nature — combinables.
 - **Zone** : France, Europe ou monde entier.
-- **Mode ligne droite** : en plus du cap, choisis l'inclinaison sous l'horizon pour
-  viser en ligne droite à travers la Terre ; la distance de surface reste affichée
-  à titre indicatif.
+- **Mode ligne droite** (Boussole) : en plus du cap, choisis l'inclinaison sous
+  l'horizon pour viser en ligne droite à travers la Terre ; la distance de surface
+  reste affichée à titre indicatif.
+- **Indices progressifs** : drapeau, position, population, monnaie, indicatif
+  téléphonique et description se dévoilent au fil des manches, avec pénalité
+  partagée en cas d'erreur.
 - **Multijoueur (jusqu'à 6)** : un sélecteur de joueurs fixe en haut de l'écran
   permet de répondre dans l'ordre voulu, avec une option pour revenir modifier une
   réponse déjà validée avant la révélation.
 - **Boussole réelle** (mobile) : le nord de la boussole suit le capteur du téléphone.
-- Score basé sur l'écart de direction et de distance, historique de manches et
-  meilleur score mémorisés.
+- **Français / anglais** : langue par défaut = celle du système, changeable dans les
+  réglages.
+- Score basé sur l'écart de direction et de distance (ou sur la rapidité de
+  réponse pour Indices), historique de manches et meilleur score mémorisés.
 
 ## Stack technique
 
 Expo (SDK 57) + Expo Router, React Native + react-native-web, TypeScript strict,
 `react-native-svg` pour la boussole et le schéma de la Terre, AsyncStorage pour la
-persistance locale (réglages, meilleur score).
+persistance locale (réglages, meilleur score), i18n maison (FR/EN). Tests unitaires
+avec Jest + Testing Library (couverture 100 % exigée sur `src/`, hors `src/app`).
 
 ## Lancer en local
 
@@ -35,8 +47,10 @@ npx expo start --web  # directement le web
 ```
 
 ```bash
-npx tsc --noEmit   # typecheck
-npx expo lint       # lint
+npx tsc --noEmit    # typecheck
+npx expo lint        # lint
+npm test             # tests unitaires
+npm run test:coverage
 ```
 
 ## Déploiement web
@@ -44,6 +58,16 @@ npx expo lint       # lint
 Le site est exporté en statique (`web.output: "static"`, `experiments.baseUrl:
 "/full-azimut"` dans `app.json`) et publié sur GitHub Pages par
 `.github/workflows/deploy-pages.yml` à chaque push sur `master`.
+
+## Données des lieux
+
+Les lieux de Boussole et Indices partagent un même pool (`places.json` +
+`countries.json`, tuples positionnels pour rester compacts). Pour les éditer sans
+toucher le JSON à la main, une petite app d'admin (Vite, dev-only) tourne en local :
+
+```bash
+npm run admin   # installe ses dépendances au premier lancement, puis lance le serveur dev
+```
 
 ## Structure du projet
 
