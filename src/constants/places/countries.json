@@ -196,7 +196,7 @@
   "US": ["États-Unis","United States",[["blue","#3C3B6E",20],["red","#B22234",44],["white","#FFFFFF",36]],"Dollar","$","+1"],
   "UY": ["Uruguay","Uruguay",[["white","#FFFFFF",60],["blue","#0038A8",35],["yellow","#FCD116",5]],"Peso","$","+598"],
   "UZ": ["Ouzbékistan","Uzbekistan",[["blue","#0099B5",33],["white","#FFFFFF",34],["green","#1EB53A",33]],"Sum","so‘m","+998"],
-  "VA": ["Cité du Vatican","Vatican City",[["yellow","#FFE000",50],["white","#FFFFFF",50]],"Euro","€","+379"],
+  "VA": ["Vatican","Vatican City",[["yellow","#FFE000",50],["white","#FFFFFF",50]],"Euro","€","+379"],
   "VC": ["Saint-Vincent-et-les-Grenadines","Saint Vincent and the Grenadines",[["blue","#0072C6",33],["yellow","#FCD116",34],["green","#009E49",33]],"Dollar des Caraïbes orientales","EC$","+1784"],
   "VE": ["Venezuela","Venezuela",[["yellow","#FFCC00",33],["blue","#00247D",33],["red","#CF142B",33]],"Bolívar","Bs","+58"],
   "VN": ["Viêt Nam","Vietnam",[["red","#DA251D",90],["yellow","#FFFF00",10]],"Dong","₫","+84"],
