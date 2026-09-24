@@ -113,6 +113,13 @@ const createStyles = ({ colors, typography }: Theme) =>
       color: colors.accent,
       fontSize: fontSize.subtitle,
     },
+    // Typed-in letters (not revealed by any clue) stand out from clue-revealed ones by color
+    // alone, same size — see the live overlay above the typed-answer input.
+    skeletonLetterTyped: {
+      ...typography.display,
+      color: colors.text,
+      fontSize: fontSize.subtitle,
+    },
     buzzPanel: {
       gap: spacing.sm + 2,
     },
@@ -453,7 +460,11 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
                       <View key={groupIndex} style={styles.skeletonWord}>
                         {group.map((letter, letterIndex) => (
                           <View key={letterIndex} style={styles.skeletonSlot}>
-                            {letter !== null && <Text style={styles.skeletonLetter}>{letter}</Text>}
+                            {letter !== null && (
+                              <Text style={skeletonGroups[groupIndex][letterIndex] === null ? styles.skeletonLetterTyped : styles.skeletonLetter}>
+                                {letter}
+                              </Text>
+                            )}
                           </View>
                         ))}
                       </View>
