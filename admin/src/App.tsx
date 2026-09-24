@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import appConfig from '../../app.json';
+
 import { clearChangelog, useChangelog } from './changelog';
 import { CountriesView } from './views/CountriesView';
 import { PlacesView } from './views/PlacesView';
@@ -55,7 +57,7 @@ export const App = () => {
       <header className="top">
         <div className="top-inner">
           <h1>
-            Admin <span className="dim">— Full Azimut</span>
+            Admin <span className="dim">— Full Azimut v{appConfig.expo.version}</span>
           </h1>
           <div className="tabs">
             <button type="button" className="chip game-chip" aria-pressed={tab === 'places'} onClick={() => setTab('places')}>
