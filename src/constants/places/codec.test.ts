@@ -4,6 +4,7 @@ import {
   decodeIndicesPlace,
   decodeIndicesPlaces,
   encodeBoussoleRow,
+  encodeCommonRow,
   encodeIndicesRow,
   serializeMergedPlaces,
   type BoussoleRow,
@@ -15,8 +16,8 @@ import {
 describe('serializeMergedPlaces', () => {
   it('prints one entry per line, matching the source JSON shape', () => {
     const entries: MergedPlaces = [
-      [['Testville', 'FR', 1.5, -2.5], ['C', 'E', null, null, null], null],
-      [['Otherville', 'DE', 3, 4], null, ['H', 'n', 1000, '☀️', 10, 'gb', 'BER', '🏰', '🎡', '🍺']],
+      [['Testville', 'FR', 1.5, -2.5, 'E'], ['C', null, null, null], null],
+      [['Otherville', 'DE', 3, 4, 'H'], null, ['n', 1000, '☀️', 10, 'gb', 'BER', '🏰', '🎡', '🍺']],
     ];
     expect(serializeMergedPlaces(entries)).toBe(
       '[\n' +
@@ -30,9 +31,16 @@ describe('serializeMergedPlaces', () => {
   });
 });
 
+describe('encodeCommonRow', () => {
+  it('replaces only the difficulty code, keeping name/code/coordinates', () => {
+    const common: CommonRow = ['Testville', 'FR', 1.5, -2.5, 'E'];
+    expect(encodeCommonRow(common, 'master')).toEqual(['Testville', 'FR', 1.5, -2.5, 'M']);
+  });
+});
+
 describe('decodeBoussolePlace / encodeBoussoleRow', () => {
-  const common: CommonRow = ['Testville', 'FR', 1.5, -2.5];
-  const row: BoussoleRow = ['C', 'E', 'Une anecdote.', 'Testville_fr', 'Testville_en'];
+  const common: CommonRow = ['Testville', 'FR', 1.5, -2.5, 'E'];
+  const row: BoussoleRow = ['C', 'Une anecdote.', 'Testville_fr', 'Testville_en'];
 
   it('maps a common row + boussole row to a Place', () => {
     expect(decodeBoussolePlace(common, row)).toEqual({
@@ -53,7 +61,7 @@ describe('decodeBoussolePlace / encodeBoussoleRow', () => {
   });
 
   it('omits optional fields when null', () => {
-    const bareRow: BoussoleRow = ['M', 'H', null, null, null];
+    const bareRow: BoussoleRow = ['M', null, null, null];
     const place = decodeBoussolePlace(common, bareRow);
     expect(place.description).toBeUndefined();
     expect(place.wikiFr).toBeUndefined();
@@ -61,15 +69,15 @@ describe('decodeBoussolePlace / encodeBoussoleRow', () => {
   });
 
   it('encodeBoussoleRow turns missing optional fields into null', () => {
-    const place = decodeBoussolePlace(common, ['M', 'H', null, null, null]);
-    expect(encodeBoussoleRow(place)).toEqual(['M', 'H', null, null, null]);
+    const place = decodeBoussolePlace(common, ['M', null, null, null]);
+    expect(encodeBoussoleRow(place)).toEqual(['M', null, null, null]);
   });
 });
 
 describe('decodeBoussolePlaces / decodeIndicesPlaces', () => {
   const entries: MergedPlaces = [
-    [['Testville', 'FR', 1.5, -2.5], ['C', 'E', null, null, null], null],
-    [['Otherville', 'DE', 3, 4], null, ['H', 'n', 1000, '☀️', 10, 'gb', 'BER', '🏰', '🎡', '🍺']],
+    [['Testville', 'FR', 1.5, -2.5, 'E'], ['C', null, null, null], null],
+    [['Otherville', 'DE', 3, 4, 'H'], null, ['n', 1000, '☀️', 10, 'gb', 'BER', '🏰', '🎡', '🍺']],
   ];
 
   it('decodeBoussolePlaces skips entries with no boussole row', () => {
@@ -86,8 +94,8 @@ describe('decodeBoussolePlaces / decodeIndicesPlaces', () => {
 });
 
 describe('decodeIndicesPlace / encodeIndicesRow', () => {
-  const common: CommonRow = ['Testville', 'FR', 1.5, -2.5];
-  const row: IndicesRow = ['E', 'ne', 12345, '☀️', 42, 'gw', 'TST', '🗼', '🎨', '🌳'];
+  const common: CommonRow = ['Testville', 'FR', 1.5, -2.5, 'E'];
+  const row: IndicesRow = ['ne', 12345, '☀️', 42, 'gw', 'TST', '🗼', '🎨', '🌳'];
 
   it('maps a common row + indices row to an IndicesPlace, deriving the country name, timezone, phone code and currency from the country code', () => {
     expect(decodeIndicesPlace(common, row)).toEqual({
@@ -114,14 +122,14 @@ describe('decodeIndicesPlace / encodeIndicesRow', () => {
   });
 
   it('passes an unmapped timezone through as-is, both ways', () => {
-    const unmappedRow: IndicesRow = [...row.slice(0, 5), 'Europe/Nowhere', ...row.slice(6)] as unknown as IndicesRow;
+    const unmappedRow: IndicesRow = [...row.slice(0, 4), 'Europe/Nowhere', ...row.slice(5)] as unknown as IndicesRow;
     const place = decodeIndicesPlace(common, unmappedRow);
     expect(place.timezone).toBe('Europe/Nowhere');
     expect(encodeIndicesRow(place)).toEqual(unmappedRow);
   });
 
   it('falls back to an empty phone code and currency for an unknown country', () => {
-    const unknownCommon: CommonRow = ['Testville', 'XX', 1.5, -2.5];
+    const unknownCommon: CommonRow = ['Testville', 'XX', 1.5, -2.5, 'E'];
     const place = decodeIndicesPlace(unknownCommon, row);
     expect(place.phoneCode).toBe('');
     expect(place.currency).toBe('');

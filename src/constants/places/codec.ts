@@ -4,10 +4,10 @@ import { countryName, countryPhoneCode, countryCurrencySymbol } from './countrie
 
 /**
  * `places.json` is the shared source of places for BOTH Boussole and Indices: an array of places,
- * and each place is itself `[common, boussole, indices]`. `common` always exists; `boussole` is
- * `null` if this place isn't in the Boussole pool, `indices` is `null` if it isn't in the
- * Indices pool (a place can be in only one of the two). Each game keeps its own difficulty
- * (they diverge on purpose). `decodeBoussolePlaces`/`decodeIndicesPlaces` are the only
+ * and each place is itself `[common, boussole, indices]`. `common` always exists (name, code,
+ * coordinates, and difficulty — shared across both games); `boussole` is `null` if this place
+ * isn't in the Boussole pool, `indices` is `null` if it isn't in the Indices pool (a place can be
+ * in only one of the two). `decodeBoussolePlaces`/`decodeIndicesPlaces` are the only
  * place that knows the column order: `src/constants/places/index.ts`, `src/constants/
  * indices.ts` and `admin/vite.config.ts` all import from here rather than re-encoding it.
  */
@@ -277,18 +277,14 @@ export const DIFFICULTY_BY_CODE = Object.fromEntries(
 
 export const TIMEZONE_BY_CODE = Object.fromEntries(Object.entries(TIMEZONE_CODES).map(([tz, code]) => [code, tz])) as Record<string, string>;
 
-export type CommonRow = readonly [name: string, code: string, latitude: number, longitude: number];
+/** `difficultyCode` lives here, not per-game: the two games never actually disagreed on a
+ * place's difficulty in practice, so tracking it twice was pure duplication (see git history
+ * for the merge). */
+export type CommonRow = readonly [name: string, code: string, latitude: number, longitude: number, difficultyCode: string];
 
-export type BoussoleRow = readonly [
-  categoryCode: string,
-  difficultyCode: string,
-  description: string | null,
-  wikiFr: string | null,
-  wikiEn: string | null,
-];
+export type BoussoleRow = readonly [categoryCode: string, description: string | null, wikiFr: string | null, wikiEn: string | null];
 
 export type IndicesRow = readonly [
-  difficultyCode: string,
   positionInCountry: IndicesPositionInCountry,
   population: number,
   climateEmoji: string,
@@ -300,15 +296,23 @@ export type IndicesRow = readonly [
   emoji3: string,
 ];
 
-/** A place: common data + its two game-specific parts, either one (never both) can be
- * `null` if this place doesn't exist in that game. */
+/** A place: common data (including difficulty) + its two game-specific parts, either one
+ * (never both) can be `null` if this place doesn't exist in that game. */
 export type PlaceEntry = readonly [common: CommonRow, boussole: BoussoleRow | null, indices: IndicesRow | null];
 
 export type MergedPlaces = readonly PlaceEntry[];
 
+export const encodeCommonRow = (common: CommonRow, difficulty: Difficulty): CommonRow => [
+  common[0],
+  common[1],
+  common[2],
+  common[3],
+  DIFFICULTY_CODES[difficulty],
+];
+
 export const decodeBoussolePlace = (common: CommonRow, row: BoussoleRow): Place => {
-  const [name, code, latitude, longitude] = common;
-  const [categoryCode, difficultyCode, description, wikiFr, wikiEn] = row;
+  const [name, code, latitude, longitude, difficultyCode] = common;
+  const [categoryCode, description, wikiFr, wikiEn] = row;
   return {
     name,
     code,
@@ -321,9 +325,8 @@ export const decodeBoussolePlace = (common: CommonRow, row: BoussoleRow): Place 
   };
 };
 
-export const encodeBoussoleRow = (place: Pick<Place, 'category' | 'difficulty' | 'description' | 'wikiFr' | 'wikiEn'>): BoussoleRow => [
+export const encodeBoussoleRow = (place: Pick<Place, 'category' | 'description' | 'wikiFr' | 'wikiEn'>): BoussoleRow => [
   CATEGORY_CODES[place.category],
-  DIFFICULTY_CODES[place.difficulty],
   place.description ?? null,
   place.wikiFr ?? null,
   place.wikiEn ?? null,
@@ -338,8 +341,8 @@ export const decodeBoussolePlaces = (entries: MergedPlaces): Place[] => {
 };
 
 export const decodeIndicesPlace = (common: CommonRow, row: IndicesRow): IndicesPlace => {
-  const [name, code, latitude, longitude] = common;
-  const [difficultyCode, positionInCountry, population, climateEmoji, elevationMeters, timezoneCode, airportCode, emoji1, emoji2, emoji3] = row;
+  const [name, code, latitude, longitude, difficultyCode] = common;
+  const [positionInCountry, population, climateEmoji, elevationMeters, timezoneCode, airportCode, emoji1, emoji2, emoji3] = row;
   return {
     name,
     code,
@@ -359,9 +362,8 @@ export const decodeIndicesPlace = (common: CommonRow, row: IndicesRow): IndicesP
 };
 
 export const encodeIndicesRow = (
-  place: Pick<IndicesPlace, 'difficulty' | 'positionInCountry' | 'population' | 'climateEmoji' | 'elevationMeters' | 'timezone' | 'airportCode' | 'emojis'>,
+  place: Pick<IndicesPlace, 'positionInCountry' | 'population' | 'climateEmoji' | 'elevationMeters' | 'timezone' | 'airportCode' | 'emojis'>,
 ): IndicesRow => [
-  DIFFICULTY_CODES[place.difficulty],
   place.positionInCountry,
   place.population,
   place.climateEmoji,

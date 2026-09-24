@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { deletePlace, fetchPlaces, saveBoussole, saveIndices, type BoussolePatch, type IndicesPatch, type PlaceRow } from '../../api/places';
+import { deletePlace, fetchPlaces, saveBoussole, saveDifficulty, saveIndices, type BoussolePatch, type IndicesPatch, type PlaceRow } from '../../api/places';
 import { ChipGroup, toggleInSet } from '../../components/ChipGroup';
 import { DeleteX } from '../../components/DeleteX';
 import { DescriptionCell } from '../../components/DescriptionCell';
@@ -39,8 +39,7 @@ export const PlacesView = () => {
 
   const [query, setQuery] = useState('');
   const [categories, setCategories] = useState(new Set(CATEGORY_ORDER));
-  const [boussoleDifficulties, setBoussoleDifficulties] = useState(new Set(DIFFICULTY_ORDER));
-  const [indicesDifficulties, setIndicesDifficulties] = useState(new Set(DIFFICULTY_ORDER));
+  const [difficulties, setDifficulties] = useState(new Set(DIFFICULTY_ORDER));
   const [country, setCountry] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<1 | -1>(1);
@@ -60,7 +59,7 @@ export const PlacesView = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [query, categories, boussoleDifficulties, indicesDifficulties, country, sortKey, sortDir]);
+  }, [query, categories, difficulties, country, sortKey, sortDir]);
 
   const countries = useMemo(
     () => Array.from(new Set((rows ?? []).map((r) => countryFor(r.code)))).sort((a, b) => a.localeCompare(b, 'fr')),
@@ -69,9 +68,9 @@ export const PlacesView = () => {
 
   const visibleRows = useMemo(() => {
     if (!rows) return [];
-    const filtered = filterRows(rows, query, categories, boussoleDifficulties, indicesDifficulties, country);
+    const filtered = filterRows(rows, query, categories, difficulties, country);
     return sortRows(filtered, sortKey, sortDir);
-  }, [rows, query, categories, boussoleDifficulties, indicesDifficulties, country, sortKey, sortDir]);
+  }, [rows, query, categories, difficulties, country, sortKey, sortDir]);
 
   const totalPages = pageCount(visibleRows.length);
   const pageRows = useMemo(() => paginate(visibleRows, page), [visibleRows, page]);
@@ -80,13 +79,36 @@ export const PlacesView = () => {
     setQuery('');
     setCountry('');
     setCategories(new Set(CATEGORY_ORDER));
-    setBoussoleDifficulties(new Set(DIFFICULTY_ORDER));
-    setIndicesDifficulties(new Set(DIFFICULTY_ORDER));
+    setDifficulties(new Set(DIFFICULTY_ORDER));
+  };
+
+  const handleDifficultyChange = (row: PlaceRow, difficulty: Difficulty) => {
+    if (!rows) return;
+    const previousBoussole = row.boussole;
+    const previousIndices = row.indices;
+    setRows(
+      rows.map((r) =>
+        r.index === row.index
+          ? { ...r, boussole: r.boussole && { ...r.boussole, difficulty }, indices: r.indices && { ...r.indices, difficulty } }
+          : r,
+      ),
+    );
+    setSaveState({ index: row.index, field: 'difficulty', status: 'saving' });
+
+    saveDifficulty(row.index, difficulty)
+      .then(({ boussole, indices }) => {
+        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, boussole, indices } : r)) ?? cur);
+        setSaveState({ index: row.index, field: 'difficulty', status: 'saved' });
+      })
+      .catch((err: Error) => {
+        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, boussole: previousBoussole, indices: previousIndices } : r)) ?? cur);
+        setSaveState({ index: row.index, field: 'difficulty', status: 'error', message: err.message });
+      });
   };
 
   const handleBoussoleChange = (row: PlaceRow, patch: BoussolePatch) => {
     if (!rows || !row.boussole) return;
-    const field: Field = 'difficulty' in patch ? 'difficulty-boussole' : 'category' in patch ? 'category' : 'description';
+    const field: Field = 'category' in patch ? 'category' : 'description';
     const previous = row.boussole;
     setRows(rows.map((r) => (r.index === row.index ? { ...r, boussole: { ...r.boussole!, ...patch } } : r)));
     setSaveState({ index: row.index, field, status: 'saving' });
@@ -182,22 +204,12 @@ export const PlacesView = () => {
           <ChipGroup order={CATEGORY_ORDER} labels={CATEGORY_LABELS} active={categories} onToggle={(key) => setCategories(toggleInSet(categories, key))} colors={CATEGORY_COLORS} />
         </div>
         <div className="row">
-          <span className="field-label">Difficulté (Boussole)</span>
+          <span className="field-label">Difficulté</span>
           <ChipGroup
             order={DIFFICULTY_ORDER}
             labels={DIFFICULTY_LABELS}
-            active={boussoleDifficulties}
-            onToggle={(key) => setBoussoleDifficulties(toggleInSet(boussoleDifficulties, key))}
-            colors={DIFFICULTY_COLORS}
-          />
-        </div>
-        <div className="row">
-          <span className="field-label">Difficulté (Indices)</span>
-          <ChipGroup
-            order={DIFFICULTY_ORDER}
-            labels={DIFFICULTY_LABELS}
-            active={indicesDifficulties}
-            onToggle={(key) => setIndicesDifficulties(toggleInSet(indicesDifficulties, key))}
+            active={difficulties}
+            onToggle={(key) => setDifficulties(toggleInSet(difficulties, key))}
             colors={DIFFICULTY_COLORS}
           />
         </div>
@@ -223,6 +235,21 @@ export const PlacesView = () => {
               <div className="place-coords">
                 <span className="coord">{fmtCoord(row.coordinates.latitude, 'N', 'S')}</span>
                 <span className="coord">{fmtCoord(row.coordinates.longitude, 'E', 'O')}</span>
+              </div>
+              <div className="field-cell">
+                <select
+                  className="field-select"
+                  style={{ '--tier-color': DIFFICULTY_COLORS[(row.boussole ?? row.indices)!.difficulty] } as React.CSSProperties}
+                  value={(row.boussole ?? row.indices)!.difficulty}
+                  onChange={(e) => handleDifficultyChange(row, e.target.value as Difficulty)}
+                >
+                  {DIFFICULTY_ORDER.map((d) => (
+                    <option key={d} value={d}>
+                      {DIFFICULTY_LABELS[d]}
+                    </option>
+                  ))}
+                </select>
+                {saveFlagFor(row, 'difficulty')}
               </div>
               <DeleteX name={row.name} onDelete={() => handleDelete(row)} />
             </div>
@@ -254,26 +281,6 @@ export const PlacesView = () => {
                         </td>
                       </tr>
                       <tr>
-                        <th>Difficulté</th>
-                        <td>
-                          <div className="field-cell">
-                            <select
-                              className="field-select"
-                              style={{ '--tier-color': DIFFICULTY_COLORS[row.boussole.difficulty] } as React.CSSProperties}
-                              value={row.boussole.difficulty}
-                              onChange={(e) => handleBoussoleChange(row, { difficulty: e.target.value as Difficulty })}
-                            >
-                              {DIFFICULTY_ORDER.map((d) => (
-                                <option key={d} value={d}>
-                                  {DIFFICULTY_LABELS[d]}
-                                </option>
-                              ))}
-                            </select>
-                            {saveFlagFor(row, 'difficulty-boussole')}
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
                         <th>Wiki</th>
                         <td>
                           <WikiLinks wikiFr={row.boussole.wikiFr} wikiEn={row.boussole.wikiEn} />
@@ -301,26 +308,6 @@ export const PlacesView = () => {
                 {row.indices ? (
                   <table className="kv-table">
                     <tbody>
-                      <tr>
-                        <th>Difficulté</th>
-                        <td>
-                          <div className="field-cell">
-                            <select
-                              className="field-select"
-                              style={{ '--tier-color': DIFFICULTY_COLORS[row.indices.difficulty] } as React.CSSProperties}
-                              value={row.indices.difficulty}
-                              onChange={(e) => handleIndicesChange(row, { difficulty: e.target.value as Difficulty })}
-                            >
-                              {DIFFICULTY_ORDER.map((d) => (
-                                <option key={d} value={d}>
-                                  {DIFFICULTY_LABELS[d]}
-                                </option>
-                              ))}
-                            </select>
-                            {saveFlagFor(row, 'difficulty-indices')}
-                          </div>
-                        </td>
-                      </tr>
                       <tr>
                         <th>Position</th>
                         <td>

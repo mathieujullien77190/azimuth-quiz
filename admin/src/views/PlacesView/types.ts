@@ -2,8 +2,7 @@ export type SortKey = 'name' | 'countryName' | 'code' | 'lat' | 'lon';
 
 export type Field =
   | 'category'
-  | 'difficulty-boussole'
-  | 'difficulty-indices'
+  | 'difficulty'
   | 'description'
   | 'position'
   | 'population'

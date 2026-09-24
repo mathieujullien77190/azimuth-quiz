@@ -5,7 +5,16 @@ import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type Connect, type Plugin } from 'vite';
 
-import { decodeBoussolePlace, decodeIndicesPlace, encodeBoussoleRow, encodeIndicesRow, serializeMergedPlaces, type MergedPlaces, type PlaceEntry } from '../src/constants/places/codec';
+import {
+  decodeBoussolePlace,
+  decodeIndicesPlace,
+  encodeBoussoleRow,
+  encodeCommonRow,
+  encodeIndicesRow,
+  serializeMergedPlaces,
+  type MergedPlaces,
+  type PlaceEntry,
+} from '../src/constants/places/codec';
 import { decodeCountry, encodeCountry, serializeCountries, type CountryRow } from '../src/constants/places/countries';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
@@ -83,14 +92,30 @@ const placesApi = (): Plugin => ({
           const [commonRow, boussoleRow, indicesRow] = entries[index] ?? [];
           if (!commonRow) throw new Error('Lieu introuvable');
 
+          if ('common' in patch) {
+            if ('difficulty' in patch.common) {
+              if (!DIFFICULTIES.includes(patch.common.difficulty)) throw new Error('Difficulte invalide');
+              const newCommon = encodeCommonRow(commonRow, patch.common.difficulty);
+
+              entries[index] = [newCommon, boussoleRow, indicesRow];
+              writeFileSync(placesPath, serializeMergedPlaces(entries as MergedPlaces));
+              res.setHeader('Content-Type', 'application/json');
+              res.end(
+                JSON.stringify({
+                  boussole: boussoleRow ? decodeBoussolePlace(newCommon, boussoleRow) : null,
+                  indices: indicesRow ? decodeIndicesPlace(newCommon, indicesRow) : null,
+                }),
+              );
+              return;
+            }
+
+            throw new Error('Requete invalide : "difficulty" attendu dans "common"');
+          }
+
           if ('boussole' in patch) {
             if (!boussoleRow) throw new Error("Ce lieu n'est pas dans le pool Boussole");
             const place = { ...decodeBoussolePlace(commonRow, boussoleRow) };
 
-            if ('difficulty' in patch.boussole) {
-              if (!DIFFICULTIES.includes(patch.boussole.difficulty)) throw new Error('Difficulte invalide');
-              place.difficulty = patch.boussole.difficulty;
-            }
             if ('category' in patch.boussole) {
               if (!CATEGORIES.includes(patch.boussole.category)) throw new Error('Categorie invalide');
               place.category = patch.boussole.category;
@@ -112,10 +137,6 @@ const placesApi = (): Plugin => ({
             if (!indicesRow) throw new Error("Ce lieu n'est pas dans le pool Indices");
             const place = { ...decodeIndicesPlace(commonRow, indicesRow) };
 
-            if ('difficulty' in patch.indices) {
-              if (!DIFFICULTIES.includes(patch.indices.difficulty)) throw new Error('Difficulte invalide');
-              place.difficulty = patch.indices.difficulty;
-            }
             if ('positionInCountry' in patch.indices) {
               if (!POSITIONS.includes(patch.indices.positionInCountry)) throw new Error('Position invalide');
               place.positionInCountry = patch.indices.positionInCountry;

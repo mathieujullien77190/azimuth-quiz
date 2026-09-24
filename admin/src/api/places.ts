@@ -1,5 +1,5 @@
 import { decodeBoussolePlace, decodeIndicesPlace, type MergedPlaces } from '@/constants/places/codec';
-import type { IndicesPlace, Place } from '@/types';
+import type { Difficulty, IndicesPlace, Place } from '@/types';
 
 import { del, getJson, putJson } from './http';
 
@@ -27,13 +27,19 @@ export const fetchPlaces = async (): Promise<PlaceRow[]> => {
   }));
 };
 
-export type BoussolePatch = Partial<Pick<Place, 'category' | 'difficulty' | 'description'>>;
+export type BoussolePatch = Partial<Pick<Place, 'category' | 'description'>>;
 export type IndicesPatch = Partial<
-  Pick<IndicesPlace, 'difficulty' | 'positionInCountry' | 'population' | 'climateEmoji' | 'elevationMeters' | 'timezone' | 'airportCode' | 'emojis'>
+  Pick<IndicesPlace, 'positionInCountry' | 'population' | 'climateEmoji' | 'elevationMeters' | 'timezone' | 'airportCode' | 'emojis'>
 >;
 
 export const saveBoussole = (index: number, patch: BoussolePatch): Promise<Place> => putJson(`/api/places/${index}`, { boussole: patch });
 
 export const saveIndices = (index: number, patch: IndicesPatch): Promise<IndicesPlace> => putJson(`/api/places/${index}`, { indices: patch });
+
+/** Difficulty is shared between the two games (see `codec.ts`), so it's patched at the place
+ * level, not under `boussole`/`indices`: the response carries both decoded game views back so
+ * the UI can update whichever of them are present without a separate round-trip. */
+export const saveDifficulty = (index: number, difficulty: Difficulty): Promise<{ boussole: Place | null; indices: IndicesPlace | null }> =>
+  putJson(`/api/places/${index}`, { common: { difficulty } });
 
 export const deletePlace = (index: number): Promise<void> => del(`/api/places/${index}`);

@@ -30,19 +30,12 @@ export const sortRows = (rows: PlaceRow[], key: SortKey, dir: 1 | -1): PlaceRow[
     return cmp * dir;
   });
 
-export const filterRows = (
-  rows: PlaceRow[],
-  query: string,
-  categories: Set<string>,
-  boussoleDifficulties: Set<string>,
-  indicesDifficulties: Set<string>,
-  country: string,
-): PlaceRow[] => {
+export const filterRows = (rows: PlaceRow[], query: string, categories: Set<string>, difficulties: Set<string>, country: string): PlaceRow[] => {
   const q = query.trim().toLowerCase();
   return rows.filter((row) => {
     if (row.boussole && !categories.has(row.boussole.category)) return false;
-    if (row.boussole && !boussoleDifficulties.has(row.boussole.difficulty)) return false;
-    if (row.indices && !indicesDifficulties.has(row.indices.difficulty)) return false;
+    const difficulty = row.boussole?.difficulty ?? row.indices?.difficulty;
+    if (difficulty && !difficulties.has(difficulty)) return false;
     const country_ = countryFor(row.code);
     if (country && country_ !== country) return false;
     if (q && !row.name.toLowerCase().includes(q) && !country_.toLowerCase().includes(q) && !row.code.toLowerCase().includes(q)) return false;
@@ -51,7 +44,6 @@ export const filterRows = (
 };
 
 export const INDICES_FIELD_BY_KEY: Record<string, Field> = {
-  difficulty: 'difficulty-indices',
   positionInCountry: 'position',
   population: 'population',
   climateEmoji: 'climate',
