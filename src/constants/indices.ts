@@ -51,11 +51,21 @@ const CAPITAL_KEYS = new Set(
 
 export const isCapitalPlace = (place: Pick<IndicesPlace, 'name' | 'code'>): boolean => CAPITAL_KEYS.has(`${place.name}|${place.code}`);
 
+// Same cross-reference as CAPITAL_KEYS, for Boussole's "citiesFr" category.
+const FRENCH_CITY_KEYS = new Set(
+  decodeBoussolePlaces(placesData as unknown as MergedPlaces)
+    .filter((place) => place.category === 'citiesFr')
+    .map((place) => `${place.name}|${place.code}`),
+);
+
+export const isFrenchCityPlace = (place: Pick<IndicesPlace, 'name' | 'code'>): boolean => FRENCH_CITY_KEYS.has(`${place.name}|${place.code}`);
+
 // Reuses Boussole's category id/emoji/label conventions (see constants/index.ts and
-// i18n's setup.categories) rather than duplicating them — only these 2 of the 6 Boussole
+// i18n's setup.categories) rather than duplicating them — only these 3 of the 7 Boussole
 // categories apply to Indices, since its whole pool is cities.
 export const INDICES_CATEGORIES: { id: IndicesCategory; emoji: string }[] = [
   { id: 'cities', emoji: '🏙️' },
+  { id: 'citiesFr', emoji: '🥖' },
   { id: 'capital', emoji: '⭐' },
 ];
 
@@ -64,7 +74,7 @@ export const INDICES_ANSWER_METHODS: { id: IndicesAnswerMethod }[] = [{ id: 'spo
 export const DEFAULT_INDICES_SETTINGS: IndicesSettings = {
   playerNames: [''],
   difficulty: 'easy',
-  categories: ['cities', 'capital'],
+  categories: ['cities', 'citiesFr', 'capital'],
   answerMethod: 'typed',
   rounds: 5,
   startWithFirstLetter: true,

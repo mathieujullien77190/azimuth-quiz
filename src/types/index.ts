@@ -7,8 +7,8 @@ export type Coordinates = {
 
 export type Category = 'cities' | 'mountains' | 'landmarks' | 'nature' | 'kids' | 'capital' | 'citiesFr';
 
-/** Indices only draws from cities, so only these two of the 7 Boussole categories apply. */
-export type IndicesCategory = Extract<Category, 'cities' | 'capital'>;
+/** Indices only draws from cities, so only these three of the 7 Boussole categories apply. */
+export type IndicesCategory = Extract<Category, 'cities' | 'capital' | 'citiesFr'>;
 
 /** Popularity/fame of the place, from best-known to most niche. */
 export type Difficulty = 'easy' | 'intermediate' | 'hard';

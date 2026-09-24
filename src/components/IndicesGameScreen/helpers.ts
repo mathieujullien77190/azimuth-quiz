@@ -1,4 +1,4 @@
-import { INDICES_CLUE_ORDER, INDICES_PLACES, isCapitalPlace } from '@/constants';
+import { INDICES_CLUE_ORDER, INDICES_PLACES, isCapitalPlace, isFrenchCityPlace } from '@/constants';
 import { pickLeastDrawn, type IndicesDrawHistory } from '@/helpers/indicesHistory';
 import { effectiveDifficulty } from '@/helpers/places';
 import type { Language } from '@/i18n';
@@ -27,20 +27,21 @@ export const maxScoreForRound = (totalReveals: number): number => Math.ceil(tota
  * (falls back to the whole pool if the filter is empty), prefers whichever have been drawn the
  * fewest times per `history` — never-drawn places first, then, once everything in the pool has
  * come up at least once, cycles through the least-drawn ones instead of repeating at random. See
- * `pickLeastDrawn`/`recordIndicesDraw` in helpers/indicesHistory.ts. "Cities" means non-capital
- * cities here — a place matches if it's a capital and 'capital' is selected, or if it isn't and
- * 'cities' is selected (see `isCapitalPlace`, cross-referenced from Boussole). */
+ * `pickLeastDrawn`/`recordIndicesDraw` in helpers/indicesHistory.ts. Each place falls into
+ * exactly one of the 3 Indices categories — capital first, then French city, then plain city
+ * (see `isCapitalPlace`/`isFrenchCityPlace`, cross-referenced from Boussole). */
+const indicesCategoryOf = (place: Pick<IndicesPlace, 'name' | 'code'>): IndicesCategory =>
+  isCapitalPlace(place) ? 'capital' : isFrenchCityPlace(place) ? 'citiesFr' : 'cities';
+
 export const randomIndicesPlace = (
   difficulty: Difficulty,
   categories: IndicesCategory[],
   language: Language,
   history: IndicesDrawHistory = {},
 ): IndicesPlace => {
-  const pool = INDICES_PLACES.filter((place) => {
-    const isCapital = isCapitalPlace(place);
-    const matchesCategory = (isCapital && categories.includes('capital')) || (!isCapital && categories.includes('cities'));
-    return matchesCategory && effectiveDifficulty(place, language) === difficulty;
-  });
+  const pool = INDICES_PLACES.filter(
+    (place) => categories.includes(indicesCategoryOf(place)) && effectiveDifficulty(place, language) === difficulty,
+  );
   const source = pool.length > 0 ? pool : INDICES_PLACES;
   return pickLeastDrawn(source, history);
 };

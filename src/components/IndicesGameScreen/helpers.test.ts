@@ -1,4 +1,4 @@
-import { INDICES_CLUE_ORDER, INDICES_PLACES, isCapitalPlace } from '@/constants';
+import { INDICES_CLUE_ORDER, INDICES_PLACES, isCapitalPlace, isFrenchCityPlace } from '@/constants';
 import type { Difficulty, IndicesClueId } from '@/types';
 
 import { maxScoreForRound, nameSkeleton, normalizePlaceGuess, randomIndicesPlace, totalRevealCount } from './helpers';
@@ -49,6 +49,20 @@ describe('randomIndicesPlace', () => {
     for (let i = 0; i < 20; i += 1) {
       const place = randomIndicesPlace('easy', ['cities'], 'fr');
       expect(isCapitalPlace(place)).toBe(false);
+    }
+  });
+
+  it('only draws French cities when "citiesFr" is the only category selected', () => {
+    for (let i = 0; i < 20; i += 1) {
+      const place = randomIndicesPlace('easy', ['citiesFr'], 'fr');
+      expect(isFrenchCityPlace(place)).toBe(true);
+    }
+  });
+
+  it('never draws a French city when "citiesFr" is not selected', () => {
+    for (let i = 0; i < 20; i += 1) {
+      const place = randomIndicesPlace('easy', ['cities', 'capital'], 'fr');
+      expect(isFrenchCityPlace(place)).toBe(false);
     }
   });
 
