@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { DEFAULT_ORIGIN, INDICES_CLUE_ORDER, PLAYER_COLORS, fontSize, spacing } from '@/constants';
-import { countryFlagColors } from '@/constants/places/countries';
 import { bearingDeg, distanceKm, formatNumber, playerDisplayName, resolveOrigin } from '@/helpers';
 import { getCachedIndicesHistory, recordIndicesDraw } from '@/helpers/indicesHistory';
 import { useLanguage, useTranslation } from '@/i18n';
@@ -239,16 +238,12 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
 
   const roundOver = verdict !== null;
   const isLastRound = roundNumber >= settings.rounds;
-  // The flag reveals color by color: the number of colors varies by country (2 or 3
-  // usually, see countryFlagColors in constants/places/countries.ts) — needed here for
-  // `maxScore` too.
-  const flagColors = countryFlagColors(place.code) ?? [];
   // Round score: a countdown, not a cost accumulator. Starts from a round number (the
   // total number of possible clues rounded up to the nearest ten, e.g. 26 -> 30) and goes down by
   // 1 for each clue picked, all clues combined (no more difficulty tiers). Finding it fast
   // (few clues used) thus leaves a high remaining score — that's what the finder wins
   // (see `settle`).
-  const maxScore = maxScoreForRound(totalRevealCount(flagColors.length));
+  const maxScore = maxScoreForRound(totalRevealCount());
   const remaining = maxScore - revealedClueIds.length;
   // On reveal: what the buzzer actually won/lost this round (the remaining score if they
   // found it, -WRONG_ANSWER_PENALTY if wrong, 0 if nobody tried) — see `settle`/
@@ -556,10 +551,9 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
             const isPopulation = clueId === 'population';
             const isCurrency = clueId === 'currency';
             const isLocalTime = clueId === 'localTime';
-            // Flag: 1 color on the 1st click, 1 more on the 2nd, all the rest on the 3rd (never
-            // more than 3 color clicks, even if the country has more than 3 colors), then the
-            // actual flag on a 4th (see IndicesClueCard).
-            const flagMaxStage = Math.min(3, flagColors.length) + 1;
+            // Flag: always exactly 3 clicks regardless of how many colors the flag actually has
+            // — 1 color, then every color, then the actual flag (see IndicesClueCard).
+            const flagMaxStage = 3;
             const moreToReveal =
               (isEmoji && !roundOver && emojiStage < 3) ||
               (isFlag && !roundOver && flagStage < flagMaxStage) ||

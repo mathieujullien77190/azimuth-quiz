@@ -185,22 +185,16 @@ describe('IndicesClueCard — flag progressive reveal', () => {
     expect(getAllByText('?')).toHaveLength(2);
   });
 
-  it('reveals one more color per stage, with its percent', async () => {
-    const { getAllByText } = await renderCard({ clueId: 'flagColors', flagStage: 2, state: 'revealed' });
-    expect(getAllByText('33%')).toHaveLength(2);
-    expect(getAllByText('?')).toHaveLength(1);
-  });
-
-  it('reveals every color at the last stage', async () => {
-    const { queryAllByText } = await renderCard({ clueId: 'flagColors', flagStage: 3, state: 'revealed' });
+  it('reveals every color on the 2nd click, however many the flag actually has', async () => {
+    const { queryAllByText } = await renderCard({ clueId: 'flagColors', flagStage: 2, state: 'revealed' });
     expect(queryAllByText('?')).toHaveLength(0);
     expect(queryAllByText('33%')).toHaveLength(3);
   });
 
-  it('swaps the swatches for the actual flag emoji at stage 4, and the progress badge counts it too', async () => {
-    const { getByText, queryAllByText } = await renderCard({ clueId: 'flagColors', flagStage: 4, state: 'revealed' });
+  it('swaps the swatches for the actual flag emoji at stage 3, and the progress badge counts it too', async () => {
+    const { getByText, queryAllByText } = await renderCard({ clueId: 'flagColors', flagStage: 3, state: 'revealed' });
     expect(getByText('🇫🇷')).toBeTruthy();
-    expect(getByText('4/4')).toBeTruthy();
+    expect(getByText('3/3')).toBeTruthy();
     expect(queryAllByText('?')).toHaveLength(0);
     expect(queryAllByText('33%')).toHaveLength(0);
   });

@@ -47,11 +47,10 @@ const multiStageProgress = (
   switch (clueId) {
     case 'emoji':
       return { stage: Math.min(stages.emojiStage ?? 1, 3), max: 3 };
-    case 'flagColors': {
-      // +1 over the color-click cap: the 4th click reveals the actual flag, not one more color.
-      const max = Math.min(3, (countryFlagColors(place.code) ?? []).length) + 1;
-      return { stage: Math.min(stages.flagStage ?? 1, max), max };
-    }
+    case 'flagColors':
+      // Always exactly 3, regardless of how many colors the flag actually has: 1 color, then
+      // every color, then the actual flag.
+      return { stage: Math.min(stages.flagStage ?? 1, 3), max: 3 };
     case 'distance':
       return { stage: Math.min(stages.distanceStage ?? 1, 2), max: 2 };
     case 'elevation':
@@ -354,14 +353,13 @@ const revealedBody = (
     case 'flagColors': {
       const allColors = countryFlagColors(place.code) ?? [];
       const stage = flagStage ?? 1;
-      // 1 color on the 1st click, 1 more on the 2nd, all the rest on the 3rd click (never more
-      // than 3 clicks, see IndicesGameScreen): from the 3rd click on, everything is revealed at
-      // once — a further 4th click swaps the swatches for the actual flag.
-      if (stage >= 4) return <Text style={styles.flagEmoji}>{flagEmoji(place.code)}</Text>;
+      // 1st click: one color. 2nd click: every color, however many the flag actually has. 3rd
+      // click: swaps the swatches for the actual flag (see IndicesGameScreen).
+      if (stage >= 3) return <Text style={styles.flagEmoji}>{flagEmoji(place.code)}</Text>;
       return (
         <View style={styles.flagColorList}>
           {allColors.map((row, i) => {
-            const shown = stage >= 3 || i < stage;
+            const shown = stage >= 2 || i < stage;
             const hex = row[FLAG_COLOR_FIELD.HEX];
             const percent = row[FLAG_COLOR_FIELD.PERCENT];
             return (

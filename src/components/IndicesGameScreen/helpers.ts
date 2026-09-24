@@ -9,19 +9,11 @@ const TWO_STAGE_CLUE_IDS = new Set(['distance', 'elevation', 'population', 'curr
 
 /** Total number of possible clues in a round if all were taken, counted multiple times
  * for the ones that reveal in stages (emoji: 3 clicks; distance/elevation/population/
- * currency/localTime: 2; flag: at most 4 — 1 color, then 1 color, then all the rest on the
- * 3rd click even if the flag has more, then the actual flag on a 4th) — used as the base for
- * `maxScoreForRound`. */
-export const totalRevealCount = (flagColorCount: number): number =>
+ * currency/localTime: 2; flag: always 3 — 1 color, then every color regardless of how many the
+ * flag actually has, then the actual flag) — used as the base for `maxScoreForRound`. */
+export const totalRevealCount = (): number =>
   INDICES_CLUE_ORDER.reduce((total, clueId) => {
-    const count =
-      clueId === 'emoji'
-        ? 3
-        : clueId === 'flagColors'
-          ? Math.min(3, flagColorCount) + 1
-          : TWO_STAGE_CLUE_IDS.has(clueId)
-            ? 2
-            : 1;
+    const count = clueId === 'emoji' || clueId === 'flagColors' ? 3 : TWO_STAGE_CLUE_IDS.has(clueId) ? 2 : 1;
     return total + count;
   }, 0);
 

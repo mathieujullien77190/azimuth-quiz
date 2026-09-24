@@ -7,21 +7,11 @@ describe('totalRevealCount', () => {
   const TWO_STAGE: IndicesClueId[] = ['distance', 'elevation', 'population', 'currency', 'localTime'];
 
   it('matches revealing every clue, including every multi-stage one', () => {
-    const flagColorCount = 3;
     const allIds: IndicesClueId[] = INDICES_CLUE_ORDER.flatMap((clueId) => {
-      const revealCount =
-        clueId === 'emoji' ? 3 : clueId === 'flagColors' ? flagColorCount + 1 : TWO_STAGE.includes(clueId) ? 2 : 1;
+      const revealCount = clueId === 'emoji' || clueId === 'flagColors' ? 3 : TWO_STAGE.includes(clueId) ? 2 : 1;
       return Array<IndicesClueId>(revealCount).fill(clueId);
     });
-    expect(totalRevealCount(flagColorCount)).toBe(allIds.length);
-  });
-
-  it('grows with the number of flag colors, up to 3 (plus the flag reveal click)', () => {
-    expect(totalRevealCount(3)).toBe(totalRevealCount(2) + 1);
-  });
-
-  it('caps the color-click count at 3 regardless of how many colors the flag actually has (the flag reveal click still adds 1)', () => {
-    expect(totalRevealCount(5)).toBe(totalRevealCount(3));
+    expect(totalRevealCount()).toBe(allIds.length);
   });
 });
 

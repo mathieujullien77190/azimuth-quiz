@@ -118,23 +118,21 @@ describe('IndicesGameScreen — picking clues', () => {
     expect(getByText('29 pts')).toBeTruthy();
   });
 
-  it('flag colors reveal one by one for the 3-color France flag, then the actual flag, then locks', async () => {
+  it('flag colors reveal one click, then the actual flag, then locks', async () => {
     const { getByText, getAllByText } = await renderGame({ playerNames: ['Zoé'] });
     await fireEvent.press(getByText('Drapeau'));
     expect(getAllByText('33%')).toHaveLength(1);
     expect(getAllByText('?')).toHaveLength(2);
 
-    await fireEvent.press(getAllByText('33%')[0]);
-    expect(getAllByText('33%')).toHaveLength(2);
-
+    // 2nd click: every color at once, however many the flag actually has.
     await fireEvent.press(getAllByText('33%')[0]);
     expect(getAllByText('33%')).toHaveLength(3);
 
-    // 4th click: swaps the color swatches for the actual flag.
+    // 3rd click: swaps the color swatches for the actual flag.
     await fireEvent.press(getAllByText('33%')[0]);
     expect(getByText('🇫🇷')).toBeTruthy();
 
-    // 5th click: nothing left to reveal, the score must not move anymore.
+    // 4th click: nothing left to reveal, the score must not move anymore.
     const scoreBefore = getByText(/pts$/).props.children.join('');
     await fireEvent.press(getByText('🇫🇷'));
     expect(getByText(/pts$/).props.children.join('')).toBe(scoreBefore);
