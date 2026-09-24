@@ -529,7 +529,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
               {formatNumber(displayScore)} {t.common.pts}
             </Text>
           </View>
-          <RoundProgress roundNumber={roundNumber} totalRounds={settings.rounds} />
+          <RoundProgress difficulties={[settings.difficulty]} roundNumber={roundNumber} totalRounds={settings.rounds} />
           <PlayerTabs
             activeIndex={roundOver ? -1 : turnIndex}
             activeLabel={t.game.playerTurn}

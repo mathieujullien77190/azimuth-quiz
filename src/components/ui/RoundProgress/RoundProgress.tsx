@@ -1,12 +1,12 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { fontSize, spacing } from '@/constants';
+import { DIFFICULTIES, fontSize, spacing } from '@/constants';
 import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
-import type { Theme } from '@/types';
+import type { Difficulty, Theme } from '@/types';
 
 import { MAX_PROGRESS_DOTS } from './constants';
-import { formatRoundProgress } from './helpers';
+import { formatDifficulties, formatRoundProgress } from './helpers';
 import type { RoundProgressProps } from './types';
 
 const createStyles = ({ colors, typography }: Theme) =>
@@ -40,19 +40,22 @@ const createStyles = ({ colors, typography }: Theme) =>
   });
 
 /**
- * Ligne "MANCHE N / M" + pastilles de progression : partagee telle quelle entre Boussole
- * (`GameScreen`) et Indices (`IndicesGameScreen`), seul le nombre de manches differe. Les
- * pastilles disparaissent au-dela de `MAX_PROGRESS_DOTS` (illisibles trop nombreuses) ; la
- * pastille d'index `roundNumber - 1` (la manche en cours) compte deja comme "faite".
+ * "ROUND N / M" line + progress dots: shared as-is between Boussole (`GameScreen`) and Indices
+ * (`IndicesGameScreen`) — only the round count and the active difficulty/ies differ. The dots
+ * disappear past `MAX_PROGRESS_DOTS` (unreadable once there are too many); the dot at index
+ * `roundNumber - 1` (the current round) already counts as "done".
  */
-const RoundProgress = ({ roundNumber, totalRounds }: RoundProgressProps) => {
+const RoundProgress = ({ roundNumber, totalRounds, difficulties }: RoundProgressProps) => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
+  // DIFFICULTIES lists every Difficulty value, so the lookup always finds a match.
+  const emojiOf = (id: Difficulty) => DIFFICULTIES.find((d) => d.id === id)!.emoji;
 
   return (
     <View style={styles.row}>
       <Text style={styles.label}>
-        {t.game.round} {formatRoundProgress(roundNumber, totalRounds)}
+        {t.game.round} {formatRoundProgress(roundNumber, totalRounds)} ·{' '}
+        {formatDifficulties(difficulties, emojiOf, (id: Difficulty) => t.setup.difficulties[id])}
       </Text>
       {totalRounds <= MAX_PROGRESS_DOTS && (
         <View style={styles.dots}>

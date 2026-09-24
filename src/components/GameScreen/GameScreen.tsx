@@ -326,7 +326,7 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
               <Text style={styles.score}>{scoreLabel}</Text>
             </View>
 
-            <RoundProgress roundNumber={game.roundNumber} totalRounds={game.totalRounds} />
+            <RoundProgress difficulties={game.config.difficulties} roundNumber={game.roundNumber} totalRounds={game.totalRounds} />
 
             {game.isMultiplayer && !record && (
               <PlayerTabs
