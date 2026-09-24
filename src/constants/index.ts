@@ -48,18 +48,19 @@ export const DEFAULT_ORIGIN: Origin = {
 export const LOCATION_TIMEOUT_MS = 6000;
 
 // --- Storage ---
-export const BEST_SCORE_STORAGE_KEY = 'fullazimut:best-score';
-export const SETTINGS_STORAGE_KEY = 'fullazimut:settings';
-export const LANGUAGE_STORAGE_KEY = 'fullazimut:language';
-export const THEME_STORAGE_KEY = 'fullazimut:theme';
+// Renamed from "fullazimut:*" along with the app itself (-> Azimuth Quiz, repo azimuth-quiz):
+// deliberately resets every existing player's saved settings/theme/score/history/mascot-caught
+// state on next launch, rather than keeping the old prefix forever for continuity.
+export const BEST_SCORE_STORAGE_KEY = 'azimuthquiz:best-score';
+export const SETTINGS_STORAGE_KEY = 'azimuthquiz:settings';
+export const LANGUAGE_STORAGE_KEY = 'azimuthquiz:language';
+export const THEME_STORAGE_KEY = 'azimuthquiz:theme';
 /** Once the home screen's mascot (UFO by night, helicopter by day) is caught (clicked), it stops
- * moving forever. The key's string value is unchanged from the earlier UFO-only version (renaming
- * it would silently reset every existing player's "caught" state — see the "Azimuth Quiz" rename
- * for the same call). */
-export const MASCOT_CAUGHT_STORAGE_KEY = 'fullazimut:ufo-caught';
+ * moving forever. */
+export const MASCOT_CAUGHT_STORAGE_KEY = 'azimuthquiz:ufo-caught';
 /** How many times each Indices place has been drawn, across every game — lets rounds avoid
  * repeats (see helpers/indicesHistory.ts). */
-export const INDICES_HISTORY_STORAGE_KEY = 'fullazimut:indices-history';
+export const INDICES_HISTORY_STORAGE_KEY = 'azimuthquiz:indices-history';
 
 // --- Ranks (solo): the title comes from translations.endScreen.ranks (same order). ---
 export const RANKS = [

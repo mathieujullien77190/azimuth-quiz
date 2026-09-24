@@ -1,7 +1,7 @@
 import { polyfillCountryFlagEmojis } from 'country-flag-emoji-polyfill';
 import { Platform } from 'react-native';
 
-const STYLE_ID = 'fullazimut-no-select';
+const STYLE_ID = 'azimuthquiz-no-select';
 
 /**
  * On the web, dragging a finger/mouse across the compass or the sliders selects text.

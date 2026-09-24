@@ -5,7 +5,7 @@
 Jeu de geographie : un lieu s'affiche, le joueur vise son cap a la boussole et estime
 la distance depuis un point de depart (position GPS ou Paris par defaut). 1 a 6 joueurs
 sur le meme telephone, jusqu'a 20 manches. Deploye en web statique sur GitHub Pages
-(`https://mathieujullien77190.github.io/full-azimut/`) en plus des builds natifs.
+(`https://mathieujullien77190.github.io/azimuth-quiz/`) en plus des builds natifs.
 
 ## Structure
 
@@ -72,7 +72,7 @@ sur react-native-web s'il n'a pas de `style={{ flexGrow: 0, flexShrink: 0 }}` ex
 
 Deux themes, `night` (sombre, bleu nuit + ambre, ciel etoile) et `day` (clair, ciel
 bleu + orange, nuages qui derivent — meme `ThemeBackdrop`, branche sur `theme.isDark`).
-Choix persiste (`ThemeProvider`/`ThemeSettingsContext`, cle `fullazimut:theme`),
+Choix persiste (`ThemeProvider`/`ThemeSettingsContext`, cle `azimuthquiz:theme`),
 selecteur dans `SettingsScreen`. `useTheme()` lit le theme courant via le contexte ;
 `useThemeSettings()` donne `{ themeId, ready, setThemeId, resetThemeId }`. Quelques
 elements suivent `isDark` directement plutot qu'un token de couleur : la mascotte du
@@ -89,7 +89,7 @@ et retourne un `StyleSheet.create(...)`.
 
 ## Build web / GitHub Pages
 
-`app.json` : `web.output: "static"` + `experiments.baseUrl: "/full-azimut"` (site de
+`app.json` : `web.output: "static"` + `experiments.baseUrl: "/azimuth-quiz"` (site de
 projet GitHub Pages, pas a la racine du domaine). Necessite `@expo/metro-runtime` en
 dependance (sinon `expo export --platform web` echoue). `.github/workflows/deploy-pages.yml`
 exporte et publie `dist/` sur push vers `master` via les actions GitHub Pages officielles
@@ -111,5 +111,5 @@ environnement).
   le pattern officiel de cette API, incompatible
   avec cette regle stricte. Meme categorie que les 4 fichiers ci-dessus, pas une erreur a
   corriger.
-- Repo : `mathieujullien77190/full-azimut`, un seul contributeur, commits directs sur
+- Repo : `mathieujullien77190/azimuth-quiz`, un seul contributeur, commits directs sur
   `master`.

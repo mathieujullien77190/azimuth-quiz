@@ -10,7 +10,7 @@ export default defineConfig(({ command }) => ({
   // Only the production build needs the subpath: it's served under the main app's GitHub Pages
   // site (see .github/workflows/deploy-pages.yml, which builds this into dist/admin/). The dev
   // server (`npm run admin`) stays at the root so `npm run admin` keeps working exactly as before.
-  base: command === 'build' ? '/full-azimut/admin/' : '/',
+  base: command === 'build' ? '/azimuth-quiz/admin/' : '/',
   plugins: [react()],
   resolve: {
     alias: { '@': path.resolve(rootDir, '../src') },

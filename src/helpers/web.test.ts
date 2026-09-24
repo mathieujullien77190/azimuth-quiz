@@ -44,14 +44,14 @@ describe('disableTextSelection', () => {
 
     disableTextSelection();
     expect(appended).toHaveLength(1);
-    expect(fakeStyle.id).toBe('fullazimut-no-select');
+    expect(fakeStyle.id).toBe('azimuthquiz-no-select');
     expect(fakeStyle.textContent).toContain('user-select: none');
   });
 
   it('is a no-op the second time (style tag already present)', () => {
     Platform.OS = 'web';
     const elementsById = new Map<string, unknown>();
-    elementsById.set('fullazimut-no-select', {});
+    elementsById.set('azimuthquiz-no-select', {});
     const appendChild = jest.fn();
     (globalThis as { document?: unknown }).document = {
       getElementById: (id: string) => elementsById.get(id) ?? null,

@@ -1,6 +1,6 @@
 # Azimuth Quiz
 
-🔗 **[Jouer dans le navigateur](https://mathieujullien77190.github.io/full-azimut/)**
+🔗 **[Jouer dans le navigateur](https://mathieujullien77190.github.io/azimuth-quiz/)**
 
 Deux jeux de géographie, choisis depuis l'écran d'accueil :
 
@@ -56,9 +56,9 @@ npm run test:coverage
 ## Déploiement web
 
 Le site est exporté en statique (`web.output: "static"`, `experiments.baseUrl:
-"/full-azimut"` dans `app.json`) et publié sur GitHub Pages par
+"/azimuth-quiz"` dans `app.json`) et publié sur GitHub Pages par
 `.github/workflows/deploy-pages.yml` à chaque push sur `master`. Le même workflow
-build l'app d'admin (`admin/`, base path `/full-azimut/admin`) et la place dans
+build l'app d'admin (`admin/`, base path `/azimuth-quiz/admin`) et la place dans
 `dist/admin/` avant publication, pour qu'elle finisse sur le même site.
 
 ## Données des lieux
@@ -68,7 +68,7 @@ Les lieux de Boussole et Indices partagent un même pool (`places.json` +
 sans toucher le JSON à la main, une petite app d'admin (React + Vite) est déployée sur
 GitHub Pages, à côté du jeu :
 
-🔗 **[Éditeur de lieux](https://mathieujullien77190.github.io/full-azimut/admin/)**
+🔗 **[Éditeur de lieux](https://mathieujullien77190.github.io/azimuth-quiz/admin/)**
 
 Elle n'a **aucun backend** : les données sont lues depuis le JSON figé au moment du
 build (donc en lecture, pas forcément à jour avec les tout derniers changements), et
