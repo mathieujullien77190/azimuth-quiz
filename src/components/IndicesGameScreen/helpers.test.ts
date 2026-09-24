@@ -1,14 +1,16 @@
 import { INDICES_CLUE_ORDER, INDICES_PLACES, isCapitalPlace, isFrenchCityPlace } from '@/constants';
+import { nameSkeleton } from '@/helpers';
 import type { Difficulty, IndicesClueId } from '@/types';
 
-import { maxScoreForRound, normalizePlaceGuess, randomIndicesPlace, totalRevealCount } from './helpers';
+import { maxScoreForRound, normalizePlaceGuess, overlayTypedLetters, randomIndicesPlace, skeletonLetterCount, totalRevealCount } from './helpers';
 
 describe('totalRevealCount', () => {
-  const TWO_STAGE: IndicesClueId[] = ['distance', 'elevation', 'population', 'currency', 'localTime', 'letter'];
+  const TWO_STAGE: IndicesClueId[] = ['distance', 'elevation', 'population', 'currency', 'localTime'];
+  const THREE_STAGE: IndicesClueId[] = ['emoji', 'flagColors', 'letter'];
 
   it('matches revealing every clue, including every multi-stage one', () => {
     const allIds: IndicesClueId[] = INDICES_CLUE_ORDER.flatMap((clueId) => {
-      const revealCount = clueId === 'emoji' || clueId === 'flagColors' ? 3 : TWO_STAGE.includes(clueId) ? 2 : 1;
+      const revealCount = THREE_STAGE.includes(clueId) ? 3 : TWO_STAGE.includes(clueId) ? 2 : 1;
       return Array<IndicesClueId>(revealCount).fill(clueId);
     });
     expect(totalRevealCount()).toBe(allIds.length);
@@ -100,5 +102,37 @@ describe('normalizePlaceGuess', () => {
     const withApostrophe = normalizePlaceGuess("N'Djamena");
     expect(normalizePlaceGuess('N Djamena')).toBe(withApostrophe);
     expect(normalizePlaceGuess('Ndjamena')).toBe(withApostrophe);
+  });
+});
+
+describe('skeletonLetterCount', () => {
+  it('sums the letter slots across every word', () => {
+    const groups = nameSkeleton('Rio de Janeiro', { groupByWord: true, lengthKnown: true });
+    expect(skeletonLetterCount(groups)).toBe(12);
+  });
+
+  it('is 0 for an empty skeleton', () => {
+    expect(skeletonLetterCount([])).toBe(0);
+  });
+});
+
+describe('overlayTypedLetters', () => {
+  it('fills each slot with the typed letter at its position, ignoring spaces/punctuation typed', () => {
+    const groups = nameSkeleton('Rio de Janeiro', { groupByWord: true, lengthKnown: true });
+    expect(overlayTypedLetters(groups, 'Rio de Jan')).toEqual([
+      ['R', 'I', 'O'],
+      ['D', 'E'],
+      ['J', 'A', 'N', null, null, null, null],
+    ]);
+  });
+
+  it('falls back to the clue-revealed letter (or blank) once past what has been typed', () => {
+    const groups = nameSkeleton('Paris', { groupByWord: true, lengthKnown: true });
+    expect(overlayTypedLetters(groups, 'Pa')).toEqual([['P', 'A', null, null, null]]);
+  });
+
+  it('an empty guess leaves the skeleton untouched', () => {
+    const groups = nameSkeleton('Paris', { groupByWord: true, lengthKnown: true });
+    expect(overlayTypedLetters(groups, '')).toEqual(groups);
   });
 });

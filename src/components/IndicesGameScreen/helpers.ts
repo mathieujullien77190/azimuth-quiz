@@ -1,19 +1,23 @@
 import { INDICES_CLUE_ORDER, INDICES_PLACES, isCapitalPlace, isFrenchCityPlace } from '@/constants';
 import { pickLeastDrawn, type IndicesDrawHistory } from '@/helpers/indicesHistory';
+import type { NameSkeletonSlot } from '@/helpers/indicesSkeleton';
 import { effectiveDifficulty } from '@/helpers/places';
 import type { Language } from '@/i18n';
 import type { Difficulty, IndicesCategory, IndicesPlace } from '@/types';
 
 /** Clues that reveal in 2 clicks: tier/symbol/day-night on the 1st, exact value on the 2nd. */
-const TWO_STAGE_CLUE_IDS = new Set(['distance', 'elevation', 'population', 'currency', 'localTime', 'letter']);
+const TWO_STAGE_CLUE_IDS = new Set(['distance', 'elevation', 'population', 'currency', 'localTime']);
+/** Clues that reveal in 3 clicks. */
+const THREE_STAGE_CLUE_IDS = new Set(['emoji', 'flagColors', 'letter']);
 
 /** Total number of possible clues in a round if all were taken, counted multiple times
- * for the ones that reveal in stages (emoji: 3 clicks; distance/elevation/population/
- * currency/localTime/letter: 2; flag: always 3 — 1 color, then every color regardless of how many
- * the flag actually has, then the actual flag) — used as the base for `maxScoreForRound`. */
+ * for the ones that reveal in stages (emoji: 3 clicks; letter: 3 (first letter, then word count,
+ * then every letter); flag: always 3 — 1 color, then every color regardless of how many the flag
+ * actually has, then the actual flag; distance/elevation/population/currency/localTime: 2) —
+ * used as the base for `maxScoreForRound`. */
 export const totalRevealCount = (): number =>
   INDICES_CLUE_ORDER.reduce((total, clueId) => {
-    const count = clueId === 'emoji' || clueId === 'flagColors' ? 3 : TWO_STAGE_CLUE_IDS.has(clueId) ? 2 : 1;
+    const count = THREE_STAGE_CLUE_IDS.has(clueId) ? 3 : TWO_STAGE_CLUE_IDS.has(clueId) ? 2 : 1;
     return total + count;
   }, 0);
 
@@ -56,3 +60,25 @@ export const normalizePlaceGuess = (value: string): string =>
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]+/gu, '');
+
+/** Total number of letter slots across every group of a name skeleton (letters only, word
+ * separators excluded) — the cap on how many letters can be typed once the "letter" clue's 3rd
+ * click (the real per-word length) is known, see `overlayTypedLetters`. */
+export const skeletonLetterCount = (groups: NameSkeletonSlot[][]): number => groups.reduce((total, group) => total + group.length, 0);
+
+/** Live-fills a name skeleton with what's been typed so far, once the real shape is known (the
+ * "letter" clue's 3rd click): each slot shows the typed letter at its position once typed that
+ * far, falling back to whatever the clue itself revealed (or a blank) before that. Typed
+ * characters are consumed positionally across every slot, revealed or not — the player types the
+ * whole name from the start, not just its hidden parts. */
+export const overlayTypedLetters = (groups: NameSkeletonSlot[][], typed: string): NameSkeletonSlot[][] => {
+  const typedLetters = [...typed.replace(/[^\p{L}]/gu, '')];
+  let index = 0;
+  return groups.map((group) =>
+    group.map((slot) => {
+      const typedLetter = typedLetters[index];
+      index += 1;
+      return typedLetter !== undefined ? typedLetter.toUpperCase() : slot;
+    }),
+  );
+};

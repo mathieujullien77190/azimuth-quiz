@@ -55,7 +55,7 @@ const multiStageProgress = (
     case 'localTime':
       return { stage: Math.min(stages.localTimeStage ?? 1, 2), max: 2 };
     case 'letter':
-      return { stage: Math.min(stages.letterStage ?? 1, 2), max: 2 };
+      return { stage: Math.min(stages.letterStage ?? 1, 3), max: 3 };
     default:
       return undefined;
   }
@@ -144,6 +144,14 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       fontSize: fontSize.subtitle,
       textAlign: 'center',
     },
+    // One Text per word, in a wrapping row: keeps a visible gap between words without
+    // relying on a literal space character (see the `letter` clue).
+    letterRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      gap: spacing.sm,
+    },
     // Smaller/letter-spaced sibling of statValue: the "letter" clue's text (e.g. "S__ _________")
     // can get long for multi-word names, unlike every other clue's short value.
     letterValue: {
@@ -152,6 +160,9 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       fontSize: fontSize.body,
       letterSpacing: 1,
       textAlign: 'center',
+    },
+    letterUnderline: {
+      textDecorationLine: 'underline',
     },
     statUnit: {
       ...typography.body,
@@ -347,9 +358,28 @@ const revealedBody = (
     }
     case 'letter': {
       const stage = letterStage ?? 1;
-      const groups = nameSkeleton(place.name, { lengthKnown: stage >= 2 });
-      const text = groups.map((group) => group.map((slot) => slot ?? '_').join('')).join(' ');
-      return <Text style={styles.letterValue}>{text}</Text>;
+      const groups = nameSkeleton(place.name, { groupByWord: stage >= 2, lengthKnown: stage >= 3 });
+      // A single-word name has nothing new to show at stage 2 (word count = 1, already implied
+      // by stage 1): the first letter gets underlined instead, so the click still feels like it
+      // did something.
+      const underlineFirst = stage === 2 && groups.length === 1;
+      return (
+        <View style={styles.letterRow}>
+          {groups.map((group, groupIndex) => (
+            <Text key={groupIndex} style={styles.letterValue}>
+              {group.map((slot, slotIndex) =>
+                groupIndex === 0 && slotIndex === 0 && underlineFirst ? (
+                  <Text key={slotIndex} style={styles.letterUnderline}>
+                    {slot}
+                  </Text>
+                ) : (
+                  (slot ?? '_')
+                ),
+              )}
+            </Text>
+          ))}
+        </View>
+      );
     }
     case 'vowels':
       return <Text style={styles.statValue}>{vowelsOf(place.name)}</Text>;

@@ -16,7 +16,7 @@ import Card from '../ui/Card';
 import RoundProgress from '../ui/RoundProgress';
 import Screen from '../ui/Screen';
 import { WRONG_ANSWER_PENALTY } from './constants';
-import { maxScoreForRound, normalizePlaceGuess, randomIndicesPlace, totalRevealCount } from './helpers';
+import { maxScoreForRound, normalizePlaceGuess, overlayTypedLetters, randomIndicesPlace, skeletonLetterCount, totalRevealCount } from './helpers';
 import type { IndicesGameScreenProps } from './types';
 
 const createStyles = ({ colors, typography }: Theme) =>
@@ -270,15 +270,19 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const populationStage = revealedClueIds.filter((id) => id === 'population').length;
   const currencyStage = revealedClueIds.filter((id) => id === 'currency').length;
   const localTimeStage = revealedClueIds.filter((id) => id === 'localTime').length;
-  // 1st click on "letter": first letter + word count (generic slots). 2nd click: real
-  // per-word length too.
+  // "letter" reveals in 3 clicks: 1st the first letter alone, 2nd the word count (one generic
+  // box per word), 3rd the real per-word length.
   const letterStage = revealedClueIds.filter((id) => id === 'letter').length;
 
   // "M _ _ _" name recap above the buzz/give-up buttons: nothing shown until "letter" has
-  // been picked at least once (word count + first letter, together, see above); a 2nd click
-  // swaps the generic boxes for the real per-word length.
+  // been picked at least once. `lengthKnown` also gates the live-typing overlay/cap below the
+  // typed-answer input (see `overlayTypedLetters`/`skeletonLetterCount`): both need the real
+  // per-word length, not just the generic word-count boxes.
+  const skeletonLengthKnown = letterStage >= 3 || vowelsRevealed;
   const skeletonGroups =
-    letterStage >= 1 ? nameSkeleton(place.name, { lengthKnown: letterStage >= 2 || vowelsRevealed, revealVowels: vowelsRevealed }) : [];
+    letterStage >= 1
+      ? nameSkeleton(place.name, { groupByWord: letterStage >= 2 || vowelsRevealed, lengthKnown: skeletonLengthKnown, revealVowels: vowelsRevealed })
+      : [];
 
   // All the guards (round over, clue already revealed, emoji/flag exhausted) are enforced
   // upstream by `IndicesClueCard`: `onPress` is only provided if the card is genuinely
@@ -443,9 +447,27 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
             />
             {buzzedIndex !== null && settings.answerMethod === 'typed' && (
               <>
+                {skeletonLengthKnown && (
+                  <View style={styles.skeletonRow}>
+                    {overlayTypedLetters(skeletonGroups, guessText).map((group, groupIndex) => (
+                      <View key={groupIndex} style={styles.skeletonWord}>
+                        {group.map((letter, letterIndex) => (
+                          <View key={letterIndex} style={styles.skeletonSlot}>
+                            {letter !== null && <Text style={styles.skeletonLetter}>{letter}</Text>}
+                          </View>
+                        ))}
+                      </View>
+                    ))}
+                  </View>
+                )}
                 <TextInput
                   autoCapitalize="words"
-                  onChangeText={setGuessText}
+                  onChangeText={(next) => {
+                    // Once the real length is known, block typing past it (letters only —
+                    // spaces/punctuation don't count, the player may type either).
+                    if (skeletonLengthKnown && [...next.replace(/[^\p{L}]/gu, '')].length > skeletonLetterCount(skeletonGroups)) return;
+                    setGuessText(next);
+                  }}
                   onSubmitEditing={submitGuess}
                   placeholder={t.indicesGame.guessPlaceholder}
                   placeholderTextColor={colors.textMuted}
@@ -458,6 +480,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
                   label={t.indicesGame.submitGuess}
                   onPress={submitGuess}
                 />
+                <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
               </>
             )}
             {buzzedIndex !== null && settings.answerMethod === 'spoken' && !verified && (
@@ -562,7 +585,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
               (isPopulation && !roundOver && populationStage < 2) ||
               (isCurrency && !roundOver && currencyStage < 2) ||
               (isLocalTime && !roundOver && localTimeStage < 2) ||
-              (isLetter && !roundOver && letterStage < 2);
+              (isLetter && !roundOver && letterStage < 3);
             return (
               <IndicesClueCard
                 bearingDeg={bearing}
@@ -575,7 +598,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
                 flagStage={isFlag ? (roundOver ? flagMaxStage : flagStage) : undefined}
                 key={clueId}
                 label={t.indicesGame.clues[clueId]}
-                letterStage={isLetter ? (roundOver ? 2 : letterStage) : undefined}
+                letterStage={isLetter ? (roundOver ? 3 : letterStage) : undefined}
                 localTimeStage={isLocalTime ? (roundOver ? 2 : localTimeStage) : undefined}
                 moreToReveal={moreToReveal}
                 onPress={roundOver ? undefined : () => pickClue(clueId)}

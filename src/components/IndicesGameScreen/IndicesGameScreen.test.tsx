@@ -52,7 +52,7 @@ describe('IndicesGameScreen — picking clues', () => {
 
   it('revealing a clue takes 1 point off the remaining score and advances the turn', async () => {
     const { getByText } = await renderGame({ playerNames: ['Zoé', 'Max'] });
-    // Paris/France (3 flag colors): 24 possible clues in total, rounded up to 30.
+    // Paris/France (3 flag colors): 25 possible clues in total, rounded up to 30.
     expect(getByText('Zoé · 30 pts')).toBeTruthy();
 
     await fireEvent.press(getByText('Indicatif tél.'));
@@ -105,9 +105,16 @@ describe('IndicesGameScreen — picking clues', () => {
     expect(getAllByText('P').length).toBeGreaterThan(0);
   });
 
-  it('letter: 2nd click swaps the generic slot for the real length in both the card and the skeleton', async () => {
+  it('letter: 3 clicks go first letter -> word count (no visible change, single word) -> real length', async () => {
     const { getAllByText } = await renderGame({ playerNames: ['Zoé'] });
     await fireEvent.press(getAllByText('Lettres')[0]);
+    expect(getAllByText('P').length).toBeGreaterThan(0);
+
+    // 2nd click: word count, but "Paris" is a single word so nothing new to show.
+    await fireEvent.press(getAllByText('P')[0]);
+    expect(getAllByText('P').length).toBeGreaterThan(0);
+
+    // 3rd click: real length.
     await fireEvent.press(getAllByText('P')[0]);
     expect(getAllByText('P____').length).toBeGreaterThan(0);
   });
@@ -125,8 +132,9 @@ describe('IndicesGameScreen — picking clues', () => {
     expect(getByText('29 pts')).toBeTruthy();
   });
 
-  it('startWithFirstLetter: still just stage 1 (generic slot), a 2nd click on "letter" reveals the real length', async () => {
+  it('startWithFirstLetter: 2 more clicks (word count then real length) reach the full skeleton', async () => {
     const { getAllByText } = await renderGame({ playerNames: ['Zoé'], startWithFirstLetter: true });
+    await fireEvent.press(getAllByText('P')[0]);
     await fireEvent.press(getAllByText('P')[0]);
     expect(getAllByText('P____').length).toBeGreaterThan(0);
   });
@@ -295,6 +303,40 @@ describe('IndicesGameScreen — buzz flow (typed answer)', () => {
     await fireEvent.changeText(input, '  paris  ');
     await fireEvent.press(getByText('Valider'));
     expect(getByText('Zoé marque 30 points !')).toBeTruthy();
+  });
+
+  it('a Cancel button closes the buzz panel without touching the score', async () => {
+    const { getByText, getAllByLabelText, queryByText, queryByPlaceholderText } = await renderGame({
+      answerMethod: 'typed',
+      playerNames: ['Zoé'],
+    });
+    await fireEvent.press(getByText('🔔 J’ai trouvé !'));
+    await fireEvent.press(getAllByLabelText('Zoé')[1]);
+    await fireEvent.press(getByText('Annuler'));
+    expect(queryByPlaceholderText('Nom de la ville…')).toBeNull();
+    expect(queryByText(/marque/)).toBeNull();
+    expect(getByText('🔔 J’ai trouvé !')).toBeTruthy();
+  });
+
+  it('once the real length is known (letter, 3rd click), typing live-fills the skeleton and blocks extra letters', async () => {
+    const { getByText, getAllByText, getAllByLabelText, getByPlaceholderText } = await renderGame({
+      answerMethod: 'typed',
+      playerNames: ['Zoé'],
+    });
+    await fireEvent.press(getAllByText('Lettres')[0]);
+    await fireEvent.press(getAllByText('P')[0]);
+    await fireEvent.press(getAllByText('P')[0]);
+
+    await fireEvent.press(getByText('🔔 J’ai trouvé !'));
+    await fireEvent.press(getAllByLabelText('Zoé')[1]);
+    const input = getByPlaceholderText('Nom de la ville…');
+
+    await fireEvent.changeText(input, 'Pa');
+    expect(getAllByText('A').length).toBeGreaterThan(0);
+
+    // "Paris" has 5 letters: a 6th is refused, the input stays at its previous value.
+    await fireEvent.changeText(input, 'Parisx');
+    expect(input.props.value).toBe('Pa');
   });
 });
 

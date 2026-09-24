@@ -84,8 +84,21 @@ describe('IndicesClueCard — revealed content per clue', () => {
     expect(getByText('P')).toBeTruthy();
   });
 
-  it('letter: stage 2 shows the real length ("Paris" -> "P____")', async () => {
+  it('letter: stage 2 on a single-word name looks the same but underlines the letter (nothing new to show)', async () => {
     const { getByText } = await renderCard({ clueId: 'letter', letterStage: 2, state: 'revealed' });
+    const letter = getByText('P');
+    expect(letter.props.style).toEqual(expect.objectContaining({ textDecorationLine: 'underline' }));
+  });
+
+  it('letter: stage 2 on a multi-word name shows one generic box per word ("New York" -> "N", "_")', async () => {
+    const newYork = INDICES_PLACES.find((p) => p.name === 'New York')!;
+    const { getByText } = await renderCard({ clueId: 'letter', letterStage: 2, place: newYork, state: 'revealed' });
+    expect(getByText('N')).toBeTruthy();
+    expect(getByText('_')).toBeTruthy();
+  });
+
+  it('letter: stage 3 shows the real length ("Paris" -> "P____")', async () => {
+    const { getByText } = await renderCard({ clueId: 'letter', letterStage: 3, state: 'revealed' });
     expect(getByText('P____')).toBeTruthy();
   });
 
