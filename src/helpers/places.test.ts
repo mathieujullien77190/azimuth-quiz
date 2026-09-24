@@ -13,7 +13,7 @@ jest.mock('@/constants', () => {
       { name: 'Berlin', code: 'DE', coordinates: { latitude: 52.52, longitude: 13.405 }, category: 'cities', difficulty: 'easy' },
       // Russia: in EUROPE_CODES but outside the longitude bounds (>45) -> excluded from the Europe zone.
       { name: 'Vladivostok', code: 'RU', coordinates: { latitude: 43.1, longitude: 131.9 }, category: 'cities', difficulty: 'hard' },
-      { name: 'Tokyo', code: 'JP', coordinates: { latitude: 35.6762, longitude: 139.6503 }, category: 'landmarks', difficulty: 'master' },
+      { name: 'Tokyo', code: 'JP', coordinates: { latitude: 35.6762, longitude: 139.6503 }, category: 'landmarks', difficulty: 'hard' },
       // Less than MIN_PLACE_DISTANCE_KM (150km) from Paris.
       { name: 'Rouen', code: 'FR', coordinates: { latitude: 49.4431, longitude: 1.0993 }, category: 'mountains', difficulty: 'intermediate' },
     ],
@@ -57,18 +57,18 @@ describe('filterPlaces', () => {
   });
 
   it('zone "france" keeps only code FR', () => {
-    const result = filterPlaces(['cities', 'mountains', 'landmarks'], ['easy', 'intermediate', 'hard', 'master'], 'france', 'fr');
+    const result = filterPlaces(['cities', 'mountains', 'landmarks'], ['easy', 'intermediate', 'hard'], 'france', 'fr');
     expect(result).toEqual([paris, rouen]);
   });
 
   it('zone "europe" excludes places past the longitude/latitude bounds even with an EUROPE_CODES code', () => {
-    const result = filterPlaces(['cities', 'mountains', 'landmarks'], ['easy', 'intermediate', 'hard', 'master'], 'europe', 'fr');
+    const result = filterPlaces(['cities', 'mountains', 'landmarks'], ['easy', 'intermediate', 'hard'], 'europe', 'fr');
     expect(result).toEqual([paris, berlin, rouen]);
     expect(result).not.toContainEqual(vladivostok);
   });
 
   it('zone "world" keeps every code', () => {
-    const result = filterPlaces(['cities', 'mountains', 'landmarks'], ['easy', 'intermediate', 'hard', 'master'], 'world', 'fr');
+    const result = filterPlaces(['cities', 'mountains', 'landmarks'], ['easy', 'intermediate', 'hard'], 'world', 'fr');
     expect(result).toHaveLength(5);
   });
 
@@ -94,8 +94,8 @@ describe('effectiveDifficulty', () => {
     expect(effectiveDifficulty(rouen, 'en')).toBe('hard');
   });
 
-  it('caps at "master" instead of overflowing', () => {
-    expect(effectiveDifficulty({ code: 'FR', difficulty: 'master' }, 'en')).toBe('master');
+  it('caps at "hard" instead of overflowing', () => {
+    expect(effectiveDifficulty({ code: 'FR', difficulty: 'hard' }, 'en')).toBe('hard');
   });
 });
 
@@ -103,7 +103,7 @@ describe('pickPlaces', () => {
   const baseSettings: GameSettings = {
     playerNames: [''],
     categories: ['cities', 'mountains', 'landmarks'],
-    difficulties: ['easy', 'intermediate', 'hard', 'master'],
+    difficulties: ['easy', 'intermediate', 'hard'],
     zone: 'world',
     rounds: 10,
     straightLine: false,

@@ -100,8 +100,7 @@ export const CATEGORIES: { id: Category; emoji: string }[] = [
 export const DIFFICULTIES: { id: Difficulty; emoji: string }[] = [
   { id: 'easy', emoji: '🟢' },
   { id: 'intermediate', emoji: '🟡' },
-  { id: 'hard', emoji: '🟠' },
-  { id: 'master', emoji: '🔴' },
+  { id: 'hard', emoji: '🔴' },
 ];
 
 export const ZONES: { id: Zone }[] = [{ id: 'france' }, { id: 'europe' }, { id: 'world' }];

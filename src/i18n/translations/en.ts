@@ -50,7 +50,6 @@ export const en: Translations = {
       easy: 'Easy',
       intermediate: 'Intermediate',
       hard: 'Hard',
-      master: 'Master',
     },
     zoneTitle: 'Zone',
     zones: {

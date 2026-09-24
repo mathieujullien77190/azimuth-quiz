@@ -35,7 +35,7 @@ describe('maxScoreForRound', () => {
 });
 
 describe('randomIndicesPlace', () => {
-  const difficulties: Difficulty[] = ['easy', 'intermediate', 'hard', 'master'];
+  const difficulties: Difficulty[] = ['easy', 'intermediate', 'hard'];
 
   it.each(difficulties)('only returns places matching difficulty %s', (difficulty) => {
     for (let i = 0; i < 20; i += 1) {
@@ -48,10 +48,10 @@ describe('randomIndicesPlace', () => {
     expect(INDICES_PLACES).toContainEqual(place);
   });
 
-  it('in English, only draws French places one tier up from their real difficulty', () => {
+  it('in English, never draws an "easy" French place (a French easy place is bumped to intermediate)', () => {
     for (let i = 0; i < 20; i += 1) {
-      const place = randomIndicesPlace('hard', 'en');
-      if (place.code === 'FR') expect(place.difficulty).toBe('intermediate');
+      const place = randomIndicesPlace('easy', 'en');
+      if (place.code === 'FR') expect(place.difficulty).not.toBe('easy');
     }
   });
 });

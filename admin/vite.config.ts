@@ -20,8 +20,8 @@ import { decodeCountry, encodeCountry, serializeCountries, type CountryRow } fro
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const placesPath = path.resolve(rootDir, '../src/constants/places/places.json');
 const countriesPath = path.resolve(rootDir, '../src/constants/places/countries.json');
-const DIFFICULTIES = ['easy', 'intermediate', 'hard', 'master'];
-const CATEGORIES = ['cities', 'mountains', 'landmarks', 'nature', 'kids'];
+const DIFFICULTIES = ['easy', 'intermediate', 'hard'];
+const CATEGORIES = ['cities', 'capital', 'mountains', 'landmarks', 'nature', 'kids'];
 const POSITIONS = ['center', 'n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
 const FLAG_COLOR_IDS = ['red', 'blue', 'white', 'green', 'yellow', 'black'];
 

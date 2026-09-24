@@ -48,9 +48,8 @@ export const fr: Translations = {
     difficultyHint: 'Notoriété du lieu : plus c’est pointu, plus c’est dur.',
     difficulties: {
       easy: 'Facile',
-      intermediate: 'Intermédiaire',
+      intermediate: 'Moyen',
       hard: 'Difficile',
-      master: 'Maître',
     },
     zoneTitle: 'Zone',
     zones: {

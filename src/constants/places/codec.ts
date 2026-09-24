@@ -26,7 +26,6 @@ export const DIFFICULTY_CODES: Record<Difficulty, string> = {
   easy: 'E',
   intermediate: 'I',
   hard: 'H',
-  master: 'M',
 };
 
 /** IANA timezone (e.g. "Europe/Madrid") -> 2-letter code, arbitrary but stable (alphabetical

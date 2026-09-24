@@ -34,7 +34,7 @@ describe('serializeMergedPlaces', () => {
 describe('encodeCommonRow', () => {
   it('replaces only the difficulty code, keeping name/code/coordinates', () => {
     const common: CommonRow = ['Testville', 'FR', 1.5, -2.5, 'E'];
-    expect(encodeCommonRow(common, 'master')).toEqual(['Testville', 'FR', 1.5, -2.5, 'M']);
+    expect(encodeCommonRow(common, 'hard')).toEqual(['Testville', 'FR', 1.5, -2.5, 'H']);
   });
 });
 

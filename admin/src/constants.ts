@@ -21,20 +21,18 @@ export const CATEGORY_COLORS: Record<Category, string> = {
   kids: '#F472B6',
 };
 
-export const DIFFICULTY_ORDER: Difficulty[] = ['easy', 'intermediate', 'hard', 'master'];
+export const DIFFICULTY_ORDER: Difficulty[] = ['easy', 'intermediate', 'hard'];
 
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   easy: 'Facile',
-  intermediate: 'Intermédiaire',
+  intermediate: 'Moyen',
   hard: 'Difficile',
-  master: 'Maître',
 };
 
 export const DIFFICULTY_COLORS: Record<Difficulty, string> = {
   easy: '#4ADE80',
   intermediate: '#F5B841',
-  hard: '#FB923C',
-  master: '#FF6B6B',
+  hard: '#FF6B6B',
 };
 
 export const POSITION_ORDER: IndicesPositionInCountry[] = ['center', 'n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];

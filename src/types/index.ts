@@ -7,10 +7,13 @@ export type Coordinates = {
 
 export type Category = 'cities' | 'mountains' | 'landmarks' | 'nature' | 'kids' | 'capital';
 
+/** Indices only draws from cities, so only these two of the 6 Boussole categories apply. */
+export type IndicesCategory = Extract<Category, 'cities' | 'capital'>;
+
 export type Zone = 'france' | 'europe' | 'world';
 
 /** Popularity/fame of the place, from best-known to most niche. */
-export type Difficulty = 'easy' | 'intermediate' | 'hard' | 'master';
+export type Difficulty = 'easy' | 'intermediate' | 'hard';
 
 /**
  * Base shared by both games: the minimal geographic identity of a place. Boussole (`Place`) and
