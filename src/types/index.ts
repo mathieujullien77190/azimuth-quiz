@@ -216,6 +216,9 @@ export type IndicesSettings = {
   difficulty: Difficulty;
   answerMethod: IndicesAnswerMethod;
   rounds: number;
+  /** Each round starts with the first-letter clue already revealed for free, instead of
+   * everything locked. */
+  startWithFirstLetter: boolean;
 };
 
 export type Theme = {

@@ -94,6 +94,7 @@ const createStyles = ({ colors, typography }: Theme) =>
       justifyContent: 'center',
       alignItems: 'flex-end',
       gap: spacing.xl,
+      marginBottom: spacing.md,
     },
     skeletonWord: {
       flexDirection: 'row',
@@ -215,7 +216,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const bearing = bearingDeg(origin.coordinates, place.coordinates);
   const distance = distanceKm(origin.coordinates, place.coordinates);
 
-  const [revealedClueIds, setRevealedClueIds] = useState<IndicesClueId[]>([]);
+  const [revealedClueIds, setRevealedClueIds] = useState<IndicesClueId[]>(() => (settings.startWithFirstLetter ? ['firstLetter'] : []));
   const [turnIndex, setTurnIndex] = useState(0);
   const [buzzOpen, setBuzzOpen] = useState(false);
   const [buzzedIndex, setBuzzedIndex] = useState<number | null>(null);
@@ -351,7 +352,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
     }
     setRoundNumber((n) => n + 1);
     setPlace(randomIndicesPlace(settings.difficulty));
-    setRevealedClueIds([]);
+    setRevealedClueIds(settings.startWithFirstLetter ? ['firstLetter'] : []);
     setTurnIndex(0);
     setBuzzOpen(false);
     setBuzzedIndex(null);

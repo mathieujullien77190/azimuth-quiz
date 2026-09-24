@@ -46,4 +46,5 @@ export const DEFAULT_INDICES_SETTINGS: IndicesSettings = {
   difficulty: 'easy',
   answerMethod: 'spoken',
   rounds: 5,
+  startWithFirstLetter: false,
 };

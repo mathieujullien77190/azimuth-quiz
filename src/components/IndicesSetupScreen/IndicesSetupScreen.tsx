@@ -22,6 +22,7 @@ import Button from '../ui/Button';
 import Chip from '../ui/Chip';
 import Screen from '../ui/Screen';
 import Section from '../ui/Section';
+import Toggle from '../ui/Toggle';
 import { resizeNames } from './helpers';
 import type { IndicesSetupScreenProps } from './types';
 
@@ -170,6 +171,14 @@ export const IndicesSetupScreen = ({ onStart, onBack }: IndicesSetupScreenProps)
             />
           ))}
         </View>
+      </Section>
+
+      <Section title={t.indicesSetup.optionsTitle}>
+        <Toggle
+          {...t.indicesSetup.toggles.startWithFirstLetter}
+          onValueChange={(value) => updateSettings({ startWithFirstLetter: value })}
+          value={settings.startWithFirstLetter}
+        />
       </Section>
 
       <Section title={t.setup.roundsTitle}>

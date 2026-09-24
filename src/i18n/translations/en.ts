@@ -170,6 +170,13 @@ export const en: Translations = {
       spoken: 'Out loud',
       typed: 'Type the city',
     },
+    optionsTitle: 'Options',
+    toggles: {
+      startWithFirstLetter: {
+        label: 'Reveal first letter',
+        description: 'Each round starts with the first letter already revealed for free.',
+      },
+    },
   },
   indicesGame: {
     roundOver: 'Round over',

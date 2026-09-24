@@ -71,6 +71,14 @@ describe('IndicesSetupScreen', () => {
     expect(getByText('À voix haute').parent?.props.accessibilityState.selected).toBe(false);
   });
 
+  it('wires the "reveal first letter" toggle', async () => {
+    const { getByLabelText } = await renderScreen();
+
+    await fireEvent(getByLabelText('Première lettre révélée'), 'valueChange', true);
+
+    expect(getByLabelText('Première lettre révélée').props.value).toBe(true);
+  });
+
   it('updates the rounds count when a rounds chip is pressed', async () => {
     const { getByText } = await renderScreen();
 

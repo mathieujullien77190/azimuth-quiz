@@ -102,6 +102,19 @@ describe('IndicesGameScreen — picking clues', () => {
     expect(getAllByText('P').length).toBeGreaterThan(0);
   });
 
+  it('startWithFirstLetter: the first letter is already revealed (and already costs 1 point) at round start', async () => {
+    const { getAllByText, getByText } = await renderGame({ playerNames: ['Zoé'], startWithFirstLetter: true });
+    expect(getByText('29 pts')).toBeTruthy();
+    expect(getAllByText('P').length).toBeGreaterThan(0);
+  });
+
+  it('startWithFirstLetter: the next round also starts with it revealed', async () => {
+    const { getByText } = await renderGame({ playerNames: ['Zoé'], rounds: 2, startWithFirstLetter: true });
+    await fireEvent.press(getByText('🤷 Je ne sais pas'));
+    await fireEvent.press(getByText('Continuer'));
+    expect(getByText('29 pts')).toBeTruthy();
+  });
+
   it('flag colors reveal one by one for the 3-color France flag then lock', async () => {
     const { getByText, getAllByText } = await renderGame({ playerNames: ['Zoé'] });
     await fireEvent.press(getByText('Drapeau'));

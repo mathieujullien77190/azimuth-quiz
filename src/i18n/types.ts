@@ -132,6 +132,10 @@ export type Translations = {
     difficultyHint: string;
     answerMethodTitle: string;
     answerMethods: Record<IndicesAnswerMethod, string>;
+    optionsTitle: string;
+    toggles: {
+      startWithFirstLetter: { label: string; description: string };
+    };
   };
   indicesGame: {
     roundOver: string;

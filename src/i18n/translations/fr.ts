@@ -171,6 +171,13 @@ export const fr: Translations = {
       spoken: 'À voix haute',
       typed: 'Je tape la ville',
     },
+    optionsTitle: 'Options',
+    toggles: {
+      startWithFirstLetter: {
+        label: 'Première lettre révélée',
+        description: 'Chaque manche démarre avec la première lettre déjà dévoilée gratuitement.',
+      },
+    },
   },
   indicesGame: {
     roundOver: 'Manche terminée',
