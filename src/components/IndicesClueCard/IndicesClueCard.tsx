@@ -97,16 +97,16 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
     label: {
       ...typography.label,
       color: colors.textMuted,
-      fontSize: fontSize.caption - 3,
+      fontSize: fontSize.caption - 1,
     },
     stageDots: {
       flexDirection: 'row',
       gap: 4,
     },
     stageDot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
+      width: 8,
+      height: 8,
+      borderRadius: 4,
       borderWidth: 1.5,
       borderColor: colors.accent,
     },
