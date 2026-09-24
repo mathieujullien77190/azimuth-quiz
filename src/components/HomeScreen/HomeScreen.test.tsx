@@ -66,6 +66,10 @@ describe('HomeScreen — UFO settings button', () => {
     const timingSpy = jest
       .spyOn(Animated, 'timing')
       .mockReturnValue({ start: (cb?: (result: { finished: boolean }) => void) => cb?.({ finished: true }), stop: jest.fn() } as unknown as Animated.CompositeAnimation);
+    // Math.random() close to 0 always picks the first UFO_PAUSE_OPTIONS_S entry (never
+    // UFO_SPIN_PAUSE_S): pinned rather than left to real randomness, so this test deterministically
+    // covers the "doesn't spin" branch instead of only doing so ~3 times out of 4.
+    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.01);
 
     const { getByLabelText, getByText, unmount } = await render(<HomeScreen />);
     await waitFor(() => expect(mockedLoadUfoCaught).toHaveBeenCalled());
@@ -80,6 +84,7 @@ describe('HomeScreen — UFO settings button', () => {
     expect(mockedSaveUfoCaught).toHaveBeenCalled();
     expect(mockPush).toHaveBeenCalledWith('/settings');
 
+    randomSpy.mockRestore();
     timingSpy.mockRestore();
     // Unmounts while a move is still "pending" (the mocked timing chain leaves a real
     // setTimeout scheduled for the next move): exercises the effect's cleanup path.
