@@ -193,7 +193,7 @@ export const EarthSection = ({
 
     return (
       <G key={key} opacity={opacity}>
-        {item.isTruth !== true && (
+        {!showStraightLine && item.isTruth !== true && (
           <Path
             d={arcPath(center, radius, angle, side)}
             fill="none"
