@@ -145,7 +145,11 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       color: colors.textMuted,
       fontSize: fontSize.caption + 1,
       textAlign: 'center',
-      marginBottom: spacing.xs,
+    },
+    // Same 10px gap as buzzPanel (spacing.sm + 2), for even spacing between the footer's own
+    // top-level elements (points-at-stake text, then the actions/buzz panel/result banner).
+    footerContent: {
+      gap: spacing.sm + 2,
     },
     // Same pill look as the active tab in PlayerTabs (see its `active`/`labelActive` styles):
     // reads as "this is the player who's currently doing something", same as up there.
@@ -486,7 +490,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   return (
     <Screen
       footer={
-        <>
+        <View style={styles.footerContent}>
           {!roundOver && (
             <Text style={styles.pointsAtStake}>{t.indicesGame.pointsAtStake(formatNumber(remaining))}</Text>
           )}
@@ -639,7 +643,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
               <Button label={t.indicesGame.giveUp} onPress={giveUp} variant="ghost" />
             </View>
           )}
-        </>
+        </View>
       }
       header={
         <View style={styles.header}>

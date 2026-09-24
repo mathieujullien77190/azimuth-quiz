@@ -28,6 +28,12 @@ describe('IndicesClueCard — locked state', () => {
     const { queryByRole } = await renderCard({ clueId: 'population', state: 'locked' });
     expect(queryByRole('button')).toBeNull();
   });
+
+  it.each(['bearing', 'distance'] as const)('%s stays full-width even while locked', async (clueId) => {
+    const { getByRole } = await renderCard({ clueId, onPress: jest.fn(), state: 'locked' });
+    const style = getByRole('button').props.style as unknown[];
+    expect(style).toContainEqual(expect.objectContaining({ flexBasis: '100%' }));
+  });
 });
 
 describe('IndicesClueCard — revealed content per clue', () => {

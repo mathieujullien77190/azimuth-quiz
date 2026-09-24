@@ -18,7 +18,8 @@ import type { IndicesClueCardProps } from './types';
 /** Increasing diameters for the 5 dots of the population gauge (see `populationTier`). */
 const POPULATION_DOT_SIZES = [6, 10, 14, 18, 22];
 
-/** Clues that switch to a full-width card once revealed (bigger visual). */
+/** Clues that always span the full width of the grid, locked or revealed (bigger visual, and
+ * avoids relying on react-native-web's more forgiving flexbox to fit the compass/Earth). */
 const WIDE_CLUE_IDS = new Set(['bearing', 'distance']);
 
 /** "1/2", "2/3"... above multi-click clues — `undefined` for single-click clues
@@ -477,7 +478,7 @@ export const IndicesClueCard = ({
   const t = useTranslation();
   const [revealAnim] = useState(() => new Animated.Value(state === 'revealed' ? 1 : 0));
   const pickable = (state === 'locked' || (state === 'revealed' && moreToReveal)) && onPress !== undefined;
-  const wide = state === 'revealed' && WIDE_CLUE_IDS.has(clueId);
+  const wide = WIDE_CLUE_IDS.has(clueId);
   const progress =
     state === 'revealed'
       ? multiStageProgress(clueId, place, {
