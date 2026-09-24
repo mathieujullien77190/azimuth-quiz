@@ -11,6 +11,7 @@ import {
   BOTTOM_MARGIN,
   CAPTION_STRAIGHT,
   CAPTION_SURFACE,
+  DAY_ORBIT_EMOJI,
   EARTH_RADIUS_RATIO,
   HEIGHT_RATIO,
   HORIZON_LABEL,
@@ -83,6 +84,19 @@ const createStyles = ({ colors, typography }: Theme) =>
       textAlignVertical: 'center',
       transform: [{ rotate: '-35deg' }],
     },
+    // The plane glyph (✈️) points a different base direction than the satellite dish (🛰️): a
+    // 90deg clockwise offset, tuned by eye, lines it up with its orbit instead of reusing
+    // satelliteEmoji's -35deg (tuned for the satellite only).
+    dayOrbitEmoji: {
+      width: 20,
+      height: 20,
+      marginLeft: -10,
+      marginTop: -10,
+      fontSize: 16,
+      textAlign: 'center',
+      textAlignVertical: 'center',
+      transform: [{ rotate: '45deg' }],
+    },
     // Counter-rotates relative to the orbit (see satelliteAngle) to stay legible regardless
     // of the satellite's angle at the moment of the click, rather than rotating with it.
     quipWrap: {
@@ -128,7 +142,7 @@ export const EarthSection = ({
   allowSatellite = zoomControls,
   forceSide,
 }: EarthSectionProps) => {
-  const { colors, compass, typography } = useTheme();
+  const { colors, compass, isDark, typography } = useTheme();
   const styles = useThemedStyles(createStyles);
   const height = size * HEIGHT_RATIO;
   const baseRadius = size * EARTH_RADIUS_RATIO;
@@ -214,7 +228,7 @@ export const EarthSection = ({
             strokeWidth={2}
           />
         )}
-        <Circle cx={end.x} cy={end.y} r={5.5} fill={color} stroke={colors.background} strokeWidth={2} />
+        <Circle cx={end.x} cy={end.y} r={5.5} fill={color} stroke={colors.surface} strokeWidth={2} />
         {item.isTruth === true && <Circle cx={end.x} cy={end.y} r={11} fill="none" stroke={color} strokeWidth={2} />}
       </G>
     );
@@ -294,7 +308,7 @@ export const EarthSection = ({
 
           {marks.map((item, index) => mark(item, `mark-${index}`))}
 
-          <Circle cx={player.x} cy={player.y} r={6} fill={colors.text} stroke={colors.background} strokeWidth={2} />
+          <Circle cx={player.x} cy={player.y} r={6} fill={colors.text} stroke={colors.surface} strokeWidth={2} />
           <SvgText
             x={player.x}
             y={player.y - 12}
@@ -330,7 +344,9 @@ export const EarthSection = ({
             {/* No accessibilityRole="button" here: EarthSection can already be inside a real
             button (the "Distance" clue card), and web doesn't accept a nested <button>. */}
             <Pressable hitSlop={10} onPress={() => setShowQuip((v) => !v)}>
-              <Text style={styles.satelliteEmoji}>{SATELLITE_EMOJI}</Text>
+              <Text style={isDark ? styles.satelliteEmoji : styles.dayOrbitEmoji}>
+                {isDark ? SATELLITE_EMOJI : DAY_ORBIT_EMOJI}
+              </Text>
             </Pressable>
             {showQuip && (
               // Counter-rotates relative to the parent to stay legible regardless of the

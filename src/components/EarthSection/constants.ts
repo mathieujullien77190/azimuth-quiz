@@ -17,8 +17,9 @@ export const HORIZON_LABEL = 'horizon';
 
 // Orbiting satellite, just for fun: on reveal, in distance mode (not straight line), and
 // only zoomed out to the real scale (zoom 1 = the whole Earth visible, otherwise it would be
-// off-screen or grotesquely close).
+// off-screen or grotesquely close). A plane by day instead (see EarthSection), same orbit.
 export const SATELLITE_EMOJI = '🛰️';
+export const DAY_ORBIT_EMOJI = '✈️';
 export const SATELLITE_ORBIT_MS = 28000;
 export const SATELLITE_CLEARANCE = 46;
 /** Joke on clicking the satellite (see `EarthSection`): hides itself after this delay, or

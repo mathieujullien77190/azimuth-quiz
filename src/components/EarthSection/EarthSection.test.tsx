@@ -2,8 +2,9 @@ import { act, fireEvent, render } from '@testing-library/react-native';
 import { Animated } from 'react-native';
 
 import { EARTH_RADIUS_KM } from '@/constants';
+import { ThemeSettingsContext } from '@/themes';
 
-import { SATELLITE_ORBIT_MS, SATELLITE_QUIP, ZOOM_STEPS } from './constants';
+import { DAY_ORBIT_EMOJI, SATELLITE_ORBIT_MS, SATELLITE_QUIP, ZOOM_STEPS } from './constants';
 import EarthSection from '.';
 import type { EarthMark } from './types';
 
@@ -139,6 +140,18 @@ describe('EarthSection — satellite', () => {
     await act(() => onFinished({ finished: true }));
     // `cancelled` prevents any new spin() after unmount.
     expect(startMock).toHaveBeenCalledTimes(callsBeforeUnmount);
+  });
+
+  it('shows a plane instead of the satellite by day', async () => {
+    const { getByText, queryByText } = await render(
+      <ThemeSettingsContext.Provider
+        value={{ themeId: 'day', ready: true, setThemeId: jest.fn(), resetThemeId: jest.fn() }}
+      >
+        <EarthSection allowSatellite marks={[farMark]} showStraightLine={false} size={240} />
+      </ThemeSettingsContext.Provider>,
+    );
+    expect(getByText(DAY_ORBIT_EMOJI)).toBeTruthy();
+    expect(queryByText('🛰️')).toBeNull();
   });
 
   it('toggles the joke bubble on tap and hides it again on a second tap', async () => {
