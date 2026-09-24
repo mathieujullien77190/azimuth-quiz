@@ -70,9 +70,12 @@ sur react-native-web s'il n'a pas de `style={{ flexGrow: 0, flexShrink: 0 }}` ex
 
 ## Theme
 
-Un seul theme, `night` (sombre, bleu nuit + ambre) — pas de mode clair, pas de
-selecteur d'apparence, `useTheme()` le retourne directement (pas de contexte a
-fournir). Police unique partout, y compris dans le SVG (compas, `EarthSection`) :
+Deux themes, `night` (sombre, bleu nuit + ambre, ciel etoile) et `day` (clair, ciel
+bleu + ambre, nuages qui derivent — meme `ThemeBackdrop`, branche sur `theme.isDark`).
+Choix persiste (`ThemeProvider`/`ThemeSettingsContext`, cle `fullazimut:theme`),
+selecteur dans `SettingsScreen`. `useTheme()` lit le theme courant via le contexte ;
+`useThemeSettings()` donne `{ themeId, ready, setThemeId, resetThemeId }`. Police unique
+partout, y compris dans le SVG (compas, `EarthSection`) :
 `themes/fonts.ts` exporte `FONT_FAMILY` (stack `"JetBrains Mono", ui-monospace, ...`),
 consomme par les 4 tokens de typographie du theme. Un composant SVG doit lire
 `typography.<token>.fontFamily` et le passer explicitement a `fontFamily` sur

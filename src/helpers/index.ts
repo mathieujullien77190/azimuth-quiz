@@ -32,9 +32,11 @@ export {
   clearAppData,
   loadLanguage,
   loadSettings,
+  loadThemeId,
   loadUfoCaught,
   saveLanguage,
   saveSettings,
+  saveThemeId,
   saveUfoCaught,
   systemLanguage,
 } from './storage';

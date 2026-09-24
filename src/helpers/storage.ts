@@ -5,15 +5,17 @@ import {
   BEST_SCORE_STORAGE_KEY,
   LANGUAGE_STORAGE_KEY,
   SETTINGS_STORAGE_KEY,
+  THEME_STORAGE_KEY,
   UFO_CAUGHT_STORAGE_KEY,
 } from '@/constants';
 import type { Language } from '@/i18n';
-import type { GameSettings } from '@/types';
+import type { GameSettings, ThemeId } from '@/types';
 
 import { clearIndicesHistory } from './indicesHistory';
 import { sanitizeSettings } from './settings';
 
 const isLanguage = (value: unknown): value is Language => value === 'fr' || value === 'en';
+const isThemeId = (value: unknown): value is ThemeId => value === 'night' || value === 'day';
 
 /** System language if English is detected, French by default otherwise (only languages supported). */
 export const systemLanguage = (): Language => (getLocales()[0]?.languageCode === 'en' ? 'en' : 'fr');
@@ -68,9 +70,26 @@ export const saveLanguage = async (language: Language): Promise<void> => {
   }
 };
 
-/** Clears everything the app saves on the device: Boussole settings, language, UFO state and
- * Indices' draw history (+ a possible "best score" left over from an earlier version). Indices'
- * own settings aren't persisted in the first place (reset every launch). */
+export const loadThemeId = async (): Promise<ThemeId> => {
+  try {
+    const raw = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+    return isThemeId(raw) ? raw : 'night';
+  } catch {
+    return 'night';
+  }
+};
+
+export const saveThemeId = async (themeId: ThemeId): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(THEME_STORAGE_KEY, themeId);
+  } catch {
+    // Theme not saved: not critical, Night will be used as the default again.
+  }
+};
+
+/** Clears everything the app saves on the device: Boussole settings, language, theme, UFO state
+ * and Indices' draw history (+ a possible "best score" left over from an earlier version).
+ * Indices' own settings aren't persisted in the first place (reset every launch). */
 export const clearAppData = async (): Promise<void> => {
   clearIndicesHistory();
   try {
@@ -78,6 +97,7 @@ export const clearAppData = async (): Promise<void> => {
       BEST_SCORE_STORAGE_KEY,
       SETTINGS_STORAGE_KEY,
       LANGUAGE_STORAGE_KEY,
+      THEME_STORAGE_KEY,
       UFO_CAUGHT_STORAGE_KEY,
     ]);
   } catch {

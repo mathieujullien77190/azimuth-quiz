@@ -232,8 +232,11 @@ export type IndicesSettings = {
   startWithFirstLetter: boolean;
 };
 
+/** The two available themes (see src/themes): 'night' is the default. */
+export type ThemeId = 'night' | 'day';
+
 export type Theme = {
-  id: string;
+  id: ThemeId;
   name: string;
   tagline: string;
   isDark: boolean;

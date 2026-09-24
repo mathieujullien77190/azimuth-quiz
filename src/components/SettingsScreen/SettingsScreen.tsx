@@ -5,8 +5,8 @@ import { fontSize, spacing } from '@/constants';
 import { clearAppData } from '@/helpers';
 import { useLanguage, useTranslation, type Language } from '@/i18n';
 import { useSettings } from '@/settings';
-import { useThemedStyles } from '@/themes';
-import type { Theme } from '@/types';
+import { useThemedStyles, useThemeSettings } from '@/themes';
+import type { Theme, ThemeId } from '@/types';
 
 import Button from '../ui/Button';
 import Chip from '../ui/Chip';
@@ -46,18 +46,21 @@ const createStyles = ({ colors, typography }: Theme) =>
 export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const styles = useThemedStyles(createStyles);
   const { language, setLanguage, resetLanguage } = useLanguage();
+  const { themeId, setThemeId, resetThemeId } = useThemeSettings();
   const { resetSettings } = useSettings();
   const t = useTranslation();
   const [dataCleared, setDataCleared] = useState(false);
 
   const languages: Language[] = ['fr', 'en'];
+  const themeIds: ThemeId[] = ['night', 'day'];
 
   // Clears storage AND resets the in-memory contexts to defaults: otherwise the app would keep
-  // the old values (Boussole settings, language) until it's relaunched.
+  // the old values (Boussole settings, language, theme) until it's relaunched.
   const onClearData = () => {
     clearAppData();
     resetSettings();
     resetLanguage();
+    resetThemeId();
     setDataCleared(true);
   };
 
@@ -73,6 +76,19 @@ export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
               label={t.settings.languageOptions[candidate]}
               onPress={() => setLanguage(candidate)}
               selected={language === candidate}
+            />
+          ))}
+        </View>
+      </Section>
+
+      <Section title={t.settings.appearanceTitle}>
+        <View style={styles.chips}>
+          {themeIds.map((candidate) => (
+            <Chip
+              key={candidate}
+              label={t.settings.appearanceOptions[candidate]}
+              onPress={() => setThemeId(candidate)}
+              selected={themeId === candidate}
             />
           ))}
         </View>

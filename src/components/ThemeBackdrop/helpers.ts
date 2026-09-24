@@ -1,4 +1,11 @@
 import {
+  CLOUD_MAX_DRIFT_MS,
+  CLOUD_MAX_OPACITY,
+  CLOUD_MAX_SCALE,
+  CLOUD_MAX_Y_RATIO,
+  CLOUD_MIN_DRIFT_MS,
+  CLOUD_MIN_OPACITY,
+  CLOUD_MIN_SCALE,
   STAR_MAX_OPACITY,
   STAR_MAX_RADIUS,
   STAR_MIN_OPACITY,
@@ -8,7 +15,7 @@ import {
   TWINKLE_MIN_DURATION_MS,
   TWINKLE_MIN_OPACITY_RATIO,
 } from './constants';
-import type { Star } from './types';
+import type { Cloud, Star } from './types';
 
 /** Deterministic pseudo-random generator (same seed = same stars, every render). */
 const mulberry32 = (seed: number) => {
@@ -46,4 +53,28 @@ export const twinkleOpacity = (star: Star, elapsedMs: number): number => {
   const phase = ((elapsedMs + star.delay) / star.duration) * Math.PI * 2;
   const t = (Math.sin(phase) + 1) / 2;
   return floor + t * (star.opacity - floor);
+};
+
+/** Position as a ratio [0, 1]: stays stable, just resizes with the screen. Kept in the sky's
+ * upper half — clouds shouldn't drift down into the content. */
+export const buildClouds = (count: number, seed: number): Cloud[] => {
+  const random = mulberry32(seed);
+  return Array.from({ length: count }, () => ({
+    xRatio: random(),
+    yRatio: random() * CLOUD_MAX_Y_RATIO,
+    scale: CLOUD_MIN_SCALE + random() * (CLOUD_MAX_SCALE - CLOUD_MIN_SCALE),
+    opacity: CLOUD_MIN_OPACITY + random() * (CLOUD_MAX_OPACITY - CLOUD_MIN_OPACITY),
+    driftDurationMs: CLOUD_MIN_DRIFT_MS + random() * (CLOUD_MAX_DRIFT_MS - CLOUD_MIN_DRIFT_MS),
+  }));
+};
+
+/**
+ * A cloud's horizontal position at instant `elapsedMs` (since mount), as a ratio [0, 1] of
+ * (screen width + cloud width): drifts right at a steady pace from its starting `xRatio`, then
+ * wraps back to the left edge — a pure function of the cloud and time, same reasoning as
+ * `twinkleOpacity` (no Animated).
+ */
+export const cloudXRatio = (cloud: Cloud, elapsedMs: number): number => {
+  const progress = elapsedMs / cloud.driftDurationMs;
+  return (cloud.xRatio + progress) % 1;
 };

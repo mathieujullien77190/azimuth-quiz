@@ -1,7 +1,8 @@
 # Design (theme)
 
-Un seul design, la maquette `designs/night.svg` : bleu nuit + ambre, ciel étoilé,
-réponse en jaune.
+Deux themes : `night` (bleu nuit + ambre, ciel étoilé — la maquette `designs/night.svg`,
+réponse en jaune) et `day` (ciel bleu + ambre, nuages qui dérivent). Choisi dans
+`SettingsScreen`, persisté (`ThemeProvider`), `useTheme()` retourne le theme courant.
 
 ## Utiliser le theme dans un composant
 

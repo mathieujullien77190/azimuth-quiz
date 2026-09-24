@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import IndicesSettingsProvider from '@/components/IndicesSettingsProvider';
 import LanguageProvider from '@/components/LanguageProvider';
 import SettingsProvider from '@/components/SettingsProvider';
+import ThemeProvider from '@/components/ThemeProvider';
 import { disableTextSelection, polyfillFlagEmoji } from '@/helpers';
 import { useTheme } from '@/themes';
 
@@ -30,13 +31,15 @@ const RootLayout = () => {
   useEffect(polyfillFlagEmoji, []);
 
   return (
-    <LanguageProvider>
-      <SettingsProvider>
-        <IndicesSettingsProvider>
-          <ThemedShell />
-        </IndicesSettingsProvider>
-      </SettingsProvider>
-    </LanguageProvider>
+    <ThemeProvider>
+      <LanguageProvider>
+        <SettingsProvider>
+          <IndicesSettingsProvider>
+            <ThemedShell />
+          </IndicesSettingsProvider>
+        </SettingsProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 };
 

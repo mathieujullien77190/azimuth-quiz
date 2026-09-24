@@ -51,6 +51,7 @@ export const LOCATION_TIMEOUT_MS = 6000;
 export const BEST_SCORE_STORAGE_KEY = 'fullazimut:best-score';
 export const SETTINGS_STORAGE_KEY = 'fullazimut:settings';
 export const LANGUAGE_STORAGE_KEY = 'fullazimut:language';
+export const THEME_STORAGE_KEY = 'fullazimut:theme';
 /** Once the home screen's UFO is caught (clicked), it stops moving forever. */
 export const UFO_CAUGHT_STORAGE_KEY = 'fullazimut:ufo-caught';
 /** How many times each Indices place has been drawn, across every game — lets rounds avoid

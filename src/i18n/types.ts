@@ -114,6 +114,8 @@ export type Translations = {
     title: string;
     languageTitle: string;
     languageOptions: { fr: string; en: string };
+    appearanceTitle: string;
+    appearanceOptions: { night: string; day: string };
     aboutTitle: string;
     author: string;
     claudeMention: string;

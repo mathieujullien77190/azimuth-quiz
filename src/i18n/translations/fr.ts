@@ -137,13 +137,15 @@ export const fr: Translations = {
     title: 'Réglages',
     languageTitle: 'Langue',
     languageOptions: { fr: 'Français', en: 'English' },
+    appearanceTitle: 'Apparence',
+    appearanceOptions: { night: '🌙 Nuit', day: '☀️ Jour' },
     aboutTitle: 'À propos',
     author: 'Par Matou.',
     claudeMention:
       'Fait pour l’apéro entre potes : pas de pub, pas de tracking, juste vous et une boussole récalcitrante.',
     dataTitle: 'Données',
     dataHint:
-      'Tout ce que l’app sauvegarde sur ce téléphone : les réglages de partie et la langue. Rien n’est envoyé ailleurs. Ce bouton efface cela.',
+      'Tout ce que l’app sauvegarde sur ce téléphone : les réglages de partie, la langue et l’apparence. Rien n’est envoyé ailleurs. Ce bouton efface cela.',
     clearData: 'Vider les données',
     dataCleared: 'Données effacées.',
   },

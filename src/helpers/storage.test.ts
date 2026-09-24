@@ -5,6 +5,7 @@ import {
   BEST_SCORE_STORAGE_KEY,
   LANGUAGE_STORAGE_KEY,
   SETTINGS_STORAGE_KEY,
+  THEME_STORAGE_KEY,
   UFO_CAUGHT_STORAGE_KEY,
 } from '@/constants';
 
@@ -12,9 +13,11 @@ import {
   clearAppData,
   loadLanguage,
   loadSettings,
+  loadThemeId,
   loadUfoCaught,
   saveLanguage,
   saveSettings,
+  saveThemeId,
   saveUfoCaught,
   systemLanguage,
 } from './storage';
@@ -120,11 +123,36 @@ describe('loadLanguage / saveLanguage', () => {
   });
 });
 
+describe('loadThemeId / saveThemeId', () => {
+  it('falls back to "night" when nothing is stored', async () => {
+    expect(await loadThemeId()).toBe('night');
+  });
+
+  it('round-trips a saved theme', async () => {
+    await saveThemeId('day');
+    expect(await loadThemeId()).toBe('day');
+  });
+
+  it('ignores a stored value that is not a known theme', async () => {
+    await AsyncStorage.setItem(THEME_STORAGE_KEY, 'sunset');
+    expect(await loadThemeId()).toBe('night');
+  });
+
+  it('tolerates read/write failures', async () => {
+    (AsyncStorage.getItem as jest.Mock).mockRejectedValueOnce(new Error('boom'));
+    expect(await loadThemeId()).toBe('night');
+
+    (AsyncStorage.setItem as jest.Mock).mockRejectedValueOnce(new Error('boom'));
+    await expect(saveThemeId('day')).resolves.toBeUndefined();
+  });
+});
+
 describe('clearAppData', () => {
   it('removes every known storage key', async () => {
     await AsyncStorage.setItem(BEST_SCORE_STORAGE_KEY, '1');
     await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, '{}');
     await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, 'en');
+    await AsyncStorage.setItem(THEME_STORAGE_KEY, 'day');
     await AsyncStorage.setItem(UFO_CAUGHT_STORAGE_KEY, 'true');
 
     await clearAppData();
@@ -132,6 +160,7 @@ describe('clearAppData', () => {
     expect(await AsyncStorage.getItem(BEST_SCORE_STORAGE_KEY)).toBeNull();
     expect(await AsyncStorage.getItem(SETTINGS_STORAGE_KEY)).toBeNull();
     expect(await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY)).toBeNull();
+    expect(await AsyncStorage.getItem(THEME_STORAGE_KEY)).toBeNull();
     expect(await AsyncStorage.getItem(UFO_CAUGHT_STORAGE_KEY)).toBeNull();
   });
 
