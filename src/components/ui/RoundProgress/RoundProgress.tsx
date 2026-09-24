@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { DIFFICULTIES, fontSize, spacing } from '@/constants';
+import { DIFFICULTIES, difficultyEmoji, fontSize, spacing } from '@/constants';
 import { useTranslation } from '@/i18n';
-import { useThemedStyles } from '@/themes';
+import { useTheme, useThemedStyles } from '@/themes';
 import type { Difficulty, Theme } from '@/types';
 
 import { MAX_PROGRESS_DOTS } from './constants';
@@ -47,9 +47,10 @@ const createStyles = ({ colors, typography }: Theme) =>
  */
 const RoundProgress = ({ roundNumber, totalRounds, difficulties }: RoundProgressProps) => {
   const styles = useThemedStyles(createStyles);
+  const { isDark } = useTheme();
   const t = useTranslation();
   // DIFFICULTIES lists every Difficulty value, so the lookup always finds a match.
-  const emojiOf = (id: Difficulty) => DIFFICULTIES.find((d) => d.id === id)!.emoji;
+  const emojiOf = (id: Difficulty) => difficultyEmoji(DIFFICULTIES.find((d) => d.id === id)!, isDark);
 
   return (
     <View style={styles.row}>

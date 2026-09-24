@@ -11,6 +11,7 @@ import {
   NAME_PLACEHOLDERS,
   PLAYER_COLORS,
   ROUND_OPTIONS,
+  difficultyEmoji,
   fontSize,
   isCapitalPlace,
   isFrenchCityPlace,
@@ -98,7 +99,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
 
 export const IndicesSetupScreen = ({ onStart, onBack }: IndicesSetupScreenProps) => {
   const styles = useThemedStyles(createStyles);
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const t = useTranslation();
   const { settings, updateSettings } = useIndicesSettings();
   const { language } = useLanguage();
@@ -194,7 +195,7 @@ export const IndicesSetupScreen = ({ onStart, onBack }: IndicesSetupScreenProps)
           {DIFFICULTIES.map((difficulty) => (
             <Chip
               key={difficulty.id}
-              emoji={difficulty.emoji}
+              emoji={difficultyEmoji(difficulty, isDark)}
               label={t.setup.difficulties[difficulty.id]}
               onPress={() => updateSettings({ difficulty: difficulty.id })}
               selected={settings.difficulty === difficulty.id}

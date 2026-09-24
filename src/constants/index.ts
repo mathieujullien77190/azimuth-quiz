@@ -114,11 +114,17 @@ export const CATEGORIES: { id: Category; emoji: string }[] = [
 
 export const DIFFICULTIES: { id: Difficulty; emoji: string }[] = [
   { id: 'easy', emoji: '🟢' },
-  // Orange, not yellow (🟡): on the selected chip's own amber accent background, a yellow dot
-  // all but disappears.
+  // Orange, not yellow (🟡): on Night's selected chip (its own amber accent background), a
+  // yellow dot all but disappears. Day's accent is a true orange though, so there it's the
+  // reverse — see `difficultyEmoji`, which swaps back to yellow for `intermediate` by day.
   { id: 'intermediate', emoji: '🟠' },
   { id: 'hard', emoji: '🔴' },
 ];
+
+/** DIFFICULTIES' emoji, with the "moyen" dot swapped per-theme for readability against the
+ * selected chip's own accent-colored background (see DIFFICULTIES' comment). */
+export const difficultyEmoji = (difficulty: (typeof DIFFICULTIES)[number], isDark: boolean): string =>
+  difficulty.id === 'intermediate' ? (isDark ? '🟠' : '🟡') : difficulty.emoji;
 
 export const DEFAULT_SETTINGS: GameSettings = {
   playerNames: [''],

@@ -9,6 +9,7 @@ import {
   NAME_PLACEHOLDERS,
   PLAYER_COLORS,
   ROUND_OPTIONS,
+  difficultyEmoji,
   fontSize,
   spacing,
 } from '@/constants';
@@ -174,7 +175,7 @@ const CustomOriginInputs = ({ latitude, longitude, onChange }: CustomOriginInput
 
 export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
   const styles = useThemedStyles(createStyles);
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const t = useTranslation();
   const { language } = useLanguage();
   const { settings, ready, updateSettings } = useSettings();
@@ -250,7 +251,7 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
           {DIFFICULTIES.map((difficulty) => (
             <Chip
               key={difficulty.id}
-              emoji={difficulty.emoji}
+              emoji={difficultyEmoji(difficulty, isDark)}
               label={t.setup.difficulties[difficulty.id]}
               onPress={() => updateSettings(selectDifficultyFilter(settings, difficulty.id))}
               selected={settings.difficulties.includes(difficulty.id)}
