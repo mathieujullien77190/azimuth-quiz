@@ -556,9 +556,10 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
             const isPopulation = clueId === 'population';
             const isCurrency = clueId === 'currency';
             const isLocalTime = clueId === 'localTime';
-            // Flag: 1 color on the 1st click, 1 more on the 2nd, all the rest on the 3rd — never
-            // more than 3 clicks, even if the country has more than 3 colors (see IndicesClueCard).
-            const flagMaxStage = Math.min(3, flagColors.length);
+            // Flag: 1 color on the 1st click, 1 more on the 2nd, all the rest on the 3rd (never
+            // more than 3 color clicks, even if the country has more than 3 colors), then the
+            // actual flag on a 4th (see IndicesClueCard).
+            const flagMaxStage = Math.min(3, flagColors.length) + 1;
             const moreToReveal =
               (isEmoji && !roundOver && emojiStage < 3) ||
               (isFlag && !roundOver && flagStage < flagMaxStage) ||
@@ -576,7 +577,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
                 distanceStage={isDistance ? (roundOver ? 2 : distanceStage) : undefined}
                 elevationStage={isElevation ? (roundOver ? 2 : elevationStage) : undefined}
                 emojiStage={isEmoji ? (roundOver ? 3 : emojiStage) : undefined}
-                flagStage={isFlag ? (roundOver ? flagColors.length : flagStage) : undefined}
+                flagStage={isFlag ? (roundOver ? flagMaxStage : flagStage) : undefined}
                 key={clueId}
                 label={t.indicesGame.clues[clueId]}
                 localTimeStage={isLocalTime ? (roundOver ? 2 : localTimeStage) : undefined}

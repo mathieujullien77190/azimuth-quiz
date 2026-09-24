@@ -197,6 +197,14 @@ describe('IndicesClueCard — flag progressive reveal', () => {
     expect(queryAllByText('33%')).toHaveLength(3);
   });
 
+  it('swaps the swatches for the actual flag emoji at stage 4, and the progress badge counts it too', async () => {
+    const { getByText, queryAllByText } = await renderCard({ clueId: 'flagColors', flagStage: 4, state: 'revealed' });
+    expect(getByText('🇫🇷')).toBeTruthy();
+    expect(getByText('4/4')).toBeTruthy();
+    expect(queryAllByText('?')).toHaveLength(0);
+    expect(queryAllByText('33%')).toHaveLength(0);
+  });
+
   it('renders an empty list for a country with no flag color data', async () => {
     const unknownCountryPlace = { ...place, code: 'XX' };
     const { toJSON, queryAllByText } = await renderCard({ clueId: 'flagColors', place: unknownCountryPlace, state: 'revealed' });

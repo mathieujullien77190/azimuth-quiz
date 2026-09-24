@@ -5,6 +5,7 @@
   "dependencies": {
     "@expo/metro-runtime": "~57.0.16",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "country-flag-emoji-polyfill": "^0.1.10",
     "expo": "~57.0.24",
     "expo-constants": "~57.0.19",
     "expo-haptics": "~57.0.3",

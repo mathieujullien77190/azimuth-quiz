@@ -36,4 +36,4 @@ export {
   saveUfoCaught,
   systemLanguage,
 } from './storage';
-export { disableTextSelection } from './web';
+export { disableTextSelection, polyfillFlagEmoji } from './web';

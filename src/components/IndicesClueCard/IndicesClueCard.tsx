@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, isCapitalPlace, spacing } from '@/constants';
-import { countryCurrencyName, countryFlagColors, FLAG_COLOR_FIELD } from '@/constants/places/countries';
+import { countryCurrencyName, countryFlagColors, flagEmoji, FLAG_COLOR_FIELD } from '@/constants/places/countries';
 import { formatDistance, formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
+import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 import type { Theme } from '@/types';
 
 import Compass from '../Compass';
@@ -47,7 +48,8 @@ const multiStageProgress = (
     case 'emoji':
       return { stage: Math.min(stages.emojiStage ?? 1, 3), max: 3 };
     case 'flagColors': {
-      const max = Math.min(3, (countryFlagColors(place.code) ?? []).length);
+      // +1 over the color-click cap: the 4th click reveals the actual flag, not one more color.
+      const max = Math.min(3, (countryFlagColors(place.code) ?? []).length) + 1;
       return { stage: Math.min(stages.flagStage ?? 1, max), max };
     }
     case 'distance':
@@ -129,6 +131,10 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
     },
     bigEmoji: {
       fontSize: 28,
+    },
+    flagEmoji: {
+      fontFamily: FLAG_FONT_FAMILY,
+      fontSize: 40,
     },
     populationDotRow: {
       flexDirection: 'row',
@@ -349,7 +355,9 @@ const revealedBody = (
       const allColors = countryFlagColors(place.code) ?? [];
       const stage = flagStage ?? 1;
       // 1 color on the 1st click, 1 more on the 2nd, all the rest on the 3rd click (never more
-      // than 3 clicks, see IndicesGameScreen): from the 3rd click on, everything is revealed at once.
+      // than 3 clicks, see IndicesGameScreen): from the 3rd click on, everything is revealed at
+      // once — a further 4th click swaps the swatches for the actual flag.
+      if (stage >= 4) return <Text style={styles.flagEmoji}>{flagEmoji(place.code)}</Text>;
       return (
         <View style={styles.flagColorList}>
           {allColors.map((row, i) => {

@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import IndicesSettingsProvider from '@/components/IndicesSettingsProvider';
 import LanguageProvider from '@/components/LanguageProvider';
 import SettingsProvider from '@/components/SettingsProvider';
-import { disableTextSelection } from '@/helpers';
+import { disableTextSelection, polyfillFlagEmoji } from '@/helpers';
 import { useTheme } from '@/themes';
 
 const ThemedShell = () => {
@@ -27,6 +27,7 @@ const ThemedShell = () => {
 
 const RootLayout = () => {
   useEffect(disableTextSelection, []);
+  useEffect(polyfillFlagEmoji, []);
 
   return (
     <LanguageProvider>

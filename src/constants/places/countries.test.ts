@@ -9,6 +9,7 @@ import {
   decodeCountry,
   encodeCountry,
   FLAG_COLOR_FIELD,
+  flagEmoji,
   serializeCountries,
 } from './countries';
 
@@ -52,6 +53,17 @@ describe('countryFlagColors', () => {
 
   it('returns undefined for a country with no flag data', () => {
     expect(countryFlagColors('XX')).toBeUndefined();
+  });
+});
+
+describe('flagEmoji', () => {
+  it('builds the flag from the two regional indicator symbols', () => {
+    expect(flagEmoji('FR')).toBe('🇫🇷');
+    expect(flagEmoji('JP')).toBe('🇯🇵');
+  });
+
+  it('uppercases the code first', () => {
+    expect(flagEmoji('fr')).toBe('🇫🇷');
   });
 });
 

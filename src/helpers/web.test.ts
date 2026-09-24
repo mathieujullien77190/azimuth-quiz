@@ -1,6 +1,9 @@
+import { polyfillCountryFlagEmojis } from 'country-flag-emoji-polyfill';
 import { Platform } from 'react-native';
 
-import { disableTextSelection } from './web';
+import { disableTextSelection, polyfillFlagEmoji } from './web';
+
+jest.mock('country-flag-emoji-polyfill', () => ({ polyfillCountryFlagEmojis: jest.fn() }));
 
 describe('disableTextSelection', () => {
   const originalOS = Platform.OS;
@@ -58,5 +61,36 @@ describe('disableTextSelection', () => {
 
     disableTextSelection();
     expect(appendChild).not.toHaveBeenCalled();
+  });
+});
+
+describe('polyfillFlagEmoji', () => {
+  const originalOS = Platform.OS;
+  const originalDocument = (globalThis as { document?: unknown }).document;
+
+  afterEach(() => {
+    Platform.OS = originalOS;
+    (globalThis as { document?: unknown }).document = originalDocument;
+    jest.clearAllMocks();
+  });
+
+  it('does nothing on native (no document to touch)', () => {
+    Platform.OS = 'ios';
+    expect(() => polyfillFlagEmoji()).not.toThrow();
+    expect(polyfillCountryFlagEmojis).not.toHaveBeenCalled();
+  });
+
+  it('does nothing when document is unavailable, even on web', () => {
+    Platform.OS = 'web';
+    (globalThis as { document?: unknown }).document = undefined;
+    polyfillFlagEmoji();
+    expect(polyfillCountryFlagEmojis).not.toHaveBeenCalled();
+  });
+
+  it('injects the fallback font on web', () => {
+    Platform.OS = 'web';
+    (globalThis as { document?: unknown }).document = {};
+    polyfillFlagEmoji();
+    expect(polyfillCountryFlagEmojis).toHaveBeenCalledTimes(1);
   });
 });
