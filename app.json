@@ -3,7 +3,7 @@
     "name": "Full Azimut",
     "slug": "full-azimut",
     "scheme": "fullazimut",
-    "version": "2.1.1",
+    "version": "2.3.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
