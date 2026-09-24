@@ -125,7 +125,8 @@ export const fr: Translations = {
     yourScore: 'Ton score',
     scoringInfoLabel: 'Comment les points sont calculés',
     scoringInfo:
-      'Cap et distance rapportent chacun jusqu’à 500 points, selon la précision de l’estimation. +100 points bonus sur chaque catégorie pour le(s) meilleur(s) de la manche (à plusieurs seulement).',
+      'Cap et distance rapportent chacun jusqu’à 500 points, selon la précision de l’estimation. +100 points bonus sur chaque catégorie pour le(s) meilleur(s) de la manche (à plusieurs seulement). +100 points bonus supplémentaires pour un cap trouvé pile au degré près.',
+    perfect: 'PERFECT',
   },
   endScreen: {
     replay: 'Rejouer',

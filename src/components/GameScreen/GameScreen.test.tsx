@@ -29,6 +29,7 @@ const scoreFixture = {
   distancePoints: 350,
   directionBonus: 100,
   distanceBonus: 0,
+  directionExactBonus: 0,
   total: 850,
 };
 

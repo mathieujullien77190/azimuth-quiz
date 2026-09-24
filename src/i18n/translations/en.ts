@@ -125,7 +125,8 @@ export const en: Translations = {
     yourScore: 'Your score',
     scoringInfoLabel: 'How points are calculated',
     scoringInfo:
-      'Direction and distance each earn up to 500 points, based on how close your guess was. +100 bonus points on each category for whoever did best this round (multiplayer only).',
+      'Direction and distance each earn up to 500 points, based on how close your guess was. +100 bonus points on each category for whoever did best this round (multiplayer only). +100 extra bonus points for a heading nailed to the exact degree.',
+    perfect: 'PERFECT',
   },
   endScreen: {
     replay: 'Play again',

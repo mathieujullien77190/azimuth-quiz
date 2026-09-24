@@ -33,6 +33,7 @@ const scoreFixture = {
   distancePoints: 350,
   directionBonus: 100,
   distanceBonus: 0,
+  directionExactBonus: 0,
   total: 850,
 };
 
@@ -128,6 +129,21 @@ describe('RoundResult — score bonus colouring', () => {
       <RoundResult options={{ straightLine: true }} players={soloPlayers} record={bonusRecord} totals={[850]} />,
     );
     expect(getAllByText('Inclinaison')).toHaveLength(2);
+  });
+
+  it('shows "PERFECT" instead of the degree gap, and folds the bonus into the points, on an exact heading', async () => {
+    const exactRecord: RoundRecord = {
+      place,
+      results: [
+        { guess: { bearing: 90, distanceKm: 950, inclination: 25 }, score: { ...scoreFixture, directionBonus: 0, directionExactBonus: 100 } },
+      ],
+    };
+    const { getByText, queryByText } = await render(
+      <RoundResult options={{ straightLine: false }} players={soloPlayers} record={exactRecord} totals={[850]} />,
+    );
+    expect(getByText('PERFECT')).toBeTruthy();
+    expect(queryByText('(+10°)')).toBeNull();
+    expect(getByText('+500')).toBeTruthy();
   });
 });
 

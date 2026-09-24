@@ -96,6 +96,9 @@ export type Translations = {
     /** Accessibility label for the ⓘ button that shows/hides scoringInfo. */
     scoringInfoLabel: string;
     scoringInfo: string;
+    /** Shown instead of "(+0°)" for an exact heading guess — kept in English in both
+     * languages, on purpose (see git history). */
+    perfect: string;
   };
   endScreen: {
     replay: string;

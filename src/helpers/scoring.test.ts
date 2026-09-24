@@ -1,4 +1,4 @@
-import { MAX_DIRECTION_POINTS, MAX_DISTANCE_POINTS, RANKS } from '@/constants';
+import { EXACT_DIRECTION_BONUS, MAX_DIRECTION_POINTS, MAX_DISTANCE_POINTS, RANKS } from '@/constants';
 import type { Coordinates, Guess, Place, PlayerResult } from '@/types';
 
 import { applyBestBonus, getRank, scoreRound } from './scoring';
@@ -17,18 +17,26 @@ const trueBearing = bearingDeg(origin, place.coordinates);
 const trueSurfaceKm = distanceKm(origin, place.coordinates);
 
 describe('scoreRound', () => {
-  it('awards the full 1000 points for a perfect guess (surface mode)', () => {
+  it('awards the full 1000 points plus the exact-heading bonus for a perfect guess (surface mode)', () => {
     const guess: Guess = { bearing: trueBearing, distanceKm: trueSurfaceKm, inclination: 0 };
     const score = scoreRound(origin, place, guess, { straightLine: false });
     expect(score.directionPoints).toBe(MAX_DIRECTION_POINTS);
     expect(score.distancePoints).toBe(MAX_DISTANCE_POINTS);
-    expect(score.total).toBe(MAX_DIRECTION_POINTS + MAX_DISTANCE_POINTS);
+    expect(score.directionExactBonus).toBe(EXACT_DIRECTION_BONUS);
+    expect(score.total).toBe(MAX_DIRECTION_POINTS + MAX_DISTANCE_POINTS + EXACT_DIRECTION_BONUS);
   });
 
   it('awards 0 direction points for a guess opposite the true bearing', () => {
     const guess: Guess = { bearing: (trueBearing + 180) % 360, distanceKm: trueSurfaceKm, inclination: 0 };
     const score = scoreRound(origin, place, guess, { straightLine: false });
     expect(score.directionPoints).toBe(0);
+    expect(score.directionExactBonus).toBe(0);
+  });
+
+  it('does not award the exact-heading bonus for a guess off by even half a degree', () => {
+    const guess: Guess = { bearing: (trueBearing + 0.6) % 360, distanceKm: trueSurfaceKm, inclination: 0 };
+    const score = scoreRound(origin, place, guess, { straightLine: false });
+    expect(score.directionExactBonus).toBe(0);
   });
 
   it('awards 0 distance points when the guess is far outside the tolerance ratio', () => {
@@ -68,6 +76,7 @@ describe('applyBestBonus', () => {
       distancePoints: 0,
       directionBonus: 0,
       distanceBonus: 0,
+      directionExactBonus: 0,
       total: 0,
     },
   });

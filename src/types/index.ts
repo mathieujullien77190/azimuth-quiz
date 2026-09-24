@@ -72,6 +72,9 @@ export type RoundScore = {
    * each category separately. Always 0 in solo (no one to beat). */
   directionBonus: number;
   distanceBonus: number;
+  /** Bonus for guessing the exact heading, to the nearest degree (see EXACT_DIRECTION_BONUS).
+   * Independent of `directionBonus`: everyone who nails it gets it, not just the round's best. */
+  directionExactBonus: number;
   total: number;
 };
 

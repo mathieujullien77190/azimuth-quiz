@@ -2,6 +2,7 @@ import {
   BEST_BONUS_RATIO,
   DIRECTION_TOLERANCE_DEG,
   DISTANCE_TOLERANCE_RATIO,
+  EXACT_DIRECTION_BONUS,
   MAX_DIRECTION_POINTS,
   MAX_DISTANCE_POINTS,
   RANKS,
@@ -30,6 +31,7 @@ export const scoreRound = (origin: Coordinates, place: Place, guess: Guess, opti
 
   const directionError = angleDifference(guess.bearing, trueBearing);
   const directionPoints = Math.round(MAX_DIRECTION_POINTS * curve(1 - directionError / DIRECTION_TOLERANCE_DEG));
+  const directionExactBonus = Math.round(directionError) === 0 ? EXACT_DIRECTION_BONUS : 0;
 
   const distanceError = Math.abs(Math.log(guess.distanceKm / trueDistanceForGuess));
   const distancePoints = Math.round(
@@ -47,7 +49,8 @@ export const scoreRound = (origin: Coordinates, place: Place, guess: Guess, opti
     distancePoints,
     directionBonus: 0,
     distanceBonus: 0,
-    total: directionPoints + distancePoints,
+    directionExactBonus,
+    total: directionPoints + distancePoints + directionExactBonus,
   };
 };
 
@@ -76,7 +79,12 @@ export const applyBestBonus = (results: PlayerResult[]): PlayerResult[] => {
         ...result.score,
         directionBonus: earnedDirectionBonus,
         distanceBonus: earnedDistanceBonus,
-        total: result.score.directionPoints + result.score.distancePoints + earnedDirectionBonus + earnedDistanceBonus,
+        total:
+          result.score.directionPoints +
+          result.score.distancePoints +
+          earnedDirectionBonus +
+          earnedDistanceBonus +
+          result.score.directionExactBonus,
       },
     };
   });

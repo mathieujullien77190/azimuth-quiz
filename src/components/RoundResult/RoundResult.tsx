@@ -205,10 +205,20 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
           <View style={styles.row}>
             <Text style={styles.rowLabel}>{t.roundResult.direction}</Text>
             <Text style={styles.rowValue}>
-              {formatBearing(result.guess.bearing, t.cardinals)} (+{Math.round(result.score.directionError)}°)
+              {formatBearing(result.guess.bearing, t.cardinals)}{' '}
+              {result.score.directionExactBonus > 0 ? (
+                <Text style={{ color: colors.success }}>{t.roundResult.perfect}</Text>
+              ) : (
+                `(+${Math.round(result.score.directionError)}°)`
+              )}
             </Text>
-            <Text style={[styles.rowPoints, { color: result.score.directionBonus > 0 ? colors.success : colors.text }]}>
-              {formatRowScore(result.score.directionPoints, result.score.directionBonus)}
+            <Text
+              style={[
+                styles.rowPoints,
+                { color: result.score.directionBonus > 0 || result.score.directionExactBonus > 0 ? colors.success : colors.text },
+              ]}
+            >
+              {formatRowScore(result.score.directionPoints, result.score.directionBonus + result.score.directionExactBonus)}
             </Text>
           </View>
           <View style={styles.row}>
