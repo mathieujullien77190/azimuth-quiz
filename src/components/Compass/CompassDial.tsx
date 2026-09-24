@@ -1,23 +1,19 @@
 import { memo } from 'react';
-import Svg, { Circle, G, Line, Polygon, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, G, Polygon } from 'react-native-svg';
 
 import { useTranslation } from '@/i18n';
 import { useTheme } from '@/themes';
 
-import {
-  FACE_RADIUS_RATIO,
-  KNOB_RADIUS_RATIO,
-  LABEL_RADIUS_RATIO,
-  NEEDLE_HALF_WIDTH_RATIO,
-  NEEDLE_LENGTH_RATIO,
-  NEEDLE_TAIL_RATIO,
-} from './constants';
-import { buildTicks, cardinalPoints, needlePoints, polarToPoint } from './helpers';
+import { CompassFace } from './CompassFace';
+import { KNOB_RADIUS_RATIO, NEEDLE_HALF_WIDTH_RATIO, NEEDLE_LENGTH_RATIO, NEEDLE_TAIL_RATIO } from './constants';
+import { needlePoints, polarToPoint } from './helpers';
 import type { CompassDialProps } from './types';
 
 /**
  * Le dessin de la boussole (cadran + aiguilles), oriente nord en haut.
  * Memoise : quand le capteur fait tourner le cadran, seul le conteneur change.
+ * Le cadran statique (graduations, lettres cardinales) est isole dans `CompassFace`, memoise
+ * separement sur des props qui ne changent pas pendant un drag — voir ce fichier.
  */
 export const CompassDial = memo(function CompassDial({
   size,
@@ -28,15 +24,8 @@ export const CompassDial = memo(function CompassDial({
 }: CompassDialProps) {
   const { colors, typography } = useTheme();
   const t = useTranslation();
-  const points = cardinalPoints(t.compassWestLabel);
-  const tickStyle = {
-    cardinal: { stroke: colors.text, width: 2.5 },
-    intercardinal: { stroke: colors.textMuted, width: 2 },
-    minor: { stroke: colors.border, width: 1.5 },
-  } as const;
   const center = size / 2;
   const radius = size / 2;
-  const ticks = buildTicks(size);
 
   const needleLength = radius * NEEDLE_LENGTH_RATIO;
   const needleTail = radius * NEEDLE_TAIL_RATIO;
@@ -45,55 +34,7 @@ export const CompassDial = memo(function CompassDial({
 
   return (
     <Svg width={size} height={size}>
-      <Circle
-        cx={center}
-        cy={center}
-        r={radius * FACE_RADIUS_RATIO}
-        fill={colors.surface}
-        stroke={colors.border}
-        strokeWidth={3}
-      />
-      <Circle
-        cx={center}
-        cy={center}
-        r={radius * 0.5}
-        fill="none"
-        stroke={colors.border}
-        strokeWidth={1}
-        strokeDasharray="3 6"
-      />
-
-      {ticks.map(({ key, from, to, kind }) => (
-        <Line
-          key={key}
-          x1={from.x}
-          y1={from.y}
-          x2={to.x}
-          y2={to.y}
-          stroke={tickStyle[kind].stroke}
-          strokeWidth={tickStyle[kind].width}
-          strokeLinecap="round"
-        />
-      ))}
-
-      {points.map(({ label, bearing: labelBearing }) => {
-        const { x, y } = polarToPoint(center, radius * LABEL_RADIUS_RATIO, labelBearing);
-        const fontSize = size * 0.09;
-        return (
-          <SvgText
-            key={label}
-            x={x}
-            y={y + fontSize * 0.35}
-            fill={label === 'N' ? colors.danger : colors.textMuted}
-            fontSize={fontSize}
-            fontFamily={typography.heading.fontFamily}
-            fontWeight="800"
-            textAnchor="middle"
-          >
-            {label}
-          </SvgText>
-        );
-      })}
+      <CompassFace colors={colors} size={size} typography={typography} westLabel={t.compassWestLabel} />
 
       {extraNeedles.map((needle, index) => (
         <G key={index}>

@@ -62,6 +62,20 @@ describe('Compass — interactive (onChange provided)', () => {
     expect(onChange).toHaveBeenCalledWith(90);
   });
 
+  it('does not call onChange again when the touch resolves to the same bearing', async () => {
+    const onChange = jest.fn();
+    const createSpy = jest.spyOn(PanResponder, 'create');
+    await render(<Compass bearing={null} onChange={onChange} size={200} />);
+    const config = createSpy.mock.calls[createSpy.mock.calls.length - 1][0] as PanResponderConfig;
+
+    config.onPanResponderGrant?.({ nativeEvent: { locationX: 100, locationY: 0 } } as never, {} as never);
+    expect(onChange).toHaveBeenCalledTimes(1);
+
+    // Same position again: same computed bearing (0), should be deduped.
+    config.onPanResponderMove?.({ nativeEvent: { locationX: 100, locationY: 0 } } as never, {} as never);
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
   it('adds the sensor heading to the touch bearing', async () => {
     mockedUseHeading.mockReturnValue({ heading: 45, onTouch });
     const onChange = jest.fn();

@@ -1,3 +1,5 @@
+import type { Theme } from '@/types';
+
 export type CompassProps = {
   size: number;
   /** Heading chosen by the player (null = not chosen yet). */
@@ -37,6 +39,13 @@ export type CompassDialProps = {
   color?: string;
   extraNeedles: CompassNeedle[];
   truthBearing: number | null;
+};
+
+export type CompassFaceProps = {
+  size: number;
+  colors: Theme['colors'];
+  typography: Theme['typography'];
+  westLabel: string;
 };
 
 export type UseHeadingResult = {

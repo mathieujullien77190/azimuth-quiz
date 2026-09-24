@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -27,6 +27,10 @@ import { ANSWERED_OPACITY, REVEAL_OPACITY } from './constants';
 import { compassSizeFor, earthSizeFor } from './helpers';
 import type { GameScreenProps } from './types';
 import { useGame } from './useGame';
+
+// Stable reference for the "hide other players' answers" branch: otherwise Legend (memoized)
+// re-renders on every compass-drag tick just from getting a fresh empty array each time.
+const NO_ANSWERED: ReturnType<typeof useGame>['answered'] = [];
 
 const createStyles = ({ colors, isDark, typography }: Theme) =>
   StyleSheet.create({
@@ -194,10 +198,18 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
   const goToDistance = () => scrollRef.current?.scrollTo({ animated: true, y: 0 });
   // Switching players scrolls back to the top: otherwise we'd stay scrolled on the previous
   // player's heading/distance, which no longer makes sense for the new one.
-  const selectPlayer = (index: number) => {
-    scrollRef.current?.scrollTo({ animated: true, y: 0 });
-    game.selectPlayer(index);
-  };
+  // useCallback: passed to PlayerTabs (memoized) as onSelect — a stable reference lets it bail
+  // out of re-rendering on every compass-drag tick (see Compass.tsx's dedup guard). Destructured
+  // out of `game` (a fresh object every render) rather than depended on as `game.selectPlayer`,
+  // which the lint rule can't verify is itself stable.
+  const { selectPlayer: gameSelectPlayer } = game;
+  const selectPlayer = useCallback(
+    (index: number) => {
+      scrollRef.current?.scrollTo({ animated: true, y: 0 });
+      gameSelectPlayer(index);
+    },
+    [gameSelectPlayer],
+  );
   // "Submit" moves to the next player (or reveals if it was the last one): either way we
   // scroll back to the top instead of staying scrolled on the previous player's heading/distance.
   const submit = () => {
@@ -217,6 +229,32 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
   useEffect(() => {
     if (record) scrollRef.current?.scrollTo({ animated: true, y: 0 });
   }, [record]);
+
+  // Other players' already-submitted answers: shown on the compass and on the Earth, faded
+  // out, unless the "Hide other players' answers" option is on (each player then only sees
+  // their own arrow/estimate during the round; the reveal always shows everything either way).
+  const showOthersWhileGuessing = !game.config.hideOtherAnswers;
+  const answered = showOthersWhileGuessing ? game.answered : NO_ANSWERED;
+
+  // useMemo: passed to Legend (memoized) as `items` — a stable reference (when its own
+  // dependencies haven't changed) lets it bail out of re-rendering on every compass-drag tick.
+  const legendItems = useMemo(
+    () =>
+      record
+        ? game.isMultiplayer
+          ? [
+              ...game.players.map((player) => ({ label: player.name, color: player.color })),
+              { label: t.game.reality, color: colors.truth, ring: true },
+            ]
+          : [
+              { label: t.game.yourAnswer, color: game.players[0].color },
+              { label: t.game.reality, color: colors.truth, ring: true },
+            ]
+        : game.isMultiplayer
+          ? answered.map((entry) => ({ label: entry.player.name, color: entry.player.color }))
+          : [],
+    [record, game.isMultiplayer, game.players, answered, colors.truth, t.game.reality, t.game.yourAnswer],
+  );
 
   if (game.phase === 'loading' || game.place === undefined || game.currentPlayer === undefined) {
     return (
@@ -250,11 +288,6 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
   // so we need the equivalent ground distance (same destination, cf. helpers/geo).
   const earthDistanceKm = (km: number) => (straightLine ? arcKmFromChordKm(km) : km);
 
-  // Other players' already-submitted answers: shown on the compass and on the Earth, faded
-  // out, unless the "Hide other players' answers" option is on (each player then only sees
-  // their own arrow/estimate during the round; the reveal always shows everything either way).
-  const showOthersWhileGuessing = !game.config.hideOtherAnswers;
-  const answered = showOthersWhileGuessing ? game.answered : [];
   const answeredNeedles = answered.map((entry) => ({ bearing: entry.guess.bearing, color: entry.player.color }));
 
   const earthMarks: EarthMark[] = record
@@ -281,20 +314,6 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
         })),
         { bearing: game.bearing, distanceKm: earthDistanceKm(game.distanceKm), color: playerColor },
       ];
-
-  const legendItems = record
-    ? game.isMultiplayer
-      ? [
-          ...game.players.map((player) => ({ label: player.name, color: player.color })),
-          { label: t.game.reality, color: colors.truth, ring: true },
-        ]
-      : [
-          { label: t.game.yourAnswer, color: game.players[0].color },
-          { label: t.game.reality, color: colors.truth, ring: true },
-        ]
-    : game.isMultiplayer
-      ? answered.map((entry) => ({ label: entry.player.name, color: entry.player.color }))
-      : [];
 
   const scoreLabel = record
     ? game.isMultiplayer

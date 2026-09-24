@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 import { DISTANCE_MARKS_KM } from '@/constants';
 import { formatDistance, kmToRatio, ratioToKm } from '@/helpers';
 import { useTranslation } from '@/i18n';
@@ -5,7 +7,7 @@ import { useTranslation } from '@/i18n';
 import SliderTrack from '../SliderTrack';
 import type { DistanceSliderProps } from './types';
 
-export const DistanceSlider = ({ valueKm, maxKm, onChange }: DistanceSliderProps) => {
+export const DistanceSlider = memo(function DistanceSlider({ valueKm, maxKm, onChange }: DistanceSliderProps) {
   const t = useTranslation();
 
   return (
@@ -20,4 +22,4 @@ export const DistanceSlider = ({ valueKm, maxKm, onChange }: DistanceSliderProps
       valueText={formatDistance(valueKm)}
     />
   );
-};
+});

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
@@ -36,7 +37,7 @@ const createStyles = ({ colors, typography }: Theme) =>
   });
 
 /** Who is which color, on the compass and on the Earth. */
-export const Legend = ({ items }: LegendProps) => {
+export const Legend = memo(function Legend({ items }: LegendProps) {
   const styles = useThemedStyles(createStyles);
 
   return (
@@ -55,4 +56,4 @@ export const Legend = ({ items }: LegendProps) => {
       ))}
     </View>
   );
-};
+});

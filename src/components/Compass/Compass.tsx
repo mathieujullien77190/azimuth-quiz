@@ -38,11 +38,18 @@ export const Compass = ({
   onChangeRef.current = onChange;
   const onTouchRef = useRef(onTouch);
   onTouchRef.current = onTouch;
+  // Tracks the last bearing actually sent, updated eagerly inside `update` (not just from the
+  // `bearing` prop on render) so two touch-move events landing on the same degree before React
+  // re-renders still dedupe — avoids re-rendering the whole GameScreen for a no-op move.
+  const bearingRef = useRef(bearing);
+  bearingRef.current = bearing;
 
   const panResponder = useMemo(() => {
     const update = (x: number, y: number) => {
       // Angle on screen, then converted back into the dial's frame (north = 0).
       const next = Math.round(normalizeBearing(bearingFromTouch(x, y, size) + headingRef.current)) % 360;
+      if (next === bearingRef.current) return;
+      bearingRef.current = next;
       onChangeRef.current?.(next);
     };
 

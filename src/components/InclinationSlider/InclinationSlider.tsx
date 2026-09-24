@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 import { formatInclination, inclinationFromChordKm, kmToRatio, ratioToKm } from '@/helpers';
 import { useTranslation } from '@/i18n';
 
@@ -10,7 +12,7 @@ import type { InclinationSliderProps } from './types';
  * pas donner l'info que le mode distance donne directement, ce qui viderait l'interet du mode
  * inclinaison (le plus difficile des deux).
  */
-export const InclinationSlider = ({ distanceKm, maxKm, onChange }: InclinationSliderProps) => {
+export const InclinationSlider = memo(function InclinationSlider({ distanceKm, maxKm, onChange }: InclinationSliderProps) {
   const t = useTranslation();
   const inclination = inclinationFromChordKm(distanceKm);
 
@@ -23,4 +25,4 @@ export const InclinationSlider = ({ distanceKm, maxKm, onChange }: InclinationSl
       valueText={formatInclination(inclination)}
     />
   );
-};
+});

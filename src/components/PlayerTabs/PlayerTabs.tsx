@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
@@ -86,7 +87,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
   });
 
 /** Player selector fixed at the top of the game screen: pick who's answering, without leaving the screen. */
-export const PlayerTabs = ({
+export const PlayerTabs = memo(function PlayerTabs({
   players,
   order,
   activeIndex,
@@ -94,7 +95,7 @@ export const PlayerTabs = ({
   allowRevision,
   onSelect,
   activeLabel,
-}: PlayerTabsProps) => {
+}: PlayerTabsProps) {
   const styles = useThemedStyles(createStyles);
   const { width } = useWindowDimensions();
   const compact = width < COMPACT_BREAKPOINT;
@@ -136,4 +137,4 @@ export const PlayerTabs = ({
       })}
     </ScrollView>
   );
-};
+});

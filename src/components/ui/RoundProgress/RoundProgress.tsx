@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { DIFFICULTIES, difficultyEmoji, fontSize, spacing } from '@/constants';
@@ -45,7 +46,7 @@ const createStyles = ({ colors, typography }: Theme) =>
  * disappear past `MAX_PROGRESS_DOTS` (unreadable once there are too many); the dot at index
  * `roundNumber - 1` (the current round) already counts as "done".
  */
-const RoundProgress = ({ roundNumber, totalRounds, difficulties }: RoundProgressProps) => {
+const RoundProgress = memo(function RoundProgress({ roundNumber, totalRounds, difficulties }: RoundProgressProps) {
   const styles = useThemedStyles(createStyles);
   const { isDark } = useTheme();
   const t = useTranslation();
@@ -67,6 +68,6 @@ const RoundProgress = ({ roundNumber, totalRounds, difficulties }: RoundProgress
       )}
     </View>
   );
-};
+});
 
 export default RoundProgress;

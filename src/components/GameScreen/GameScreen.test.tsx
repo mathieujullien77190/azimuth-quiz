@@ -270,7 +270,7 @@ describe('GameScreen — theme', () => {
   it('gives the header a white background by day instead of the page background', async () => {
     const { toJSON } = await render(
       <ThemeSettingsContext.Provider
-        value={{ themeId: 'day', ready: true, setThemeId: jest.fn(), resetThemeId: jest.fn() }}
+        value={{ themeId: 'day', ready: true, setThemeId: jest.fn(), resetThemeId: jest.fn(), animationsEnabled: false, setAnimationsEnabled: jest.fn(), resetAnimationsEnabled: jest.fn() }}
       >
         <GameScreen onQuit={jest.fn()} />
       </ThemeSettingsContext.Provider>,

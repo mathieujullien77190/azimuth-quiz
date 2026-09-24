@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Linking, Pressable, StyleSheet, Text } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
@@ -53,7 +54,7 @@ const createStyles = ({ colors, typography }: Theme) =>
     },
   });
 
-export const PlaceCard = ({ place, showCountry, description }: PlaceCardProps) => {
+export const PlaceCard = memo(function PlaceCard({ place, showCountry, description }: PlaceCardProps) {
   const styles = useThemedStyles(createStyles);
   const { language } = useLanguage();
   const t = useTranslation();
@@ -88,4 +89,4 @@ export const PlaceCard = ({ place, showCountry, description }: PlaceCardProps) =
       )}
     </Card>
   );
-};
+});
