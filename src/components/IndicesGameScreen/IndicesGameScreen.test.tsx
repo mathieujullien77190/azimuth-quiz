@@ -49,7 +49,7 @@ describe('IndicesGameScreen — picking clues', () => {
 
   it('revealing a clue takes 1 point off the remaining score and advances the turn', async () => {
     const { getByText } = await renderGame({ playerNames: ['Zoé', 'Max'] });
-    // Paris/France (3 couleurs de drapeau) : 24 indices possibles au total, arrondi a 30.
+    // Paris/France (3 flag colors): 24 possible clues in total, rounded up to 30.
     expect(getByText('Zoé · 30 pts')).toBeTruthy();
 
     await fireEvent.press(getByText('Indicatif tél.'));
@@ -68,7 +68,7 @@ describe('IndicesGameScreen — picking clues', () => {
   it('pressing a header player tab is a no-op (display-only, unlike the buzz-panel tabs)', async () => {
     const { getByText, getAllByLabelText } = await renderGame({ playerNames: ['Zoé', 'Max'] });
     await fireEvent.press(getAllByLabelText('Max')[0]);
-    // Toujours au tour de Zoé : les onglets du header ne changent pas le joueur actif.
+    // Still Zoé's turn: the header tabs don't change the active player.
     expect(getByText('À Zoé de jouer')).toBeTruthy();
   });
 
@@ -85,9 +85,21 @@ describe('IndicesGameScreen — picking clues', () => {
     expect(getByText(PARIS.emojis[2])).toBeTruthy();
 
     const scoreBefore = getByText(/pts$/).props.children.join('');
-    // 4e clic : plus rien a devoiler, le score ne doit plus bouger.
+    // 4th click: nothing left to reveal, the score must not move anymore.
     await fireEvent.press(getByText(PARIS.emojis[2]));
     expect(getByText(/pts$/).props.children.join('')).toBe(scoreBefore);
+  });
+
+  it('handles a place whose country has no flag color data (empty flag, no crash)', async () => {
+    mockNextPlace = { ...PARIS, code: 'XX' };
+    const { getByText } = await renderGame({ playerNames: ['Zoé'] });
+    expect(getByText(/pts/)).toBeTruthy();
+  });
+
+  it('shows the revealed first letter in the word-recap skeleton above the buzz row', async () => {
+    const { getAllByText } = await renderGame({ playerNames: ['Zoé'] });
+    await fireEvent.press(getAllByText('Première lettre')[0]);
+    expect(getAllByText('P').length).toBeGreaterThan(0);
   });
 
   it('flag colors reveal one by one for the 3-color France flag then lock', async () => {
@@ -104,33 +116,54 @@ describe('IndicesGameScreen — picking clues', () => {
   });
 });
 
-describe('IndicesGameScreen — buzz flow (turnPlayer + spoken)', () => {
-  it('lets the current-turn player answer, verify, and settle correct', async () => {
-    const { getByText } = await renderGame({ answerMethod: 'spoken', buzzerMode: 'turnPlayer', playerNames: ['Zoé'] });
+describe('IndicesGameScreen — buzz flow (spoken)', () => {
+  it('lets the buzzing player be picked, verified, and settled correct', async () => {
+    const { getByText, getAllByLabelText } = await renderGame({ answerMethod: 'spoken', playerNames: ['Zoé'] });
     await fireEvent.press(getByText('🔔 J’ai trouvé !'));
+    expect(getByText('Qui buzze ?')).toBeTruthy();
+    await fireEvent.press(getAllByLabelText('Zoé')[1]);
     expect(getByText(/Zoé buzze/)).toBeTruthy();
     await fireEvent.press(getByText('Vérifier'));
     await fireEvent.press(getByText('✓ Bonne réponse'));
-    // Aucun indice pris : le score restant (donc gagne) est encore au maximum (30).
+    // No clue taken: the remaining (thus won) score is still at the maximum (30).
     expect(getByText('Zoé marque 30 points !')).toBeTruthy();
     expect(getByText('Continuer')).toBeTruthy();
   });
 
-  it('settles a wrong answer with a fixed penalty', async () => {
-    const { getByText } = await renderGame({ answerMethod: 'spoken', buzzerMode: 'turnPlayer', playerNames: ['Zoé'] });
+  it('settles a wrong answer with a fixed penalty, but keeps the round open for another buzz', async () => {
+    const { getByText, getAllByLabelText, queryByText } = await renderGame({
+      answerMethod: 'spoken',
+      playerNames: ['Zoé', 'Max'],
+    });
     await fireEvent.press(getByText('🔔 J’ai trouvé !'));
+    await fireEvent.press(getAllByLabelText('Zoé')[1]);
     await fireEvent.press(getByText('Vérifier'));
     await fireEvent.press(getByText('✕ Faux'));
-    // Penalite fixe (WRONG_ANSWER_PENALTY = 10), peu importe combien d'indices avaient ete pris.
+    // Fixed penalty (WRONG_ANSWER_PENALTY = 10), regardless of how many clues had been taken.
     expect(getByText('Zoé se trompe — perd 10 points.')).toBeTruthy();
+    // No reveal, no "Continuer" — the round stays open, anyone (including Zoé again) can re-buzz.
+    expect(queryByText('Continuer')).toBeNull();
+    expect(queryByText(PARIS.name)).toBeNull();
+    await fireEvent.press(getByText('🔔 J’ai trouvé !'));
+    await fireEvent.press(getAllByLabelText('Max')[1]);
+    await fireEvent.press(getByText('Vérifier'));
+    await fireEvent.press(getByText('✓ Bonne réponse'));
+    expect(getByText('Max marque 30 points !')).toBeTruthy();
   });
-});
 
-describe('IndicesGameScreen — buzz flow (anyone + spoken)', () => {
+  it('cancels a buzz (wrong player, accidental click...) without touching the score', async () => {
+    const { getByText, getAllByLabelText, queryByText } = await renderGame({ answerMethod: 'spoken', playerNames: ['Zoé'] });
+    await fireEvent.press(getByText('🔔 J’ai trouvé !'));
+    await fireEvent.press(getAllByLabelText('Zoé')[1]);
+    await fireEvent.press(getByText('Vérifier'));
+    await fireEvent.press(getByText('Annuler'));
+    expect(queryByText('✓ Bonne réponse')).toBeNull();
+    expect(getByText('🔔 J’ai trouvé !')).toBeTruthy();
+  });
+
   it('asks who buzzes and lets any player be selected before verifying', async () => {
     const { getByText, getAllByLabelText } = await renderGame({
       answerMethod: 'spoken',
-      buzzerMode: 'anyone',
       playerNames: ['Zoé', 'Max'],
     });
     await fireEvent.press(getByText('🔔 J’ai trouvé !'));
@@ -144,23 +177,22 @@ describe('IndicesGameScreen — buzz flow (anyone + spoken)', () => {
 });
 
 describe('IndicesGameScreen — buzz flow (typed answer)', () => {
-  it('turnPlayer + typed: submit button is disabled until text is entered, wrong guess is scored as wrong', async () => {
-    const { getByText, getByPlaceholderText } = await renderGame({
+  it('submit button is disabled until text is entered, wrong guess is scored as wrong', async () => {
+    const { getByText, getAllByLabelText, getByPlaceholderText } = await renderGame({
       answerMethod: 'typed',
-      buzzerMode: 'turnPlayer',
       playerNames: ['Zoé'],
     });
     await fireEvent.press(getByText('🔔 J’ai trouvé !'));
+    await fireEvent.press(getAllByLabelText('Zoé')[1]);
     const input = getByPlaceholderText('Nom de la ville…');
     await fireEvent.changeText(input, 'Berlin');
     await fireEvent.press(getByText('Valider'));
     expect(getByText(/Zoé se trompe/)).toBeTruthy();
   });
 
-  it('anyone + typed: the text input only appears after a player is picked, correct guess scores correctly', async () => {
+  it('the text input only appears after a player is picked, correct guess scores correctly', async () => {
     const { getByText, getAllByLabelText, queryByPlaceholderText, getByPlaceholderText } = await renderGame({
       answerMethod: 'typed',
-      buzzerMode: 'anyone',
       playerNames: ['Zoé', 'Max'],
     });
     await fireEvent.press(getByText('🔔 J’ai trouvé !'));
@@ -190,7 +222,7 @@ describe('IndicesGameScreen — round progression', () => {
     await fireEvent.press(getByText('🤷 Je ne sais pas'));
     await fireEvent.press(getByText('Continuer'));
     expect(getByText(/Manche 2 \/ 2/)).toBeTruthy();
-    // Nouvelle manche : le score restant repart du maximum (30), pas de 0.
+    // New round: the remaining score starts back at the maximum (30), not 0.
     expect(getByText('30 pts')).toBeTruthy();
   });
 
@@ -206,24 +238,23 @@ describe('IndicesGameScreen — round progression', () => {
   it('final standings: shows a single-winner banner when totals differ', async () => {
     const { getByText, getAllByLabelText } = await renderGame({
       answerMethod: 'spoken',
-      buzzerMode: 'anyone',
       playerNames: ['Zoé', 'Max'],
       rounds: 2,
     });
-    // Manche 1 : Max revele un indice puis trouve, sa penalite = le cout de cet indice (3).
+    // Round 1: Max reveals a clue then finds it, their penalty = the cost of that clue (3).
     await fireEvent.press(getByText('Population'));
     await fireEvent.press(getByText('🔔 J’ai trouvé !'));
     await fireEvent.press(getAllByLabelText('Max')[1]);
     await fireEvent.press(getByText('Vérifier'));
     await fireEvent.press(getByText('✓ Bonne réponse'));
     await fireEvent.press(getByText('Continuer'));
-    // Manche 2 : Zoé buzze et trouve sans indice, son total cumule reste a 0.
+    // Round 2: Zoé buzzes in and finds it with no clue, their cumulative total stays at 0.
     await fireEvent.press(getByText('🔔 J’ai trouvé !'));
     await fireEvent.press(getAllByLabelText('Zoé')[1]);
     await fireEvent.press(getByText('Vérifier'));
     await fireEvent.press(getByText('✓ Bonne réponse'));
     await fireEvent.press(getByText('Voir le score'));
-    // Zoé (0) bat Max (3) : victoire unique, pas d'egalite.
+    // Zoé (0) beats Max (3): a single winner, no tie.
     expect(getByText('Zoé gagne !')).toBeTruthy();
   });
 
@@ -269,7 +300,7 @@ describe('IndicesGameScreen — origin resolution cleanup', () => {
 
     const { unmount } = await renderGame({ playerNames: ['Zoé'] });
     await unmount();
-    // Se resout APRES le demontage : le `cancelled` de l'effet doit empecher tout setState.
+    // Resolves AFTER unmount: the effect's `cancelled` must prevent any setState.
     resolvePending({ coordinates: { latitude: 0, longitude: 0 }, isDevicePosition: true, name: 'device' });
     await Promise.resolve();
   });

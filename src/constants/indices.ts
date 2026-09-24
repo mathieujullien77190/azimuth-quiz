@@ -1,26 +1,26 @@
 import { decodeIndicesPlaces, type MergedPlaces } from '@/constants/places/codec';
 import placesData from '@/constants/places/places.json';
-import type { IndicesAnswerMethod, IndicesBuzzerMode, IndicesClueId, IndicesPlace, IndicesSettings } from '@/types';
+import type { IndicesAnswerMethod, IndicesClueId, IndicesPlace, IndicesSettings } from '@/types';
 
-// Jeu Indices : lieux dedies, sans rapport avec constants/places/ (Boussole) si ce n'est que les
-// donnees de depart (nom/pays/coordonnees/difficulte) ont ete importees depuis CITIES la-bas, puis
-// augmentees ici des champs propres a Indices (position, population, climat, altitude, fuseau
-// horaire). Les couleurs de drapeau, le nom du pays et le nom generique de la devise sont partages
-// avec Boussole (voir constants/places/countries.ts) : un pays n'a qu'un drapeau et qu'une devise,
-// ca n'a rien d'Indices-specifique.
+// Indices game: dedicated places, unrelated to constants/places/ (Boussole) except that the
+// starting data (name/country/coordinates/difficulty) was imported from CITIES over there, then
+// augmented here with fields specific to Indices (position, population, climate, elevation,
+// timezone). Flag colors, country name and the currency's generic name are shared
+// with Boussole (see constants/places/countries.ts): a country has only one flag and one
+// currency, that's nothing Indices-specific.
 
 /**
- * Chaque lieu Indices est reconstruit depuis `places.json`, la source commune avec Boussole (voir
- * `src/constants/places/codec.ts`) : `decodeIndicesPlaces` associe chaque lieu commun a ses champs
- * propres a Indices (population, climat, altitude...). Les deux pools de lieux restent
- * independants (curation, taille et criteres differents), seules l'identite (nom/pays/coordonnees)
- * et — pour les lieux presents dans les deux jeux — les champs bruts sont partages.
+ * Each Indices place is rebuilt from `places.json`, the source shared with Boussole (see
+ * `src/constants/places/codec.ts`): `decodeIndicesPlaces` pairs each common place with its
+ * Indices-specific fields (population, climate, elevation...). The two place pools stay
+ * independent (different curation, size and criteria), only the identity (name/country/coordinates)
+ * and — for places present in both games — the raw fields are shared.
  */
 export const INDICES_PLACES: IndicesPlace[] = decodeIndicesPlaces(placesData as unknown as MergedPlaces);
 
-// Ordre d'affichage dans la grille : du plus facile (cout le plus haut, en haut) au plus dur (cout
-// 1, violet, en bas). Chaque manche affiche desormais tous les indices (plus de sous-ensemble) :
-// cet ordre est donc l'ordre d'affichage complet, pas juste un tri visuel d'un tirage partiel.
+// Display order in the grid: from easiest (highest cost, at the top) to hardest (cost
+// 1, purple, at the bottom). Every round now shows all clues (no more subset):
+// so this order is the full display order, not just a visual sort of a partial draw.
 export const INDICES_CLUE_ORDER: IndicesClueId[] = [
   'population',
   'localTime',
@@ -39,14 +39,11 @@ export const INDICES_CLUE_ORDER: IndicesClueId[] = [
   'phoneCode',
 ];
 
-export const INDICES_BUZZER_MODES: { id: IndicesBuzzerMode }[] = [{ id: 'turnPlayer' }, { id: 'anyone' }];
-
 export const INDICES_ANSWER_METHODS: { id: IndicesAnswerMethod }[] = [{ id: 'spoken' }, { id: 'typed' }];
 
 export const DEFAULT_INDICES_SETTINGS: IndicesSettings = {
   playerNames: [''],
   difficulty: 'easy',
-  buzzerMode: 'anyone',
   answerMethod: 'spoken',
   rounds: 5,
 };

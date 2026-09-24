@@ -197,9 +197,9 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const playerOrder = players.map((_, index) => index);
   const noneAnswered = players.map(() => false);
 
-  // Point de depart pour les indices "cap"/"distance" : position de l'appareil si accordee, sinon
-  // Paris (meme comportement que Boussole). Pas de reglage dedie pour l'instant, et le nom de
-  // l'origine n'est jamais affiche ici (contrairement a Boussole), donc pas besoin de traduction.
+  // Starting point for the "heading"/"distance" clues: device position if granted, otherwise
+  // Paris (same behavior as Boussole). No dedicated setting for now, and the origin's
+  // name is never shown here (unlike Boussole), so no need for translation.
   const [origin, setOrigin] = useState<Origin>(DEFAULT_ORIGIN);
   useEffect(() => {
     let cancelled = false;
@@ -221,37 +221,38 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const [buzzedIndex, setBuzzedIndex] = useState<number | null>(null);
   const [verified, setVerified] = useState(false);
   const [guessText, setGuessText] = useState('');
-  const [verdict, setVerdict] = useState<'correct' | 'wrong' | 'giveUp' | null>(null);
+  const [verdict, setVerdict] = useState<'correct' | 'giveUp' | null>(null);
+  const [lastWrong, setLastWrong] = useState<string | null>(null);
   const [roundNumber, setRoundNumber] = useState(1);
   const [finished, setFinished] = useState(false);
-  // Cumul par joueur sur toute la partie (plusieurs manches) : seul celui qui buzze voit son total
-  // bouger, en bien s'il trouve (le score restant de la manche) ou en mal s'il se trompe
-  // (`WRONG_ANSWER_PENALTY`) — abandonner ne coute rien a personne (voir `settle`/`giveUp`).
+  // Cumulative per player across the whole game (several rounds): only whoever buzzes sees their
+  // total move, up if they find it (the round's remaining score) or down if they're wrong
+  // (`WRONG_ANSWER_PENALTY`) — giving up costs nobody anything (see `settle`/`giveUp`).
   const [playerTotals, setPlayerTotals] = useState<number[]>(() => players.map(() => 0));
 
   const roundOver = verdict !== null;
   const isLastRound = roundNumber >= settings.rounds;
-  // Le drapeau se devoile couleur par couleur : le nombre de couleurs varie selon le pays (2 ou 3
-  // en general, voir countryFlagColors dans constants/places/countries.ts) — necessaire ici pour
-  // `maxScore` aussi.
+  // The flag reveals color by color: the number of colors varies by country (2 or 3
+  // usually, see countryFlagColors in constants/places/countries.ts) — needed here for
+  // `maxScore` too.
   const flagColors = countryFlagColors(place.code) ?? [];
-  // Score de la manche : un compte a rebours, pas un cumul de cout. Part d'un chiffre rond (le
-  // nombre total d'indices possibles arrondi a la dizaine superieure, ex. 26 -> 30) et descend de
-  // 1 a chaque indice choisi, tous indices confondus (plus de niveaux de difficulte). Trouver vite
-  // (peu d'indices utilises) laisse donc un score restant eleve — c'est lui que gagne celui qui
-  // trouve (voir `settle`).
+  // Round score: a countdown, not a cost accumulator. Starts from a round number (the
+  // total number of possible clues rounded up to the nearest ten, e.g. 26 -> 30) and goes down by
+  // 1 for each clue picked, all clues combined (no more difficulty tiers). Finding it fast
+  // (few clues used) thus leaves a high remaining score — that's what the finder wins
+  // (see `settle`).
   const maxScore = maxScoreForRound(totalRevealCount(flagColors.length));
   const remaining = maxScore - revealedClueIds.length;
-  // A la revelation : ce que le buzzeur a vraiment gagne/perdu cette manche (le score restant s'il
-  // a trouve, -WRONG_ANSWER_PENALTY s'il s'est trompe, 0 si personne n'a essaye) — voir `settle`/
-  // `giveUp`, qui appliquent exactement cette meme valeur aux totaux des joueurs.
-  const roundDelta = verdict === 'correct' ? remaining : verdict === 'wrong' ? -WRONG_ANSWER_PENALTY : 0;
+  // On reveal: what the buzzer actually won/lost this round (the remaining score if they
+  // found it, -WRONG_ANSWER_PENALTY if wrong, 0 if nobody tried) — see `settle`/
+  // `giveUp`, which apply this exact same value to the players' totals.
+  const roundDelta = verdict === 'correct' ? remaining : 0;
   const displayScore = roundOver ? roundDelta : remaining;
 
-  // Recap "M _ _ _" du nom au-dessus des boutons buzz/abandon, quel que soit l'ordre dans lequel
-  // "Lettres" / "Nombre de mots" / "Premiere lettre" sont reveles : "Nombre de mots" seul donne
-  // des cases generiques (pas la vraie longueur), "Lettres" donne la vraie longueur (par mot si
-  // "Nombre de mots" est aussi connu), "Premiere lettre" seule n'affiche que la lettre, sans case.
+  // "M _ _ _" name recap above the buzz/give-up buttons, regardless of the order in which
+  // "Letters" / "Word count" / "First letter" are revealed: "Word count" alone gives
+  // generic boxes (not the real length), "Letters" gives the real length (per word if
+  // "Word count" is also known), "First letter" alone only shows the letter, no box.
   const knowsWordCount = revealedClueIds.includes('wordCount');
   const knowsLength = revealedClueIds.includes('letterCount');
   const knowsFirstLetter = revealedClueIds.includes('firstLetter');
@@ -264,42 +265,43 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
         })
       : [];
 
-  // L'emoji se devoile en 3 fois (place.emojis est un triplet) : chaque clic supplementaire sur la
-  // carte deja revelee compte comme un nouvel indice choisi (cout + tour), jusqu'a epuisement.
+  // The emoji reveals in 3 steps (place.emojis is a triplet): each extra click on the
+  // already-revealed card counts as a newly picked clue (cost + turn), until exhausted.
   const emojiStage = revealedClueIds.filter((id) => id === 'emoji').length;
   const flagStage = revealedClueIds.filter((id) => id === 'flagColors').length;
-  // Meme principe : le cap+distance s'affiche des le 1er choix, mais la valeur en km reste cachee
-  // ("?" au milieu) jusqu'a un 2e clic, qui compte donc comme un indice choisi de plus.
+  // Same idea: the heading+distance shows from the 1st pick, but the km value stays hidden
+  // ("?" in the middle) until a 2nd click, which thus counts as one more picked clue.
   const distanceStage = revealedClueIds.filter((id) => id === 'distance').length;
-  // Meme principe encore : emoji de palier (altitude/population) ou symbole/jour-nuit (devise/heure
-  // locale) au 1er clic, valeur exacte au 2e.
+  // Same idea again: tiered emoji (elevation/population) or symbol/day-night (currency/local
+  // time) on the 1st click, exact value on the 2nd.
   const elevationStage = revealedClueIds.filter((id) => id === 'elevation').length;
   const populationStage = revealedClueIds.filter((id) => id === 'population').length;
   const currencyStage = revealedClueIds.filter((id) => id === 'currency').length;
   const localTimeStage = revealedClueIds.filter((id) => id === 'localTime').length;
 
-  // Tous les garde-fous (manche terminee, indice deja revele, emoji/drapeau epuises) sont assures
-  // en amont par `IndicesClueCard` : `onPress` n'est fourni que si la carte est reellement
-  // pickable (voir `moreToReveal` plus bas et `onPress={roundOver ? undefined : ...}`).
+  // All the guards (round over, clue already revealed, emoji/flag exhausted) are enforced
+  // upstream by `IndicesClueCard`: `onPress` is only provided if the card is genuinely
+  // pickable (see `moreToReveal` below and `onPress={roundOver ? undefined : ...}`).
   const pickClue = (clueId: IndicesClueId) => {
     setRevealedClueIds((ids) => [...ids, clueId]);
     setTurnIndex((index) => (index + 1) % players.length);
+    setLastWrong(null);
   };
 
-  // Boutons "J'ai trouve"/"Je ne sais pas" uniquement rendus hors manche terminee (voir le footer
-  // plus bas) : pas besoin de re-verifier `roundOver` ici.
+  // "I found it"/"I don't know" buttons only rendered outside round-over (see the footer
+  // below): no need to re-check `roundOver` here.
   const openBuzz = () => {
     setBuzzOpen(true);
     setVerified(false);
     setGuessText('');
-    // "Celui qui a choisi" : forcement le joueur dont c'est le tour, pas de choix a faire.
-    setBuzzedIndex(settings.buzzerMode === 'turnPlayer' ? turnIndex : null);
+    setBuzzedIndex(null);
+    setLastWrong(null);
   };
 
   const verify = () => setVerified(true);
 
-  // Repli si le buzz etait une erreur (mauvais joueur, clic accidentel...) : ferme le panneau sans
-  // toucher au score, comme si on n'avait jamais buzze.
+  // Fallback if the buzz was a mistake (wrong player, accidental click...): closes the panel
+  // without touching the score, as if nobody had buzzed.
   const cancelBuzz = () => {
     setBuzzOpen(false);
     setVerified(false);
@@ -307,24 +309,35 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
     setGuessText('');
   };
 
-  // Appele uniquement une fois `buzzedIndex` connu (voir les points d'appel : bouton Verifier et
-  // `submitGuess`, tous deux gardes par `buzzedIndex !== null` en amont).
+  // Called only once `buzzedIndex` is known (see the call sites: the Verify button and
+  // `submitGuess`, both guarded upstream by `buzzedIndex !== null`).
   const settle = (correct: boolean) => {
-    // Seul celui qui a buzze voit son total bouger : le score restant s'il a trouve, une penalite
-    // fixe s'il s'est trompe (sinon buzzer au hasard serait sans risque).
+    // Only whoever buzzed sees their total move: the remaining score if they found it, a fixed
+    // penalty if they were wrong (otherwise buzzing at random would be risk-free).
     const delta = correct ? remaining : -WRONG_ANSWER_PENALTY;
     setPlayerTotals((totals) => totals.map((total, index) => (index === buzzedIndex ? total + delta : total)));
-    setVerdict(correct ? 'correct' : 'wrong');
+    if (correct) {
+      setVerdict('correct');
+      setBuzzOpen(false);
+      return;
+    }
+    // A wrong guess only knocks out the player who buzzed (penalty already applied above): the
+    // round stays open so anyone (including them again) can buzz and try — no reveal, no round end.
+    // buzzedName is always defined here too (settle requires buzzedIndex to be known, see above).
+    setLastWrong(buzzedName as string);
     setBuzzOpen(false);
+    setVerified(false);
+    setBuzzedIndex(null);
+    setGuessText('');
   };
 
-  // Le bouton Valider n'est rendu qu'une fois `buzzedIndex` connu (typage force la comparaison).
+  // The Submit button is only rendered once `buzzedIndex` is known (typing forces the comparison).
   const submitGuess = () => {
     settle(normalizePlaceGuess(guessText) === normalizePlaceGuess(place.name));
   };
 
-  // Abandonner ne coute rien a personne (0 point) : ni le gain d'une bonne reponse, ni la penalite
-  // d'une mauvaise — juste passer la manche.
+  // Giving up costs nobody anything (0 points): neither the gain of a right answer, nor the
+  // penalty of a wrong one — just skips the round.
   const giveUp = () => {
     setVerdict('giveUp');
     setBuzzOpen(false);
@@ -345,14 +358,15 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
     setVerified(false);
     setGuessText('');
     setVerdict(null);
+    setLastWrong(null);
   };
 
   const buzzedName = buzzedIndex !== null ? players[buzzedIndex] : undefined;
 
   if (finished) {
-    // Toujours au moins 1 joueur (MIN_PLAYERS = 1) : `standings` n'est jamais vide. Le score est
-    // maintenant un compte a rebours qu'on gagne (voir `remaining`/`settle`) : le plus HAUT total
-    // gagne, pas le plus bas.
+    // Always at least 1 player (MIN_PLAYERS = 1): `standings` is never empty. The score is
+    // now a countdown you win (see `remaining`/`settle`): the HIGHEST total
+    // wins, not the lowest.
     const standings = players
       .map((name, index) => ({ name, total: playerTotals[index] }))
       .sort((a, b) => b.total - a.total);
@@ -391,12 +405,8 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
         roundOver ? (
           <View style={styles.actions}>
             <Text style={[styles.resultBanner, verdict === 'correct' ? styles.resultCorrect : styles.resultWrong]}>
-              {/* buzzedName est toujours defini pour 'correct'/'wrong' (settle exige buzzedIndex connu). */}
-              {verdict === 'correct'
-                ? t.indicesGame.scored(buzzedName!, formatNumber(remaining))
-                : verdict === 'wrong'
-                  ? t.indicesGame.missed(buzzedName!, formatNumber(WRONG_ANSWER_PENALTY))
-                  : t.indicesGame.noOneFound}
+              {/* buzzedName is always defined for 'correct' (settle requires buzzedIndex to be known). */}
+              {verdict === 'correct' ? t.indicesGame.scored(buzzedName!, formatNumber(remaining)) : t.indicesGame.noOneFound}
             </Text>
             <Text style={styles.revealAnswer}>
               {t.indicesGame.wasPlace} {place.name}
@@ -417,16 +427,14 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
                   ? t.indicesGame.buzzedPromptTyped(buzzedName)
                   : t.indicesGame.buzzedPrompt(buzzedName)}
             </Text>
-            {settings.buzzerMode === 'anyone' && (
-              <PlayerTabs
-                activeIndex={buzzedIndex ?? -1}
-                allowRevision
-                answered={noneAnswered}
-                onSelect={setBuzzedIndex}
-                order={playerOrder}
-                players={playerTabs}
-              />
-            )}
+            <PlayerTabs
+              activeIndex={buzzedIndex ?? -1}
+              allowRevision
+              answered={noneAnswered}
+              onSelect={setBuzzedIndex}
+              order={playerOrder}
+              players={playerTabs}
+            />
             {buzzedIndex !== null && settings.answerMethod === 'typed' && (
               <>
                 <TextInput
@@ -447,7 +455,10 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
               </>
             )}
             {buzzedIndex !== null && settings.answerMethod === 'spoken' && !verified && (
-              <Button label={t.indicesGame.verify} onPress={verify} />
+              <>
+                <Button label={t.indicesGame.verify} onPress={verify} />
+                <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
+              </>
             )}
             {verified && settings.answerMethod === 'spoken' && (
               <>
@@ -472,6 +483,11 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
           </View>
         ) : (
           <View style={styles.buzzRow}>
+            {lastWrong !== null && (
+              <Text style={[styles.resultBanner, styles.resultWrong]}>
+                {t.indicesGame.missed(lastWrong, formatNumber(WRONG_ANSWER_PENALTY))}
+              </Text>
+            )}
             {skeletonGroups.length > 0 && (
               <View style={styles.skeletonRow}>
                 {skeletonGroups.map((group, groupIndex) => (
@@ -519,7 +535,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
       <Card>
         <View style={styles.clueGrid}>
           {INDICES_CLUE_ORDER.map((clueId) => {
-            // A la revelation, tout s'affiche, meme les indices jamais choisis pendant la manche.
+            // On reveal, everything shows, even clues never picked during the round.
             const revealed = roundOver || revealedClueIds.includes(clueId);
             const isEmoji = clueId === 'emoji';
             const isFlag = clueId === 'flagColors';
@@ -528,8 +544,8 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
             const isPopulation = clueId === 'population';
             const isCurrency = clueId === 'currency';
             const isLocalTime = clueId === 'localTime';
-            // Drapeau : 1 couleur au 1er clic, 1 de plus au 2e, tout le reste au 3e — jamais plus
-            // de 3 clics, meme si le pays a plus de 3 couleurs (voir IndicesClueCard).
+            // Flag: 1 color on the 1st click, 1 more on the 2nd, all the rest on the 3rd — never
+            // more than 3 clicks, even if the country has more than 3 colors (see IndicesClueCard).
             const flagMaxStage = Math.min(3, flagColors.length);
             const moreToReveal =
               (isEmoji && !roundOver && emojiStage < 3) ||

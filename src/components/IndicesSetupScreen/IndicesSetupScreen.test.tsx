@@ -3,8 +3,8 @@ import { fireEvent, render, within } from '@testing-library/react-native';
 import IndicesSettingsProvider from '../IndicesSettingsProvider';
 import IndicesSetupScreen from '.';
 
-/** Section (Card) contenant un titre donne : sert a lever les ambiguites de labels partages entre
- * sections (ex. "5" est a la fois un nombre de joueurs et un nombre de manches possibles). */
+/** Section (Card) containing a given title: used to resolve ambiguities between labels shared
+ * across sections (e.g. "5" is both a possible player count and a possible round count). */
 const section = (getByText: (text: string) => Parameters<typeof within>[0], title: string) =>
   within(getByText(title).parent!.parent!);
 
@@ -18,13 +18,12 @@ const renderScreen = async (onStart = jest.fn(), onBack = jest.fn()) => {
 };
 
 describe('IndicesSetupScreen', () => {
-  it('renders one name input per default player and selects the default difficulty/buzzer/answer/rounds chips', async () => {
+  it('renders one name input per default player and selects the default difficulty/answer/rounds chips', async () => {
     const { getByText, getByDisplayValue } = await renderScreen();
 
-    expect(getByDisplayValue('')).toBeTruthy(); // 1 joueur par defaut, nom vide
+    expect(getByDisplayValue('')).toBeTruthy(); // 1 player by default, empty name
 
     expect(getByText('Facile').parent?.props.accessibilityState.selected).toBe(true);
-    expect(getByText('Tout le monde').parent?.props.accessibilityState.selected).toBe(true);
     expect(getByText('À voix haute').parent?.props.accessibilityState.selected).toBe(true);
 
     const rounds = section(getByText, 'Nombre de manches');
@@ -34,7 +33,7 @@ describe('IndicesSetupScreen', () => {
   it('resizes the player list when a player-count chip is pressed, keeping already-typed names', async () => {
     const { getByText, getByPlaceholderText, getAllByDisplayValue } = await renderScreen();
 
-    const nameInput = getByPlaceholderText(/./); // seul joueur, un seul input pour l'instant
+    const nameInput = getByPlaceholderText(/./); // single player, only one input for now
     await fireEvent.changeText(nameInput, 'Zoé');
 
     const players = section(getByText, 'Joueurs');
@@ -46,7 +45,7 @@ describe('IndicesSetupScreen', () => {
     expect(inputs[1].props.value).toBe('');
     expect(inputs[2].props.value).toBe('');
 
-    // Editer le 2e joueur ne doit toucher que lui (couvre la branche i !== index du map).
+    // Editing the 2nd player should only affect them (covers the i !== index branch of the map).
     await fireEvent.changeText(inputs[1], 'Max');
     inputs = getAllByDisplayValue(/^.*$/);
     expect(inputs[0].props.value).toBe('Zoé');
@@ -61,15 +60,6 @@ describe('IndicesSetupScreen', () => {
 
     expect(getByText('Difficile').parent?.props.accessibilityState.selected).toBe(true);
     expect(getByText('Facile').parent?.props.accessibilityState.selected).toBe(false);
-  });
-
-  it('updates the buzzer mode when a chip is pressed', async () => {
-    const { getByText } = await renderScreen();
-
-    await fireEvent.press(getByText('Celui qui a choisi'));
-
-    expect(getByText('Celui qui a choisi').parent?.props.accessibilityState.selected).toBe(true);
-    expect(getByText('Tout le monde').parent?.props.accessibilityState.selected).toBe(false);
   });
 
   it('updates the answer method when a chip is pressed', async () => {

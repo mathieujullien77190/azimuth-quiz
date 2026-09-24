@@ -1,7 +1,7 @@
 import { countryFlagColors } from '@/constants/places/countries';
 import type { IndicesClueId } from '@/types';
 
-import { DEFAULT_INDICES_SETTINGS, INDICES_ANSWER_METHODS, INDICES_BUZZER_MODES, INDICES_CLUE_ORDER, INDICES_PLACES } from './indices';
+import { DEFAULT_INDICES_SETTINGS, INDICES_ANSWER_METHODS, INDICES_CLUE_ORDER, INDICES_PLACES } from './indices';
 
 const ALL_CLUE_IDS: IndicesClueId[] = [
   'position',
@@ -27,8 +27,8 @@ describe('INDICES_PLACES', () => {
   });
 
   it('has no duplicate (name, country) entries', () => {
-    // Deux vraies villes peuvent legitimement partager un nom (ex. Victoria, Canada / Seychelles) :
-    // seule la paire nom+pays doit etre unique, pas le nom seul.
+    // Two real cities can legitimately share a name (e.g. Victoria, Canada / Seychelles):
+    // only the name+country pair must be unique, not the name alone.
     const keys = INDICES_PLACES.map((place) => `${place.name}, ${place.country}`);
     expect(new Set(keys).size).toBe(keys.length);
   });
@@ -64,11 +64,7 @@ describe('INDICES_CLUE_ORDER', () => {
   });
 });
 
-describe('INDICES_BUZZER_MODES / INDICES_ANSWER_METHODS', () => {
-  it('lists both buzzer modes', () => {
-    expect(INDICES_BUZZER_MODES.map((mode) => mode.id).sort()).toEqual(['anyone', 'turnPlayer'].sort());
-  });
-
+describe('INDICES_ANSWER_METHODS', () => {
   it('lists both answer methods', () => {
     expect(INDICES_ANSWER_METHODS.map((method) => method.id).sort()).toEqual(['spoken', 'typed'].sort());
   });
@@ -78,7 +74,6 @@ describe('DEFAULT_INDICES_SETTINGS', () => {
   it('is a valid, playable settings object', () => {
     expect(DEFAULT_INDICES_SETTINGS.playerNames.length).toBeGreaterThan(0);
     expect(DEFAULT_INDICES_SETTINGS.rounds).toBeGreaterThan(0);
-    expect(['turnPlayer', 'anyone']).toContain(DEFAULT_INDICES_SETTINGS.buzzerMode);
     expect(['spoken', 'typed']).toContain(DEFAULT_INDICES_SETTINGS.answerMethod);
   });
 });

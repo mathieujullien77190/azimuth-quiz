@@ -165,11 +165,6 @@ export const fr: Translations = {
     playerNameAccessibility: (index) => `Nom du joueur ${index}`,
     difficultyTitle: 'Difficulté',
     difficultyHint: 'Notoriété du lieu : détermine dans quelle réserve de villes la manche pioche.',
-    buzzerModeTitle: 'Qui peut buzzer',
-    buzzerModes: {
-      turnPlayer: 'Celui qui a choisi',
-      anyone: 'Tout le monde',
-    },
     answerMethodTitle: 'Réponse',
     answerMethods: {
       spoken: 'À voix haute',

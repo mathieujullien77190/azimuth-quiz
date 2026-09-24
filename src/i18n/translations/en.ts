@@ -164,11 +164,6 @@ export const en: Translations = {
     playerNameAccessibility: (index) => `Player ${index} name`,
     difficultyTitle: 'Difficulty',
     difficultyHint: 'How well-known the place is: sets which pool of cities the round draws from.',
-    buzzerModeTitle: 'Who can buzz',
-    buzzerModes: {
-      turnPlayer: 'Whoever picked it',
-      anyone: 'Anyone',
-    },
     answerMethodTitle: 'Answer',
     answerMethods: {
       spoken: 'Out loud',

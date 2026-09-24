@@ -4,7 +4,6 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 import {
   DIFFICULTIES,
   INDICES_ANSWER_METHODS,
-  INDICES_BUZZER_MODES,
   MAX_PLAYERS,
   MIN_PLAYERS,
   NAME_PLACEHOLDERS,
@@ -155,19 +154,6 @@ export const IndicesSetupScreen = ({ onStart, onBack }: IndicesSetupScreenProps)
               label={t.setup.difficulties[difficulty.id]}
               onPress={() => updateSettings({ difficulty: difficulty.id })}
               selected={settings.difficulty === difficulty.id}
-            />
-          ))}
-        </View>
-      </Section>
-
-      <Section title={t.indicesSetup.buzzerModeTitle}>
-        <View style={styles.chips}>
-          {INDICES_BUZZER_MODES.map((mode) => (
-            <Chip
-              key={mode.id}
-              label={t.indicesSetup.buzzerModes[mode.id]}
-              onPress={() => updateSettings({ buzzerMode: mode.id })}
-              selected={settings.buzzerMode === mode.id}
             />
           ))}
         </View>

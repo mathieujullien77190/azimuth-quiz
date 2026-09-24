@@ -1,8 +1,8 @@
-import type { Category, Difficulty, IndicesAnswerMethod, IndicesBuzzerMode, IndicesClueId, Zone } from '@/types';
+import type { Category, Difficulty, IndicesAnswerMethod, IndicesClueId, Zone } from '@/types';
 
 export type Language = 'fr' | 'en';
 
-/** Contenu d'une carte jeu sur l'accueil (`HomeScreen` / `GameCard`). */
+/** Content of a game card on the home screen (`HomeScreen` / `GameCard`). */
 export type HomeGameCopy = {
   title: string;
   tagline: string;
@@ -10,18 +10,18 @@ export type HomeGameCopy = {
   cta: string;
 };
 
-/** Les 8 points cardinaux, dans l'ordre N, NE, E, SE, S, SO/SW, O/W, NO/NW (pas de nord). */
+/** The 8 cardinal points, in order N, NE, E, SE, S, SO/SW, O/W, NO/NW (no "north" entry). */
 export type CardinalLabels = readonly [string, string, string, string, string, string, string, string];
 
 export type Translations = {
   common: {
-    /** Nom affiche comme point de depart quand la position de l'appareil est utilisee. */
+    /** Name shown as the starting point when the device's position is used. */
     yourPosition: string;
     pts: string;
   };
-  /** Les 8 points cardinaux abreges, pour formatBearing (ex. "S · 173°"). */
+  /** The 8 abbreviated cardinal points, for formatBearing (e.g. "S · 173°"). */
   cardinals: CardinalLabels;
-  /** Lettre unique pour l'ouest sur le cadran de la boussole ("O" en francais, "W" en anglais). */
+  /** Single letter for west on the compass dial ("O" in French, "W" in English). */
   compassWestLabel: string;
   compassAccessibilityLabel: string;
   home: {
@@ -59,7 +59,7 @@ export type Translations = {
       allowRevision: { label: string; description: string };
       hideOtherAnswers: { label: string; description: string };
     };
-    /** Latitude/longitude saisies a la main quand "Utiliser ma position" est desactive. */
+    /** Latitude/longitude entered by hand when "Use my position" is off. */
     customOrigin: { latitude: string; longitude: string };
     availability: (available: number, rounds: number) => string;
   };
@@ -73,15 +73,15 @@ export type Translations = {
     roundOver: string;
     reality: string;
     yourAnswer: string;
-    /** Navigue vers la section "cap" (boussole) pendant la saisie, sans valider. */
+    /** Navigates to the "heading" (compass) section while answering, without submitting. */
     nextStep: string;
-    /** Revient vers la section "distance"/"inclinaison" pendant la saisie, sans valider. */
+    /** Goes back to the "distance"/"inclination" section while answering, without submitting. */
     previousStep: string;
-    /** Remplace les initiales sur l'onglet du joueur actif ("A Matou de jouer"). */
+    /** Replaces the initials on the active player's tab ("Matou's turn"). */
     playerTurn: (name: string) => string;
   };
   placeCard: {
-    /** Accessibilite du badge "W" qui ouvre la page Wikipedia du lieu (revelation seulement). */
+    /** Accessibility label for the "W" badge that opens the place's Wikipedia page (reveal only). */
     wikiLabel: string;
   };
   sliders: {
@@ -94,7 +94,7 @@ export type Translations = {
     distance: string;
     inclination: string;
     yourScore: string;
-    /** Accessibilite du bouton ⓘ qui affiche/cache scoringInfo. */
+    /** Accessibility label for the ⓘ button that shows/hides scoringInfo. */
     scoringInfoLabel: string;
     scoringInfo: string;
   };
@@ -103,10 +103,10 @@ export type Translations = {
     menu: string;
     winner: (name: string) => string;
     tie: (names: string) => string;
-    /** Mot de liaison entre deux noms a egalite ("et" / "and"). */
+    /** Connector word between two tied names ("et" / "and"). */
     and: string;
     roundBest: (name: string) => string;
-    /** Titres des rangs (solo), meme ordre que RANKS dans constants/index.ts. */
+    /** Rank titles (solo), same order as RANKS in constants/index.ts. */
     ranks: readonly [string, string, string, string, string];
   };
   settings: {
@@ -117,7 +117,7 @@ export type Translations = {
     author: string;
     claudeMention: string;
     dataTitle: string;
-    /** Explique precisement ce que la sauvegarde locale contient, avant le bouton qui l'efface. */
+    /** Explains precisely what local storage contains, right before the button that clears it. */
     dataHint: string;
     clearData: string;
     dataCleared: string;
@@ -130,8 +130,6 @@ export type Translations = {
     playerNameAccessibility: (index: number) => string;
     difficultyTitle: string;
     difficultyHint: string;
-    buzzerModeTitle: string;
-    buzzerModes: Record<IndicesBuzzerMode, string>;
     answerMethodTitle: string;
     answerMethods: Record<IndicesAnswerMethod, string>;
   };
