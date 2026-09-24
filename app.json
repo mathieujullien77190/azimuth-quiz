@@ -3,7 +3,7 @@
     "name": "Azimuth Quiz",
     "slug": "full-azimut",
     "scheme": "fullazimut",
-    "version": "2.13.0",
+    "version": "2.14.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
