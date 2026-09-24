@@ -1,6 +1,6 @@
 import { decodeBoussolePlaces, decodeIndicesPlaces, type MergedPlaces } from '@/constants/places/codec';
 import placesData from '@/constants/places/places.json';
-import type { IndicesAnswerMethod, IndicesClueId, IndicesPlace, IndicesSettings } from '@/types';
+import type { IndicesAnswerMethod, IndicesCategory, IndicesClueId, IndicesPlace, IndicesSettings } from '@/types';
 
 // Indices game: dedicated places, unrelated to constants/places/ (Boussole) except that the
 // starting data (name/country/coordinates/difficulty) was imported from CITIES over there, then
@@ -51,11 +51,20 @@ const CAPITAL_KEYS = new Set(
 
 export const isCapitalPlace = (place: Pick<IndicesPlace, 'name' | 'code'>): boolean => CAPITAL_KEYS.has(`${place.name}|${place.code}`);
 
+// Reuses Boussole's category id/emoji/label conventions (see constants/index.ts and
+// i18n's setup.categories) rather than duplicating them — only these 2 of the 6 Boussole
+// categories apply to Indices, since its whole pool is cities.
+export const INDICES_CATEGORIES: { id: IndicesCategory; emoji: string }[] = [
+  { id: 'cities', emoji: '🏙️' },
+  { id: 'capital', emoji: '⭐' },
+];
+
 export const INDICES_ANSWER_METHODS: { id: IndicesAnswerMethod }[] = [{ id: 'spoken' }, { id: 'typed' }];
 
 export const DEFAULT_INDICES_SETTINGS: IndicesSettings = {
   playerNames: [''],
   difficulty: 'easy',
+  categories: ['cities', 'capital'],
   answerMethod: 'spoken',
   rounds: 5,
   startWithFirstLetter: false,

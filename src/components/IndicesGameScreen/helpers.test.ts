@@ -1,4 +1,4 @@
-import { INDICES_CLUE_ORDER, INDICES_PLACES } from '@/constants';
+import { INDICES_CLUE_ORDER, INDICES_PLACES, isCapitalPlace } from '@/constants';
 import type { Difficulty, IndicesClueId } from '@/types';
 
 import { maxScoreForRound, nameSkeleton, normalizePlaceGuess, randomIndicesPlace, totalRevealCount } from './helpers';
@@ -39,18 +39,32 @@ describe('randomIndicesPlace', () => {
 
   it.each(difficulties)('only returns places matching difficulty %s', (difficulty) => {
     for (let i = 0; i < 20; i += 1) {
-      expect(randomIndicesPlace(difficulty, 'fr').difficulty).toBe(difficulty);
+      expect(randomIndicesPlace(difficulty, ['cities', 'capital'], 'fr').difficulty).toBe(difficulty);
     }
   });
 
   it('falls back to the full pool when the filtered pool is empty', () => {
-    const place = randomIndicesPlace('does-not-exist' as Difficulty, 'fr');
+    const place = randomIndicesPlace('does-not-exist' as Difficulty, ['cities', 'capital'], 'fr');
     expect(INDICES_PLACES).toContainEqual(place);
+  });
+
+  it('only draws capitals when "cities" is not selected', () => {
+    for (let i = 0; i < 20; i += 1) {
+      const place = randomIndicesPlace('easy', ['capital'], 'fr');
+      expect(isCapitalPlace(place)).toBe(true);
+    }
+  });
+
+  it('only draws non-capital cities when "capital" is not selected', () => {
+    for (let i = 0; i < 20; i += 1) {
+      const place = randomIndicesPlace('easy', ['cities'], 'fr');
+      expect(isCapitalPlace(place)).toBe(false);
+    }
   });
 
   it('in English, never draws an "easy" French place (a French easy place is bumped to intermediate)', () => {
     for (let i = 0; i < 20; i += 1) {
-      const place = randomIndicesPlace('easy', 'en');
+      const place = randomIndicesPlace('easy', ['cities', 'capital'], 'en');
       if (place.code === 'FR') expect(place.difficulty).not.toBe('easy');
     }
   });

@@ -213,7 +213,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
     };
   }, []);
 
-  const [place, setPlace] = useState(() => randomIndicesPlace(settings.difficulty, language));
+  const [place, setPlace] = useState(() => randomIndicesPlace(settings.difficulty, settings.categories, language));
   const bearing = bearingDeg(origin.coordinates, place.coordinates);
   const distance = distanceKm(origin.coordinates, place.coordinates);
 
@@ -352,7 +352,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
       return;
     }
     setRoundNumber((n) => n + 1);
-    setPlace(randomIndicesPlace(settings.difficulty, language));
+    setPlace(randomIndicesPlace(settings.difficulty, settings.categories, language));
     setRevealedClueIds(settings.startWithFirstLetter ? ['firstLetter'] : []);
     setTurnIndex(0);
     setBuzzOpen(false);

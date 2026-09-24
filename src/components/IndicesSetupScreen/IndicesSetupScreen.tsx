@@ -4,6 +4,7 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 import {
   DIFFICULTIES,
   INDICES_ANSWER_METHODS,
+  INDICES_CATEGORIES,
   MAX_PLAYERS,
   MIN_PLAYERS,
   NAME_PLACEHOLDERS,
@@ -16,7 +17,7 @@ import { initials, shuffle } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useIndicesSettings } from '@/settings';
 import { useTheme, useThemedStyles } from '@/themes';
-import type { Theme } from '@/types';
+import type { IndicesCategory, Theme } from '@/types';
 
 import Button from '../ui/Button';
 import Chip from '../ui/Chip';
@@ -98,6 +99,13 @@ export const IndicesSetupScreen = ({ onStart, onBack }: IndicesSetupScreenProps)
   const playerCount = settings.playerNames.length;
   const placeholderNames = useMemo(() => shuffle([...NAME_PLACEHOLDERS]), []);
 
+  const toggleCategory = (category: IndicesCategory) => {
+    const categories = settings.categories.includes(category)
+      ? settings.categories.filter((c) => c !== category)
+      : [...settings.categories, category];
+    updateSettings({ categories });
+  };
+
   return (
     <Screen>
       <Text style={styles.title}>{t.indicesSetup.screenTitle}</Text>
@@ -143,6 +151,20 @@ export const IndicesSetupScreen = ({ onStart, onBack }: IndicesSetupScreenProps)
               </View>
             );
           })}
+        </View>
+      </Section>
+
+      <Section title={t.setup.categoriesTitle}>
+        <View style={styles.chips}>
+          {INDICES_CATEGORIES.map((category) => (
+            <Chip
+              key={category.id}
+              emoji={category.emoji}
+              label={t.setup.categories[category.id]}
+              onPress={() => toggleCategory(category.id)}
+              selected={settings.categories.includes(category.id)}
+            />
+          ))}
         </View>
       </Section>
 

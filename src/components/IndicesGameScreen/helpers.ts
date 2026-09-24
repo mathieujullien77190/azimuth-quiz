@@ -1,7 +1,7 @@
-import { INDICES_CLUE_ORDER, INDICES_PLACES } from '@/constants';
+import { INDICES_CLUE_ORDER, INDICES_PLACES, isCapitalPlace } from '@/constants';
 import { effectiveDifficulty } from '@/helpers/places';
 import type { Language } from '@/i18n';
-import type { Difficulty, IndicesPlace } from '@/types';
+import type { Difficulty, IndicesCategory, IndicesPlace } from '@/types';
 
 /** Clues that reveal in 2 clicks: tier/symbol/day-night on the 1st, exact value on the 2nd. */
 const TWO_STAGE_CLUE_IDS = new Set(['distance', 'elevation', 'population', 'currency', 'localTime']);
@@ -29,10 +29,16 @@ export const totalRevealCount = (flagColorCount: number): number =>
  * used) leaves a higher — and thus more won — remaining score. */
 export const maxScoreForRound = (totalReveals: number): number => Math.ceil(totalReveals / 10) * 10;
 
-/** Round's place: drawn at random among places of the chosen difficulty (falls back to the
- * whole pool if the filter is empty, which shouldn't happen with 446 places spread over 4 tiers). */
-export const randomIndicesPlace = (difficulty: Difficulty, language: Language): IndicesPlace => {
-  const pool = INDICES_PLACES.filter((place) => effectiveDifficulty(place, language) === difficulty);
+/** Round's place: drawn at random among places matching both the chosen difficulty and the
+ * chosen categories (falls back to the whole pool if the filter is empty). "Cities" means
+ * non-capital cities here — a place matches if it's a capital and 'capital' is selected, or if
+ * it isn't and 'cities' is selected (see `isCapitalPlace`, cross-referenced from Boussole). */
+export const randomIndicesPlace = (difficulty: Difficulty, categories: IndicesCategory[], language: Language): IndicesPlace => {
+  const pool = INDICES_PLACES.filter((place) => {
+    const isCapital = isCapitalPlace(place);
+    const matchesCategory = (isCapital && categories.includes('capital')) || (!isCapital && categories.includes('cities'));
+    return matchesCategory && effectiveDifficulty(place, language) === difficulty;
+  });
   const source = pool.length > 0 ? pool : INDICES_PLACES;
   return source[Math.floor(Math.random() * source.length)];
 };

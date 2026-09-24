@@ -53,6 +53,20 @@ describe('IndicesSetupScreen', () => {
     expect(inputs[2].props.value).toBe('');
   });
 
+  it('both category chips are selected by default, and can be toggled off and back on', async () => {
+    const { getByText } = await renderScreen();
+
+    expect(getByText('Villes').parent?.props.accessibilityState.selected).toBe(true);
+    expect(getByText('Capitales').parent?.props.accessibilityState.selected).toBe(true);
+
+    await fireEvent.press(getByText('Capitales'));
+    expect(getByText('Capitales').parent?.props.accessibilityState.selected).toBe(false);
+    expect(getByText('Villes').parent?.props.accessibilityState.selected).toBe(true);
+
+    await fireEvent.press(getByText('Capitales'));
+    expect(getByText('Capitales').parent?.props.accessibilityState.selected).toBe(true);
+  });
+
   it('updates the difficulty selection when a difficulty chip is pressed', async () => {
     const { getByText } = await renderScreen();
 

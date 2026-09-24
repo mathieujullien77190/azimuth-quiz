@@ -218,6 +218,7 @@ export type IndicesAnswerMethod = 'spoken' | 'typed';
 export type IndicesSettings = {
   playerNames: string[];
   difficulty: Difficulty;
+  categories: IndicesCategory[];
   answerMethod: IndicesAnswerMethod;
   rounds: number;
   /** Each round starts with the first-letter clue already revealed for free, instead of
