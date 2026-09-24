@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import {
@@ -14,6 +14,7 @@ import {
   spacing,
 } from '@/constants';
 import { initials, shuffle } from '@/helpers';
+import { loadIndicesHistory } from '@/helpers/indicesHistory';
 import { useTranslation } from '@/i18n';
 import { useIndicesSettings } from '@/settings';
 import { useTheme, useThemedStyles } from '@/themes';
@@ -98,6 +99,13 @@ export const IndicesSetupScreen = ({ onStart, onBack }: IndicesSetupScreenProps)
   const { settings, updateSettings } = useIndicesSettings();
   const playerCount = settings.playerNames.length;
   const placeholderNames = useMemo(() => shuffle([...NAME_PLACEHOLDERS]), []);
+
+  // Fire-and-forget: by the time the player presses "Start", the read is essentially always
+  // done, so the very first round already benefits from the draw history (see
+  // helpers/indicesHistory.ts) instead of only rounds 2+ within this session.
+  useEffect(() => {
+    loadIndicesHistory();
+  }, []);
 
   const toggleCategory = (category: IndicesCategory) => {
     const categories = settings.categories.includes(category)

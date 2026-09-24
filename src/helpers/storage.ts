@@ -10,6 +10,7 @@ import {
 import type { Language } from '@/i18n';
 import type { GameSettings } from '@/types';
 
+import { clearIndicesHistory } from './indicesHistory';
 import { sanitizeSettings } from './settings';
 
 const isLanguage = (value: unknown): value is Language => value === 'fr' || value === 'en';
@@ -67,10 +68,11 @@ export const saveLanguage = async (language: Language): Promise<void> => {
   }
 };
 
-/** Clears everything the app saves on the device: Boussole settings, language and UFO
- * state (+ a possible "best score" left over from an earlier version). Nothing else is
- * persisted (Indices has no save, the end-of-game score is no longer stored). */
+/** Clears everything the app saves on the device: Boussole settings, language, UFO state and
+ * Indices' draw history (+ a possible "best score" left over from an earlier version). Indices'
+ * own settings aren't persisted in the first place (reset every launch). */
 export const clearAppData = async (): Promise<void> => {
+  clearIndicesHistory();
   try {
     await AsyncStorage.multiRemove([
       BEST_SCORE_STORAGE_KEY,

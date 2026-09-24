@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { DEFAULT_ORIGIN, INDICES_CLUE_ORDER, PLAYER_COLORS, fontSize, spacing } from '@/constants';
 import { countryFlagColors } from '@/constants/places/countries';
 import { bearingDeg, distanceKm, formatNumber, playerDisplayName, resolveOrigin } from '@/helpers';
+import { getCachedIndicesHistory, recordIndicesDraw } from '@/helpers/indicesHistory';
 import { useLanguage, useTranslation } from '@/i18n';
 import { useIndicesSettings } from '@/settings';
 import { useTheme, useThemedStyles } from '@/themes';
@@ -213,7 +214,11 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
     };
   }, []);
 
-  const [place, setPlace] = useState(() => randomIndicesPlace(settings.difficulty, settings.categories, language));
+  const [place, setPlace] = useState(() => {
+    const drawn = randomIndicesPlace(settings.difficulty, settings.categories, language, getCachedIndicesHistory() ?? {});
+    recordIndicesDraw(drawn);
+    return drawn;
+  });
   const bearing = bearingDeg(origin.coordinates, place.coordinates);
   const distance = distanceKm(origin.coordinates, place.coordinates);
 
@@ -352,7 +357,12 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
       return;
     }
     setRoundNumber((n) => n + 1);
-    setPlace(randomIndicesPlace(settings.difficulty, settings.categories, language));
+    // Never null here (unlike the initial draw above): recordIndicesDraw already populated the
+    // module-level cache synchronously for this very place pool, on mount, before any round
+    // could finish and reach this point.
+    const nextPlace = randomIndicesPlace(settings.difficulty, settings.categories, language, getCachedIndicesHistory()!);
+    recordIndicesDraw(nextPlace);
+    setPlace(nextPlace);
     setRevealedClueIds(settings.startWithFirstLetter ? ['firstLetter'] : []);
     setTurnIndex(0);
     setBuzzOpen(false);

@@ -48,6 +48,9 @@ export const SETTINGS_STORAGE_KEY = 'fullazimut:settings';
 export const LANGUAGE_STORAGE_KEY = 'fullazimut:language';
 /** Once the home screen's UFO is caught (clicked), it stops moving forever. */
 export const UFO_CAUGHT_STORAGE_KEY = 'fullazimut:ufo-caught';
+/** How many times each Indices place has been drawn, across every game — lets rounds avoid
+ * repeats (see helpers/indicesHistory.ts). */
+export const INDICES_HISTORY_STORAGE_KEY = 'fullazimut:indices-history';
 
 // --- Ranks (solo): the title comes from translations.endScreen.ranks (same order). ---
 export const RANKS = [

@@ -1,4 +1,5 @@
 import { INDICES_CLUE_ORDER, INDICES_PLACES, isCapitalPlace } from '@/constants';
+import { pickLeastDrawn, type IndicesDrawHistory } from '@/helpers/indicesHistory';
 import { effectiveDifficulty } from '@/helpers/places';
 import type { Language } from '@/i18n';
 import type { Difficulty, IndicesCategory, IndicesPlace } from '@/types';
@@ -29,18 +30,26 @@ export const totalRevealCount = (flagColorCount: number): number =>
  * used) leaves a higher — and thus more won — remaining score. */
 export const maxScoreForRound = (totalReveals: number): number => Math.ceil(totalReveals / 10) * 10;
 
-/** Round's place: drawn at random among places matching both the chosen difficulty and the
- * chosen categories (falls back to the whole pool if the filter is empty). "Cities" means
- * non-capital cities here — a place matches if it's a capital and 'capital' is selected, or if
- * it isn't and 'cities' is selected (see `isCapitalPlace`, cross-referenced from Boussole). */
-export const randomIndicesPlace = (difficulty: Difficulty, categories: IndicesCategory[], language: Language): IndicesPlace => {
+/** Round's place: among places matching both the chosen difficulty and the chosen categories
+ * (falls back to the whole pool if the filter is empty), prefers whichever have been drawn the
+ * fewest times per `history` — never-drawn places first, then, once everything in the pool has
+ * come up at least once, cycles through the least-drawn ones instead of repeating at random. See
+ * `pickLeastDrawn`/`recordIndicesDraw` in helpers/indicesHistory.ts. "Cities" means non-capital
+ * cities here — a place matches if it's a capital and 'capital' is selected, or if it isn't and
+ * 'cities' is selected (see `isCapitalPlace`, cross-referenced from Boussole). */
+export const randomIndicesPlace = (
+  difficulty: Difficulty,
+  categories: IndicesCategory[],
+  language: Language,
+  history: IndicesDrawHistory = {},
+): IndicesPlace => {
   const pool = INDICES_PLACES.filter((place) => {
     const isCapital = isCapitalPlace(place);
     const matchesCategory = (isCapital && categories.includes('capital')) || (!isCapital && categories.includes('cities'));
     return matchesCategory && effectiveDifficulty(place, language) === difficulty;
   });
   const source = pool.length > 0 ? pool : INDICES_PLACES;
-  return source[Math.floor(Math.random() * source.length)];
+  return pickLeastDrawn(source, history);
 };
 
 /** Normalizes a place name for comparison ("I type the city" mode): lowercased, accents,

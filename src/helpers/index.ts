@@ -13,6 +13,14 @@ export {
   straightDistanceKm,
 } from './geo';
 export { kmToRatio, ratioToKm } from './distanceScale';
+export {
+  clearIndicesHistory,
+  getCachedIndicesHistory,
+  indicesPlaceKey,
+  loadIndicesHistory,
+  pickLeastDrawn,
+  recordIndicesDraw,
+} from './indicesHistory';
 export { resolveOrigin } from './location';
 export { filterPlaces, pickPlaces } from './places';
 export { shuffle } from './random';
