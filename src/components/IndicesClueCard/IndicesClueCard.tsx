@@ -129,8 +129,7 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       height: 78,
     },
     lockIcon: {
-      fontSize: 17,
-      opacity: 0.6,
+      fontSize: 22,
     },
     bigEmoji: {
       fontSize: 28,
