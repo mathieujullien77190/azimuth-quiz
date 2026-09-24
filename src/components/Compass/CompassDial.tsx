@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import Svg, { Circle, Defs, G, Line, Polygon, RadialGradient, Stop, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, G, Line, Polygon, Text as SvgText } from 'react-native-svg';
 
 import { useTranslation } from '@/i18n';
 import { useTheme } from '@/themes';
@@ -26,7 +26,7 @@ export const CompassDial = memo(function CompassDial({
   extraNeedles,
   truthBearing,
 }: CompassDialProps) {
-  const { colors, compass, typography } = useTheme();
+  const { colors, typography } = useTheme();
   const t = useTranslation();
   const points = cardinalPoints(t.compassWestLabel);
   const tickStyle = {
@@ -45,18 +45,11 @@ export const CompassDial = memo(function CompassDial({
 
   return (
     <Svg width={size} height={size}>
-      <Defs>
-        <RadialGradient id="face" cx="50%" cy="45%" r="60%">
-          <Stop offset="0%" stopColor={compass.faceInner} />
-          <Stop offset="100%" stopColor={compass.faceOuter} />
-        </RadialGradient>
-      </Defs>
-
       <Circle
         cx={center}
         cy={center}
         r={radius * FACE_RADIUS_RATIO}
-        fill="url(#face)"
+        fill={colors.surface}
         stroke={colors.border}
         strokeWidth={3}
       />
