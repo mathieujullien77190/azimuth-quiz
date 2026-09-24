@@ -265,11 +265,12 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const knowsLength = revealedClueIds.includes('letterCount');
   const knowsFirstLetter = revealedClueIds.includes('firstLetter');
   const skeletonGroups =
-    knowsWordCount || knowsLength || knowsFirstLetter
+    knowsWordCount || knowsLength || knowsFirstLetter || vowelsRevealed
       ? nameSkeleton(place.name, {
-          groupByWord: knowsWordCount,
+          groupByWord: knowsWordCount || vowelsRevealed,
           revealFirst: knowsFirstLetter,
-          lengthKnown: knowsLength,
+          lengthKnown: knowsLength || vowelsRevealed,
+          revealVowels: vowelsRevealed,
         })
       : [];
 

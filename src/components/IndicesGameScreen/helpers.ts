@@ -65,11 +65,21 @@ export type NameSkeletonSlot = string | null;
  * words apart, spaced widely (see `skeletonRow` in IndicesGameScreen). */
 const GENERIC_WORD_SLOTS = 1;
 
+const isVowel = (letter: string): boolean =>
+  /[AEIOU]/.test(
+    letter
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .toUpperCase(),
+  );
+
 /**
  * Splits the name into groups of slots for the "M _ _ _" recap above the buzz/give-up buttons.
  * `groupByWord` separates the words (the "Word count" clue revealed) instead of a single block,
  * `revealFirst` reveals the very first letter of the name (the "First letter" clue revealed),
- * `lengthKnown` (the "Letters" clue revealed) gives the real length of each box:
+ * `lengthKnown` (the "Letters" clue revealed) gives the real length of each box, `revealVowels`
+ * (the "Vowels" bonus clue revealed) fills in every vowel of the name on top of whatever else is
+ * known:
  * - neither known: no boxes, only the revealed letter (at most one) is kept;
  * - words known without the length: `GENERIC_WORD_SLOTS` boxes per word (indicative shape, not
  *   the real length);
@@ -77,7 +87,7 @@ const GENERIC_WORD_SLOTS = 1;
  */
 export const nameSkeleton = (
   name: string,
-  options: { groupByWord: boolean; revealFirst: boolean; lengthKnown: boolean },
+  options: { groupByWord: boolean; revealFirst: boolean; lengthKnown: boolean; revealVowels?: boolean },
 ): NameSkeletonSlot[][] => {
   const words = options.groupByWord ? name.trim().split(/\s+/) : [name];
   const firstLetter = name.replace(/[^\p{L}]/gu, '')[0]?.toUpperCase() ?? null;
@@ -92,7 +102,9 @@ export const nameSkeleton = (
 
   const groups = words.map((word, wordIndex) =>
     [...word.replace(/[^\p{L}]/gu, '')].map((letter, letterIndex): NameSkeletonSlot =>
-      options.revealFirst && wordIndex === 0 && letterIndex === 0 ? letter.toUpperCase() : null,
+      (options.revealFirst && wordIndex === 0 && letterIndex === 0) || (options.revealVowels && isVowel(letter))
+        ? letter.toUpperCase()
+        : null,
     ),
   );
   if (options.lengthKnown) return groups;
