@@ -14,7 +14,10 @@ export const day: Theme = {
     background: '#CFEBFA',
     surface: '#FFFFFF',
     surfaceHigh: '#E7F5FC',
-    border: '#B9DDEE',
+    // Darker/more saturated than the original pale blue (#B9DDEE): that one barely stood out
+    // against surfaceHigh or the compass face (both light blues too) — card outlines and the
+    // compass's minor degree ticks (see CompassDial) were nearly invisible.
+    border: '#7FA3BD',
     text: '#132033',
     textMuted: '#4C6178',
     accent: '#F97316',
