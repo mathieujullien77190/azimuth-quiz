@@ -123,9 +123,9 @@ export const CountriesView = () => {
             <div className="place-header">
               <div className="place-identity">
                 <span className="place-name">{row.fr}</span>
-                <span style={{ fontFamily: FLAG_FONT_FAMILY }}>{flagEmoji(row.code)}</span>
                 <span className="place-meta">{row.code}</span>
               </div>
+              <span style={{ fontFamily: FLAG_FONT_FAMILY, fontSize: 28, marginLeft: 'auto' }}>{flagEmoji(row.code)}</span>
             </div>
 
             <table className="kv-table">
