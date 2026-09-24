@@ -61,6 +61,9 @@ export const MASCOT_CAUGHT_STORAGE_KEY = 'azimuthquiz:ufo-caught';
 /** How many times each Indices place has been drawn, across every game — lets rounds avoid
  * repeats (see helpers/indicesHistory.ts). */
 export const INDICES_HISTORY_STORAGE_KEY = 'azimuthquiz:indices-history';
+/** Home screen mascot roaming + starry/cloudy backdrop drift: off by default (some devices
+ * stutter on them), opt-in via Settings. */
+export const ANIMATIONS_ENABLED_STORAGE_KEY = 'azimuthquiz:animations-enabled';
 
 // --- Ranks (solo): the title comes from translations.endScreen.ranks (same order). ---
 export const RANKS = [

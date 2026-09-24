@@ -12,6 +12,7 @@ import Button from '../ui/Button';
 import Chip from '../ui/Chip';
 import Screen from '../ui/Screen';
 import Section from '../ui/Section';
+import Toggle from '../ui/Toggle';
 import { APP_VERSION } from './constants';
 import type { SettingsScreenProps } from './types';
 
@@ -46,7 +47,8 @@ const createStyles = ({ colors, typography }: Theme) =>
 export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const styles = useThemedStyles(createStyles);
   const { language, setLanguage, resetLanguage } = useLanguage();
-  const { themeId, setThemeId, resetThemeId } = useThemeSettings();
+  const { themeId, setThemeId, resetThemeId, animationsEnabled, setAnimationsEnabled, resetAnimationsEnabled } =
+    useThemeSettings();
   const { resetSettings } = useSettings();
   const t = useTranslation();
   const [dataCleared, setDataCleared] = useState(false);
@@ -61,6 +63,7 @@ export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
     resetSettings();
     resetLanguage();
     resetThemeId();
+    resetAnimationsEnabled();
     setDataCleared(true);
   };
 
@@ -92,6 +95,7 @@ export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
             />
           ))}
         </View>
+        <Toggle {...t.settings.animationsToggle} onValueChange={setAnimationsEnabled} value={animationsEnabled} />
       </Section>
 
       <Section title={t.settings.dataTitle}>

@@ -469,7 +469,7 @@ describe('IndicesGameScreen — theme', () => {
     const settings: IndicesSettings = { ...DEFAULT_INDICES_SETTINGS, startWithFirstLetter: false };
     const { toJSON } = await render(
       <ThemeSettingsContext.Provider
-        value={{ themeId: 'day', ready: true, setThemeId: jest.fn(), resetThemeId: jest.fn() }}
+        value={{ themeId: 'day', ready: true, setThemeId: jest.fn(), resetThemeId: jest.fn(), animationsEnabled: false, setAnimationsEnabled: jest.fn(), resetAnimationsEnabled: jest.fn() }}
       >
         <IndicesSettingsContext.Provider value={{ settings, updateSettings: jest.fn() }}>
           <IndicesGameScreen onQuit={jest.fn()} />

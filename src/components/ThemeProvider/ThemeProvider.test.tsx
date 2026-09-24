@@ -2,22 +2,30 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
-import { THEME_STORAGE_KEY } from '@/constants';
+import { ANIMATIONS_ENABLED_STORAGE_KEY, THEME_STORAGE_KEY } from '@/constants';
 import { useThemeSettings } from '@/themes';
 
 import ThemeProvider from '.';
 
 const Probe = () => {
-  const { themeId, ready, setThemeId, resetThemeId } = useThemeSettings();
+  const { themeId, ready, setThemeId, resetThemeId, animationsEnabled, setAnimationsEnabled, resetAnimationsEnabled } =
+    useThemeSettings();
   return (
     <>
       <Text testID="themeId">{themeId}</Text>
       <Text testID="ready">{String(ready)}</Text>
+      <Text testID="animationsEnabled">{String(animationsEnabled)}</Text>
       <Text onPress={() => setThemeId('day')} testID="setDay">
         setDay
       </Text>
       <Text onPress={resetThemeId} testID="reset">
         reset
+      </Text>
+      <Text onPress={() => setAnimationsEnabled(true)} testID="enableAnimations">
+        enableAnimations
+      </Text>
+      <Text onPress={resetAnimationsEnabled} testID="resetAnimations">
+        resetAnimations
       </Text>
     </>
   );
@@ -74,6 +82,43 @@ describe('ThemeProvider', () => {
     expect(getByTestId('themeId').props.children).toBe('night');
     // Nothing is written to storage by resetThemeId (see the function's doc comment).
     expect(await AsyncStorage.getItem(THEME_STORAGE_KEY)).toBe('day');
+  });
+
+  it('loads a previously stored animationsEnabled value', async () => {
+    await AsyncStorage.setItem(ANIMATIONS_ENABLED_STORAGE_KEY, 'true');
+    const { getByTestId } = await render(
+      <ThemeProvider>
+        <Probe />
+      </ThemeProvider>,
+    );
+    await waitFor(() => expect(getByTestId('animationsEnabled').props.children).toBe('true'));
+  });
+
+  it('setAnimationsEnabled updates the value and persists it', async () => {
+    const { getByTestId } = await render(
+      <ThemeProvider>
+        <Probe />
+      </ThemeProvider>,
+    );
+    await waitFor(() => expect(getByTestId('ready').props.children).toBe('true'));
+    await fireEvent.press(getByTestId('enableAnimations'));
+    expect(getByTestId('animationsEnabled').props.children).toBe('true');
+    await waitFor(async () => expect(await AsyncStorage.getItem(ANIMATIONS_ENABLED_STORAGE_KEY)).toBe('true'));
+  });
+
+  it('resetAnimationsEnabled falls back to false without touching storage', async () => {
+    const { getByTestId } = await render(
+      <ThemeProvider>
+        <Probe />
+      </ThemeProvider>,
+    );
+    await waitFor(() => expect(getByTestId('ready').props.children).toBe('true'));
+    await fireEvent.press(getByTestId('enableAnimations'));
+    expect(getByTestId('animationsEnabled').props.children).toBe('true');
+
+    await fireEvent.press(getByTestId('resetAnimations'));
+    expect(getByTestId('animationsEnabled').props.children).toBe('false');
+    expect(await AsyncStorage.getItem(ANIMATIONS_ENABLED_STORAGE_KEY)).toBe('true');
   });
 
   it('does not update state after unmounting while the initial load is still pending', async () => {

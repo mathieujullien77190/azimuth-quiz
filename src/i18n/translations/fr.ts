@@ -139,6 +139,10 @@ export const fr: Translations = {
     languageOptions: { fr: 'Français', en: 'English' },
     appearanceTitle: 'Apparence',
     appearanceOptions: { night: '🌙 Nuit', day: '☀️ Jour' },
+    animationsToggle: {
+      label: 'Animations',
+      description: 'Mascotte qui se balade et ciel animé sur l’accueil. Désactivé par défaut (peut saccader sur certains téléphones).',
+    },
     aboutTitle: 'À propos',
     author: 'Par Matou.',
     claudeMention:

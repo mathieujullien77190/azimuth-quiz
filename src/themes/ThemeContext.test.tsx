@@ -16,18 +16,26 @@ describe('THEMES', () => {
 // component rendered outside one, which should never happen in the real app but must still be
 // a harmless, non-crashing default — same reasoning as LanguageContext's).
 const Probe = () => {
-  const { themeId, ready, setThemeId, resetThemeId } = useThemeSettings();
+  const { themeId, ready, setThemeId, resetThemeId, animationsEnabled, setAnimationsEnabled, resetAnimationsEnabled } =
+    useThemeSettings();
   const theme = useTheme();
   return (
     <>
       <Text testID="themeId">{themeId}</Text>
       <Text testID="ready">{String(ready)}</Text>
       <Text testID="themeName">{theme.name}</Text>
+      <Text testID="animationsEnabled">{String(animationsEnabled)}</Text>
       <Text onPress={() => setThemeId('day')} testID="setDay">
         setDay
       </Text>
       <Text onPress={resetThemeId} testID="reset">
         reset
+      </Text>
+      <Text onPress={() => setAnimationsEnabled(true)} testID="enableAnimations">
+        enableAnimations
+      </Text>
+      <Text onPress={resetAnimationsEnabled} testID="resetAnimations">
+        resetAnimations
       </Text>
     </>
   );
@@ -47,5 +55,13 @@ describe('default context value (no Provider)', () => {
     await fireEvent.press(getByTestId('reset'));
     // Still Night: the default context's setters don't actually change anything.
     expect(getByTestId('themeId').props.children).toBe('night');
+  });
+
+  it('animationsEnabled defaults to false, and its setters are harmless no-ops', async () => {
+    const { getByTestId } = await render(<Probe />);
+    expect(getByTestId('animationsEnabled').props.children).toBe('false');
+    await fireEvent.press(getByTestId('enableAnimations'));
+    await fireEvent.press(getByTestId('resetAnimations'));
+    expect(getByTestId('animationsEnabled').props.children).toBe('false');
   });
 });

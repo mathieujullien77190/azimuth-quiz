@@ -2,8 +2,27 @@ import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { Animated } from 'react-native';
 
 import { loadMascotCaught, saveMascotCaught } from '@/helpers';
+import { ThemeSettingsContext } from '@/themes';
 
 import HomeScreen from '.';
+
+// Animations are off by default (see ThemeSettingsContext): the roaming tests below need them on.
+const renderWithAnimations = () =>
+  render(
+    <ThemeSettingsContext.Provider
+      value={{
+        themeId: 'night',
+        ready: true,
+        setThemeId: jest.fn(),
+        resetThemeId: jest.fn(),
+        animationsEnabled: true,
+        setAnimationsEnabled: jest.fn(),
+        resetAnimationsEnabled: jest.fn(),
+      }}
+    >
+      <HomeScreen />
+    </ThemeSettingsContext.Provider>,
+  );
 
 const mockPush = jest.fn();
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }));
@@ -59,6 +78,21 @@ describe('HomeScreen — mascot settings button', () => {
     expect(mockedSaveMascotCaught).not.toHaveBeenCalled();
   });
 
+  it('stays put (no roaming) when not yet caught but animations are disabled', async () => {
+    mockedLoadMascotCaught.mockResolvedValue(false);
+    const timingSpy = jest.spyOn(Animated, 'timing');
+
+    const { getByText } = await render(<HomeScreen />);
+    await waitFor(() => expect(mockedLoadMascotCaught).toHaveBeenCalled());
+    await flushMicrotasks();
+    await fireEvent(getByText('AZIMUTH QUIZ').parent!, 'layout', {
+      nativeEvent: { layout: { width: 300, height: 120, x: 0, y: 0 } },
+    });
+
+    expect(timingSpy).not.toHaveBeenCalled();
+    timingSpy.mockRestore();
+  });
+
   it('roams around before being caught, then catching it saves the state and still navigates', async () => {
     mockedLoadMascotCaught.mockResolvedValue(false);
     // Resolves synchronously so the move (and, inside it, the recursive schedule) runs
@@ -71,7 +105,7 @@ describe('HomeScreen — mascot settings button', () => {
     // covers the "doesn't spin" branch instead of only doing so ~3 times out of 4.
     const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.01);
 
-    const { getByLabelText, getByText, unmount } = await render(<HomeScreen />);
+    const { getByLabelText, getByText, unmount } = await renderWithAnimations();
     await waitFor(() => expect(mockedLoadMascotCaught).toHaveBeenCalled());
     await flushMicrotasks();
 
@@ -99,7 +133,7 @@ describe('HomeScreen — mascot settings button', () => {
     // Math.random() close to 1 always picks the last MASCOT_PAUSE_OPTIONS_S entry (MASCOT_SPIN_PAUSE_S).
     const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.99);
 
-    const { getByText, unmount } = await render(<HomeScreen />);
+    const { getByText, unmount } = await renderWithAnimations();
     await waitFor(() => expect(mockedLoadMascotCaught).toHaveBeenCalled());
     await flushMicrotasks();
     await fireEvent(getByText('AZIMUTH QUIZ').parent!, 'layout', {
@@ -120,7 +154,7 @@ describe('HomeScreen — mascot settings button', () => {
       .spyOn(Animated, 'timing')
       .mockReturnValue({ start: (cb?: (result: { finished: boolean }) => void) => cb?.({ finished: false }), stop: jest.fn() } as unknown as Animated.CompositeAnimation);
 
-    const { getByText, unmount } = await render(<HomeScreen />);
+    const { getByText, unmount } = await renderWithAnimations();
     await waitFor(() => expect(mockedLoadMascotCaught).toHaveBeenCalled());
     await flushMicrotasks();
     await fireEvent(getByText('AZIMUTH QUIZ').parent!, 'layout', {
@@ -151,7 +185,7 @@ describe('HomeScreen — mascot settings button', () => {
     );
     const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.99);
 
-    const { getByText, unmount } = await render(<HomeScreen />);
+    const { getByText, unmount } = await renderWithAnimations();
     await waitFor(() => expect(mockedLoadMascotCaught).toHaveBeenCalled());
     await flushMicrotasks();
     await fireEvent(getByText('AZIMUTH QUIZ').parent!, 'layout', {
@@ -174,7 +208,7 @@ describe('HomeScreen — mascot settings button', () => {
       .mockReturnValue({ start: jest.fn(), stop: jest.fn() } as unknown as Animated.CompositeAnimation);
     const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
 
-    const { getByText, unmount } = await render(<HomeScreen />);
+    const { getByText, unmount } = await renderWithAnimations();
     await waitFor(() => expect(mockedLoadMascotCaught).toHaveBeenCalled());
     await flushMicrotasks();
     await fireEvent(getByText('AZIMUTH QUIZ').parent!, 'layout', {

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import Svg, { Circle, Ellipse, G } from 'react-native-svg';
 
-import { useTheme } from '@/themes';
+import { useTheme, useThemeSettings } from '@/themes';
 
 import {
   CLOUD_COUNT,
@@ -20,18 +20,22 @@ import { buildClouds, buildStars, cloudXRatio, twinkleOpacity } from './helpers'
  * blue sky by day (see `theme.isDark`). Purely decorative (pointerEvents none). */
 export const ThemeBackdrop = () => {
   const { colors, isDark } = useTheme();
+  const { animationsEnabled } = useThemeSettings();
   const { width, height } = useWindowDimensions();
   const stars = useMemo(() => buildStars(STAR_COUNT, STAR_SEED), []);
   const clouds = useMemo(() => buildClouds(CLOUD_COUNT, CLOUD_SEED), []);
   // Time elapsed since mount: 0 on first render (static export included, no hydration
-  // mismatch), then incremented via a client-side-only timer.
+  // mismatch), then incremented via a client-side-only timer. Animations off: stays 0, stars/
+  // clouds render at their initial (still decorative, just static) position/opacity, and the
+  // whole SVG never re-renders — no per-tick cost.
   const [elapsedMs, setElapsedMs] = useState(0);
 
   useEffect(() => {
+    if (!animationsEnabled) return undefined;
     const start = Date.now();
     const id = setInterval(() => setElapsedMs(Date.now() - start), TWINKLE_TICK_MS);
     return () => clearInterval(id);
-  }, []);
+  }, [animationsEnabled]);
 
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>

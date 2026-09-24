@@ -30,10 +30,12 @@ export { applyBestBonus, getRank, scoreRound } from './scoring';
 export { playerDisplayName, sanitizeSettings } from './settings';
 export {
   clearAppData,
+  loadAnimationsEnabled,
   loadLanguage,
   loadMascotCaught,
   loadSettings,
   loadThemeId,
+  saveAnimationsEnabled,
   saveLanguage,
   saveMascotCaught,
   saveSettings,

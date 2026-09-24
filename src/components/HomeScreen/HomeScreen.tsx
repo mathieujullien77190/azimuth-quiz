@@ -6,7 +6,7 @@ import { Animated, StyleSheet, Text, View } from 'react-native';
 import { fontSize, spacing } from '@/constants';
 import { loadMascotCaught, saveMascotCaught } from '@/helpers';
 import { useTranslation } from '@/i18n';
-import { useThemedStyles } from '@/themes';
+import { useThemedStyles, useThemeSettings } from '@/themes';
 import type { Theme } from '@/types';
 
 import GameCard from '../GameCard';
@@ -58,6 +58,7 @@ export const HomeScreen = () => {
   const router = useRouter();
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
+  const { animationsEnabled } = useThemeSettings();
 
   // As long as it's never been clicked, the mascot (UFO by night, helicopter by day — see
   // MascotButton) flies to a random position within the title zone (animated transition),
@@ -73,7 +74,7 @@ export const HomeScreen = () => {
     loadMascotCaught().then(setMascotCaught);
   }, []);
 
-  const roaming = !mascotCaught && mascotZone.width > 0 && mascotZone.height > 0;
+  const roaming = animationsEnabled && !mascotCaught && mascotZone.width > 0 && mascotZone.height > 0;
 
   useEffect(() => {
     if (!roaming) return undefined;

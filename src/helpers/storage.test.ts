@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLocales } from 'expo-localization';
 
 import {
+  ANIMATIONS_ENABLED_STORAGE_KEY,
   BEST_SCORE_STORAGE_KEY,
   MASCOT_CAUGHT_STORAGE_KEY,
   LANGUAGE_STORAGE_KEY,
@@ -11,10 +12,12 @@ import {
 
 import {
   clearAppData,
+  loadAnimationsEnabled,
   loadMascotCaught,
   loadLanguage,
   loadSettings,
   loadThemeId,
+  saveAnimationsEnabled,
   saveMascotCaught,
   saveLanguage,
   saveSettings,
@@ -147,6 +150,28 @@ describe('loadThemeId / saveThemeId', () => {
   });
 });
 
+describe('loadAnimationsEnabled / saveAnimationsEnabled', () => {
+  it('is false until saved', async () => {
+    expect(await loadAnimationsEnabled()).toBe(false);
+    await saveAnimationsEnabled(true);
+    expect(await loadAnimationsEnabled()).toBe(true);
+  });
+
+  it('round-trips back to false', async () => {
+    await saveAnimationsEnabled(true);
+    await saveAnimationsEnabled(false);
+    expect(await loadAnimationsEnabled()).toBe(false);
+  });
+
+  it('tolerates read/write failures', async () => {
+    (AsyncStorage.getItem as jest.Mock).mockRejectedValueOnce(new Error('boom'));
+    expect(await loadAnimationsEnabled()).toBe(false);
+
+    (AsyncStorage.setItem as jest.Mock).mockRejectedValueOnce(new Error('boom'));
+    await expect(saveAnimationsEnabled(true)).resolves.toBeUndefined();
+  });
+});
+
 describe('clearAppData', () => {
   it('removes every known storage key', async () => {
     await AsyncStorage.setItem(BEST_SCORE_STORAGE_KEY, '1');
@@ -154,6 +179,7 @@ describe('clearAppData', () => {
     await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, 'en');
     await AsyncStorage.setItem(THEME_STORAGE_KEY, 'day');
     await AsyncStorage.setItem(MASCOT_CAUGHT_STORAGE_KEY, 'true');
+    await AsyncStorage.setItem(ANIMATIONS_ENABLED_STORAGE_KEY, 'true');
 
     await clearAppData();
 
@@ -162,6 +188,7 @@ describe('clearAppData', () => {
     expect(await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY)).toBeNull();
     expect(await AsyncStorage.getItem(THEME_STORAGE_KEY)).toBeNull();
     expect(await AsyncStorage.getItem(MASCOT_CAUGHT_STORAGE_KEY)).toBeNull();
+    expect(await AsyncStorage.getItem(ANIMATIONS_ENABLED_STORAGE_KEY)).toBeNull();
   });
 
   it('tolerates a failure clearing storage', async () => {

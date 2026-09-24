@@ -145,7 +145,7 @@ describe('EarthSection — satellite', () => {
   it('shows a plane instead of the satellite by day', async () => {
     const { getByText, queryByText } = await render(
       <ThemeSettingsContext.Provider
-        value={{ themeId: 'day', ready: true, setThemeId: jest.fn(), resetThemeId: jest.fn() }}
+        value={{ themeId: 'day', ready: true, setThemeId: jest.fn(), resetThemeId: jest.fn(), animationsEnabled: false, setAnimationsEnabled: jest.fn(), resetAnimationsEnabled: jest.fn() }}
       >
         <EarthSection allowSatellite marks={[farMark]} showStraightLine={false} size={240} />
       </ThemeSettingsContext.Provider>,

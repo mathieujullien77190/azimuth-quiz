@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLocales } from 'expo-localization';
 
 import {
+  ANIMATIONS_ENABLED_STORAGE_KEY,
   BEST_SCORE_STORAGE_KEY,
   MASCOT_CAUGHT_STORAGE_KEY,
   LANGUAGE_STORAGE_KEY,
@@ -87,10 +88,27 @@ export const saveThemeId = async (themeId: ThemeId): Promise<void> => {
   }
 };
 
+/** Off by default: some devices stutter on the mascot roaming/backdrop drift animations. */
+export const loadAnimationsEnabled = async (): Promise<boolean> => {
+  try {
+    return (await AsyncStorage.getItem(ANIMATIONS_ENABLED_STORAGE_KEY)) === 'true';
+  } catch {
+    return false;
+  }
+};
+
+export const saveAnimationsEnabled = async (enabled: boolean): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(ANIMATIONS_ENABLED_STORAGE_KEY, enabled ? 'true' : 'false');
+  } catch {
+    // Not saved: not critical, defaults back to off on next launch.
+  }
+};
+
 /** Clears everything the app saves on the device: Boussole settings, language, theme, whether
- * the home screen's mascot has been caught, and Indices' draw history (+ a possible "best
- * score" left over from an earlier version). Indices' own settings aren't persisted in the
- * first place (reset every launch). */
+ * the home screen's mascot has been caught, whether animations are enabled, and Indices' draw
+ * history (+ a possible "best score" left over from an earlier version). Indices' own settings
+ * aren't persisted in the first place (reset every launch). */
 export const clearAppData = async (): Promise<void> => {
   clearIndicesHistory();
   try {
@@ -100,6 +118,7 @@ export const clearAppData = async (): Promise<void> => {
       LANGUAGE_STORAGE_KEY,
       THEME_STORAGE_KEY,
       MASCOT_CAUGHT_STORAGE_KEY,
+      ANIMATIONS_ENABLED_STORAGE_KEY,
     ]);
   } catch {
     // Nothing to do: at worst the old data sticks around, not critical.
