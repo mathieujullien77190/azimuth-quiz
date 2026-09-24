@@ -1,5 +1,3 @@
-export type SortKey = 'name' | 'countryName' | 'code' | 'lat' | 'lon';
-
 export type Field =
   | 'category'
   | 'difficulty'

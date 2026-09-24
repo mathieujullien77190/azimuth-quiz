@@ -4,12 +4,14 @@ export const ChipGroup = <T extends string,>({
   active,
   onToggle,
   colors,
+  emojis,
 }: {
   order: T[];
   labels: Record<T, string>;
   active: Set<T>;
   onToggle: (key: T) => void;
   colors?: Record<T, string>;
+  emojis?: Record<T, string>;
 }) => (
   <div className="row">
     {order.map((key) => {
@@ -24,7 +26,7 @@ export const ChipGroup = <T extends string,>({
           style={color ? ({ '--tier-color': color } as React.CSSProperties) : undefined}
           onClick={() => onToggle(key)}
         >
-          <span className="dot" />
+          {emojis?.[key] !== undefined ? <span>{emojis[key]}</span> : <span className="dot" />}
           {labels[key]}
         </button>
       );

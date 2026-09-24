@@ -20,28 +20,18 @@ import {
 } from '../../constants';
 import type { Category, Difficulty } from '@/types';
 
-import { filterRows, fmtCoord, INDICES_FIELD_BY_KEY, sortRows } from './helpers';
-import type { Field, SaveState, SortKey } from './types';
-
-const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-  { key: 'name', label: 'Nom' },
-  { key: 'countryName', label: 'Pays' },
-  { key: 'code', label: 'Code' },
-  { key: 'lat', label: 'Latitude' },
-  { key: 'lon', label: 'Longitude' },
-];
+import { filterRows, fmtCoord, INDICES_FIELD_BY_KEY } from './helpers';
+import type { Field, SaveState } from './types';
 
 export const PlacesView = () => {
   const [rows, setRows] = useState<PlaceRow[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState | null>(null);
 
+  const [panelOpen, setPanelOpen] = useState(true);
   const [query, setQuery] = useState('');
   const [categories, setCategories] = useState(new Set(CATEGORY_ORDER));
   const [difficulties, setDifficulties] = useState(new Set(DIFFICULTY_ORDER));
-  const [country, setCountry] = useState('');
-  const [sortKey, setSortKey] = useState<SortKey>('name');
-  const [sortDir, setSortDir] = useState<1 | -1>(1);
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -58,25 +48,18 @@ export const PlacesView = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [query, categories, difficulties, country, sortKey, sortDir]);
-
-  const countries = useMemo(
-    () => Array.from(new Set((rows ?? []).map((r) => countryFor(r.code)))).sort((a, b) => a.localeCompare(b, 'fr')),
-    [rows],
-  );
+  }, [query, categories, difficulties]);
 
   const visibleRows = useMemo(() => {
     if (!rows) return [];
-    const filtered = filterRows(rows, query, categories, difficulties, country);
-    return sortRows(filtered, sortKey, sortDir);
-  }, [rows, query, categories, difficulties, country, sortKey, sortDir]);
+    return filterRows(rows, query, categories, difficulties);
+  }, [rows, query, categories, difficulties]);
 
   const totalPages = pageCount(visibleRows.length);
   const pageRows = useMemo(() => paginate(visibleRows, page), [visibleRows, page]);
 
   const resetFilters = () => {
     setQuery('');
-    setCountry('');
     setCategories(new Set(CATEGORY_ORDER));
     setDifficulties(new Set(DIFFICULTY_ORDER));
   };
@@ -170,48 +153,44 @@ export const PlacesView = () => {
   return (
     <>
       <div className="panel">
-        <div className="row">
-          <span className="field-label">Recherche</span>
-          <input type="search" placeholder="Nom du lieu, pays ou code…" value={query} onChange={(e) => setQuery(e.target.value)} />
-          <select aria-label="Filtrer par pays" value={country} onChange={(e) => setCountry(e.target.value)}>
-            <option value="">Tous les pays</option>
-            {countries.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-          <button className="reset" type="button" onClick={resetFilters}>
-            Réinitialiser
+        <div className="row panel-header">
+          <span className="field-label">Filtres</span>
+          <button className="reset" type="button" onClick={() => setPanelOpen((open) => !open)}>
+            {panelOpen ? '▲ Réduire' : '▼ Déplier'}
           </button>
         </div>
-        <div className="row">
-          <span className="field-label">Tri</span>
-          <select value={sortKey} onChange={(e) => setSortKey(e.target.value as SortKey)}>
-            {SORT_OPTIONS.map((opt) => (
-              <option key={opt.key} value={opt.key}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-          <button className="reset" type="button" onClick={() => setSortDir((d) => (d === 1 ? -1 : 1))}>
-            {sortDir === 1 ? '▲ croissant' : '▼ décroissant'}
-          </button>
-        </div>
-        <div className="row">
-          <span className="field-label">Catégorie (Boussole)</span>
-          <ChipGroup order={CATEGORY_ORDER} labels={CATEGORY_LABELS} active={categories} onToggle={(key) => setCategories(toggleInSet(categories, key))} colors={CATEGORY_COLORS} />
-        </div>
-        <div className="row">
-          <span className="field-label">Difficulté</span>
-          <ChipGroup
-            order={DIFFICULTY_ORDER}
-            labels={DIFFICULTY_LABELS}
-            active={difficulties}
-            onToggle={(key) => setDifficulties(toggleInSet(difficulties, key))}
-            colors={DIFFICULTY_COLORS}
-          />
-        </div>
+        {panelOpen && (
+          <>
+            <div className="row">
+              <span className="field-label">Recherche</span>
+              <input type="search" placeholder="Nom du lieu, pays ou code…" value={query} onChange={(e) => setQuery(e.target.value)} />
+              <button className="reset" type="button" onClick={resetFilters}>
+                Réinitialiser
+              </button>
+            </div>
+            <div className="row">
+              <span className="field-label">Catégorie (Boussole)</span>
+              <ChipGroup
+                order={CATEGORY_ORDER}
+                labels={CATEGORY_LABELS}
+                active={categories}
+                onToggle={(key) => setCategories(toggleInSet(categories, key))}
+                colors={CATEGORY_COLORS}
+                emojis={CATEGORY_EMOJIS}
+              />
+            </div>
+            <div className="row">
+              <span className="field-label">Difficulté</span>
+              <ChipGroup
+                order={DIFFICULTY_ORDER}
+                labels={DIFFICULTY_LABELS}
+                active={difficulties}
+                onToggle={(key) => setDifficulties(toggleInSet(difficulties, key))}
+                colors={DIFFICULTY_COLORS}
+              />
+            </div>
+          </>
+        )}
       </div>
 
       <p className="count-line">
@@ -230,16 +209,28 @@ export const PlacesView = () => {
                 <span className="place-meta" title={countryFor(row.code)}>
                   {countryFor(row.code)} ({row.code})
                 </span>
-                {row.boussole && (
-                  <span className="category-badge" style={{ '--tier-color': CATEGORY_COLORS[row.boussole.category] } as React.CSSProperties}>
-                    {CATEGORY_EMOJIS[row.boussole.category]} {CATEGORY_LABELS[row.boussole.category]}
-                  </span>
-                )}
               </div>
               <div className="place-coords">
                 <span className="coord">{fmtCoord(row.coordinates.latitude, 'N', 'S')}</span>
                 <span className="coord">{fmtCoord(row.coordinates.longitude, 'E', 'O')}</span>
               </div>
+              {row.boussole && (
+                <div className="field-cell">
+                  <select
+                    className="field-select"
+                    style={{ '--tier-color': CATEGORY_COLORS[row.boussole.category] } as React.CSSProperties}
+                    value={row.boussole.category}
+                    onChange={(e) => handleBoussoleChange(row, { category: e.target.value as Category })}
+                  >
+                    {CATEGORY_ORDER.map((c) => (
+                      <option key={c} value={c}>
+                        {CATEGORY_EMOJIS[c]} {CATEGORY_LABELS[c]}
+                      </option>
+                    ))}
+                  </select>
+                  {saveFlagFor(row, 'category')}
+                </div>
+              )}
               <div className="field-cell">
                 <select
                   className="field-select"
@@ -264,26 +255,6 @@ export const PlacesView = () => {
                 {row.boussole ? (
                   <table className="kv-table">
                     <tbody>
-                      <tr>
-                        <th>Catégorie</th>
-                        <td>
-                          <div className="field-cell">
-                            <select
-                              className="field-select"
-                              style={{ '--tier-color': CATEGORY_COLORS[row.boussole.category] } as React.CSSProperties}
-                              value={row.boussole.category}
-                              onChange={(e) => handleBoussoleChange(row, { category: e.target.value as Category })}
-                            >
-                              {CATEGORY_ORDER.map((c) => (
-                                <option key={c} value={c}>
-                                  {CATEGORY_LABELS[c]}
-                                </option>
-                              ))}
-                            </select>
-                            {saveFlagFor(row, 'category')}
-                          </div>
-                        </td>
-                      </tr>
                       <tr>
                         <th>Wiki</th>
                         <td>
