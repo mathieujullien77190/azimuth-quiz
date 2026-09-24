@@ -53,11 +53,11 @@ describe('IndicesGameScreen — picking clues', () => {
   it('revealing a clue takes 1 point off the remaining score and advances the turn', async () => {
     const { getByText } = await renderGame({ playerNames: ['Zoé', 'Max'] });
     // Paris/France (3 flag colors): 25 possible clues in total, rounded up to 30.
-    expect(getByText('Zoé · 30 pts')).toBeTruthy();
+    expect(getByText('30 pts')).toBeTruthy();
 
     await fireEvent.press(getByText('Indicatif tél.'));
     expect(getByText('À Max de jouer')).toBeTruthy();
-    expect(getByText('Max · 29 pts')).toBeTruthy();
+    expect(getByText('29 pts')).toBeTruthy();
   });
 
   it('pressing an already-revealed single-shot clue again does not change the score', async () => {

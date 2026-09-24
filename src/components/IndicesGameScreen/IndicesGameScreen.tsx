@@ -576,7 +576,6 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
               <Text style={styles.quit}>{t.game.quit}</Text>
             </Pressable>
             <Text style={styles.score}>
-              {players.length > 1 && !roundOver ? `${players[turnIndex]} · ` : ''}
               {formatNumber(displayScore)} {t.common.pts}
             </Text>
           </View>
