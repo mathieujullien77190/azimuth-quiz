@@ -119,14 +119,20 @@ describe('normalizePlaceGuess', () => {
   });
 
   it('strips accents', () => {
-    expect(normalizePlaceGuess('São Paulo')).toBe('sao paulo');
+    expect(normalizePlaceGuess('São Paulo')).toBe('saopaulo');
   });
 
-  it('replaces punctuation with spaces and trims', () => {
-    expect(normalizePlaceGuess("  Côte d'Ivoire! ")).toBe('cote d ivoire');
+  it('drops spaces and punctuation entirely, not just collapses them', () => {
+    expect(normalizePlaceGuess("  Côte d'Ivoire! ")).toBe('cotedivoire');
   });
 
   it('treats equivalent spellings as equal', () => {
     expect(normalizePlaceGuess('Rio de Janeiro')).toBe(normalizePlaceGuess('  rio   DE Janeiro  '));
+  });
+
+  it("treats an apostrophe, a space, and no separator at all as equal", () => {
+    const withApostrophe = normalizePlaceGuess("N'Djamena");
+    expect(normalizePlaceGuess('N Djamena')).toBe(withApostrophe);
+    expect(normalizePlaceGuess('Ndjamena')).toBe(withApostrophe);
   });
 });

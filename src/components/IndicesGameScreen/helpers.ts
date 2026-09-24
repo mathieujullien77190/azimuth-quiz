@@ -35,15 +35,16 @@ export const randomIndicesPlace = (difficulty: Difficulty): IndicesPlace => {
   return source[Math.floor(Math.random() * source.length)];
 };
 
-/** Normalizes a place name for comparison ("I type the city" mode): lowercased, accents and
- * punctuation stripped, multiple spaces collapsed. */
+/** Normalizes a place name for comparison ("I type the city" mode): lowercased, accents,
+ * spaces and punctuation (apostrophes, hyphens...) all dropped outright — not just collapsed —
+ * so "N'Djamena", "N Djamena" and "Ndjamena" all compare equal regardless of which separator
+ * (or none) the player used. */
 export const normalizePlaceGuess = (value: string): string =>
   value
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, ' ')
-    .trim();
+    .replace(/[^\p{L}\p{N}]+/gu, '');
 
 /** A group (word) of "slots" in the recap above the buzz/give-up buttons: each slot is either
  * an already-revealed letter, or `null` (a box to draw as a dash, not revealed yet). */
