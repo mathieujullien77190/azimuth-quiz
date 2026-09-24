@@ -146,7 +146,6 @@ export type Translations = {
     noOneFound: string;
     whoBuzzes: string;
     buzzedPrompt: (name: string) => string;
-    buzzedPromptTyped: (name: string) => string;
     verify: string;
     cancel: string;
     correct: string;

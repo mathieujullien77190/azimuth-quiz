@@ -262,6 +262,26 @@ describe('IndicesGameScreen — buzz flow (spoken)', () => {
     expect(getByText('🔔 J’ai trouvé !')).toBeTruthy();
   });
 
+  it('keeps the miss banner and letter recap visible while picking who buzzes next (only the button itself is replaced)', async () => {
+    const { getByText, getAllByText, getAllByLabelText } = await renderGame({
+      answerMethod: 'spoken',
+      playerNames: ['Zoé', 'Max'],
+    });
+    await fireEvent.press(getAllByText('Lettres')[0]);
+    await fireEvent.press(getByText('🔔 J’ai trouvé !'));
+    await fireEvent.press(getAllByLabelText('Zoé')[1]);
+    await fireEvent.press(getByText('Vérifier'));
+    await fireEvent.press(getByText('✕ Faux'));
+    expect(getByText('Zoé se trompe — perd 10 points.')).toBeTruthy();
+    expect(getAllByText('P').length).toBeGreaterThan(0);
+
+    await fireEvent.press(getByText('🔔 J’ai trouvé !'));
+    expect(getByText('Qui buzze ?')).toBeTruthy();
+    // The button is gone, but the miss banner and letter recap from before are still there.
+    expect(getByText('Zoé se trompe — perd 10 points.')).toBeTruthy();
+    expect(getAllByText('P').length).toBeGreaterThan(0);
+  });
+
   it('asks who buzzes and lets any player be selected before verifying', async () => {
     const { getByText, getAllByLabelText } = await renderGame({
       answerMethod: 'spoken',

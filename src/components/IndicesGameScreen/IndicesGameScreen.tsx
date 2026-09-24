@@ -19,7 +19,7 @@ import { WRONG_ANSWER_PENALTY } from './constants';
 import { maxScoreForRound, normalizePlaceGuess, overlayTypedLetters, randomIndicesPlace, skeletonLetterCount, totalRevealCount } from './helpers';
 import type { IndicesGameScreenProps } from './types';
 
-const createStyles = ({ colors, typography }: Theme) =>
+const createStyles = ({ colors, radius, typography }: Theme) =>
   StyleSheet.create({
     title: {
       ...typography.display,
@@ -128,6 +128,33 @@ const createStyles = ({ colors, typography }: Theme) =>
       color: colors.textMuted,
       fontSize: fontSize.caption + 1,
       textAlign: 'center',
+    },
+    whoBuzzesRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    // Same pill look as the active tab in PlayerTabs (see its `active`/`labelActive` styles):
+    // reads as "this is the player who's currently doing something", same as up there.
+    buzzerBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'center',
+      gap: spacing.xs + 2,
+      paddingHorizontal: spacing.md - 2,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.button,
+      backgroundColor: colors.accent,
+    },
+    buzzerBadgeDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+    },
+    buzzerBadgeText: {
+      ...typography.heading,
+      color: colors.onAccent,
+      fontSize: fontSize.body - 1,
     },
     verdictRow: {
       flexDirection: 'row',
@@ -301,13 +328,13 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   };
 
   // "I found it"/"I don't know" buttons only rendered outside round-over (see the footer
-  // below): no need to re-check `roundOver` here.
+  // below): no need to re-check `roundOver` here. Deliberately doesn't touch `lastWrong`: the
+  // previous miss stays visible while the next player picks themselves (see the footer).
   const openBuzz = () => {
     setBuzzOpen(true);
     setVerified(false);
     setGuessText('');
     setBuzzedIndex(null);
-    setLastWrong(null);
   };
 
   const verify = () => setVerified(true);
@@ -435,24 +462,13 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
             <Button label={isLastRound ? t.game.last : t.indicesGame.continueLabel} onPress={continueRound} />
             <Button label={t.indicesGame.home} onPress={onQuit} variant="ghost" />
           </View>
-        ) : buzzOpen ? (
+        ) : buzzedIndex !== null ? (
           <View style={styles.buzzPanel}>
-            <Text style={styles.buzzTitle}>
-              {buzzedName === undefined
-                ? t.indicesGame.whoBuzzes
-                : settings.answerMethod === 'typed'
-                  ? t.indicesGame.buzzedPromptTyped(buzzedName)
-                  : t.indicesGame.buzzedPrompt(buzzedName)}
-            </Text>
-            <PlayerTabs
-              activeIndex={buzzedIndex ?? -1}
-              allowRevision
-              answered={noneAnswered}
-              onSelect={setBuzzedIndex}
-              order={playerOrder}
-              players={playerTabs}
-            />
-            {buzzedIndex !== null && settings.answerMethod === 'typed' && (
+            <View style={styles.buzzerBadge}>
+              <View style={[styles.buzzerBadgeDot, { backgroundColor: PLAYER_COLORS[buzzedIndex] }]} />
+              <Text style={styles.buzzerBadgeText}>{t.indicesGame.buzzedPrompt(buzzedName!)}</Text>
+            </View>
+            {settings.answerMethod === 'typed' && (
               <>
                 {skeletonLengthKnown && (
                   <View style={styles.skeletonRow}>
@@ -494,7 +510,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
                 <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
               </>
             )}
-            {buzzedIndex !== null && settings.answerMethod === 'spoken' && !verified && (
+            {settings.answerMethod === 'spoken' && !verified && (
               <>
                 <Button label={t.indicesGame.verify} onPress={verify} />
                 <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
@@ -541,7 +557,14 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
                 ))}
               </View>
             )}
-            <Button label={t.indicesGame.buzz} onPress={openBuzz} variant="ghost" />
+            {buzzOpen ? (
+              <View style={styles.whoBuzzesRow}>
+                <Text style={styles.buzzTitle}>{t.indicesGame.whoBuzzes}</Text>
+                <PlayerTabs activeIndex={-1} allowRevision answered={noneAnswered} onSelect={setBuzzedIndex} order={playerOrder} players={playerTabs} />
+              </View>
+            ) : (
+              <Button label={t.indicesGame.buzz} onPress={openBuzz} variant="ghost" />
+            )}
             <Button label={t.indicesGame.giveUp} onPress={giveUp} variant="ghost" />
           </View>
         )
