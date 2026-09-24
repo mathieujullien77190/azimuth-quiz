@@ -1,4 +1,6 @@
 import { INDICES_CLUE_ORDER, INDICES_PLACES } from '@/constants';
+import { effectiveDifficulty } from '@/helpers/places';
+import type { Language } from '@/i18n';
 import type { Difficulty, IndicesPlace } from '@/types';
 
 /** Clues that reveal in 2 clicks: tier/symbol/day-night on the 1st, exact value on the 2nd. */
@@ -29,8 +31,8 @@ export const maxScoreForRound = (totalReveals: number): number => Math.ceil(tota
 
 /** Round's place: drawn at random among places of the chosen difficulty (falls back to the
  * whole pool if the filter is empty, which shouldn't happen with 446 places spread over 4 tiers). */
-export const randomIndicesPlace = (difficulty: Difficulty): IndicesPlace => {
-  const pool = INDICES_PLACES.filter((place) => place.difficulty === difficulty);
+export const randomIndicesPlace = (difficulty: Difficulty, language: Language): IndicesPlace => {
+  const pool = INDICES_PLACES.filter((place) => effectiveDifficulty(place, language) === difficulty);
   const source = pool.length > 0 ? pool : INDICES_PLACES;
   return source[Math.floor(Math.random() * source.length)];
 };

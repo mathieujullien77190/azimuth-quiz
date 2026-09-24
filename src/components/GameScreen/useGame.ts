@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useTranslation } from '@/i18n';
+import { useLanguage, useTranslation } from '@/i18n';
 import {
   DEFAULT_DISTANCE_KM,
   DEFAULT_ORIGIN,
@@ -45,6 +45,9 @@ export const useGame = () => {
   settingsRef.current = settings;
 
   const t = useTranslation();
+  const { language } = useLanguage();
+  const languageRef = useRef(language);
+  languageRef.current = language;
   const deviceOriginNameRef = useRef(t.common.yourPosition);
   useEffect(() => {
     deviceOriginNameRef.current = t.common.yourPosition;
@@ -135,7 +138,7 @@ export const useGame = () => {
 
     setConfig(chosen);
     setOrigin(resolvedOrigin);
-    setPlaces(pickPlaces(resolvedOrigin.coordinates, chosen));
+    setPlaces(pickPlaces(resolvedOrigin.coordinates, chosen, languageRef.current));
     setRoundIndex(0);
     setRecords([]);
     startRound(chosen.playerNames.length, 0);

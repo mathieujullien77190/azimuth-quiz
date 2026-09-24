@@ -14,7 +14,7 @@ import {
   spacing,
 } from '@/constants';
 import { filterPlaces, initials, shuffle } from '@/helpers';
-import { useTranslation } from '@/i18n';
+import { useLanguage, useTranslation } from '@/i18n';
 import { useSettings } from '@/settings';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
@@ -183,9 +183,10 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
   const t = useTranslation();
+  const { language } = useLanguage();
   const { settings, ready, updateSettings } = useSettings();
   const playerCount = settings.playerNames.length;
-  const available = filterPlaces(settings.categories, settings.difficulties, settings.zone).length;
+  const available = filterPlaces(settings.categories, settings.difficulties, settings.zone, language).length;
   const zoneDescription = t.setup.zones[settings.zone].description;
   // A different order every time the screen loads, stable while typing.
   const placeholderNames = useMemo(() => shuffle([...NAME_PLACEHOLDERS]), []);

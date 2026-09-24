@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { DEFAULT_ORIGIN, INDICES_CLUE_ORDER, PLAYER_COLORS, fontSize, spacing } from '@/constants';
 import { countryFlagColors } from '@/constants/places/countries';
 import { bearingDeg, distanceKm, formatNumber, playerDisplayName, resolveOrigin } from '@/helpers';
-import { useTranslation } from '@/i18n';
+import { useLanguage, useTranslation } from '@/i18n';
 import { useIndicesSettings } from '@/settings';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { IndicesClueId, Origin, Theme } from '@/types';
@@ -192,6 +192,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
   const t = useTranslation();
+  const { language } = useLanguage();
   const { settings } = useIndicesSettings();
   const players = settings.playerNames.map((name, index) => playerDisplayName(name, index));
   const playerTabs = players.map((name, index) => ({ color: PLAYER_COLORS[index], name }));
@@ -212,7 +213,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
     };
   }, []);
 
-  const [place, setPlace] = useState(() => randomIndicesPlace(settings.difficulty));
+  const [place, setPlace] = useState(() => randomIndicesPlace(settings.difficulty, language));
   const bearing = bearingDeg(origin.coordinates, place.coordinates);
   const distance = distanceKm(origin.coordinates, place.coordinates);
 
@@ -351,7 +352,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
       return;
     }
     setRoundNumber((n) => n + 1);
-    setPlace(randomIndicesPlace(settings.difficulty));
+    setPlace(randomIndicesPlace(settings.difficulty, language));
     setRevealedClueIds(settings.startWithFirstLetter ? ['firstLetter'] : []);
     setTurnIndex(0);
     setBuzzOpen(false);

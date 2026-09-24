@@ -39,13 +39,20 @@ describe('randomIndicesPlace', () => {
 
   it.each(difficulties)('only returns places matching difficulty %s', (difficulty) => {
     for (let i = 0; i < 20; i += 1) {
-      expect(randomIndicesPlace(difficulty).difficulty).toBe(difficulty);
+      expect(randomIndicesPlace(difficulty, 'fr').difficulty).toBe(difficulty);
     }
   });
 
   it('falls back to the full pool when the filtered pool is empty', () => {
-    const place = randomIndicesPlace('does-not-exist' as Difficulty);
+    const place = randomIndicesPlace('does-not-exist' as Difficulty, 'fr');
     expect(INDICES_PLACES).toContainEqual(place);
+  });
+
+  it('in English, only draws French places one tier up from their real difficulty', () => {
+    for (let i = 0; i < 20; i += 1) {
+      const place = randomIndicesPlace('hard', 'en');
+      if (place.code === 'FR') expect(place.difficulty).toBe('intermediate');
+    }
   });
 });
 
