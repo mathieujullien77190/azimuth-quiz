@@ -9,7 +9,7 @@ import { countryName, countryPhoneCode, countryCurrencySymbol } from './countrie
  * isn't in the Boussole pool, `indices` is `null` if it isn't in the Indices pool (a place can be
  * in only one of the two). `decodeBoussolePlaces`/`decodeIndicesPlaces` are the only
  * place that knows the column order: `src/constants/places/index.ts`, `src/constants/
- * indices.ts` and `admin/vite.config.ts` all import from here rather than re-encoding it.
+ * indices.ts` and `admin/src/api/places.ts` all import from here rather than re-encoding it.
  */
 
 export const CATEGORY_CODES: Record<Category, string> = {

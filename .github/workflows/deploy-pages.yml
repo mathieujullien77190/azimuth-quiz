@@ -31,6 +31,19 @@ jobs:
       - name: Export web build (static, base path /full-azimut)
         run: npx expo export --platform web
 
+      - name: Install admin dependencies
+        run: npm ci
+        working-directory: admin
+
+      - name: Build admin app (static, base path /full-azimut/admin, no backend — see admin/src/changelog.ts)
+        run: npm run build
+        working-directory: admin
+
+      - name: Merge admin build into the main site's dist/admin/
+        run: |
+          mkdir -p dist/admin
+          cp -r admin/dist/. dist/admin/
+
       # Pages ignore les dossiers "_..." si Jekyll tourne dessus ; sans effet ici (deploiement
       # par Action, pas par branche), mais inoffensif a garder au cas ou la source change.
       - run: touch dist/.nojekyll

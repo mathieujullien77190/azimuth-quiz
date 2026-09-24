@@ -95,7 +95,7 @@ export const PlacesView = () => {
     );
     setSaveState({ index: row.index, field: 'difficulty', status: 'saving' });
 
-    saveDifficulty(row.index, difficulty)
+    saveDifficulty(row, difficulty)
       .then(({ boussole, indices }) => {
         setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, boussole, indices } : r)) ?? cur);
         setSaveState({ index: row.index, field: 'difficulty', status: 'saved' });
@@ -113,7 +113,7 @@ export const PlacesView = () => {
     setRows(rows.map((r) => (r.index === row.index ? { ...r, boussole: { ...r.boussole!, ...patch } } : r)));
     setSaveState({ index: row.index, field, status: 'saving' });
 
-    saveBoussole(row.index, patch)
+    saveBoussole(row, patch)
       .then((updated) => {
         setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, boussole: updated } : r)) ?? cur);
         setSaveState({ index: row.index, field, status: 'saved' });
@@ -132,7 +132,7 @@ export const PlacesView = () => {
     setRows(rows.map((r) => (r.index === row.index ? { ...r, indices: { ...r.indices!, ...patch } } : r)));
     setSaveState({ index: row.index, field, status: 'saving' });
 
-    saveIndices(row.index, patch)
+    saveIndices(row, patch)
       .then((updated) => {
         setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, indices: updated } : r)) ?? cur);
         setSaveState({ index: row.index, field, status: 'saved' });
@@ -156,7 +156,7 @@ export const PlacesView = () => {
   };
 
   const handleDelete = async (row: PlaceRow) => {
-    await deletePlace(row.index);
+    await deletePlace(row);
     setRows((cur) => (cur ?? []).filter((r) => r.index !== row.index));
   };
 

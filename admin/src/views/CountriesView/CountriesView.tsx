@@ -54,7 +54,7 @@ export const CountriesView = () => {
     setCountries(countries.map((c) => (c.code === row.code ? { ...c, ...patch } : c)));
     setSaveState({ code: row.code, field, status: 'saving' });
 
-    saveCountry(row.code, patch)
+    saveCountry(row, patch)
       .then((updated) => {
         setCountries((cur) => cur?.map((c) => (c.code === row.code ? updated : c)) ?? cur);
         setSaveState({ code: row.code, field, status: 'saved' });
@@ -180,7 +180,7 @@ export const CountriesView = () => {
         ))}
       </div>
 
-      <footer>{countries.length} pays — modifications écrites directement dans countries.json.</footer>
+      <footer>{countries.length} pays — les modifications sont enregistrées dans le journal (en haut), pas dans countries.json.</footer>
     </>
   );
 };

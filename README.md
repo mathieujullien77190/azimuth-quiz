@@ -57,13 +57,25 @@ npm run test:coverage
 
 Le site est exporté en statique (`web.output: "static"`, `experiments.baseUrl:
 "/full-azimut"` dans `app.json`) et publié sur GitHub Pages par
-`.github/workflows/deploy-pages.yml` à chaque push sur `master`.
+`.github/workflows/deploy-pages.yml` à chaque push sur `master`. Le même workflow
+build l'app d'admin (`admin/`, base path `/full-azimut/admin`) et la place dans
+`dist/admin/` avant publication, pour qu'elle finisse sur le même site.
 
 ## Données des lieux
 
 Les lieux de Boussole et Indices partagent un même pool (`places.json` +
-`countries.json`, tuples positionnels pour rester compacts). Pour les éditer sans
-toucher le JSON à la main, une petite app d'admin (Vite, dev-only) tourne en local :
+`countries.json`, tuples positionnels pour rester compacts). Pour les parcourir/éditer
+sans toucher le JSON à la main, une petite app d'admin (React + Vite) est déployée sur
+GitHub Pages, à côté du jeu :
+
+🔗 **[Éditeur de lieux](https://mathieujullien77190.github.io/full-azimut/admin/)**
+
+Elle n'a **aucun backend** : les données sont lues depuis le JSON figé au moment du
+build (donc en lecture, pas forcément à jour avec les tout derniers changements), et
+aucune modification n'est jamais écrite sur disque directement — pas d'API, pas
+d'auth à gérer. Chaque édition ajoute une ligne dans un journal texte affiché en haut
+de l'app ; on copie ce journal et on le colle à Claude, qui applique les changements
+décrits aux fichiers du dépôt. Ça marche pareil en local :
 
 ```bash
 npm run admin   # installe ses dépendances au premier lancement, puis lance le serveur dev

@@ -1,7 +1,8 @@
 import { decodeBoussolePlace, decodeIndicesPlace, type MergedPlaces } from '@/constants/places/codec';
+import placesData from '@/constants/places/places.json';
 import type { Difficulty, IndicesPlace, Place } from '@/types';
 
-import { del, getJson, putJson } from './http';
+import { logChange } from '../changelog';
 
 /** A place card: the common identity, plus each game's data when this place is in it
  * (either one can be absent — see `codec.ts`). */
@@ -14,10 +15,12 @@ export type PlaceRow = {
   indices: IndicesPlace | null;
 };
 
-export const fetchPlaces = async (): Promise<PlaceRow[]> => {
-  const entries = await getJson<MergedPlaces>('/api/places', 'Impossible de charger les lieux.');
+const ENTRIES = placesData as unknown as MergedPlaces;
 
-  return entries.map(([common, boussoleRow, indicesRow], index) => ({
+/** Reads the bundled `places.json` (no network, no backend — see changelog.ts): kept `async` so
+ * call sites reading it don't need to change just because this no longer fetches anything. */
+export const fetchPlaces = async (): Promise<PlaceRow[]> =>
+  ENTRIES.map(([common, boussoleRow, indicesRow], index) => ({
     index,
     name: common[0],
     code: common[1],
@@ -25,21 +28,43 @@ export const fetchPlaces = async (): Promise<PlaceRow[]> => {
     boussole: boussoleRow ? decodeBoussolePlace(common, boussoleRow) : null,
     indices: indicesRow ? decodeIndicesPlace(common, indicesRow) : null,
   }));
-};
 
 export type BoussolePatch = Partial<Pick<Place, 'category' | 'description'>>;
 export type IndicesPatch = Partial<
   Pick<IndicesPlace, 'positionInCountry' | 'population' | 'climateEmoji' | 'elevationMeters' | 'timezone' | 'airportCode' | 'emojis'>
 >;
 
-export const saveBoussole = (index: number, patch: BoussolePatch): Promise<Place> => putJson(`/api/places/${index}`, { boussole: patch });
+const fmt = (value: unknown): string => (Array.isArray(value) ? value.join(' ') : String(value ?? '(vide)'));
 
-export const saveIndices = (index: number, patch: IndicesPatch): Promise<IndicesPlace> => putJson(`/api/places/${index}`, { indices: patch });
+const identity = (row: Pick<PlaceRow, 'name' | 'code'>): string => `${row.name} (${row.code})`;
 
-/** Difficulty is shared between the two games (see `codec.ts`), so it's patched at the place
- * level, not under `boussole`/`indices`: the response carries both decoded game views back so
- * the UI can update whichever of them are present without a separate round-trip. */
-export const saveDifficulty = (index: number, difficulty: Difficulty): Promise<{ boussole: Place | null; indices: IndicesPlace | null }> =>
-  putJson(`/api/places/${index}`, { common: { difficulty } });
+export const saveBoussole = async (row: PlaceRow, patch: BoussolePatch): Promise<Place> => {
+  const current = row.boussole!;
+  for (const key of Object.keys(patch) as (keyof BoussolePatch)[]) {
+    logChange(`[Boussole] ${identity(row)} — ${key} : ${fmt(current[key])} -> ${fmt(patch[key])}`);
+  }
+  return { ...current, ...patch };
+};
 
-export const deletePlace = (index: number): Promise<void> => del(`/api/places/${index}`);
+export const saveIndices = async (row: PlaceRow, patch: IndicesPatch): Promise<IndicesPlace> => {
+  const current = row.indices!;
+  for (const key of Object.keys(patch) as (keyof IndicesPatch)[]) {
+    logChange(`[Indices] ${identity(row)} — ${key} : ${fmt(current[key])} -> ${fmt(patch[key])}`);
+  }
+  return { ...current, ...patch };
+};
+
+/** Difficulty is shared between the two games (see `codec.ts`), so it's logged once at the
+ * place level rather than once per game. */
+export const saveDifficulty = (row: PlaceRow, difficulty: Difficulty): Promise<{ boussole: Place | null; indices: IndicesPlace | null }> => {
+  const current = (row.boussole ?? row.indices)!.difficulty;
+  logChange(`[Difficulté] ${identity(row)} — ${current} -> ${difficulty}`);
+  return Promise.resolve({
+    boussole: row.boussole && { ...row.boussole, difficulty },
+    indices: row.indices && { ...row.indices, difficulty },
+  });
+};
+
+export const deletePlace = async (row: PlaceRow): Promise<void> => {
+  logChange(`[Suppression] ${identity(row)}`);
+};
