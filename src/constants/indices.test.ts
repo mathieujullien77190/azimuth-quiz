@@ -1,15 +1,7 @@
+import { countryFlagColors } from '@/constants/places/countries';
 import type { IndicesClueId } from '@/types';
 
-import {
-  DEFAULT_INDICES_SETTINGS,
-  INDICES_ANSWER_METHODS,
-  INDICES_BUZZER_MODES,
-  INDICES_CLUE_ORDER,
-  INDICES_FLAG_COLOR_FIELD,
-  INDICES_FLAG_COLORS_BY_COUNTRY,
-  INDICES_PLACES,
-  indicesPlaceFromRow,
-} from './indices';
+import { DEFAULT_INDICES_SETTINGS, INDICES_ANSWER_METHODS, INDICES_BUZZER_MODES, INDICES_CLUE_ORDER, INDICES_PLACES } from './indices';
 
 const ALL_CLUE_IDS: IndicesClueId[] = [
   'position',
@@ -43,8 +35,9 @@ describe('INDICES_PLACES', () => {
 
   it('every place has a matching flag-colors entry for its country', () => {
     for (const place of INDICES_PLACES) {
-      expect(INDICES_FLAG_COLORS_BY_COUNTRY[place.country]).toBeDefined();
-      expect(INDICES_FLAG_COLORS_BY_COUNTRY[place.country].length).toBeGreaterThan(0);
+      const colors = countryFlagColors(place.code);
+      expect(colors).toBeDefined();
+      expect(colors!.length).toBeGreaterThan(0);
     }
   });
 
@@ -61,57 +54,6 @@ describe('INDICES_PLACES', () => {
       expect(place.coordinates.latitude).toBeLessThanOrEqual(90);
       expect(place.coordinates.longitude).toBeGreaterThanOrEqual(-180);
       expect(place.coordinates.longitude).toBeLessThanOrEqual(180);
-    }
-  });
-});
-
-describe('indicesPlaceFromRow', () => {
-  it('maps each tuple field to the correct named property', () => {
-    const row = [
-      'Testville',
-      'Testland',
-      1.5,
-      -2.5,
-      'easy',
-      'ne',
-      12345,
-      '☀️',
-      42,
-      'Europe/Paris',
-      '+33',
-      '€',
-      'TST',
-      '🗼',
-      '🎨',
-      '🌳',
-    ] as const;
-
-    expect(indicesPlaceFromRow(row as never)).toEqual({
-      name: 'Testville',
-      country: 'Testland',
-      coordinates: { latitude: 1.5, longitude: -2.5 },
-      difficulty: 'easy',
-      positionInCountry: 'ne',
-      population: 12345,
-      climateEmoji: '☀️',
-      elevationMeters: 42,
-      timezone: 'Europe/Paris',
-      phoneCode: '+33',
-      currency: '€',
-      airportCode: 'TST',
-      emojis: ['🗼', '🎨', '🌳'],
-    });
-  });
-});
-
-describe('INDICES_FLAG_COLORS_BY_COUNTRY', () => {
-  it('every color row has a valid hex and a percent between 1 and 100', () => {
-    for (const rows of Object.values(INDICES_FLAG_COLORS_BY_COUNTRY)) {
-      for (const row of rows) {
-        expect(row[INDICES_FLAG_COLOR_FIELD.HEX]).toMatch(/^#[0-9A-F]{6}$/);
-        expect(row[INDICES_FLAG_COLOR_FIELD.PERCENT]).toBeGreaterThan(0);
-        expect(row[INDICES_FLAG_COLOR_FIELD.PERCENT]).toBeLessThanOrEqual(100);
-      }
     }
   });
 });

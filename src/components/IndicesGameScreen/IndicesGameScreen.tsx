@@ -1,14 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import {
-  DEFAULT_ORIGIN,
-  INDICES_CLUE_ORDER,
-  INDICES_FLAG_COLORS_BY_COUNTRY,
-  PLAYER_COLORS,
-  fontSize,
-  spacing,
-} from '@/constants';
+import { DEFAULT_ORIGIN, INDICES_CLUE_ORDER, PLAYER_COLORS, fontSize, spacing } from '@/constants';
+import { countryFlagColors } from '@/constants/places/countries';
 import { bearingDeg, distanceKm, formatNumber, playerDisplayName, resolveOrigin } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useIndicesSettings } from '@/settings';
@@ -238,8 +232,9 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const roundOver = verdict !== null;
   const isLastRound = roundNumber >= settings.rounds;
   // Le drapeau se devoile couleur par couleur : le nombre de couleurs varie selon le pays (2 ou 3
-  // en general, voir INDICES_FLAG_COLORS_BY_COUNTRY) — necessaire ici pour `maxScore` aussi.
-  const flagColors = INDICES_FLAG_COLORS_BY_COUNTRY[place.country];
+  // en general, voir countryFlagColors dans constants/places/countries.ts) — necessaire ici pour
+  // `maxScore` aussi.
+  const flagColors = countryFlagColors(place.code) ?? [];
   // Score de la manche : un compte a rebours, pas un cumul de cout. Part d'un chiffre rond (le
   // nombre total d'indices possibles arrondi a la dizaine superieure, ex. 26 -> 30) et descend de
   // 1 a chaque indice choisi, tous indices confondus (plus de niveaux de difficulte). Trouver vite

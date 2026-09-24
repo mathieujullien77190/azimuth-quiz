@@ -179,12 +179,14 @@ export type IndicesFlagColorId = 'red' | 'blue' | 'white' | 'green' | 'yellow' |
 
 /** Une couleur du drapeau et sa part de la surface totale (%), couleurs uniques fusionnees et
  * triees dans leur ordre d'apparition sur le drapeau (l'indice ne revele que la premiere).
- * Tuple positionnel (voir INDICES_FLAG_COLOR_FIELD dans constants/indices.ts pour qui est qui). */
+ * Tuple positionnel (voir FLAG_COLOR_FIELD dans constants/places/countries.ts pour qui est qui). */
 export type IndicesFlagColorRow = readonly [colorId: IndicesFlagColorId, hex: string, percent: number];
 
 /** Lieu du jeu Indices : etend `GeoPlace`, mais son pool de lieux reste independant de celui de
- * Boussole (voir constants/indices.ts vs constants/places/). */
+ * Boussole (voir constants/indices.ts vs constants/places/). `code` (ISO du pays) vient du lieu
+ * commun aux deux jeux — sert aux lookups partages (nom de pays, drapeau, monnaie). */
 export type IndicesPlace = GeoPlace & {
+  code: string;
   difficulty: Difficulty;
   positionInCountry: IndicesPositionInCountry;
   population: number;

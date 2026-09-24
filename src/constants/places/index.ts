@@ -1,9 +1,8 @@
 import type { Place } from '@/types';
 
-import { CITIES } from './cities';
-import { KIDS } from './kids';
-import { LANDMARKS } from './landmarks';
-import { MOUNTAINS } from './mountains';
-import { NATURE } from './nature';
+import { decodeBoussolePlaces, type MergedPlaces } from './codec';
+import placesData from './places.json';
 
-export const PLACES: Place[] = [...CITIES, ...MOUNTAINS, ...LANDMARKS, ...NATURE, ...KIDS];
+/** Source unique des lieux : `places.json` (partage avec Indices, voir `codec.ts`), editable a la
+ * main ou via `npm run admin`. */
+export const PLACES: Place[] = decodeBoussolePlaces(placesData as unknown as MergedPlaces);

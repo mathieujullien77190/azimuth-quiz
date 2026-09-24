@@ -1,0 +1,1 @@
+export { DeleteX } from './DeleteX';

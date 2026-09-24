@@ -1,14 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import {
-  INDICES_COUNTRY_CODES,
-  INDICES_CURRENCY_NAMES,
-  INDICES_FLAG_COLOR_FIELD,
-  INDICES_FLAG_COLORS_BY_COUNTRY,
-  fontSize,
-  spacing,
-} from '@/constants';
+import { fontSize, spacing } from '@/constants';
+import { countryCurrencyName, countryFlagColors, FLAG_COLOR_FIELD } from '@/constants/places/countries';
 import { formatDistance, formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
@@ -53,7 +47,7 @@ const multiStageProgress = (
     case 'emoji':
       return { stage: Math.min(stages.emojiStage ?? 1, 3), max: 3 };
     case 'flagColors': {
-      const max = Math.min(3, INDICES_FLAG_COLORS_BY_COUNTRY[place.country].length);
+      const max = Math.min(3, (countryFlagColors(place.code) ?? []).length);
       return { stage: Math.min(stages.flagStage ?? 1, max), max };
     }
     case 'distance':
@@ -347,7 +341,7 @@ const revealedBody = (
     case 'firstLetter':
       return <Text style={styles.statValue}>{firstLetterOf(place.name)}</Text>;
     case 'flagColors': {
-      const allColors = INDICES_FLAG_COLORS_BY_COUNTRY[place.country];
+      const allColors = countryFlagColors(place.code) ?? [];
       const stage = flagStage ?? 1;
       // 1 couleur au 1er clic, 1 de plus au 2e, tout le reste au 3e clic (jamais plus de 3 clics,
       // voir IndicesGameScreen) : a partir du 3e, tout est devoile d'un coup.
@@ -355,8 +349,8 @@ const revealedBody = (
         <View style={styles.flagColorList}>
           {allColors.map((row, i) => {
             const shown = stage >= 3 || i < stage;
-            const hex = row[INDICES_FLAG_COLOR_FIELD.HEX];
-            const percent = row[INDICES_FLAG_COLOR_FIELD.PERCENT];
+            const hex = row[FLAG_COLOR_FIELD.HEX];
+            const percent = row[FLAG_COLOR_FIELD.PERCENT];
             return (
               <View key={i} style={styles.flagColorRow}>
                 <View style={[styles.flagSwatch, shown && { backgroundColor: hex }]} />
@@ -397,8 +391,7 @@ const revealedBody = (
     case 'currency': {
       const stage = currencyStage ?? 1;
       if (stage < 2) return <Text style={styles.statValue}>{place.currency}</Text>;
-      const code = INDICES_COUNTRY_CODES[place.country];
-      const name = code !== undefined ? INDICES_CURRENCY_NAMES[code] : undefined;
+      const name = countryCurrencyName(place.code);
       return <Text style={styles.statValue}>{name ?? place.currency}</Text>;
     }
     case 'airportCode':

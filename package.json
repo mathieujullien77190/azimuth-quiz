@@ -1,6 +1,6 @@
 {
   "name": "full-azimut",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/metro-runtime": "~57.0.16",
@@ -39,7 +39,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "jest",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "admin": "node scripts/admin.mjs"
   },
   "private": true,
   "jest": {
@@ -49,6 +50,9 @@
     },
     "setupFiles": [
       "<rootDir>/jest.setup.js"
+    ],
+    "modulePathIgnorePatterns": [
+      "<rootDir>/admin/"
     ],
     "collectCoverageFrom": [
       "src/**/*.{ts,tsx}",

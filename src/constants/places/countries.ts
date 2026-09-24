@@ -1,206 +1,82 @@
 import type { Language } from '@/i18n';
+import type { IndicesFlagColorRow } from '@/types';
+
+import countriesData from './countries.json';
 
 /**
- * Nom du pays par code ISO 3166-1 alpha-2, fr/en. Les lieux ne stockent que `code` (voir `Place`) :
- * le nom affiche s'en deduit ici, evitant de repeter (et de desynchroniser) un nom par lieu.
+ * Donnees par pays (code ISO 3166-1 alpha-2, cle de l'objet), partagees par Boussole et Indices :
+ * chaque pays est stocke comme un tuple positionnel `[fr, en, flag, currency, currencySymbol,
+ * phoneCode]` plutot qu'un objet a champs nommes (196 pays x 6 champs : les noms de propriete
+ * repetes pesaient lourd pour rien — meme raisonnement que `places.json`, voir `codec.ts`).
+ * `flag`/`currency`/`currencySymbol`/`phoneCode` valent `null` si pas encore renseignes (un pays
+ * peut exister sans qu'aucun lieu l'utilise encore dans Indices). Les lieux ne stockent que
+ * `code` : le reste s'en deduit ici, evitant de le repeter (et de le desynchroniser) par lieu —
+ * devise/indicatif ne varient jamais au sein d'un meme pays, contrairement a la difficulte ou
+ * l'anecdote qui sont propres a chaque lieu.
  */
-export const COUNTRY_NAMES: Record<string, { fr: string; en: string }> = {
-  AD: { fr: 'Andorre', en: 'Andorra' },
-  AE: { fr: 'Émirats arabes unis', en: 'United Arab Emirates' },
-  AF: { fr: 'Afghanistan', en: 'Afghanistan' },
-  AL: { fr: 'Albanie', en: 'Albania' },
-  AO: { fr: 'Angola', en: 'Angola' },
-  AR: { fr: 'Argentine', en: 'Argentina' },
-  AS: { fr: 'Samoa américaines', en: 'American Samoa' },
-  AT: { fr: 'Autriche', en: 'Austria' },
-  AU: { fr: 'Australie', en: 'Australia' },
-  AW: { fr: 'Aruba', en: 'Aruba' },
-  BA: { fr: 'Bosnie-Herzégovine', en: 'Bosnia and Herzegovina' },
-  BB: { fr: 'Barbade', en: 'Barbados' },
-  BD: { fr: 'Bangladesh', en: 'Bangladesh' },
-  BE: { fr: 'Belgique', en: 'Belgium' },
-  BF: { fr: 'Burkina Faso', en: 'Burkina Faso' },
-  BG: { fr: 'Bulgarie', en: 'Bulgaria' },
-  BH: { fr: 'Bahreïn', en: 'Bahrain' },
-  BI: { fr: 'Burundi', en: 'Burundi' },
-  BJ: { fr: 'Bénin', en: 'Benin' },
-  BO: { fr: 'Bolivie', en: 'Bolivia' },
-  BR: { fr: 'Brésil', en: 'Brazil' },
-  BS: { fr: 'Bahamas', en: 'Bahamas' },
-  BT: { fr: 'Bhoutan', en: 'Bhutan' },
-  BW: { fr: 'Botswana', en: 'Botswana' },
-  BY: { fr: 'Biélorussie', en: 'Belarus' },
-  BZ: { fr: 'Belize', en: 'Belize' },
-  CA: { fr: 'Canada', en: 'Canada' },
-  CD: { fr: 'RD Congo', en: 'DR Congo' },
-  CG: { fr: 'Congo', en: 'Congo' },
-  CH: { fr: 'Suisse', en: 'Switzerland' },
-  CI: { fr: "Côte d'Ivoire", en: 'Ivory Coast' },
-  CL: { fr: 'Chili', en: 'Chile' },
-  CM: { fr: 'Cameroun', en: 'Cameroon' },
-  CN: { fr: 'Chine', en: 'China' },
-  CO: { fr: 'Colombie', en: 'Colombia' },
-  CR: { fr: 'Costa Rica', en: 'Costa Rica' },
-  CU: { fr: 'Cuba', en: 'Cuba' },
-  CV: { fr: 'Cap-Vert', en: 'Cape Verde' },
-  CW: { fr: 'Curaçao', en: 'Curaçao' },
-  CY: { fr: 'Chypre', en: 'Cyprus' },
-  CZ: { fr: 'Tchéquie', en: 'Czechia' },
-  DE: { fr: 'Allemagne', en: 'Germany' },
-  DJ: { fr: 'Djibouti', en: 'Djibouti' },
-  DK: { fr: 'Danemark', en: 'Denmark' },
-  DM: { fr: 'Dominique', en: 'Dominica' },
-  DO: { fr: 'République dominicaine', en: 'Dominican Republic' },
-  DZ: { fr: 'Algérie', en: 'Algeria' },
-  EC: { fr: 'Équateur', en: 'Ecuador' },
-  EE: { fr: 'Estonie', en: 'Estonia' },
-  EG: { fr: 'Égypte', en: 'Egypt' },
-  ER: { fr: 'Érythrée', en: 'Eritrea' },
-  ES: { fr: 'Espagne', en: 'Spain' },
-  ET: { fr: 'Éthiopie', en: 'Ethiopia' },
-  FI: { fr: 'Finlande', en: 'Finland' },
-  FJ: { fr: 'Fidji', en: 'Fiji' },
-  FM: { fr: 'Micronésie', en: 'Micronesia' },
-  FR: { fr: 'France', en: 'France' },
-  GA: { fr: 'Gabon', en: 'Gabon' },
-  GB: { fr: 'Royaume-Uni', en: 'United Kingdom' },
-  GD: { fr: 'Grenade', en: 'Grenada' },
-  GE: { fr: 'Géorgie', en: 'Georgia' },
-  GF: { fr: 'Guyane française', en: 'French Guiana' },
-  GH: { fr: 'Ghana', en: 'Ghana' },
-  GL: { fr: 'Groenland', en: 'Greenland' },
-  GM: { fr: 'Gambie', en: 'Gambia' },
-  GN: { fr: 'Guinée', en: 'Guinea' },
-  GP: { fr: 'Guadeloupe', en: 'Guadeloupe' },
-  GQ: { fr: 'Guinée équatoriale', en: 'Equatorial Guinea' },
-  GR: { fr: 'Grèce', en: 'Greece' },
-  GT: { fr: 'Guatemala', en: 'Guatemala' },
-  GW: { fr: 'Guinée-Bissau', en: 'Guinea-Bissau' },
-  GY: { fr: 'Guyana', en: 'Guyana' },
-  HK: { fr: 'Hong Kong', en: 'Hong Kong' },
-  HN: { fr: 'Honduras', en: 'Honduras' },
-  HR: { fr: 'Croatie', en: 'Croatia' },
-  HT: { fr: 'Haïti', en: 'Haiti' },
-  HU: { fr: 'Hongrie', en: 'Hungary' },
-  ID: { fr: 'Indonésie', en: 'Indonesia' },
-  IE: { fr: 'Irlande', en: 'Ireland' },
-  IL: { fr: 'Israël', en: 'Israel' },
-  IN: { fr: 'Inde', en: 'India' },
-  IQ: { fr: 'Irak', en: 'Iraq' },
-  IR: { fr: 'Iran', en: 'Iran' },
-  IS: { fr: 'Islande', en: 'Iceland' },
-  IT: { fr: 'Italie', en: 'Italy' },
-  JM: { fr: 'Jamaïque', en: 'Jamaica' },
-  JO: { fr: 'Jordanie', en: 'Jordan' },
-  JP: { fr: 'Japon', en: 'Japan' },
-  KE: { fr: 'Kenya', en: 'Kenya' },
-  KG: { fr: 'Kirghizistan', en: 'Kyrgyzstan' },
-  KH: { fr: 'Cambodge', en: 'Cambodia' },
-  KI: { fr: 'Kiribati', en: 'Kiribati' },
-  KM: { fr: 'Comores', en: 'Comoros' },
-  KN: { fr: 'Saint-Kitts-et-Nevis', en: 'Saint Kitts and Nevis' },
-  KP: { fr: 'Corée du Nord', en: 'North Korea' },
-  KR: { fr: 'Corée du Sud', en: 'South Korea' },
-  KW: { fr: 'Koweït', en: 'Kuwait' },
-  KY: { fr: 'Îles Caïmans', en: 'Cayman Islands' },
-  KZ: { fr: 'Kazakhstan', en: 'Kazakhstan' },
-  LA: { fr: 'Laos', en: 'Laos' },
-  LB: { fr: 'Liban', en: 'Lebanon' },
-  LC: { fr: 'Sainte-Lucie', en: 'Saint Lucia' },
-  LI: { fr: 'Liechtenstein', en: 'Liechtenstein' },
-  LK: { fr: 'Sri Lanka', en: 'Sri Lanka' },
-  LR: { fr: 'Liberia', en: 'Liberia' },
-  LS: { fr: 'Lesotho', en: 'Lesotho' },
-  LT: { fr: 'Lituanie', en: 'Lithuania' },
-  LU: { fr: 'Luxembourg', en: 'Luxembourg' },
-  LV: { fr: 'Lettonie', en: 'Latvia' },
-  LY: { fr: 'Libye', en: 'Libya' },
-  MA: { fr: 'Maroc', en: 'Morocco' },
-  MC: { fr: 'Monaco', en: 'Monaco' },
-  MD: { fr: 'Moldavie', en: 'Moldova' },
-  ME: { fr: 'Monténégro', en: 'Montenegro' },
-  MG: { fr: 'Madagascar', en: 'Madagascar' },
-  MH: { fr: 'Îles Marshall', en: 'Marshall Islands' },
-  MK: { fr: 'Macédoine du Nord', en: 'North Macedonia' },
-  ML: { fr: 'Mali', en: 'Mali' },
-  MM: { fr: 'Myanmar', en: 'Myanmar' },
-  MN: { fr: 'Mongolie', en: 'Mongolia' },
-  MQ: { fr: 'Martinique', en: 'Martinique' },
-  MR: { fr: 'Mauritanie', en: 'Mauritania' },
-  MT: { fr: 'Malte', en: 'Malta' },
-  MU: { fr: 'Maurice', en: 'Mauritius' },
-  MV: { fr: 'Maldives', en: 'Maldives' },
-  MW: { fr: 'Malawi', en: 'Malawi' },
-  MX: { fr: 'Mexique', en: 'Mexico' },
-  MY: { fr: 'Malaisie', en: 'Malaysia' },
-  MZ: { fr: 'Mozambique', en: 'Mozambique' },
-  NA: { fr: 'Namibie', en: 'Namibia' },
-  NC: { fr: 'Nouvelle-Calédonie', en: 'New Caledonia' },
-  NE: { fr: 'Niger', en: 'Niger' },
-  NG: { fr: 'Nigeria', en: 'Nigeria' },
-  NI: { fr: 'Nicaragua', en: 'Nicaragua' },
-  NL: { fr: 'Pays-Bas', en: 'Netherlands' },
-  NO: { fr: 'Norvège', en: 'Norway' },
-  NP: { fr: 'Népal', en: 'Nepal' },
-  NZ: { fr: 'Nouvelle-Zélande', en: 'New Zealand' },
-  OM: { fr: 'Oman', en: 'Oman' },
-  PA: { fr: 'Panama', en: 'Panama' },
-  PE: { fr: 'Pérou', en: 'Peru' },
-  PF: { fr: 'Polynésie française', en: 'French Polynesia' },
-  PG: { fr: 'Papouasie-Nouvelle-Guinée', en: 'Papua New Guinea' },
-  PH: { fr: 'Philippines', en: 'Philippines' },
-  PK: { fr: 'Pakistan', en: 'Pakistan' },
-  PL: { fr: 'Pologne', en: 'Poland' },
-  PR: { fr: 'Porto Rico', en: 'Puerto Rico' },
-  PT: { fr: 'Portugal', en: 'Portugal' },
-  PW: { fr: 'Palaos', en: 'Palau' },
-  PY: { fr: 'Paraguay', en: 'Paraguay' },
-  QA: { fr: 'Qatar', en: 'Qatar' },
-  RO: { fr: 'Roumanie', en: 'Romania' },
-  RS: { fr: 'Serbie', en: 'Serbia' },
-  RU: { fr: 'Russie', en: 'Russia' },
-  RW: { fr: 'Rwanda', en: 'Rwanda' },
-  SA: { fr: 'Arabie saoudite', en: 'Saudi Arabia' },
-  SB: { fr: 'Îles Salomon', en: 'Solomon Islands' },
-  SC: { fr: 'Seychelles', en: 'Seychelles' },
-  SD: { fr: 'Soudan', en: 'Sudan' },
-  SE: { fr: 'Suède', en: 'Sweden' },
-  SG: { fr: 'Singapour', en: 'Singapore' },
-  SI: { fr: 'Slovénie', en: 'Slovenia' },
-  SK: { fr: 'Slovaquie', en: 'Slovakia' },
-  SL: { fr: 'Sierra Leone', en: 'Sierra Leone' },
-  SM: { fr: 'Saint-Marin', en: 'San Marino' },
-  SN: { fr: 'Sénégal', en: 'Senegal' },
-  SO: { fr: 'Somalie', en: 'Somalia' },
-  SR: { fr: 'Suriname', en: 'Suriname' },
-  SS: { fr: 'Soudan du Sud', en: 'South Sudan' },
-  ST: { fr: 'Sao Tomé-et-Principe', en: 'São Tomé and Príncipe' },
-  SV: { fr: 'Salvador', en: 'El Salvador' },
-  SY: { fr: 'Syrie', en: 'Syria' },
-  SZ: { fr: 'Eswatini', en: 'Eswatini' },
-  TD: { fr: 'Tchad', en: 'Chad' },
-  TG: { fr: 'Togo', en: 'Togo' },
-  TH: { fr: 'Thaïlande', en: 'Thailand' },
-  TJ: { fr: 'Tadjikistan', en: 'Tajikistan' },
-  TM: { fr: 'Turkménistan', en: 'Turkmenistan' },
-  TN: { fr: 'Tunisie', en: 'Tunisia' },
-  TO: { fr: 'Tonga', en: 'Tonga' },
-  TR: { fr: 'Turquie', en: 'Turkey' },
-  TV: { fr: 'Tuvalu', en: 'Tuvalu' },
-  TW: { fr: 'Taïwan', en: 'Taiwan' },
-  TZ: { fr: 'Tanzanie', en: 'Tanzania' },
-  UA: { fr: 'Ukraine', en: 'Ukraine' },
-  UG: { fr: 'Ouganda', en: 'Uganda' },
-  US: { fr: 'États-Unis', en: 'United States' },
-  UY: { fr: 'Uruguay', en: 'Uruguay' },
-  VE: { fr: 'Venezuela', en: 'Venezuela' },
-  VN: { fr: 'Viêt Nam', en: 'Vietnam' },
-  VU: { fr: 'Vanuatu', en: 'Vanuatu' },
-  WS: { fr: 'Samoa', en: 'Samoa' },
-  YE: { fr: 'Yémen', en: 'Yemen' },
-  ZA: { fr: 'Afrique du Sud', en: 'South Africa' },
-  ZM: { fr: 'Zambie', en: 'Zambia' },
-  ZW: { fr: 'Zimbabwe', en: 'Zimbabwe' },
+export type CountryRow = readonly [
+  fr: string,
+  en: string,
+  flag: IndicesFlagColorRow[] | null,
+  currency: string | null,
+  currencySymbol: string | null,
+  phoneCode: string | null,
+];
+
+export type CountryEntry = {
+  fr: string;
+  en: string;
+  flag: IndicesFlagColorRow[] | null;
+  currency: string | null;
+  currencySymbol: string | null;
+  phoneCode: string | null;
 };
 
-export const countryName = (code: string, language: Language): string => COUNTRY_NAMES[code]?.[language] ?? code;
+const COUNTRIES = countriesData as unknown as Record<string, CountryRow>;
+
+export const decodeCountry = (row: CountryRow): CountryEntry => {
+  const [fr, en, flag, currency, currencySymbol, phoneCode] = row;
+  return { fr, en, flag, currency, currencySymbol, phoneCode };
+};
+
+export const encodeCountry = (entry: CountryEntry): CountryRow => [entry.fr, entry.en, entry.flag, entry.currency, entry.currencySymbol, entry.phoneCode];
+
+export const COUNTRY_NAMES: Record<string, { fr: string; en: string }> = Object.fromEntries(
+  Object.entries(COUNTRIES).map(([code, row]) => [code, { fr: row[0], en: row[1] }]),
+);
+
+export const countryName = (code: string, language: Language): string => {
+  const row = COUNTRIES[code];
+  if (!row) return code;
+  return language === 'fr' ? row[0] : row[1];
+};
+
+/** Index des champs d'une ligne de `flag` (tuple positionnel, voir `IndicesFlagColorRow`). */
+export const FLAG_COLOR_FIELD = {
+  COLOR_ID: 0,
+  HEX: 1,
+  PERCENT: 2,
+} as const;
+
+export const countryFlagColors = (code: string): IndicesFlagColorRow[] | undefined => COUNTRIES[code]?.[2] ?? undefined;
+
+/** Nom generique de la devise (jamais l'adjectif de nationalite : "Dollar", pas "Dollar
+ * zimbabween" ni "Dollar americain" — ça reviendrait a donner le pays). */
+export const countryCurrencyName = (code: string): string | undefined => COUNTRIES[code]?.[3] ?? undefined;
+
+/** Symbole/code de la devise (ex. "€", "AED") : plusieurs pays peuvent legitimement le partager
+ * (zone euro...). */
+export const countryCurrencySymbol = (code: string): string | undefined => COUNTRIES[code]?.[4] ?? undefined;
+
+/** Indicatif telephonique international (ex. "+33"). */
+export const countryPhoneCode = (code: string): string | undefined => COUNTRIES[code]?.[5] ?? undefined;
+
+/** Une entree par ligne (au lieu du multi-ligne par defaut de `JSON.stringify(_, null, 2)`) : un
+ * `git diff` sur un seul pays modifie touche une seule ligne. Utilise par `admin/vite.config.ts`
+ * pour reecrire `countries.json` apres une edition. */
+export const serializeCountries = (countries: Record<string, CountryRow>): string => {
+  const lines = Object.keys(countries)
+    .sort()
+    .map((code) => '  ' + JSON.stringify(code) + ': ' + JSON.stringify(countries[code]));
+  return '{\n' + lines.join(',\n') + '\n}\n';
+};
