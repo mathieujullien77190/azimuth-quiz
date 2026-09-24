@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { fontSize, spacing } from '@/constants';
+import { fontSize, isCapitalPlace, spacing } from '@/constants';
 import { countryCurrencyName, countryFlagColors, FLAG_COLOR_FIELD } from '@/constants/places/countries';
 import { formatDistance, formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
@@ -265,8 +265,11 @@ const revealedBody = (
   styles: ReturnType<typeof createStyles>,
   units: { population: string; letters: string },
   colors: Theme['colors'],
+  isCapitalLabels: { yes: string; no: string },
 ) => {
   switch (clueId) {
+    case 'isCapital':
+      return <Text style={styles.statValue}>{isCapitalPlace(place) ? isCapitalLabels.yes : isCapitalLabels.no}</Text>;
     case 'position': {
       const dot = POSITION_COORDS[place.positionInCountry];
       return (
@@ -501,6 +504,7 @@ export const IndicesClueCard = ({
               styles,
               { letters: t.indicesGame.letterUnit, population: t.indicesGame.populationUnit },
               colors,
+              { no: t.indicesGame.isCapitalNo, yes: t.indicesGame.isCapitalYes },
             )}
           </Animated.View>
         ) : (

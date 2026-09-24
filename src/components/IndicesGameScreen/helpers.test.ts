@@ -130,6 +130,11 @@ describe('normalizePlaceGuess', () => {
     expect(normalizePlaceGuess('Rio de Janeiro')).toBe(normalizePlaceGuess('  rio   DE Janeiro  '));
   });
 
+  it('treats any accented letter as its unaccented base letter (é=e, ń=n...), not just the common ones', () => {
+    expect(normalizePlaceGuess('Gdańsk')).toBe('gdansk');
+    expect(normalizePlaceGuess('École')).toBe(normalizePlaceGuess('Ecole'));
+  });
+
   it("treats an apostrophe, a space, and no separator at all as equal", () => {
     const withApostrophe = normalizePlaceGuess("N'Djamena");
     expect(normalizePlaceGuess('N Djamena')).toBe(withApostrophe);

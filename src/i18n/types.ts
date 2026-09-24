@@ -157,6 +157,8 @@ export type Translations = {
     continueLabel: string;
     home: string;
     clues: Record<IndicesClueId, string>;
+    isCapitalYes: string;
+    isCapitalNo: string;
     populationUnit: string;
     letterUnit: string;
     finalScoreTitle: string;

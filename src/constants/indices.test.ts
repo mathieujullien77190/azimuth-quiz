@@ -19,6 +19,7 @@ const ALL_CLUE_IDS: IndicesClueId[] = [
   'currency',
   'airportCode',
   'firstLetter',
+  'isCapital',
 ];
 
 describe('INDICES_PLACES', () => {

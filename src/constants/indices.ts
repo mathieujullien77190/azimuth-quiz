@@ -1,4 +1,4 @@
-import { decodeIndicesPlaces, type MergedPlaces } from '@/constants/places/codec';
+import { decodeBoussolePlaces, decodeIndicesPlaces, type MergedPlaces } from '@/constants/places/codec';
 import placesData from '@/constants/places/places.json';
 import type { IndicesAnswerMethod, IndicesClueId, IndicesPlace, IndicesSettings } from '@/types';
 
@@ -25,6 +25,7 @@ export const INDICES_CLUE_ORDER: IndicesClueId[] = [
   'population',
   'localTime',
   'firstLetter',
+  'isCapital',
   'bearing',
   'distance',
   'letterCount',
@@ -38,6 +39,17 @@ export const INDICES_CLUE_ORDER: IndicesClueId[] = [
   'currency',
   'phoneCode',
 ];
+
+// "Is this a capital?" isn't Indices' own data: it's Boussole's "capital" category (see
+// constants/places/codec.ts), which only exists on places in the Boussole pool. Cross-referenced
+// here by (name, country code) rather than duplicated as its own field on every Indices place.
+const CAPITAL_KEYS = new Set(
+  decodeBoussolePlaces(placesData as unknown as MergedPlaces)
+    .filter((place) => place.category === 'capital')
+    .map((place) => `${place.name}|${place.code}`),
+);
+
+export const isCapitalPlace = (place: Pick<IndicesPlace, 'name' | 'code'>): boolean => CAPITAL_KEYS.has(`${place.name}|${place.code}`);
 
 export const INDICES_ANSWER_METHODS: { id: IndicesAnswerMethod }[] = [{ id: 'spoken' }, { id: 'typed' }];
 

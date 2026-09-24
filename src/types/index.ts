@@ -169,7 +169,8 @@ export type IndicesClueId =
   | 'phoneCode'
   | 'currency'
   | 'airportCode'
-  | 'firstLetter';
+  | 'firstLetter'
+  | 'isCapital';
 
 /** Approximate position of the city within its country, on a 3x3 grid. */
 export type IndicesPositionInCountry = 'center' | 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';

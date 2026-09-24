@@ -31,6 +31,17 @@ describe('IndicesClueCard — locked state', () => {
 });
 
 describe('IndicesClueCard — revealed content per clue', () => {
+  it('isCapital: shows "Oui" for a capital', async () => {
+    const { getByText } = await renderCard({ clueId: 'isCapital', place, state: 'revealed' });
+    expect(getByText('Oui')).toBeTruthy();
+  });
+
+  it('isCapital: shows "Non" for a non-capital', async () => {
+    const nonCapital = INDICES_PLACES.find((p) => p.name === 'Marseille')!;
+    const { getByText } = await renderCard({ clueId: 'isCapital', place: nonCapital, state: 'revealed' });
+    expect(getByText('Non')).toBeTruthy();
+  });
+
   it('position: renders a dot positioned per positionInCountry', async () => {
     const { toJSON } = await renderCard({ clueId: 'position', state: 'revealed' });
     expect(toJSON()).toBeTruthy();
