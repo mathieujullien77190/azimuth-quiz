@@ -38,6 +38,7 @@ export const fr: Translations = {
     categoriesTitle: 'Catégories',
     categories: {
       cities: 'Villes',
+      capital: 'Capitales',
       mountains: 'Montagnes',
       landmarks: 'Monuments',
       nature: 'Nature',

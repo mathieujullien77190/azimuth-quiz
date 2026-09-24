@@ -89,6 +89,8 @@ export const PLAYER_COLORS = ['#EF4444', '#16A34A', '#0891B2', '#2563EB', '#9333
 // Label/description: see translations.setup.categories / .difficulties / .zones (same id).
 export const CATEGORIES: { id: Category; emoji: string }[] = [
   { id: 'cities', emoji: '🏙️' },
+  // Star: the standard map symbol for a capital city.
+  { id: 'capital', emoji: '⭐' },
   { id: 'mountains', emoji: '⛰️' },
   { id: 'landmarks', emoji: '🏛️' },
   { id: 'nature', emoji: '🌿' },
@@ -136,7 +138,7 @@ export const EUROPE_MIN_LATITUDE = 30;
 
 export const DEFAULT_SETTINGS: GameSettings = {
   playerNames: [''],
-  categories: ['cities', 'mountains', 'landmarks', 'nature'],
+  categories: ['cities', 'capital', 'mountains', 'landmarks', 'nature'],
   // Single choice (radio).
   difficulties: ['intermediate'],
   zone: 'world',

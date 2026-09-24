@@ -18,6 +18,8 @@ export const CATEGORY_CODES: Record<Category, string> = {
   landmarks: 'L',
   nature: 'N',
   kids: 'K',
+  // 'C' is already taken by cities, no clean mnemonic left: 'P' is arbitrary.
+  capital: 'P',
 };
 
 export const DIFFICULTY_CODES: Record<Difficulty, string> = {
@@ -247,6 +249,22 @@ export const TIMEZONE_CODES: Record<string, string> = {
   'Pacific/Tahiti': 'if',
   'Pacific/Tarawa': 'ig',
   'Pacific/Tongatapu': 'ih',
+  // Appended out of alphabetical order (added later, for new capital-city entries): reusing an
+  // existing zone's code would silently reassign it, corrupting every place already using it.
+  'America/Antigua': 'ii',
+  'America/Port_of_Spain': 'ij',
+  'America/St_Vincent': 'ik',
+  'Africa/Bangui': 'il',
+  'Africa/Blantyre': 'im',
+  'Asia/Baku': 'io',
+  'Asia/Brunei': 'ip',
+  'Asia/Dili': 'iq',
+  'Asia/Tashkent': 'ir',
+  'Asia/Tbilisi': 'is',
+  'Asia/Ulaanbaatar': 'it',
+  'Asia/Yerevan': 'iu',
+  'Europe/Podgorica': 'iv',
+  'Pacific/Nauru': 'iw',
 };
 
 export const CATEGORY_BY_CODE = Object.fromEntries(
