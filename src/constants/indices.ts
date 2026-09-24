@@ -65,7 +65,7 @@ export const DEFAULT_INDICES_SETTINGS: IndicesSettings = {
   playerNames: [''],
   difficulty: 'easy',
   categories: ['cities', 'capital'],
-  answerMethod: 'spoken',
+  answerMethod: 'typed',
   rounds: 5,
   startWithFirstLetter: true,
 };

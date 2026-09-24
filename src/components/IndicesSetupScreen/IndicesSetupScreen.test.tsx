@@ -24,7 +24,7 @@ describe('IndicesSetupScreen', () => {
     expect(getByDisplayValue('')).toBeTruthy(); // 1 player by default, empty name
 
     expect(getByText('Facile').parent?.props.accessibilityState.selected).toBe(true);
-    expect(getByText('À voix haute').parent?.props.accessibilityState.selected).toBe(true);
+    expect(getByText('Je tape la ville').parent?.props.accessibilityState.selected).toBe(true);
 
     const rounds = section(getByText, 'Nombre de manches');
     expect(rounds.getByText('5').parent?.props.accessibilityState.selected).toBe(true);
@@ -79,10 +79,10 @@ describe('IndicesSetupScreen', () => {
   it('updates the answer method when a chip is pressed', async () => {
     const { getByText } = await renderScreen();
 
-    await fireEvent.press(getByText('Je tape la ville'));
+    await fireEvent.press(getByText('À voix haute'));
 
-    expect(getByText('Je tape la ville').parent?.props.accessibilityState.selected).toBe(true);
-    expect(getByText('À voix haute').parent?.props.accessibilityState.selected).toBe(false);
+    expect(getByText('À voix haute').parent?.props.accessibilityState.selected).toBe(true);
+    expect(getByText('Je tape la ville').parent?.props.accessibilityState.selected).toBe(false);
   });
 
   it('the "reveal first letter" toggle is on by default, and can be wired off and back on', async () => {
