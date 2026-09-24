@@ -31,7 +31,10 @@ beforeEach(() => {
 });
 
 const renderGame = async (overrides: Partial<IndicesSettings> = {}, onQuit = jest.fn()) => {
-  const settings: IndicesSettings = { ...DEFAULT_INDICES_SETTINGS, ...overrides };
+  // Defaults to off here regardless of DEFAULT_INDICES_SETTINGS: most of these tests are about
+  // other mechanics and assume a clean 30pts start — the dedicated startWithFirstLetter tests
+  // below already override this explicitly.
+  const settings: IndicesSettings = { ...DEFAULT_INDICES_SETTINGS, startWithFirstLetter: false, ...overrides };
   const utils = await render(
     <IndicesSettingsContext.Provider value={{ settings, updateSettings: jest.fn() }}>
       <IndicesGameScreen onQuit={onQuit} />

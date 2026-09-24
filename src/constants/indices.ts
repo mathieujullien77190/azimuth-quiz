@@ -67,5 +67,5 @@ export const DEFAULT_INDICES_SETTINGS: IndicesSettings = {
   categories: ['cities', 'capital'],
   answerMethod: 'spoken',
   rounds: 5,
-  startWithFirstLetter: false,
+  startWithFirstLetter: true,
 };
