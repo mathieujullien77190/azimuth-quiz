@@ -1,11 +1,12 @@
-export type UfoIdleFrame = {
+export type HelicopterIdleFrame = {
   bobY: number;
-  /** Two blink phases alternating (one high while the other is low). */
-  blinkOpacityA: number;
-  blinkOpacityB: number;
+  /** Main rotor rotation, in degrees [0, 360). */
+  rotorAngleDeg: number;
+  /** Tail anti-collision light. */
+  blinkOpacity: number;
 };
 
-export type UfoButtonProps = {
+export type HelicopterButtonProps = {
   onPress: () => void;
   accessibilityLabel: string;
 };

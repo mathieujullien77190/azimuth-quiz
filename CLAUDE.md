@@ -102,7 +102,7 @@ environnement).
   `Compass.tsx`, `useHeading.ts`, `useGame.ts`, `SliderTrack.tsx`.
 - `react-hooks/refs` se declenche aussi, de facon attendue et inevitable, partout ou
   l'API `Animated` de React Native est utilisee (`HomeScreen.tsx` : position/rotation de
-  la soucoupe ; `EarthSection.tsx` : orbite du satellite) — lire `.current` d'un
+  l'helicoptere ; `EarthSection.tsx` : orbite du satellite) — lire `.current` d'un
   `Animated.Value`/`ValueXY` cree via `useRef` puis l'utiliser dans le style au rendu est
   le pattern officiel de cette API, incompatible
   avec cette regle stricte. Meme categorie que les 4 fichiers ci-dessus, pas une erreur a

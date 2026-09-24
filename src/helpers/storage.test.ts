@@ -3,22 +3,22 @@ import { getLocales } from 'expo-localization';
 
 import {
   BEST_SCORE_STORAGE_KEY,
+  HELICOPTER_CAUGHT_STORAGE_KEY,
   LANGUAGE_STORAGE_KEY,
   SETTINGS_STORAGE_KEY,
   THEME_STORAGE_KEY,
-  UFO_CAUGHT_STORAGE_KEY,
 } from '@/constants';
 
 import {
   clearAppData,
+  loadHelicopterCaught,
   loadLanguage,
   loadSettings,
   loadThemeId,
-  loadUfoCaught,
+  saveHelicopterCaught,
   saveLanguage,
   saveSettings,
   saveThemeId,
-  saveUfoCaught,
   systemLanguage,
 } from './storage';
 
@@ -82,19 +82,19 @@ describe('loadSettings / saveSettings', () => {
   });
 });
 
-describe('loadUfoCaught / saveUfoCaught', () => {
+describe('loadHelicopterCaught / saveHelicopterCaught', () => {
   it('is false until saved', async () => {
-    expect(await loadUfoCaught()).toBe(false);
-    await saveUfoCaught();
-    expect(await loadUfoCaught()).toBe(true);
+    expect(await loadHelicopterCaught()).toBe(false);
+    await saveHelicopterCaught();
+    expect(await loadHelicopterCaught()).toBe(true);
   });
 
   it('tolerates read/write failures', async () => {
     (AsyncStorage.getItem as jest.Mock).mockRejectedValueOnce(new Error('boom'));
-    expect(await loadUfoCaught()).toBe(false);
+    expect(await loadHelicopterCaught()).toBe(false);
 
     (AsyncStorage.setItem as jest.Mock).mockRejectedValueOnce(new Error('boom'));
-    await expect(saveUfoCaught()).resolves.toBeUndefined();
+    await expect(saveHelicopterCaught()).resolves.toBeUndefined();
   });
 });
 
@@ -153,7 +153,7 @@ describe('clearAppData', () => {
     await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, '{}');
     await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, 'en');
     await AsyncStorage.setItem(THEME_STORAGE_KEY, 'day');
-    await AsyncStorage.setItem(UFO_CAUGHT_STORAGE_KEY, 'true');
+    await AsyncStorage.setItem(HELICOPTER_CAUGHT_STORAGE_KEY, 'true');
 
     await clearAppData();
 
@@ -161,7 +161,7 @@ describe('clearAppData', () => {
     expect(await AsyncStorage.getItem(SETTINGS_STORAGE_KEY)).toBeNull();
     expect(await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY)).toBeNull();
     expect(await AsyncStorage.getItem(THEME_STORAGE_KEY)).toBeNull();
-    expect(await AsyncStorage.getItem(UFO_CAUGHT_STORAGE_KEY)).toBeNull();
+    expect(await AsyncStorage.getItem(HELICOPTER_CAUGHT_STORAGE_KEY)).toBeNull();
   });
 
   it('tolerates a failure clearing storage', async () => {

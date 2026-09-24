@@ -3,10 +3,10 @@ import { getLocales } from 'expo-localization';
 
 import {
   BEST_SCORE_STORAGE_KEY,
+  HELICOPTER_CAUGHT_STORAGE_KEY,
   LANGUAGE_STORAGE_KEY,
   SETTINGS_STORAGE_KEY,
   THEME_STORAGE_KEY,
-  UFO_CAUGHT_STORAGE_KEY,
 } from '@/constants';
 import type { Language } from '@/i18n';
 import type { GameSettings, ThemeId } from '@/types';
@@ -37,19 +37,19 @@ export const saveSettings = async (settings: GameSettings): Promise<void> => {
   }
 };
 
-export const loadUfoCaught = async (): Promise<boolean> => {
+export const loadHelicopterCaught = async (): Promise<boolean> => {
   try {
-    return (await AsyncStorage.getItem(UFO_CAUGHT_STORAGE_KEY)) === 'true';
+    return (await AsyncStorage.getItem(HELICOPTER_CAUGHT_STORAGE_KEY)) === 'true';
   } catch {
     return false;
   }
 };
 
-export const saveUfoCaught = async (): Promise<void> => {
+export const saveHelicopterCaught = async (): Promise<void> => {
   try {
-    await AsyncStorage.setItem(UFO_CAUGHT_STORAGE_KEY, 'true');
+    await AsyncStorage.setItem(HELICOPTER_CAUGHT_STORAGE_KEY, 'true');
   } catch {
-    // Not saved: the UFO will start moving again on next launch, not critical.
+    // Not saved: the helicopter will start moving again on next launch, not critical.
   }
 };
 
@@ -87,9 +87,10 @@ export const saveThemeId = async (themeId: ThemeId): Promise<void> => {
   }
 };
 
-/** Clears everything the app saves on the device: Boussole settings, language, theme, UFO state
- * and Indices' draw history (+ a possible "best score" left over from an earlier version).
- * Indices' own settings aren't persisted in the first place (reset every launch). */
+/** Clears everything the app saves on the device: Boussole settings, language, theme, whether
+ * the home screen's helicopter has been caught, and Indices' draw history (+ a possible "best
+ * score" left over from an earlier version). Indices' own settings aren't persisted in the
+ * first place (reset every launch). */
 export const clearAppData = async (): Promise<void> => {
   clearIndicesHistory();
   try {
@@ -98,7 +99,7 @@ export const clearAppData = async (): Promise<void> => {
       SETTINGS_STORAGE_KEY,
       LANGUAGE_STORAGE_KEY,
       THEME_STORAGE_KEY,
-      UFO_CAUGHT_STORAGE_KEY,
+      HELICOPTER_CAUGHT_STORAGE_KEY,
     ]);
   } catch {
     // Nothing to do: at worst the old data sticks around, not critical.

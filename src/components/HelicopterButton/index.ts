@@ -1,1 +1,1 @@
-export { UfoButton as default } from './UfoButton';
+export { HelicopterButton as default } from './HelicopterButton';

@@ -1,11 +1,11 @@
-import { UFO_FOOTPRINT, UFO_PAUSE_OPTIONS_S } from './constants';
+import { HELICOPTER_FOOTPRINT, HELICOPTER_PAUSE_OPTIONS_S } from './constants';
 
-export type UfoPosition = { top: number; left: number };
+export type HelicopterPosition = { top: number; left: number };
 
-/** Random position for the UFO, fully contained within a zoneWidth x zoneHeight zone. */
-export const randomUfoPosition = (zoneWidth: number, zoneHeight: number): UfoPosition => {
-  const maxLeft = Math.max(0, zoneWidth - UFO_FOOTPRINT.width);
-  const maxTop = Math.max(0, zoneHeight - UFO_FOOTPRINT.height);
+/** Random position for the helicopter, fully contained within a zoneWidth x zoneHeight zone. */
+export const randomHelicopterPosition = (zoneWidth: number, zoneHeight: number): HelicopterPosition => {
+  const maxLeft = Math.max(0, zoneWidth - HELICOPTER_FOOTPRINT.width);
+  const maxTop = Math.max(0, zoneHeight - HELICOPTER_FOOTPRINT.height);
   return {
     top: Math.round(Math.random() * maxTop),
     left: Math.round(Math.random() * maxLeft),
@@ -13,5 +13,5 @@ export const randomUfoPosition = (zoneWidth: number, zoneHeight: number): UfoPos
 };
 
 /** Pause duration (in seconds) at rest between two moves: 3, 4, 5 or 6 at random. */
-export const randomUfoPauseSeconds = (): (typeof UFO_PAUSE_OPTIONS_S)[number] =>
-  UFO_PAUSE_OPTIONS_S[Math.floor(Math.random() * UFO_PAUSE_OPTIONS_S.length)];
+export const randomHelicopterPauseSeconds = (): (typeof HELICOPTER_PAUSE_OPTIONS_S)[number] =>
+  HELICOPTER_PAUSE_OPTIONS_S[Math.floor(Math.random() * HELICOPTER_PAUSE_OPTIONS_S.length)];

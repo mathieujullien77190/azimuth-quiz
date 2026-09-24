@@ -30,14 +30,14 @@ export { applyBestBonus, getRank, scoreRound } from './scoring';
 export { playerDisplayName, sanitizeSettings } from './settings';
 export {
   clearAppData,
+  loadHelicopterCaught,
   loadLanguage,
   loadSettings,
   loadThemeId,
-  loadUfoCaught,
+  saveHelicopterCaught,
   saveLanguage,
   saveSettings,
   saveThemeId,
-  saveUfoCaught,
   systemLanguage,
 } from './storage';
 export { disableTextSelection, polyfillFlagEmoji } from './web';

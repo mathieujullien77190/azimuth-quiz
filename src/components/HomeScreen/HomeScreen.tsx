@@ -4,16 +4,16 @@ import type { LayoutChangeEvent } from 'react-native';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
-import { loadUfoCaught, saveUfoCaught } from '@/helpers';
+import { loadHelicopterCaught, saveHelicopterCaught } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
 import GameCard from '../GameCard';
-import UfoButton from '../UfoButton';
+import HelicopterButton from '../HelicopterButton';
 import Screen from '../ui/Screen';
-import { APP_TITLE, UFO_MOVE_DURATION_MS, UFO_SPIN_DURATION_MS, UFO_SPIN_PAUSE_S } from './constants';
-import { randomUfoPauseSeconds, randomUfoPosition } from './helpers';
+import { APP_TITLE, HELICOPTER_MOVE_DURATION_MS, HELICOPTER_SPIN_DURATION_MS, HELICOPTER_SPIN_PAUSE_S } from './constants';
+import { randomHelicopterPauseSeconds, randomHelicopterPosition } from './helpers';
 
 const createStyles = ({ colors, typography }: Theme) =>
   StyleSheet.create({
@@ -23,16 +23,16 @@ const createStyles = ({ colors, typography }: Theme) =>
       paddingTop: spacing.md,
       paddingBottom: spacing.sm,
     },
-    ufoButton: {
+    helicopterButton: {
       position: 'absolute',
       zIndex: 10,
       elevation: 10,
     },
-    ufoButtonDefault: {
+    helicopterButtonDefault: {
       top: spacing.sm,
       right: spacing.lg,
     },
-    ufoButtonRoaming: {
+    helicopterButtonRoaming: {
       top: 0,
       left: 0,
     },
@@ -59,50 +59,50 @@ export const HomeScreen = () => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
 
-  // As long as it's never been clicked, the UFO flies to a random position within the title
-  // zone (animated transition), waits 3 to 6 sec in place, spins in place once if that
-  // pause lands on 6 sec, then moves on. Once caught (clicked, remembered forever),
-  // it stays fixed at its default position (top right, `ufoButtonDefault`).
-  const [ufoCaught, setUfoCaught] = useState(true);
-  const [ufoZone, setUfoZone] = useState({ width: 0, height: 0 });
-  const ufoAnim = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
-  const ufoRotation = useRef(new Animated.Value(0)).current;
+  // As long as it's never been clicked, the helicopter flies to a random position within the
+  // title zone (animated transition), waits 3 to 6 sec in place, does a pirouette in place once
+  // if that pause lands on 6 sec, then moves on. Once caught (clicked, remembered forever), it
+  // stays fixed at its default position (top right, `helicopterButtonDefault`).
+  const [helicopterCaught, setHelicopterCaught] = useState(true);
+  const [helicopterZone, setHelicopterZone] = useState({ width: 0, height: 0 });
+  const helicopterAnim = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const helicopterRotation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    loadUfoCaught().then(setUfoCaught);
+    loadHelicopterCaught().then(setHelicopterCaught);
   }, []);
 
-  const roaming = !ufoCaught && ufoZone.width > 0 && ufoZone.height > 0;
+  const roaming = !helicopterCaught && helicopterZone.width > 0 && helicopterZone.height > 0;
 
   useEffect(() => {
     if (!roaming) return undefined;
     let active = true;
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-    const start = randomUfoPosition(ufoZone.width, ufoZone.height);
-    ufoAnim.setValue({ x: start.left, y: start.top });
+    const start = randomHelicopterPosition(helicopterZone.width, helicopterZone.height);
+    helicopterAnim.setValue({ x: start.left, y: start.top });
 
     // No `active` guard needed here: the only two call sites are the initial synchronous call
     // below and the recursive one inside the move's callback (scheduled via `timeoutId`), and
     // cleanup always clears `timeoutId` in the same tick it sets `active = false` — so this can
     // never run again after unmount.
     const scheduleNextMove = () => {
-      const target = randomUfoPosition(ufoZone.width, ufoZone.height);
-      Animated.timing(ufoAnim, {
-        duration: UFO_MOVE_DURATION_MS,
+      const target = randomHelicopterPosition(helicopterZone.width, helicopterZone.height);
+      Animated.timing(helicopterAnim, {
+        duration: HELICOPTER_MOVE_DURATION_MS,
         toValue: { x: target.left, y: target.top },
         useNativeDriver: true,
       }).start(({ finished }) => {
         if (!active || !finished) return;
-        const pauseS = randomUfoPauseSeconds();
-        if (pauseS === UFO_SPIN_PAUSE_S) {
-          ufoRotation.setValue(0);
-          Animated.timing(ufoRotation, {
-            duration: UFO_SPIN_DURATION_MS,
+        const pauseS = randomHelicopterPauseSeconds();
+        if (pauseS === HELICOPTER_SPIN_PAUSE_S) {
+          helicopterRotation.setValue(0);
+          Animated.timing(helicopterRotation, {
+            duration: HELICOPTER_SPIN_DURATION_MS,
             toValue: 1,
             useNativeDriver: true,
           }).start(({ finished: spun }) => {
-            if (spun) ufoRotation.setValue(0);
+            if (spun) helicopterRotation.setValue(0);
           });
         }
         timeoutId = setTimeout(scheduleNextMove, pauseS * 1000);
@@ -114,24 +114,24 @@ export const HomeScreen = () => {
     return () => {
       active = false;
       if (timeoutId !== undefined) clearTimeout(timeoutId);
-      ufoAnim.stopAnimation();
-      ufoRotation.stopAnimation();
+      helicopterAnim.stopAnimation();
+      helicopterRotation.stopAnimation();
     };
-  }, [roaming, ufoZone, ufoAnim, ufoRotation]);
+  }, [roaming, helicopterZone, helicopterAnim, helicopterRotation]);
 
   const onHeaderLayout = (event: LayoutChangeEvent) => {
-    setUfoZone({ width: event.nativeEvent.layout.width, height: event.nativeEvent.layout.height });
+    setHelicopterZone({ width: event.nativeEvent.layout.width, height: event.nativeEvent.layout.height });
   };
 
-  const onUfoPress = () => {
-    if (!ufoCaught) {
-      setUfoCaught(true);
-      saveUfoCaught();
+  const onHelicopterPress = () => {
+    if (!helicopterCaught) {
+      setHelicopterCaught(true);
+      saveHelicopterCaught();
     }
     router.push('/settings');
   };
 
-  const ufoSpin = ufoRotation.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+  const helicopterSpin = helicopterRotation.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
   return (
     <Screen>
@@ -139,16 +139,16 @@ export const HomeScreen = () => {
         {roaming ? (
           <Animated.View
             style={[
-              styles.ufoButton,
-              styles.ufoButtonRoaming,
-              { transform: [...ufoAnim.getTranslateTransform(), { rotate: ufoSpin }] },
+              styles.helicopterButton,
+              styles.helicopterButtonRoaming,
+              { transform: [...helicopterAnim.getTranslateTransform(), { rotate: helicopterSpin }] },
             ]}
           >
-            <UfoButton accessibilityLabel={t.home.settingsButtonLabel} onPress={onUfoPress} />
+            <HelicopterButton accessibilityLabel={t.home.settingsButtonLabel} onPress={onHelicopterPress} />
           </Animated.View>
         ) : (
-          <View style={[styles.ufoButton, styles.ufoButtonDefault]}>
-            <UfoButton accessibilityLabel={t.home.settingsButtonLabel} onPress={onUfoPress} />
+          <View style={[styles.helicopterButton, styles.helicopterButtonDefault]}>
+            <HelicopterButton accessibilityLabel={t.home.settingsButtonLabel} onPress={onHelicopterPress} />
           </View>
         )}
         <Text style={styles.title}>{APP_TITLE}</Text>
