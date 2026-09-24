@@ -39,6 +39,7 @@ export const fr: Translations = {
     categories: {
       cities: 'Villes',
       capital: 'Capitales',
+      citiesFr: 'Villes FR',
       mountains: 'Montagnes',
       landmarks: 'Monuments',
       nature: 'Nature',
@@ -50,12 +51,6 @@ export const fr: Translations = {
       easy: 'Facile',
       intermediate: 'Moyen',
       hard: 'Difficile',
-    },
-    zoneTitle: 'Zone',
-    zones: {
-      france: { label: 'France', description: 'Lyon oui, Cork non' },
-      europe: { label: 'Europe', description: 'Du Portugal à Moscou' },
-      world: { label: 'Monde', description: 'Toute la planète' },
     },
     roundsTitle: 'Nombre de manches',
     modeTitle: 'Mode',

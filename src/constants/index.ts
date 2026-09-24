@@ -1,4 +1,4 @@
-import type { Category, Difficulty, GameSettings, Origin, Zone } from '@/types';
+import type { Category, Difficulty, GameSettings, Origin } from '@/types';
 
 export * from './theme';
 export * from './indices';
@@ -89,11 +89,14 @@ export const NAME_PLACEHOLDERS = [
 // truth color (none between 3° and 85°) so no player picks them by chance.
 export const PLAYER_COLORS = ['#EF4444', '#16A34A', '#0891B2', '#2563EB', '#9333EA', '#DB2777'] as const;
 
-// Label/description: see translations.setup.categories / .difficulties / .zones (same id).
+// Label/description: see translations.setup.categories / .difficulties (same id).
 export const CATEGORIES: { id: Category; emoji: string }[] = [
   { id: 'cities', emoji: '🏙️' },
   // Star: the standard map symbol for a capital city.
   { id: 'capital', emoji: '⭐' },
+  // Baguette rather than a flag emoji: flag glyphs are unreliable on some platforms (see
+  // FLAG_FONT_FAMILY in themes/fonts.ts) and this chip doesn't warrant bundling that fix too.
+  { id: 'citiesFr', emoji: '🥖' },
   { id: 'mountains', emoji: '⛰️' },
   { id: 'landmarks', emoji: '🏛️' },
   { id: 'nature', emoji: '🌿' },
@@ -106,44 +109,11 @@ export const DIFFICULTIES: { id: Difficulty; emoji: string }[] = [
   { id: 'hard', emoji: '🔴' },
 ];
 
-export const ZONES: { id: Zone }[] = [{ id: 'france' }, { id: 'europe' }, { id: 'world' }];
-
-/** European countries (the zone filter adds a longitude bound for Russia and Turkey). */
-export const EUROPE_CODES: readonly string[] = [
-  'FR',
-  'GB',
-  'DE',
-  'ES',
-  'IT',
-  'PT',
-  'NL',
-  'BE',
-  'CH',
-  'AT',
-  'CZ',
-  'PL',
-  'HU',
-  'RO',
-  'GR',
-  'DK',
-  'SE',
-  'NO',
-  'FI',
-  'IS',
-  'IE',
-  'TR',
-  'RU',
-  'UA',
-];
-export const EUROPE_MAX_LONGITUDE = 45;
-export const EUROPE_MIN_LATITUDE = 30;
-
 export const DEFAULT_SETTINGS: GameSettings = {
   playerNames: [''],
-  categories: ['cities', 'capital', 'mountains', 'landmarks', 'nature'],
+  categories: ['cities', 'capital', 'citiesFr', 'mountains', 'landmarks', 'nature'],
   // Single choice (radio).
   difficulties: ['intermediate'],
-  zone: 'world',
   rounds: 5,
   straightLine: false,
   useGps: true,

@@ -39,6 +39,7 @@ export const en: Translations = {
     categories: {
       cities: 'Cities',
       capital: 'Capitals',
+      citiesFr: 'French cities',
       mountains: 'Mountains',
       landmarks: 'Landmarks',
       nature: 'Nature',
@@ -50,12 +51,6 @@ export const en: Translations = {
       easy: 'Easy',
       intermediate: 'Intermediate',
       hard: 'Hard',
-    },
-    zoneTitle: 'Zone',
-    zones: {
-      france: { label: 'France', description: 'Lyon yes, Cork no' },
-      europe: { label: 'Europe', description: 'From Portugal to Moscow' },
-      world: { label: 'World', description: 'The whole planet' },
     },
     roundsTitle: 'Number of rounds',
     modeTitle: 'Mode',

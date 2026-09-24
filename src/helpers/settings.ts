@@ -1,14 +1,5 @@
-import {
-  CATEGORIES,
-  DEFAULT_SETTINGS,
-  DIFFICULTIES,
-  MAX_PLAYERS,
-  MIN_PLAYERS,
-  NAME_PLACEHOLDERS,
-  ROUND_OPTIONS,
-  ZONES,
-} from '@/constants';
-import type { Category, Difficulty, GameSettings, Zone } from '@/types';
+import { CATEGORIES, DEFAULT_SETTINGS, DIFFICULTIES, MAX_PLAYERS, MIN_PLAYERS, NAME_PLACEHOLDERS, ROUND_OPTIONS } from '@/constants';
+import type { Category, Difficulty, GameSettings } from '@/types';
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
@@ -42,7 +33,6 @@ export const sanitizeSettings = (raw: unknown): GameSettings => {
     : undefined;
   const difficulties = firstValidDifficulty !== undefined ? [firstValidDifficulty] : DEFAULT_SETTINGS.difficulties;
 
-  const zone = ZONES.some((candidate) => candidate.id === raw.zone) ? (raw.zone as Zone) : DEFAULT_SETTINGS.zone;
   const rounds = ROUND_OPTIONS.some((option) => option === raw.rounds)
     ? (raw.rounds as number)
     : DEFAULT_SETTINGS.rounds;
@@ -54,7 +44,6 @@ export const sanitizeSettings = (raw: unknown): GameSettings => {
     playerNames,
     categories: categories.length > 0 ? categories : DEFAULT_SETTINGS.categories,
     difficulties,
-    zone,
     rounds,
     // Old settings: the two separate "straight line" options collapse into a single mode.
     straightLine: flag(raw.straightLine, raw.straightDistance === true || raw.straightDirection === true),

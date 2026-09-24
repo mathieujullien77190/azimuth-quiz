@@ -11,8 +11,6 @@ jest.mock('@/constants', () => {
     PLACES: [
       { name: 'Paris', code: 'FR', coordinates: { latitude: 48.8566, longitude: 2.3522 }, category: 'cities', difficulty: 'easy' },
       { name: 'Berlin', code: 'DE', coordinates: { latitude: 52.52, longitude: 13.405 }, category: 'cities', difficulty: 'easy' },
-      // Russia: in EUROPE_CODES but outside the longitude bounds (>45) -> excluded from the Europe zone.
-      { name: 'Vladivostok', code: 'RU', coordinates: { latitude: 43.1, longitude: 131.9 }, category: 'cities', difficulty: 'hard' },
       { name: 'Tokyo', code: 'JP', coordinates: { latitude: 35.6762, longitude: 139.6503 }, category: 'landmarks', difficulty: 'hard' },
       // Less than MIN_PLACE_DISTANCE_KM (150km) from Paris.
       { name: 'Rouen', code: 'FR', coordinates: { latitude: 49.4431, longitude: 1.0993 }, category: 'mountains', difficulty: 'intermediate' },
@@ -35,13 +33,6 @@ const berlin: Place = {
   category: 'cities',
   difficulty: 'easy',
 };
-const vladivostok: Place = {
-  name: 'Vladivostok',
-  code: 'RU',
-  coordinates: { latitude: 43.1, longitude: 131.9 },
-  category: 'cities',
-  difficulty: 'hard',
-};
 const rouen: Place = {
   name: 'Rouen',
   code: 'FR',
@@ -51,32 +42,21 @@ const rouen: Place = {
 };
 
 describe('filterPlaces', () => {
-  it('keeps only matching categories and difficulties, any zone', () => {
-    const result = filterPlaces(['cities'], ['easy'], 'world', 'fr');
+  it('keeps only matching categories and difficulties', () => {
+    const result = filterPlaces(['cities'], ['easy'], 'fr');
     expect(result).toEqual([paris, berlin]);
   });
 
-  it('zone "france" keeps only code FR', () => {
-    const result = filterPlaces(['cities', 'mountains', 'landmarks'], ['easy', 'intermediate', 'hard'], 'france', 'fr');
-    expect(result).toEqual([paris, rouen]);
-  });
-
-  it('zone "europe" excludes places past the longitude/latitude bounds even with an EUROPE_CODES code', () => {
-    const result = filterPlaces(['cities', 'mountains', 'landmarks'], ['easy', 'intermediate', 'hard'], 'europe', 'fr');
-    expect(result).toEqual([paris, berlin, rouen]);
-    expect(result).not.toContainEqual(vladivostok);
-  });
-
-  it('zone "world" keeps every code', () => {
-    const result = filterPlaces(['cities', 'mountains', 'landmarks'], ['easy', 'intermediate', 'hard'], 'world', 'fr');
-    expect(result).toHaveLength(5);
+  it('matches across every country when several categories/difficulties are selected', () => {
+    const result = filterPlaces(['cities', 'mountains', 'landmarks'], ['easy', 'intermediate', 'hard'], 'fr');
+    expect(result).toHaveLength(4);
   });
 
   it('in English, a French place only matches the difficulty filter one tier up', () => {
     // Paris is 'easy': in English it behaves as 'intermediate', so an 'easy'-only filter drops it...
-    expect(filterPlaces(['cities'], ['easy'], 'world', 'en')).not.toContainEqual(paris);
+    expect(filterPlaces(['cities'], ['easy'], 'en')).not.toContainEqual(paris);
     // ...while an 'intermediate'-only filter picks it up.
-    expect(filterPlaces(['cities'], ['intermediate'], 'world', 'en')).toContainEqual(paris);
+    expect(filterPlaces(['cities'], ['intermediate'], 'en')).toContainEqual(paris);
   });
 });
 
@@ -104,7 +84,6 @@ describe('pickPlaces', () => {
     playerNames: [''],
     categories: ['cities', 'mountains', 'landmarks'],
     difficulties: ['easy', 'intermediate', 'hard'],
-    zone: 'world',
     rounds: 10,
     straightLine: false,
     useGps: false,

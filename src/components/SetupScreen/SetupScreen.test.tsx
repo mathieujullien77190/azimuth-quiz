@@ -57,7 +57,7 @@ describe('SetupScreen — multiplayer-only toggles', () => {
   });
 });
 
-describe('SetupScreen — categories / difficulty / zone / rounds / mode', () => {
+describe('SetupScreen — categories / difficulty / rounds / mode', () => {
   it('toggles a category filter', async () => {
     const { getByText, updateSettings } = await renderSetup();
     // Mountains is already selected by default: clicking it deselects it.
@@ -74,17 +74,6 @@ describe('SetupScreen — categories / difficulty / zone / rounds / mode', () =>
     expect(updateSettings).toHaveBeenCalledWith(
       expect.objectContaining({ difficulties: ['hard'] }),
     );
-  });
-
-  it('selects a zone', async () => {
-    const { getByText, updateSettings } = await renderSetup();
-    await fireEvent.press(getByText('France'));
-    expect(updateSettings).toHaveBeenCalledWith({ zone: 'france' });
-  });
-
-  it('shows the description of the selected zone', async () => {
-    const { getByText } = await renderSetup({ zone: 'europe' });
-    expect(getByText('Du Portugal à Moscou')).toBeTruthy();
   });
 
   it('selects a round count', async () => {

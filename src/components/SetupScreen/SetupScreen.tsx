@@ -9,7 +9,6 @@ import {
   NAME_PLACEHOLDERS,
   PLAYER_COLORS,
   ROUND_OPTIONS,
-  ZONES,
   fontSize,
   spacing,
 } from '@/constants';
@@ -186,8 +185,7 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
   const { language } = useLanguage();
   const { settings, ready, updateSettings } = useSettings();
   const playerCount = settings.playerNames.length;
-  const available = filterPlaces(settings.categories, settings.difficulties, settings.zone, language).length;
-  const zoneDescription = t.setup.zones[settings.zone].description;
+  const available = filterPlaces(settings.categories, settings.difficulties, language).length;
   // A different order every time the screen loads, stable while typing.
   const placeholderNames = useMemo(() => shuffle([...NAME_PLACEHOLDERS]), []);
 
@@ -265,20 +263,6 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
             />
           ))}
         </View>
-      </Section>
-
-      <Section title={t.setup.zoneTitle}>
-        <View style={styles.chips}>
-          {ZONES.map((candidate) => (
-            <Chip
-              key={candidate.id}
-              label={t.setup.zones[candidate.id].label}
-              onPress={() => updateSettings({ zone: candidate.id })}
-              selected={settings.zone === candidate.id}
-            />
-          ))}
-        </View>
-        <Text style={styles.hint}>{zoneDescription}</Text>
       </Section>
 
       <Section title={t.setup.roundsTitle}>

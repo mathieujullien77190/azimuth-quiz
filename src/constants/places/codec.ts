@@ -20,6 +20,8 @@ export const CATEGORY_CODES: Record<Category, string> = {
   kids: 'K',
   // 'C' is already taken by cities, no clean mnemonic left: 'P' is arbitrary.
   capital: 'P',
+  // 'F' for France.
+  citiesFr: 'F',
 };
 
 export const DIFFICULTY_CODES: Record<Difficulty, string> = {

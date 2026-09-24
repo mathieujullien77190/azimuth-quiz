@@ -60,11 +60,6 @@ describe('sanitizeSettings', () => {
     expect(result.difficulties).toEqual(DEFAULT_SETTINGS.difficulties);
   });
 
-  it('keeps a valid zone, falls back otherwise', () => {
-    expect(sanitizeSettings({ zone: 'europe' }).zone).toBe('europe');
-    expect(sanitizeSettings({ zone: 'mars' }).zone).toBe(DEFAULT_SETTINGS.zone);
-  });
-
   it('keeps a valid rounds option, falls back otherwise', () => {
     expect(sanitizeSettings({ rounds: 15 }).rounds).toBe(15);
     expect(sanitizeSettings({ rounds: 7 }).rounds).toBe(DEFAULT_SETTINGS.rounds);

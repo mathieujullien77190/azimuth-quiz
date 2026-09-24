@@ -1,4 +1,4 @@
-import type { Category, Difficulty, IndicesAnswerMethod, IndicesClueId, Zone } from '@/types';
+import type { Category, Difficulty, IndicesAnswerMethod, IndicesClueId } from '@/types';
 
 export type Language = 'fr' | 'en';
 
@@ -43,8 +43,6 @@ export type Translations = {
     difficultyTitle: string;
     difficultyHint: string;
     difficulties: Record<Difficulty, string>;
-    zoneTitle: string;
-    zones: Record<Zone, { label: string; description: string }>;
     roundsTitle: string;
     modeTitle: string;
     distanceModes: {

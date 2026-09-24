@@ -14,14 +14,13 @@ jest.mock('@/helpers', () => ({ ...jest.requireActual('@/helpers'), resolveOrigi
 const mockedUseSettings = useSettings as jest.Mock;
 const mockedResolveOrigin = resolveOrigin as jest.Mock;
 
-// All categories/difficulties, world zone: guarantees plenty of matching places regardless of
-// exactly how any given place is currently rated.
+// Every category/difficulty: guarantees plenty of matching places regardless of exactly how any
+// given place is currently rated.
 const baseSettings: GameSettings = {
   ...DEFAULT_SETTINGS,
   playerNames: ['Zoé'],
   categories: CATEGORIES.map((c) => c.id),
   difficulties: DIFFICULTIES.map((d) => d.id),
-  zone: 'world',
   rounds: 2,
   useGps: false,
   customLatitude: 48.8566,

@@ -5,12 +5,10 @@ export type Coordinates = {
   longitude: number;
 };
 
-export type Category = 'cities' | 'mountains' | 'landmarks' | 'nature' | 'kids' | 'capital';
+export type Category = 'cities' | 'mountains' | 'landmarks' | 'nature' | 'kids' | 'capital' | 'citiesFr';
 
-/** Indices only draws from cities, so only these two of the 6 Boussole categories apply. */
+/** Indices only draws from cities, so only these two of the 7 Boussole categories apply. */
 export type IndicesCategory = Extract<Category, 'cities' | 'capital'>;
-
-export type Zone = 'france' | 'europe' | 'world';
 
 /** Popularity/fame of the place, from best-known to most niche. */
 export type Difficulty = 'easy' | 'intermediate' | 'hard';
@@ -28,8 +26,8 @@ export type GeoPlace = {
 };
 
 export type Place = Omit<GeoPlace, 'country'> & {
-  /** ISO 3166-1 alpha-2 country code: source of the flag, the zone filter, AND the displayed
-   * name (see `constants/places/countries.ts`) — no country name stored per place. */
+  /** ISO 3166-1 alpha-2 country code: source of the flag AND the displayed name (see
+   * `constants/places/countries.ts`) — no country name stored per place. */
   code: string;
   category: Category;
   difficulty: Difficulty;
@@ -97,7 +95,6 @@ export type GameSettings = {
   playerNames: string[];
   categories: Category[];
   difficulties: Difficulty[];
-  zone: Zone;
   rounds: number;
   /**
    * Straight line through the Earth: you choose the heading and the inclination below the

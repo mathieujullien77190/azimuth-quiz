@@ -1,11 +1,12 @@
 import { countryName } from '@/constants/places/countries';
 import type { Category, Difficulty, IndicesPositionInCountry } from '@/types';
 
-export const CATEGORY_ORDER: Category[] = ['cities', 'capital', 'mountains', 'landmarks', 'nature', 'kids'];
+export const CATEGORY_ORDER: Category[] = ['cities', 'capital', 'citiesFr', 'mountains', 'landmarks', 'nature', 'kids'];
 
 export const CATEGORY_LABELS: Record<Category, string> = {
   cities: 'Villes',
   capital: 'Capitales',
+  citiesFr: 'Villes FR',
   mountains: 'Montagnes',
   landmarks: 'Monuments',
   nature: 'Nature',
@@ -15,6 +16,7 @@ export const CATEGORY_LABELS: Record<Category, string> = {
 export const CATEGORY_COLORS: Record<Category, string> = {
   cities: '#60A5FA',
   capital: '#FBBF24',
+  citiesFr: '#38BDF8',
   mountains: '#A78BFA',
   landmarks: '#F5B841',
   nature: '#4ADE80',
