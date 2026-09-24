@@ -156,6 +156,14 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       color: colors.onAccent,
       fontSize: fontSize.body - 1,
     },
+    buzzInputRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    guessInputFlex: {
+      flex: 1,
+    },
     verdictRow: {
       flexDirection: 'row',
       gap: spacing.sm,
@@ -464,11 +472,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
           </View>
         ) : buzzedIndex !== null ? (
           <View style={styles.buzzPanel}>
-            <View style={styles.buzzerBadge}>
-              <View style={[styles.buzzerBadgeDot, { backgroundColor: PLAYER_COLORS[buzzedIndex] }]} />
-              <Text style={styles.buzzerBadgeText}>{t.indicesGame.buzzedPrompt(buzzedName!)}</Text>
-            </View>
-            {settings.answerMethod === 'typed' && (
+            {settings.answerMethod === 'typed' ? (
               <>
                 {skeletonLengthKnown && (
                   <View style={styles.skeletonRow}>
@@ -487,21 +491,27 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
                     ))}
                   </View>
                 )}
-                <TextInput
-                  autoCapitalize="words"
-                  onChangeText={(next) => {
-                    // Once the real length is known, block typing past it (letters only —
-                    // spaces/punctuation don't count, the player may type either).
-                    if (skeletonLengthKnown && [...next.replace(/[^\p{L}]/gu, '')].length > skeletonLetterCount(skeletonGroups)) return;
-                    setGuessText(next);
-                  }}
-                  onSubmitEditing={submitGuess}
-                  placeholder={t.indicesGame.guessPlaceholder}
-                  placeholderTextColor={colors.textMuted}
-                  returnKeyType="done"
-                  style={styles.guessInput}
-                  value={guessText}
-                />
+                <View style={styles.buzzInputRow}>
+                  <View style={styles.buzzerBadge}>
+                    <View style={[styles.buzzerBadgeDot, { backgroundColor: PLAYER_COLORS[buzzedIndex] }]} />
+                    <Text style={styles.buzzerBadgeText}>{t.indicesGame.buzzedPrompt(buzzedName!)}</Text>
+                  </View>
+                  <TextInput
+                    autoCapitalize="words"
+                    onChangeText={(next) => {
+                      // Once the real length is known, block typing past it (letters only —
+                      // spaces/punctuation don't count, the player may type either).
+                      if (skeletonLengthKnown && [...next.replace(/[^\p{L}]/gu, '')].length > skeletonLetterCount(skeletonGroups)) return;
+                      setGuessText(next);
+                    }}
+                    onSubmitEditing={submitGuess}
+                    placeholder={t.indicesGame.guessPlaceholder}
+                    placeholderTextColor={colors.textMuted}
+                    returnKeyType="done"
+                    style={[styles.guessInput, styles.guessInputFlex]}
+                    value={guessText}
+                  />
+                </View>
                 <Button
                   disabled={guessText.trim().length === 0}
                   label={t.indicesGame.submitGuess}
@@ -509,31 +519,38 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
                 />
                 <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
               </>
-            )}
-            {settings.answerMethod === 'spoken' && !verified && (
+            ) : (
               <>
-                <Button label={t.indicesGame.verify} onPress={verify} />
-                <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
-              </>
-            )}
-            {verified && settings.answerMethod === 'spoken' && (
-              <>
-                <Text style={styles.revealAnswer}>
-                  {t.indicesGame.wasPlace} {place.name}
-                  <Text style={styles.revealSub}>
-                    {'\n'}
-                    {place.country}
-                  </Text>
-                </Text>
-                <View style={styles.verdictRow}>
-                  <Pressable accessibilityRole="button" onPress={() => settle(true)} style={styles.verdictBtn}>
-                    <Text style={styles.verdictLabelCorrect}>{t.indicesGame.correct}</Text>
-                  </Pressable>
-                  <Pressable accessibilityRole="button" onPress={() => settle(false)} style={styles.verdictBtn}>
-                    <Text style={styles.verdictLabelWrong}>{t.indicesGame.wrong}</Text>
-                  </Pressable>
+                <View style={styles.buzzerBadge}>
+                  <View style={[styles.buzzerBadgeDot, { backgroundColor: PLAYER_COLORS[buzzedIndex] }]} />
+                  <Text style={styles.buzzerBadgeText}>{t.indicesGame.buzzedPrompt(buzzedName!)}</Text>
                 </View>
-                <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
+                {!verified && (
+                  <>
+                    <Button label={t.indicesGame.verify} onPress={verify} />
+                    <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
+                  </>
+                )}
+                {verified && (
+                  <>
+                    <Text style={styles.revealAnswer}>
+                      {t.indicesGame.wasPlace} {place.name}
+                      <Text style={styles.revealSub}>
+                        {'\n'}
+                        {place.country}
+                      </Text>
+                    </Text>
+                    <View style={styles.verdictRow}>
+                      <Pressable accessibilityRole="button" onPress={() => settle(true)} style={styles.verdictBtn}>
+                        <Text style={styles.verdictLabelCorrect}>{t.indicesGame.correct}</Text>
+                      </Pressable>
+                      <Pressable accessibilityRole="button" onPress={() => settle(false)} style={styles.verdictBtn}>
+                        <Text style={styles.verdictLabelWrong}>{t.indicesGame.wrong}</Text>
+                      </Pressable>
+                    </View>
+                    <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
+                  </>
+                )}
               </>
             )}
           </View>
