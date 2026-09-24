@@ -359,16 +359,16 @@ const revealedBody = (
       // 1st click: one color. 2nd click: every color, however many the flag actually has. 3rd
       // click: swaps the swatches for the actual flag (see IndicesGameScreen).
       if (stage >= 3) return <Text style={styles.flagEmoji}>{flagEmoji(place.code)}</Text>;
+      const visibleColors = stage >= 2 ? allColors : allColors.slice(0, 1);
       return (
         <View style={styles.flagColorList}>
-          {allColors.map((row, i) => {
-            const shown = stage >= 2 || i < stage;
+          {visibleColors.map((row, i) => {
             const hex = row[FLAG_COLOR_FIELD.HEX];
             const percent = row[FLAG_COLOR_FIELD.PERCENT];
             return (
               <View key={i} style={styles.flagColorRow}>
-                <View style={[styles.flagSwatch, shown && { backgroundColor: hex }]} />
-                <Text style={styles.flagColorPercent}>{shown ? `${percent}%` : '?'}</Text>
+                <View style={[styles.flagSwatch, { backgroundColor: hex }]} />
+                <Text style={styles.flagColorPercent}>{percent}%</Text>
               </View>
             );
           })}

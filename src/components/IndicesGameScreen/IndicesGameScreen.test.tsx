@@ -122,7 +122,6 @@ describe('IndicesGameScreen — picking clues', () => {
     const { getByText, getAllByText } = await renderGame({ playerNames: ['Zoé'] });
     await fireEvent.press(getByText('Drapeau'));
     expect(getAllByText('33%')).toHaveLength(1);
-    expect(getAllByText('?')).toHaveLength(2);
 
     // 2nd click: every color at once, however many the flag actually has.
     await fireEvent.press(getAllByText('33%')[0]);

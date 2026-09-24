@@ -184,10 +184,10 @@ describe('IndicesClueCard — emoji progressive reveal', () => {
 });
 
 describe('IndicesClueCard — flag progressive reveal', () => {
-  it('defaults to stage 1 when flagStage is not provided: first color shown, others hidden', async () => {
-    const { getAllByText } = await renderCard({ clueId: 'flagColors', state: 'revealed' });
+  it('defaults to stage 1 when flagStage is not provided: only the first color is shown', async () => {
+    const { getAllByText, queryAllByText } = await renderCard({ clueId: 'flagColors', state: 'revealed' });
     expect(getAllByText('33%')).toHaveLength(1);
-    expect(getAllByText('?')).toHaveLength(2);
+    expect(queryAllByText('?')).toHaveLength(0);
   });
 
   it('reveals every color on the 2nd click, however many the flag actually has', async () => {
