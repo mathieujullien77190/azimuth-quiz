@@ -22,14 +22,14 @@ import {
 } from './helpers';
 import type { IndicesClueCardProps } from './types';
 
-/** Diametres croissants des 5 ronds de la jauge de population (voir `populationTier`). */
+/** Increasing diameters for the 5 dots of the population gauge (see `populationTier`). */
 const POPULATION_DOT_SIZES = [6, 10, 14, 18, 22];
 
-/** Indices qui passent en carte pleine largeur une fois reveles (visuel plus grand). */
+/** Clues that switch to a full-width card once revealed (bigger visual). */
 const WIDE_CLUE_IDS = new Set(['bearing', 'distance']);
 
-/** "1/2", "2/3"... au-dessus des indices a plusieurs clics — `undefined` pour les indices a un
- * seul clic (pas de badge dans ce cas, voir l'appel dans le composant). */
+/** "1/2", "2/3"... above multi-click clues — `undefined` for single-click clues
+ * (no badge in that case, see the call site in the component). */
 const multiStageProgress = (
   clueId: IndicesClueCardProps['clueId'],
   place: IndicesClueCardProps['place'],
@@ -343,8 +343,8 @@ const revealedBody = (
     case 'flagColors': {
       const allColors = countryFlagColors(place.code) ?? [];
       const stage = flagStage ?? 1;
-      // 1 couleur au 1er clic, 1 de plus au 2e, tout le reste au 3e clic (jamais plus de 3 clics,
-      // voir IndicesGameScreen) : a partir du 3e, tout est devoile d'un coup.
+      // 1 color on the 1st click, 1 more on the 2nd, all the rest on the 3rd click (never more
+      // than 3 clicks, see IndicesGameScreen): from the 3rd click on, everything is revealed at once.
       return (
         <View style={styles.flagColorList}>
           {allColors.map((row, i) => {
@@ -369,6 +369,7 @@ const revealedBody = (
         <View style={styles.distanceWrap}>
           <EarthSection
             allowSatellite
+            forceSide={1}
             marks={[{ bearing: bearingDeg, color: colors.accent, distanceKm }]}
             showStraightLine={false}
             size={EARTH_CLUE_SIZE}

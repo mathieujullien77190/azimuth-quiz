@@ -7,18 +7,18 @@ import { SATELLITE_ORBIT_MS, SATELLITE_QUIP, ZOOM_STEPS } from './constants';
 import EarthSection from '.';
 import type { EarthMark } from './types';
 
-// Un mark proche : le zoom ideal grimpe bien au-dessus de 1 (bcp de place disponible relativement
-// a un tres petit offset), pour exercer les boutons +/- sans avoir a cliquer dessus d'abord.
+// A nearby mark: the ideal zoom climbs well above 1 (lots of room available relative
+// to a very small offset), to exercise the +/- buttons without having to click them first.
 const nearMark: EarthMark = { bearing: 90, distanceKm: 5, color: '#EF4444' };
-// Un mark tres loin (l'autre bout de la Terre) : force le zoom ideal a redescendre a 1, seul
-// palier ou le satellite peut apparaitre.
+// A very far mark (the other side of the Earth): forces the ideal zoom back down to 1, the only
+// tier where the satellite can appear.
 const farMark: EarthMark = { bearing: 90, distanceKm: EARTH_RADIUS_KM * Math.PI, color: '#16A34A' };
 
 describe('EarthSection — marks rendering', () => {
   it('renders without the straight-line chord or zoom controls by default', async () => {
     const { queryByText } = await render(<EarthSection marks={[nearMark]} showStraightLine={false} size={240} />);
     expect(queryByText('horizon')).toBeNull();
-    // Pas de zoomControls -> pas de boutons +/-.
+    // No zoomControls -> no +/- buttons.
     expect(queryByText('−')).toBeNull();
     expect(queryByText('+')).toBeNull();
   });
@@ -26,8 +26,8 @@ describe('EarthSection — marks rendering', () => {
   it('shows the horizon line/label and caption in straight-line mode', async () => {
     const { getByText, toJSON } = await render(<EarthSection marks={[nearMark]} showStraightLine size={240} />);
     expect(getByText('COUPE DE LA TERRE')).toBeTruthy();
-    // Le label "horizon" est du texte SVG (RNSVGText/TSpan), non matchable par getByText : on
-    // verifie sa presence dans l'arbre rendu directement.
+    // The "horizon" label is SVG text (RNSVGText/TSpan), not matchable by getByText: we
+    // check its presence directly in the rendered tree.
     expect(JSON.stringify(toJSON())).toContain('horizon');
   });
 
@@ -64,6 +64,17 @@ describe('EarthSection — zoom controls', () => {
       await fireEvent.press(plus);
     }
     expect(plus.props.accessibilityState.disabled).toBe(true);
+  });
+
+  it('using a far mark (ideal zoom at the minimum), + starts enabled and increases the zoom', async () => {
+    const { getAllByRole } = await render(
+      <EarthSection marks={[farMark]} showStraightLine={false} size={240} zoomControls />,
+    );
+    const [minus, plus] = getAllByRole('button');
+    expect(minus.props.accessibilityState.disabled).toBe(true);
+    expect(plus.props.accessibilityState.disabled).toBe(false);
+    await fireEvent.press(plus);
+    expect(minus.props.accessibilityState.disabled).toBe(false);
   });
 });
 
@@ -106,12 +117,12 @@ describe('EarthSection — satellite', () => {
     );
     expect(startMock).toHaveBeenCalledTimes(1);
 
-    // Simule la fin (naturelle) du premier tour : la boucle manuelle doit relancer un timing.
+    // Simulates the (natural) end of the first turn: the manual loop must restart a timing.
     const onFinished = startMock.mock.calls[0][0] as (result: { finished: boolean }) => void;
     await act(() => onFinished({ finished: true }));
     expect(startMock).toHaveBeenCalledTimes(2);
 
-    // Un callback "non fini" (interrompu) ne doit pas relancer la boucle.
+    // A "not finished" (interrupted) callback must not restart the loop.
     const onFinished2 = startMock.mock.calls[1][0] as (result: { finished: boolean }) => void;
     await act(() => onFinished2({ finished: false }));
     expect(startMock).toHaveBeenCalledTimes(2);
@@ -126,7 +137,7 @@ describe('EarthSection — satellite', () => {
     const onFinished = startMock.mock.calls[callsBeforeUnmount - 1][0] as (result: { finished: boolean }) => void;
     await unmount();
     await act(() => onFinished({ finished: true }));
-    // `cancelled` empeche tout nouveau spin() apres le demontage.
+    // `cancelled` prevents any new spin() after unmount.
     expect(startMock).toHaveBeenCalledTimes(callsBeforeUnmount);
   });
 

@@ -1,12 +1,12 @@
 export const EARTH_RADIUS_RATIO = 0.36;
-/** Position verticale du joueur (sommet du cercle a l'echelle 1), en part de la taille. */
+/** Player's vertical position (circle's apex at scale 1), as a share of the size. */
 export const PLAYER_Y_RATIO = 0.21;
 export const HEIGHT_RATIO = 0.98;
-/** Part de la largeur / de la hauteur ou les reponses peuvent s'etendre une fois zoome. */
+/** Share of the width / height where answers can extend once zoomed. */
 export const AVAILABLE_X_RATIO = 0.44;
 export const BOTTOM_MARGIN = 18;
 
-/** Zooms possibles sur le cercle (1 = echelle reelle). */
+/** Possible zooms on the circle (1 = real scale). */
 export const ZOOM_STEPS = [1, 1.5, 2, 3, 4, 6, 8, 12, 20, 30] as const;
 export const MAX_ZOOM = 30;
 
@@ -15,12 +15,12 @@ export const CAPTION_STRAIGHT = 'Coupe de la Terre';
 export const PLAYER_LABEL = 'toi';
 export const HORIZON_LABEL = 'horizon';
 
-// Satellite qui orbite pour rigoler : a la revelation, en mode distance (pas ligne droite), et
-// seulement dezoome a l'echelle reelle (zoom 1 = la Terre entiere visible, sinon il serait hors
-// champ ou grotesquement proche).
+// Orbiting satellite, just for fun: on reveal, in distance mode (not straight line), and
+// only zoomed out to the real scale (zoom 1 = the whole Earth visible, otherwise it would be
+// off-screen or grotesquely close).
 export const SATELLITE_EMOJI = '🛰️';
 export const SATELLITE_ORBIT_MS = 28000;
 export const SATELLITE_CLEARANCE = 46;
-/** Blague au clic sur le satellite (voir `EarthSection`) : se cache toute seule apres ce delai, ou
- * immediatement si on reclique. */
+/** Joke on clicking the satellite (see `EarthSection`): hides itself after this delay, or
+ * immediately if clicked again. */
 export const SATELLITE_QUIP = 'La Terre est ronde ? 🤔';

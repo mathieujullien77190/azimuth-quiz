@@ -66,8 +66,8 @@ const createStyles = ({ colors, typography }: Theme) =>
     svgWrap: {
       position: 'relative',
     },
-    // Point d'ancrage sans taille au centre de la Terre : la rotation puis le translateY qui
-    // suivent placent le satellite en orbite, sans affecter sa propre position de centrage.
+    // Sizeless anchor point at the center of the Earth: the rotation then translateY that
+    // follow place the satellite in orbit, without affecting its own centering position.
     satelliteAnchor: {
       position: 'absolute',
       width: 0,
@@ -83,8 +83,8 @@ const createStyles = ({ colors, typography }: Theme) =>
       textAlignVertical: 'center',
       transform: [{ rotate: '-35deg' }],
     },
-    // Contre-tourne par rapport a l'orbite (voir satelliteAngle) pour rester lisible quel que soit
-    // l'angle du satellite au moment du clic, plutot que de tourner avec lui.
+    // Counter-rotates relative to the orbit (see satelliteAngle) to stay legible regardless
+    // of the satellite's angle at the moment of the click, rather than rotating with it.
     quipWrap: {
       position: 'absolute',
       left: 14,
@@ -108,17 +108,17 @@ const createStyles = ({ colors, typography }: Theme) =>
   });
 
 /**
- * La Terre vue de cote, le joueur tout en haut. Chaque reponse part du cote de son cap
- * (cap a l'ouest = a gauche, cap a l'est = a droite) et se dessine en un arc qui suit le cercle
- * (distance de surface). En mode ligne droite, une corde rejoint en plus le meme point d'arrivee :
- * l'inclinaison choisie fixe a la fois l'arc et la corde, la distance de surface n'est qu'une indication.
- * Le cercle zoome en continu sur son sommet pour que les reperes proches restent lisibles : plus
- * les distances de `marks` sont courtes, plus le zoom "ideal" (`fitZoom`) monte, parmi `ZOOM_STEPS`.
- * A la revelation (`zoomControls`), des boutons +/- permettent de s'ecarter de cet ideal : on peut
- * toujours redescendre jusqu'a 1 (la Terre entiere) ou monter jusqu'au dernier palier. Un `key`
- * different a chaque manche (cote appelant) remonte le composant et remet ce choix a l'ideal.
- * La vraie reponse (isTruth) ne se dessine que par son point cercle : pas d'arc ni de corde, pour
- * ne pas noyer les reponses des joueurs sous ses propres traits.
+ * The Earth seen from the side, the player at the very top. Each answer starts from the side of
+ * its heading (heading west = left, heading east = right) and draws as an arc following the circle
+ * (surface distance). In straight-line mode, a chord also joins the same endpoint:
+ * the chosen inclination fixes both the arc and the chord, the surface distance is only indicative.
+ * The circle zooms continuously on its apex so nearby markers stay legible: the shorter
+ * `marks`' distances are, the higher the "ideal" zoom (`fitZoom`) climbs, among `ZOOM_STEPS`.
+ * On reveal (`zoomControls`), +/- buttons allow moving away from that ideal: you can
+ * always go back down to 1 (the whole Earth) or up to the last tier. A different `key`
+ * on every round (caller side) remounts the component and resets that choice to the ideal.
+ * The true answer (isTruth) only draws as its circled point: no arc or chord, so as to
+ * not drown players' answers under its own lines.
  */
 export const EarthSection = ({
   size,
@@ -126,6 +126,7 @@ export const EarthSection = ({
   showStraightLine,
   zoomControls = false,
   allowSatellite = zoomControls,
+  forceSide,
 }: EarthSectionProps) => {
   const { colors, compass, typography } = useTheme();
   const styles = useThemedStyles(createStyles);
@@ -135,13 +136,13 @@ export const EarthSection = ({
 
   const baseCenter: Point = { x: player.x, y: player.y + baseRadius };
   const offsets = marks.map((item) => {
-    const end = markEnd(item, baseCenter, baseRadius);
+    const end = markEnd(item, baseCenter, baseRadius, forceSide);
     return { x: end.x - player.x, y: end.y - player.y };
   });
   const idealZoom = fitZoom(offsets, size * AVAILABLE_X_RATIO, height - player.y - BOTTOM_MARGIN);
   const idealIndex = ZOOM_STEPS.indexOf(idealZoom as (typeof ZOOM_STEPS)[number]);
 
-  // null = pas de choix manuel : on suit l'ideal. Des qu'on touche +/-, on part de son index.
+  // null = no manual choice: follows the ideal. As soon as +/- is touched, starts from its index.
   const [manualIndex, setManualIndex] = useState<number | null>(null);
   const stepIndex = manualIndex ?? idealIndex;
   const zoom = ZOOM_STEPS[stepIndex];
@@ -150,16 +151,16 @@ export const EarthSection = ({
   const center: Point = { x: player.x, y: player.y + radius };
   const horizonReach = Math.min(radius * 1.15, size * 0.32);
 
-  // Satellite en orbite, juste pour rigoler : uniquement quand `allowSatellite` (revelation
-  // Boussole, ou mini-Terre toujours-revelee de l'indice "Distance" d'Indices), dezoome a
-  // l'echelle reelle (zoom 1, sinon hors champ ou grotesque) — peu importe le mode.
+  // Orbiting satellite, just for fun: only when `allowSatellite` (Boussole reveal,
+  // or the always-revealed mini-Earth of Indices' "Distance" clue), zoomed out to
+  // the real scale (zoom 1, otherwise off-screen or grotesque) — regardless of the mode.
   const showSatellite = allowSatellite && zoom === 1;
   const satelliteAngle = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!showSatellite) return undefined;
-    // Animated.loop() plante parfois apres un seul tour sur le driver JS de react-native-web
-    // (celui utilise ici, faute de useNativeDriver dispo sur web) : on boucle donc a la main,
-    // en relancant un timing depuis 0 a chaque `finished`, plutot que de compter sur `loop()`.
+    // Animated.loop() sometimes crashes after a single turn on react-native-web's JS driver
+    // (the one used here, since useNativeDriver isn't available on web): so we loop by hand,
+    // restarting a timing from 0 on every `finished`, rather than relying on `loop()`.
     let cancelled = false;
     const spin = () => {
       satelliteAngle.setValue(0);
@@ -179,14 +180,14 @@ export const EarthSection = ({
     };
   }, [showSatellite, satelliteAngle]);
 
-  // Blague au clic sur le satellite : reste affichee tant qu'on ne reclique pas dessus (voir le
-  // Pressable plus bas), pas de disparition automatique.
+  // Joke on clicking the satellite: stays shown until it's clicked again (see the
+  // Pressable below), no automatic disappearance.
   const [showQuip, setShowQuip] = useState(false);
 
   const mark = (item: EarthMark, key: string) => {
-    const side = sideOf(item.bearing);
+    const side = forceSide ?? sideOf(item.bearing);
     const angle = surfaceAngle(item.distanceKm);
-    const end = markEnd(item, center, radius);
+    const end = markEnd(item, center, radius, forceSide);
     const color = item.color;
     const opacity = item.opacity ?? 1;
 
@@ -326,15 +327,15 @@ export const EarthSection = ({
               },
             ]}
           >
-            {/* Pas de accessibilityRole="button" ici : EarthSection peut deja etre dans un vrai
-            bouton (carte indice "Distance"), et le web n'accepte pas un <button> imbrique. */}
+            {/* No accessibilityRole="button" here: EarthSection can already be inside a real
+            button (the "Distance" clue card), and web doesn't accept a nested <button>. */}
             <Pressable hitSlop={10} onPress={() => setShowQuip((v) => !v)}>
               <Text style={styles.satelliteEmoji}>{SATELLITE_EMOJI}</Text>
             </Pressable>
             {showQuip && (
-              // Contre-tourne par rapport au parent pour rester lisible quel que soit l'angle
-              // d'orbite au moment du clic (meme principe que l'ancienne rotation de l'emoji,
-              // reutilise ici pour le texte plutot que pour le satellite lui-meme).
+              // Counter-rotates relative to the parent to stay legible regardless of the
+              // orbit angle at the moment of the click (same idea as the emoji's former
+              // rotation, reused here for the text instead of the satellite itself).
               <Animated.View
                 pointerEvents="none"
                 style={[

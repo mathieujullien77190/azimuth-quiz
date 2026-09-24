@@ -80,7 +80,7 @@ describe('IndicesClueCard — revealed content per clue', () => {
 
   it('bearing: renders nothing when bearingDeg is missing', async () => {
     const { toJSON } = await renderCard({ clueId: 'bearing', state: 'revealed' });
-    // La carte s'affiche quand meme (icone/anim), mais le corps de l'indice est vide (null).
+    // The card still renders (icon/anim), but the clue body is empty (null).
     expect(toJSON()).toBeTruthy();
   });
 
@@ -117,6 +117,12 @@ describe('IndicesClueCard — revealed content per clue', () => {
   it('currency: stage 2 renders the full currency name, with no country name in it', async () => {
     const { getByText } = await renderCard({ clueId: 'currency', currencyStage: 2, state: 'revealed' });
     expect(getByText('Euro')).toBeTruthy();
+  });
+
+  it('currency: stage 2 falls back to the symbol when the country has no currency name', async () => {
+    const unknownCountryPlace = { ...place, code: 'XX' };
+    const { getByText } = await renderCard({ clueId: 'currency', currencyStage: 2, place: unknownCountryPlace, state: 'revealed' });
+    expect(getByText(place.currency)).toBeTruthy();
   });
 
   it('airportCode: renders the airport code', async () => {
@@ -178,5 +184,12 @@ describe('IndicesClueCard — flag progressive reveal', () => {
     const { queryAllByText } = await renderCard({ clueId: 'flagColors', flagStage: 3, state: 'revealed' });
     expect(queryAllByText('?')).toHaveLength(0);
     expect(queryAllByText('33%')).toHaveLength(3);
+  });
+
+  it('renders an empty list for a country with no flag color data', async () => {
+    const unknownCountryPlace = { ...place, code: 'XX' };
+    const { toJSON, queryAllByText } = await renderCard({ clueId: 'flagColors', place: unknownCountryPlace, state: 'revealed' });
+    expect(toJSON()).toBeTruthy();
+    expect(queryAllByText('?')).toHaveLength(0);
   });
 });

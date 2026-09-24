@@ -1,6 +1,6 @@
 import type { IndicesPositionInCountry } from '@/types';
 
-/** Centre du petit carre "ville" dans le grand carre "pays", en % (grille 3x3). */
+/** Center of the small "city" square inside the big "country" square, in % (3x3 grid). */
 export const POSITION_COORDS: Record<IndicesPositionInCountry, { left: number; top: number }> = {
   center: { left: 50, top: 50 },
   n: { left: 50, top: 18 },
@@ -13,7 +13,7 @@ export const POSITION_COORDS: Record<IndicesPositionInCountry, { left: number; t
   sw: { left: 18, top: 82 },
 };
 
-// Indices 'bearing'/'distance' : passent en carte pleine largeur une fois reveles, pour laisser
-// respirer la boussole / la Terre (composants repris tels quels de Full Azimut).
+// 'bearing'/'distance' clues: switch to a full-width card once revealed, to give the
+// compass / Earth (components reused as-is from Full Azimut) room to breathe.
 export const COMPASS_CLUE_SIZE = 140;
 export const EARTH_CLUE_SIZE = 170;

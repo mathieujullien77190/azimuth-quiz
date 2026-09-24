@@ -92,7 +92,7 @@ describe('fitZoom', () => {
   });
 
   it('only considers the positive (downward) part of the y offset', () => {
-    // Un offset y negatif (au-dessus du joueur) ne doit pas contraindre le zoom vertical.
+    // A negative y offset (above the player) must not constrain the vertical zoom.
     const zoom = fitZoom([{ x: 1, y: -1000 }], 1000, 10);
     expect(zoom).toBe(MAX_ZOOM);
   });

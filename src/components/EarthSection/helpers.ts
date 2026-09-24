@@ -3,19 +3,19 @@ import { EARTH_RADIUS_KM } from '@/constants';
 import { MAX_ZOOM, ZOOM_STEPS } from './constants';
 import type { EarthMark, Point, Side } from './types';
 
-/** Cote du schema : un cap vers l'ouest (270° +/- 90°) part a gauche, sinon a droite. */
+/** Side of the diagram: a westward heading (270° +/- 90°) goes left, otherwise right. */
 export const sideOf = (bearing: number): Side => (Math.sin((bearing * Math.PI) / 180) < 0 ? -1 : 1);
 
-/** Point du cercle a `angle` radians du sommet (le joueur) ; angle positif = droite, negatif = gauche. */
+/** Point on the circle at `angle` radians from the apex (the player); positive angle = right, negative = left. */
 export const surfacePoint = (center: Point, radius: number, angle: number): Point => ({
   x: center.x + radius * Math.sin(angle),
   y: center.y - radius * Math.cos(angle),
 });
 
-/** Angle au centre correspondant a une distance mesuree sur la surface. */
+/** Central angle corresponding to a distance measured along the surface. */
 export const surfaceAngle = (distanceKm: number): number => Math.min(Math.PI, distanceKm / EARTH_RADIUS_KM);
 
-/** Arc de cercle du sommet jusqu'a `angle` radians, du cote `side` (attribut `d` d'un <Path>). */
+/** Circle arc from the apex to `angle` radians, on the `side` side (`d` attribute of a <Path>). */
 export const arcPath = (center: Point, radius: number, angle: number, side: Side): string => {
   const start = surfacePoint(center, radius, 0);
   const end = surfacePoint(center, radius, side * angle);
@@ -23,15 +23,19 @@ export const arcPath = (center: Point, radius: number, angle: number, side: Side
 };
 
 /**
- * Extremite d'une reponse sur le cercle : l'arc (surface) et la corde (ligne droite) relient les
- * deux memes points, donc partagent ce point d'arrivee - seule l'inclinaison choisie fixe la distance.
+ * Endpoint of an answer on the circle: the arc (surface) and the chord (straight line) connect the
+ * same two points, so they share this endpoint - only the chosen inclination sets the distance.
  */
-export const markEnd = (item: Pick<EarthMark, 'bearing' | 'distanceKm'>, center: Point, radius: number): Point =>
-  surfacePoint(center, radius, sideOf(item.bearing) * surfaceAngle(item.distanceKm));
+export const markEnd = (
+  item: Pick<EarthMark, 'bearing' | 'distanceKm'>,
+  center: Point,
+  radius: number,
+  forceSide?: Side,
+): Point => surfacePoint(center, radius, (forceSide ?? sideOf(item.bearing)) * surfaceAngle(item.distanceKm));
 
 /**
- * Plus fort zoom (parmi ZOOM_STEPS) qui garde toutes les extremites dans la zone visible.
- * `offsets` : extremites relatives au joueur, a l'echelle 1.
+ * Highest zoom (among ZOOM_STEPS) that keeps all endpoints within the visible zone.
+ * `offsets`: endpoints relative to the player, at scale 1.
  */
 export const fitZoom = (offsets: Point[], availableX: number, availableY: number): number => {
   const maxX = Math.max(1e-6, ...offsets.map((offset) => Math.abs(offset.x)));
