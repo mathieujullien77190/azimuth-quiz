@@ -5,17 +5,21 @@ import {
   DIFFICULTIES,
   INDICES_ANSWER_METHODS,
   INDICES_CATEGORIES,
+  INDICES_PLACES,
   MAX_PLAYERS,
   MIN_PLAYERS,
   NAME_PLACEHOLDERS,
   PLAYER_COLORS,
   ROUND_OPTIONS,
   fontSize,
+  isCapitalPlace,
+  isFrenchCityPlace,
   spacing,
 } from '@/constants';
 import { initials, shuffle } from '@/helpers';
 import { loadIndicesHistory } from '@/helpers/indicesHistory';
-import { useTranslation } from '@/i18n';
+import { effectiveDifficulty } from '@/helpers/places';
+import { useLanguage, useTranslation } from '@/i18n';
 import { useIndicesSettings } from '@/settings';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { IndicesCategory, Theme } from '@/types';
@@ -97,8 +101,17 @@ export const IndicesSetupScreen = ({ onStart, onBack }: IndicesSetupScreenProps)
   const { colors } = useTheme();
   const t = useTranslation();
   const { settings, updateSettings } = useIndicesSettings();
+  const { language } = useLanguage();
   const playerCount = settings.playerNames.length;
   const placeholderNames = useMemo(() => shuffle([...NAME_PLACEHOLDERS]), []);
+  const available = useMemo(
+    () =>
+      INDICES_PLACES.filter((place) => {
+        const category = isCapitalPlace(place) ? 'capital' : isFrenchCityPlace(place) ? 'citiesFr' : 'cities';
+        return settings.categories.includes(category) && effectiveDifficulty(place, language) === settings.difficulty;
+      }).length,
+    [settings.categories, settings.difficulty, language],
+  );
 
   // Fire-and-forget: by the time the player presses "Start", the read is essentially always
   // done, so the very first round already benefits from the draw history (see
@@ -162,7 +175,7 @@ export const IndicesSetupScreen = ({ onStart, onBack }: IndicesSetupScreenProps)
         </View>
       </Section>
 
-      <Section title={t.setup.categoriesTitle}>
+      <Section hint={t.setup.categoriesAvailability(available)} title={t.setup.categoriesTitle}>
         <View style={styles.chips}>
           {INDICES_CATEGORIES.map((category) => (
             <Chip
