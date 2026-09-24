@@ -22,8 +22,10 @@ export const day: Theme = {
     textMuted: '#4C6178',
     accent: '#F97316',
     accentDark: '#C2410C',
-    onAccent: '#1A1203',
-    truth: '#7C3AED',
+    onAccent: '#FFFFFF',
+    // The true-answer arrow/point uses the accent color by day (was Night's purple, which read
+    // as an unrelated third color against the blue/orange Day palette).
+    truth: '#F97316',
     danger: '#DC2626',
     success: '#16A34A',
   },
