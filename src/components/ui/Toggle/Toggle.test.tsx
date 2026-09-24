@@ -1,5 +1,8 @@
 import { fireEvent, render } from '@testing-library/react-native';
 
+import { ThemeSettingsContext } from '@/themes';
+
+import { DAY_THUMB_ON_COLOR } from './constants';
 import Toggle from '.';
 
 describe('Toggle', () => {
@@ -28,5 +31,16 @@ describe('Toggle', () => {
   it('reflects the value being true', async () => {
     const { getByLabelText } = await render(<Toggle label="Live compass" onValueChange={jest.fn()} value={true} />);
     expect(getByLabelText('Live compass').props.value).toBe(true);
+  });
+
+  it('uses a dedicated thumb color when enabled by day', async () => {
+    const { toJSON } = await render(
+      <ThemeSettingsContext.Provider
+        value={{ themeId: 'day', ready: true, setThemeId: jest.fn(), resetThemeId: jest.fn() }}
+      >
+        <Toggle label="Live compass" onValueChange={jest.fn()} value={true} />
+      </ThemeSettingsContext.Provider>,
+    );
+    expect(JSON.stringify(toJSON())).toContain(DAY_THUMB_ON_COLOR);
   });
 });

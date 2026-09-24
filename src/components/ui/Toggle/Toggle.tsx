@@ -4,6 +4,7 @@ import { fontSize, spacing } from '@/constants';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
+import { DAY_THUMB_ON_COLOR } from './constants';
 import type { ToggleProps } from './types';
 
 const createStyles = ({ colors, typography }: Theme) =>
@@ -31,7 +32,8 @@ const createStyles = ({ colors, typography }: Theme) =>
 
 const Toggle = ({ label, description, value, onValueChange }: ToggleProps) => {
   const styles = useThemedStyles(createStyles);
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
+  const thumbOnColor = isDark ? colors.success : DAY_THUMB_ON_COLOR;
 
   return (
     <View style={styles.row}>
@@ -42,7 +44,7 @@ const Toggle = ({ label, description, value, onValueChange }: ToggleProps) => {
       <Switch
         accessibilityLabel={label}
         onValueChange={onValueChange}
-        thumbColor={value ? colors.success : colors.textMuted}
+        thumbColor={value ? thumbOnColor : colors.textMuted}
         trackColor={{ false: colors.surfaceHigh, true: colors.accent }}
         value={value}
       />
