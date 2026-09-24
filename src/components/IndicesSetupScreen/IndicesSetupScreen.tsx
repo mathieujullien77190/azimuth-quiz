@@ -3,7 +3,6 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import {
   DIFFICULTIES,
-  DIFFICULTY_SELECTED_COLOR,
   INDICES_ANSWER_METHODS,
   INDICES_CATEGORIES,
   INDICES_PLACES,
@@ -195,7 +194,6 @@ export const IndicesSetupScreen = ({ onStart, onBack }: IndicesSetupScreenProps)
           {DIFFICULTIES.map((difficulty) => (
             <Chip
               key={difficulty.id}
-              color={DIFFICULTY_SELECTED_COLOR[difficulty.id]}
               emoji={difficulty.emoji}
               label={t.setup.difficulties[difficulty.id]}
               onPress={() => updateSettings({ difficulty: difficulty.id })}

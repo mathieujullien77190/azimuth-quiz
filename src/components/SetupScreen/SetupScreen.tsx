@@ -4,7 +4,6 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 import {
   CATEGORIES,
   DIFFICULTIES,
-  DIFFICULTY_SELECTED_COLOR,
   MAX_PLAYERS,
   MIN_PLAYERS,
   NAME_PLACEHOLDERS,
@@ -251,7 +250,6 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
           {DIFFICULTIES.map((difficulty) => (
             <Chip
               key={difficulty.id}
-              color={DIFFICULTY_SELECTED_COLOR[difficulty.id]}
               emoji={difficulty.emoji}
               label={t.setup.difficulties[difficulty.id]}
               onPress={() => updateSettings(selectDifficultyFilter(settings, difficulty.id))}
