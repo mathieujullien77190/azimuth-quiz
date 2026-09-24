@@ -23,4 +23,4 @@ export const SATELLITE_ORBIT_MS = 28000;
 export const SATELLITE_CLEARANCE = 46;
 /** Joke on clicking the satellite (see `EarthSection`): hides itself after this delay, or
  * immediately if clicked again. */
-export const SATELLITE_QUIP = 'La Terre est ronde ? 🤔';
+export const SATELLITE_QUIP = 'La Terre est-elle ronde ? 🤔';
