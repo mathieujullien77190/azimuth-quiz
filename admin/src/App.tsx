@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { polyfillCountryFlagEmojis } from 'country-flag-emoji-polyfill';
+import { useEffect, useState } from 'react';
 
 import appConfig from '../../app.json';
 
@@ -51,6 +52,11 @@ const ChangelogPanel = () => {
 
 export const App = () => {
   const [tab, setTab] = useState<Tab>('places');
+  // Same Chromium-on-Windows flag-emoji fallback as the game itself (see helpers/web.ts) —
+  // needed here too since the flag badge below uses the same font/emoji.
+  useEffect(() => {
+    polyfillCountryFlagEmojis();
+  }, []);
 
   return (
     <div className="wrap">

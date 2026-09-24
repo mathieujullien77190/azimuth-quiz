@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { flagEmoji } from '@/constants/places/countries';
+import { FLAG_FONT_FAMILY } from '@/themes/fonts';
+
 import { deletePlace, fetchPlaces, saveBoussole, saveDifficulty, saveIndices, type BoussolePatch, type IndicesPatch, type PlaceRow } from '../../api/places';
 import { ChipGroup, toggleInSet } from '../../components/ChipGroup';
 import { DeleteX } from '../../components/DeleteX';
 import { DescriptionCell } from '../../components/DescriptionCell';
-import { EditableSelect } from '../../components/EditableSelect';
 import { EditableValue } from '../../components/EditableValue';
 import { Pagination, pageCount, paginate } from '../../components/Pagination';
 import { WikiLinks } from '../../components/WikiLinks';
@@ -18,7 +20,6 @@ import {
   DIFFICULTY_LABELS,
   DIFFICULTY_ORDER,
   POSITION_LABELS,
-  POSITION_ORDER,
 } from '../../constants';
 import type { Category, Difficulty } from '@/types';
 
@@ -229,6 +230,7 @@ export const PlacesView = () => {
             <div className="place-header">
               <div className="place-identity">
                 <span className="place-name">{row.name}</span>
+                <span style={{ fontFamily: FLAG_FONT_FAMILY }}>{flagEmoji(row.code)}</span>
                 <span className="place-meta" title={countryFor(row.code)}>
                   {countryFor(row.code)} ({row.code})
                 </span>
@@ -316,15 +318,7 @@ export const PlacesView = () => {
                     <tbody>
                       <tr>
                         <th>Position</th>
-                        <td>
-                          <EditableSelect
-                            value={row.indices.positionInCountry}
-                            options={POSITION_ORDER}
-                            labels={POSITION_LABELS}
-                            saveFlag={saveFlagFor(row, 'position')}
-                            onSave={(next) => handleIndicesChange(row, { positionInCountry: next })}
-                          />
-                        </td>
+                        <td className="muted">{POSITION_LABELS[row.indices.positionInCountry]}</td>
                       </tr>
                       <tr>
                         <th>Population</th>
@@ -350,25 +344,11 @@ export const PlacesView = () => {
                       </tr>
                       <tr>
                         <th>Altitude</th>
-                        <td>
-                          <EditableValue
-                            type="number"
-                            value={String(row.indices.elevationMeters)}
-                            display={`${row.indices.elevationMeters} m`}
-                            saveFlag={saveFlagFor(row, 'elevation')}
-                            onSave={(next) => handleIndicesChange(row, { elevationMeters: Number(next) })}
-                          />
-                        </td>
+                        <td className="muted">{row.indices.elevationMeters} m</td>
                       </tr>
                       <tr>
                         <th>Fuseau horaire</th>
-                        <td>
-                          <EditableValue
-                            value={row.indices.timezone}
-                            saveFlag={saveFlagFor(row, 'timezone')}
-                            onSave={(next) => handleIndicesChange(row, { timezone: next })}
-                          />
-                        </td>
+                        <td className="muted">{row.indices.timezone}</td>
                       </tr>
                       <tr>
                         <th>Indicatif</th>
@@ -380,13 +360,7 @@ export const PlacesView = () => {
                       </tr>
                       <tr>
                         <th>Aéroport</th>
-                        <td>
-                          <EditableValue
-                            value={row.indices.airportCode}
-                            saveFlag={saveFlagFor(row, 'airport')}
-                            onSave={(next) => handleIndicesChange(row, { airportCode: next })}
-                          />
-                        </td>
+                        <td className="muted">{row.indices.airportCode}</td>
                       </tr>
                       <tr>
                         <th>Emojis</th>

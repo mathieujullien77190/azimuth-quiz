@@ -44,11 +44,7 @@ export const filterRows = (rows: PlaceRow[], query: string, categories: Set<stri
 };
 
 export const INDICES_FIELD_BY_KEY: Record<string, Field> = {
-  positionInCountry: 'position',
   population: 'population',
   climateEmoji: 'climate',
-  elevationMeters: 'elevation',
-  timezone: 'timezone',
-  airportCode: 'airport',
   emojis: 'emojis',
 };

@@ -30,9 +30,10 @@ export const fetchPlaces = async (): Promise<PlaceRow[]> =>
   }));
 
 export type BoussolePatch = Partial<Pick<Place, 'category' | 'description'>>;
-export type IndicesPatch = Partial<
-  Pick<IndicesPlace, 'positionInCountry' | 'population' | 'climateEmoji' | 'elevationMeters' | 'timezone' | 'airportCode' | 'emojis'>
->;
+// Position/elevation/timezone/airport code/phone code/currency are all read-only in the admin:
+// they come from real-world data (geography, IANA zones, ISO codes), not editorial judgment like
+// category/difficulty/description — editing them here would be too easy to get subtly wrong.
+export type IndicesPatch = Partial<Pick<IndicesPlace, 'population' | 'climateEmoji' | 'emojis'>>;
 
 const fmt = (value: unknown): string => (Array.isArray(value) ? value.join(' ') : String(value ?? '(vide)'));
 
