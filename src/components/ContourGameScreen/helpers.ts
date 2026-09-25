@@ -22,11 +22,13 @@ export const contourPlayerTotals = (records: ContourRoundRecord[], playerCount: 
     records.reduce((total, record) => total + (record.results[playerIndex]?.score.total ?? 0), 0),
   );
 
-/** Random country for a new round, from whichever of the 8 match `difficulty` (same spirit as
+/** Random country for a new round, from whichever countries match `difficulty` (same spirit as
  * Boussole filtering `PLACES` by difficulty), avoiding an immediate repeat of `excludeCode`
- * whenever the filtered pool has more than one option — with only France tagged `easy` and only
- * Norway `hard` (see `codec.ts`), either of those pools always has exactly one country, so that
- * exclusion never actually applies there and the round draws the same country every time. */
+ * whenever the filtered pool has more than one option — the `easy` (FR/ES) and `hard` (NO) pools
+ * each hold exactly one country (see `codec.ts`/`countries.json`'s curated `contour.difficulty`),
+ * so that exclusion never actually applies there and either draws the same country every time;
+ * it's the much larger `intermediate` pool — most countries, including every auto-generated one
+ * (see `scripts/generateContours.mjs`) — where the anti-repeat exclusion actually matters. */
 export const randomCountry = (countries: ContourCountry[], difficulty: Difficulty, excludeCode?: string): ContourCountry => {
   const pool = countries.filter((country) => country.difficulty === difficulty);
   const candidates = pool.length > 1 ? pool.filter((country) => country.code !== excludeCode) : pool;

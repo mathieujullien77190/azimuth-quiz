@@ -261,29 +261,48 @@ export type ContourNeighbor =
 
 /** Anchor for tier 3/4's own on-board label (the target country's own flag, then its name stacked
  * just below it) — a fraction (0-1) of the board canvas, same model and same reasoning as
- * `ContourNeighbor`'s `x`/`y`: curated per country (see `constants/contours/centerLabels.ts`), a
- * plain bounding-box center can read badly for an oddly-shaped country, so it's an editable point
- * (draggable in the admin's Contour view) rather than always derived. */
+ * `ContourNeighbor`'s `x`/`y`: curated per country (part of its `contour.centerLabel` field in
+ * `constants/places/countries.json`, see `ContourDataRow`), a plain bounding-box center can read
+ * badly for an oddly-shaped country, so it's an editable point (draggable in the admin's Contour
+ * view) rather than always derived. */
 export type ContourCenterLabel = { x: number; y: number };
 
-/** A country's outline for the Contour game: geometry plus its curated neighbor list — name/flag
- * come from `constants/places/countries.ts` (shared with Boussole/Indices), looked up by `code`
- * rather than duplicated here. `points` is a closed ring (`[longitude, latitude]` pairs, first
- * === last), mainland only (islands/overseas territories dropped), simplified to ~40-80 points. */
+/** A country's outline for the Contour game: geometry plus its neighbor list — name/flag come from
+ * `constants/places/countries.ts` (shared with Boussole/Indices), looked up by `code` rather than
+ * duplicated here. `points` is a closed ring (`[longitude, latitude]` pairs, first === last),
+ * mainland only (islands/overseas territories dropped), simplified to ~40-80 points (a handful of
+ * large/complex countries run higher, see `scripts/generateContours.mjs`). */
 export type ContourCountry = {
   code: string;
   points: readonly (readonly [number, number])[];
-  /** See `ContourNeighbor` — merged in from constants/contours/neighbors.ts at decode time
-   * (constants/contours/codec.ts), not authored inline with `points`. */
+  /** See `ContourNeighbor` — merged in from `countries.json`'s `contour.neighbors` at decode time
+   * (`constants/contours/codec.ts`), not authored inline with `points`. Hand-curated for the 8
+   * original countries, mostly auto-generated (real-world adjacency, projected/clamped position —
+   * country-type only, never sea/ocean) for every other one — see `ContourDataRow`. */
   neighbors: ContourNeighbor[];
-  /** See `ContourCenterLabel` — merged in from constants/contours/centerLabels.ts at decode time,
-   * same pattern as `neighbors`. */
+  /** See `ContourCenterLabel` — merged in from `countries.json`'s `contour.centerLabel` at decode
+   * time, same pattern as `neighbors`. */
   centerLabel: ContourCenterLabel;
   /** Curated (not derived — outline recognizability is a judgment call, not measurable), same
    * `Difficulty` scale as Boussole/Indices: how hard the country's silhouette is to place/guess.
-   * Merged in from its own small curated map at decode time (see `codec.ts`), same pattern as
-   * `neighbors`. */
+   * Merged in from `countries.json`'s `contour.difficulty` at decode time (see `codec.ts`), same
+   * pattern as `neighbors` — defaults to `'intermediate'` for every auto-generated country. */
   difficulty: Difficulty;
+};
+
+/**
+ * Raw, on-disk shape of a country's Contour data: the optional 7th element of `CountryRow`
+ * (`constants/places/countries.ts`) — present only for a country that actually has a silhouette,
+ * so the vast majority of rows without one stay a plain 6-element array (no `null` padding).
+ * `neighbors`/`centerLabel`/`difficulty` are each optional and fall back to their own default at
+ * decode time (see `constants/contours/codec.ts`), same defaults `ContourCountry` always resolves
+ * to — only `points` is mandatory, there's no sensible default outline.
+ */
+export type ContourDataRow = {
+  points: readonly (readonly [number, number])[];
+  neighbors?: ContourNeighbor[];
+  centerLabel?: ContourCenterLabel;
+  difficulty?: Difficulty;
 };
 
 export type ContourSettings = {

@@ -22,10 +22,12 @@ const BOARD_MAX_HEIGHT = 480;
 
 /**
  * The Contour map editor for a single country — everything ContourView.tsx used to be, minus its
- * own country picker: mounted inline inside CountriesView's own card for one of the 8 curated
- * countries (see CountriesView.tsx's "🗺️ Silhouette" toggle), so pays and Contour data live on
- * the same screen instead of a separate tab. `initialCountry` seeds local state; nothing here
- * writes back up to the parent (same no-backend, journal-only pattern as the rest of the admin).
+ * own country picker: mounted inline inside CountriesView's own card for whichever country already
+ * has Contour data (see CountriesView.tsx's "🗺️ Silhouette" toggle, `CONTOURS.find` — a country
+ * gets one as soon as its `countries.json` row grows a `contour` field, hand-curated or generated
+ * by `scripts/generateContours.mjs`), so pays and Contour data live on the same screen instead of a
+ * separate tab. `initialCountry` seeds local state; nothing here writes back up to the parent (same
+ * no-backend, journal-only pattern as the rest of the admin).
  */
 export const ContourEditor = ({ initialCountry }: { initialCountry: ContourCountry }) => {
   const [country, setCountry] = useState(initialCountry);

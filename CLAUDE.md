@@ -98,10 +98,12 @@ penalise personne.
 
 Deux filtres par difficulte, meme enum `Difficulty` que Boussole/Indices mais choix
 unique (`ContourSettings.difficulty`, pas de multi-select) : le pays du tour
-(`ContourCountry.difficulty`, curee a la main dans `constants/contours/codec.ts` —
-France et Espagne en `easy`, seule la Norvege en `hard`, le reste `intermediate` ;
-deliberement desequilibre, ne pas tenter de rectifier sans demande explicite) et les
-lieux de la phase 'city'
+(`ContourCountry.difficulty`, curee a la main via le champ optionnel `contour.difficulty`
+sur la ligne du pays dans `constants/places/countries.json` — France et Espagne en
+`easy`, seule la Norvege en `hard`, absent (= `intermediate` par defaut, voir `codec.ts`)
+pour tous les autres, y compris tous les pays generes automatiquement ; deliberement
+desequilibre, ne pas tenter de rectifier sans demande explicite) et les lieux de la
+phase 'city'
 (`Place.difficulty`, filtre en plus du `code` pays et de la categorie dans
 `randomPlacesFor` — categorie `kids` toujours exclue, et `CONTOUR_EXCLUDED_PLACES`,
 `constants/contours/excludedPlaces.ts`, exclut a la main certains lieux de Silhouette
@@ -111,12 +113,24 @@ un lieu de categorie capital/mountains/landmarks/nature affiche l'emoji de sa ca
 a la place du point jaune uni (`placeEmoji`, `ContourGameScreen/helpers.ts`) ;
 cities/citiesFr gardent le point jaune classique.
 
-Donnees des voisins (`constants/contours/neighbors.ts`, `CONTOUR_NEIGHBORS`) : liste
-curee a la main, par pays (pas de table globale par code — un meme voisin peut avoir une
-position differente selon le pays qui le cite). Deux constructeurs, `country(...)` et
-`sea(...)`/`ocean(...)` — ces deux derniers partagent `type: 'sea'` mais un champ
-`kind: 'sea' | 'ocean'` choisit l'icone (🐟 ou 🐳, `neighborIcon` dans
-`ContourGameScreen/helpers.ts`).
+Donnees Contour (points/voisins/centerLabel/difficulty) : plus de fichiers a part dans
+`constants/contours/` (qui ne garde plus que `codec.ts` — decode uniquement, plus aucune
+donnee — et `excludedPlaces.ts`, sans rapport) ; tout vit desormais comme un 7e element
+optionnel `contour` sur la ligne du pays concerne dans `constants/places/countries.json`
+(type `ContourDataRow`, voir `src/types/index.ts` et `CountryRow`) — absent pour la
+grande majorite des pays, qui restent un tableau a 6 elements sans padding. Les voisins
+de type pays (`{ type: 'country', code, x, y }`) sont pour la plupart generes
+automatiquement par `scripts/generateContours.mjs` (`npm run generate:contours`, outil
+dev uniquement, hors `npm test`/CI/l'app livree — adjacence reelle + centroide via
+`world-countries`, position projetee sur le plateau du pays puis ramenee au bord via un
+clamp directionnel, voir le script pour le detail) ; seuls les 8 pays d'origine
+(DE/ES/FR/GR/IE/IT/NO/PT) gardent des positions ajustees a la main. Les voisins de type
+mer/ocean (`{ type: 'sea', kind, fr, en, x, y }`) restent purement curee a la main :
+absents pour tout pays genere automatiquement (a completer manuellement via l'admin plus
+tard si besoin), presents seulement pour les 8 pays d'origine — `kind: 'sea' | 'ocean'`
+choisit l'icone (🐟 ou 🐳, `neighborIcon` dans `ContourGameScreen/helpers.ts`). Un meme
+voisin peut avoir une position differente selon le pays qui le cite (pas de table globale
+par code) : chaque `ContourCountry.neighbors` est propre a son pays.
 
 La phase `'reveal'` fige la geometrie du round dans son propre `ContourRoundRecord`
 (`width`/`height`/`outline`, en plus des positions deja en pixels) et la reaffiche telle
@@ -125,7 +139,9 @@ de `'guess'`/`'city'`) — sinon les points places par les joueurs (figes a l'an
 taille) se retrouvaient decales par rapport a un contour redessine a une nouvelle taille.
 
 Admin : pas d'onglet a part — un bouton "🗺️ Silhouette" apparait dans la carte pays de
-`admin/src/views/CountriesView` pour les 8 pays curees (`CONTOURS.find`), et deplie
+`admin/src/views/CountriesView` pour tout pays possedant deja des donnees Contour
+(`CONTOURS.find` — desormais ~150 pays, pas seulement les 8 d'origine, sans aucun
+changement d'UI necessaire puisque ce lookup a toujours ete dynamique), et deplie
 `admin/src/views/ContourView/ContourEditor.tsx` juste en dessous, dans cette meme carte
 (recherche/pagination/tri deja fournis par CountriesView, partages entre pays classiques
 et Silhouette). `ContourEditor` prend un seul `initialCountry` en prop (pas de selecteur

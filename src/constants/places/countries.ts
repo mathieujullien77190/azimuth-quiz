@@ -1,18 +1,20 @@
 import type { Language } from '@/i18n';
-import type { IndicesFlagColorRow } from '@/types';
+import type { ContourDataRow, IndicesFlagColorRow } from '@/types';
 
 import countriesData from './countries.json';
 
 /**
  * Per-country data (ISO 3166-1 alpha-2 code, the object's key), shared by Boussole and Indices:
  * each country is stored as a positional tuple `[fr, en, flag, currency, currencySymbol,
- * phoneCode]` rather than an object with named fields (196 countries x 6 fields: the repeated
- * property names weighed a lot for nothing — same reasoning as `places.json`, see `codec.ts`).
- * `flag`/`currency`/`currencySymbol`/`phoneCode` are `null` when not filled in yet (a country
- * can exist without any place using it yet in Indices). Places only store `code`: everything
- * else is derived from here, avoiding repeating it (and desyncing it) per place — currency/phone
- * code never vary within a given country, unlike difficulty or the trivia, which are specific
- * to each place.
+ * phoneCode, contour?]` rather than an object with named fields (209 countries x up to 7 fields:
+ * the repeated property names weighed a lot for nothing — same reasoning as `places.json`, see
+ * `codec.ts`). `flag`/`currency`/`currencySymbol`/`phoneCode` are `null` when not filled in yet (a
+ * country can exist without any place using it yet in Indices). Places only store `code`:
+ * everything else is derived from here, avoiding repeating it (and desyncing it) per place —
+ * currency/phone code never vary within a given country, unlike difficulty or the trivia, which
+ * are specific to each place. `contour` (see `ContourDataRow`) is the 7th element, present only
+ * for a country with Contour/Silhouette data (`constants/contours/codec.ts` reads it) — omitted
+ * entirely (not `null`) for the many countries without one, so a plain row stays 6 elements.
  */
 export type CountryRow = readonly [
   fr: string,
@@ -21,6 +23,7 @@ export type CountryRow = readonly [
   currency: string | null,
   currencySymbol: string | null,
   phoneCode: string | null,
+  contour?: ContourDataRow,
 ];
 
 export type CountryEntry = {
@@ -30,16 +33,23 @@ export type CountryEntry = {
   currency: string | null;
   currencySymbol: string | null;
   phoneCode: string | null;
+  /** Absent for the many countries with no Contour/Silhouette data — see `CountryRow`. */
+  contour?: ContourDataRow;
 };
 
 const COUNTRIES = countriesData as unknown as Record<string, CountryRow>;
 
 export const decodeCountry = (row: CountryRow): CountryEntry => {
-  const [fr, en, flag, currency, currencySymbol, phoneCode] = row;
-  return { fr, en, flag, currency, currencySymbol, phoneCode };
+  const [fr, en, flag, currency, currencySymbol, phoneCode, contour] = row;
+  return { fr, en, flag, currency, currencySymbol, phoneCode, contour };
 };
 
-export const encodeCountry = (entry: CountryEntry): CountryRow => [entry.fr, entry.en, entry.flag, entry.currency, entry.currencySymbol, entry.phoneCode];
+/** Inverse of `decodeCountry` — round-trips losslessly: a `contour`-less entry re-encodes to a
+ * plain 6-element row (no trailing `undefined`), one with `contour` set re-encodes to 7. */
+export const encodeCountry = (entry: CountryEntry): CountryRow =>
+  entry.contour === undefined
+    ? [entry.fr, entry.en, entry.flag, entry.currency, entry.currencySymbol, entry.phoneCode]
+    : [entry.fr, entry.en, entry.flag, entry.currency, entry.currencySymbol, entry.phoneCode, entry.contour];
 
 export const COUNTRY_NAMES: Record<string, { fr: string; en: string }> = Object.fromEntries(
   Object.entries(COUNTRIES).map(([code, row]) => [code, { fr: row[0], en: row[1] }]),

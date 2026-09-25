@@ -96,6 +96,29 @@ describe('decodeCountry / encodeCountry', () => {
   it('encodeCountry is the inverse of decodeCountry', () => {
     expect(encodeCountry(decodeCountry(row))).toEqual(row);
   });
+
+  it('round-trips a 7-element row (with Contour data) without padding a 6-element one', () => {
+    const rowWithContour: CountryRow = [
+      'Norvège',
+      'Norway',
+      [['red', '#EF2B2D', 50]],
+      'Couronne',
+      'kr',
+      '+47',
+      { points: [[0, 0], [1, 1], [2, 2]], difficulty: 'hard' },
+    ];
+
+    const decoded = decodeCountry(rowWithContour);
+    expect(decoded.contour).toEqual({ points: [[0, 0], [1, 1], [2, 2]], difficulty: 'hard' });
+
+    const reencoded = encodeCountry(decoded);
+    expect(reencoded).toEqual(rowWithContour);
+    expect(reencoded).toHaveLength(7);
+
+    // A plain row (no contour) must never re-encode with a trailing `undefined`/`null`.
+    const reencodedPlain = encodeCountry(decodeCountry(row));
+    expect(reencodedPlain).toHaveLength(6);
+  });
 });
 
 describe('serializeCountries', () => {

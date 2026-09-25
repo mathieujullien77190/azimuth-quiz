@@ -1,42 +1,97 @@
+import type { CountryRow } from '@/constants/places/countries';
+import type { Difficulty } from '@/types';
+
 import { CONTOURS, decodeContours } from './codec';
 
+const row = (contour?: CountryRow[6]): CountryRow => ['Name', 'Name', null, null, null, null, contour];
+
 describe('decodeContours', () => {
-  it('merges each code with its own points and curated neighbor list', () => {
-    const decoded = decodeContours({ FR: [[0, 0], [1, 1]] });
+  it('merges a row with a contour field into a resolved ContourCountry', () => {
+    const decoded = decodeContours({
+      FR: row({
+        points: [
+          [0, 0],
+          [1, 1],
+          [2, 2],
+        ],
+        neighbors: [{ type: 'country', code: 'DE', x: 0.1, y: 0.2 }],
+      }),
+    });
     expect(decoded).toHaveLength(1);
     expect(decoded[0].code).toBe('FR');
-    expect(decoded[0].points).toEqual([[0, 0], [1, 1]]);
-    expect(decoded[0].neighbors.length).toBeGreaterThan(0);
+    expect(decoded[0].points).toEqual([
+      [0, 0],
+      [1, 1],
+      [2, 2],
+    ]);
+    expect(decoded[0].neighbors).toEqual([{ type: 'country', code: 'DE', x: 0.1, y: 0.2 }]);
   });
 
-  it('falls back to an empty neighbor list for a code with no curated data', () => {
-    const decoded = decodeContours({ XX: [[0, 0]] });
+  it('skips a row with no contour field entirely (the vast majority of countries)', () => {
+    const decoded = decodeContours({ XX: row(undefined) });
+    expect(decoded).toEqual([]);
+  });
+
+  it('falls back to an empty neighbor list, the default center label and intermediate difficulty when the contour omits them', () => {
+    const decoded = decodeContours({
+      XX: row({
+        points: [
+          [0, 0],
+          [1, 1],
+          [2, 2],
+        ],
+      }),
+    });
     expect(decoded[0].neighbors).toEqual([]);
+    expect(decoded[0].centerLabel).toEqual({ x: 0.5, y: 0.5 });
+    expect(decoded[0].difficulty).toBe('intermediate');
   });
 
-  it('gives France easy and Norway hard, everyone else intermediate (including an unknown code)', () => {
-    const decoded = decodeContours({ FR: [[0, 0]], NO: [[0, 0]], DE: [[0, 0]], XX: [[0, 0]] });
-    expect(decoded.find((c) => c.code === 'FR')?.difficulty).toBe('easy');
-    expect(decoded.find((c) => c.code === 'NO')?.difficulty).toBe('hard');
-    expect(decoded.find((c) => c.code === 'DE')?.difficulty).toBe('intermediate');
-    expect(decoded.find((c) => c.code === 'XX')?.difficulty).toBe('intermediate');
+  it('keeps an explicit centerLabel/difficulty instead of the default', () => {
+    const decoded = decodeContours({
+      NO: row({
+        points: [
+          [0, 0],
+          [1, 1],
+          [2, 2],
+        ],
+        centerLabel: { x: 0.3, y: 0.7 },
+        difficulty: 'hard',
+      }),
+    });
+    expect(decoded[0].centerLabel).toEqual({ x: 0.3, y: 0.7 });
+    expect(decoded[0].difficulty).toBe('hard');
   });
 });
 
 describe('CONTOURS', () => {
-  it('gives every one of the 8 Contour countries at least one neighbor', () => {
+  it('gives every country an outline of at least 3 points', () => {
     for (const country of CONTOURS) {
-      expect(country.neighbors.length).toBeGreaterThan(0);
+      expect(country.points.length).toBeGreaterThanOrEqual(3);
     }
   });
 
-  it('gives France/Spain easy, Norway hard, and every other country intermediate', () => {
+  it('allows a country with no neighbors at all (expected for an island with no land border)', () => {
+    for (const country of CONTOURS) {
+      expect(Array.isArray(country.neighbors)).toBe(true);
+    }
+  });
+
+  it('gives every country a valid Difficulty, pins France/Spain easy and Norway hard, and every other country intermediate', () => {
+    const validDifficulties: Difficulty[] = ['easy', 'intermediate', 'hard'];
     const difficultyOf = (code: string) => CONTOURS.find((c) => c.code === code)?.difficulty;
+
+    for (const country of CONTOURS) {
+      expect(validDifficulties).toContain(country.difficulty);
+    }
+
     expect(difficultyOf('FR')).toBe('easy');
     expect(difficultyOf('ES')).toBe('easy');
     expect(difficultyOf('NO')).toBe('hard');
-    for (const code of ['IT', 'PT', 'DE', 'IE', 'GR']) {
-      expect(difficultyOf(code)).toBe('intermediate');
+
+    for (const country of CONTOURS) {
+      if (['FR', 'ES', 'NO'].includes(country.code)) continue;
+      expect(country.difficulty).toBe('intermediate');
     }
   });
 
