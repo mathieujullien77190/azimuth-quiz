@@ -1,148 +1,66 @@
-import { forwardRef, useEffect, useMemo, useRef } from 'react';
-import type { ComponentProps, ElementRef } from 'react';
-import { Animated, Easing, PanResponder, Platform, StyleSheet, View } from 'react-native';
+import { useMemo, useRef } from 'react';
+import { PanResponder, Platform, StyleSheet, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
 import Svg, { Circle, Path, Text as SvgText } from 'react-native-svg';
 
-import { useTheme, useThemeSettings } from '@/themes';
-import type { Point2D } from '@/types';
+import { useTheme } from '@/themes';
+import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 
 import {
-  ANCHOR_RADIUS,
   CONNECTOR_DASH_PATTERN,
   CONNECTOR_STROKE_WIDTH,
-  HOLE_MARKER_RADIUS,
+  HINT_ICON_FONT_SIZE,
+  MARKER_EMOJI_FONT_SIZE,
   MARKER_LABEL_FONT_SIZE,
   MARKER_LABEL_GAP,
   MARKER_RADIUS,
-  TRACE_STROKE_WIDTH,
-  TRUTH_DRAW_DURATION_MS,
   TRUTH_MARKER_RING_RADIUS,
   VISIBLE_STROKE_WIDTH,
 } from './constants';
-import { polylineLength, polylinePath } from './helpers';
+import { polylinePath } from './helpers';
 import type { ContourBoardMarker, ContourBoardProps } from './types';
 
-const NO_ANCHORS: ContourBoardProps['anchors'] = [];
-const NO_HOLE_MARKERS: ContourBoardProps['holeMarkers'] = [];
-const NO_TRACES: ContourBoardProps['traces'] = [];
 const NO_MARKERS: ContourBoardProps['markers'] = [];
 const NO_CONNECTORS: ContourBoardProps['connectors'] = [];
+const NO_HINT_LABELS: ContourBoardProps['hintLabels'] = [];
 
-// `Animated.createAnimatedComponent` injects a `collapsable` prop meant for native Views; SVG
-// `Path` (a web DOM `<path>` under react-native-web) forwards unrecognized props straight to the
-// DOM instead of understanding it, which React then warns about ("non-boolean attribute"). This
-// wrapper strips it before it reaches the real `Path`, while still forwarding the ref
-// `Animated.createAnimatedComponent` needs to update `strokeDashoffset` imperatively.
-const PathWithoutCollapsable = forwardRef<ElementRef<typeof Path>, ComponentProps<typeof Path> & { collapsable?: boolean }>(
-  function PathWithoutCollapsable({ collapsable: _collapsable, ...pathProps }, ref) {
-    return <Path ref={ref} {...pathProps} />;
-  },
-);
-// `strokeDashoffset` is an SVG prop, not a transform/opacity style: unlike EarthSection's
-// satellite orbit (rotate/translateY), the native driver can't animate it at all, on any
-// platform — see the `useNativeDriver: false` on its `Animated.timing` below.
-const AnimatedPath = Animated.createAnimatedComponent(PathWithoutCollapsable);
-
-/** SVG + touch board: draws the country's fixed `visible` arcs (one per hole gap, or a single one
- * in solo), any extra `anchors`/`holeMarkers`/`traces`/`markers` (still-unclaimed holes' anchor
- * dots and numbered badges, claimed holes' true arcs, city markers), and the live `activePoints`
- * trace or `placedPoint` marker on top. Touch capture follows the same `PanResponder` pattern as
- * `Compass` (refs to avoid stale closures, `touchAction: 'none'` on web so a vertical drag doesn't
- * also scroll the page) and is in exactly one of two mutually exclusive modes at a time, picked by
- * which callback prop the caller passes: `onDraw` appends to a multi-point trace, `onPlacePoint`
- * moves a single marker. */
+/** SVG + touch board: draws the country's fixed `outline` (the whole real border, no
+ * interaction), any `markers`/`connectors`/`hintLabels` (city guesses, the true city,
+ * guess-to-solution dashed lines, guess-phase hint icons/text), and the live `placedPoint`
+ * marker on top. Touch capture follows the same
+ * `PanResponder` pattern as `Compass` (a ref to avoid stale closures, `touchAction: 'none'` on
+ * web so a vertical drag doesn't also scroll the page), active only while `onPlacePoint` is
+ * passed — the board has no interaction at all outside of the city phase's tap-to-place-a-marker
+ * step. */
 export const ContourBoard = ({
   width,
   height,
-  visible,
-  anchors = NO_ANCHORS,
-  holeMarkers = NO_HOLE_MARKERS,
-  traces = NO_TRACES,
+  outline,
   markers = NO_MARKERS,
   connectors = NO_CONNECTORS,
-  activePoints,
-  activeColor,
+  hintLabels = NO_HINT_LABELS,
   placedPoint,
   activeMarkerColor,
-  onDraw,
   onPlacePoint,
 }: ContourBoardProps) => {
   const { colors, typography } = useTheme();
-  const { animationsEnabled } = useThemeSettings();
-  const editable = onDraw !== undefined || onPlacePoint !== undefined;
+  const editable = onPlacePoint !== undefined;
 
-  // Truth traces (claimed holes, `isTruth`) always render last (on top of player traces and city
-  // markers). The caller can reveal them one at a time, as each hole gets claimed (see
-  // ContourGameScreen's `revealedTraces`) — so each trace's `key` gets its own `Animated.Value`,
-  // played once the first render it appears in, independent of whichever others are already mid-
-  // animation or already done. `d`/length are derived once per trace here (not re-derived per
-  // frame): `strokeDashoffset` only ever reads the cheap `interpolate`.
-  const revealValuesRef = useRef(new Map<string | number, Animated.Value>());
-  const revealStartedKeysRef = useRef(new Set<string | number>());
-  const truthEntries = traces
-    .filter((trace) => trace.isTruth)
-    .map((trace, index) => {
-      const key = trace.key ?? index;
-      let progress = revealValuesRef.current.get(key);
-      if (!progress) {
-        progress = new Animated.Value(0);
-        revealValuesRef.current.set(key, progress);
-      }
-      return { trace, key, d: polylinePath(trace.points), length: polylineLength(trace.points), progress };
-    });
-  const otherTraces = traces.filter((trace) => !trace.isTruth);
-
-  useEffect(() => {
-    truthEntries.forEach(({ key, progress }) => {
-      if (revealStartedKeysRef.current.has(key)) return;
-      revealStartedKeysRef.current.add(key);
-      if (!animationsEnabled) {
-        progress.setValue(1);
-        return;
-      }
-      Animated.timing(progress, {
-        duration: TRUTH_DRAW_DURATION_MS,
-        easing: Easing.inOut(Easing.ease),
-        toValue: 1,
-        useNativeDriver: false,
-      }).start();
-    });
-    // No dependency array: must recheck every render since a new hole can join `truthEntries` at
-    // any point (turn by turn, see above) — cheap either way, `revealStartedKeysRef` turns every
-    // already-handled key into an immediate no-op.
-  });
-
-  const onDrawRef = useRef(onDraw);
-  onDrawRef.current = onDraw;
   const onPlacePointRef = useRef(onPlacePoint);
   onPlacePointRef.current = onPlacePoint;
-  const pointsRef = useRef<Point2D[]>(activePoints ?? []);
-  pointsRef.current = activePoints ?? [];
 
   const panResponder = useMemo(() => {
-    const handle = (x: number, y: number) => {
-      if (onDrawRef.current !== undefined) {
-        // Appends to pointsRef instead of resetting it: lifting the finger and touching down
-        // again (e.g. to rest, or after switching to another player's tab and back) resumes the
-        // trace instead of discarding what was already drawn.
-        const next = [...pointsRef.current, { x, y }];
-        pointsRef.current = next;
-        onDrawRef.current(next);
-        return;
-      }
-      onPlacePointRef.current?.({ x, y });
-    };
+    const handle = (x: number, y: number) => onPlacePointRef.current?.({ x, y });
 
     return PanResponder.create({
-      onStartShouldSetPanResponder: () => onDrawRef.current !== undefined || onPlacePointRef.current !== undefined,
-      onMoveShouldSetPanResponder: () => onDrawRef.current !== undefined || onPlacePointRef.current !== undefined,
+      onStartShouldSetPanResponder: () => onPlacePointRef.current !== undefined,
+      onMoveShouldSetPanResponder: () => onPlacePointRef.current !== undefined,
       onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: (event) => handle(event.nativeEvent.locationX, event.nativeEvent.locationY),
       onPanResponderMove: (event) => handle(event.nativeEvent.locationX, event.nativeEvent.locationY),
     });
-    // `handle` only reads refs (never `width`/`height` directly), and the board remounts (via a
-    // `key` on the caller side) every round anyway, so this never needs rebuilding after mount.
+    // `handle` only reads a ref (never a prop directly), and the board remounts (via a `key` on
+    // the caller side) every round anyway, so this never needs rebuilding after mount.
   }, []);
 
   return (
@@ -151,74 +69,65 @@ export const ContourBoard = ({
       {...(editable ? panResponder.panHandlers : {})}
     >
       <Svg height={height} width={width}>
-        {visible.map((segment, index) => (
-          <Path
-            d={polylinePath(segment)}
-            fill="none"
+        <Path
+          d={polylinePath(outline)}
+          // A filled silhouette rather than a bare outline, matching the game mode's own name —
+          // `surfaceHigh` reads as a raised panel over `ThemeBackdrop` in both themes.
+          fill={colors.surfaceHigh}
+          stroke={colors.textMuted}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={VISIBLE_STROKE_WIDTH}
+        />
+        {hintLabels.map((label, index) => (
+          <SvgText
+            fill={colors.text}
+            fontFamily={label.icon ? FLAG_FONT_FAMILY : typography.heading.fontFamily}
+            fontSize={label.icon ? HINT_ICON_FONT_SIZE : MARKER_LABEL_FONT_SIZE}
+            fontWeight="800"
             key={index}
-            stroke={colors.textMuted}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={VISIBLE_STROKE_WIDTH}
-          />
-        ))}
-        {otherTraces.map((trace, index) => (
-          <Path
-            d={polylinePath(trace.points)}
-            fill="none"
-            key={index}
-            stroke={trace.color}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={TRACE_STROKE_WIDTH}
-          />
-        ))}
-        {activePoints !== undefined && activeColor !== undefined && (
-          <Path
-            d={polylinePath(activePoints)}
-            fill="none"
-            stroke={activeColor}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={TRACE_STROKE_WIDTH}
-          />
-        )}
-        {anchors.map((anchor, index) => (
-          <Circle cx={anchor.x} cy={anchor.y} fill={colors.surface} key={index} r={ANCHOR_RADIUS} stroke={colors.text} strokeWidth={2} />
-        ))}
-        {holeMarkers.map((marker, index) => (
-          <Circle
-            cx={marker.position.x}
-            cy={marker.position.y}
-            fill={colors.accent}
-            key={index}
-            r={HOLE_MARKER_RADIUS}
-            stroke={colors.surface}
-            strokeWidth={2}
-          />
+            textAnchor="middle"
+            x={label.position.x}
+            y={label.position.y}
+          >
+            {label.text}
+          </SvgText>
         ))}
         {connectors.map((connector, index) => (
           <Path
             d={polylinePath([connector.from, connector.to])}
             fill="none"
             key={index}
-            stroke={colors.textMuted}
+            stroke={connector.color ?? colors.textMuted}
             strokeDasharray={CONNECTOR_DASH_PATTERN}
             strokeLinecap="round"
             strokeWidth={CONNECTOR_STROKE_WIDTH}
           />
         ))}
-        {markers.map((marker, index) => (
-          <Circle
-            cx={marker.position.x}
-            cy={marker.position.y}
-            fill={marker.color}
-            key={index}
-            r={MARKER_RADIUS}
-            stroke={colors.surface}
-            strokeWidth={2}
-          />
-        ))}
+        {/* The truth (solution) dot drawn last/on top of every player guess dot — same order as
+            the ring pass right below, so an overlapping guess never hides which dot is the truth.
+            Skips a marker with its own `emoji` (a category icon replaces the plain dot for it —
+            see ContourGameScreen's `placeEmoji`), rendered in its own pass below instead. */}
+        {[...markers.filter((marker) => !marker.isTruth), ...markers.filter((marker) => marker.isTruth)]
+          .filter((marker) => marker.emoji === undefined)
+          .map((marker, index) => (
+            <Circle
+              cx={marker.position.x}
+              cy={marker.position.y}
+              fill={marker.color}
+              key={index}
+              r={MARKER_RADIUS}
+              stroke={colors.surface}
+              strokeWidth={2}
+            />
+          ))}
+        {markers
+          .filter((marker): marker is ContourBoardMarker & { emoji: string } => marker.emoji !== undefined)
+          .map((marker, index) => (
+            <SvgText fill={colors.text} fontSize={MARKER_EMOJI_FONT_SIZE} key={`emoji-${index}`} textAnchor="middle" x={marker.position.x} y={marker.position.y + MARKER_EMOJI_FONT_SIZE / 3}>
+              {marker.emoji}
+            </SvgText>
+          ))}
         {markers
           .filter((marker) => marker.isTruth)
           .map((marker, index) => (
@@ -257,19 +166,6 @@ export const ContourBoard = ({
             strokeWidth={2}
           />
         )}
-        {truthEntries.map(({ trace, key, d, length, progress }) => (
-          <AnimatedPath
-            d={d}
-            fill="none"
-            key={key}
-            stroke={trace.color}
-            strokeDasharray={length}
-            strokeDashoffset={progress.interpolate({ inputRange: [0, 1], outputRange: [length, 0] })}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={TRACE_STROKE_WIDTH}
-          />
-        ))}
       </Svg>
     </View>
   );

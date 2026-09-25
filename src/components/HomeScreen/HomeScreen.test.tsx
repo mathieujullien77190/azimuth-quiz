@@ -53,7 +53,7 @@ describe('HomeScreen — content', () => {
     expect(getByText('Choisis ton jeu de géographie')).toBeTruthy();
     expect(getByText('Boussole')).toBeTruthy();
     expect(getByText('Indices')).toBeTruthy();
-    expect(getByText('Contour')).toBeTruthy();
+    expect(getByText('Silhouette')).toBeTruthy();
     expect(getAllByText('Jouer')).toHaveLength(3);
   });
 

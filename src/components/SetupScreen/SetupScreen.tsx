@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import {
@@ -13,7 +13,7 @@ import {
   fontSize,
   spacing,
 } from '@/constants';
-import { filterPlaces, initials, shuffle } from '@/helpers';
+import { filterPlaces, initials } from '@/helpers';
 import { useLanguage, useTranslation } from '@/i18n';
 import { useSettings } from '@/settings';
 import { useTheme, useThemedStyles } from '@/themes';
@@ -181,8 +181,8 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
   const { settings, ready, updateSettings } = useSettings();
   const playerCount = settings.playerNames.length;
   const available = filterPlaces(settings.categories, settings.difficulties, language).length;
-  // A different order every time the screen loads, stable while typing.
-  const placeholderNames = useMemo(() => shuffle([...NAME_PLACEHOLDERS]), []);
+  // Fixed order (same name always at the same field) rather than randomized per load.
+  const placeholderNames = NAME_PLACEHOLDERS;
 
   return (
     <Screen>

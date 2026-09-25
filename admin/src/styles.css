@@ -642,6 +642,174 @@ td.muted {
   margin-top: 4px;
 }
 
+.contour-main-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.contour-board-wrap {
+  position: relative;
+  margin: 8px 0 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.contour-places-panel {
+  flex: 1;
+  min-width: 220px;
+  margin: 8px 0 16px;
+}
+
+.contour-places-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.contour-place-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.contour-place-row:hover {
+  background: var(--surface-high);
+}
+
+.contour-place-row.selected {
+  background: color-mix(in srgb, #f4c430 20%, transparent);
+}
+
+.contour-place-row .coord {
+  margin-left: auto;
+  color: var(--text-muted);
+}
+
+/* Highlights the place clicked in "Lieux possibles" — see `selectedPlacePosition`. */
+.contour-place-highlight {
+  fill: none;
+  stroke: #f4c430;
+  stroke-width: 2.5;
+}
+
+/* Same drag look as a neighbor marker, dashed ring added so it reads as distinct (there's always
+   exactly one flag + one name, never deletable). */
+.contour-center-label .contour-neighbor-icon {
+  outline: 1.5px dashed var(--accent);
+  outline-offset: 4px;
+  border-radius: 50%;
+}
+
+.contour-svg {
+  display: block;
+}
+
+.contour-outline {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* Zero-size anchor at the neighbor's own point, not a visual box: `positionFor`'s pixel already
+   sits here via inline `left`/`top`. Icon and name (below) are its only visible children, each
+   centering itself on this same point independently — this div just supplies the shared origin,
+   the drag hit-target (mousedown bubbles up from either child), and the delete button's anchor. */
+.contour-neighbor {
+  position: absolute;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.contour-neighbor:active,
+.contour-neighbor.dragging {
+  cursor: grabbing;
+  z-index: 5;
+}
+
+/* Not `pointer-events: none` — the parent anchor has no width/height of its own (its children are
+   `position: absolute`, out of flow), so these spans are the actual clickable/draggable surface;
+   a mousedown on either bubbles up to the parent's own `onMouseDown` (drag) same as before. Name
+   stacks just below the icon (not centered on the same point) — same tier-1-icon-then-tier-2-
+   name-below layout as the real game (see ContourBoard.tsx's `hintLabels` and
+   `HINT_STACK_GAP_RATIO`), shown here always (both at once) since this is a static preview, not a
+   tiered reveal. */
+.contour-neighbor-icon,
+.contour-neighbor-name {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+}
+
+.contour-neighbor-icon {
+  font-size: 18px;
+  line-height: 1;
+  transform: translate(-50%, -50%);
+}
+
+.contour-neighbor-name {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  text-shadow:
+    0 0 3px var(--surface),
+    0 0 3px var(--surface);
+  transform: translate(-50%, 6px);
+}
+
+.contour-neighbor.dragging .contour-neighbor-icon,
+.contour-neighbor.dragging .contour-neighbor-name {
+  filter: drop-shadow(0 0 2px var(--accent));
+}
+
+/* Offset from the shared point rather than the old badge's corner: icon/name now overlap right on
+   top of it, so the delete button sits a little further out to stay clear of both. */
+.contour-neighbor-delete {
+  position: absolute;
+  top: -16px;
+  right: -16px;
+}
+
+.contour-neighbor-delete .delete-x {
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  background: var(--surface);
+}
+
+.contour-neighbor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.contour-neighbor-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+}
+
+.contour-neighbor-row .coord {
+  margin-left: auto;
+}
+
 .empty {
   padding: 40px 16px;
   text-align: center;

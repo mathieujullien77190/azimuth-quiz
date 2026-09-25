@@ -1,8 +1,18 @@
-import { useMemo } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { CONTOUR_PLACES_COUNT_OPTIONS, MAX_PLAYERS, MIN_PLAYERS, NAME_PLACEHOLDERS, PLAYER_COLORS, ROUND_OPTIONS, fontSize, spacing } from '@/constants';
-import { initials, shuffle } from '@/helpers';
+import {
+  CONTOUR_PLACES_COUNT_OPTIONS,
+  DIFFICULTIES,
+  MAX_PLAYERS,
+  MIN_PLAYERS,
+  NAME_PLACEHOLDERS,
+  PLAYER_COLORS,
+  ROUND_OPTIONS,
+  difficultyEmoji,
+  fontSize,
+  spacing,
+} from '@/constants';
+import { initials } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useContourSettings } from '@/settings';
 import { useTheme, useThemedStyles } from '@/themes';
@@ -76,11 +86,12 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
 
 export const ContourSetupScreen = ({ onStart, onBack }: ContourSetupScreenProps) => {
   const styles = useThemedStyles(createStyles);
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const t = useTranslation();
   const { settings, updateSettings } = useContourSettings();
   const playerCount = settings.playerNames.length;
-  const placeholderNames = useMemo(() => shuffle([...NAME_PLACEHOLDERS]), []);
+  // Fixed order (same name always at the same field) rather than randomized per load.
+  const placeholderNames = NAME_PLACEHOLDERS;
 
   return (
     <Screen>
@@ -138,6 +149,20 @@ export const ContourSetupScreen = ({ onStart, onBack }: ContourSetupScreenProps)
               label={String(placesCount)}
               onPress={() => updateSettings({ placesCount })}
               selected={settings.placesCount === placesCount}
+            />
+          ))}
+        </View>
+      </Section>
+
+      <Section hint={t.contourSetup.difficultyHint} title={t.contourSetup.difficultyTitle}>
+        <View style={styles.chips}>
+          {DIFFICULTIES.map((difficulty) => (
+            <Chip
+              key={difficulty.id}
+              emoji={difficultyEmoji(difficulty, isDark)}
+              label={t.setup.difficulties[difficulty.id]}
+              onPress={() => updateSettings({ difficulty: difficulty.id })}
+              selected={settings.difficulty === difficulty.id}
             />
           ))}
         </View>

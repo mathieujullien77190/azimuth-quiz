@@ -1,4 +1,4 @@
-import { boardDimensionsFor, createProjector, polylineLength, polylinePath, projectPoints } from './helpers';
+import { boardDimensionsFor, createProjector, createUnprojector, polylinePath, projectPoints } from './helpers';
 
 describe('createProjector', () => {
   it('centers a square ring within the available square, padding respected', () => {
@@ -59,6 +59,36 @@ describe('createProjector', () => {
   });
 });
 
+describe('createUnprojector', () => {
+  const ring: [number, number][] = [
+    [0, -10],
+    [10, -10],
+    [10, 10],
+    [0, 10],
+  ];
+
+  it('round-trips an arbitrary point through createProjector then back', () => {
+    const size = { width: 100, height: 200 };
+    const project = createProjector(ring, size, 10);
+    const unproject = createUnprojector(ring, size, 10);
+    const original: [number, number] = [4.2, -3.7];
+    const roundTripped = unproject(project(original));
+    expect(roundTripped[0]).toBeCloseTo(original[0]);
+    expect(roundTripped[1]).toBeCloseTo(original[1]);
+  });
+
+  it('recovers each corner of the ring itself', () => {
+    const size = { width: 50, height: 100 };
+    const project = createProjector(ring, size, 0);
+    const unproject = createUnprojector(ring, size, 0);
+    ring.forEach((corner) => {
+      const [lon, lat] = unproject(project(corner));
+      expect(lon).toBeCloseTo(corner[0]);
+      expect(lat).toBeCloseTo(corner[1]);
+    });
+  });
+});
+
 describe('boardDimensionsFor', () => {
   it('uses the full max width for a square-ish ring that already fits the max height', () => {
     const ring: [number, number][] = [
@@ -110,18 +140,5 @@ describe('polylinePath', () => {
 
   it('chains L commands for the rest of the points', () => {
     expect(polylinePath([{ x: 0, y: 0 }, { x: 1, y: 1 }, { x: 2, y: 2 }])).toBe('M 0 0 L 1 1 L 2 2');
-  });
-});
-
-describe('polylineLength', () => {
-  it('is 0 for 0 or 1 points', () => {
-    expect(polylineLength([])).toBe(0);
-    expect(polylineLength([{ x: 5, y: 5 }])).toBe(0);
-  });
-
-  it('sums the straight-segment distances, matching polylinePath\'s own "L" segments', () => {
-    // 3-4-5 triangle then straight up: 5 + 10 = 15.
-    const points = [{ x: 0, y: 0 }, { x: 3, y: 4 }, { x: 3, y: 14 }];
-    expect(polylineLength(points)).toBeCloseTo(15);
   });
 });

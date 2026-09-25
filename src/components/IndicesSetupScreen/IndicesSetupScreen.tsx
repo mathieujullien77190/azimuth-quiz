@@ -17,7 +17,7 @@ import {
   isFrenchCityPlace,
   spacing,
 } from '@/constants';
-import { initials, shuffle } from '@/helpers';
+import { initials } from '@/helpers';
 import { loadIndicesHistory } from '@/helpers/indicesHistory';
 import { effectiveDifficulty } from '@/helpers/places';
 import { useLanguage, useTranslation } from '@/i18n';
@@ -104,7 +104,8 @@ export const IndicesSetupScreen = ({ onStart, onBack }: IndicesSetupScreenProps)
   const { settings, updateSettings } = useIndicesSettings();
   const { language } = useLanguage();
   const playerCount = settings.playerNames.length;
-  const placeholderNames = useMemo(() => shuffle([...NAME_PLACEHOLDERS]), []);
+  // Fixed order (same name always at the same field) rather than randomized per load.
+  const placeholderNames = NAME_PLACEHOLDERS;
   const available = useMemo(
     () =>
       INDICES_PLACES.filter((place) => {

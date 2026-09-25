@@ -1,22 +1,27 @@
 import type { Point2D } from '@/types';
 
-export type ContourBoardTrace = {
-  points: Point2D[];
-  color: string;
-  /** Renders on top of everything else: a hole's true arc. Each `isTruth` trace plays its own
-   * "drawn by a pen" reveal animation once, the first render it appears in (see ContourBoard's
-   * own doc comment) — so holes revealed at different times animate independently. */
-  isTruth?: boolean;
-  /** Stable React key for an `isTruth` trace (e.g. its hole index) — also identifies which
-   * `Animated.Value` drives its reveal, so it must stay the same across renders for that hole. */
-  key?: string | number;
-};
-
 /** A straight dashed segment between two points (e.g. a player's city guess and that place's
  * true solution) — purely visual, no animation, always in a neutral muted stroke. */
 export type ContourBoardConnector = {
   from: Point2D;
   to: Point2D;
+  /** Defaults to a neutral muted stroke (see ContourBoard's own default) when omitted — set per
+   * place (CONTOUR_PLACE_LINE_COLORS) so several places' connectors stay visually distinguishable
+   * on the same board. */
+  color?: string;
+};
+
+/** A single icon/text label drawn straight on the board, centered on `position` (e.g. a hinted
+ * neighbor's flag then its name stacked below — see `ContourNeighbor` — or the target country's
+ * own flag/name at its center). */
+export type ContourBoardHintLabel = {
+  position: Point2D;
+  text: string;
+  /** `text` is an emoji glyph (a flag or the sea/ocean fish icon) rather than plain name text:
+   * renders bigger, and with FLAG_FONT_FAMILY — harmless for a non-flag emoji (browsers fall
+   * back automatically), but required for a flag glyph to render as a flag rather than a raw
+   * two-letter code on Windows Chromium (see themes/fonts.ts). */
+  icon?: boolean;
 };
 
 export type ContourBoardMarker = {
@@ -27,48 +32,32 @@ export type ContourBoardMarker = {
   /** Name shown next to the marker (e.g. the true place's name) — omit for markers that don't
    * need one (player guesses). */
   label?: string;
-};
-
-/** Plain dot at a still-unclaimed hole's location: a passive location hint (not a tap target —
- * the target hole is inferred from where the player draws, see ContourGameScreen's
- * `nearestUnclaimedHole`). */
-export type ContourBoardHoleMarker = {
-  position: Point2D;
+  /** A category icon (see ContourGameScreen's `placeEmoji`) drawn instead of the plain filled dot
+   * — only ever set on a truth marker, never a player guess. `color` still drives its ring. */
+  emoji?: string;
 };
 
 export type ContourBoardProps = {
   width: number;
   height: number;
-  /** Fixed arcs, always shown — several with holes in between (one per player), a single one
-   * covering almost the whole ring in solo. */
-  visible: Point2D[][];
-  /** Dots marking specific points (e.g. every still-unclaimed hole's two anchors, while players
-   * are drawing): the caller decides which points are worth marking, the board just renders them. */
-  anchors?: Point2D[];
-  /** Location dots (see ContourBoardHoleMarker) for still-unclaimed holes. */
-  holeMarkers?: ContourBoardHoleMarker[];
-  /** Extra strokes on top of `visible`: claimed holes' true arcs (`isTruth`, each one revealed
-   * the first render it appears in) and any other colored traces the caller wants to show. */
-  traces?: ContourBoardTrace[];
+  /** The country's full outline (closed ring, screen-space): shown as-is, no touch interaction
+   * on the shape itself. */
+  outline: Point2D[];
   /** Fixed markers on top of everything else: the true city and submitted players' city guesses
    * (reveal). */
   markers?: ContourBoardMarker[];
   /** Dashed guess-to-solution lines, rendered under `markers` so the dots stay on top — a quick
    * visual read of each player's error distance. */
   connectors?: ContourBoardConnector[];
-  /** The active player's in-progress trace (controlled: the board only renders it, `onDraw`
-   * reports new points back to the caller). */
-  activePoints?: Point2D[];
-  activeColor?: string;
-  /** The active player's in-progress city marker (controlled the same way as `activePoints`,
-   * via `onPlacePoint`). */
+  /** Directional hint labels (e.g. every revealed neighbor's flag/name, the target country's own
+   * flag/name at its center) — see `ContourBoardHintLabel`. */
+  hintLabels?: ContourBoardHintLabel[];
+  /** The active player's in-progress city marker (controlled: the board only renders it,
+   * `onPlacePoint` reports the new position back to the caller). */
   placedPoint?: Point2D;
   activeMarkerColor?: string;
-  /** Presence puts the board in trace-drawing mode (touch-editable, mutually exclusive with
-   * `onPlacePoint`): called with the full updated trace on every touch move/grant. */
-  onDraw?: (points: Point2D[]) => void;
-  /** Presence puts the board in point-placing mode instead (touch-editable, mutually exclusive
-   * with `onDraw`): called with the touch position on every grant/move, so dragging before
+  /** Presence puts the board in point-placing mode (touch-editable, the city phase's only
+   * interaction): called with the touch position on every touch grant/move, so dragging before
    * lifting the finger fine-tunes the marker. */
   onPlacePoint?: (point: Point2D) => void;
 };

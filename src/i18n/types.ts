@@ -174,21 +174,38 @@ export type Translations = {
     playerNameAccessibility: (index: number) => string;
     placesCountTitle: string;
     placesCountHint: string;
+    difficultyTitle: string;
+    difficultyHint: string;
   };
   contourGame: {
-    /** Instruction shown above the board while players trace their (automatically assigned)
-     * hole: draw between its two anchor dots. */
-    traceHint: string;
+    /** Shown in the country-identity slot during the 'guess' phase, in place of the (not yet
+     * known) country name/flag. */
+    guessPrompt: string;
+    /** The shared "reveal a hint" icon button, inline with the guess input, clickable by any
+     * player — reveals one more of the 4 on-board hint tiers each click (every neighbor's icon,
+     * then its name, then the target country's own flag, then its name) and disappears once all
+     * 4 are out. */
+    hintButton: string;
+    guessPlaceholder: string;
+    /** Shown right after "Valider", before attribution — whether the typed text matched. */
+    resultOk: string;
+    resultNotOk: string;
+    /** Prompt above the player tabs used to attribute the just-validated guess to whoever typed
+     * it — scores them if correct, deducts CONTOUR_WRONG_GUESS_PENALTY if not. */
+    whoAnswered: string;
+    /** A wrong guess, naming who it got attributed to — doesn't end anything, shown until the
+     * next attempt. */
+    wrongGuess: (name: string) => string;
+    /** Shown alongside the "Continuer" button once the 4th hint tier (the country's own name) is
+     * revealed: nobody scores for this part, same as the old give-up — an explicit confirm
+     * before moving on to the city phase, consistent with the rest of the app's button style. */
+    noOneGuessed: string;
     /** Instruction shown above the board during a city step, naming the place to mark and which
      * one it is out of how many this round (1-indexed). */
     cityHint: (cityName: string, placeNumber: number, totalPlaces: number) => string;
-    /** Short labels for the results card's trace/city point breakdown. */
-    traceLabel: string;
+    /** Short labels for the results card's guess/city point breakdown. */
+    guessLabel: string;
     cityLabel: string;
-    /** Shown once every hole is claimed and every player has submitted their trace, instead of
-     * auto-advancing: pressing it swaps every player's guess trace for the true contour, then
-     * starts the city/places phase. */
-    revealContourLabel: string;
     /** Advances from one place's guess-vs-solution comparison to the next place (or the final
      * reveal, on the last one) — single shared button, not per-player. */
     continueLabel: string;

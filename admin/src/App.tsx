@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react';
 import appConfig from '../../app.json';
 
 import { clearChangelog, useChangelog } from './changelog';
+import { ContourView } from './views/ContourView';
 import { CountriesView } from './views/CountriesView';
 import { PlacesView } from './views/PlacesView';
 
-type Tab = 'places' | 'countries';
+type Tab = 'places' | 'countries' | 'contour';
 
 const ChangelogPanel = () => {
   const lines = useChangelog();
@@ -72,13 +73,16 @@ export const App = () => {
             <button type="button" className="chip game-chip" aria-pressed={tab === 'countries'} onClick={() => setTab('countries')}>
               Pays
             </button>
+            <button type="button" className="chip game-chip" aria-pressed={tab === 'contour'} onClick={() => setTab('contour')}>
+              Contour
+            </button>
           </div>
         </div>
       </header>
 
       <ChangelogPanel />
 
-      {tab === 'places' ? <PlacesView /> : <CountriesView />}
+      {tab === 'places' ? <PlacesView /> : tab === 'countries' ? <CountriesView /> : <ContourView />}
     </div>
   );
 };

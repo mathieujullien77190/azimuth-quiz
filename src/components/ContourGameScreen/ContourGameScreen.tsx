@@ -1,31 +1,53 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import type { LayoutChangeEvent } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { CONTOURS, CONTOUR_HOLE_RATIO, CONTOUR_SOLO_HOLE_RATIO, PLAYER_COLORS, fontSize, spacing } from '@/constants';
+import {
+  CONTOURS,
+  CONTOUR_GUESS_POINTS_BY_HINTS,
+  CONTOUR_PLACE_LINE_COLORS,
+  CONTOUR_WRONG_GUESS_PENALTY,
+  PLAYER_COLORS,
+  fontSize,
+  spacing,
+} from '@/constants';
 import { countryName, flagEmoji } from '@/constants/places/countries';
-import { formatNumber, playerDisplayName, scoreCityGuess, scoreContourRound, splitContourHoles } from '@/helpers';
+import { formatNumber, playerDisplayName, scoreCityGuess } from '@/helpers';
 import { useLanguage, useTranslation } from '@/i18n';
 import { useContourSettings } from '@/settings';
 import { useTheme, useThemedStyles } from '@/themes';
 import { FLAG_FONT_FAMILY } from '@/themes/fonts';
-import type { ContourCountry, ContourPhase, ContourRoundRecord, ContourTraceScore, Point2D, Theme } from '@/types';
+import type { ContourCountry, ContourNeighbor, ContourPhase, ContourRoundRecord, Difficulty, Place, Point2D, Theme } from '@/types';
 
 import ContourBoard, {
-  BOARD_PADDING,
+  BOARD_PADDING_RATIO,
+  HINT_STACK_GAP_RATIO,
   boardDimensionsFor,
   createProjector,
   projectPoints,
   type ContourBoardConnector,
-  type ContourBoardHoleMarker,
+  type ContourBoardHintLabel,
   type ContourBoardMarker,
-  type ContourBoardTrace,
 } from '../ContourBoard';
 import Legend from '../Legend';
 import PlayerTabs from '../PlayerTabs';
+import ThemeBackdrop from '../ThemeBackdrop';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
+import RoundProgress from '../ui/RoundProgress';
 import Screen from '../ui/Screen';
-import { boardMaxSizeFor, contourPlayerTotals, nearestUnclaimedHole, randomCountry, randomPlacesFor, rotatedOrder } from './helpers';
+import { BOARD_AREA_MARGIN, INITIAL_BOARD_MAX_SIZE } from './constants';
+import {
+  contourPlayerTotals,
+  neighborIcon,
+  neighborName,
+  normalizeContourGuess,
+  placeEmoji,
+  randomCountry,
+  randomPlacesFor,
+  rotatedOrder,
+} from './helpers';
 import type { ContourGameScreenProps } from './types';
 
 const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
@@ -41,6 +63,47 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       backgroundColor: isDark ? colors.background : colors.surface,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
+    },
+    // 'guess'/'city' only: no separate header/footer bands reserving their own layout space —
+    // the board measures (and fills) the entire safe area (see `fullBleedBoardArea`) and these
+    // two float on top of it instead, so the country outline can run edge to edge behind them.
+    fullBleedSafeArea: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    fullBleedBoardArea: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    // `surfaceHigh` (already the "raised panel" surface everywhere else — inputs, chips...) at
+    // high but not full opacity: reads as a floating panel over a busy outline/hint icons in
+    // both themes, without needing a separate day/night branch the way the old opaque `header`
+    // did. `F0` = ~94% opaque, enough to keep small text legible without looking like a solid bar.
+    overlayTop: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: `${colors.surfaceHigh}F0`,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      paddingBottom: spacing.xs,
+    },
+    overlayBottom: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: `${colors.surfaceHigh}F0`,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.sm,
+    },
+    cityFooter: {
+      gap: spacing.sm,
     },
     topBar: {
       flexDirection: 'row',
@@ -60,12 +123,25 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       color: colors.accent,
       fontSize: fontSize.subtitle,
     },
-    round: {
-      ...typography.label,
-      color: colors.textMuted,
-      fontSize: fontSize.caption,
+    // Round icon-only button, inline in the guess-phase input row (see `buzzInputRow`).
+    hintFab: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surfaceHigh,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+    },
+    hintFabIcon: {
+      fontSize: fontSize.subtitle,
+    },
+    resultOkText: {
+      ...typography.heading,
       textAlign: 'center',
-      paddingBottom: spacing.xs,
+      fontSize: fontSize.caption + 1,
+      color: colors.success,
     },
     countryCard: {
       alignItems: 'center',
@@ -74,6 +150,11 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
     countryName: {
       ...typography.heading,
       color: colors.text,
+      fontSize: fontSize.subtitle,
+    },
+    guessPoints: {
+      ...typography.display,
+      color: colors.accent,
       fontSize: fontSize.subtitle,
     },
     // Flag emoji needs its own font family: Chromium on Windows has no system font that renders
@@ -88,8 +169,24 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       fontSize: fontSize.caption + 1,
       textAlign: 'center',
     },
+    // 'reveal' only ('guess'/'city' use `fullBleedBoardArea` instead, see above): `flex: 1` so
+    // this card claims whatever's left of the ScrollView's own height once its siblings (the
+    // country card above, the results card below) have taken theirs — see `boardArea`, measured
+    // inside it, for the actual live sizing.
     boardCard: {
+      flex: 1,
       alignItems: 'center',
+    },
+    // The board's actual "available space" measurement (see `onBoardAreaLayout`): stretches to
+    // the card's full width and claims the rest of its height (after `Legend`, a sibling below
+    // it, has taken its own — so a visible Legend correctly shrinks the box the board fits into).
+    // Centered so the board (typically smaller than this box on one axis, once fit to the
+    // country's own aspect ratio) doesn't just stick to a corner.
+    boardArea: {
+      flex: 1,
+      alignSelf: 'stretch',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     // Frames the board's exact touch/drawable rectangle: no explicit width/height on purpose, so
     // it shrink-wraps ContourBoard's own `width` x `height` View exactly (the border sits around
@@ -171,57 +268,115 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       fontSize: fontSize.caption + 1,
       color: colors.success,
     },
+    guessFooter: {
+      gap: spacing.sm + 2,
+    },
+    wrongGuessText: {
+      ...typography.heading,
+      textAlign: 'center',
+      fontSize: fontSize.caption + 1,
+      color: colors.danger,
+    },
+    buzzPanel: {
+      gap: spacing.sm + 2,
+    },
+    whoAnsweredRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    buzzInputRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    guessInput: {
+      ...typography.heading,
+      minHeight: 48,
+      paddingHorizontal: spacing.md,
+      borderRadius: 10,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      backgroundColor: colors.surfaceHigh,
+      color: colors.text,
+      fontSize: fontSize.body,
+    },
+    guessInputFlex: {
+      flex: 1,
+    },
   });
 
-/** Board data for the current round: computed once in `startRound` and kept fixed through it
- * (see `boardMaxSizeFor`'s doc comment for why). */
+/** What's actually random about a round: picked once (`buildRoundSeed`, in `startRound`) and kept
+ * fixed until the next one. Deliberately excludes anything screen-space (that's `RoundBoard`,
+ * re-derived live from this + the measured board area — see `useMemo` below) so a live resize
+ * (e.g. rotating the device, or the 'guess' -> 'city' phase's own chrome changing) reflows the
+ * same round instead of re-rolling it. */
+type RoundSeed = {
+  country: ContourCountry;
+  places: Place[];
+};
+
+const buildRoundSeed = (excludeCode: string | undefined, placesCount: number, difficulty: Difficulty): RoundSeed => {
+  const country = randomCountry(CONTOURS, difficulty, excludeCode);
+  return { country, places: randomPlacesFor(country.code, placesCount, difficulty) };
+};
+
+/** Board data for the current round, fit to `maxWidth`/`maxHeight` (the board area's live
+ * measured size — see `onBoardAreaLayout`): re-derived (not re-rolled) via `useMemo` whenever
+ * either changes, so the same round reflows to fill whatever space is actually available. */
 type RoundBoard = {
   country: ContourCountry;
   /** Canvas size, shaped to the country's own aspect ratio (see `boardDimensionsFor`) rather
-   * than a fixed square. */
+   * than a fixed square — as large as it can be within `maxWidth`/`maxHeight` without distorting it. */
   width: number;
   height: number;
-  /** Single scalar for the scoring tolerance (see `scoreContourRound`/`scoreCityGuess`): the
-   * average of `width`/`height`, so tolerance stays reasonable on both axes even for an
-   * elongated country instead of favoring whichever axis a diagonal or a single dimension would. */
+  /** Single scalar for the city-guess scoring tolerance (see `scoreCityGuess`): the average of
+   * `width`/`height`, so tolerance stays reasonable on both axes even for an elongated country
+   * instead of favoring whichever axis a diagonal or a single dimension would. */
   boardSize: number;
-  /** Fixed arcs shown throughout the round, one per hole (a single one covering ~60% of the ring
-   * in solo, since there's only one hole there — see `buildRound`). */
-  visibleSegments: Point2D[][];
-  /** One hidden gap per player: `holes[i]` is whichever player's `holeAssignment` points to `i`
-   * claimed (see `nearestUnclaimedHole`) — its true arc is drawn directly on the board (in
-   * `colors.truth`) the moment it's claimed. */
-  holes: Point2D[][];
+  /** The country's full outline, projected once for the round — shown as-is from the very start
+   * of the 'guess' phase. */
+  outline: Point2D[];
+  /** Tier 3/4's own on-board anchor for the target country's own flag, then its name stacked just
+   * below it (see `HINT_STACK_GAP_RATIO`) — curated per country (`ContourCountry.centerLabel`,
+   * a fraction of this canvas, same model as `ContourNeighbor`), rather than a fixed geometric
+   * center: lets an oddly-shaped country (or an admin, via the Contour view) place it somewhere
+   * that actually reads well over the silhouette. */
+  centerPosition: Point2D;
+  /** Every curated neighbor (see `ContourCountry.neighbors`), paired with its on-board pixel
+   * position (`neighbor.x`/`y` scaled to this round's canvas) and text alignment. */
+  neighborHints: { neighbor: ContourNeighbor; position: Point2D }[];
   /** This round's named places (any category, see `randomPlacesFor`): one city-placement step
    * each, in this order. Can be shorter than `ContourSettings.placesCount` (or empty) if the
-   * country doesn't have that many matching places. */
-  places: { name: string; position: Point2D }[];
+   * country doesn't have that many matching places. `emoji` (see `placeEmoji`) replaces the plain
+   * truth dot with a category icon for capital/mountain/landmark/nature places. */
+  places: { name: string; position: Point2D; emoji: string | undefined }[];
 };
 
-const buildRound = (
-  excludeCode: string | undefined,
-  windowWidth: number,
-  windowHeight: number,
-  playerCount: number,
-  placesCount: number,
-): RoundBoard => {
-  const country = randomCountry(CONTOURS, excludeCode);
-  const { maxWidth, maxHeight } = boardMaxSizeFor(windowWidth, windowHeight);
+const projectRound = (seed: RoundSeed, maxWidth: number, maxHeight: number): RoundBoard => {
+  const { country, places } = seed;
   const { width, height } = boardDimensionsFor(country.points, maxWidth, maxHeight);
-  const project = createProjector(country.points, { width, height }, BOARD_PADDING);
-  const holeRatio = playerCount === 1 ? CONTOUR_SOLO_HOLE_RATIO : CONTOUR_HOLE_RATIO;
-  const { holes: holesGeo, visibleSegments: visibleGeo } = splitContourHoles(country.points, playerCount, holeRatio);
-  const places = randomPlacesFor(country.code, placesCount);
+  // Ratio of Math.min(width, height), not a fixed pixel count — see BOARD_PADDING_RATIO's own doc
+  // comment for why: keeps the admin's differently-sized preview canvas laid out proportionally
+  // identical to this board.
+  const project = createProjector(country.points, { width, height }, Math.min(width, height) * BOARD_PADDING_RATIO);
 
   return {
     country,
     width,
     height,
     boardSize: (width + height) / 2,
-    visibleSegments: visibleGeo.map((segment) => projectPoints(segment, project)),
-    holes: holesGeo.map((hole) => projectPoints(hole, project)),
+    outline: projectPoints(country.points, project),
+    centerPosition: { x: country.centerLabel.x * width, y: country.centerLabel.y * height },
+    // `neighbor.x`/`y` are already a fraction of this exact board canvas (see `ContourNeighbor`'s
+    // own doc comment) — just scale, no reprojection or edge-clamping needed.
+    neighborHints: country.neighbors.map((neighbor) => ({
+      neighbor,
+      position: { x: neighbor.x * width, y: neighbor.y * height },
+    })),
     places: places.map((place) => ({
       name: place.name,
+      emoji: placeEmoji(place),
       position: project([place.coordinates.longitude, place.coordinates.latitude]),
     })),
   };
@@ -233,32 +388,76 @@ const buildRound = (
  * `guessesByPlayer`. */
 type CityAnswer = { cityGuess: Point2D | undefined };
 
-const NO_TRACE_SCORE: ContourTraceScore = { traceErrorPx: Infinity, tracePoints: 0 };
+/** Result of the round's 'guess' phase, once resolved (a correct guess or a give-up) — carried
+ * straight into `finishCityPhase` so the round record can combine it with the city scores. */
+type GuessOutcome = { playerIndex: number; hintsUsed: number; guessPoints: number };
 
 export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
   const t = useTranslation();
   const { language } = useLanguage();
-  const { width, height: windowHeight } = useWindowDimensions();
   const { settings } = useContourSettings();
 
   const players = settings.playerNames.map((name, index) => playerDisplayName(name, index));
   const playerTabs = players.map((name, index) => ({ color: PLAYER_COLORS[index], name }));
+  const playerOrder = players.map((_, index) => index);
   const isMultiplayer = players.length > 1;
 
   const [roundIndex, setRoundIndex] = useState(0);
-  const [board, setBoard] = useState<RoundBoard>(() => buildRound(undefined, width, windowHeight, players.length, settings.placesCount));
+  const [roundSeed, setRoundSeed] = useState<RoundSeed>(() => buildRoundSeed(undefined, settings.placesCount, settings.difficulty));
+  // The board area's live measured size (see `onBoardAreaLayout`) — `null` for the one frame
+  // before its first `onLayout` fires, so `board` below falls back to a sane placeholder box.
+  const [boardAreaSize, setBoardAreaSize] = useState<{ width: number; height: number } | null>(null);
+  const onBoardAreaLayout = (event: LayoutChangeEvent) => {
+    const { width, height } = event.nativeEvent.layout;
+    setBoardAreaSize((previous) => (previous?.width === width && previous?.height === height ? previous : { width, height }));
+  };
+  // Re-fit (not re-roll) `roundSeed` to the live measured box: recomputes whenever the round
+  // changes or the box itself does (device rotation, or the 'guess' -> 'city' phase's different
+  // surrounding chrome resizing it — see `boardArea`'s own doc comment). Shaved by
+  // `BOARD_AREA_MARGIN` on every side first, so the board's own frame doesn't touch the measured
+  // box's edges (the full screen, in 'guess'/'city' — see `fullBleedBoardArea`).
+  const [phase, setPhase] = useState<ContourPhase>('guess');
+  // 'guess'/'city' only: live heights of the translucent `overlayTop`/`overlayBottom` bands that
+  // float on top of the full-bleed board (see their own onLayout below) — subtracted from the
+  // height budget the board is fit into (see `board` below), so a tall/narrow country (e.g.
+  // Portugal) doesn't fit itself edge-to-edge past those bands and end up with its top/bottom
+  // hidden underneath them. Left at 0 outside 'guess'/'city' (the 'reveal'/'end' board area is a
+  // different, ordinary-flow View with no overlays to account for).
+  const [overlayTopHeight, setOverlayTopHeight] = useState(0);
+  const [overlayBottomHeight, setOverlayBottomHeight] = useState(0);
+  const onOverlayTopLayout = (event: LayoutChangeEvent) => setOverlayTopHeight(event.nativeEvent.layout.height);
+  const onOverlayBottomLayout = (event: LayoutChangeEvent) => setOverlayBottomHeight(event.nativeEvent.layout.height);
+  const isFullBleedPhase = phase === 'guess' || phase === 'city';
+  const board = useMemo(
+    () =>
+      projectRound(
+        roundSeed,
+        (boardAreaSize?.width ?? INITIAL_BOARD_MAX_SIZE) - BOARD_AREA_MARGIN * 2,
+        (boardAreaSize?.height ?? INITIAL_BOARD_MAX_SIZE) -
+          BOARD_AREA_MARGIN * 2 -
+          (isFullBleedPhase ? overlayTopHeight + overlayBottomHeight : 0),
+      ),
+    [roundSeed, boardAreaSize, isFullBleedPhase, overlayTopHeight, overlayBottomHeight],
+  );
   const [roundOrder, setRoundOrder] = useState<number[]>(() => rotatedOrder(0, players.length));
   const [activePlayerIndex, setActivePlayerIndex] = useState(() => roundOrder[0] ?? 0);
-  const [phase, setPhase] = useState<ContourPhase>('trace');
 
-  // --- trace phase (turn-based): no picking step, the target hole is inferred from the trace
-  // itself and claimed the moment it's committed (see `commitActiveTrace`) ---
-  const [holeAssignment, setHoleAssignment] = useState<(number | undefined)[]>(() => players.map(() => undefined));
-  const [traceDraftsByPlayer, setTraceDraftsByPlayer] = useState<Point2D[][]>(() => players.map(() => []));
-  const [tracesByPlayer, setTracesByPlayer] = useState<(Point2D[] | undefined)[]>(() => players.map(() => undefined));
-  const [traceScores, setTraceScores] = useState<ContourTraceScore[]>(() => players.map(() => NO_TRACE_SCORE));
+  // --- guess phase (shared, not turn-based): the input/"Valider" pair is always on screen, no
+  // buzz-in step — anyone can type an answer. Validating checks it immediately and switches to a
+  // player-attribution step (`pendingCorrect`): correct scores whoever gets picked (see
+  // `resolveGuess`); wrong deducts CONTOUR_WRONG_GUESS_PENALTY from them instead and reopens the
+  // input for another attempt, same hint tier. ---
+  const [hintsRevealed, setHintsRevealed] = useState(0);
+  const [guessText, setGuessText] = useState('');
+  const [pendingCorrect, setPendingCorrect] = useState<boolean | null>(null);
+  const [penalizedPlayer, setPenalizedPlayer] = useState<string | null>(null);
+  // Cumulative CONTOUR_WRONG_GUESS_PENALTY hits this round, by player index — folded into
+  // `finishCityPhase`'s per-player `penaltyPoints` (persists across attempts within the round,
+  // reset in `startRound`).
+  const [roundPenalties, setRoundPenalties] = useState<number[]>(() => players.map(() => 0));
+  const [guessOutcome, setGuessOutcome] = useState<GuessOutcome | null>(null);
 
   // --- city phase: one turn-based mini-round per place in `board.places` ---
   const [placeIndex, setPlaceIndex] = useState(0);
@@ -270,98 +469,82 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
   const [records, setRecords] = useState<ContourRoundRecord[]>([]);
 
   const isLastRound = roundIndex + 1 >= settings.rounds;
-  const claimedHoleIndexes = new Set(holeAssignment.filter((index): index is number => index !== undefined));
-  const activeTraceDraft = traceDraftsByPlayer[activePlayerIndex] ?? [];
   const activeCityDraft = cityDraftsByPlayer[activePlayerIndex];
-  const traceAnsweredByPlayer = tracesByPlayer.map((trace) => trace !== undefined);
   const cityAnsweredByPlayer = cityAnswersByPlayer.map((answer) => answer !== undefined);
   const currentRecord = records[roundIndex];
   const activePlace = board.places[placeIndex];
-  /** Every hole is claimed and every player has submitted (see `submitTrace`, which deliberately
-   * doesn't auto-advance once this becomes true): the board keeps showing every player's own
-   * guess trace until `startCityPhase` (the "reveal" button) swaps them for the true contour. */
-  const traceComplete = phase === 'trace' && !roundOrder.some((index) => tracesByPlayer[index] === undefined);
   /** Everyone's answered the current place (see `submitCity`, which deliberately doesn't
    * auto-advance once this becomes true): the board shows that place's solution + every guess
    * together until `continuePlaces` moves on. */
   const placeComplete = phase === 'city' && !roundOrder.some((index) => cityAnswersByPlayer[index] === undefined);
 
   const startRound = (index: number, excludeCode: string) => {
-    setBoard(buildRound(excludeCode, width, windowHeight, players.length, settings.placesCount));
+    setRoundSeed(buildRoundSeed(excludeCode, settings.placesCount, settings.difficulty));
     const order = rotatedOrder(index, players.length);
     setRoundOrder(order);
     setActivePlayerIndex(order[0] ?? 0);
-    setPhase('trace');
-    setHoleAssignment(players.map(() => undefined));
-    setTraceDraftsByPlayer(players.map(() => []));
-    setTracesByPlayer(players.map(() => undefined));
-    setTraceScores(players.map(() => NO_TRACE_SCORE));
+    setPhase('guess');
+    setHintsRevealed(0);
+    setGuessText('');
+    setPendingCorrect(null);
+    setPenalizedPlayer(null);
+    setRoundPenalties(players.map(() => 0));
+    setGuessOutcome(null);
     setPlaceIndex(0);
     setPlaceGuesses([]);
     setCityDraftsByPlayer(players.map(() => undefined));
     setCityAnswersByPlayer(players.map(() => undefined));
   };
 
-  // --- trace phase ---
+  // --- guess phase ---
 
-  /**
-   * Commits the active player's trace and, the first time (no take-backs, no re-matching on a
-   * later revision), claims whichever still-unclaimed hole it was nearest to — removing it from
-   * the pool for everyone else — and reveals its true arc right on the board (see `traces` below,
-   * built from `holeAssignment`). Scores against that same hole every time this runs (so a later
-   * revision via `allowRevision` re-scores the redrawn trace, still against the original hole).
-   */
-  const commitActiveTrace = (): { updated: (Point2D[] | undefined)[]; complete: boolean } => {
-    const trace = traceDraftsByPlayer[activePlayerIndex] ?? [];
-    const updated = tracesByPlayer.map((existing, index) => (index === activePlayerIndex ? trace : existing));
-    setTracesByPlayer(updated);
+  /** "Indice": reveals the next of the 4 on-board hint tiers (1: every neighbor's icon, 2: every
+   * neighbor's name, 3: the target country's own flag, 4: its own name — effectively the answer)
+   * — caps at 4, past which the button disappears in favor of an explicit "Continuer"
+   * (`confirmNoGuess`) in the footer. */
+  const revealHint = () => setHintsRevealed((n) => Math.min(n + 1, 4));
 
-    const alreadyClaimed = holeAssignment[activePlayerIndex];
-    const holeIndex = alreadyClaimed ?? nearestUnclaimedHole(trace, board.holes, claimedHoleIndexes);
+  /** "Valider": checks the typed text immediately (nobody's identity involved yet) and switches
+   * to the attribution step (`pendingCorrect`) — the player tabs that follow decide who scores
+   * (if correct) or gets penalized (if not), see `attributeGuess`. */
+  const submitGuess = () => {
+    if (guessText.trim().length === 0) return;
+    const correct = normalizeContourGuess(guessText) === normalizeContourGuess(countryName(board.country.code, language));
+    setPendingCorrect(correct);
+    setPenalizedPlayer(null);
+  };
 
-    if (holeIndex !== -1) {
-      if (alreadyClaimed === undefined) {
-        setHoleAssignment((previous) => previous.map((assigned, index) => (index === activePlayerIndex ? holeIndex : assigned)));
-      }
-      const score = scoreContourRound(trace, board.holes[holeIndex], board.boardSize);
-      setTraceScores((previous) => previous.map((existing, index) => (index === activePlayerIndex ? score : existing)));
+  /** Resolves the pending "Valider" result once a player's picked as who answered: a correct
+   * guess scores them (tiered by hints already revealed) and moves straight into the city phase
+   * (`resolveGuess`); a wrong one deducts CONTOUR_WRONG_GUESS_PENALTY from their running total and
+   * reopens the same input for another attempt, same hint tier — nothing about the round resets. */
+  const attributeGuess = (index: number) => {
+    if (pendingCorrect) {
+      resolveGuess({ playerIndex: index, hintsUsed: hintsRevealed, guessPoints: CONTOUR_GUESS_POINTS_BY_HINTS[hintsRevealed] });
+      return;
     }
-
-    return { updated, complete: !roundOrder.some((index) => updated[index] === undefined) };
+    setRoundPenalties((previous) => previous.map((points, i) => (i === index ? points + CONTOUR_WRONG_GUESS_PENALTY : points)));
+    setPenalizedPlayer(players[index]);
+    setPendingCorrect(null);
+    setGuessText('');
   };
 
-  const selectPlayerTrace = (index: number) => {
-    if (index === activePlayerIndex) return;
-    commitActiveTrace();
-    setActivePlayerIndex(index);
-  };
+  /** Once tier 4 has revealed the country's own name (`hintsRevealed === 4`, the footer's
+   * "Continuer" confirmation): nobody scores, same as the old give-up, moving on to the city
+   * phase — a deliberate explicit click rather than an automatic transition the instant the name
+   * appears, consistent with the rest of the app's button-driven pacing. */
+  const confirmNoGuess = () => resolveGuess({ playerIndex: -1, hintsUsed: hintsRevealed, guessPoints: 0 });
 
-  /** Once every hole is claimed and every player has submitted (see `traceComplete`), this
-   * deliberately stops rather than auto-advancing: the board keeps showing every player's own
-   * guess trace until the player presses the "reveal" button (`startCityPhase`), which swaps
-   * them for the true contour (see the `traces` prop, gated on `phase`) and starts the city
-   * phase in the same action. */
-  const submitTrace = () => {
-    const { updated, complete } = commitActiveTrace();
-    if (complete) return;
-    const nextUnanswered = roundOrder.find((index) => updated[index] === undefined) as number;
-    setActivePlayerIndex(nextUnanswered);
-  };
-
-  const setActiveTraceDraft = (trace: Point2D[]) => {
-    setTraceDraftsByPlayer((previous) => previous.map((draft, index) => (index === activePlayerIndex ? trace : draft)));
-  };
-
-  // --- city phase ---
-
-  /** The trace phase's "reveal" button: every hole is already claimed at this point, so simply
-   * leaving `phase` swaps the board's `traces` from every player's guess to the true contour (see
-   * the `traces` prop below, gated on `phase`) — moves straight on to the city phase, on the same
-   * board, or, if the round drew no places at all, straight past it to the final reveal (no dead
-   * screen waiting for a phase with nothing to do). */
-  const startCityPhase = () => {
+  /** Shared by a correct guess and a give-up: locks in `guessOutcome` (read back by
+   * `finishCityPhase`) and moves straight into the city phase — or, if the round drew no places
+   * at all, straight past it to the final reveal (no dead screen waiting for a phase with
+   * nothing to do). */
+  const resolveGuess = (outcome: GuessOutcome) => {
+    setGuessOutcome(outcome);
+    setPendingCorrect(null);
+    setGuessText('');
     if (board.places.length === 0) {
-      finishCityPhase([]);
+      finishCityPhase([], outcome);
       return;
     }
     setPlaceIndex(0);
@@ -372,6 +555,8 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
     setPhase('city');
   };
 
+  // --- city phase ---
+
   const commitActiveCity = (): { updated: (CityAnswer | undefined)[]; complete: boolean } => {
     const cityGuess = cityDraftsByPlayer[activePlayerIndex];
     const updated = cityAnswersByPlayer.map((existing, index) => (index === activePlayerIndex ? { cityGuess } : existing));
@@ -379,37 +564,44 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
     return { updated, complete: !roundOrder.some((index) => updated[index] === undefined) };
   };
 
-  /** Combines the trace scores (locked in progressively back during the trace phase) with the
-   * sum of every place's city score into the round's final results. `allGuesses[p][playerIndex]`
-   * is that player's marker for place `p` — built up across places by `submitCity` and passed in
-   * whole once the last one is done (or immediately, empty, if the round had no places at all). */
-  const finishCityPhase = (allGuesses: (Point2D | undefined)[][]) => {
+  /** Combines the guess-phase outcome (locked in by `resolveGuess`) with the sum of every
+   * place's city score into the round's final results. `allGuesses[p][playerIndex]` is that
+   * player's marker for place `p` — built up across places by `submitCity` and passed in whole
+   * once the last one is done (or immediately, empty, if the round had no places at all). */
+  const finishCityPhase = (allGuesses: (Point2D | undefined)[][], outcome: GuessOutcome) => {
     const results = players.map((_, playerIndex) => {
-      const traceScore = traceScores[playerIndex];
       const cityScores = allGuesses.map((placePlayerGuesses, placeIdx) =>
         scoreCityGuess(placePlayerGuesses[playerIndex], board.places[placeIdx].position, board.boardSize),
       );
       const cityPoints = cityScores.reduce((sum, score) => sum + score.cityPoints, 0);
       const finiteErrors = cityScores.map((score) => score.cityErrorPx).filter(Number.isFinite);
       const cityErrorPx = finiteErrors.length > 0 ? finiteErrors.reduce((sum, error) => sum + error, 0) / finiteErrors.length : Infinity;
+      const isGuesser = playerIndex === outcome.playerIndex;
+      const guessPoints = isGuesser ? outcome.guessPoints : 0;
+      const penaltyPoints = roundPenalties[playerIndex] ?? 0;
 
       return {
-        trace: tracesByPlayer[playerIndex] ?? [],
         cityGuesses: allGuesses.map((placePlayerGuesses) => placePlayerGuesses[playerIndex]),
-        score: { ...traceScore, cityErrorPx, cityPoints, total: traceScore.tracePoints + cityPoints },
+        score: {
+          hintsUsed: isGuesser ? outcome.hintsUsed : 0,
+          guessPoints,
+          penaltyPoints,
+          cityErrorPx,
+          cityPoints,
+          total: guessPoints + cityPoints - penaltyPoints,
+        },
       };
     });
     setRecords((previous) => [
       ...previous,
       {
         country: board.country,
-        visibleSegments: board.visibleSegments,
-        holes: board.holes,
+        outline: board.outline,
+        width: board.width,
+        height: board.height,
         boardSize: board.boardSize,
         places: board.places,
-        // Never actually undefined here in practice (a trace only ever commits once its player
-        // has claimed a hole), the fallback just satisfies the type.
-        holeAssignment: holeAssignment.map((holeIndex) => holeIndex ?? 0),
+        guesserIndex: outcome.playerIndex,
         results,
       },
     ]);
@@ -449,7 +641,9 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
       return;
     }
 
-    finishCityPhase(allGuesses);
+    // Never actually null here in practice (the city phase only ever starts once a guess outcome
+    // has been resolved, see `resolveGuess`) — the fallback just satisfies the type.
+    finishCityPhase(allGuesses, guessOutcome as GuessOutcome);
   };
 
   const setActiveCityDraft = (point: Point2D) => {
@@ -505,15 +699,54 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
       ? isMultiplayer
         ? t.game.roundOver
         : `${formatNumber(totals[0])} ${t.common.pts}`
-      : `${formatNumber(totals[activePlayerIndex])} ${t.common.pts}`;
+      : phase === 'city'
+        ? `${formatNumber(totals[activePlayerIndex])} ${t.common.pts}`
+        : isMultiplayer
+          ? ''
+          : `${formatNumber(totals[0])} ${t.common.pts}`;
 
   const legendItems = isMultiplayer
     ? [...players.map((name, index) => ({ label: name, color: PLAYER_COLORS[index] })), { label: t.game.reality, color: colors.truth, ring: true }]
     : [{ label: t.game.yourAnswer, color: PLAYER_COLORS[0] }, { label: t.game.reality, color: colors.truth, ring: true }];
 
+  // Points a correct guess would earn right now: drops one tier (CONTOUR_GUESS_POINTS_BY_HINTS)
+  // each time "Indice" is pressed, down to 0 once tier 4 (the give-up) is revealed.
+  const currentGuessPoints = hintsRevealed >= 4 ? 0 : CONTOUR_GUESS_POINTS_BY_HINTS[hintsRevealed];
+
+  // The 4 guess-phase hint tiers, all drawn straight on the board (positions computed once per
+  // round in `buildRound`): tier 1 shows every neighbor's icon (flag or 🐟/🐳) at its own curated
+  // spot, tier 2 stacks its name just below that same icon (not swapped — both stay up so the
+  // icon keeps reading as "this is what that name refers to"), tier 3 adds the target country's
+  // own flag at its curated spot, tier 4 stacks its name below that the same way.
+  const stackGap = Math.min(board.width, board.height) * HINT_STACK_GAP_RATIO;
+  const neighborHintLabels: ContourBoardHintLabel[] =
+    phase === 'guess' && hintsRevealed >= 1
+      ? board.neighborHints.flatMap(({ neighbor, position }) => [
+          { position, icon: true, text: neighborIcon(neighbor) },
+          ...(hintsRevealed >= 2
+            ? [{ position: { x: position.x, y: position.y + stackGap }, text: neighborName(neighbor, language) }]
+            : []),
+        ])
+      : [];
+  const centerHintLabels: ContourBoardHintLabel[] =
+    phase === 'guess'
+      ? [
+          ...(hintsRevealed >= 3 ? [{ position: board.centerPosition, icon: true, text: flagEmoji(board.country.code) }] : []),
+          ...(hintsRevealed >= 4
+            ? [
+                {
+                  position: { x: board.centerPosition.x, y: board.centerPosition.y + stackGap },
+                  text: countryName(board.country.code, language),
+                },
+              ]
+            : []),
+        ]
+      : [];
+  const guessHintLabels: ContourBoardHintLabel[] = [...neighborHintLabels, ...centerHintLabels];
+
   const cityMarkers: ContourBoardMarker[] = currentRecord
     ? currentRecord.places.flatMap((place, placeIdx) => [
-        { position: place.position, color: colors.truth, isTruth: true, label: place.name },
+        { position: place.position, color: colors.truth, isTruth: true, label: place.name, emoji: place.emoji },
         ...currentRecord.results.flatMap((result, playerIndex) => {
           const guess = result.cityGuesses[placeIdx];
           return guess !== undefined ? [{ position: guess, color: PLAYER_COLORS[playerIndex] }] : [];
@@ -527,20 +760,21 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
     ? currentRecord.places.flatMap((place, placeIdx) =>
         currentRecord.results.flatMap((result) => {
           const guess = result.cityGuesses[placeIdx];
-          return guess !== undefined ? [{ from: guess, to: place.position }] : [];
+          const color = CONTOUR_PLACE_LINE_COLORS[placeIdx % CONTOUR_PLACE_LINE_COLORS.length];
+          return guess !== undefined ? [{ from: guess, to: place.position, color }] : [];
         }),
       )
     : [];
 
   // City phase, place by place: every already-completed place's solution marker persists for the
-  // rest of the city phase (same accumulate pattern as the trace phase's revealed holes). For the
-  // current place: each player's guess marker appears the moment they submit (same accumulate
-  // pattern as the trace phase's `submittedTraces`, stacking up turn by turn — the active player's
-  // own guess is excluded here while they're still placing, since it's already shown live via
-  // `placedPoint`/`activeMarkerColor` instead), and the solution marker only joins once everyone's
-  // answered (`placeComplete`) — at which point this is just the natural end state of that
-  // accumulation, not a separate reveal. Both guesses and the (non-persisted) solution disappear
-  // once `continuePlaces` moves on to the next place, which resets `cityAnswersByPlayer`.
+  // rest of the city phase (same accumulate pattern as the trace phase's revealed holes used to
+  // be). For the current place: each player's guess marker appears the moment they submit
+  // (stacking up turn by turn — the active player's own guess is excluded here while they're
+  // still placing, since it's already shown live via `placedPoint`/`activeMarkerColor` instead),
+  // and the solution marker only joins once everyone's answered (`placeComplete`) — at which
+  // point this is just the natural end state of that accumulation, not a separate reveal. Both
+  // guesses and the (non-persisted) solution disappear once `continuePlaces` moves on to the
+  // next place, which resets `cityAnswersByPlayer`.
   const cityStepMarkers: ContourBoardMarker[] =
     phase === 'city'
       ? [
@@ -549,8 +783,11 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
             color: colors.truth,
             isTruth: true,
             label: board.places[placeIdx].name,
+            emoji: board.places[placeIdx].emoji,
           })),
-          ...(placeComplete ? [{ position: activePlace.position, color: colors.truth, isTruth: true, label: activePlace.name }] : []),
+          ...(placeComplete
+            ? [{ position: activePlace.position, color: colors.truth, isTruth: true, label: activePlace.name, emoji: activePlace.emoji }]
+            : []),
           ...roundOrder.flatMap((index) => {
             if (!placeComplete && index === activePlayerIndex) return [];
             const guess = cityAnswersByPlayer[index]?.cityGuess;
@@ -566,97 +803,156 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
     phase === 'city' && placeComplete
       ? roundOrder.flatMap((index) => {
           const guess = cityAnswersByPlayer[index]?.cityGuess;
-          return guess !== undefined ? [{ from: guess, to: activePlace.position }] : [];
+          const color = CONTOUR_PLACE_LINE_COLORS[placeIndex % CONTOUR_PLACE_LINE_COLORS.length];
+          return guess !== undefined ? [{ from: guess, to: activePlace.position, color }] : [];
         })
       : [];
 
-  // The true contour: revealed hole by hole, immediately as each one is claimed (see
-  // `commitActiveTrace`, which updates `holeAssignment`/`claimedHoleIndexes` right on submit) —
-  // alongside `submittedTraces` below, not instead of it, so a player's own guess stays visible
-  // next to their hole's solution from the moment they submit. By the time the trace phase's
-  // "reveal" button (`startCityPhase`) is pressed every hole is already claimed, so it's just a
-  // phase transition with nothing left to visually swap. Keyed by hole index so ContourBoard's
-  // shared reveal animation only plays once per hole, not again whenever this recomputes.
-  const revealedTraces: ContourBoardTrace[] = board.holes
-    .map((hole, index) => ({ hole, index }))
-    .filter(({ index }) => claimedHoleIndexes.has(index))
-    .map(({ hole, index }) => ({ points: hole, color: colors.truth, isTruth: true, key: index }));
+  // 'guess'/'city': the board fills the entire safe area (see `fullBleedBoardArea`, measured by
+  // `onBoardAreaLayout`) instead of whatever's left between a header and a footer band — the
+  // former header/footer content now floats on top of it instead, in `overlayTop`/`overlayBottom`
+  // (translucent, bordered, positioned absolutely so they don't reserve their own layout space).
+  // 'reveal' keeps the ordinary `Screen` header/footer/scrollable-content layout below: it has a
+  // results table to show beneath the board, not just a couple of floating controls over it.
+  if (phase === 'guess' || phase === 'city') {
+    return (
+      <SafeAreaView style={styles.fullBleedSafeArea}>
+        <ThemeBackdrop />
+        <View onLayout={onBoardAreaLayout} style={styles.fullBleedBoardArea}>
+          <View style={styles.boardFrame}>
+            <ContourBoard
+              activeMarkerColor={phase === 'city' && !placeComplete ? PLAYER_COLORS[activePlayerIndex] : undefined}
+              connectors={phase === 'city' ? cityStepConnectors : undefined}
+              height={board.height}
+              hintLabels={guessHintLabels}
+              key={roundIndex}
+              markers={phase === 'city' ? cityStepMarkers : undefined}
+              onPlacePoint={phase === 'city' && !placeComplete ? setActiveCityDraft : undefined}
+              outline={board.outline}
+              placedPoint={phase === 'city' && !placeComplete ? activeCityDraft : undefined}
+              width={board.width}
+            />
+          </View>
+        </View>
 
-  // Every player's own submitted trace, in their color — stacks up turn by turn through the whole
-  // trace phase (including once `traceComplete`, right up until the "reveal" button is pressed),
-  // then disappears for good once `phase` moves past 'trace' (its hole's `revealedTraces` entry
-  // keeps showing on its own from then on). The active player's own trace is excluded here: while
-  // they're up (drawing fresh, or revisiting an already-submitted one via allowRevision), their live draft
-  // already renders via `activePoints`/`activeColor` — showing both would double it up.
-  const submittedTraces: ContourBoardTrace[] =
-    phase === 'trace'
-      ? tracesByPlayer
-          .map((trace, index) => ({ trace, index }))
-          .filter(({ trace, index }) => trace !== undefined && trace.length >= 2 && index !== activePlayerIndex)
-          .map(({ trace, index }) => ({ points: trace as Point2D[], color: PLAYER_COLORS[index] }))
-      : [];
+        <View onLayout={onOverlayTopLayout} style={styles.overlayTop}>
+          <View style={styles.topBar}>
+            <Pressable accessibilityRole="button" hitSlop={12} onPress={onQuit}>
+              <Text style={styles.quit}>{t.game.quit}</Text>
+            </Pressable>
+            {phase === 'guess' ? (
+              <Text style={styles.guessPoints}>
+                {formatNumber(currentGuessPoints)} {t.common.pts}
+              </Text>
+            ) : (
+              <Text style={styles.score}>
+                {isMultiplayer && phase === 'city' ? `${players[activePlayerIndex]} · ` : ''}
+                {scoreLabel}
+              </Text>
+            )}
+          </View>
+          <RoundProgress difficulties={[settings.difficulty]} roundNumber={roundIndex + 1} totalRounds={settings.rounds} />
+          <View style={styles.countryCard}>
+            {phase === 'guess' ? (
+              <Text style={styles.countryName}>{t.contourGame.guessPrompt}</Text>
+            ) : (
+              <Text style={styles.countryName}>
+                <Text style={styles.flagEmoji}>{flagEmoji(board.country.code)}</Text> {countryName(board.country.code, language)}
+              </Text>
+            )}
+            {phase === 'city' && activePlace && (
+              <Text style={styles.hint}>{t.contourGame.cityHint(activePlace.name, placeIndex + 1, board.places.length)}</Text>
+            )}
+          </View>
+        </View>
 
-  // Passive location hints (dots) for every hole NOT yet claimed: empty by the time the trace
-  // phase is done (every hole is claimed by then), so these need no phase-specific gating — they
-  // naturally stop showing once nobody's drawing anymore.
-  const unclaimedHoles = board.holes.map((hole, index) => ({ hole, index })).filter(({ index }) => !claimedHoleIndexes.has(index));
-  const traceAnchors = unclaimedHoles.flatMap(({ hole }) => [hole[0], hole[hole.length - 1]]);
-  // Suppressed for the entire trace phase: the accent-colored dots clash with/clutter the
-  // anchors + trace being drawn regardless of stroke state, and the two anchor circles per
-  // unclaimed hole are location hint enough on their own during that phase.
-  const holeMarkers: ContourBoardHoleMarker[] =
-    phase === 'trace'
-      ? []
-      : unclaimedHoles.map(({ hole }) => ({
-          position: hole[Math.floor(hole.length / 2)],
-        }));
-
-  const showPlayerTabs = phase === 'trace' || phase === 'city';
-  const tabsAnsweredByPlayer = phase === 'city' ? cityAnsweredByPlayer : traceAnsweredByPlayer;
-  const tabsOnSelect = phase === 'city' ? selectPlayerCity : selectPlayerTrace;
+        <View onLayout={onOverlayBottomLayout} style={styles.overlayBottom}>
+          {phase === 'guess' ? (
+            hintsRevealed >= 4 ? (
+              <View style={styles.guessFooter}>
+                <Text style={styles.hint}>{t.contourGame.noOneGuessed}</Text>
+                <Button label={t.contourGame.continueLabel} onPress={confirmNoGuess} />
+              </View>
+            ) : pendingCorrect !== null ? (
+              <View style={styles.buzzPanel}>
+                <Text style={pendingCorrect ? styles.resultOkText : styles.wrongGuessText}>
+                  {pendingCorrect ? t.contourGame.resultOk : t.contourGame.resultNotOk}
+                </Text>
+                <View style={styles.whoAnsweredRow}>
+                  <Text style={styles.hint}>{t.contourGame.whoAnswered}</Text>
+                  <PlayerTabs
+                    activeIndex={-1}
+                    allowRevision
+                    answered={players.map(() => false)}
+                    onSelect={attributeGuess}
+                    order={playerOrder}
+                    players={playerTabs}
+                  />
+                </View>
+              </View>
+            ) : (
+              <View style={styles.guessFooter}>
+                {penalizedPlayer !== null && <Text style={styles.wrongGuessText}>{t.contourGame.wrongGuess(penalizedPlayer)}</Text>}
+                <View style={styles.buzzInputRow}>
+                  <Pressable
+                    accessibilityLabel={t.contourGame.hintButton}
+                    accessibilityRole="button"
+                    hitSlop={8}
+                    onPress={revealHint}
+                    style={styles.hintFab}
+                  >
+                    <Text style={styles.hintFabIcon}>💡</Text>
+                  </Pressable>
+                  <TextInput
+                    autoCapitalize="words"
+                    onChangeText={setGuessText}
+                    onSubmitEditing={submitGuess}
+                    placeholder={t.contourGame.guessPlaceholder}
+                    placeholderTextColor={colors.textMuted}
+                    returnKeyType="done"
+                    style={[styles.guessInput, styles.guessInputFlex]}
+                    value={guessText}
+                  />
+                </View>
+                <Button disabled={guessText.trim().length === 0} label={t.game.validate} onPress={submitGuess} />
+              </View>
+            )
+          ) : (
+            <View style={styles.cityFooter}>
+              <PlayerTabs
+                activeIndex={activePlayerIndex}
+                activeLabel={t.game.playerTurn}
+                allowRevision
+                answered={cityAnsweredByPlayer}
+                onSelect={selectPlayerCity}
+                order={roundOrder}
+                players={playerTabs}
+              />
+              {placeComplete && <Legend items={legendItems} />}
+              {placeComplete ? (
+                <Button label={t.contourGame.continueLabel} onPress={continuePlaces} />
+              ) : (
+                <Button disabled={activeCityDraft === undefined} label={t.game.validate} onPress={submitCity} />
+              )}
+            </View>
+          )}
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <Screen
-      footer={
-        phase === 'trace' ? (
-          traceComplete ? (
-            <Button label={t.contourGame.revealContourLabel} onPress={startCityPhase} />
-          ) : (
-            <Button disabled={activeTraceDraft.length < 2} label={t.game.validate} onPress={submitTrace} />
-          )
-        ) : phase === 'city' ? (
-          placeComplete ? (
-            <Button label={t.contourGame.continueLabel} onPress={continuePlaces} />
-          ) : (
-            <Button disabled={activeCityDraft === undefined} label={t.game.validate} onPress={submitCity} />
-          )
-        ) : (
-          <Button label={isLastRound ? t.game.last : t.game.next} onPress={next} />
-        )
-      }
+      footer={<Button label={isLastRound ? t.game.last : t.game.next} onPress={next} />}
       header={
         <View style={styles.header}>
           <View style={styles.topBar}>
             <Pressable accessibilityRole="button" hitSlop={12} onPress={onQuit}>
               <Text style={styles.quit}>{t.game.quit}</Text>
             </Pressable>
-            <Text style={styles.score}>
-              {isMultiplayer && (phase === 'trace' || phase === 'city') ? `${players[activePlayerIndex]} · ` : ''}
-              {scoreLabel}
-            </Text>
+            <Text style={styles.score}>{scoreLabel}</Text>
           </View>
-          <Text style={styles.round}>{`${roundIndex + 1} / ${settings.rounds}`}</Text>
-          {showPlayerTabs && (
-            <PlayerTabs
-              activeIndex={activePlayerIndex}
-              activeLabel={t.game.playerTurn}
-              allowRevision
-              answered={tabsAnsweredByPlayer}
-              onSelect={tabsOnSelect}
-              order={roundOrder}
-              players={playerTabs}
-            />
-          )}
+          <RoundProgress difficulties={[settings.difficulty]} roundNumber={roundIndex + 1} totalRounds={settings.rounds} />
         </View>
       }
     >
@@ -664,36 +960,32 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
         <Text style={styles.countryName}>
           <Text style={styles.flagEmoji}>{flagEmoji(board.country.code)}</Text> {countryName(board.country.code, language)}
         </Text>
-        {phase === 'trace' && <Text style={styles.hint}>{t.contourGame.traceHint}</Text>}
-        {phase === 'city' && activePlace && (
-          <Text style={styles.hint}>{t.contourGame.cityHint(activePlace.name, placeIndex + 1, board.places.length)}</Text>
-        )}
       </View>
 
       <Card style={styles.boardCard}>
-        <View style={styles.boardFrame}>
-          <ContourBoard
-            activeColor={phase === 'trace' ? PLAYER_COLORS[activePlayerIndex] : undefined}
-            activeMarkerColor={phase === 'city' && !placeComplete ? PLAYER_COLORS[activePlayerIndex] : undefined}
-            activePoints={phase === 'trace' ? activeTraceDraft : undefined}
-            anchors={traceAnchors}
-            connectors={phase === 'reveal' ? cityConnectors : phase === 'city' ? cityStepConnectors : undefined}
-            height={board.height}
-            holeMarkers={holeMarkers}
-            key={roundIndex}
-            markers={phase === 'reveal' ? cityMarkers : phase === 'city' ? cityStepMarkers : undefined}
-            onDraw={phase === 'trace' ? setActiveTraceDraft : undefined}
-            onPlacePoint={phase === 'city' && !placeComplete ? setActiveCityDraft : undefined}
-            placedPoint={phase === 'city' && !placeComplete ? activeCityDraft : undefined}
-            traces={[...revealedTraces, ...submittedTraces]}
-            visible={board.visibleSegments}
-            width={board.width}
-          />
+        <View style={styles.boardArea}>
+          {currentRecord && (
+            <View style={styles.boardFrame}>
+              {/* Drawn at the record's own frozen size (see `ContourRoundRecord.width`/`height`),
+                  not re-fit to this Card's own area: reveal's layout never matches the
+                  'guess'/'city' full-bleed box the stored outline/markers were projected at, so
+                  re-fitting here would desync the frozen pixel positions from a freshly
+                  re-projected outline. */}
+              <ContourBoard
+                connectors={cityConnectors}
+                height={currentRecord.height}
+                key={roundIndex}
+                markers={cityMarkers}
+                outline={currentRecord.outline}
+                width={currentRecord.width}
+              />
+            </View>
+          )}
         </View>
-        {(phase === 'reveal' || (phase === 'city' && placeComplete)) && <Legend items={legendItems} />}
+        <Legend items={legendItems} />
       </Card>
 
-      {phase === 'reveal' && currentRecord && (
+      {currentRecord && (
         <Card style={styles.resultsCard}>
           {currentRecord.results
             .map((result, index) => ({ result, index }))
@@ -704,7 +996,7 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
                 <View style={styles.resultTexts}>
                   <Text style={styles.resultName}>{players[index]}</Text>
                   <Text style={styles.resultBreakdown}>
-                    {t.contourGame.traceLabel} {formatNumber(result.score.tracePoints)} · {t.contourGame.cityLabel}{' '}
+                    {t.contourGame.guessLabel} {formatNumber(result.score.guessPoints)} · {t.contourGame.cityLabel}{' '}
                     {formatNumber(result.score.cityPoints)}
                   </Text>
                 </View>
