@@ -1,1 +1,1 @@
-export { ContourView } from './ContourView';
+export { ContourEditor } from './ContourEditor';

@@ -1,14 +1,8 @@
 import { countryName } from '@/constants/places/countries';
-import { CONTOURS } from '@/constants/contours';
 import type { ContourCountry, ContourNeighbor } from '@/types';
 
 import { logChange } from '../changelog';
 import type { PlaceRow } from './places';
-
-/** Reads the bundled Contour country/neighbor data (no network, no backend — see changelog.ts):
- * kept `async` so call sites reading it don't need to change just because this no longer fetches
- * anything (same reasoning as fetchCountries/fetchPlaces). */
-export const fetchContourCountries = async (): Promise<ContourCountry[]> => CONTOURS;
 
 const neighborIdentity = (neighbor: ContourNeighbor): string => (neighbor.type === 'country' ? countryName(neighbor.code, 'fr') : neighbor.fr);
 
@@ -30,7 +24,7 @@ export const saveNeighborPosition = async (
 };
 
 /** Same `[Suppression] ...` wording as `deletePlace`, under our own `[Contour]` tag — see
- * ContourView.tsx's own optimistic-remove-then-log call site. */
+ * ContourEditor.tsx's own optimistic-remove-then-log call site. */
 export const deleteNeighbor = async (country: ContourCountry, neighbor: ContourNeighbor): Promise<void> => {
   logChange(`[Contour] ${countryName(country.code, 'fr')} — suppression du voisin ${neighborIdentity(neighbor)}`);
 };

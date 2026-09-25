@@ -85,7 +85,10 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       top: 0,
       left: 0,
       right: 0,
-      backgroundColor: `${colors.surfaceHigh}F0`,
+      // Night: `surfaceHigh` at ~94% opacity (see this style's own earlier doc comment). Day:
+      // plain white instead — `surfaceHigh`'s pale blue there barely reads as a distinct panel
+      // over the equally pale sky backdrop.
+      backgroundColor: isDark ? `${colors.surfaceHigh}F0` : `${colors.surface}F0`,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
       paddingBottom: spacing.xs,
@@ -95,7 +98,7 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: `${colors.surfaceHigh}F0`,
+      backgroundColor: isDark ? `${colors.surfaceHigh}F0` : `${colors.surface}F0`,
       borderTopWidth: 1,
       borderTopColor: colors.border,
       paddingHorizontal: spacing.lg,
@@ -173,13 +176,8 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
     // this card claims whatever's left of the ScrollView's own height once its siblings (the
     // country card above, the results card below) have taken theirs — see `boardArea`, measured
     // inside it, for the actual live sizing.
-    boardCard: {
-      flex: 1,
-      alignItems: 'center',
-    },
     // The board's actual "available space" measurement (see `onBoardAreaLayout`): stretches to
-    // the card's full width and claims the rest of its height (after `Legend`, a sibling below
-    // it, has taken its own — so a visible Legend correctly shrinks the box the board fits into).
+    // the screen's full width and claims the rest of its height.
     // Centered so the board (typically smaller than this box on one axis, once fit to the
     // country's own aspect ratio) doesn't just stick to a corner.
     boardArea: {
@@ -198,7 +196,7 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       borderColor: colors.border,
       borderRadius: radius.md,
     },
-    resultsCard: {
+    resultsList: {
       gap: spacing.sm,
     },
     resultRow: {
@@ -962,31 +960,27 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
         </Text>
       </View>
 
-      <Card style={styles.boardCard}>
-        <View style={styles.boardArea}>
-          {currentRecord && (
-            <View style={styles.boardFrame}>
-              {/* Drawn at the record's own frozen size (see `ContourRoundRecord.width`/`height`),
-                  not re-fit to this Card's own area: reveal's layout never matches the
-                  'guess'/'city' full-bleed box the stored outline/markers were projected at, so
-                  re-fitting here would desync the frozen pixel positions from a freshly
-                  re-projected outline. */}
-              <ContourBoard
-                connectors={cityConnectors}
-                height={currentRecord.height}
-                key={roundIndex}
-                markers={cityMarkers}
-                outline={currentRecord.outline}
-                width={currentRecord.width}
-              />
-            </View>
-          )}
-        </View>
-        <Legend items={legendItems} />
-      </Card>
+      <View style={styles.boardArea}>
+        {currentRecord && (
+          <View style={styles.boardFrame}>
+            {/* Drawn at the record's own frozen size (see `ContourRoundRecord.width`/`height`),
+                not re-fit to this area: reveal's layout never matches the 'guess'/'city'
+                full-bleed box the stored outline/markers were projected at, so re-fitting here
+                would desync the frozen pixel positions from a freshly re-projected outline. */}
+            <ContourBoard
+              connectors={cityConnectors}
+              height={currentRecord.height}
+              key={roundIndex}
+              markers={cityMarkers}
+              outline={currentRecord.outline}
+              width={currentRecord.width}
+            />
+          </View>
+        )}
+      </View>
 
       {currentRecord && (
-        <Card style={styles.resultsCard}>
+        <View style={styles.resultsList}>
           {currentRecord.results
             .map((result, index) => ({ result, index }))
             .sort((a, b) => b.result.score.total - a.result.score.total)
@@ -1005,7 +999,7 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
                 </Text>
               </View>
             ))}
-        </Card>
+        </View>
       )}
     </Screen>
   );

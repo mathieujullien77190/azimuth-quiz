@@ -30,11 +30,12 @@ describe('CONTOURS', () => {
     }
   });
 
-  it('gives France easy, Norway hard, and every other country intermediate', () => {
+  it('gives France/Spain easy, Norway hard, and every other country intermediate', () => {
     const difficultyOf = (code: string) => CONTOURS.find((c) => c.code === code)?.difficulty;
     expect(difficultyOf('FR')).toBe('easy');
+    expect(difficultyOf('ES')).toBe('easy');
     expect(difficultyOf('NO')).toBe('hard');
-    for (const code of ['ES', 'IT', 'PT', 'DE', 'IE', 'GR']) {
+    for (const code of ['IT', 'PT', 'DE', 'IE', 'GR']) {
       expect(difficultyOf(code)).toBe('intermediate');
     }
   });

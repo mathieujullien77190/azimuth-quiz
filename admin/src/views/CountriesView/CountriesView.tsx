@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { flagEmoji } from '@/constants/places/countries';
+import { CONTOURS } from '@/constants/contours';
 import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 
 import { fetchCountries, saveCountry, type CountryPatch, type CountryRecord } from '../../api/countries';
 import { EditableValue } from '../../components/EditableValue';
 import { Pagination, pageCount, paginate } from '../../components/Pagination';
+import { ContourEditor } from '../ContourView';
 
 import { FlagEditor } from './FlagEditor';
 import { filterCountries, sortCountries } from './helpers';
@@ -26,6 +28,9 @@ export const CountriesView = () => {
   const [sortKey, setSortKey] = useState<SortKey>('fr');
   const [sortDir, setSortDir] = useState<1 | -1>(1);
   const [page, setPage] = useState(1);
+  // Which card's own Contour/Silhouette editor is expanded (see the "🗺️ Silhouette" toggle below)
+  // — at most one at a time, so the page never mounts more than one interactive SVG board.
+  const [expandedContourCode, setExpandedContourCode] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCountries()
@@ -118,14 +123,29 @@ export const CountriesView = () => {
 
       <div className="cards-scroll">
         {pageRows.length === 0 && <div className="empty">Aucun pays ne correspond à cette recherche.</div>}
-        {pageRows.map((row) => (
+        {pageRows.map((row) => {
+          const contourCountry = CONTOURS.find((c) => c.code === row.code);
+          const contourExpanded = expandedContourCode === row.code;
+          return (
           <div className="place-card" key={row.code}>
             <div className="place-header">
               <div className="place-identity">
                 <span className="place-name">{row.fr}</span>
                 <span className="place-meta">{row.code}</span>
               </div>
-              <span style={{ fontFamily: FLAG_FONT_FAMILY, fontSize: 28, marginLeft: 'auto' }}>{flagEmoji(row.code)}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
+                {contourCountry && (
+                  <button
+                    type="button"
+                    className="chip"
+                    aria-pressed={contourExpanded}
+                    onClick={() => setExpandedContourCode(contourExpanded ? null : row.code)}
+                  >
+                    🗺️ Silhouette
+                  </button>
+                )}
+                <span style={{ fontFamily: FLAG_FONT_FAMILY, fontSize: 28 }}>{flagEmoji(row.code)}</span>
+              </div>
             </div>
 
             <table className="kv-table">
@@ -180,8 +200,11 @@ export const CountriesView = () => {
                 </tr>
               </tbody>
             </table>
+
+            {contourExpanded && contourCountry && <ContourEditor initialCountry={contourCountry} />}
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <footer>{countries.length} pays — les modifications sont enregistrées dans le journal (en haut), pas dans countries.json.</footer>

@@ -12,11 +12,12 @@ const DEFAULT_CENTER_LABEL: ContourCenterLabel = { x: 0.5, y: 0.5 };
 const CONTOURS_RAW = contoursData as unknown as Record<string, [number, number][]>;
 
 // Curated, not derived (outline recognizability is a judgment call — kept out of contours.json,
-// same reasoning as neighbors.ts living alongside it rather than inside it): France is widely
-// recognizable, Norway's fjorded coast makes it the hardest of the 8 to place blind, everything
-// else is the default middle tier.
+// same reasoning as neighbors.ts living alongside it rather than inside it): France and Spain are
+// widely recognizable, Norway's fjorded coast makes it the hardest of the 8 to place blind,
+// everything else is the default middle tier.
 const CONTOUR_DIFFICULTIES: Record<string, Difficulty> = {
   FR: 'easy',
+  ES: 'easy',
   NO: 'hard',
 };
 const DEFAULT_CONTOUR_DIFFICULTY: Difficulty = 'intermediate';

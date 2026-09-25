@@ -6,6 +6,11 @@
  * island city that reads badly pinned onto the mainland-only outline), not a property of the
  * place itself. Keyed by `${code}:${name}` (see `excludeKey`) since `Place` has no stable id.
  */
-export const CONTOUR_EXCLUDED_PLACES: ReadonlySet<string> = new Set(['FR:Ajaccio', 'FR:Bastia']);
+export const CONTOUR_EXCLUDED_PLACES: ReadonlySet<string> = new Set([
+  'FR:Ajaccio',
+  'FR:Bastia',
+  'ES:Palma de Majorque',
+  'ES:Teide',
+]);
 
 export const excludeKey = (code: string, name: string): string => `${code}:${name}`;

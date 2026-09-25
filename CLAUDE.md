@@ -99,8 +99,9 @@ penalise personne.
 Deux filtres par difficulte, meme enum `Difficulty` que Boussole/Indices mais choix
 unique (`ContourSettings.difficulty`, pas de multi-select) : le pays du tour
 (`ContourCountry.difficulty`, curee a la main dans `constants/contours/codec.ts` —
-seule la France est `easy`, seule la Norvege est `hard`, le reste `intermediate` ;
-deliberement desequilibre, ne pas tenter de rectifier) et les lieux de la phase 'city'
+France et Espagne en `easy`, seule la Norvege en `hard`, le reste `intermediate` ;
+deliberement desequilibre, ne pas tenter de rectifier sans demande explicite) et les
+lieux de la phase 'city'
 (`Place.difficulty`, filtre en plus du `code` pays et de la categorie dans
 `randomPlacesFor` — categorie `kids` toujours exclue, et `CONTOUR_EXCLUDED_PLACES`,
 `constants/contours/excludedPlaces.ts`, exclut a la main certains lieux de Silhouette
@@ -123,12 +124,17 @@ quelle plutot que de la recalculer contre la mise en page de reveal (differente 
 de `'guess'`/`'city'`) — sinon les points places par les joueurs (figes a l'ancienne
 taille) se retrouvaient decales par rapport a un contour redessine a une nouvelle taille.
 
-Admin (`admin/src/views/ContourView`) : recherche + selection parmi les 8 pays (meme
-filtre nom/code que `admin/src/views/CountriesView`), plus recherche/pagination sur la
-liste "Lieux possibles" (`Pagination`) avec surbrillance jaune sur la carte au clic sur
-un lieu. Chaque voisin (et le point drapeau/nom du pays cible, un seul point desormais,
-plus deux) se glisse a la souris et se pose exactement ou on le lache — rien n'est ecrit
-sur disque, chaque deplacement/suppression ajoute une ligne au journal
+Admin : pas d'onglet a part — un bouton "🗺️ Silhouette" apparait dans la carte pays de
+`admin/src/views/CountriesView` pour les 8 pays curees (`CONTOURS.find`), et deplie
+`admin/src/views/ContourView/ContourEditor.tsx` juste en dessous, dans cette meme carte
+(recherche/pagination/tri deja fournis par CountriesView, partages entre pays classiques
+et Silhouette). `ContourEditor` prend un seul `initialCountry` en prop (pas de selecteur
+de pays a lui, CountriesView fait deja ce role) et ajoute sa propre
+recherche/pagination sur la liste "Lieux possibles" (`Pagination`) avec surbrillance
+jaune sur la carte au clic sur un lieu. Chaque voisin (et le point drapeau/nom du pays
+cible, un seul point desormais) se glisse a la souris et se pose exactement ou on le
+lache — rien n'est ecrit sur disque, chaque deplacement/suppression ajoute une ligne au
+journal
 (`saveNeighborPosition`, `saveCenterLabelPosition`, `deleteNeighbor`,
 `admin/src/api/contour.ts`). Supprimer un lieu depuis cette vue ne le supprime jamais de
 Boussole/Indices : `excludePlaceFromContour` l'ajoute seulement au set

@@ -43,7 +43,7 @@ export const ContourBoard = ({
   activeMarkerColor,
   onPlacePoint,
 }: ContourBoardProps) => {
-  const { colors, typography } = useTheme();
+  const { colors, isDark, typography } = useTheme();
   const editable = onPlacePoint !== undefined;
 
   const onPlacePointRef = useRef(onPlacePoint);
@@ -72,8 +72,10 @@ export const ContourBoard = ({
         <Path
           d={polylinePath(outline)}
           // A filled silhouette rather than a bare outline, matching the game mode's own name —
-          // `surfaceHigh` reads as a raised panel over `ThemeBackdrop` in both themes.
-          fill={colors.surfaceHigh}
+          // `surfaceHigh` by night reads as a raised panel over `ThemeBackdrop`; by day plain
+          // white (`surface`) instead, since `surfaceHigh`'s pale blue there is barely
+          // distinguishable from the sky backdrop right behind it.
+          fill={isDark ? colors.surfaceHigh : colors.surface}
           stroke={colors.textMuted}
           strokeLinecap="round"
           strokeLinejoin="round"
