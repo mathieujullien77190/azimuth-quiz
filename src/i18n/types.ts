@@ -30,6 +30,7 @@ export type Translations = {
     games: {
       compass: HomeGameCopy;
       clues: HomeGameCopy;
+      contour: HomeGameCopy;
     };
   };
   setup: {
@@ -164,5 +165,34 @@ export type Translations = {
     isCapitalNo: string;
     populationUnit: string;
     finalScoreTitle: string;
+  };
+  contourSetup: {
+    screenTitle: string;
+    back: string;
+    start: string;
+    playersSection: { title: string; hint: string };
+    playerNameAccessibility: (index: number) => string;
+    placesCountTitle: string;
+    placesCountHint: string;
+  };
+  contourGame: {
+    /** Instruction shown above the board while players trace their (automatically assigned)
+     * hole: draw between its two anchor dots. */
+    traceHint: string;
+    /** Instruction shown above the board during a city step, naming the place to mark and which
+     * one it is out of how many this round (1-indexed). */
+    cityHint: (cityName: string, placeNumber: number, totalPlaces: number) => string;
+    /** Short labels for the results card's trace/city point breakdown. */
+    traceLabel: string;
+    cityLabel: string;
+    /** Shown once every hole is claimed and every player has submitted their trace, instead of
+     * auto-advancing: pressing it swaps every player's guess trace for the true contour, then
+     * starts the city/places phase. */
+    revealContourLabel: string;
+    /** Advances from one place's guess-vs-solution comparison to the next place (or the final
+     * reveal, on the last one) — single shared button, not per-player. */
+    continueLabel: string;
+    finalScoreTitle: string;
+    home: string;
   };
 };

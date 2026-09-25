@@ -24,6 +24,12 @@ export const fr: Translations = {
         meta: ['1 à 6 joueurs'],
         cta: 'Jouer',
       },
+      contour: {
+        title: 'Contour',
+        tagline: 'Un bout du contour d’un pays s’affiche. Termine le tracé au doigt le plus fidèlement possible.',
+        meta: ['1 à 6 joueurs'],
+        cta: 'Jouer',
+      },
     },
   },
   setup: {
@@ -216,5 +222,27 @@ export const fr: Translations = {
     isCapitalNo: 'Non',
     populationUnit: 'hab.',
     finalScoreTitle: 'Classement final',
+  },
+  contourSetup: {
+    screenTitle: 'Contour',
+    back: 'Retour',
+    start: 'Lancer la partie',
+    playersSection: {
+      title: 'Joueurs',
+      hint: 'Tout le monde joue sur le même téléphone, chacun son tour.',
+    },
+    playerNameAccessibility: (index) => `Nom du joueur ${index}`,
+    placesCountTitle: 'Nombre de lieux',
+    placesCountHint: 'Combien de lieux à placer sur la carte, en plus du tracé.',
+  },
+  contourGame: {
+    traceHint: 'Termine le tracé au doigt entre les deux points, en suivant le contour du pays.',
+    cityHint: (cityName, placeNumber, totalPlaces) => `Lieu ${placeNumber}/${totalPlaces} : place ${cityName} sur la carte.`,
+    traceLabel: 'Tracé',
+    cityLabel: 'Ville',
+    revealContourLabel: 'Positionner les lieux',
+    continueLabel: 'Continuer',
+    finalScoreTitle: 'Classement final',
+    home: 'Accueil',
   },
 };

@@ -232,6 +232,97 @@ export type IndicesSettings = {
   startWithFirstLetter: boolean;
 };
 
+// --- Contour: trace a country's outline, independent from both Boussole and Indices ---
+
+/** Screen-space point (pixels) inside a `ContourBoard`: not a geographic coordinate. */
+export type Point2D = {
+  x: number;
+  y: number;
+};
+
+/** A country's outline for the Contour game: only the geometry — name/flag come from
+ * `constants/places/countries.ts` (shared with Boussole/Indices), looked up by `code` rather
+ * than duplicated here. `points` is a closed ring (`[longitude, latitude]` pairs, first === last),
+ * mainland only (islands/overseas territories dropped), simplified to ~40-80 points. */
+export type ContourCountry = {
+  code: string;
+  points: readonly (readonly [number, number])[];
+};
+
+export type ContourSettings = {
+  playerNames: string[];
+  rounds: number;
+  /** How many named places (any category, see `randomPlacesFor`) get a city-placement step each
+   * round — 0 would skip the city phase entirely, but the setup screen only offers 1/3/5. */
+  placesCount: 1 | 3 | 5;
+};
+
+export type ContourTraceScore = {
+  /** Mean distance (in the board's screen-space pixels) between the player's trace and the
+   * true hidden arc, once both are resampled to the same point count. */
+  traceErrorPx: number;
+  tracePoints: number;
+};
+
+export type ContourCityScore = {
+  /** Mean distance (board pixels) across every placed marker's distance from its true place —
+   * purely informational (not itself scored), `Infinity` if the player placed none at all. */
+  cityErrorPx: number;
+  /** Sum of the per-place scores (see `scoreCityGuess`) across every place drawn this round. */
+  cityPoints: number;
+};
+
+export type ContourRoundScore = ContourTraceScore &
+  ContourCityScore & {
+    /** tracePoints + cityPoints. */
+    total: number;
+  };
+
+export type ContourPlayerResult = {
+  /** Raw captured points, in the round's `ContourBoard` screen-space (see `boardSize` on the
+   * round record: both must be read together to make sense of these coordinates). */
+  trace: Point2D[];
+  /** One marker per place drawn this round (see `ContourRoundRecord.places`, same order),
+   * `undefined` for any place the player never placed one on (scores 0 for that place). Empty
+   * when the round drew no places at all (see `placesCount`/`randomPlacesFor`). */
+  cityGuesses: (Point2D | undefined)[];
+  score: ContourRoundScore;
+};
+
+export type ContourRoundRecord = {
+  country: ContourCountry;
+  /** Fixed arcs shown throughout the round (one per hole, see `holes`): together they retrace
+   * the whole ring except the holes. */
+  visibleSegments: Point2D[][];
+  /** One hidden gap per player (see `holeAssignment` for who had which): each one's true arc is
+   * revealed (drawn in `colors.truth`) directly on the board the moment it's claimed, during the
+   * trace phase — by the time the round moves on to the city phase, all of them are visible. */
+  holes: Point2D[][];
+  /** Screen-space scale `visibleSegments`/`holes`/every trace were projected at for this round. */
+  boardSize: number;
+  /** The round's named places (Boussole `Place`s matching the country, any category, see
+   * `randomPlacesFor`): each one's display name and true board position, projected the same way
+   * as `holes`. One city-placement step per entry, in this order — can be empty (a country with
+   * fewer matching places than `ContourSettings.placesCount`), in which case the round skips the
+   * city phase entirely. */
+  places: { name: string; position: Point2D }[];
+  /** Which hole each player claimed (index into `holes`/`visibleSegments`), in player order —
+   * inferred from where each player drew their trace (see `nearestUnclaimedHole`), not picked
+   * explicitly. */
+  holeAssignment: number[];
+  /** One result per player, in player order. */
+  results: ContourPlayerResult[];
+};
+
+/**
+ * A round has two turn-based steps, back to back on the same board: everyone traces their own
+ * (automatically claimed) hole, its true arc revealed the moment they submit ('trace' — no
+ * separate reveal screen, the board already shows the whole contour by the time everyone's done),
+ * then everyone places their city marker(s) ('city'), then the final reveal ('reveal', city
+ * scores computed and combined with the trace scores locked in back during 'trace').
+ */
+export type ContourPhase = 'trace' | 'city' | 'reveal' | 'end';
+
 /** The two available themes (see src/themes): 'night' is the default. */
 export type ThemeId = 'night' | 'day';
 

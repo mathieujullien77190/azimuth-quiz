@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import ContourSettingsProvider from '@/components/ContourSettingsProvider';
 import IndicesSettingsProvider from '@/components/IndicesSettingsProvider';
 import LanguageProvider from '@/components/LanguageProvider';
 import SettingsProvider from '@/components/SettingsProvider';
@@ -35,7 +36,9 @@ const RootLayout = () => {
       <LanguageProvider>
         <SettingsProvider>
           <IndicesSettingsProvider>
-            <ThemedShell />
+            <ContourSettingsProvider>
+              <ThemedShell />
+            </ContourSettingsProvider>
           </IndicesSettingsProvider>
         </SettingsProvider>
       </LanguageProvider>

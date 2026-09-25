@@ -24,6 +24,12 @@ export const en: Translations = {
         meta: ['1 to 6 players'],
         cta: 'Play',
       },
+      contour: {
+        title: 'Contour',
+        tagline: 'Part of a country\'s outline shows up. Finish tracing it with your finger, as closely as you can.',
+        meta: ['1 to 6 players'],
+        cta: 'Play',
+      },
     },
   },
   setup: {
@@ -215,5 +221,27 @@ export const en: Translations = {
     isCapitalNo: 'No',
     populationUnit: 'pop.',
     finalScoreTitle: 'Final standings',
+  },
+  contourSetup: {
+    screenTitle: 'Contour',
+    back: 'Back',
+    start: 'Start game',
+    playersSection: {
+      title: 'Players',
+      hint: 'Everyone plays on the same phone, taking turns.',
+    },
+    playerNameAccessibility: (index) => `Player ${index} name`,
+    placesCountTitle: 'Number of places',
+    placesCountHint: 'How many places to mark on the map, on top of the outline trace.',
+  },
+  contourGame: {
+    traceHint: 'Finish tracing with your finger between the two dots, following the country\'s outline.',
+    cityHint: (cityName, placeNumber, totalPlaces) => `Place ${placeNumber}/${totalPlaces}: mark ${cityName} on the map.`,
+    traceLabel: 'Trace',
+    cityLabel: 'City',
+    revealContourLabel: 'Place the locations',
+    continueLabel: 'Continue',
+    finalScoreTitle: 'Final standings',
+    home: 'Home',
   },
 };

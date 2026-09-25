@@ -47,13 +47,14 @@ beforeEach(() => {
 });
 
 describe('HomeScreen — content', () => {
-  it('shows the title, tagline, and both game cards', async () => {
+  it('shows the title, tagline, and all three game cards', async () => {
     const { getByText, getAllByText } = await render(<HomeScreen />);
     expect(getByText('AZIMUTH QUIZ')).toBeTruthy();
     expect(getByText('Choisis ton jeu de géographie')).toBeTruthy();
     expect(getByText('Boussole')).toBeTruthy();
     expect(getByText('Indices')).toBeTruthy();
-    expect(getAllByText('Jouer')).toHaveLength(2);
+    expect(getByText('Contour')).toBeTruthy();
+    expect(getAllByText('Jouer')).toHaveLength(3);
   });
 
   it('navigates to /setup when the Boussole card is played', async () => {
@@ -66,6 +67,12 @@ describe('HomeScreen — content', () => {
     const { getAllByText } = await render(<HomeScreen />);
     await fireEvent.press(getAllByText('Jouer')[1]);
     expect(mockPush).toHaveBeenCalledWith('/indices-setup');
+  });
+
+  it('navigates to /contour-setup when the Contour card is played', async () => {
+    const { getAllByText } = await render(<HomeScreen />);
+    await fireEvent.press(getAllByText('Jouer')[2]);
+    expect(mockPush).toHaveBeenCalledWith('/contour-setup');
   });
 });
 

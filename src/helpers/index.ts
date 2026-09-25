@@ -13,6 +13,9 @@ export {
   straightDistanceKm,
 } from './geo';
 export { kmToRatio, ratioToKm, roundDistance } from './distanceScale';
+export { splitContourHoles } from './contourGeometry';
+export type { ContourHoleSplit } from './contourGeometry';
+export { averagePointDistance, resamplePolyline, scoreCityGuess, scoreContourRound } from './contourScoring';
 export {
   clearIndicesHistory,
   getCachedIndicesHistory,

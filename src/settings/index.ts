@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 
-import { DEFAULT_INDICES_SETTINGS, DEFAULT_SETTINGS } from '@/constants';
-import type { GameSettings, IndicesSettings } from '@/types';
+import { DEFAULT_CONTOUR_SETTINGS, DEFAULT_INDICES_SETTINGS, DEFAULT_SETTINGS } from '@/constants';
+import type { ContourSettings, GameSettings, IndicesSettings } from '@/types';
 
 export type SettingsContextValue = {
   settings: GameSettings;
@@ -35,3 +35,16 @@ export const IndicesSettingsContext = createContext<IndicesSettingsContextValue>
 });
 
 export const useIndicesSettings = (): IndicesSettingsContextValue => useContext(IndicesSettingsContext);
+
+/** Contour game settings: independent context, never mixed with `GameSettings`/`IndicesSettings`. */
+export type ContourSettingsContextValue = {
+  settings: ContourSettings;
+  updateSettings: (patch: Partial<ContourSettings>) => void;
+};
+
+export const ContourSettingsContext = createContext<ContourSettingsContextValue>({
+  settings: DEFAULT_CONTOUR_SETTINGS,
+  updateSettings: () => {},
+});
+
+export const useContourSettings = (): ContourSettingsContextValue => useContext(ContourSettingsContext);

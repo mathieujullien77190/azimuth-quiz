@@ -2,7 +2,9 @@ import type { Category, Difficulty, GameSettings, Origin } from '@/types';
 
 export * from './theme';
 export * from './indices';
+export * from './contour';
 export { PLACES } from './places';
+export { CONTOURS } from './contours';
 
 // --- Score ---
 export const MAX_ROUND_POINTS = 1000;
