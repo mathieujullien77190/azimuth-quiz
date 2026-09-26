@@ -54,22 +54,6 @@ export const CompassDial = memo(function CompassDial({
         </G>
       ))}
 
-      {truthBearing !== null && (
-        <>
-          <Polygon
-            points={needlePoints(center, truthBearing, needleLength, needleTail, needleHalfWidth)}
-            fill={colors.truth}
-            opacity={0.9}
-          />
-          <Circle
-            cx={polarToPoint(center, knobRadius, truthBearing).x}
-            cy={polarToPoint(center, knobRadius, truthBearing).y}
-            r={size * 0.028}
-            fill={colors.truth}
-          />
-        </>
-      )}
-
       {bearing !== null && (
         <>
           <Polygon
@@ -83,6 +67,29 @@ export const CompassDial = memo(function CompassDial({
             fill={color ?? colors.accent}
             stroke={colors.background}
             strokeWidth={3}
+          />
+        </>
+      )}
+
+      {/* Drawn last (on top of every player needle, including this player's own): the solution
+          must always read clearly, never partly hidden under an overlapping player knob. Its own
+          knob is the biggest of all three knob sizes (0.045 vs the player's own 0.04 and an extra
+          needle's 0.034) so it fully covers one underneath rather than leaving a colored ring
+          peeking out around a smaller yellow center. */}
+      {truthBearing !== null && (
+        <>
+          <Polygon
+            points={needlePoints(center, truthBearing, needleLength, needleTail, needleHalfWidth)}
+            fill={colors.truth}
+            opacity={0.9}
+          />
+          <Circle
+            cx={polarToPoint(center, knobRadius, truthBearing).x}
+            cy={polarToPoint(center, knobRadius, truthBearing).y}
+            r={size * 0.045}
+            fill={colors.truth}
+            stroke={colors.background}
+            strokeWidth={2}
           />
         </>
       )}
