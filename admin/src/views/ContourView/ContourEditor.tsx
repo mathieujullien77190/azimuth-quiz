@@ -231,7 +231,7 @@ export const ContourEditor = ({ initialCountry }: { initialCountry: ContourCount
                 {/* Icon at `pos`, name stacked just below — same layout as the real game's tier
                     1 (icon)/tier 2 (icon+name), shown here always at once since this is a static
                     preview rather than a tiered reveal. */}
-                <span className="contour-neighbor-icon" style={neighbor.type === 'country' ? { fontFamily: FLAG_FONT_FAMILY } : undefined}>
+                <span className="contour-neighbor-icon" style={{ fontFamily: FLAG_FONT_FAMILY }}>
                   {neighborIcon(neighbor)}
                 </span>
                 <span className="contour-neighbor-name">{neighborName(neighbor)}</span>

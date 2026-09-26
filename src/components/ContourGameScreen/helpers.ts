@@ -1,9 +1,12 @@
 import { CATEGORIES, PLACES } from '@/constants';
 import { flagEmoji, countryName } from '@/constants/places/countries';
-import { CONTOUR_EXCLUDED_PLACES, excludeKey } from '@/constants/contours/excludedPlaces';
 import { shuffle } from '@/helpers';
 import type { Language } from '@/i18n';
 import type { Category, ContourCountry, ContourNeighbor, ContourRoundRecord, Difficulty, Place } from '@/types';
+
+// Order `randomPlacesFor` falls back through when the requested tier alone doesn't have enough
+// places for a country — easiest first, since a too-easy city still beats no city at all.
+const DIFFICULTY_FALLBACK_ORDER: Difficulty[] = ['easy', 'intermediate', 'hard'];
 
 // Which of Boussole's own categories get their own icon on reveal instead of the plain truth dot
 // (see `placeEmoji`) — deliberately not every category: a city/French city still reads fine as a
@@ -36,18 +39,24 @@ export const randomCountry = (countries: ContourCountry[], difficulty: Difficult
 };
 
 /** Up to `count` distinct random Boussole places (see PLACES in constants/places, any category)
- * matching both the country and `difficulty` (same tier as `randomCountry`'s own filtering) —
- * fewer (down to none) if the country doesn't have that many at that tier; the caller must
- * handle a short (or empty) result. */
+ * for the given country, preferring `difficulty` (same tier as `randomCountry`'s own filtering)
+ * but topping up from the other tiers — easiest first (`DIFFICULTY_FALLBACK_ORDER`) — whenever
+ * that tier alone doesn't have enough: most countries only have a handful of places per
+ * difficulty, so a strict single-tier filter would leave the city phase short far too often.
+ * Still fewer (down to none) if the country doesn't have that many places overall; the caller
+ * must handle a short (or empty) result. */
 export const randomPlacesFor = (countryCode: string, count: number, difficulty: Difficulty): Place[] => {
-  const candidates = PLACES.filter(
-    (place) =>
-      place.code === countryCode &&
-      place.difficulty === difficulty &&
-      place.category !== 'kids' &&
-      !CONTOUR_EXCLUDED_PLACES.has(excludeKey(place.code, place.name)),
-  );
-  return shuffle(candidates).slice(0, count);
+  const matching = (tier: Difficulty): Place[] =>
+    PLACES.filter(
+      (place) => place.code === countryCode && place.difficulty === tier && place.category !== 'kids' && !place.excludeFromContour,
+    );
+
+  const picked = shuffle(matching(difficulty));
+  for (const tier of DIFFICULTY_FALLBACK_ORDER) {
+    if (picked.length >= count || tier === difficulty) continue;
+    picked.push(...shuffle(matching(tier)));
+  }
+  return picked.slice(0, count);
 };
 
 /** Category icon (see `ICON_CATEGORIES`) for a place drawn as the truth marker on reveal, in
@@ -56,16 +65,12 @@ export const randomPlacesFor = (countryCode: string, count: number, difficulty: 
 export const placeEmoji = (place: Place): string | undefined =>
   ICON_CATEGORIES.has(place.category) ? CATEGORIES.find((category) => category.id === place.category)?.emoji : undefined;
 
-/** Tier-1 icon for a curated neighbor entry: its flag for a `country` neighbor, a fish for a sea
- * or a whale for an ocean one — see `ContourNeighbor`. */
-export const neighborIcon = (neighbor: ContourNeighbor): string =>
-  neighbor.type === 'country' ? flagEmoji(neighbor.code) : neighbor.kind === 'ocean' ? '🐳' : '🐟';
+/** Tier-1 icon for a curated neighbor entry: its flag. */
+export const neighborIcon = (neighbor: ContourNeighbor): string => flagEmoji(neighbor.code);
 
-/** Tier-2 display name for a curated neighbor entry, in the active UI language: resolved via the
- * shared country-name table for a `country` neighbor, or its own stored `fr`/`en` pair for a
- * `sea`/ocean one (no such lookup table exists for seas). */
-export const neighborName = (neighbor: ContourNeighbor, language: Language): string =>
-  neighbor.type === 'country' ? countryName(neighbor.code, language) : language === 'fr' ? neighbor.fr : neighbor.en;
+/** Tier-3 display name for a curated neighbor entry, in the active UI language: resolved via the
+ * shared country-name table. */
+export const neighborName = (neighbor: ContourNeighbor, language: Language): string => countryName(neighbor.code, language);
 
 /** Normalizes a guessed country name for comparison: mirrors IndicesGameScreen/helpers.ts's own
  * `normalizePlaceGuess` (lowercased, accents/spaces/punctuation all dropped outright, not just

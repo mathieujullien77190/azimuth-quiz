@@ -297,9 +297,19 @@ export type IndicesRow = readonly [
   emoji3: string,
 ];
 
-/** A place: common data (including difficulty) + its two game-specific parts, either one
- * (never both) can be `null` if this place doesn't exist in that game. */
-export type PlaceEntry = readonly [common: CommonRow, boussole: BoussoleRow | null, indices: IndicesRow | null];
+/** Contour/Silhouette's own place-level row — its own array, same idea as `boussole`/`indices`,
+ * rather than a field smuggled into `common` (which stays shared, game-agnostic data). Only ever
+ * `[true]` in practice today (`excludeFromContour`): Silhouette's city phase should skip this
+ * place (a judgment call specific to that game, see `ContourGameScreen/helpers.ts`'s
+ * `randomPlacesFor`) while Boussole/Indices keep using it normally. */
+export type ContourRow = readonly [excludeFromContour: boolean];
+
+/** A place: common data (including difficulty) + its per-game parts. `boussole`/`indices` are
+ * `null` when this place doesn't exist in that game; `contour` is the 4th, optional element
+ * (omitted, not `null`, for the vast majority of places with no Contour-specific data — same
+ * optional-trailing-element pattern as `CountryRow`'s `contour`, see
+ * `constants/places/countries.ts`). */
+export type PlaceEntry = readonly [common: CommonRow, boussole: BoussoleRow | null, indices: IndicesRow | null, contour?: ContourRow];
 
 export type MergedPlaces = readonly PlaceEntry[];
 
@@ -311,7 +321,7 @@ export const encodeCommonRow = (common: CommonRow, difficulty: Difficulty): Comm
   DIFFICULTY_CODES[difficulty],
 ];
 
-export const decodeBoussolePlace = (common: CommonRow, row: BoussoleRow): Place => {
+export const decodeBoussolePlace = (common: CommonRow, row: BoussoleRow, contour?: ContourRow): Place => {
   const [name, code, latitude, longitude, difficultyCode] = common;
   const [categoryCode, description, wikiFr, wikiEn] = row;
   return {
@@ -323,6 +333,7 @@ export const decodeBoussolePlace = (common: CommonRow, row: BoussoleRow): Place 
     ...(description !== null && { description }),
     ...(wikiFr !== null && { wikiFr }),
     ...(wikiEn !== null && { wikiEn }),
+    ...(contour?.[0] && { excludeFromContour: true }),
   };
 };
 
@@ -335,8 +346,8 @@ export const encodeBoussoleRow = (place: Pick<Place, 'category' | 'description' 
 
 export const decodeBoussolePlaces = (entries: MergedPlaces): Place[] => {
   const places: Place[] = [];
-  for (const [common, boussole] of entries) {
-    if (boussole) places.push(decodeBoussolePlace(common, boussole));
+  for (const [common, boussole, , contour] of entries) {
+    if (boussole) places.push(decodeBoussolePlace(common, boussole, contour));
   }
   return places;
 };

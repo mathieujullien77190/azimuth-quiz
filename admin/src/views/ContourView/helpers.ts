@@ -8,7 +8,6 @@ import type { ContourNeighbor } from '@/types';
  * safe to bundle into this plain-React admin app (see ContourEditor.tsx's own note on
  * `@/components/ContourBoard/helpers`).
  */
-export const neighborIcon = (neighbor: ContourNeighbor): string =>
-  neighbor.type === 'country' ? flagEmoji(neighbor.code) : neighbor.kind === 'ocean' ? '🐳' : '🐟';
+export const neighborIcon = (neighbor: ContourNeighbor): string => flagEmoji(neighbor.code);
 
-export const neighborName = (neighbor: ContourNeighbor): string => (neighbor.type === 'country' ? countryName(neighbor.code, 'fr') : neighbor.fr);
+export const neighborName = (neighbor: ContourNeighbor): string => countryName(neighbor.code, 'fr');

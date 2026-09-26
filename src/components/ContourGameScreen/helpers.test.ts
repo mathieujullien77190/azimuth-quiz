@@ -75,7 +75,7 @@ describe('randomCountry', () => {
 });
 
 describe('randomPlacesFor', () => {
-  it('only returns places matching both the given country code and difficulty', () => {
+  it('only returns places matching the given country and difficulty when that tier alone already has enough', () => {
     randomPlacesFor('FR', 5, 'hard').forEach((place) => {
       expect(place.code).toBe('FR');
       expect(place.difficulty).toBe('hard');
@@ -87,18 +87,22 @@ describe('randomPlacesFor', () => {
     expect(new Set(places.map((place) => place.name)).size).toBe(places.length);
   });
 
-  it('returns fewer places than asked for instead of crashing when the country/difficulty pool has less', () => {
+  it('returns fewer places than asked for instead of crashing when the country has less overall, even pooling every difficulty', () => {
     const places = randomPlacesFor('PT', 999, 'easy');
     expect(places.length).toBeGreaterThan(0);
     expect(places.length).toBeLessThan(999);
   });
 
-  it('returns an empty array when nothing matches the country', () => {
+  it('returns an empty array when nothing matches the country at any difficulty', () => {
     expect(randomPlacesFor('XX', 3, 'easy')).toEqual([]);
   });
 
-  it('returns an empty array when the country has no places at that difficulty', () => {
-    expect(randomPlacesFor('IE', 3, 'easy')).toEqual([]);
+  it('falls back to the other difficulties, easiest first, when the requested tier is empty (IE has none at "easy": 1 "intermediate" + 4 "hard")', () => {
+    const places = randomPlacesFor('IE', 3, 'easy');
+    expect(places).toHaveLength(3);
+    places.forEach((place) => expect(place.code).toBe('IE'));
+    expect(places.filter((place) => place.difficulty === 'intermediate')).toHaveLength(1);
+    expect(places.filter((place) => place.difficulty === 'hard')).toHaveLength(2);
   });
 
   it('never draws a "kids" category place', () => {
@@ -116,33 +120,17 @@ describe('randomPlacesFor', () => {
 });
 
 describe('neighborIcon', () => {
-  it('returns the flag emoji for a country neighbor', () => {
+  it('returns the flag emoji for a neighbor', () => {
     const neighbor: ContourNeighbor = { type: 'country', code: 'AT', x: 0, y: 0 };
     expect(neighborIcon(neighbor)).toBe('🇦🇹');
-  });
-
-  it('returns a fish for a sea neighbor', () => {
-    const neighbor: ContourNeighbor = { type: 'sea', kind: 'sea', fr: 'Méditerranée', en: 'Mediterranean', x: 0, y: 0 };
-    expect(neighborIcon(neighbor)).toBe('🐟');
-  });
-
-  it('returns a whale for an ocean neighbor', () => {
-    const neighbor: ContourNeighbor = { type: 'sea', kind: 'ocean', fr: 'Atlantique', en: 'Atlantic', x: 0, y: 0 };
-    expect(neighborIcon(neighbor)).toBe('🐳');
   });
 });
 
 describe('neighborName', () => {
-  it('resolves a country neighbor via the shared country-name table, per language', () => {
+  it('resolves a neighbor via the shared country-name table, per language', () => {
     const neighbor: ContourNeighbor = { type: 'country', code: 'AT', x: 0, y: 0 };
     expect(neighborName(neighbor, 'fr')).toBe('Autriche');
     expect(neighborName(neighbor, 'en')).toBe('Austria');
-  });
-
-  it("uses a sea/ocean neighbor's own stored fr/en pair", () => {
-    const neighbor: ContourNeighbor = { type: 'sea', kind: 'sea', fr: 'Méditerranée', en: 'Mediterranean', x: 0, y: 0 };
-    expect(neighborName(neighbor, 'fr')).toBe('Méditerranée');
-    expect(neighborName(neighbor, 'en')).toBe('Mediterranean');
   });
 });
 

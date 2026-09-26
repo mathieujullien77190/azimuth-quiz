@@ -72,6 +72,16 @@ describe('decodeBoussolePlace / encodeBoussoleRow', () => {
     const place = decodeBoussolePlace(common, ['M', null, null, null]);
     expect(encodeBoussoleRow(place)).toEqual(['M', null, null, null]);
   });
+
+  it('applies excludeFromContour from its own contour row ([true]), its own array next to boussole/indices', () => {
+    const place = decodeBoussolePlace(common, row, [true]);
+    expect(place.excludeFromContour).toBe(true);
+  });
+
+  it('omits excludeFromContour when there is no contour row', () => {
+    const place = decodeBoussolePlace(common, row);
+    expect(place.excludeFromContour).toBeUndefined();
+  });
 });
 
 describe('decodeBoussolePlaces / decodeIndicesPlaces', () => {
@@ -90,6 +100,13 @@ describe('decodeBoussolePlaces / decodeIndicesPlaces', () => {
     const places = decodeIndicesPlaces(entries);
     expect(places).toHaveLength(1);
     expect(places[0].name).toBe('Otherville');
+  });
+
+  it('decodeBoussolePlaces carries a contour row through to excludeFromContour', () => {
+    const excludedEntries: MergedPlaces = [
+      [['Excludeville', 'FR', 5, 6, 'E'], ['C', null, null, null], null, [true]],
+    ];
+    expect(decodeBoussolePlaces(excludedEntries)[0].excludeFromContour).toBe(true);
   });
 });
 

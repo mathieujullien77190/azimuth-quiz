@@ -140,12 +140,6 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
     hintFabIcon: {
       fontSize: fontSize.subtitle,
     },
-    resultOkText: {
-      ...typography.heading,
-      textAlign: 'center',
-      fontSize: fontSize.caption + 1,
-      color: colors.success,
-    },
     countryCard: {
       alignItems: 'center',
       gap: spacing.xs,
@@ -172,6 +166,22 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       fontSize: fontSize.caption + 1,
       textAlign: 'center',
     },
+    // City phase's own place-to-find instruction, right above the Valider/Continuer button:
+    // bigger than the shared `hint` style above (which stays small for the guess-phase texts it's
+    // still used for) so it reads clearly as the current objective, not a passing status line.
+    cityHint: {
+      ...typography.body,
+      color: colors.textMuted,
+      fontSize: fontSize.subtitle,
+      textAlign: 'center',
+    },
+    // The place name itself, singled out in `colors.text` (full contrast, unlike the muted
+    // instruction around it) and bold, so it's the one word that jumps out at a glance.
+    cityHintName: {
+      ...typography.heading,
+      color: colors.text,
+      fontSize: fontSize.subtitle,
+    },
     // 'reveal' only ('guess'/'city' use `fullBleedBoardArea` instead, see above): `flex: 1` so
     // this card claims whatever's left of the ScrollView's own height once its siblings (the
     // country card above, the results card below) have taken theirs — see `boardArea`, measured
@@ -195,6 +205,21 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       borderWidth: 1.5,
       borderColor: colors.border,
       borderRadius: radius.md,
+    },
+    // City phase only: the target country's own flag/name, floating over the board itself (the
+    // header shows the player list instead, see the 'city' branch of `overlayTop`) — `top` is
+    // overridden inline with the live `overlayTopHeight` so it always sits just below that band
+    // rather than under it.
+    boardCountryBadge: {
+      position: 'absolute',
+      alignSelf: 'center',
+      zIndex: 1,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.md,
+      backgroundColor: isDark ? `${colors.surfaceHigh}F0` : `${colors.surface}F0`,
+      borderWidth: 1,
+      borderColor: colors.border,
     },
     resultsList: {
       gap: spacing.sm,
@@ -275,13 +300,56 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       fontSize: fontSize.caption + 1,
       color: colors.danger,
     },
-    buzzPanel: {
-      gap: spacing.sm + 2,
+    // Shown on the attribution overlay below for a correct guess (its wrong counterpart reuses
+    // `wrongGuessText` above) — unlike Indices, Contour's overlay covers both outcomes: the
+    // penalty/reward still needs a player picked either way, so there's no way to skip it on a
+    // miss the way Indices does.
+    resultOkText: {
+      ...typography.heading,
+      textAlign: 'center',
+      fontSize: fontSize.caption + 1,
+      color: colors.success,
     },
-    whoAnsweredRow: {
-      flexDirection: 'row',
+    // Post-"Valider" step (see `validateGuess`/`pendingCorrect`): covers the entire screen, same
+    // pattern as IndicesGameScreen's own attribution overlay — half-transparent (hex alpha suffix)
+    // so the board/hints behind stay dimly visible rather than fully hidden.
+    attributeOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: `${colors.background}80`,
       alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.lg,
+      padding: spacing.lg,
+    },
+    attributePrompt: {
+      ...typography.heading,
+      color: colors.text,
+      fontSize: fontSize.subtitle,
+    },
+    attributeGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
       gap: spacing.sm,
+      alignSelf: 'stretch',
+    },
+    attributeButton: {
+      minWidth: 110,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      borderRadius: radius.button,
+      borderWidth: 2,
+      backgroundColor: colors.surfaceHigh,
+      alignItems: 'center',
+    },
+    attributeButtonText: {
+      ...typography.heading,
+      color: colors.text,
+      fontSize: fontSize.subtitle,
     },
     buzzInputRow: {
       flexDirection: 'row',
@@ -496,9 +564,9 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
 
   // --- guess phase ---
 
-  /** "Indice": reveals the next of the 4 on-board hint tiers (1: every neighbor's icon, 2: every
-   * neighbor's name, 3: the target country's own flag, 4: its own name — effectively the answer)
-   * — caps at 4, past which the button disappears in favor of an explicit "Continuer"
+  /** "Indice": reveals the next of the 4 on-board hint tiers (1: every neighbor's icon, 2: the
+   * target country's own flag, 3: every neighbor's name, 4: its own name — effectively the
+   * answer) — caps at 4, past which the button disappears in favor of an explicit "Continuer"
    * (`confirmNoGuess`) in the footer. */
   const revealHint = () => setHintsRevealed((n) => Math.min(n + 1, 4));
 
@@ -712,16 +780,17 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
   const currentGuessPoints = hintsRevealed >= 4 ? 0 : CONTOUR_GUESS_POINTS_BY_HINTS[hintsRevealed];
 
   // The 4 guess-phase hint tiers, all drawn straight on the board (positions computed once per
-  // round in `buildRound`): tier 1 shows every neighbor's icon (flag or 🐟/🐳) at its own curated
-  // spot, tier 2 stacks its name just below that same icon (not swapped — both stay up so the
-  // icon keeps reading as "this is what that name refers to"), tier 3 adds the target country's
-  // own flag at its curated spot, tier 4 stacks its name below that the same way.
+  // round in `buildRound`): tier 1 shows every neighbor's flag at its own curated spot, tier 2
+  // adds the target country's own flag at its curated spot, tier 3 stacks each
+  // neighbor's name just below its own icon (not swapped — both stay up so the icon keeps
+  // reading as "this is what that name refers to"), tier 4 stacks the country's name below its
+  // flag the same way.
   const stackGap = Math.min(board.width, board.height) * HINT_STACK_GAP_RATIO;
   const neighborHintLabels: ContourBoardHintLabel[] =
     phase === 'guess' && hintsRevealed >= 1
       ? board.neighborHints.flatMap(({ neighbor, position }) => [
           { position, icon: true, text: neighborIcon(neighbor) },
-          ...(hintsRevealed >= 2
+          ...(hintsRevealed >= 3
             ? [{ position: { x: position.x, y: position.y + stackGap }, text: neighborName(neighbor, language) }]
             : []),
         ])
@@ -729,7 +798,7 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
   const centerHintLabels: ContourBoardHintLabel[] =
     phase === 'guess'
       ? [
-          ...(hintsRevealed >= 3 ? [{ position: board.centerPosition, icon: true, text: flagEmoji(board.country.code) }] : []),
+          ...(hintsRevealed >= 2 ? [{ position: board.centerPosition, icon: true, text: flagEmoji(board.country.code) }] : []),
           ...(hintsRevealed >= 4
             ? [
                 {
@@ -817,6 +886,13 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
       <SafeAreaView style={styles.fullBleedSafeArea}>
         <ThemeBackdrop />
         <View onLayout={onBoardAreaLayout} style={styles.fullBleedBoardArea}>
+          {phase === 'city' && (
+            <View style={[styles.boardCountryBadge, { top: overlayTopHeight + spacing.sm }]}>
+              <Text style={styles.countryName}>
+                <Text style={styles.flagEmoji}>{flagEmoji(board.country.code)}</Text> {countryName(board.country.code, language)}
+              </Text>
+            </View>
+          )}
           <View style={styles.boardFrame}>
             <ContourBoard
               activeMarkerColor={phase === 'city' && !placeComplete ? PLAYER_COLORS[activePlayerIndex] : undefined}
@@ -850,18 +926,21 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
             )}
           </View>
           <RoundProgress difficulties={[settings.difficulty]} roundNumber={roundIndex + 1} totalRounds={settings.rounds} />
-          <View style={styles.countryCard}>
-            {phase === 'guess' ? (
+          {phase === 'guess' ? (
+            <View style={styles.countryCard}>
               <Text style={styles.countryName}>{t.contourGame.guessPrompt}</Text>
-            ) : (
-              <Text style={styles.countryName}>
-                <Text style={styles.flagEmoji}>{flagEmoji(board.country.code)}</Text> {countryName(board.country.code, language)}
-              </Text>
-            )}
-            {phase === 'city' && activePlace && (
-              <Text style={styles.hint}>{t.contourGame.cityHint(activePlace.name, placeIndex + 1, board.places.length)}</Text>
-            )}
-          </View>
+            </View>
+          ) : (
+            <PlayerTabs
+              activeIndex={activePlayerIndex}
+              activeLabel={t.game.playerTurn}
+              allowRevision
+              answered={cityAnsweredByPlayer}
+              onSelect={selectPlayerCity}
+              order={roundOrder}
+              players={playerTabs}
+            />
+          )}
         </View>
 
         <View onLayout={onOverlayBottomLayout} style={styles.overlayBottom}>
@@ -870,23 +949,6 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
               <View style={styles.guessFooter}>
                 <Text style={styles.hint}>{t.contourGame.noOneGuessed}</Text>
                 <Button label={t.contourGame.continueLabel} onPress={confirmNoGuess} />
-              </View>
-            ) : pendingCorrect !== null ? (
-              <View style={styles.buzzPanel}>
-                <Text style={pendingCorrect ? styles.resultOkText : styles.wrongGuessText}>
-                  {pendingCorrect ? t.contourGame.resultOk : t.contourGame.resultNotOk}
-                </Text>
-                <View style={styles.whoAnsweredRow}>
-                  <Text style={styles.hint}>{t.contourGame.whoAnswered}</Text>
-                  <PlayerTabs
-                    activeIndex={-1}
-                    allowRevision
-                    answered={players.map(() => false)}
-                    onSelect={attributeGuess}
-                    order={playerOrder}
-                    players={playerTabs}
-                  />
-                </View>
               </View>
             ) : (
               <View style={styles.guessFooter}>
@@ -917,16 +979,14 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
             )
           ) : (
             <View style={styles.cityFooter}>
-              <PlayerTabs
-                activeIndex={activePlayerIndex}
-                activeLabel={t.game.playerTurn}
-                allowRevision
-                answered={cityAnsweredByPlayer}
-                onSelect={selectPlayerCity}
-                order={roundOrder}
-                players={playerTabs}
-              />
               {placeComplete && <Legend items={legendItems} />}
+              {activePlace && (
+                <Text style={styles.cityHint}>
+                  {t.contourGame.cityHint.prefix(placeIndex + 1, board.places.length)}
+                  <Text style={styles.cityHintName}>{activePlace.name}</Text>
+                  {t.contourGame.cityHint.suffix}
+                </Text>
+              )}
               {placeComplete ? (
                 <Button label={t.contourGame.continueLabel} onPress={continuePlaces} />
               ) : (
@@ -935,6 +995,31 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
             </View>
           )}
         </View>
+
+        {/* Post-"Valider" step (see `validateGuess`/`pendingCorrect`): covers the whole screen,
+            same full-screen "who answered" pattern as IndicesGameScreen — a mis-tap on "Valider"
+            still needs a player picked either way (the penalty/reward can't be skipped on a
+            miss), so both outcomes show their own banner here rather than just the correct one. */}
+        {pendingCorrect !== null && (
+          <View style={styles.attributeOverlay}>
+            <Text style={pendingCorrect ? styles.resultOkText : styles.wrongGuessText}>
+              {pendingCorrect ? t.contourGame.resultOk : t.contourGame.resultNotOk}
+            </Text>
+            <Text style={styles.attributePrompt}>{t.contourGame.whoAnswered}</Text>
+            <View style={styles.attributeGrid}>
+              {playerOrder.map((index) => (
+                <Pressable
+                  accessibilityRole="button"
+                  key={index}
+                  onPress={() => attributeGuess(index)}
+                  style={[styles.attributeButton, { borderColor: PLAYER_COLORS[index] }]}
+                >
+                  <Text style={styles.attributeButtonText}>{players[index]}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        )}
       </SafeAreaView>
     );
   }

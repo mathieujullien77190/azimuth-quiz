@@ -38,6 +38,11 @@ export type Place = Omit<GeoPlace, 'country'> & {
    * not the full URL. Absent if nobody has filled it in yet for this place. */
   wikiFr?: string;
   wikiEn?: string;
+  /** True only for a place Contour/Silhouette's city phase should skip (a judgment call
+   * specific to that game, e.g. an island city that reads badly pinned onto the
+   * mainland-only outline) — Boussole/Indices keep using it normally. Omitted (not
+   * `false`) for every other place. */
+  excludeFromContour?: boolean;
 };
 
 export type Origin = {
@@ -252,12 +257,10 @@ export type Point2D = {
  * is exactly what renders in the game, at the same relative spot regardless of screen size (see
  * `ContourGameScreen`'s `projectRound`, which just scales `x*width`/`y*height`). Authored per
  * country (not a global by-code lookup): the same neighbor can need a different display spot
- * depending on which country it's being hinted from. A `country` neighbor's name/flag come from
- * `constants/places/countries.ts`, looked up by `code`; a `sea` neighbor has no such lookup, so
- * its own `fr`/`en` name is stored directly (same fr/en pair pattern as everywhere else). */
-export type ContourNeighbor =
-  | { type: 'country'; code: string; x: number; y: number }
-  | { type: 'sea'; kind: 'sea' | 'ocean'; fr: string; en: string; x: number; y: number };
+ * depending on which country it's being hinted from. Name/flag come from
+ * `constants/places/countries.ts`, looked up by `code` — no sea/ocean neighbors any more (dropped:
+ * they complicated every consumer for little payoff), so `type: 'country'` is the only variant. */
+export type ContourNeighbor = { type: 'country'; code: string; x: number; y: number };
 
 /** Anchor for tier 3/4's own on-board label (the target country's own flag, then its name stacked
  * just below it) — a fraction (0-1) of the board canvas, same model and same reasoning as

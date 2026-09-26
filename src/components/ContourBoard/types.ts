@@ -17,7 +17,7 @@ export type ContourBoardConnector = {
 export type ContourBoardHintLabel = {
   position: Point2D;
   text: string;
-  /** `text` is an emoji glyph (a flag or the sea/ocean fish icon) rather than plain name text:
+  /** `text` is an emoji glyph (a flag) rather than plain name text:
    * renders bigger, and with FLAG_FONT_FAMILY — harmless for a non-flag emoji (browsers fall
    * back automatically), but required for a flag glyph to render as a flag rather than a raw
    * two-letter code on Windows Chromium (see themes/fonts.ts). */

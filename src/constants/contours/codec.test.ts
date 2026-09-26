@@ -95,19 +95,14 @@ describe('CONTOURS', () => {
     }
   });
 
-  it('gives every country neighbor a valid ISO code and every sea neighbor an fr/en name', () => {
+  it('gives every neighbor a valid ISO code and an on-board position', () => {
     for (const country of CONTOURS) {
       for (const neighbor of country.neighbors) {
         expect(neighbor.x).toBeGreaterThanOrEqual(0);
         expect(neighbor.x).toBeLessThanOrEqual(1);
         expect(neighbor.y).toBeGreaterThanOrEqual(0);
         expect(neighbor.y).toBeLessThanOrEqual(1);
-        if (neighbor.type === 'country') {
-          expect(neighbor.code).toMatch(/^[A-Z]{2}$/);
-        } else {
-          expect(neighbor.fr.length).toBeGreaterThan(0);
-          expect(neighbor.en.length).toBeGreaterThan(0);
-        }
+        expect(neighbor.code).toMatch(/^[A-Z]{2}$/);
       }
     }
   });
