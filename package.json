@@ -1,6 +1,6 @@
 {
   "name": "azimuth-quiz",
-  "version": "2.21.0",
+  "version": "2.22.0",
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/metro-runtime": "~57.0.16",
@@ -58,7 +58,8 @@
       "<rootDir>/jest.setup.js"
     ],
     "modulePathIgnorePatterns": [
-      "<rootDir>/admin/"
+      "<rootDir>/admin/",
+      "<rootDir>/.claude/worktrees/"
     ],
     "collectCoverageFrom": [
       "src/**/*.{ts,tsx}",
