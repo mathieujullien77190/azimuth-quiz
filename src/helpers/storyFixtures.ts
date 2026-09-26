@@ -9,14 +9,15 @@ import {
   PLACES,
   PLAYER_COLORS,
 } from '@/constants';
-import { applyBestBonus, bearingDeg, distanceKm, normalizeBearing, scoreRound } from '@/helpers';
 import type { ContourCountry, Guess, IndicesPlace, Place, Player, PlayerResult, Point2D, RoundRecord } from '@/types';
 
-// Every fixture below is pulled from the app's own real data (PLACES/INDICES_PLACES/CONTOURS,
-// see @/constants) rather than invented — the point of this gallery is to audit the REAL
-// components with data that looks like the real game, not a mockup. `find`+non-null assertion
-// (not `?? fallback`) is deliberate: if one of these names ever moves/disappears from the source
-// data, the gallery should fail loudly (a missing fixture) rather than silently render with `undefined`.
+import { bearingDeg, distanceKm, normalizeBearing } from './geo';
+import { applyBestBonus, scoreRound } from './scoring';
+
+// Sample data shared by every component's `.stories.tsx` — pulled from the app's own real data
+// (PLACES/INDICES_PLACES/CONTOURS) rather than invented, same spirit as the admin gallery this
+// replaced. Lives here (not in `admin/`) so a component's story never depends on admin code —
+// admin already depends on `src/` via its `@/` alias, never the other way around.
 
 const findPlace = (name: string, code: string): Place => PLACES.find((place) => place.name === name && place.code === code)!;
 
@@ -27,10 +28,9 @@ const findIndicesPlace = (name: string, code: string): IndicesPlace =>
  * Boussole place is needed. */
 export const SAMPLE_PLACE_REVEALED: Place = findPlace('Tokyo', 'JP');
 
-/** A different place for the "still guessing" PlaceCard state — Tokyo doubling as both would
- * work, but a second real place is just as easy to grab and reads better next to it. Also a
- * `landmarks` category place: gives ContourBoard's category-emoji reveal (`placeEmoji`) something
- * to show beyond the plain dot. */
+/** A different place for the "still guessing" PlaceCard state — also a `landmarks` category
+ * place: gives ContourBoard's category-emoji reveal (`placeEmoji`) something to show beyond the
+ * plain dot. */
 export const SAMPLE_PLACE_GUESSING: Place = findPlace('Machu Picchu', 'PE');
 
 export const SAMPLE_INDICES_PLACE: IndicesPlace = findIndicesPlace('Tokyo', 'JP');
@@ -50,8 +50,8 @@ const TRUE_BEARING = bearingDeg(ORIGIN, SAMPLE_PLACE_REVEALED.coordinates);
 const TRUE_DISTANCE_KM = distanceKm(ORIGIN, SAMPLE_PLACE_REVEALED.coordinates);
 
 /** Three plausible guesses (one spot-on, one overshooting, one wide off) for the same round, fed
- * through the real scoring helpers (`scoreRound`/`applyBestBonus`) — every number RoundResult
- * shows below is exactly what the real game would compute for these guesses, not invented. */
+ * through the real scoring helpers — every number RoundResult shows is exactly what the real game
+ * would compute for these guesses, not invented. */
 const SAMPLE_GUESSES: Guess[] = [
   { bearing: normalizeBearing(TRUE_BEARING + 2), distanceKm: Math.round(TRUE_DISTANCE_KM * 0.97), inclination: 0 },
   { bearing: normalizeBearing(TRUE_BEARING - 18), distanceKm: Math.round(TRUE_DISTANCE_KM * 1.35), inclination: 0 },
@@ -77,9 +77,9 @@ export const SAMPLE_INDICES_BEARING = bearingDeg(ORIGIN, SAMPLE_INDICES_PLACE.co
 export const SAMPLE_INDICES_DISTANCE_KM = distanceKm(ORIGIN, SAMPLE_INDICES_PLACE.coordinates);
 
 // --- ContourBoard (Silhouette) ---
-// Same fit/projector math the real game (ContourGameScreen's `projectRound`) and the admin's own
-// existing ContourEditor preview both use — see `boardDimensionsFor`'s own doc comment: it's what
-// keeps a neighbor's curated `x`/`y` fraction landing at the same relative spot everywhere.
+// Same fit/projector math the real game (ContourGameScreen's `projectRound`) and the admin's
+// ContourEditor preview both use — see `boardDimensionsFor`'s own doc comment: it's what keeps a
+// neighbor's curated `x`/`y` fraction landing at the same relative spot everywhere.
 
 const CONTOUR_BOARD_MAX_WIDTH = 420;
 const CONTOUR_BOARD_MAX_HEIGHT = 320;
