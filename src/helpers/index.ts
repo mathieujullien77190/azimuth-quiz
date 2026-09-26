@@ -1,3 +1,4 @@
+export { db } from './firebase';
 export { formatBearing, formatDistance, formatInclination, formatNumber, initials } from './format';
 export {
   angleDifference,
