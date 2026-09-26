@@ -4,13 +4,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
     "country-flag-emoji-polyfill": "^0.1.10",
-    "expo-location": "~57.0.19",
     "expo-localization": "~57.0.2",
+    "expo-location": "~57.0.19",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-native": "0.86.3",
@@ -19,10 +21,14 @@
     "react-native-web": "^0.21.2"
   },
   "devDependencies": {
+    "@storybook/addon-a11y": "^10.6.0",
+    "@storybook/addon-docs": "^10.6.0",
+    "@storybook/react-vite": "^10.6.0",
     "@types/node": "^22.9.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "storybook": "^10.6.0",
     "typescript": "^5.6.3",
     "vite": "^5.4.11"
   }
