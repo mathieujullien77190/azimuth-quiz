@@ -143,16 +143,23 @@ export type Translations = {
     };
   };
   indicesGame: {
-    roundOver: string;
     pointsAtStake: (points: string) => string;
     buzz: string;
     giveUp: string;
+    /** Solo play only: names the one player instead of the generic "nobody" (there's no one
+     * else it could have been). */
+    soloNotFound: (name: string) => string;
     noOneFound: string;
     buzzedPrompt: (name: string) => string;
     verify: string;
     cancel: string;
     correct: string;
     wrong: string;
+    /** Shown on the full-screen attribution overlay right after "Valider" (typed mode only),
+     * before picking who answered — only on a correct guess, nothing shown for a wrong one. */
+    resultOk: string;
+    /** Prompt above the player buttons on that same overlay. */
+    whoAnswered: string;
     scored: (name: string, points: string) => string;
     missed: (name: string, points: string) => string;
     guessPlaceholder: string;
@@ -200,9 +207,11 @@ export type Translations = {
      * revealed: nobody scores for this part, same as the old give-up — an explicit confirm
      * before moving on to the city phase, consistent with the rest of the app's button style. */
     noOneGuessed: string;
-    /** Instruction shown above the board during a city step, naming the place to mark and which
-     * one it is out of how many this round (1-indexed). */
-    cityHint: (cityName: string, placeNumber: number, totalPlaces: number) => string;
+    /** Instruction shown just above the Valider/Continuer button during a city step, naming the
+     * place to mark and which one it is out of how many this round (1-indexed). Split around the
+     * place name (rather than one interpolated string) so the component can render that name in
+     * its own bigger/bolder Text — see ContourGameScreen.tsx's own render. */
+    cityHint: { prefix: (placeNumber: number, totalPlaces: number) => string; suffix: string };
     /** Short labels for the results card's guess/city point breakdown. */
     guessLabel: string;
     cityLabel: string;

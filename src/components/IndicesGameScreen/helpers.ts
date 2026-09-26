@@ -5,16 +5,18 @@ import { effectiveDifficulty } from '@/helpers/places';
 import type { Language } from '@/i18n';
 import type { Difficulty, IndicesCategory, IndicesPlace } from '@/types';
 
-/** Clues that reveal in 2 clicks: tier/symbol/day-night on the 1st, exact value on the 2nd. */
-const TWO_STAGE_CLUE_IDS = new Set(['distance', 'elevation', 'population', 'currency', 'localTime']);
+/** Clues that reveal in 2 clicks: tier/symbol/day-night on the 1st, exact value on the 2nd
+ * (distance/elevation/population/currency/localTime); letter: first letter alone, then every
+ * letter with the real per-word length. */
+const TWO_STAGE_CLUE_IDS = new Set(['distance', 'elevation', 'population', 'currency', 'localTime', 'letter']);
 /** Clues that reveal in 3 clicks. */
-const THREE_STAGE_CLUE_IDS = new Set(['emoji', 'flagColors', 'letter']);
+const THREE_STAGE_CLUE_IDS = new Set(['emoji', 'flagColors']);
 
 /** Total number of possible clues in a round if all were taken, counted multiple times
- * for the ones that reveal in stages (emoji: 3 clicks; letter: 3 (first letter, then word count,
- * then every letter); flag: always 3 — 1 color, then every color regardless of how many the flag
- * actually has, then the actual flag; distance/elevation/population/currency/localTime: 2) —
- * used as the base for `maxScoreForRound`. */
+ * for the ones that reveal in stages (emoji: 3 clicks; flag: always 3 — 1 color, then every color
+ * regardless of how many the flag actually has, then the actual flag;
+ * distance/elevation/population/currency/localTime/letter: 2) — used as the base for
+ * `maxScoreForRound`. */
 export const totalRevealCount = (): number =>
   INDICES_CLUE_ORDER.reduce((total, clueId) => {
     const count = THREE_STAGE_CLUE_IDS.has(clueId) ? 3 : TWO_STAGE_CLUE_IDS.has(clueId) ? 2 : 1;

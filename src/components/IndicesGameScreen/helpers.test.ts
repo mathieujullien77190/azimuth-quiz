@@ -5,8 +5,8 @@ import type { Difficulty, IndicesClueId } from '@/types';
 import { maxScoreForRound, normalizePlaceGuess, overlayTypedLetters, randomIndicesPlace, skeletonLetterCount, totalRevealCount } from './helpers';
 
 describe('totalRevealCount', () => {
-  const TWO_STAGE: IndicesClueId[] = ['distance', 'elevation', 'population', 'currency', 'localTime'];
-  const THREE_STAGE: IndicesClueId[] = ['emoji', 'flagColors', 'letter'];
+  const TWO_STAGE: IndicesClueId[] = ['distance', 'elevation', 'population', 'currency', 'localTime', 'letter'];
+  const THREE_STAGE: IndicesClueId[] = ['emoji', 'flagColors'];
 
   it('matches revealing every clue, including every multi-stage one', () => {
     const allIds: IndicesClueId[] = INDICES_CLUE_ORDER.flatMap((clueId) => {

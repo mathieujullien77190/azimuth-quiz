@@ -173,14 +173,6 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       color: colors.onAccent,
       fontSize: fontSize.body - 1,
     },
-    buzzInputRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-    },
-    guessInputFlex: {
-      flex: 1,
-    },
     verdictRow: {
       flexDirection: 'row',
       gap: spacing.sm,
@@ -245,6 +237,48 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       color: colors.text,
       fontSize: fontSize.body,
     },
+    // Typed mode's post-"Valider" step: covers the entire screen (see the component's own
+    // return, rendered as a sibling of `Screen` rather than inside its footer). Half-transparent
+    // (hex alpha suffix, same trick as ContourGameScreen's own overlays) so the board/round behind
+    // stays dimly visible rather than fully hidden.
+    attributeOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: `${colors.background}80`,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.lg,
+      padding: spacing.lg,
+    },
+    attributePrompt: {
+      ...typography.heading,
+      color: colors.text,
+      fontSize: fontSize.subtitle,
+    },
+    attributeGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      alignSelf: 'stretch',
+    },
+    attributeButton: {
+      minWidth: 110,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      borderRadius: radius.button,
+      borderWidth: 2,
+      backgroundColor: colors.surfaceHigh,
+      alignItems: 'center',
+    },
+    attributeButtonText: {
+      ...typography.heading,
+      color: colors.text,
+      fontSize: fontSize.subtitle,
+    },
   });
 
 export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
@@ -289,10 +323,16 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
     settings.startWithFirstLetter ? ['letter'] : [],
   );
   const [turnIndex, setTurnIndex] = useState(0);
+  // Spoken mode only (see the footer below): who buzzed, picked before anyone speaks — typed
+  // mode no longer buzzes first, see `pendingCorrect`.
   const [buzzOpen, setBuzzOpen] = useState(false);
   const [buzzedIndex, setBuzzedIndex] = useState<number | null>(null);
   const [verified, setVerified] = useState(false);
   const [guessText, setGuessText] = useState('');
+  // Typed mode only: set the moment "Valider" is pressed (before anyone's identified) to whether
+  // the typed text matched — the full-screen overlay below then asks who answered, and
+  // `attributeGuess` finishes the job `settle` used to do right away in the old buzz-first flow.
+  const [pendingCorrect, setPendingCorrect] = useState<boolean | null>(null);
   const [verdict, setVerdict] = useState<'correct' | 'wrong' | 'giveUp' | null>(null);
   const [lastWrong, setLastWrong] = useState<string | null>(null);
   const [roundNumber, setRoundNumber] = useState(1);
@@ -331,15 +371,15 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
   const populationStage = revealedClueIds.filter((id) => id === 'population').length;
   const currencyStage = revealedClueIds.filter((id) => id === 'currency').length;
   const localTimeStage = revealedClueIds.filter((id) => id === 'localTime').length;
-  // "letter" reveals in 3 clicks: 1st the first letter alone, 2nd the word count (one generic
-  // box per word), 3rd the real per-word length.
+  // "letter" reveals in 2 clicks: 1st the first letter alone, 2nd every letter's slot with the
+  // real per-word length.
   const letterStage = revealedClueIds.filter((id) => id === 'letter').length;
 
   // "M _ _ _" name recap above the buzz/give-up buttons: nothing shown until "letter" has
   // been picked at least once. `lengthKnown` also gates the live-typing overlay/cap below the
   // typed-answer input (see `overlayTypedLetters`/`skeletonLetterCount`): both need the real
-  // per-word length, not just the generic word-count boxes.
-  const skeletonLengthKnown = letterStage >= 3 || vowelsRevealed;
+  // per-word length.
+  const skeletonLengthKnown = letterStage >= 2 || vowelsRevealed;
   const skeletonGroups =
     letterStage >= 1
       ? nameSkeleton(place.name, {
@@ -358,13 +398,14 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
     setLastWrong(null);
   };
 
-  // "I found it"/"I don't know" buttons only rendered outside round-over (see the footer
-  // below): no need to re-check `roundOver` here. Deliberately doesn't touch `lastWrong`: the
-  // previous miss stays visible while the next player picks themselves (see the footer).
+  // Spoken mode only: "J'ai trouvé" opens the buzz-first player picker (there's no text to type,
+  // so identifying who's about to answer out loud has to come before the verdict). Typed mode
+  // never buzzes first any more — see `validateGuess`/`attributeGuess` below. Deliberately
+  // doesn't touch `lastWrong`: the previous miss stays visible while the next player picks
+  // themselves.
   const openBuzz = () => {
     setBuzzOpen(true);
     setVerified(false);
-    setGuessText('');
     setBuzzedIndex(null);
   };
 
@@ -376,17 +417,18 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
     setBuzzOpen(false);
     setVerified(false);
     setBuzzedIndex(null);
-    setGuessText('');
   };
 
-  // Called only once `buzzedIndex` is known (see the call sites: the Verify button and
-  // `submitGuess`, both guarded upstream by `buzzedIndex !== null`).
-  const settle = (correct: boolean) => {
-    // Only whoever buzzed sees their total move: the remaining score if they found it, a fixed
-    // penalty if they were wrong (otherwise buzzing at random would be risk-free).
+  // Shared by both answer methods once a player is finally known: spoken mode knows it from the
+  // buzz-first pick (`buzzedIndex`), typed mode only from the post-"Valider" attribution overlay
+  // (`attributeGuess`) — hence taking `index` as a plain argument instead of reading state.
+  const settle = (correct: boolean, index: number) => {
+    // Only whoever answered sees their total move: the remaining score if they found it, a fixed
+    // penalty if they were wrong (otherwise answering at random would be risk-free).
     const delta = correct ? remaining : -WRONG_ANSWER_PENALTY;
-    setPlayerTotals((totals) => totals.map((total, index) => (index === buzzedIndex ? total + delta : total)));
+    setPlayerTotals((totals) => totals.map((total, i) => (i === index ? total + delta : total)));
     if (correct) {
+      setBuzzedIndex(index);
       setVerdict('correct');
       setBuzzOpen(false);
       return;
@@ -395,23 +437,37 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
     // there's nothing left to hide once someone's wrong there — ending the round avoids
     // pretending it's still a mystery everyone in the room just saw spelled out.
     if (settings.answerMethod === 'spoken') {
+      setBuzzedIndex(index);
       setVerdict('wrong');
       setBuzzOpen(false);
       return;
     }
     // Typed mode never reveals the answer on a miss (just "that's not it"): the round stays
-    // open so anyone (including them again) can buzz and try.
-    // buzzedName is always defined here too (settle requires buzzedIndex to be known, see above).
-    setLastWrong(buzzedName as string);
+    // open so anyone (including them again) can type and try.
+    setLastWrong(players[index]);
     setBuzzOpen(false);
     setVerified(false);
     setBuzzedIndex(null);
     setGuessText('');
   };
 
-  // The Submit button is only rendered once `buzzedIndex` is known (typing forces the comparison).
-  const submitGuess = () => {
-    settle(normalizePlaceGuess(guessText) === normalizePlaceGuess(place.name));
+  // Typed mode's "Valider": checks the typed text immediately (nobody's identity involved yet).
+  // Solo play has only one possible answerer, so it settles right away instead of opening the
+  // full-screen "who answered" overlay (`pendingCorrect`) — that overlay only makes sense once
+  // there's an actual choice to make, see `attributeGuess`.
+  const validateGuess = () => {
+    const correct = normalizePlaceGuess(guessText) === normalizePlaceGuess(place.name);
+    if (players.length === 1) {
+      settle(correct, 0);
+      return;
+    }
+    setPendingCorrect(correct);
+  };
+
+  // Resolves the overlay once a player's picked as who answered.
+  const attributeGuess = (index: number) => {
+    settle(pendingCorrect as boolean, index);
+    setPendingCorrect(null);
   };
 
   // Giving up costs nobody anything (0 points): neither the gain of a right answer, nor the
@@ -487,7 +543,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
     );
   }
 
-  return (
+  const screen = (
     <Screen
       footer={
         <View style={styles.footerContent}>
@@ -503,7 +559,9 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
                   ? t.indicesGame.scored(buzzedName!, formatNumber(remaining))
                   : verdict === 'wrong'
                     ? t.indicesGame.missed(buzzedName!, formatNumber(WRONG_ANSWER_PENALTY))
-                    : t.indicesGame.noOneFound}
+                    : players.length === 1
+                      ? t.indicesGame.soloNotFound(players[0])
+                      : t.indicesGame.noOneFound}
               </Text>
               <Text style={styles.revealAnswer}>
                 {t.indicesGame.wasPlace} {place.name}
@@ -514,101 +572,40 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
               </Text>
               <Button label={isLastRound ? t.game.last : t.indicesGame.continueLabel} onPress={continueRound} />
             </View>
-          ) : buzzedIndex !== null ? (
+          ) : settings.answerMethod === 'spoken' && buzzedIndex !== null ? (
             <View style={styles.buzzPanel}>
-              {settings.answerMethod === 'typed' ? (
+              <View style={styles.buzzerBadge}>
+                <View style={[styles.buzzerBadgeDot, { backgroundColor: PLAYER_COLORS[buzzedIndex] }]} />
+                <Text style={styles.buzzerBadgeText}>{t.indicesGame.buzzedPrompt(buzzedName!)}</Text>
+              </View>
+              {!verified && (
                 <>
-                  {skeletonLengthKnown && (
-                    <View style={styles.skeletonRow}>
-                      {overlayTypedLetters(skeletonGroups, guessText).map((group, groupIndex) => (
-                        <View key={groupIndex} style={styles.skeletonWord}>
-                          {group.map((letter, letterIndex) => (
-                            <View key={letterIndex} style={styles.skeletonSlot}>
-                              {letter !== null && (
-                                <Text
-                                  style={
-                                    skeletonGroups[groupIndex][letterIndex] === null
-                                      ? styles.skeletonLetterTyped
-                                      : styles.skeletonLetter
-                                  }
-                                >
-                                  {letter}
-                                </Text>
-                              )}
-                            </View>
-                          ))}
-                        </View>
-                      ))}
-                    </View>
-                  )}
-                  <View style={styles.buzzInputRow}>
-                    <View style={styles.buzzerBadge}>
-                      <View style={[styles.buzzerBadgeDot, { backgroundColor: PLAYER_COLORS[buzzedIndex] }]} />
-                      <Text style={styles.buzzerBadgeText}>{t.indicesGame.buzzedPrompt(buzzedName!)}</Text>
-                    </View>
-                    <TextInput
-                      autoCapitalize="words"
-                      onChangeText={(next) => {
-                        // Once the real length is known, block typing past it (letters only —
-                        // spaces/punctuation don't count, the player may type either).
-                        if (
-                          skeletonLengthKnown &&
-                          [...next.replace(/[^\p{L}]/gu, '')].length > skeletonLetterCount(skeletonGroups)
-                        )
-                          return;
-                        setGuessText(next);
-                      }}
-                      onSubmitEditing={submitGuess}
-                      placeholder={t.indicesGame.guessPlaceholder}
-                      placeholderTextColor={colors.textMuted}
-                      returnKeyType="done"
-                      style={[styles.guessInput, styles.guessInputFlex]}
-                      value={guessText}
-                    />
-                  </View>
-                  <Button
-                    disabled={guessText.trim().length === 0}
-                    label={t.indicesGame.submitGuess}
-                    onPress={submitGuess}
-                  />
+                  <Button label={t.indicesGame.verify} onPress={verify} />
                   <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
                 </>
-              ) : (
+              )}
+              {verified && (
                 <>
-                  <View style={styles.buzzerBadge}>
-                    <View style={[styles.buzzerBadgeDot, { backgroundColor: PLAYER_COLORS[buzzedIndex] }]} />
-                    <Text style={styles.buzzerBadgeText}>{t.indicesGame.buzzedPrompt(buzzedName!)}</Text>
+                  <Text style={styles.revealAnswer}>
+                    {t.indicesGame.wasPlace} {place.name}
+                    <Text style={styles.revealSub}>
+                      {'\n'}
+                      {place.country}
+                    </Text>
+                  </Text>
+                  <View style={styles.verdictRow}>
+                    <Pressable accessibilityRole="button" onPress={() => settle(true, buzzedIndex)} style={styles.verdictBtn}>
+                      <Text style={styles.verdictLabelCorrect}>{t.indicesGame.correct}</Text>
+                    </Pressable>
+                    <Pressable accessibilityRole="button" onPress={() => settle(false, buzzedIndex)} style={styles.verdictBtn}>
+                      <Text style={styles.verdictLabelWrong}>{t.indicesGame.wrong}</Text>
+                    </Pressable>
                   </View>
-                  {!verified && (
-                    <>
-                      <Button label={t.indicesGame.verify} onPress={verify} />
-                      <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
-                    </>
-                  )}
-                  {verified && (
-                    <>
-                      <Text style={styles.revealAnswer}>
-                        {t.indicesGame.wasPlace} {place.name}
-                        <Text style={styles.revealSub}>
-                          {'\n'}
-                          {place.country}
-                        </Text>
-                      </Text>
-                      <View style={styles.verdictRow}>
-                        <Pressable accessibilityRole="button" onPress={() => settle(true)} style={styles.verdictBtn}>
-                          <Text style={styles.verdictLabelCorrect}>{t.indicesGame.correct}</Text>
-                        </Pressable>
-                        <Pressable accessibilityRole="button" onPress={() => settle(false)} style={styles.verdictBtn}>
-                          <Text style={styles.verdictLabelWrong}>{t.indicesGame.wrong}</Text>
-                        </Pressable>
-                      </View>
-                      <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
-                    </>
-                  )}
+                  <Button label={t.indicesGame.cancel} onPress={cancelBuzz} variant="ghost" />
                 </>
               )}
             </View>
-          ) : (
+          ) : settings.answerMethod === 'spoken' ? (
             <View style={styles.buzzRow}>
               {lastWrong !== null && (
                 <Text style={[styles.resultBanner, styles.resultWrong]}>
@@ -642,6 +639,66 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
               )}
               <Button label={t.indicesGame.giveUp} onPress={giveUp} variant="ghost" />
             </View>
+          ) : (
+            // Typed mode: input + "Valider" always visible, no buzz-first step — see
+            // `validateGuess`/`attributeGuess` (the full-screen overlay lives outside `Screen`,
+            // see the bottom of this component's return).
+            <View style={styles.buzzRow}>
+              {lastWrong !== null && (
+                <Text style={[styles.resultBanner, styles.resultWrong]}>
+                  {t.indicesGame.missed(lastWrong, formatNumber(WRONG_ANSWER_PENALTY))}
+                </Text>
+              )}
+              {skeletonGroups.length > 0 && (
+                <View style={styles.skeletonRow}>
+                  {(skeletonLengthKnown ? overlayTypedLetters(skeletonGroups, guessText) : skeletonGroups).map(
+                    (group, groupIndex) => (
+                      <View key={groupIndex} style={styles.skeletonWord}>
+                        {group.map((letter, letterIndex) => (
+                          <View key={letterIndex} style={styles.skeletonSlot}>
+                            {letter !== null && (
+                              <Text
+                                style={
+                                  skeletonLengthKnown && skeletonGroups[groupIndex][letterIndex] === null
+                                    ? styles.skeletonLetterTyped
+                                    : styles.skeletonLetter
+                                }
+                              >
+                                {letter}
+                              </Text>
+                            )}
+                          </View>
+                        ))}
+                      </View>
+                    ),
+                  )}
+                </View>
+              )}
+              <TextInput
+                autoCapitalize="words"
+                onChangeText={(next) => {
+                  // Once the real length is known, block typing past it (letters only — spaces/
+                  // punctuation don't count, the player may type either).
+                  if (
+                    skeletonLengthKnown &&
+                    [...next.replace(/[^\p{L}]/gu, '')].length > skeletonLetterCount(skeletonGroups)
+                  )
+                    return;
+                  setGuessText(next);
+                }}
+                onSubmitEditing={validateGuess}
+                placeholder={t.indicesGame.guessPlaceholder}
+                placeholderTextColor={colors.textMuted}
+                returnKeyType="done"
+                style={styles.guessInput}
+                value={guessText}
+              />
+              {guessText.trim().length === 0 ? (
+                <Button label={t.indicesGame.giveUp} onPress={giveUp} variant="ghost" />
+              ) : (
+                <Button label={t.indicesGame.submitGuess} onPress={validateGuess} />
+              )}
+            </View>
           )}
         </View>
       }
@@ -669,8 +726,6 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
         </View>
       }
     >
-      {roundOver && <Text style={styles.hint}>{t.indicesGame.roundOver}</Text>}
-
       <Card>
         <View style={styles.clueGrid}>
           {INDICES_CLUE_ORDER.map((clueId) => {
@@ -695,7 +750,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
               (isPopulation && !roundOver && populationStage < 2) ||
               (isCurrency && !roundOver && currencyStage < 2) ||
               (isLocalTime && !roundOver && localTimeStage < 2) ||
-              (isLetter && !roundOver && letterStage < 3);
+              (isLetter && !roundOver && letterStage < 2);
             return (
               <IndicesClueCard
                 bearingDeg={bearing}
@@ -708,7 +763,7 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
                 flagStage={isFlag ? (roundOver ? flagMaxStage : flagStage) : undefined}
                 key={clueId}
                 label={t.indicesGame.clues[clueId]}
-                letterStage={isLetter ? (roundOver ? 3 : letterStage) : undefined}
+                letterStage={isLetter ? (roundOver ? 2 : letterStage) : undefined}
                 localTimeStage={isLocalTime ? (roundOver ? 2 : localTimeStage) : undefined}
                 moreToReveal={moreToReveal}
                 onPress={roundOver ? undefined : () => pickClue(clueId)}
@@ -732,5 +787,34 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
         </View>
       </Card>
     </Screen>
+  );
+
+  return (
+    <>
+      {screen}
+      {/* Typed mode's post-"Valider" step (see `validateGuess`): covers the whole screen (header
+          included), not just the footer, since attributing the answer matters more right now
+          than anything else on screen. */}
+      {pendingCorrect !== null && (
+        <View style={styles.attributeOverlay}>
+          {pendingCorrect && (
+            <Text style={[styles.resultBanner, styles.resultCorrect]}>{t.indicesGame.resultOk}</Text>
+          )}
+          <Text style={styles.attributePrompt}>{t.indicesGame.whoAnswered}</Text>
+          <View style={styles.attributeGrid}>
+            {playerOrder.map((index) => (
+              <Pressable
+                accessibilityRole="button"
+                key={index}
+                onPress={() => attributeGuess(index)}
+                style={[styles.attributeButton, { borderColor: PLAYER_COLORS[index] }]}
+              >
+                <Text style={styles.attributeButtonText}>{players[index]}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      )}
+    </>
   );
 };

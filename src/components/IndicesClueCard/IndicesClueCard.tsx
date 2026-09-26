@@ -56,7 +56,7 @@ const multiStageProgress = (
     case 'localTime':
       return { stage: Math.min(stages.localTimeStage ?? 1, 2), max: 2 };
     case 'letter':
-      return { stage: Math.min(stages.letterStage ?? 1, 3), max: 3 };
+      return { stage: Math.min(stages.letterStage ?? 1, 2), max: 2 };
     default:
       return undefined;
   }
@@ -169,9 +169,6 @@ const createStyles = ({ colors, radius, typography }: Theme) =>
       fontSize: fontSize.body,
       letterSpacing: 1,
       textAlign: 'center',
-    },
-    letterUnderline: {
-      textDecorationLine: 'underline',
     },
     statUnit: {
       ...typography.body,
@@ -367,24 +364,12 @@ const revealedBody = (
     }
     case 'letter': {
       const stage = letterStage ?? 1;
-      const groups = nameSkeleton(place.name, { groupByWord: stage >= 2, lengthKnown: stage >= 3 });
-      // A single-word name has nothing new to show at stage 2 (word count = 1, already implied
-      // by stage 1): the first letter gets underlined instead, so the click still feels like it
-      // did something.
-      const underlineFirst = stage === 2 && groups.length === 1;
+      const groups = nameSkeleton(place.name, { groupByWord: stage >= 2, lengthKnown: stage >= 2 });
       return (
         <View style={styles.letterRow}>
           {groups.map((group, groupIndex) => (
             <Text key={groupIndex} style={styles.letterValue}>
-              {group.map((slot, slotIndex) =>
-                groupIndex === 0 && slotIndex === 0 && underlineFirst ? (
-                  <Text key={slotIndex} style={styles.letterUnderline}>
-                    {slot}
-                  </Text>
-                ) : (
-                  (slot ?? '_')
-                ),
-              )}
+              {group.map((slot) => slot ?? '_')}
             </Text>
           ))}
         </View>
