@@ -266,6 +266,7 @@ export const TIMEZONE_CODES: Record<string, string> = {
   'Asia/Yerevan': 'iu',
   'Europe/Podgorica': 'iv',
   'Pacific/Nauru': 'iw',
+  'America/Nuuk': 'ix',
 };
 
 export const CATEGORY_BY_CODE = Object.fromEntries(
