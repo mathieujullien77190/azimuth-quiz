@@ -64,6 +64,13 @@ export default defineConfig(({ command }) => ({
     __DEV__: JSON.stringify(command !== 'build'),
     // react-native-web itself needs `global` (Node-style) defined in the browser.
     global: 'globalThis',
+    // expo-modules-core (Platform.ts) and expo's own HMR setup branch on `process.env.EXPO_OS`;
+    // Metro/babel-preset-expo normally inlines it to the target platform. Must be the literal
+    // `'web'` (not just defined) — expo/src/async-require/hmr.ts's `setup()` checks
+    // `=== 'web'` to pick its browser code path vs. the Metro-native one, which expects
+    // native-only params (`platform`/`bundleEntry`/`host`) we don't have here.
+    'process.env.EXPO_OS': JSON.stringify('web'),
+    'process.env': '{}',
   },
   optimizeDeps: {
     esbuildOptions: { resolveExtensions: WEB_FIRST_EXTENSIONS },

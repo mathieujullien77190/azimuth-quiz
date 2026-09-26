@@ -1,6 +1,6 @@
 {
   "name": "azimuth-quiz",
-  "version": "2.22.0",
+  "version": "2.22.1",
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/metro-runtime": "~57.0.16",
