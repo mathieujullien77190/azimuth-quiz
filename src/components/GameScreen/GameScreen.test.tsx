@@ -70,7 +70,6 @@ const baseGame = {
   totals: [0],
   setBearing: jest.fn(),
   setDistanceKm: jest.fn(),
-  selectPlayer: jest.fn(),
   submit: jest.fn(),
   next: jest.fn(),
   restart: jest.fn(),
@@ -179,20 +178,6 @@ describe('GameScreen — guess phase, multiplayer', () => {
     await fireEvent.press(getAllByText(/de jouer/)[1]);
     // Dismissing the popup leaves only the PlayerTabs label.
     expect(getAllByText(/de jouer/)).toHaveLength(1);
-  });
-
-  it('switching player tabs calls selectPlayer', async () => {
-    mockGame({
-      players: multiPlayers,
-      isMultiplayer: true,
-      currentPlayer: multiPlayers[0],
-      roundOrder: [0, 1],
-      answeredByPlayer: [false, false],
-      totals: [0, 0],
-    });
-    const { getByLabelText } = await render(<GameScreen onQuit={jest.fn()} />);
-    await fireEvent.press(getByLabelText('Max'));
-    expect(baseGame.selectPlayer).toHaveBeenCalledWith(1);
   });
 
   it('shows already-answered players faded on the compass/earth unless hideOtherAnswers is on', async () => {

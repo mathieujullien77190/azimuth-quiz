@@ -51,11 +51,12 @@ revelation — plus la distance est courte, plus il zoome (jusqu'a `MAX_ZOOM`).
 ## Multijoueur : onglets fixes, pas de handoff
 
 Pas d'ecran "passe le telephone" : `PlayerTabs` reste epingle en haut de `GameScreen`
-(via le `header` de `Screen`) et laisse choisir n'importe quel joueur a tout moment.
-`useGame.selectPlayer` recharge le brouillon existant si `GameSettings.allowRevision`
-est actif (reglage optionnel), sinon un onglet deja valide se verrouille. `submit()`
-avance automatiquement vers le premier joueur non repondu ; une fois tous repondus,
-calcule les scores et passe en phase `reveal`.
+(via le `header` de `Screen`), mais purement informatif — on ne peut plus taper un
+onglet pour changer de joueur (`onSelect` omis, voir `PlayerTabsProps`) ; `submit()`
+avance automatiquement vers le premier joueur non repondu, et c'est le seul moyen de
+changer de joueur. Une fois tous repondus, calcule les scores et passe en phase
+`reveal`. `PlayerTabs` reste interactif (onglet cliquable, verrouillage optionnel via
+`allowRevision`) pour Indices/Silhouette, qui ont leurs propres flux de tour par tour.
 
 ## Silhouette (jeu "Contour" en interne) : devine un pays, place des lieux
 

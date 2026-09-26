@@ -18,6 +18,12 @@ export type Translations = {
     /** Name shown as the starting point when the device's position is used. */
     yourPosition: string;
     pts: string;
+    /** Shared "nobody found it" wording (Indices' give-up, Contour's hint-tier-4 confirm) — see
+     * `components/ui/NoOneFoundText`, which picks between these two depending on player count. */
+    noOneFound: string;
+    /** Solo play only: names the one player instead of the generic "nobody" (there's no one else
+     * it could have been). */
+    soloNotFound: (name: string) => string;
   };
   /** The 8 abbreviated cardinal points, for formatBearing (e.g. "S · 173°"). */
   cardinals: CardinalLabels;
@@ -56,7 +62,6 @@ export type Translations = {
       liveCompass: { label: string; description: string };
       useGps: { label: string; description: string };
       showCountry: { label: string; description: string };
-      allowRevision: { label: string; description: string };
       hideOtherAnswers: { label: string; description: string };
     };
     /** Latitude/longitude entered by hand when "Use my position" is off. */
@@ -146,10 +151,6 @@ export type Translations = {
     pointsAtStake: (points: string) => string;
     buzz: string;
     giveUp: string;
-    /** Solo play only: names the one player instead of the generic "nobody" (there's no one
-     * else it could have been). */
-    soloNotFound: (name: string) => string;
-    noOneFound: string;
     buzzedPrompt: (name: string) => string;
     verify: string;
     cancel: string;
@@ -203,10 +204,6 @@ export type Translations = {
     /** A wrong guess, naming who it got attributed to — doesn't end anything, shown until the
      * next attempt. */
     wrongGuess: (name: string) => string;
-    /** Shown alongside the "Continuer" button once the 4th hint tier (the country's own name) is
-     * revealed: nobody scores for this part, same as the old give-up — an explicit confirm
-     * before moving on to the city phase, consistent with the rest of the app's button style. */
-    noOneGuessed: string;
     /** Instruction shown just above the Valider/Continuer button during a city step, naming the
      * place to mark and which one it is out of how many this round (1-indexed). Split around the
      * place name (rather than one interpolated string) so the component can render that name in

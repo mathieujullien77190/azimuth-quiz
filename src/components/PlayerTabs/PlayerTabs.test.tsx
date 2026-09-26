@@ -134,6 +134,16 @@ describe('PlayerTabs', () => {
     expect(getByText('✓')).toBeTruthy();
   });
 
+  it('renders purely informational tabs (no onSelect): not pressable, no accessibilityRole/state, still shows status', async () => {
+    const { getByText, queryByRole, queryAllByText } = await render(
+      <PlayerTabs activeIndex={0} answered={[false, true]} order={[0, 1]} players={players} />,
+    );
+    expect(getByText('ZO')).toBeTruthy();
+    expect(getByText('MA')).toBeTruthy();
+    expect(queryAllByText('✓')).toHaveLength(1);
+    expect(queryByRole('button')).toBeNull();
+  });
+
   it('renders using the order array rather than raw player index order', async () => {
     const { getAllByRole } = await render(
       <PlayerTabs

@@ -315,13 +315,6 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
         />
         {settings.playerNames.length > 1 && (
           <Toggle
-            {...t.setup.toggles.allowRevision}
-            onValueChange={(value) => updateSettings({ allowRevision: value })}
-            value={settings.allowRevision}
-          />
-        )}
-        {settings.playerNames.length > 1 && (
-          <Toggle
             {...t.setup.toggles.hideOtherAnswers}
             onValueChange={(value) => updateSettings({ hideOtherAnswers: value })}
             value={settings.hideOtherAnswers}

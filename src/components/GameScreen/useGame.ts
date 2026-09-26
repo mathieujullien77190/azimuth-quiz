@@ -211,24 +211,6 @@ export const useGame = () => {
     [config, origin, places, players, roundIndex],
   );
 
-  /**
-   * Switches tabs. Clicking directly on another player first submits the in-progress answer
-   * (like "Submit"), then switches to the chosen player — even if that submission just
-   * answered the last missing player, the reveal doesn't appear: you have to press
-   * "Submit" to get it.
-   */
-  const selectPlayer = useCallback(
-    (index: number) => {
-      if (index === activePlayerIndex) return;
-      const locked = guessesByPlayer[index] !== undefined && !config.allowRevision;
-      if (locked) return;
-
-      commitActiveGuess();
-      setActivePlayerIndex(index);
-    },
-    [activePlayerIndex, commitActiveGuess, config.allowRevision, guessesByPlayer],
-  );
-
   /** "Submit" button: the only path that reveals the answer, once everyone has answered. */
   const submit = useCallback(() => {
     const { updated, complete } = commitActiveGuess();
@@ -277,7 +259,6 @@ export const useGame = () => {
     totals: playerTotals(records, players.length),
     setBearing,
     setDistanceKm,
-    selectPlayer,
     submit,
     next,
     restart: start,

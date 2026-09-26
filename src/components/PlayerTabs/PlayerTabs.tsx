@@ -111,7 +111,31 @@ export const PlayerTabs = memo(function PlayerTabs({
         const player = players[index];
         const isActive = index === activeIndex;
         const isAnswered = answered[index] === true;
-        const locked = isTabLocked(isActive, isAnswered, allowRevision);
+        const locked = onSelect !== undefined && isTabLocked(isActive, isAnswered, allowRevision ?? false);
+
+        const content = (
+          <>
+            <View style={[styles.dot, compact && styles.dotCompact, { backgroundColor: player.color }]} />
+            <Text style={[styles.label, compact && styles.labelCompact, isActive && styles.labelActive]}>
+              {isActive && activeLabel ? activeLabel(player.name) : initials(player.name)}
+            </Text>
+            {isAnswered && (
+              <Text style={[styles.check, compact && styles.checkCompact, isActive && styles.checkActive]}>
+                {CHECK_MARK}
+              </Text>
+            )}
+          </>
+        );
+
+        // No `onSelect`: purely informational, a plain (non-pressable) tab — see this prop's own
+        // doc comment.
+        if (onSelect === undefined) {
+          return (
+            <View key={player.name + index} style={[styles.tab, compact && styles.tabCompact, isActive && styles.active]}>
+              {content}
+            </View>
+          );
+        }
 
         return (
           <Pressable
@@ -123,15 +147,7 @@ export const PlayerTabs = memo(function PlayerTabs({
             onPress={() => onSelect(index)}
             style={[styles.tab, compact && styles.tabCompact, isActive && styles.active, locked && styles.locked]}
           >
-            <View style={[styles.dot, compact && styles.dotCompact, { backgroundColor: player.color }]} />
-            <Text style={[styles.label, compact && styles.labelCompact, isActive && styles.labelActive]}>
-              {isActive && activeLabel ? activeLabel(player.name) : initials(player.name)}
-            </Text>
-            {isAnswered && (
-              <Text style={[styles.check, compact && styles.checkCompact, isActive && styles.checkActive]}>
-                {CHECK_MARK}
-              </Text>
-            )}
+            {content}
           </Pressable>
         );
       })}

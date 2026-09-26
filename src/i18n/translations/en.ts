@@ -4,6 +4,8 @@ export const en: Translations = {
   common: {
     yourPosition: 'your location',
     pts: 'pts',
+    noOneFound: 'No one found it — 0 points.',
+    soloNotFound: (name) => `${name} didn’t find it — 0 points.`,
   },
   cardinals: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
   compassWestLabel: 'W',
@@ -85,10 +87,6 @@ export const en: Translations = {
       showCountry: {
         label: 'Country hint',
         description: 'Shows the country under the place name.',
-      },
-      allowRevision: {
-        label: 'Edit after submitting',
-        description: 'Allows changing a player’s already-submitted answer, before the reveal.',
       },
       hideOtherAnswers: {
         label: 'Hide other answers',
@@ -186,8 +184,6 @@ export const en: Translations = {
     pointsAtStake: (points) => `${points} pts at stake`,
     buzz: '🔔 I know it!',
     giveUp: '🤷 No idea',
-    soloNotFound: (name) => `${name} didn’t find it — 0 points.`,
-    noOneFound: 'No one found it — 0 points.',
     buzzedPrompt: (name) => `${name} buzzes`,
     verify: 'Verify',
     cancel: 'Cancel',
@@ -246,7 +242,6 @@ export const en: Translations = {
     resultNotOk: 'Wrong answer.',
     whoAnswered: 'Who answered?',
     wrongGuess: (name) => `${name} loses 50 points.`,
-    noOneGuessed: 'Nobody found it — 0 points.',
     cityHint: {
       prefix: (placeNumber, totalPlaces) => `Place ${placeNumber}/${totalPlaces}: mark `,
       suffix: ' on the map.',

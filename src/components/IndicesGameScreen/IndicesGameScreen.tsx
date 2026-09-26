@@ -13,6 +13,7 @@ import IndicesClueCard from '../IndicesClueCard';
 import PlayerTabs from '../PlayerTabs';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
+import NoOneFoundText from '../ui/NoOneFoundText';
 import RoundProgress from '../ui/RoundProgress';
 import Screen from '../ui/Screen';
 import { WRONG_ANSWER_PENALTY } from './constants';
@@ -238,16 +239,16 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       fontSize: fontSize.body,
     },
     // Typed mode's post-"Valider" step: covers the entire screen (see the component's own
-    // return, rendered as a sibling of `Screen` rather than inside its footer). Half-transparent
-    // (hex alpha suffix, same trick as ContourGameScreen's own overlays) so the board/round behind
-    // stays dimly visible rather than fully hidden.
+    // return, rendered as a sibling of `Screen` rather than inside its footer). Mostly opaque
+    // (hex alpha suffix, same trick as ContourGameScreen's own overlays), just enough transparency
+    // to hint the board/round is still there behind it.
     attributeOverlay: {
       position: 'absolute',
       top: 0,
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: `${colors.background}80`,
+      backgroundColor: `${colors.background}E6`,
       alignItems: 'center',
       justifyContent: 'center',
       gap: spacing.lg,
@@ -555,13 +556,13 @@ export const IndicesGameScreen = ({ onQuit }: IndicesGameScreenProps) => {
               <Text style={[styles.resultBanner, verdict === 'correct' ? styles.resultCorrect : styles.resultWrong]}>
                 {/* buzzedName is always defined for 'correct'/'wrong' (settle requires buzzedIndex
                     to be known). */}
-                {verdict === 'correct'
-                  ? t.indicesGame.scored(buzzedName!, formatNumber(remaining))
-                  : verdict === 'wrong'
-                    ? t.indicesGame.missed(buzzedName!, formatNumber(WRONG_ANSWER_PENALTY))
-                    : players.length === 1
-                      ? t.indicesGame.soloNotFound(players[0])
-                      : t.indicesGame.noOneFound}
+                {verdict === 'correct' ? (
+                  t.indicesGame.scored(buzzedName!, formatNumber(remaining))
+                ) : verdict === 'wrong' ? (
+                  t.indicesGame.missed(buzzedName!, formatNumber(WRONG_ANSWER_PENALTY))
+                ) : (
+                  <NoOneFoundText players={players} />
+                )}
               </Text>
               <Text style={styles.revealAnswer}>
                 {t.indicesGame.wasPlace} {place.name}

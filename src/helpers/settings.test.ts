@@ -76,10 +76,9 @@ describe('sanitizeSettings', () => {
   });
 
   it('keeps boolean flags when present, falls back to defaults for non-booleans', () => {
-    const result = sanitizeSettings({ useGps: false, showCountry: 'yes', allowRevision: true, hideOtherAnswers: 1 });
+    const result = sanitizeSettings({ useGps: false, showCountry: 'yes', hideOtherAnswers: 1 });
     expect(result.useGps).toBe(false);
     expect(result.showCountry).toBe(DEFAULT_SETTINGS.showCountry);
-    expect(result.allowRevision).toBe(true);
     expect(result.hideOtherAnswers).toBe(DEFAULT_SETTINGS.hideOtherAnswers);
   });
 

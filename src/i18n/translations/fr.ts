@@ -4,6 +4,8 @@ export const fr: Translations = {
   common: {
     yourPosition: 'ta position',
     pts: 'pts',
+    noOneFound: 'Personne n’a trouvé — 0 point.',
+    soloNotFound: (name) => `${name} n’a pas trouvé — 0 point.`,
   },
   cardinals: ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'],
   compassWestLabel: 'O',
@@ -85,10 +87,6 @@ export const fr: Translations = {
       showCountry: {
         label: 'Aide pays',
         description: 'Affiche le pays sous le nom du lieu.',
-      },
-      allowRevision: {
-        label: 'Modifier après validation',
-        description: 'Autorise à revenir sur la réponse déjà validée d’un joueur, avant la révélation.',
       },
       hideOtherAnswers: {
         label: 'Cacher les réponses des autres',
@@ -187,8 +185,6 @@ export const fr: Translations = {
     pointsAtStake: (points) => `${points} pts en jeu`,
     buzz: '🔔 J’ai trouvé !',
     giveUp: '🤷 Je ne sais pas',
-    soloNotFound: (name) => `${name} n’a pas trouvé — 0 point.`,
-    noOneFound: 'Personne n’a trouvé — 0 point.',
     buzzedPrompt: (name) => `${name} buzze`,
     verify: 'Vérifier',
     cancel: 'Annuler',
@@ -247,7 +243,6 @@ export const fr: Translations = {
     resultNotOk: 'Mauvaise réponse.',
     whoAnswered: 'Qui a répondu ?',
     wrongGuess: (name) => `${name} perd 50 points.`,
-    noOneGuessed: 'Personne n’a trouvé — 0 point.',
     cityHint: {
       prefix: (placeNumber, totalPlaces) => `Lieu ${placeNumber}/${totalPlaces} : place `,
       suffix: ' sur la carte.',

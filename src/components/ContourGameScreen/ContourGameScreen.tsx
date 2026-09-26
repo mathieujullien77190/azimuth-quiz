@@ -30,11 +30,11 @@ import ContourBoard, {
   type ContourBoardHintLabel,
   type ContourBoardMarker,
 } from '../ContourBoard';
-import Legend from '../Legend';
 import PlayerTabs from '../PlayerTabs';
 import ThemeBackdrop from '../ThemeBackdrop';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
+import NoOneFoundText from '../ui/NoOneFoundText';
 import RoundProgress from '../ui/RoundProgress';
 import Screen from '../ui/Screen';
 import { BOARD_AREA_MARGIN, INITIAL_BOARD_MAX_SIZE } from './constants';
@@ -108,6 +108,12 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
     cityFooter: {
       gap: spacing.sm,
     },
+    // 'reveal' phase's own footer: score alongside the "Manche suivante"/"Voir le score" button,
+    // rather than up in the header next to "Quitter" (see `Screen`'s `footer` prop below).
+    revealFooter: {
+      gap: spacing.sm,
+      alignItems: 'center',
+    },
     topBar: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -174,6 +180,7 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       color: colors.textMuted,
       fontSize: fontSize.subtitle,
       textAlign: 'center',
+      marginVertical: spacing.sm,
     },
     // The place name itself, singled out in `colors.text` (full contrast, unlike the muted
     // instruction around it) and bold, so it's the one word that jumps out at a glance.
@@ -197,14 +204,9 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       justifyContent: 'center',
     },
     // Frames the board's exact touch/drawable rectangle: no explicit width/height on purpose, so
-    // it shrink-wraps ContourBoard's own `width` x `height` View exactly (the border sits around
-    // it, not eating into it) — otherwise the interactive zone isn't visually obvious against the
-    // surrounding Card.
+    // it shrink-wraps ContourBoard's own `width` x `height` View exactly.
     boardFrame: {
       alignSelf: 'center',
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      borderRadius: radius.md,
     },
     // City phase only: the target country's own flag/name, floating over the board itself (the
     // header shows the player list instead, see the 'city' branch of `overlayTop`) — `top` is
@@ -218,8 +220,6 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       paddingVertical: spacing.xs,
       borderRadius: radius.md,
       backgroundColor: isDark ? `${colors.surfaceHigh}F0` : `${colors.surface}F0`,
-      borderWidth: 1,
-      borderColor: colors.border,
     },
     resultsList: {
       gap: spacing.sm,
@@ -311,15 +311,15 @@ const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       color: colors.success,
     },
     // Post-"Valider" step (see `validateGuess`/`pendingCorrect`): covers the entire screen, same
-    // pattern as IndicesGameScreen's own attribution overlay — half-transparent (hex alpha suffix)
-    // so the board/hints behind stay dimly visible rather than fully hidden.
+    // pattern as IndicesGameScreen's own attribution overlay — mostly opaque (hex alpha suffix),
+    // just enough transparency to hint the board/hints are still there behind it.
     attributeOverlay: {
       position: 'absolute',
       top: 0,
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: `${colors.background}80`,
+      backgroundColor: `${colors.background}E6`,
       alignItems: 'center',
       justifyContent: 'center',
       gap: spacing.lg,
@@ -771,10 +771,6 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
           ? ''
           : `${formatNumber(totals[0])} ${t.common.pts}`;
 
-  const legendItems = isMultiplayer
-    ? [...players.map((name, index) => ({ label: name, color: PLAYER_COLORS[index] })), { label: t.game.reality, color: colors.truth, ring: true }]
-    : [{ label: t.game.yourAnswer, color: PLAYER_COLORS[0] }, { label: t.game.reality, color: colors.truth, ring: true }];
-
   // Points a correct guess would earn right now: drops one tier (CONTOUR_GUESS_POINTS_BY_HINTS)
   // each time "Indice" is pressed, down to 0 once tier 4 (the give-up) is revealed.
   const currentGuessPoints = hintsRevealed >= 4 ? 0 : CONTOUR_GUESS_POINTS_BY_HINTS[hintsRevealed];
@@ -947,7 +943,7 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
           {phase === 'guess' ? (
             hintsRevealed >= 4 ? (
               <View style={styles.guessFooter}>
-                <Text style={styles.hint}>{t.contourGame.noOneGuessed}</Text>
+                <NoOneFoundText players={players} />
                 <Button label={t.contourGame.continueLabel} onPress={confirmNoGuess} />
               </View>
             ) : (
@@ -979,7 +975,6 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
             )
           ) : (
             <View style={styles.cityFooter}>
-              {placeComplete && <Legend items={legendItems} />}
               {activePlace && (
                 <Text style={styles.cityHint}>
                   {t.contourGame.cityHint.prefix(placeIndex + 1, board.places.length)}
@@ -1026,14 +1021,18 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
 
   return (
     <Screen
-      footer={<Button label={isLastRound ? t.game.last : t.game.next} onPress={next} />}
+      footer={
+        <View style={styles.revealFooter}>
+          <Text style={styles.score}>{scoreLabel}</Text>
+          <Button label={isLastRound ? t.game.last : t.game.next} onPress={next} />
+        </View>
+      }
       header={
         <View style={styles.header}>
           <View style={styles.topBar}>
             <Pressable accessibilityRole="button" hitSlop={12} onPress={onQuit}>
               <Text style={styles.quit}>{t.game.quit}</Text>
             </Pressable>
-            <Text style={styles.score}>{scoreLabel}</Text>
           </View>
           <RoundProgress difficulties={[settings.difficulty]} roundNumber={roundIndex + 1} totalRounds={settings.rounds} />
         </View>

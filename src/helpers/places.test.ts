@@ -91,7 +91,6 @@ describe('pickPlaces', () => {
     customLongitude: 2.3522,
     liveCompass: false,
     showCountry: false,
-    allowRevision: false,
     hideOtherAnswers: false,
   };
 

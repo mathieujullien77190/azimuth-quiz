@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -196,20 +196,6 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
   const scrollRef = useRef<ScrollView>(null);
   const goToCap = () => scrollRef.current?.scrollToEnd({ animated: true });
   const goToDistance = () => scrollRef.current?.scrollTo({ animated: true, y: 0 });
-  // Switching players scrolls back to the top: otherwise we'd stay scrolled on the previous
-  // player's heading/distance, which no longer makes sense for the new one.
-  // useCallback: passed to PlayerTabs (memoized) as onSelect — a stable reference lets it bail
-  // out of re-rendering on every compass-drag tick (see Compass.tsx's dedup guard). Destructured
-  // out of `game` (a fresh object every render) rather than depended on as `game.selectPlayer`,
-  // which the lint rule can't verify is itself stable.
-  const { selectPlayer: gameSelectPlayer } = game;
-  const selectPlayer = useCallback(
-    (index: number) => {
-      scrollRef.current?.scrollTo({ animated: true, y: 0 });
-      gameSelectPlayer(index);
-    },
-    [gameSelectPlayer],
-  );
   // "Submit" moves to the next player (or reveals if it was the last one): either way we
   // scroll back to the top instead of staying scrolled on the previous player's heading/distance.
   const submit = () => {
@@ -353,9 +339,7 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
               <PlayerTabs
                 activeIndex={game.activePlayerIndex}
                 activeLabel={t.game.playerTurn}
-                allowRevision={game.config.allowRevision}
                 answered={game.answeredByPlayer}
-                onSelect={selectPlayer}
                 order={game.roundOrder}
                 players={game.players}
               />

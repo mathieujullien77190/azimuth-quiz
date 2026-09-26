@@ -159,57 +159,6 @@ describe('useGame — solo round flow', () => {
 });
 
 describe('useGame — multiplayer', () => {
-  it('selectPlayer commits the active draft and switches without revealing, even once everyone has answered', async () => {
-    mockSettings({ playerNames: ['Zoé', 'Max'], allowRevision: true });
-    const { result } = await renderHook(() => useGame());
-    await waitFor(() => expect(result.current.phase).toBe('guess'));
-    expect(result.current.isMultiplayer).toBe(true);
-    const first = result.current.activePlayerIndex;
-    const second = first === 0 ? 1 : 0;
-
-    await act(() => result.current.setBearing(30));
-    await act(() => result.current.setDistanceKm(300));
-    await act(() => result.current.selectPlayer(second));
-    expect(result.current.activePlayerIndex).toBe(second);
-    expect(result.current.answeredByPlayer[first]).toBe(true);
-    expect(result.current.phase).toBe('guess');
-
-    await act(() => result.current.setBearing(60));
-    await act(() => result.current.setDistanceKm(600));
-    // Switching back to an already-answered player, even the last missing one, must not reveal.
-    await act(() => result.current.selectPlayer(first));
-    expect(result.current.phase).toBe('guess');
-
-    await act(() => result.current.submit());
-    expect(result.current.phase).toBe('reveal');
-  });
-
-  it('selecting the currently active player again is a no-op', async () => {
-    mockSettings({ playerNames: ['Zoé', 'Max'] });
-    const { result } = await renderHook(() => useGame());
-    await waitFor(() => expect(result.current.phase).toBe('guess'));
-    const active = result.current.activePlayerIndex;
-
-    await act(() => result.current.selectPlayer(active));
-    expect(result.current.activePlayerIndex).toBe(active);
-  });
-
-  it('locks an already-answered tab when allowRevision is off', async () => {
-    mockSettings({ playerNames: ['Zoé', 'Max'], allowRevision: false });
-    const { result } = await renderHook(() => useGame());
-    await waitFor(() => expect(result.current.phase).toBe('guess'));
-    const first = result.current.activePlayerIndex;
-    const second = first === 0 ? 1 : 0;
-
-    await act(() => result.current.selectPlayer(second));
-    expect(result.current.activePlayerIndex).toBe(second);
-
-    // Player `first` has already answered (a blank draft still counts as an answer) and
-    // revisions are disallowed: switching back to them must be refused.
-    await act(() => result.current.selectPlayer(first));
-    expect(result.current.activePlayerIndex).toBe(second);
-  });
-
   it('submit moves to the first unanswered player instead of revealing while some are missing', async () => {
     mockSettings({ playerNames: ['Zoé', 'Max', 'Alex'] });
     const { result } = await renderHook(() => useGame());

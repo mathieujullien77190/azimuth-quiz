@@ -22,10 +22,9 @@ const renderSetup = async (overrides: Partial<GameSettings> = {}, ready = true) 
 };
 
 describe('SetupScreen — defaults', () => {
-  it('renders the title and does not show revision/hide-answers toggles nor custom origin with one player + GPS on', async () => {
+  it('renders the title and does not show the hide-answers toggle nor custom origin with one player + GPS on', async () => {
     const { getByText, queryByLabelText } = await renderSetup();
     expect(getByText('Nouvelle partie')).toBeTruthy();
-    expect(queryByLabelText('Modifier après validation')).toBeNull();
     expect(queryByLabelText('Cacher les réponses des autres')).toBeNull();
   });
 
@@ -48,10 +47,8 @@ describe('SetupScreen — defaults', () => {
 });
 
 describe('SetupScreen — multiplayer-only toggles', () => {
-  it('shows and wires allowRevision and hideOtherAnswers with 2+ players', async () => {
+  it('shows and wires hideOtherAnswers with 2+ players', async () => {
     const { getByLabelText, updateSettings } = await renderSetup({ playerNames: ['A', 'B'] });
-    await fireEvent(getByLabelText('Modifier après validation'), 'valueChange', false);
-    expect(updateSettings).toHaveBeenCalledWith({ allowRevision: false });
     await fireEvent(getByLabelText('Cacher les réponses des autres'), 'valueChange', true);
     expect(updateSettings).toHaveBeenCalledWith({ hideOtherAnswers: true });
   });

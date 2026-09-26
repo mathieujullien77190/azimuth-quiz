@@ -122,8 +122,6 @@ export type GameSettings = {
   liveCompass: boolean;
   /** Shows the country under the place's name. */
   showCountry: boolean;
-  /** Allows going back to edit a player's already-submitted answer, before the reveal. */
-  allowRevision: boolean;
   /** During the round, only shows your own arrow/estimate, never the ones already submitted
    * by other players (which remain normally visible on reveal). */
   hideOtherAnswers: boolean;
