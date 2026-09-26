@@ -80,21 +80,24 @@ voir `BOARD_PADDING_RATIO`/`HINT_STACK_GAP_RATIO` (`components/ContourBoard/cons
 en fraction de `Math.min(width, height)` plutot qu'en pixels fixes, meme raison.
 
 Paliers d'indices (`ContourGameScreen.tsx`, bouton "Indice", inline dans le footer a
-cote de l'input) : 1) icone (drapeau ou 🐟/🐳) de chaque voisin, 2) son nom empile juste
-en dessous (les deux restent affiches ensemble, l'un ne remplace plus l'autre), 3)
-drapeau du pays cible a son propre point curee (`ContourCountry.centerLabel`), 4) son
-nom empile sous le drapeau (= abandon). Toujours centre (`textAnchor="middle"` fixe dans
+cote de l'input) : 1) drapeau de chaque voisin, 2) drapeau du pays cible
+a son propre point curee (`ContourCountry.centerLabel`), 3) nom de chaque voisin empile
+juste sous son icone (les deux restent affiches ensemble, l'un ne remplace plus l'autre),
+4) nom du pays cible empile sous son drapeau (= abandon). Toujours centre (`textAnchor="middle"` fixe dans
 `ContourBoard.tsx`) : l'ancien alignement directionnel `start`/`end` n'avait plus de sens
 des que chaque hint est devenu un point fixe plutot qu'une etiquette pointant vers le bord.
 
 Flux de reponse (footer toujours visible en phase `'guess'`, pas de "buzz" prealable) :
-input + bouton Valider ; valider vérifie le texte, affiche "Bonne/Mauvaise reponse" puis
-demande d'attribuer la reponse a un joueur via `PlayerTabs` (meme ligne que le texte) —
-bonne reponse marque des points degressifs selon le palier
-(`CONTOUR_GUESS_POINTS_BY_HINTS = [500, 375, 250, 125]`, `constants/contour.ts`),
-mauvaise reponse deduit `CONTOUR_WRONG_GUESS_PENALTY` (50 points fixes) au joueur designe
-et rouvre l'input au meme palier. Un abandon (palier 4 confirme) ne rapporte ni ne
-penalise personne.
+input + bouton Valider ; valider verifie le texte puis ouvre un overlay plein ecran
+("Bonne/Mauvaise reponse" + grille de boutons joueurs, meme composant/pattern que
+`IndicesGameScreen`'s propre overlay d'attribution — fond semi-transparent, ne masque
+pas completement le plateau derriere) pour designer qui a repondu — contrairement a
+Indices, les DEUX issues (bonne et mauvaise) passent par cet overlay puisque la
+penalite doit toujours etre attribuee a quelqu'un. Bonne reponse marque des points
+degressifs selon le palier (`CONTOUR_GUESS_POINTS_BY_HINTS = [500, 375, 250, 125]`,
+`constants/contour.ts`), mauvaise reponse deduit `CONTOUR_WRONG_GUESS_PENALTY` (50
+points fixes) au joueur designe et rouvre l'input au meme palier. Un abandon (palier 4
+confirme) ne rapporte ni ne penalise personne.
 
 Deux filtres par difficulte, meme enum `Difficulty` que Boussole/Indices mais choix
 unique (`ContourSettings.difficulty`, pas de multi-select) : le pays du tour
@@ -105,10 +108,12 @@ pour tous les autres, y compris tous les pays generes automatiquement ; delibere
 desequilibre, ne pas tenter de rectifier sans demande explicite) et les lieux de la
 phase 'city'
 (`Place.difficulty`, filtre en plus du `code` pays et de la categorie dans
-`randomPlacesFor` — categorie `kids` toujours exclue, et `CONTOUR_EXCLUDED_PLACES`,
-`constants/contours/excludedPlaces.ts`, exclut a la main certains lieux de Silhouette
-uniquement sans toucher a Boussole/Indices ; un pays peut n'avoir aucun lieu a un palier
-donne, la phase 'city' se raccourcit ou saute alors silencieusement). Sur la revelation,
+`randomPlacesFor` — categorie `kids` toujours exclue, et `Place.excludeFromContour`
+(4e element optionnel de chaque entree de `places.json`, sa propre petite array `[true]`
+au meme niveau que `boussole`/`indices` plutot qu'un champ dans `common` — voir `ContourRow`,
+`constants/places/codec.ts`) exclut a la main certains lieux de Silhouette uniquement sans
+toucher a Boussole/Indices ; un pays peut n'avoir aucun lieu a un palier donne, la phase
+'city' se raccourcit ou saute alors silencieusement). Sur la revelation,
 un lieu de categorie capital/mountains/landmarks/nature affiche l'emoji de sa categorie
 a la place du point jaune uni (`placeEmoji`, `ContourGameScreen/helpers.ts`) ;
 cities/citiesFr gardent le point jaune classique.
@@ -119,18 +124,15 @@ donnee — et `excludedPlaces.ts`, sans rapport) ; tout vit desormais comme un 7
 optionnel `contour` sur la ligne du pays concerne dans `constants/places/countries.json`
 (type `ContourDataRow`, voir `src/types/index.ts` et `CountryRow`) — absent pour la
 grande majorite des pays, qui restent un tableau a 6 elements sans padding. Les voisins
-de type pays (`{ type: 'country', code, x, y }`) sont pour la plupart generes
-automatiquement par `scripts/generateContours.mjs` (`npm run generate:contours`, outil
-dev uniquement, hors `npm test`/CI/l'app livree — adjacence reelle + centroide via
-`world-countries`, position projetee sur le plateau du pays puis ramenee au bord via un
-clamp directionnel, voir le script pour le detail) ; seuls les 8 pays d'origine
-(DE/ES/FR/GR/IE/IT/NO/PT) gardent des positions ajustees a la main. Les voisins de type
-mer/ocean (`{ type: 'sea', kind, fr, en, x, y }`) restent purement curee a la main :
-absents pour tout pays genere automatiquement (a completer manuellement via l'admin plus
-tard si besoin), presents seulement pour les 8 pays d'origine — `kind: 'sea' | 'ocean'`
-choisit l'icone (🐟 ou 🐳, `neighborIcon` dans `ContourGameScreen/helpers.ts`). Un meme
-voisin peut avoir une position differente selon le pays qui le cite (pas de table globale
-par code) : chaque `ContourCountry.neighbors` est propre a son pays.
+(`{ type: 'country', code, x, y }` — uniquement des pays, plus de voisin mer/ocean : ca
+compliquait tout pour peu d'apport, retire) sont pour la plupart generes automatiquement
+par `scripts/generateContours.mjs` (`npm run generate:contours`, outil dev uniquement,
+hors `npm test`/CI/l'app livree — adjacence reelle + centroide via `world-countries`,
+position projetee sur le plateau du pays puis ramenee au bord via un clamp directionnel,
+voir le script pour le detail) ; seuls les 8 pays d'origine (DE/ES/FR/GR/IE/IT/NO/PT)
+gardent des positions ajustees a la main. Un meme voisin peut avoir une position
+differente selon le pays qui le cite (pas de table globale par code) : chaque
+`ContourCountry.neighbors` est propre a son pays.
 
 La phase `'reveal'` fige la geometrie du round dans son propre `ContourRoundRecord`
 (`width`/`height`/`outline`, en plus des positions deja en pixels) et la reaffiche telle
@@ -175,6 +177,14 @@ qui flottent par-dessus en `position: 'absolute'` (`overlayTop`/`overlayBottom`,
 `${colors.surfaceHigh}F0`) plutot que de reserver leur propre espace — pour que le
 contour du pays touche les bords de l'ecran. La phase `'reveal'` repasse par `Screen`
 classique (elle affiche un tableau de resultats sous le plateau).
+
+En phase `'city'` specifiquement, `overlayTop` affiche `PlayerTabs` (liste des joueurs,
+tour par tour) a la place du prompt de la phase `'guess'` ; le drapeau/nom du pays cible
+ne sont plus dans `overlayTop` mais flottent directement sur le plateau
+(`boardCountryBadge`, position absolue dans `fullBleedBoardArea`, `top` recale sur la
+hauteur live d'`overlayTop` pour ne jamais passer dessous) ; et `cityHint` (le lieu a
+trouver, ex. "Lieu 2/3 : place Paris sur la carte") est descendu dans `overlayBottom`,
+juste au-dessus du bouton Valider/Continuer plutot qu'en haut a cote du nom du pays.
 
 ## Theme
 

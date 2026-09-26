@@ -2,13 +2,16 @@
 
 🔗 **[Jouer dans le navigateur](https://mathieujullien77190.github.io/azimuth-quiz/)**
 
-Deux jeux de géographie, choisis depuis l'écran d'accueil :
+Trois jeux de géographie, choisis depuis l'écran d'accueil :
 
 - **Boussole** : un lieu du monde s'affiche (ville, montagne, monument ou site
   naturel) — oriente la boussole vers lui et estime la distance depuis ton point de
   départ (ta position GPS, ou Paris par défaut).
 - **Indices** : devine une ville à partir d'indices qui se révèlent progressivement
   (drapeau, population, monnaie, description...).
+- **Silhouette** : la silhouette d'un pays s'affiche — devine lequel grâce à des
+  indices partagés (drapeaux et noms des pays voisins), puis place des lieux connus
+  sur sa carte une fois révélée.
 
 De 1 à 6 joueurs sur le même téléphone, chacun son tour, jusqu'à 20 manches.
 
@@ -22,6 +25,9 @@ De 1 à 6 joueurs sur le même téléphone, chacun son tour, jusqu'à 20 manches
 - **Indices progressifs** : drapeau, position, population, monnaie, indicatif
   téléphonique et description se dévoilent au fil des manches, avec pénalité
   partagée en cas d'erreur.
+- **Silhouette** : ~150 pays disponibles, indices en paliers (drapeaux puis noms des
+  voisins), points dégressifs selon le nombre d'indices révélés avant la bonne
+  réponse.
 - **Multijoueur (jusqu'à 6)** : un sélecteur de joueurs fixe en haut de l'écran
   permet de répondre dans l'ordre voulu, avec une option pour revenir modifier une
   réponse déjà validée avant la révélation.
