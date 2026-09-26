@@ -810,3 +810,71 @@ footer {
     font-size: 17px;
   }
 }
+
+/* --- Component gallery (ComponentGalleryView) --- */
+
+.gallery-group {
+  margin: 16px 0 32px;
+}
+
+.gallery-group-title {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.2px;
+}
+
+.gallery-group-hint {
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.gallery-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.gallery-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+
+.gallery-item-label {
+  margin: 0 0 12px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.gallery-item-body {
+  /* react-native-web's <View> only honors `flex: 1` when its parent is itself a flex container
+     with a real height (see Screen/ScrollView, both flex:1 top to bottom) — this wrapper supplies
+     both, so Screen previews actually get a visible height instead of collapsing to 0. */
+  display: flex;
+}
+
+.gallery-item-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.gallery-item-note {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.gallery-backdrop-frame {
+  position: relative;
+  height: 160px;
+  overflow: hidden;
+  border-radius: 12px;
+}

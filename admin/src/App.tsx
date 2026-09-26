@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react';
 import appConfig from '../../app.json';
 
 import { clearChangelog, useChangelog } from './changelog';
+import { ComponentGalleryView } from './views/ComponentGalleryView';
 import { CountriesView } from './views/CountriesView';
 import { PlacesView } from './views/PlacesView';
 
-type Tab = 'places' | 'countries';
+type Tab = 'places' | 'countries' | 'gallery';
 
 const ChangelogPanel = () => {
   const lines = useChangelog();
@@ -72,13 +73,20 @@ export const App = () => {
             <button type="button" className="chip game-chip" aria-pressed={tab === 'countries'} onClick={() => setTab('countries')}>
               Pays
             </button>
+            <button type="button" className="chip game-chip" aria-pressed={tab === 'gallery'} onClick={() => setTab('gallery')}>
+              Composants
+            </button>
           </div>
         </div>
       </header>
 
-      <ChangelogPanel />
+      {/* No changes ever come out of the gallery tab (it only renders real components against
+          static fixtures, see ComponentGalleryView) — nothing for the journal to ever show there. */}
+      {tab !== 'gallery' && <ChangelogPanel />}
 
-      {tab === 'places' ? <PlacesView /> : <CountriesView />}
+      {tab === 'places' && <PlacesView />}
+      {tab === 'countries' && <CountriesView />}
+      {tab === 'gallery' && <ComponentGalleryView />}
     </div>
   );
 };
