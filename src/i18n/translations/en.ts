@@ -173,7 +173,7 @@ export const en: Translations = {
     clearData: 'Clear data',
     dataCleared: 'Data cleared.',
   },
-  indicesSetup: {
+  cluesSetup: {
     screenTitle: 'Clues',
     back: 'Back',
     start: 'Start game',
@@ -197,7 +197,7 @@ export const en: Translations = {
       },
     },
   },
-  indicesGame: {
+  cluesGame: {
     pointsAtStake: (points) => `${points} pts at stake`,
     buzz: '🔔 I know it!',
     giveUp: '🤷 No idea',

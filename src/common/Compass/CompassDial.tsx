@@ -10,7 +10,7 @@ import { needlePoints, polarToPoint } from './helpers';
 import type { CompassDialProps } from './types';
 
 /**
- * Le dessin de la boussole (cadran + aiguilles), oriente nord en haut.
+ * Le dessin de la compass (cadran + aiguilles), oriente nord en haut.
  * Memoise : quand le capteur fait tourner le cadran, seul le conteneur change.
  * Le cadran statique (graduations, lettres cardinales) est isole dans `CompassFace`, memoise
  * separement sur des props qui ne changent pas pendant un drag — voir ce fichier.

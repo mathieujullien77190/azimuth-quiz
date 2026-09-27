@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, G, Line, Path, RadialGradient, Stop, Text as SvgText } from 'react-native-svg';
 
-import { fontSize, spacing } from '@/constants';
+import { fontSize, spacing } from '@/data';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
@@ -165,8 +165,8 @@ export const EarthSection = ({
   const center: Point = { x: player.x, y: player.y + radius };
   const horizonReach = Math.min(radius * 1.15, size * 0.32);
 
-  // Orbiting satellite, just for fun: only when `allowSatellite` (Boussole reveal,
-  // or the always-revealed mini-Earth of Indices' "Distance" clue), zoomed out to
+  // Orbiting satellite, just for fun: only when `allowSatellite` (Compass reveal,
+  // or the always-revealed mini-Earth of Clues' "Distance" clue), zoomed out to
   // the real scale (zoom 1, otherwise off-screen or grotesque) — regardless of the mode.
   const showSatellite = allowSatellite && zoom === 1;
   const satelliteAngle = useRef(new Animated.Value(0)).current;

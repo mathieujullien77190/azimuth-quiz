@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import { spacing } from '@/constants';
+import { spacing } from '@/data';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 

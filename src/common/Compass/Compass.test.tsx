@@ -19,7 +19,7 @@ beforeEach(() => {
 describe('Compass — decorative (no onChange)', () => {
   it('is accessible as an image and exposes no gesture handlers', async () => {
     const { getByLabelText } = await render(<Compass bearing={90} size={200} />);
-    const view = getByLabelText('Boussole');
+    const view = getByLabelText('Compass');
     expect(view.props.accessibilityRole).toBe('image');
     expect(view.props.onStartShouldSetResponder).toBeUndefined();
   });
@@ -37,7 +37,7 @@ describe('Compass — decorative (no onChange)', () => {
 describe('Compass — interactive (onChange provided)', () => {
   it('is accessible as adjustable', async () => {
     const { getByLabelText } = await render(<Compass bearing={null} onChange={jest.fn()} size={200} />);
-    expect(getByLabelText('Boussole').props.accessibilityRole).toBe('adjustable');
+    expect(getByLabelText('Compass').props.accessibilityRole).toBe('adjustable');
   });
 
   it('reports the bearing under the touch, and arms the sensor on first contact', async () => {
@@ -111,21 +111,21 @@ describe('Compass — web touch handling', () => {
   it('disables native scroll capture on web while interactive', async () => {
     Platform.OS = 'web';
     const { getByLabelText } = await render(<Compass bearing={null} onChange={jest.fn()} size={100} />);
-    const style = getByLabelText('Boussole').props.style as unknown[];
+    const style = getByLabelText('Compass').props.style as unknown[];
     expect(style).toContainEqual({ touchAction: 'none' });
   });
 
   it('does not touch scroll behavior when decorative, even on web', async () => {
     Platform.OS = 'web';
     const { getByLabelText } = await render(<Compass bearing={null} size={100} />);
-    const style = getByLabelText('Boussole').props.style as unknown[];
+    const style = getByLabelText('Compass').props.style as unknown[];
     expect(style.some((entry) => typeof entry === 'object' && entry !== null && 'touchAction' in entry)).toBe(false);
   });
 
   it('does not touch scroll behavior on native, even while interactive', async () => {
     Platform.OS = 'ios';
     const { getByLabelText } = await render(<Compass bearing={null} onChange={jest.fn()} size={100} />);
-    const style = getByLabelText('Boussole').props.style as unknown[];
+    const style = getByLabelText('Compass').props.style as unknown[];
     expect(style.some((entry) => typeof entry === 'object' && entry !== null && 'touchAction' in entry)).toBe(false);
   });
 });

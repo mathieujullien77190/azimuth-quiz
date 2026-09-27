@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS } from '@/constants';
+import { DEFAULT_SETTINGS } from '@/games/compass/constants';
 import { loadSettings, saveSettings } from '@/helpers';
 
 import { hydrateSettings, useSettings } from '.';

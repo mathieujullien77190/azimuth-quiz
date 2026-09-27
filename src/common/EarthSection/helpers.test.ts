@@ -1,4 +1,4 @@
-import { EARTH_RADIUS_KM } from '@/constants';
+import { EARTH_RADIUS_KM } from '@/data';
 
 import { MAX_ZOOM, ZOOM_STEPS } from './constants';
 import { arcPath, fitZoom, markEnd, sideOf, surfaceAngle, surfacePoint } from './helpers';

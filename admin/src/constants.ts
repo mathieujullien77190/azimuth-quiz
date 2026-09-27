@@ -1,6 +1,6 @@
-import { CATEGORIES } from '@/constants';
-import { countryName } from '@/constants/places/countries';
-import type { Category, Difficulty, IndicesPositionInCountry } from '@/types';
+import { countryName } from '@/data/places/countries';
+import { CATEGORIES } from '@/games/compass/constants';
+import type { Category, Difficulty, CluePositionInCountry } from '@/types';
 
 export const CATEGORY_ORDER: Category[] = ['cities', 'capital', 'citiesFr', 'mountains', 'landmarks', 'nature', 'kids'];
 
@@ -42,9 +42,9 @@ export const DIFFICULTY_COLORS: Record<Difficulty, string> = {
   hard: '#FF6B6B',
 };
 
-export const POSITION_ORDER: IndicesPositionInCountry[] = ['center', 'n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
+export const POSITION_ORDER: CluePositionInCountry[] = ['center', 'n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
 
-export const POSITION_LABELS: Record<IndicesPositionInCountry, string> = {
+export const POSITION_LABELS: Record<CluePositionInCountry, string> = {
   center: 'Centre',
   n: 'Nord',
   s: 'Sud',

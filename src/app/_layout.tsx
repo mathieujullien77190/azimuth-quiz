@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
 import ContourSettingsProvider from '@/games/contour/components/ContourSettingsProvider';
-import IndicesSettingsProvider from '@/games/indices/components/IndicesSettingsProvider';
+import ClueSettingsProvider from '@/games/clues/components/ClueSettingsProvider';
 import LanguageProvider from '@/components/LanguageProvider';
 import ThemeProvider from '@/components/ThemeProvider';
 import { disableTextSelection, polyfillFlagEmoji } from '@/helpers';
@@ -35,11 +35,11 @@ const RootLayout = () => {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <IndicesSettingsProvider>
+        <ClueSettingsProvider>
           <ContourSettingsProvider>
             <ThemedShell />
           </ContourSettingsProvider>
-        </IndicesSettingsProvider>
+        </ClueSettingsProvider>
       </LanguageProvider>
     </ThemeProvider>
   );

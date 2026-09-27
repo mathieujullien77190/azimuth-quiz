@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { flagEmoji, countryName } from '@/constants/places/countries';
+import { flagEmoji, countryName } from '@/data/places/countries';
 import {
   SAMPLE_CONTOUR_BOARD_SIZE,
   SAMPLE_CONTOUR_CENTER_POSITION,

@@ -1,12 +1,5 @@
-import {
-  CATEGORIES,
-  DEFAULT_SETTINGS,
-  DIFFICULTIES,
-  MAX_PLAYERS,
-  MIN_PLAYERS,
-  NAME_PLACEHOLDERS,
-  ROUND_OPTIONS,
-} from '@/constants';
+import { DIFFICULTIES, MAX_PLAYERS, MIN_PLAYERS, NAME_PLACEHOLDERS, ROUND_OPTIONS } from '@/data';
+import { CATEGORIES, DEFAULT_SETTINGS } from '@/games/compass/constants';
 import type { Category, Difficulty, GameSettings } from '@/types';
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;

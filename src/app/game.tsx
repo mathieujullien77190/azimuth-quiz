@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 
-import GameScreen from '@/games/boussole/components/GameScreen';
+import GameScreen from '@/games/compass/screens/GameScreen';
 
 const GameRoute = () => {
   const router = useRouter();

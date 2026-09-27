@@ -8,7 +8,7 @@ export const FONT_FAMILY =
 
 /**
  * Prefix for any Text rendering an actual flag emoji (see `flagEmoji` in
- * constants/places/countries.ts). "Twemoji Country Flags" is injected on web, only when needed,
+ * data/places/countries.ts). "Twemoji Country Flags" is injected on web, only when needed,
  * by `polyfillCountryFlagEmojis()` (see app/_layout.tsx) — it fixes Chromium-on-Windows, which
  * has no system font for flag emoji and renders the two-letter code instead. Native iOS/Android
  * already render flag emoji correctly, so this is a no-op there either way.

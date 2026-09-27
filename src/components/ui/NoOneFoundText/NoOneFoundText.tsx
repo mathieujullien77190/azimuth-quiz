@@ -1,6 +1,6 @@
 import { StyleSheet, Text } from 'react-native';
 
-import { fontSize } from '@/constants';
+import { fontSize } from '@/data';
 import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
@@ -18,7 +18,7 @@ const createStyles = ({ colors, typography }: Theme) =>
   });
 
 /**
- * Shared "nobody found it" line for a round nobody solved (Indices' give-up, Contour's hint-tier-4
+ * Shared "nobody found it" line for a round nobody solved (Clues' give-up, Contour's hint-tier-4
  * confirm): names the one player in solo play (`t.common.soloNotFound`) instead of the generic
  * "nobody" (`t.common.noOneFound`) — there's no one else it could have been. Always the same
  * red/danger look regardless of where it's nested, same as an actual wrong guess.

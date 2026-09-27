@@ -1,18 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLocales } from 'expo-localization';
 
-import {
-  ANIMATIONS_ENABLED_STORAGE_KEY,
-  BEST_SCORE_STORAGE_KEY,
-  MASCOT_CAUGHT_STORAGE_KEY,
-  LANGUAGE_STORAGE_KEY,
-  SETTINGS_STORAGE_KEY,
-  THEME_STORAGE_KEY,
-} from '@/constants';
+import { ANIMATIONS_ENABLED_STORAGE_KEY, MASCOT_CAUGHT_STORAGE_KEY, LANGUAGE_STORAGE_KEY, THEME_STORAGE_KEY } from '@/data';
+import { BEST_SCORE_STORAGE_KEY, SETTINGS_STORAGE_KEY } from '@/games/compass/constants';
 import type { Language } from '@/i18n';
 import type { GameSettings, ThemeId } from '@/types';
 
-import { clearIndicesHistory } from '@/games/indices/helpers/indicesHistory';
+import { clearClueHistory } from '@/games/clues/helpers/clueHistory';
 
 import { sanitizeSettings } from './settings';
 
@@ -106,12 +100,12 @@ export const saveAnimationsEnabled = async (enabled: boolean): Promise<void> => 
   }
 };
 
-/** Clears everything the app saves on the device: Boussole settings, language, theme, whether
- * the home screen's mascot has been caught, whether animations are enabled, and Indices' draw
- * history (+ a possible "best score" left over from an earlier version). Indices' own settings
+/** Clears everything the app saves on the device: Compass settings, language, theme, whether
+ * the home screen's mascot has been caught, whether animations are enabled, and Clues' draw
+ * history (+ a possible "best score" left over from an earlier version). Clues' own settings
  * aren't persisted in the first place (reset every launch). */
 export const clearAppData = async (): Promise<void> => {
-  clearIndicesHistory();
+  clearClueHistory();
   try {
     await AsyncStorage.multiRemove([
       BEST_SCORE_STORAGE_KEY,

@@ -51,22 +51,22 @@ describe('HomeScreen — content', () => {
     const { getByText, getAllByText } = await render(<HomeScreen />);
     expect(getByText('AZIMUTH QUIZ')).toBeTruthy();
     expect(getByText('Choisis ton jeu de géographie')).toBeTruthy();
-    expect(getByText('Boussole')).toBeTruthy();
-    expect(getByText('Indices')).toBeTruthy();
+    expect(getByText('Compass')).toBeTruthy();
+    expect(getByText('Clues')).toBeTruthy();
     expect(getByText('Silhouette')).toBeTruthy();
     expect(getAllByText('Jouer')).toHaveLength(3);
   });
 
-  it('navigates to /setup when the Boussole card is played', async () => {
+  it('navigates to /setup when the Compass card is played', async () => {
     const { getAllByText } = await render(<HomeScreen />);
     await fireEvent.press(getAllByText('Jouer')[0]);
     expect(mockPush).toHaveBeenCalledWith('/setup');
   });
 
-  it('navigates to /indices-setup when the Indices card is played', async () => {
+  it('navigates to /clues-setup when the Clues card is played', async () => {
     const { getAllByText } = await render(<HomeScreen />);
     await fireEvent.press(getAllByText('Jouer')[1]);
-    expect(mockPush).toHaveBeenCalledWith('/indices-setup');
+    expect(mockPush).toHaveBeenCalledWith('/clues-setup');
   });
 
   it('navigates to /contour-setup when the Contour card is played', async () => {

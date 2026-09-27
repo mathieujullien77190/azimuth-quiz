@@ -1,9 +1,11 @@
 import { createContext, useContext } from 'react';
 import { create } from 'zustand';
 
-import { DEFAULT_CONTOUR_SETTINGS, DEFAULT_INDICES_SETTINGS, DEFAULT_SETTINGS } from '@/constants';
+import { DEFAULT_CLUE_SETTINGS } from '@/games/clues/constants';
+import { DEFAULT_CONTOUR_SETTINGS } from '@/games/contour/constants';
+import { DEFAULT_SETTINGS } from '@/games/compass/constants';
 import { loadSettings, saveSettings } from '@/helpers';
-import type { ContourSettings, GameSettings, IndicesSettings } from '@/types';
+import type { ClueSettings, ContourSettings, GameSettings } from '@/types';
 
 export type SettingsContextValue = {
   settings: GameSettings;
@@ -16,7 +18,7 @@ export type SettingsContextValue = {
   resetSettings: () => void;
 };
 
-/** Boussole settings — a Zustand store rather than a Context, but the same public hook shape
+/** Compass settings — a Zustand store rather than a Context, but the same public hook shape
  * (`useSettings()` returns `{ settings, ready, updateSettings, resetSettings }`), so every
  * consumer (`SetupScreen`, `useGame`, `SettingsScreen`) is unaffected by this. Never hydrated at
  * import time (see `hydrateSettings`) — a store singleton's module evaluation must stay
@@ -40,20 +42,20 @@ export const hydrateSettings = (): void => {
   loadSettings().then((settings) => useSettings.setState({ settings, ready: true }));
 };
 
-/** Indices game settings: independent context, never mixed with `GameSettings` (Boussole). */
-export type IndicesSettingsContextValue = {
-  settings: IndicesSettings;
-  updateSettings: (patch: Partial<IndicesSettings>) => void;
+/** Clues game settings: independent context, never mixed with `GameSettings` (Compass). */
+export type ClueSettingsContextValue = {
+  settings: ClueSettings;
+  updateSettings: (patch: Partial<ClueSettings>) => void;
 };
 
-export const IndicesSettingsContext = createContext<IndicesSettingsContextValue>({
-  settings: DEFAULT_INDICES_SETTINGS,
+export const ClueSettingsContext = createContext<ClueSettingsContextValue>({
+  settings: DEFAULT_CLUE_SETTINGS,
   updateSettings: () => {},
 });
 
-export const useIndicesSettings = (): IndicesSettingsContextValue => useContext(IndicesSettingsContext);
+export const useClueSettings = (): ClueSettingsContextValue => useContext(ClueSettingsContext);
 
-/** Contour game settings: independent context, never mixed with `GameSettings`/`IndicesSettings`. */
+/** Contour game settings: independent context, never mixed with `GameSettings`/`ClueSettings`. */
 export type ContourSettingsContextValue = {
   settings: ContourSettings;
   updateSettings: (patch: Partial<ContourSettings>) => void;

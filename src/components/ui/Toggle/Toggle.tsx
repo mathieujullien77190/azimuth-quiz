@@ -1,6 +1,6 @@
 import { StyleSheet, Switch, Text, View } from 'react-native';
 
-import { fontSize, spacing } from '@/constants';
+import { fontSize, spacing } from '@/data';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 

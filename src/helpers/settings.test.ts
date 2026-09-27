@@ -1,4 +1,5 @@
-import { DEFAULT_SETTINGS, NAME_PLACEHOLDERS } from '@/constants';
+import { NAME_PLACEHOLDERS } from '@/data';
+import { DEFAULT_SETTINGS } from '@/games/compass/constants';
 
 import { playerDisplayName, sanitizeSettings } from './settings';
 

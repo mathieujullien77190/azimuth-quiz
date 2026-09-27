@@ -1,7 +1,7 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
-import { DEFAULT_CONTOUR_SETTINGS } from '@/constants';
+import { DEFAULT_CONTOUR_SETTINGS } from '@/games/contour/constants';
 import { useContourSettings } from '@/settings';
 
 import ContourSettingsProvider from '.';

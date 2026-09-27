@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { spacing } from '@/constants';
+import { spacing } from '@/data';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
@@ -31,7 +31,7 @@ const createStyles = ({ colors, isDark }: Theme) =>
       borderTopColor: colors.border,
       // White by day rather than the page's own light-blue background: it reads as a
       // washed-out extension of the page instead of a distinct fixed bar (see Screen's header
-      // in GameScreen/IndicesGameScreen, same fix). Night keeps colors.background, already dark
+      // in GameScreen/ClueGameScreen, same fix). Night keeps colors.background, already dark
       // enough to read as its own bar against the starry backdrop.
       backgroundColor: isDark ? colors.background : colors.surface,
     },

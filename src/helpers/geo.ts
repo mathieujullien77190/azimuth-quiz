@@ -1,4 +1,4 @@
-import { EARTH_RADIUS_KM } from '@/constants';
+import { EARTH_RADIUS_KM } from '@/data';
 import type { Coordinates } from '@/types';
 
 const toRadians = (degrees: number): number => (degrees * Math.PI) / 180;

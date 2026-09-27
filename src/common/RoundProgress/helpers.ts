@@ -4,7 +4,7 @@ export const formatRoundProgress = (roundNumber: number, totalRounds: number): s
   `${roundNumber} / ${totalRounds}`;
 
 /** A single active difficulty shows its emoji + label ("🟡 Moyen"): with several selected at
- * once (Boussole allows it, Indices never does), just the emojis, run together, to stay compact. */
+ * once (Compass allows it, Clues never does), just the emojis, run together, to stay compact. */
 export const formatDifficulties = (
   ids: Difficulty[],
   emojiOf: (id: Difficulty) => string,

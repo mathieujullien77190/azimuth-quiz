@@ -1,14 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLocales } from 'expo-localization';
 
-import {
-  ANIMATIONS_ENABLED_STORAGE_KEY,
-  BEST_SCORE_STORAGE_KEY,
-  MASCOT_CAUGHT_STORAGE_KEY,
-  LANGUAGE_STORAGE_KEY,
-  SETTINGS_STORAGE_KEY,
-  THEME_STORAGE_KEY,
-} from '@/constants';
+import { ANIMATIONS_ENABLED_STORAGE_KEY, MASCOT_CAUGHT_STORAGE_KEY, LANGUAGE_STORAGE_KEY, THEME_STORAGE_KEY } from '@/data';
+import { BEST_SCORE_STORAGE_KEY, SETTINGS_STORAGE_KEY } from '@/games/compass/constants';
 
 import {
   clearAppData,

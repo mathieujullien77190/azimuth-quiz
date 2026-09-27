@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { DIFFICULTIES, difficultyEmoji, fontSize, spacing } from '@/constants';
+import { DIFFICULTIES, difficultyEmoji, fontSize, spacing } from '@/data';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Difficulty, Theme } from '@/types';
@@ -41,8 +41,8 @@ const createStyles = ({ colors, typography }: Theme) =>
   });
 
 /**
- * "ROUND N / M" line + progress dots: shared as-is between Boussole (`GameScreen`) and Indices
- * (`IndicesGameScreen`) — only the round count and the active difficulty/ies differ. The dots
+ * "ROUND N / M" line + progress dots: shared as-is between Compass (`GameScreen`) and Clues
+ * (`ClueGameScreen`) — only the round count and the active difficulty/ies differ. The dots
  * disappear past `MAX_PROGRESS_DOTS` (unreadable once there are too many); the dot at index
  * `roundNumber - 1` (the current round) already counts as "done".
  */

@@ -1,4 +1,4 @@
-import { EARTH_RADIUS_KM } from '@/constants';
+import { EARTH_RADIUS_KM } from '@/data';
 
 import {
   angleDifference,

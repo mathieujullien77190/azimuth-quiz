@@ -1,6 +1,6 @@
 import * as Location from 'expo-location';
 
-import { DEFAULT_ORIGIN, LOCATION_TIMEOUT_MS } from '@/constants';
+import { DEFAULT_ORIGIN, LOCATION_TIMEOUT_MS } from '@/data';
 import type { Origin } from '@/types';
 
 const fetchDeviceOrigin = async (deviceOriginName: string): Promise<Origin> => {

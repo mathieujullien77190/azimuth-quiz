@@ -8,8 +8,8 @@ export const fmtCoord = (value: number, positive: string, negative: string): str
 export const filterRows = (rows: PlaceRow[], query: string, categories: Set<string>, difficulties: Set<string>): PlaceRow[] => {
   const q = query.trim().toLowerCase();
   return rows.filter((row) => {
-    if (row.boussole && !categories.has(row.boussole.category)) return false;
-    const difficulty = row.boussole?.difficulty ?? row.indices?.difficulty;
+    if (row.compass && !categories.has(row.compass.category)) return false;
+    const difficulty = row.compass?.difficulty ?? row.clues?.difficulty;
     if (difficulty && !difficulties.has(difficulty)) return false;
     const country_ = countryFor(row.code);
     if (q && !row.name.toLowerCase().includes(q) && !country_.toLowerCase().includes(q) && !row.code.toLowerCase().includes(q)) return false;
@@ -17,7 +17,7 @@ export const filterRows = (rows: PlaceRow[], query: string, categories: Set<stri
   });
 };
 
-export const INDICES_FIELD_BY_KEY: Record<string, Field> = {
+export const CLUE_FIELD_BY_KEY: Record<string, Field> = {
   population: 'population',
   climateEmoji: 'climate',
   emojis: 'emojis',

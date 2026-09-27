@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { deletePlace, fetchPlaces, saveBoussole, saveDifficulty, saveIndices, type BoussolePatch, type IndicesPatch, type PlaceRow } from '../../api/places';
+import { deletePlace, fetchPlaces, saveCompass, saveDifficulty, saveClues, type CompassPatch, type CluesPatch, type PlaceRow } from '../../api/places';
 import { ChipGroup, toggleInSet } from '../../components/ChipGroup';
 import { DeleteX } from '../../components/DeleteX';
 import { DescriptionCell } from '../../components/DescriptionCell';
@@ -20,7 +20,7 @@ import {
 } from '../../constants';
 import type { Category, Difficulty } from '@/types';
 
-import { filterRows, fmtCoord, INDICES_FIELD_BY_KEY } from './helpers';
+import { filterRows, fmtCoord, CLUE_FIELD_BY_KEY } from './helpers';
 import type { Field, SaveState } from './types';
 
 export const PlacesView = () => {
@@ -66,61 +66,61 @@ export const PlacesView = () => {
 
   const handleDifficultyChange = (row: PlaceRow, difficulty: Difficulty) => {
     if (!rows) return;
-    const previousBoussole = row.boussole;
-    const previousIndices = row.indices;
+    const previousCompass = row.compass;
+    const previousClues = row.clues;
     setRows(
       rows.map((r) =>
         r.index === row.index
-          ? { ...r, boussole: r.boussole && { ...r.boussole, difficulty }, indices: r.indices && { ...r.indices, difficulty } }
+          ? { ...r, compass: r.compass && { ...r.compass, difficulty }, clues: r.clues && { ...r.clues, difficulty } }
           : r,
       ),
     );
     setSaveState({ index: row.index, field: 'difficulty', status: 'saving' });
 
     saveDifficulty(row, difficulty)
-      .then(({ boussole, indices }) => {
-        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, boussole, indices } : r)) ?? cur);
+      .then(({ compass, clues }) => {
+        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, compass, clues } : r)) ?? cur);
         setSaveState({ index: row.index, field: 'difficulty', status: 'saved' });
       })
       .catch((err: Error) => {
-        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, boussole: previousBoussole, indices: previousIndices } : r)) ?? cur);
+        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, compass: previousCompass, clues: previousClues } : r)) ?? cur);
         setSaveState({ index: row.index, field: 'difficulty', status: 'error', message: err.message });
       });
   };
 
-  const handleBoussoleChange = (row: PlaceRow, patch: BoussolePatch) => {
-    if (!rows || !row.boussole) return;
+  const handleCompassChange = (row: PlaceRow, patch: CompassPatch) => {
+    if (!rows || !row.compass) return;
     const field: Field = 'category' in patch ? 'category' : 'description';
-    const previous = row.boussole;
-    setRows(rows.map((r) => (r.index === row.index ? { ...r, boussole: { ...r.boussole!, ...patch } } : r)));
+    const previous = row.compass;
+    setRows(rows.map((r) => (r.index === row.index ? { ...r, compass: { ...r.compass!, ...patch } } : r)));
     setSaveState({ index: row.index, field, status: 'saving' });
 
-    saveBoussole(row, patch)
+    saveCompass(row, patch)
       .then((updated) => {
-        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, boussole: updated } : r)) ?? cur);
+        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, compass: updated } : r)) ?? cur);
         setSaveState({ index: row.index, field, status: 'saved' });
       })
       .catch((err: Error) => {
-        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, boussole: previous } : r)) ?? cur);
+        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, compass: previous } : r)) ?? cur);
         setSaveState({ index: row.index, field, status: 'error', message: err.message });
       });
   };
 
-  const handleIndicesChange = (row: PlaceRow, patch: IndicesPatch) => {
-    if (!rows || !row.indices) return;
+  const handleCluesChange = (row: PlaceRow, patch: CluesPatch) => {
+    if (!rows || !row.clues) return;
     const key = Object.keys(patch)[0];
-    const field = INDICES_FIELD_BY_KEY[key];
-    const previous = row.indices;
-    setRows(rows.map((r) => (r.index === row.index ? { ...r, indices: { ...r.indices!, ...patch } } : r)));
+    const field = CLUE_FIELD_BY_KEY[key];
+    const previous = row.clues;
+    setRows(rows.map((r) => (r.index === row.index ? { ...r, clues: { ...r.clues!, ...patch } } : r)));
     setSaveState({ index: row.index, field, status: 'saving' });
 
-    saveIndices(row, patch)
+    saveClues(row, patch)
       .then((updated) => {
-        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, indices: updated } : r)) ?? cur);
+        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, clues: updated } : r)) ?? cur);
         setSaveState({ index: row.index, field, status: 'saved' });
       })
       .catch((err: Error) => {
-        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, indices: previous } : r)) ?? cur);
+        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, clues: previous } : r)) ?? cur);
         setSaveState({ index: row.index, field, status: 'error', message: err.message });
       });
   };
@@ -169,7 +169,7 @@ export const PlacesView = () => {
               </button>
             </div>
             <div className="row">
-              <span className="field-label">Catégorie (Boussole)</span>
+              <span className="field-label">Catégorie (Compass)</span>
               <ChipGroup
                 order={CATEGORY_ORDER}
                 labels={CATEGORY_LABELS}
@@ -214,13 +214,13 @@ export const PlacesView = () => {
                 <span className="coord">{fmtCoord(row.coordinates.latitude, 'N', 'S')}</span>
                 <span className="coord">{fmtCoord(row.coordinates.longitude, 'E', 'O')}</span>
               </div>
-              {row.boussole && (
+              {row.compass && (
                 <div className="field-cell">
                   <select
                     className="field-select"
-                    style={{ '--tier-color': CATEGORY_COLORS[row.boussole.category] } as React.CSSProperties}
-                    value={row.boussole.category}
-                    onChange={(e) => handleBoussoleChange(row, { category: e.target.value as Category })}
+                    style={{ '--tier-color': CATEGORY_COLORS[row.compass.category] } as React.CSSProperties}
+                    value={row.compass.category}
+                    onChange={(e) => handleCompassChange(row, { category: e.target.value as Category })}
                   >
                     {CATEGORY_ORDER.map((c) => (
                       <option key={c} value={c}>
@@ -234,8 +234,8 @@ export const PlacesView = () => {
               <div className="field-cell">
                 <select
                   className="field-select"
-                  style={{ '--tier-color': DIFFICULTY_COLORS[(row.boussole ?? row.indices)!.difficulty] } as React.CSSProperties}
-                  value={(row.boussole ?? row.indices)!.difficulty}
+                  style={{ '--tier-color': DIFFICULTY_COLORS[(row.compass ?? row.clues)!.difficulty] } as React.CSSProperties}
+                  value={(row.compass ?? row.clues)!.difficulty}
                   onChange={(e) => handleDifficultyChange(row, e.target.value as Difficulty)}
                 >
                   {DIFFICULTY_ORDER.map((d) => (
@@ -251,51 +251,51 @@ export const PlacesView = () => {
 
             <div className="place-games">
               <div className="game-block">
-                <h3 className="game-title">Boussole</h3>
-                {row.boussole ? (
+                <h3 className="game-title">Compass</h3>
+                {row.compass ? (
                   <table className="kv-table">
                     <tbody>
                       <tr>
                         <th>Wiki</th>
                         <td>
-                          <WikiLinks wikiFr={row.boussole.wikiFr} wikiEn={row.boussole.wikiEn} />
+                          <WikiLinks wikiFr={row.compass.wikiFr} wikiEn={row.compass.wikiEn} />
                         </td>
                       </tr>
                       <tr>
                         <th>Texte</th>
                         <td>
                           <DescriptionCell
-                            value={row.boussole.description ?? ''}
+                            value={row.compass.description ?? ''}
                             saveFlag={saveFlagFor(row, 'description')}
-                            onSave={(next) => handleBoussoleChange(row, { description: next })}
+                            onSave={(next) => handleCompassChange(row, { description: next })}
                           />
                         </td>
                       </tr>
                     </tbody>
                   </table>
                 ) : (
-                  <p className="absent">Absent de Boussole</p>
+                  <p className="absent">Absent de Compass</p>
                 )}
               </div>
 
               <div className="game-block">
-                <h3 className="game-title">Indices</h3>
-                {row.indices ? (
+                <h3 className="game-title">Clues</h3>
+                {row.clues ? (
                   <table className="kv-table">
                     <tbody>
                       <tr>
                         <th>Position</th>
-                        <td className="muted">{POSITION_LABELS[row.indices.positionInCountry]}</td>
+                        <td className="muted">{POSITION_LABELS[row.clues.positionInCountry]}</td>
                       </tr>
                       <tr>
                         <th>Population</th>
                         <td>
                           <EditableValue
                             type="number"
-                            value={String(row.indices.population)}
-                            display={row.indices.population.toLocaleString('fr-FR')}
+                            value={String(row.clues.population)}
+                            display={row.clues.population.toLocaleString('fr-FR')}
                             saveFlag={saveFlagFor(row, 'population')}
-                            onSave={(next) => handleIndicesChange(row, { population: Number(next) })}
+                            onSave={(next) => handleCluesChange(row, { population: Number(next) })}
                           />
                         </td>
                       </tr>
@@ -303,41 +303,41 @@ export const PlacesView = () => {
                         <th>Climat</th>
                         <td>
                           <EditableValue
-                            value={row.indices.climateEmoji}
+                            value={row.clues.climateEmoji}
                             saveFlag={saveFlagFor(row, 'climate')}
-                            onSave={(next) => handleIndicesChange(row, { climateEmoji: next })}
+                            onSave={(next) => handleCluesChange(row, { climateEmoji: next })}
                           />
                         </td>
                       </tr>
                       <tr>
                         <th>Altitude</th>
-                        <td className="muted">{row.indices.elevationMeters} m</td>
+                        <td className="muted">{row.clues.elevationMeters} m</td>
                       </tr>
                       <tr>
                         <th>Fuseau horaire</th>
-                        <td className="muted">{row.indices.timezone}</td>
+                        <td className="muted">{row.clues.timezone}</td>
                       </tr>
                       <tr>
                         <th>Indicatif</th>
-                        <td className="muted">{row.indices.phoneCode}</td>
+                        <td className="muted">{row.clues.phoneCode}</td>
                       </tr>
                       <tr>
                         <th>Devise</th>
-                        <td className="muted">{row.indices.currency}</td>
+                        <td className="muted">{row.clues.currency}</td>
                       </tr>
                       <tr>
                         <th>Aéroport</th>
-                        <td className="muted">{row.indices.airportCode}</td>
+                        <td className="muted">{row.clues.airportCode}</td>
                       </tr>
                       <tr>
                         <th>Emojis</th>
                         <td>
                           <EditableValue
-                            value={row.indices.emojis.join(' ')}
+                            value={row.clues.emojis.join(' ')}
                             saveFlag={saveFlagFor(row, 'emojis')}
                             onSave={(next) => {
                               const parts = next.split(/\s+/).filter(Boolean);
-                              handleIndicesChange(row, { emojis: [parts[0] ?? '', parts[1] ?? '', parts[2] ?? ''] });
+                              handleCluesChange(row, { emojis: [parts[0] ?? '', parts[1] ?? '', parts[2] ?? ''] });
                             }}
                           />
                         </td>
@@ -345,7 +345,7 @@ export const PlacesView = () => {
                     </tbody>
                   </table>
                 ) : (
-                  <p className="absent">Absent d’Indices</p>
+                  <p className="absent">Absent d’Clues</p>
                 )}
               </div>
             </div>

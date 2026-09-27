@@ -1,4 +1,4 @@
-import { countryName } from '@/constants/places/countries';
+import { countryName } from '@/data/places/countries';
 import type { ContourCountry, ContourNeighbor } from '@/types';
 
 import { logChange } from '../changelog';
@@ -10,7 +10,7 @@ const fmtXY = (x: number, y: number): string => `x ${(x * 100).toFixed(1)}%, y $
 /** A neighbor's on-board spot (see `ContourNeighbor`'s own doc comment — a fraction of the board
  * canvas, not a geographic coordinate) was dragged to a new spot: logs the before/after position
  * and returns the updated neighbor for the caller's own optimistic local state (same
- * update-state-then-log pattern as saveCountry/saveBoussole — see CountriesView.tsx). */
+ * update-state-then-log pattern as saveCountry/saveCompass — see CountriesView.tsx). */
 export const saveNeighborPosition = async (
   country: ContourCountry,
   neighbor: ContourNeighbor,

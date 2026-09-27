@@ -9,27 +9,27 @@ export const fr: Translations = {
   },
   cardinals: ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'],
   compassWestLabel: 'O',
-  compassAccessibilityLabel: 'Boussole',
+  compassAccessibilityLabel: 'Compass',
   home: {
     tagline: 'Choisis ton jeu de géographie',
     settingsButtonLabel: 'Réglages',
     games: {
       compass: {
-        title: 'Boussole',
+        title: 'Compass',
         tagline: 'Un lieu s’affiche. Vise son cap et estime sa distance depuis ta position.',
         meta: ['1 à 6 joueurs'],
         cta: 'Jouer',
       },
       clues: {
-        title: 'Indices',
-        tagline: 'Devine une ville, et en dessous des indices qui se révèlent petit à petit.',
+        title: 'Clues',
+        tagline: 'Devine une ville, et en dessous des clues qui se révèlent petit à petit.',
         meta: ['1 à 6 joueurs'],
         cta: 'Jouer',
       },
       contour: {
         title: 'Silhouette',
         tagline:
-          'La silhouette d’un pays s’affiche. Devine lequel grâce aux indices, puis place des villes sur sa carte.',
+          'La silhouette d’un pays s’affiche. Devine lequel grâce aux clues, puis place des villes sur sa carte.',
         meta: ['1 à 6 joueurs'],
         cta: 'Jouer',
       },
@@ -93,8 +93,8 @@ export const fr: Translations = {
     optionsTitle: 'Options',
     toggles: {
       liveCompass: {
-        label: 'Boussole réelle',
-        description: 'Le N de la boussole pointe vers le vrai nord (capteur du téléphone).',
+        label: 'Compass réelle',
+        description: 'Le N de la compass pointe vers le vrai nord (capteur du téléphone).',
       },
       useGps: {
         label: 'Utiliser ma position',
@@ -171,15 +171,15 @@ export const fr: Translations = {
     aboutTitle: 'À propos',
     author: 'Par Matou.',
     claudeMention:
-      'Fait pour l’apéro entre potes : pas de pub, pas de tracking, juste vous et une boussole récalcitrante.',
+      'Fait pour l’apéro entre potes : pas de pub, pas de tracking, juste vous et une compass récalcitrante.',
     dataTitle: 'Données',
     dataHint:
       'Tout ce que l’app sauvegarde sur ce téléphone : les réglages de partie, la langue et l’apparence. Rien n’est envoyé ailleurs. Ce bouton efface cela.',
     clearData: 'Vider les données',
     dataCleared: 'Données effacées.',
   },
-  indicesSetup: {
-    screenTitle: 'Indices',
+  cluesSetup: {
+    screenTitle: 'Clues',
     back: 'Retour',
     start: 'Lancer la partie',
     playersSection: {
@@ -202,7 +202,7 @@ export const fr: Translations = {
       },
     },
   },
-  indicesGame: {
+  cluesGame: {
     pointsAtStake: (points) => `${points} pts en jeu`,
     buzz: '🔔 J’ai trouvé !',
     giveUp: '🤷 Je ne sais pas',

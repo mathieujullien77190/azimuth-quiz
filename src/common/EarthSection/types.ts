@@ -18,12 +18,12 @@ export type EarthSectionProps = {
   /** Shows the +/- buttons (reveal): starts from the ideal zoom, goes down to 1 (whole Earth). */
   zoomControls?: boolean;
   /** Allows the orbiting satellite at zoom 1 (see further below) independently of the +/- buttons:
-   * by default follows `zoomControls` (unchanged Boussole behavior), but a caller without
-   * zoom buttons (the mini-Earth of the Indices game's "Distance" clue, always "revealed") can
+   * by default follows `zoomControls` (unchanged Compass behavior), but a caller without
+   * zoom buttons (the mini-Earth of the Clues game's "Distance" clue, always "revealed") can
    * enable it explicitly without the buttons. */
   allowSatellite?: boolean;
   /** Forces all marks to the same side (1 = right), instead of the real side of their `bearing`:
-   * for the Indices game's "Distance" clue, which must only reveal the distance, not the direction
+   * for the Clues game's "Distance" clue, which must only reveal the distance, not the direction
    * (a fixed side for everyone rather than the true heading avoids giving away the heading for free). */
   forceSide?: Side;
 };

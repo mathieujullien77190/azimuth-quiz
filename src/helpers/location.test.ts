@@ -1,6 +1,6 @@
 import * as Location from 'expo-location';
 
-import { DEFAULT_ORIGIN } from '@/constants';
+import { DEFAULT_ORIGIN } from '@/data';
 
 import { resolveOrigin } from './location';
 

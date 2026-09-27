@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { flagEmoji } from '@/constants/places/countries';
-import { CONTOURS } from '@/constants/contours';
+import { flagEmoji } from '@/data/places/countries';
+import { CONTOURS } from '@/data/contours';
 import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 
 import { fetchCountries, saveCountry, type CountryPatch, type CountryRecord } from '../../api/countries';

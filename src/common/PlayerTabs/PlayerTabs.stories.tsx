@@ -21,9 +21,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Indices/Silhouette: tappable, unlocked (`allowRevision`) — a submitted tab reopens. */
+/** Clues/Silhouette: tappable, unlocked (`allowRevision`) — a submitted tab reopens. */
 export const RevisableTurnByTurn: Story = {
-  name: 'Tappable (Indices/Silhouette)',
+  name: 'Tappable (Clues/Silhouette)',
   args: {
     activeIndex: 1,
     activeLabel: (name) => translations.fr.game.playerTurn(name),
@@ -35,9 +35,9 @@ export const RevisableTurnByTurn: Story = {
   },
 };
 
-/** Boussole: `onSelect` omitted — status-only, no tab is tappable. */
+/** Compass: `onSelect` omitted — status-only, no tab is tappable. */
 export const InformationalOnly: Story = {
-  name: 'Purely informational (Boussole)',
+  name: 'Purely informational (Compass)',
   args: {
     activeIndex: 1,
     answered: [true, false, false],

@@ -1,4 +1,4 @@
-import { CONTOUR_GUESS_POINTS_BY_HINTS } from '@/constants';
+import { CONTOUR_GUESS_POINTS_BY_HINTS } from '@/games/contour/constants';
 
 /**
  * Points for correctly guessing the country, tiered by how many hints were already revealed

@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
-import { fontSize, spacing } from '@/constants';
+import { fontSize, spacing } from '@/data';
 import { initials } from '@/helpers';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';

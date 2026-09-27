@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { fontSize, spacing } from '@/constants';
+import { fontSize, spacing } from '@/data';
 import { clearAppData } from '@/helpers';
 import { useLanguage, useTranslation, type Language } from '@/i18n';
 import { useSettings } from '@/settings';
@@ -57,7 +57,7 @@ export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const themeIds: ThemeId[] = ['night', 'day'];
 
   // Clears storage AND resets the in-memory contexts to defaults: otherwise the app would keep
-  // the old values (Boussole settings, language, theme) until it's relaunched.
+  // the old values (Compass settings, language, theme) until it's relaunched.
   const onClearData = () => {
     clearAppData();
     resetSettings();

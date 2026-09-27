@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import OnlineGameScreen from '@/games/boussole/components/OnlineGameScreen';
+import OnlineGameScreen from '@/games/compass/screens/OnlineGameScreen';
 
 const OnlineGameRoute = () => {
   const router = useRouter();

@@ -3,7 +3,7 @@ import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { getLocales } from 'expo-localization';
 import { Text } from 'react-native';
 
-import { LANGUAGE_STORAGE_KEY } from '@/constants';
+import { LANGUAGE_STORAGE_KEY } from '@/data';
 import { useLanguage } from '@/i18n';
 
 import LanguageProvider from '.';

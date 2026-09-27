@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 
-import { fontSize, spacing } from '@/constants';
+import { fontSize, spacing } from '@/data';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 

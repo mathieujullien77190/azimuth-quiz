@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Dev-only, one-off generation tool (`npm run generate:contours`) — NOT part of `npm test`, CI, or
 // the shipped app. Regenerates auto-derived Contour/Silhouette outlines + country-type neighbor
-// hints for every country in `src/constants/places/countries.json` that doesn't already have
+// hints for every country in `src/data/places/countries.json` that doesn't already have
 // curated Contour data (the 8 hand-curated ones — DE/ES/FR/GR/IE/IT/NO/PT — are left untouched).
 // Re-run it after adding a new country to `countries.json`, or to pick up a new `world-atlas`
 // release; it's safe to re-run repeatedly, it only ever fills in codes still missing a 7th
@@ -26,7 +26,7 @@ import topology from 'world-atlas/countries-50m.json' with { type: 'json' };
 import worldCountries from 'world-countries';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const countriesPath = path.join(rootDir, 'src/constants/places/countries.json');
+const countriesPath = path.join(rootDir, 'src/data/places/countries.json');
 
 // --- Config -----------------------------------------------------------------------------------
 

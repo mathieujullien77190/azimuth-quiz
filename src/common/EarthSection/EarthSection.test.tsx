@@ -1,7 +1,7 @@
 import { act, fireEvent, render } from '@testing-library/react-native';
 import { Animated } from 'react-native';
 
-import { EARTH_RADIUS_KM } from '@/constants';
+import { EARTH_RADIUS_KM } from '@/data';
 import { ThemeSettingsContext } from '@/themes';
 
 import { DAY_ORBIT_EMOJI, SATELLITE_ORBIT_MS, SATELLITE_QUIP, ZOOM_STEPS } from './constants';

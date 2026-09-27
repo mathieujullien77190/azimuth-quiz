@@ -7,15 +7,15 @@ export type Coordinates = {
 
 export type Category = 'cities' | 'mountains' | 'landmarks' | 'nature' | 'kids' | 'capital' | 'citiesFr';
 
-/** Indices only draws from cities, so only these three of the 7 Boussole categories apply. */
-export type IndicesCategory = Extract<Category, 'cities' | 'capital' | 'citiesFr'>;
+/** Clues only draws from cities, so only these three of the 7 Compass categories apply. */
+export type ClueCategory = Extract<Category, 'cities' | 'capital' | 'citiesFr'>;
 
 /** Popularity/fame of the place, from best-known to most niche. */
 export type Difficulty = 'easy' | 'intermediate' | 'hard';
 
 /**
- * Base shared by both games: the minimal geographic identity of a place. Boussole (`Place`) and
- * Indices (`IndicesPlace`) each extend it with their own game-specific fields — both keep
+ * Base shared by both games: the minimal geographic identity of a place. Compass (`Place`) and
+ * Clues (`CluePlace`) each extend it with their own game-specific fields — both keep
  * totally separate place pools (different curation, size and criteria), only this
  * shape is shared.
  */
@@ -27,7 +27,7 @@ export type GeoPlace = {
 
 export type Place = Omit<GeoPlace, 'country'> & {
   /** ISO 3166-1 alpha-2 country code: source of the flag AND the displayed name (see
-   * `constants/places/countries.ts`) — no country name stored per place. */
+   * `data/places/countries.ts`) — no country name stored per place. */
   code: string;
   category: Category;
   difficulty: Difficulty;
@@ -155,14 +155,14 @@ export type ThemeTypography = {
   body: TextStyle;
 };
 
-// --- Indices: game independent from Azimuth Quiz, with its own places (see constants/indices.ts) ---
+// --- Clues: game independent from Azimuth Quiz, with its own places (see data/clues.ts) ---
 
 /** A clue's identifier: they all have the same "cost" (1 point off the score countdown,
- * see IndicesGameScreen), no imposed order, each player freely picks on their turn. `vowels`
- * is the exception — a hidden bonus clue, absent from `INDICES_CLUE_ORDER`, that only appears
+ * see ClueGameScreen), no imposed order, each player freely picks on their turn. `vowels`
+ * is the exception — a hidden bonus clue, absent from `CLUE_ORDER`, that only appears
  * once every other clue has been picked, and drops the round's score to 1 instead of the usual
- * -1 (see IndicesGameScreen). */
-export type IndicesClueId =
+ * -1 (see ClueGameScreen). */
+export type ClueId =
   | 'position'
   | 'population'
   | 'climate'
@@ -180,23 +180,23 @@ export type IndicesClueId =
   | 'vowels';
 
 /** Approximate position of the city within its country, on a 3x3 grid. */
-export type IndicesPositionInCountry = 'center' | 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
+export type CluePositionInCountry = 'center' | 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
 
-/** Generic colors used by the supported flags (see constants/indices.ts). */
-export type IndicesFlagColorId = 'red' | 'blue' | 'white' | 'green' | 'yellow' | 'black';
+/** Generic colors used by the supported flags (see data/clues.ts). */
+export type ClueFlagColorId = 'red' | 'blue' | 'white' | 'green' | 'yellow' | 'black';
 
 /** A flag color and its share of the total area (%), unique colors merged and
  * sorted in their order of appearance on the flag (the clue only reveals the first one).
- * Positional tuple (see FLAG_COLOR_FIELD in constants/places/countries.ts for which is which). */
-export type IndicesFlagColorRow = readonly [colorId: IndicesFlagColorId, hex: string, percent: number];
+ * Positional tuple (see FLAG_COLOR_FIELD in data/places/countries.ts for which is which). */
+export type ClueFlagColorRow = readonly [colorId: ClueFlagColorId, hex: string, percent: number];
 
-/** A place in the Indices game: extends `GeoPlace`, but its place pool stays independent from
- * Boussole's (see constants/indices.ts vs constants/places/). `code` (country ISO) comes from the
+/** A place in the Clues game: extends `GeoPlace`, but its place pool stays independent from
+ * Compass's (see data/clues.ts vs data/places/). `code` (country ISO) comes from the
  * place data shared by both games — used for shared lookups (country name, flag, currency). */
-export type IndicesPlace = GeoPlace & {
+export type CluePlace = GeoPlace & {
   code: string;
   difficulty: Difficulty;
-  positionInCountry: IndicesPositionInCountry;
+  positionInCountry: CluePositionInCountry;
   population: number;
   /** General climate trend, as an emoji (sun, rain, snow, desert...). */
   climateEmoji: string;
@@ -217,20 +217,20 @@ export type IndicesPlace = GeoPlace & {
 
 /** How the answer is verified: said out loud (manual right/wrong arbitration),
  * or typed and automatically compared to the place's name. */
-export type IndicesAnswerMethod = 'spoken' | 'typed';
+export type ClueAnswerMethod = 'spoken' | 'typed';
 
-export type IndicesSettings = {
+export type ClueSettings = {
   playerNames: string[];
   difficulty: Difficulty;
-  categories: IndicesCategory[];
-  answerMethod: IndicesAnswerMethod;
+  categories: ClueCategory[];
+  answerMethod: ClueAnswerMethod;
   rounds: number;
   /** Each round starts with the first-letter clue already revealed for free, instead of
    * everything locked. */
   startWithFirstLetter: boolean;
 };
 
-// --- Contour: trace a country's outline, independent from both Boussole and Indices ---
+// --- Contour: trace a country's outline, independent from both Compass and Clues ---
 
 /** Screen-space point (pixels) inside a `ContourBoard`: not a geographic coordinate. */
 export type Point2D = {
@@ -251,20 +251,20 @@ export type Point2D = {
  * `ContourGameScreen`'s `projectRound`, which just scales `x*width`/`y*height`). Authored per
  * country (not a global by-code lookup): the same neighbor can need a different display spot
  * depending on which country it's being hinted from. Name/flag come from
- * `constants/places/countries.ts`, looked up by `code` — no sea/ocean neighbors any more (dropped:
+ * `data/places/countries.ts`, looked up by `code` — no sea/ocean neighbors any more (dropped:
  * they complicated every consumer for little payoff), so `type: 'country'` is the only variant. */
 export type ContourNeighbor = { type: 'country'; code: string; x: number; y: number };
 
 /** Anchor for tier 3/4's own on-board label (the target country's own flag, then its name stacked
  * just below it) — a fraction (0-1) of the board canvas, same model and same reasoning as
  * `ContourNeighbor`'s `x`/`y`: curated per country (part of its `contour.centerLabel` field in
- * `constants/places/countries.json`, see `ContourDataRow`), a plain bounding-box center can read
+ * `data/places/countries.json`, see `ContourDataRow`), a plain bounding-box center can read
  * badly for an oddly-shaped country, so it's an editable point (draggable in the admin's Contour
  * view) rather than always derived. */
 export type ContourCenterLabel = { x: number; y: number };
 
 /** A country's outline for the Contour game: geometry plus its neighbor list — name/flag come from
- * `constants/places/countries.ts` (shared with Boussole/Indices), looked up by `code` rather than
+ * `data/places/countries.ts` (shared with Compass/Clues), looked up by `code` rather than
  * duplicated here. `points` is a closed ring (`[longitude, latitude]` pairs, first === last),
  * mainland only (islands/overseas territories dropped), simplified to ~40-80 points (a handful of
  * large/complex countries run higher, see `scripts/generateContours.mjs`). */
@@ -272,7 +272,7 @@ export type ContourCountry = {
   code: string;
   points: readonly (readonly [number, number])[];
   /** See `ContourNeighbor` — merged in from `countries.json`'s `contour.neighbors` at decode time
-   * (`constants/contours/codec.ts`), not authored inline with `points`. Hand-curated for the 8
+   * (`data/contours/codec.ts`), not authored inline with `points`. Hand-curated for the 8
    * original countries, mostly auto-generated (real-world adjacency, projected/clamped position —
    * country-type only, never sea/ocean) for every other one — see `ContourDataRow`. */
   neighbors: ContourNeighbor[];
@@ -280,7 +280,7 @@ export type ContourCountry = {
    * time, same pattern as `neighbors`. */
   centerLabel: ContourCenterLabel;
   /** Curated (not derived — outline recognizability is a judgment call, not measurable), same
-   * `Difficulty` scale as Boussole/Indices: how hard the country's silhouette is to place/guess.
+   * `Difficulty` scale as Compass/Clues: how hard the country's silhouette is to place/guess.
    * Merged in from `countries.json`'s `contour.difficulty` at decode time (see `codec.ts`), same
    * pattern as `neighbors` — defaults to `'intermediate'` for every auto-generated country. */
   difficulty: Difficulty;
@@ -288,10 +288,10 @@ export type ContourCountry = {
 
 /**
  * Raw, on-disk shape of a country's Contour data: the optional 7th element of `CountryRow`
- * (`constants/places/countries.ts`) — present only for a country that actually has a silhouette,
+ * (`data/places/countries.ts`) — present only for a country that actually has a silhouette,
  * so the vast majority of rows without one stay a plain 6-element array (no `null` padding).
  * `neighbors`/`centerLabel`/`difficulty` are each optional and fall back to their own default at
- * decode time (see `constants/contours/codec.ts`), same defaults `ContourCountry` always resolves
+ * decode time (see `data/contours/codec.ts`), same defaults `ContourCountry` always resolves
  * to — only `points` is mandatory, there's no sensible default outline.
  */
 export type ContourDataRow = {
@@ -305,7 +305,7 @@ export type ContourSettings = {
   playerNames: string[];
   rounds: number;
   /** Which `ContourCountry.difficulty` tier a round's country is drawn from (see `randomCountry`)
-   * — single choice, same pattern as Indices' own `IndicesSettings.difficulty`, not Boussole's
+   * — single choice, same pattern as Clues' own `ClueSettings.difficulty`, not Compass's
    * multi-select `difficulties`. */
   difficulty: Difficulty;
 };

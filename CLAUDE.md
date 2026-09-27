@@ -17,49 +17,75 @@ Depuis la reorg par jeu (fin 2026-09) : plus un seul gros `components/`/`helpers
 fourre-tout — ce qui est specifique a un jeu vit dans `src/games/<jeu>/`, ce qui est
 partage par 2+ jeux (ou generique app-wide) reste a la racine.
 
+Identifiants de code entierement en anglais (aussi fin 2026-09) : les dossiers/fichiers/
+types/fonctions qui portaient les noms francais des jeux (`boussole`→`compass`,
+`indices`→`clues`) ont ete renommes. Le nom produit affiche aux joueurs francais reste
+"Boussole"/"Indices" (valeurs de traduction dans `fr.ts`, inchangees) — meme divergence
+deliberee code/produit que Contour/Silhouette (voir plus bas) : les trois jeux ont
+desormais chacun un nom de code anglais distinct de leur nom affiche francais.
+
+`src/games/<jeu>/` separe aussi `screens/` (dossiers dont le composant principal finit
+par `*Screen` — ce sont les seuls rendus par une route de `src/app/`) de `components/`
+(tout le reste : sous-composants, cartes, providers de reglages...).
+
 ```
 src/
   app/                 # Expo Router : _layout (providers + Stack), routes (re-exports minces)
   common/              # composants partages par 2+ jeux (pas des primitives UI generiques) :
-                       # Compass, EarthSection (Boussole + clue "Distance" d'Indices), PlayerTabs
-                       # (Boussole + Indices), RoundProgress (les 3 jeux)
+                       # Compass, EarthSection (Compass + clue "Distance" de Clues), PlayerTabs
+                       # (Compass + Clues), RoundProgress (les 3 jeux)
   components/          # ce qui n'est PAS specifique a un jeu : ui/ (Button, Card, Chip, Screen,
                        # Section, Stat, Toggle), HomeScreen, SettingsScreen, LanguageProvider,
                        # ThemeProvider, MascotButton/HelicopterButton/UfoButton, GameCard
+  data/                # donnees/valeurs partagees par 2+ jeux (score/geo generiques, cles de
+                       # stockage app-wide, options de partie, palette joueurs...) + data/places/
+                       # (lieux Compass+Clues) + data/contours/ (codec geometrie Silhouette) +
+                       # data/theme.ts (tokens UI). Les constantes de tuning propres a un seul
+                       # jeu (score, sliders, ranks, valeurs par defaut...) vivent plutot dans
+                       # `games/<jeu>/constants.ts` (voir plus bas)
   games/
-    boussole/
-      components/      # GameScreen, OnlineGameScreen, SetupScreen, DistanceSlider,
-                       # InclinationSlider, SliderTrack, RoundResult, Legend, EndScreen, PlaceCard
+    compass/
+      screens/         # GameScreen, OnlineGameScreen, SetupScreen, EndScreen
+      components/      # DistanceSlider, InclinationSlider, SliderTrack, RoundResult, Legend,
+                       # PlaceCard
       helpers/         # places.ts, scoring.ts, distanceScale.ts, room.ts (Firestore, hors
                        # barrel `@/helpers` — voir plus bas)
       store/           # gameStore.ts (jeu local), roomStore.ts (partie en ligne, hors barrel
                        # comme room.ts, meme raison)
-    indices/
-      components/      # IndicesGameScreen, IndicesSetupScreen, IndicesSettingsProvider,
-                       # IndicesClueCard
-      helpers/         # indicesHistory.ts, indicesSkeleton.ts
+      constants.ts     # tuning propre a Compass : score (MAX_ROUND_POINTS, courbe...), sliders
+                       # de distance, RANKS, ROOM_PLAYER_COLORS, CATEGORIES, DEFAULT_SETTINGS —
+                       # admin importe CATEGORIES directement d'ici (meme alias `@/`)
+    clues/
+      screens/         # ClueGameScreen, ClueSetupScreen
+      components/      # ClueCard, ClueSettingsProvider
+      helpers/         # clueHistory.ts, clueSkeleton.ts
+      constants.ts     # tuning propre a Clues : CLUE_ORDER, CLUE_CATEGORIES,
+                       # CLUE_ANSWER_METHODS, DEFAULT_CLUE_SETTINGS, CLUE_HISTORY_STORAGE_KEY
     contour/
-      components/      # ContourGameScreen, ContourSetupScreen, ContourSettingsProvider,
-                       # ContourBoard
+      screens/         # ContourGameScreen, ContourSetupScreen
+      components/      # ContourBoard, ContourSettingsProvider
       helpers/         # contourScoring.ts
-  constants/           # valeurs partagees (score, geo, stockage, palette...) + constants/places/
+      constants.ts     # tuning propre a Silhouette (anciennement `constants/contour.ts`) :
+                       # MAX_CONTOUR_POINTS, CONTOUR_GUESS_POINTS_BY_HINTS,
+                       # CONTOUR_WRONG_GUESS_PENALTY, DEFAULT_CONTOUR_SETTINGS
   helpers/             # commun aux 3 jeux : geo.ts, format.ts, storage.ts, location.ts, random.ts,
                        # web.ts, firebase.ts, settings.ts (sanitize GameSettings) — le barrel
                        # `index.ts` re-exporte aussi les fonctions des `helpers/` par-jeu
-                       # ci-dessus (places/scoring/distanceScale/indicesHistory/indicesSkeleton/
+                       # ci-dessus (places/scoring/distanceScale/clueHistory/clueSkeleton/
                        # contourScoring), donc un simple `import { pickPlaces } from '@/helpers'`
                        # marche toujours sans savoir ou vit le fichier reel — room.ts/roomStore.ts
-                       # (Boussole) restent les seuls hors barrel (`firebase/firestore` plante
-                       # Jest a l'import), importes directement via leur chemin `@/games/boussole/...`
-  settings/            # GameSettings (Boussole) en store Zustand (`src/games/boussole/store/`
-                       # n'a pas encore ete elargi a lui) ; IndicesSettings/ContourSettings
+                       # (Compass) restent les seuls hors barrel (`firebase/firestore` plante
+                       # Jest a l'import), importes directement via leur chemin `@/games/compass/...`
+  settings/            # GameSettings (Compass) en store Zustand (`src/games/compass/store/`
+                       # n'a pas encore ete elargi a lui) ; ClueSettings/ContourSettings
                        # restent des contexts React independants (jamais migres, hors scope)
   themes/              # night.ts / day.ts / fonts.ts / ThemeContext
   types/                # types de domaine partages (Guess, GameSettings, Theme...)
 ```
 
 `admin/` (outil interne, app Vite a part) importe directement certains fichiers de `src/`
-via le meme alias `@/` (ex. `ContourEditor.tsx` → `@/games/contour/components/ContourBoard/helpers`)
+via le meme alias `@/` (ex. `ContourEditor.tsx` → `@/games/contour/components/ContourBoard/helpers`,
+`admin/src/constants.ts` → `@/games/compass/constants` pour `CATEGORIES`)
 — penser a verifier `admin` (au moins `npm run build` dans `admin/`) apres tout renommage/
 deplacement cote `src/`.
 
@@ -70,7 +96,7 @@ voir `gameStore.test.ts`) ; `useGame` ne fait que resoudre les reglages/la langu
 `GamePhase = 'loading' | 'guess' | 'reveal' | 'end'` ; tout le reste (composants) est pilote par
 les valeurs de retour de `useGame`, inchangees par ce decoupage.
 
-### Smart/dumb (container/presentational) sur les 3 ecrans Boussole
+### Smart/dumb (container/presentational) sur les 3 ecrans Compass
 
 `SetupScreen`, `GameScreen` et `OnlineGameScreen` suivent tous les trois le meme
 decoupage : un hook "smart" colocalise (`useOnlineRoom.ts`, `useGame.ts`,
@@ -82,8 +108,8 @@ appelle le hook, calcule les tableaux/labels derives qui ont besoin de `useTrans
 d'ecran entier (`loading`, `end`, notice "room supprimee") puisque ce ne sont pas des
 "vues" du composant dumb — il mappe le reste vers un composant `*View.tsx` (`SetupScreenView`,
 `GameScreenView`, `OnlineGameScreenView`/`OnlineAnswerView`+`OnlineResultsView`) qui ne
-fait que du rendu : jamais de `@/settings`/`@/games/boussole/helpers/room`/
-`@/games/boussole/store/roomStore`, jamais
+fait que du rendu : jamais de `@/settings`/`@/games/compass/helpers/room`/
+`@/games/compass/store/roomStore`, jamais
 d'effet — seulement des primitives UI, constantes pures et callbacks deja decides par le
 smart (ex. `onToggleCategory(id)` decide deja du blocage `readOnly` cote container, le
 dumb ne fait qu'appeler la prop). `useTranslation`/`useTheme`/`useThemedStyles`/
@@ -106,7 +132,7 @@ Deux modes de jeu (`GameSettings.straightLine`) :
   `Guess.distanceKm` existe (pas de `distanceMode`) — c'est sa signification qui change
   selon `straightLine`.
 
-Scoring (`games/boussole/helpers/scoring.ts`) : courbe logarithmique sur l'ecart de distance, ecart
+Scoring (`games/compass/helpers/scoring.ts`) : courbe logarithmique sur l'ecart de distance, ecart
 angulaire 2D (mode surface) ou 3D via `directionAngle` (mode ligne droite). 500 points
 max chacun pour la direction et la distance.
 
@@ -123,7 +149,7 @@ onglet pour changer de joueur (`onSelect` omis, voir `PlayerTabsProps`) ; `submi
 avance automatiquement vers le premier joueur non repondu, et c'est le seul moyen de
 changer de joueur. Une fois tous repondus, calcule les scores et passe en phase
 `reveal`. `PlayerTabs` reste interactif (onglet cliquable, verrouillage optionnel via
-`allowRevision`) pour Indices, qui a son propre flux de tour par tour. Silhouette
+`allowRevision`) pour Clues, qui a son propre flux de tour par tour. Silhouette
 n'utilise plus `PlayerTabs` du tout (plus de tour par tour dans ce jeu, voir sa propre
 section plus bas).
 
@@ -141,7 +167,7 @@ dans ce jeu (le palier suivant/la reponse peuvent venir de n'importe qui a tout 
 
 **Positions sur le plateau en fraction, pas en lon/lat.** `ContourNeighbor.x`/`y` et
 `ContourCountry.centerLabel` sont une fraction (0-1) du canvas du plateau — pas des
-coordonnees geographiques projetees, contrairement aux lieux Boussole/Indices. Un ancien
+coordonnees geographiques projetees, contrairement aux lieux Compass/Clues. Un ancien
 design en lon/lat + clamp directionnel (`edgeLabelPosition`, supprime) ne retenait que
 l'angle par rapport au centre, jamais la distance : deplacer un point dans l'admin ne
 bougeait rien a l'ecran tant que l'angle ne changeait pas ("il ne bouge plus"). En
@@ -161,28 +187,28 @@ des que chaque hint est devenu un point fixe plutot qu'une etiquette pointant ve
 Flux de reponse (footer toujours visible en phase `'guess'`, pas de "buzz" prealable) :
 input + bouton Valider ; valider verifie le texte puis ouvre un overlay plein ecran
 ("Bonne/Mauvaise reponse" + grille de boutons joueurs, meme composant/pattern que
-`IndicesGameScreen`'s propre overlay d'attribution — fond semi-transparent, ne masque
+`ClueGameScreen`'s propre overlay d'attribution — fond semi-transparent, ne masque
 pas completement le plateau derriere) pour designer qui a repondu — contrairement a
-Indices, les DEUX issues (bonne et mauvaise) passent par cet overlay puisque la
+Clues, les DEUX issues (bonne et mauvaise) passent par cet overlay puisque la
 penalite doit toujours etre attribuee a quelqu'un. Bonne reponse marque des points
 degressifs selon le palier (`CONTOUR_GUESS_POINTS_BY_HINTS = [500, 375, 250, 125]`,
-`constants/contour.ts`), mauvaise reponse deduit `CONTOUR_WRONG_GUESS_PENALTY` (50
+`games/contour/constants.ts`), mauvaise reponse deduit `CONTOUR_WRONG_GUESS_PENALTY` (50
 points fixes) au joueur designe et rouvre l'input au meme palier. Un abandon (palier 4
 confirme) ne rapporte ni ne penalise personne.
 
-Filtre par difficulte, meme enum `Difficulty` que Boussole/Indices mais choix unique
+Filtre par difficulte, meme enum `Difficulty` que Compass/Clues mais choix unique
 (`ContourSettings.difficulty`, pas de multi-select) : determine le pool dans lequel le
 pays du tour est tire (`ContourCountry.difficulty`, curee a la main via le champ
-optionnel `contour.difficulty` sur la ligne du pays dans `constants/places/countries.json`
+optionnel `contour.difficulty` sur la ligne du pays dans `data/places/countries.json`
 — France et Espagne en `easy`, seule la Norvege en `hard`, absent (= `intermediate` par
 defaut, voir `codec.ts`) pour tous les autres, y compris tous les pays generes
 automatiquement ; deliberement desequilibre, ne pas tenter de rectifier sans demande
 explicite).
 
 Donnees Contour (points/voisins/centerLabel/difficulty) : plus de fichiers a part dans
-`constants/contours/` (qui ne garde plus que `codec.ts` — decode uniquement, plus aucune
+`data/contours/` (qui ne garde plus que `codec.ts` — decode uniquement, plus aucune
 donnee) ; tout vit desormais comme un 7e element
-optionnel `contour` sur la ligne du pays concerne dans `constants/places/countries.json`
+optionnel `contour` sur la ligne du pays concerne dans `data/places/countries.json`
 (type `ContourDataRow`, voir `src/types/index.ts` et `CountryRow`) — absent pour la
 grande majorite des pays, qui restent un tableau a 6 elements sans padding. Les voisins
 (`{ type: 'country', code, x, y }` — uniquement des pays, plus de voisin mer/ocean : ca
@@ -216,7 +242,7 @@ journal (`saveNeighborPosition`, `saveCenterLabelPosition`, `deleteNeighbor`,
 `admin/src/api/contour.ts`). Plus de liste "Lieux possibles"/exclusion cote Silhouette
 (retiree avec la phase de placement de lieux qu'elle servait a curer) : un lieu ne se
 supprime plus que via `deletePlace` (`admin/src/api/places.ts`), partage avec
-Boussole/Indices.
+Compass/Clues.
 
 ## `Screen` : header/footer fixes
 

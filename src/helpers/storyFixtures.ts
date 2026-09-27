@@ -4,40 +4,32 @@ import {
   createProjector,
   projectPoints,
 } from '@/games/contour/components/ContourBoard';
-import {
-  CONTOURS,
-  DEFAULT_DISTANCE_KM,
-  DEFAULT_ORIGIN,
-  INDICES_PLACES,
-  MAX_STRAIGHT_DISTANCE_KM,
-  MAX_SURFACE_DISTANCE_KM,
-  PLACES,
-  PLAYER_COLORS,
-} from '@/constants';
-import type { ContourCountry, Guess, IndicesPlace, Place, Player, PlayerResult, Point2D, RoundRecord } from '@/types';
+import { CLUE_PLACES, CONTOURS, DEFAULT_ORIGIN, PLACES, PLAYER_COLORS } from '@/data';
+import { DEFAULT_DISTANCE_KM, MAX_STRAIGHT_DISTANCE_KM, MAX_SURFACE_DISTANCE_KM } from '@/games/compass/constants';
+import type { CluePlace, ContourCountry, Guess, Place, Player, PlayerResult, Point2D, RoundRecord } from '@/types';
 
 import { bearingDeg, distanceKm, normalizeBearing } from './geo';
-import { applyBestBonus, scoreRound } from '@/games/boussole/helpers/scoring';
+import { applyBestBonus, scoreRound } from '@/games/compass/helpers/scoring';
 
 // Sample data shared by every component's `.stories.tsx` — pulled from the app's own real data
-// (PLACES/INDICES_PLACES/CONTOURS) rather than invented, same spirit as the admin gallery this
+// (PLACES/CLUE_PLACES/CONTOURS) rather than invented, same spirit as the admin gallery this
 // replaced. Lives here (not in `admin/`) so a component's story never depends on admin code —
 // admin already depends on `src/` via its `@/` alias, never the other way around.
 
 const findPlace = (name: string, code: string): Place =>
   PLACES.find((place) => place.name === name && place.code === code)!;
 
-const findIndicesPlace = (name: string, code: string): IndicesPlace =>
-  INDICES_PLACES.find((place) => place.name === name && place.code === code)!;
+const findCluePlace = (name: string, code: string): CluePlace =>
+  CLUE_PLACES.find((place) => place.name === name && place.code === code)!;
 
 /** Has a French trivia description (see PlaceCard's reveal state) — used wherever a "revealed"
- * Boussole place is needed. */
+ * Compass place is needed. */
 export const SAMPLE_PLACE_REVEALED: Place = findPlace('Tokyo', 'JP');
 
 /** A different place for the "still guessing" PlaceCard state. */
 export const SAMPLE_PLACE_GUESSING: Place = findPlace('Machu Picchu', 'PE');
 
-export const SAMPLE_INDICES_PLACE: IndicesPlace = findIndicesPlace('Tokyo', 'JP');
+export const SAMPLE_CLUE_PLACE: CluePlace = findCluePlace('Tokyo', 'JP');
 
 export const SAMPLE_PLAYERS: Player[] = [
   { name: 'Zoé', color: PLAYER_COLORS[0] },
@@ -78,10 +70,10 @@ export const SAMPLE_MAX_SURFACE_KM = MAX_SURFACE_DISTANCE_KM;
 export const SAMPLE_MAX_STRAIGHT_KM = MAX_STRAIGHT_DISTANCE_KM;
 export const SAMPLE_DISTANCE_KM = DEFAULT_DISTANCE_KM;
 
-/** Bearing/distance from the same default origin to the Indices sample place — real values for
- * IndicesClueCard's `bearing`/`distance` clues. */
-export const SAMPLE_INDICES_BEARING = bearingDeg(ORIGIN, SAMPLE_INDICES_PLACE.coordinates);
-export const SAMPLE_INDICES_DISTANCE_KM = distanceKm(ORIGIN, SAMPLE_INDICES_PLACE.coordinates);
+/** Bearing/distance from the same default origin to the Clues sample place — real values for
+ * ClueCard's `bearing`/`distance` clues. */
+export const SAMPLE_CLUE_BEARING = bearingDeg(ORIGIN, SAMPLE_CLUE_PLACE.coordinates);
+export const SAMPLE_CLUE_DISTANCE_KM = distanceKm(ORIGIN, SAMPLE_CLUE_PLACE.coordinates);
 
 // --- ContourBoard (Silhouette) ---
 // Same fit/projector math the real game (ContourGameScreen's `projectRound`) and the admin's

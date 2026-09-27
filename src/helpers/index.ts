@@ -12,22 +12,22 @@ export {
   normalizeBearing,
   straightDistanceKm,
 } from './geo';
-export { kmToRatio, ratioToKm, roundDistance } from '../games/boussole/helpers/distanceScale';
+export { kmToRatio, ratioToKm, roundDistance } from '../games/compass/helpers/distanceScale';
 export { scoreCountryGuess } from '../games/contour/helpers/contourScoring';
 export {
-  clearIndicesHistory,
-  getCachedIndicesHistory,
-  indicesPlaceKey,
-  loadIndicesHistory,
+  clearClueHistory,
+  getCachedClueHistory,
+  cluePlaceKey,
+  loadClueHistory,
   pickLeastDrawn,
-  recordIndicesDraw,
-} from '../games/indices/helpers/indicesHistory';
-export { nameSkeleton } from '../games/indices/helpers/indicesSkeleton';
-export type { NameSkeletonSlot } from '../games/indices/helpers/indicesSkeleton';
+  recordClueDraw,
+} from '../games/clues/helpers/clueHistory';
+export { nameSkeleton } from '../games/clues/helpers/clueSkeleton';
+export type { NameSkeletonSlot } from '../games/clues/helpers/clueSkeleton';
 export { resolveOrigin } from './location';
-export { filterPlaces, pickPlaces } from '../games/boussole/helpers/places';
+export { filterPlaces, pickPlaces } from '../games/compass/helpers/places';
 export { shuffle } from './random';
-export { applyBestBonus, getRank, scoreRound } from '../games/boussole/helpers/scoring';
+export { applyBestBonus, getRank, scoreRound } from '../games/compass/helpers/scoring';
 export { playerDisplayName, sanitizeSettings } from './settings';
 export {
   clearAppData,

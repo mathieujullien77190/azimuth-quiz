@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 
-import { countryName, flagEmoji } from '@/constants/places/countries';
+import { countryName, flagEmoji } from '@/data/places/countries';
 // Pure geometry only, imported directly from the file rather than `@/games/contour/components/ContourBoard`
 // (that folder's own `index.ts` re-exports the React Native `ContourBoard` component, which
 // drags in `react-native`/`react-native-svg` — this module has none of that, safe to bundle here.

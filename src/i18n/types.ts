@@ -1,4 +1,4 @@
-import type { Category, Difficulty, IndicesAnswerMethod, IndicesClueId } from '@/types';
+import type { Category, Difficulty, ClueAnswerMethod, ClueId } from '@/types';
 
 export type Language = 'fr' | 'en';
 
@@ -18,7 +18,7 @@ export type Translations = {
     /** Name shown as the starting point when the device's position is used. */
     yourPosition: string;
     pts: string;
-    /** Shared "nobody found it" wording (Indices' give-up, Contour's hint-tier-4 confirm) — see
+    /** Shared "nobody found it" wording (Clues' give-up, Contour's hint-tier-4 confirm) — see
      * `components/ui/NoOneFoundText`, which picks between these two depending on player count. */
     noOneFound: string;
     /** Solo play only: names the one player instead of the generic "nobody" (there's no one else
@@ -141,7 +141,7 @@ export type Translations = {
     /** Connector word between two tied names ("et" / "and"). */
     and: string;
     roundBest: (name: string) => string;
-    /** Rank titles (solo), same order as RANKS in constants/index.ts. */
+    /** Rank titles (solo), same order as RANKS in games/compass/constants.ts. */
     ranks: readonly [string, string, string, string, string];
   };
   settings: {
@@ -160,7 +160,7 @@ export type Translations = {
     clearData: string;
     dataCleared: string;
   };
-  indicesSetup: {
+  cluesSetup: {
     screenTitle: string;
     back: string;
     start: string;
@@ -169,13 +169,13 @@ export type Translations = {
     difficultyTitle: string;
     difficultyHint: string;
     answerMethodTitle: string;
-    answerMethods: Record<IndicesAnswerMethod, string>;
+    answerMethods: Record<ClueAnswerMethod, string>;
     optionsTitle: string;
     toggles: {
       startWithFirstLetter: { label: string; description: string };
     };
   };
-  indicesGame: {
+  cluesGame: {
     pointsAtStake: (points: string) => string;
     buzz: string;
     giveUp: string;
@@ -196,7 +196,7 @@ export type Translations = {
     wasPlace: string;
     continueLabel: string;
     home: string;
-    clues: Record<IndicesClueId, string>;
+    clues: Record<ClueId, string>;
     isCapitalYes: string;
     isCapitalNo: string;
     populationUnit: string;

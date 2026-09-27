@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
-import { fontSize, spacing } from '@/constants';
+import { fontSize, spacing } from '@/data';
 import { loadMascotCaught, saveMascotCaught } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useThemedStyles, useThemeSettings } from '@/themes';
@@ -170,7 +170,7 @@ export const HomeScreen = () => {
           ctaLabel={t.home.games.clues.cta}
           icon="🧩"
           meta={t.home.games.clues.meta}
-          onPress={() => router.push('/indices-setup')}
+          onPress={() => router.push('/clues-setup')}
           tagline={t.home.games.clues.tagline}
           title={t.home.games.clues.title}
         />

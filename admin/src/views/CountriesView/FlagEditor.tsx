@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 
-import type { IndicesFlagColorId, IndicesFlagColorRow } from '@/types';
+import type { ClueFlagColorId, ClueFlagColorRow } from '@/types';
 
-const FLAG_COLOR_IDS: IndicesFlagColorId[] = ['red', 'blue', 'white', 'green', 'yellow', 'black'];
+const FLAG_COLOR_IDS: ClueFlagColorId[] = ['red', 'blue', 'white', 'green', 'yellow', 'black'];
 
-const sameFlag = (a: IndicesFlagColorRow[], b: IndicesFlagColorRow[]): boolean => JSON.stringify(a) === JSON.stringify(b);
+const sameFlag = (a: ClueFlagColorRow[], b: ClueFlagColorRow[]): boolean => JSON.stringify(a) === JSON.stringify(b);
 
 /** List of colors (id + hex + %) editable row by row, with add/remove — not the
  * same click-to-edit pattern as the other fields: a flag is a small structured list,
@@ -14,17 +14,17 @@ export const FlagEditor = ({
   saveFlag,
   onSave,
 }: {
-  value: IndicesFlagColorRow[];
+  value: ClueFlagColorRow[];
   saveFlag: React.ReactNode;
-  onSave: (next: IndicesFlagColorRow[]) => void;
+  onSave: (next: ClueFlagColorRow[]) => void;
 }) => {
-  const [rows, setRows] = useState<IndicesFlagColorRow[]>(value);
+  const [rows, setRows] = useState<ClueFlagColorRow[]>(value);
 
   useEffect(() => setRows(value), [value]);
 
   const dirty = !sameFlag(rows, value);
 
-  const updateRow = (i: number, next: IndicesFlagColorRow) => {
+  const updateRow = (i: number, next: ClueFlagColorRow) => {
     setRows((cur) => cur.map((row, idx) => (idx === i ? next : row)));
   };
 
@@ -32,7 +32,7 @@ export const FlagEditor = ({
     <div className="flag-editor">
       {rows.map((row, i) => (
         <div className="flag-row" key={i}>
-          <select className="kv-select flag-color-select" value={row[0]} onChange={(e) => updateRow(i, [e.target.value as IndicesFlagColorId, row[1], row[2]])}>
+          <select className="kv-select flag-color-select" value={row[0]} onChange={(e) => updateRow(i, [e.target.value as ClueFlagColorId, row[1], row[2]])}>
             {FLAG_COLOR_IDS.map((id) => (
               <option key={id} value={id}>
                 {id}

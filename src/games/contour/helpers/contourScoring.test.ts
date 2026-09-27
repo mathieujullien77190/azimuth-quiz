@@ -1,4 +1,4 @@
-import { CONTOUR_GUESS_POINTS_BY_HINTS, MAX_CONTOUR_POINTS } from '@/constants';
+import { CONTOUR_GUESS_POINTS_BY_HINTS, MAX_CONTOUR_POINTS } from '@/games/contour/constants';
 
 import { scoreCountryGuess } from './contourScoring';
 

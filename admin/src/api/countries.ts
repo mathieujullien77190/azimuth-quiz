@@ -1,5 +1,5 @@
-import { decodeCountry, type CountryEntry, type CountryRow } from '@/constants/places/countries';
-import countriesData from '@/constants/places/countries.json';
+import { decodeCountry, type CountryEntry, type CountryRow } from '@/data/places/countries';
+import countriesData from '@/data/places/countries.json';
 
 import { logChange } from '../changelog';
 

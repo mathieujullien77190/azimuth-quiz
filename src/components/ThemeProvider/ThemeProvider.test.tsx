@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
-import { ANIMATIONS_ENABLED_STORAGE_KEY, THEME_STORAGE_KEY } from '@/constants';
+import { ANIMATIONS_ENABLED_STORAGE_KEY, THEME_STORAGE_KEY } from '@/data';
 import { useThemeSettings } from '@/themes';
 
 import ThemeProvider from '.';
