@@ -328,7 +328,14 @@ export const SetupScreenView = ({
           <View style={styles.chips}>
             <Chip label={t.setup.online.solo} onPress={onChooseSolo} selected={onlineChoice === null} />
             <Chip label={t.setup.online.host} onPress={onChooseHost} selected={onlineChoice === 'host'} />
-            <Chip label={t.setup.online.join} onPress={onChooseJoin} selected={onlineChoice === 'join'} />
+            {joinStatus === 'valid' ? (
+              // Connected: the code field is locked (see the comment below), so this is the only
+              // way back to a fresh, editable one — `onChooseJoin` (not `onChooseSolo`) so this
+              // stays on "Join" rather than dropping back to solo.
+              <Chip label={t.setup.online.leave} onPress={onChooseJoin} selected />
+            ) : (
+              <Chip label={t.setup.online.join} onPress={onChooseJoin} selected={onlineChoice === 'join'} />
+            )}
           </View>
           {onlineChoice === 'host' && (
             <TextInput
@@ -341,8 +348,14 @@ export const SetupScreenView = ({
           )}
           {onlineChoice === 'join' && (
             <>
+              {/* Locked once joined, like the name field above: `connectedRoomCode` is derived
+                  straight from this text, so editing it further after a successful join would
+                  silently disconnect the room (read as a spurious "kicked" notice) and unlock
+                  the name/options fields again. The chip above turns into "Leave" at that point,
+                  the only way back to a fresh, editable code. */}
               <TextInput
                 autoCapitalize="none"
+                editable={joinStatus !== 'valid'}
                 onChangeText={onJoinCodeChange}
                 placeholder={t.setup.online.codePlaceholder}
                 placeholderTextColor={colors.textMuted}

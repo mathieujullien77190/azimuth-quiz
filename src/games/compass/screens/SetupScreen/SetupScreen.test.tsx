@@ -108,7 +108,7 @@ describe('SetupScreen — host/join a game', () => {
     expect(getByLabelText('Nom du joueur 1')).toBeTruthy();
     const mountainsChip = getByText('Montagnes');
     expect(mountainsChip.parent?.props.accessibilityState.disabled).toBe(true);
-    expect(getByLabelText('Compass réelle').props.accessibilityState.disabled).toBe(true);
+    expect(getByLabelText('Boussole réelle').props.accessibilityState.disabled).toBe(true);
   });
 
   it('shows a notice instead of changing anything when a joiner taps a read-only option, then hides it after 2s', async () => {
@@ -419,7 +419,7 @@ describe('SetupScreen — categories / difficulty / rounds / mode', () => {
 describe('SetupScreen — options toggles', () => {
   it('toggles liveCompass', async () => {
     const { getByLabelText, updateSettings } = await renderSetup();
-    await fireEvent(getByLabelText('Compass réelle'), 'valueChange', true);
+    await fireEvent(getByLabelText('Boussole réelle'), 'valueChange', true);
     expect(updateSettings).toHaveBeenCalledWith({ liveCompass: true });
   });
 

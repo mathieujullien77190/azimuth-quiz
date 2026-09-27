@@ -9,27 +9,27 @@ export const fr: Translations = {
   },
   cardinals: ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'],
   compassWestLabel: 'O',
-  compassAccessibilityLabel: 'Compass',
+  compassAccessibilityLabel: 'Boussole',
   home: {
     tagline: 'Choisis ton jeu de géographie',
     settingsButtonLabel: 'Réglages',
     games: {
       compass: {
-        title: 'Compass',
+        title: 'Boussole',
         tagline: 'Un lieu s’affiche. Vise son cap et estime sa distance depuis ta position.',
         meta: ['1 à 6 joueurs'],
         cta: 'Jouer',
       },
       clues: {
-        title: 'Clues',
-        tagline: 'Devine une ville, et en dessous des clues qui se révèlent petit à petit.',
+        title: 'Indices',
+        tagline: 'Devine une ville, et en dessous des indices qui se révèlent petit à petit.',
         meta: ['1 à 6 joueurs'],
         cta: 'Jouer',
       },
       contour: {
         title: 'Silhouette',
         tagline:
-          'La silhouette d’un pays s’affiche. Devine lequel grâce aux clues, puis place des villes sur sa carte.',
+          'La silhouette d’un pays s’affiche. Devine lequel grâce aux indices, puis place des villes sur sa carte.',
         meta: ['1 à 6 joueurs'],
         cta: 'Jouer',
       },
@@ -67,6 +67,7 @@ export const fr: Translations = {
       solo: 'Jouer seul',
       host: 'Créer',
       join: 'Rejoindre',
+      leave: 'Quitter',
       generating: 'Création du code…',
       yourCode: (code) => `Code de la partie : ${code}`,
       codePlaceholder: 'Code de la partie',
@@ -93,12 +94,12 @@ export const fr: Translations = {
     optionsTitle: 'Options',
     toggles: {
       liveCompass: {
-        label: 'Compass réelle',
-        description: 'Le N de la compass pointe vers le vrai nord (capteur du téléphone).',
+        label: 'Boussole réelle',
+        description: 'Le N de la boussole pointe vers le vrai nord (capteur du téléphone).',
       },
       useGps: {
         label: 'Utiliser ma position',
-        description: 'Sinon, tout part de Paris.',
+        description: 'Sinon, indique un point GPS.',
       },
       showCountry: {
         label: 'Aide pays',
@@ -171,7 +172,7 @@ export const fr: Translations = {
     aboutTitle: 'À propos',
     author: 'Par Matou.',
     claudeMention:
-      'Fait pour l’apéro entre potes : pas de pub, pas de tracking, juste vous et une compass récalcitrante.',
+      'Fait pour l’apéro entre potes : pas de pub, pas de tracking, juste vous et une boussole récalcitrante.',
     dataTitle: 'Données',
     dataHint:
       'Tout ce que l’app sauvegarde sur ce téléphone : les réglages de partie, la langue et l’apparence. Rien n’est envoyé ailleurs. Ce bouton efface cela.',
@@ -179,7 +180,7 @@ export const fr: Translations = {
     dataCleared: 'Données effacées.',
   },
   cluesSetup: {
-    screenTitle: 'Clues',
+    screenTitle: 'Indices',
     back: 'Retour',
     start: 'Lancer la partie',
     playersSection: {

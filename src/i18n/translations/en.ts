@@ -66,6 +66,7 @@ export const en: Translations = {
       solo: 'Play solo',
       host: 'Create',
       join: 'Join',
+      leave: 'Leave',
       generating: 'Creating the code…',
       yourCode: (code) => `Game code: ${code}`,
       codePlaceholder: 'Game code',

@@ -60,6 +60,10 @@ export type Translations = {
       solo: string;
       host: string;
       join: string;
+      /** Replaces `join`'s label once actually connected (`joinStatus === 'valid'`) — the code
+       * field locks at that point (see SetupScreenView), so this chip becomes the only way back
+       * out of the room. */
+      leave: string;
       generating: string;
       yourCode: (code: string) => string;
       codePlaceholder: string;
