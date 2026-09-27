@@ -24,6 +24,7 @@ jest.mock('@/settings', () => ({ useSettings: jest.fn() }));
 jest.mock('@/games/compass/helpers/room', () => ({
   ROOM_MAX_PLAYERS: 10,
   createRoom: jest.fn(),
+  deleteRoom: jest.fn(() => Promise.resolve()),
   isValidRoomCode: jest.fn((code: string) => code.length === 8),
   joinRoomPresence: jest.fn(() => Promise.resolve('local-uid')),
   // These default to a resolved promise (not bare `jest.fn()`, which returns `undefined`) since

@@ -7,6 +7,7 @@ import { pickPlaces, resolveOrigin } from '@/helpers';
 import {
   ROOM_MAX_PLAYERS,
   createRoom,
+  deleteRoom,
   isValidRoomCode,
   joinRoomPresence,
   removeRoomPlayer,
@@ -40,7 +41,17 @@ export const useOnlineRoom = (settings: GameSettings, updateSettings: (patch: Pa
   const [joinStatus, setJoinStatus] = useState<'idle' | 'valid' | 'invalid'>('idle');
   const readOnly = onlineChoice === 'join';
 
+  // Leaving host mode (Solo or switching to Join) takes the room down with it, same as
+  // `handleQuit` mid-game: there's no "pass the host" concept, and otherwise the room stays
+  // orphaned in Firestore forever (`removeRoomPlayer` on the way out, below, only ever drops this
+  // device's own presence — a leftover doc with no host is what let a joiner "reconnect" to a
+  // room its creator had already walked away from).
+  const leaveHostedRoom = () => {
+    if (onlineChoice === 'host' && roomCode !== null) deleteRoom(roomCode).catch(() => {});
+  };
+
   const chooseSolo = () => {
+    leaveHostedRoom();
     setOnlineChoice(null);
     setRoomCode(null);
     setJoinCode('');
@@ -54,6 +65,7 @@ export const useOnlineRoom = (settings: GameSettings, updateSettings: (patch: Pa
   };
 
   const chooseJoin = () => {
+    leaveHostedRoom();
     setOnlineChoice('join');
     setRoomCode(null);
     setJoinCode('');
@@ -159,20 +171,26 @@ export const useOnlineRoom = (settings: GameSettings, updateSettings: (patch: Pa
       .catch(() => {});
   }, [connectedRoomCode, soloName, soloPlaceholder]);
 
-  // Leaves the *previous* room's presence when switching to a different one (or leaving this
-  // screen) — otherwise a ghost entry stays parked there forever. Deliberately its own effect,
-  // not folded into the one above: it must only fire on an actual room change, not on a rename
-  // (which can't happen post-connect any more, but the effect still shouldn't conflate the two).
-  // Swallowed: this fires for a joiner right after the "room deleted" reset too (`onlineChoice`
-  // going back to null makes `connectedRoomCode` null), by which point the room is already gone
-  // and Firestore's rules reject the write on a nonexistent doc as "permission denied" — nothing
-  // to do about it, we're leaving anyway.
+  // Leaves the *previous* room when switching to a different one (or leaving this screen) —
+  // otherwise it stays parked there forever, still listing a host nobody will ever come back to
+  // (see `leaveHostedRoom`'s own comment: this is the same problem, just via unmount — e.g. the
+  // "Retour" button — rather than the Solo/Join chips, which already delete it themselves before
+  // this cleanup even runs). The host deletes the room outright, same as `handleQuit` mid-game;
+  // a joiner just drops its own presence, so it doesn't keep blocking the room for everyone else.
+  // Deliberately its own effect, not folded into the one above: it must only fire on an actual
+  // room change, not on a rename (which can't happen post-connect any more, but the effect still
+  // shouldn't conflate the two). Swallowed: this fires for a joiner right after the "room
+  // deleted" reset too (`onlineChoice` going back to null makes `connectedRoomCode` null), by
+  // which point the room is already gone and Firestore's rules reject the write on a nonexistent
+  // doc as "permission denied" — nothing to do about it, we're leaving anyway.
   useEffect(() => {
     if (connectedRoomCode === null || localUid === null) return;
+    const isHostOfThisRoom = localUid === hostUid;
     return () => {
-      removeRoomPlayer(connectedRoomCode, localUid).catch(() => {});
+      if (isHostOfThisRoom) deleteRoom(connectedRoomCode).catch(() => {});
+      else removeRoomPlayer(connectedRoomCode, localUid).catch(() => {});
     };
-  }, [connectedRoomCode, localUid]);
+  }, [connectedRoomCode, localUid, hostUid]);
 
   // Two ways of getting disconnected — subscribed directly to the store (not a `useEffect` reading
   // its already-selected values: setting state straight from a dependency-array-driven effect is
