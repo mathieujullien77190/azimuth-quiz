@@ -52,6 +52,7 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
       onToggleUseGps={(value) => updateOrNotify({ useGps: value })}
       onlineChoice={room.onlineChoice}
       overlayMessage={room.overlayMessage}
+      onDismissOverlay={room.dismissOverlay}
       readOnly={room.readOnly}
       ready={ready}
       roomCode={room.roomCode}

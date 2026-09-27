@@ -225,16 +225,18 @@ export const useOnlineRoom = (settings: GameSettings, updateSettings: (patch: Pa
   }, [roomScreen, connectedRoomCode, router]);
 
   // Auto-dismissed like `readOnlyNotice` below, but also drops back out of the room afterwards —
-  // there's nothing left to stay connected to.
+  // there's nothing left to stay connected to. Factored out so a tap on the notice itself
+  // (`dismissDisconnectNotice`, wired below) can run the exact same reset early.
+  const dismissDisconnectNotice = () => {
+    setDisconnectReason(null);
+    setOnlineChoice(null);
+    setRoomCode(null);
+    setJoinCode('');
+    setJoinStatus('idle');
+  };
   useEffect(() => {
     if (disconnectReason === null) return;
-    const timeout = setTimeout(() => {
-      setDisconnectReason(null);
-      setOnlineChoice(null);
-      setRoomCode(null);
-      setJoinCode('');
-      setJoinStatus('idle');
-    }, 2000);
+    const timeout = setTimeout(dismissDisconnectNotice, 2000);
     return () => clearTimeout(timeout);
   }, [disconnectReason]);
 
@@ -296,6 +298,12 @@ export const useOnlineRoom = (settings: GameSettings, updateSettings: (patch: Pa
         : readOnlyNotice
           ? t.setup.readOnlyNotice
           : null;
+  // Tapping the notice dismisses whichever one is showing early, instead of only ever waiting
+  // out its own 2s auto-dismiss timeout above.
+  const dismissOverlay = () => {
+    if (disconnectReason !== null) dismissDisconnectNotice();
+    else setReadOnlyNotice(false);
+  };
 
   return {
     soloName,
@@ -318,6 +326,7 @@ export const useOnlineRoom = (settings: GameSettings, updateSettings: (patch: Pa
     isHost,
     soloColor,
     overlayMessage,
+    dismissOverlay,
     chooseSolo,
     chooseHost,
     chooseJoin,

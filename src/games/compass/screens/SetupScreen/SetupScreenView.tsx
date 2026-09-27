@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActivityIndicator, Modal, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DIFFICULTIES, ROUND_OPTIONS, difficultyEmoji } from '@/data';
@@ -117,6 +117,7 @@ export const SetupScreenView = ({
   onToggleShowCountry,
   onToggleHideOtherAnswers,
   overlayMessage,
+  onDismissOverlay,
   startDisabled,
   onStartPress,
   onBack,
@@ -128,9 +129,9 @@ export const SetupScreenView = ({
   return (
     <>
       <Modal animationType="fade" transparent visible={overlayMessage !== null}>
-        <View style={styles.noticeOverlay}>
+        <Pressable style={styles.noticeOverlay} onPress={onDismissOverlay}>
           <Text style={styles.noticeText}>{overlayMessage}</Text>
-        </View>
+        </Pressable>
       </Modal>
       <Screen>
         <Text style={styles.title}>{t.setup.screenTitle}</Text>

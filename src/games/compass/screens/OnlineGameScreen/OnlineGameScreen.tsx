@@ -1,5 +1,6 @@
+import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Modal, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, Text } from 'react-native';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -33,6 +34,7 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
   const t = useTranslation();
+  const router = useRouter();
   const game = useOnlineGame(code, onQuit);
 
   // Same "Suivant"/"Precedent" scroll nav as the local GameScreen (see its own comment) — kept
@@ -52,12 +54,17 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
     if (next !== null) setOnCap(next);
   };
 
-  if (!game.roomExists) {
+  // Only a joiner ever sees this: the host is the one who made the room disappear (see
+  // `handleQuit`), and it's already navigating itself home in that same tap — showing it this
+  // same notice too just traps it behind a modal with nothing to do until the redundant timeout
+  // in `useOnlineGame` above catches up. Tappable (like `SetupScreenView`'s own notice overlay)
+  // rather than only ever auto-dismissing after 2s: no reason to make a joiner wait it out.
+  if (!game.roomExists && !game.isHost) {
     return (
       <Modal animationType="fade" transparent visible>
-        <View style={styles.noticeOverlay}>
+        <Pressable style={styles.noticeOverlay} onPress={() => router.replace('/')}>
           <Text style={styles.noticeText}>{t.setup.online.roomDeletedNotice}</Text>
-        </View>
+        </Pressable>
       </Modal>
     );
   }
