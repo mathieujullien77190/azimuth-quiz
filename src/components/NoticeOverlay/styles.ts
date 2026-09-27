@@ -2,18 +2,19 @@ import { StyleSheet } from 'react-native';
 import { fontSize, spacing } from '@/data';
 import type { Theme } from '@/types';
 
-export const createStyles = ({ colors, typography }: Theme) =>
+export const createStyles = ({ typography }: Theme) =>
   StyleSheet.create({
-    loading: {
+    overlay: {
       flex: 1,
-      backgroundColor: colors.background,
       alignItems: 'center',
       justifyContent: 'center',
-      gap: spacing.md,
+      paddingHorizontal: spacing.lg,
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
     },
-    loadingText: {
-      ...typography.body,
-      color: colors.textMuted,
+    text: {
+      ...typography.heading,
+      color: '#FFFFFF',
       fontSize: fontSize.body,
+      textAlign: 'center',
     },
   });

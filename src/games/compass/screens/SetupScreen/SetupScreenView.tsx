@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DIFFICULTIES, ROUND_OPTIONS, difficultyEmoji } from '@/data';
@@ -8,6 +8,7 @@ import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
 
 import PartySection from '@/components/setup/PartySection';
+import NoticeOverlay from '@/components/NoticeOverlay';
 import ThemeBackdrop from '@/components/ThemeBackdrop';
 import Button from '@/components/ui/Button';
 import Chip from '@/components/ui/Chip';
@@ -128,11 +129,7 @@ export const SetupScreenView = ({
 
   return (
     <>
-      <Modal animationType="fade" transparent visible={overlayMessage !== null}>
-        <Pressable style={styles.noticeOverlay} onPress={onDismissOverlay}>
-          <Text style={styles.noticeText}>{overlayMessage}</Text>
-        </Pressable>
-      </Modal>
+      <NoticeOverlay message={overlayMessage} onDismiss={onDismissOverlay} />
       <Screen>
         <Text style={styles.title}>{t.setup.screenTitle}</Text>
 

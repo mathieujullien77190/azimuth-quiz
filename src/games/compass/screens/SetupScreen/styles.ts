@@ -20,22 +20,6 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       color: colors.textMuted,
       fontSize: fontSize.caption + 1,
     },
-    // Full-screen splash (in a `Modal`, so it covers everything regardless of where in the
-    // layout this renders) rather than a themed banner — a fixed near-black backdrop reads the
-    // same in both themes, which a themed one wouldn't.
-    noticeOverlay: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: spacing.lg,
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    },
-    noticeText: {
-      ...typography.heading,
-      color: '#FFFFFF',
-      fontSize: fontSize.body,
-      textAlign: 'center',
-    },
     // Same "loading" convention as GameScreen/OnlineGameScreen's own early-loading screens: the
     // gap between pressing "Lancer la partie" (GPS resolution, then a Firestore write/round-trip
     // before `roomScreen` flips) used to pass with no feedback at all.

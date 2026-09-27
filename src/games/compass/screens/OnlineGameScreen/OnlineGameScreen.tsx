@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, Text } from 'react-native';
+import { ActivityIndicator, ScrollView, Text } from 'react-native';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -13,6 +13,7 @@ import { useTheme, useThemedStyles } from '@/themes';
 import type { EarthMark } from '@/components/EarthSection';
 import { REVEAL_OPACITY } from '../GameScreen/constants';
 import EndScreen from '../EndScreen';
+import NoticeOverlay from '@/components/NoticeOverlay';
 import ThemeBackdrop from '@/components/ThemeBackdrop';
 import { buildRoundRecord } from './helpers';
 import { onCapFromScroll } from '../GameScreen/helpers';
@@ -60,13 +61,7 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   // in `useOnlineGame` above catches up. Tappable (like `SetupScreenView`'s own notice overlay)
   // rather than only ever auto-dismissing after 2s: no reason to make a joiner wait it out.
   if (!game.roomExists && !game.isHost) {
-    return (
-      <Modal animationType="fade" transparent visible>
-        <Pressable style={styles.noticeOverlay} onPress={() => router.replace('/')}>
-          <Text style={styles.noticeText}>{t.setup.online.roomDeletedNotice}</Text>
-        </Pressable>
-      </Modal>
-    );
+    return <NoticeOverlay message={t.setup.online.roomDeletedNotice} onDismiss={() => router.replace('/')} />;
   }
 
   const { localUid, players, onlinePlayers, isHost, roomSettings, gameState, place, straightLine, totals, myIndex } =
@@ -155,7 +150,6 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
     return (
       <OnlineResultsView
         answered={confirmedRecord ? undefined : onlinePlayers.map(({ uid }) => gameState.guesses[uid] !== undefined)}
-        compassColor={myColor}
         confirmed={confirmedRecord !== undefined}
         difficulties={roomSettings.difficulties}
         earthMarks={earthMarks}
