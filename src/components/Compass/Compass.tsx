@@ -17,15 +17,7 @@ import { styles } from './styles';
 // Stable reference: otherwise the dial's memoization would be broken on every render.
 const NO_NEEDLES: CompassNeedle[] = [];
 
-export const Compass = ({
-  size,
-  bearing,
-  color,
-  extraNeedles = NO_NEEDLES,
-  truthBearing = null,
-  live = false,
-  onChange,
-}: CompassProps) => {
+export const Compass = ({ size, needles = NO_NEEDLES, truthBearing = null, live = false, onChange }: CompassProps) => {
   const { colors } = useTheme();
   const t = useTranslation();
   const interactive = onChange !== undefined;
@@ -40,10 +32,13 @@ export const Compass = ({
   const onTouchRef = useRef(onTouch);
   onTouchRef.current = onTouch;
   // Tracks the last bearing actually sent, updated eagerly inside `update` (not just from the
-  // `bearing` prop on render) so two touch-move events landing on the same degree before React
-  // re-renders still dedupe — avoids re-rendering the whole GameScreen for a no-op move.
-  const bearingRef = useRef(bearing);
-  bearingRef.current = bearing;
+  // caller's own needle on render) so two touch-move events landing on the same degree before
+  // React re-renders still dedupe — avoids re-rendering the whole GameScreen for a no-op move.
+  // Compass no longer owns "which needle is mine", so this is purely a dedupe cache seeded from
+  // whatever the caller passes first — an interactive `Compass` is only ever given one needle
+  // anyway (its own, still in progress), so `needles[0]` is always the right one to sync from.
+  const bearingRef = useRef(needles[0]?.bearing ?? null);
+  bearingRef.current = needles[0]?.bearing ?? null;
 
   const panResponder = useMemo(() => {
     const update = (x: number, y: number) => {
@@ -82,13 +77,7 @@ export const Compass = ({
       {...(interactive ? panResponder.panHandlers : {})}
     >
       <View pointerEvents="none" style={heading !== null ? { transform: [{ rotate: `${-heading}deg` }] } : undefined}>
-        <CompassDial
-          bearing={bearing}
-          color={color}
-          extraNeedles={extraNeedles}
-          size={size}
-          truthBearing={truthBearing}
-        />
+        <CompassDial needles={needles} size={size} truthBearing={truthBearing} />
       </View>
 
       {heading !== null && (

@@ -138,20 +138,16 @@ export const GameScreenView = ({
         <View style={styles.compass}>
           {record ? (
             <Compass
-              bearing={isMultiplayer ? null : record.results[0].guess.bearing}
-              color={playerColor}
-              extraNeedles={isMultiplayer ? revealNeedles : []}
               live={config.liveCompass}
+              needles={isMultiplayer ? revealNeedles : [{ bearing: record.results[0].guess.bearing, color: playerColor }]}
               size={compassSizeFor(width)}
               truthBearing={record.results[0].score.trueBearing}
             />
           ) : (
             <>
               <Compass
-                bearing={bearing}
-                color={playerColor}
-                extraNeedles={answeredNeedles}
                 live={config.liveCompass}
+                needles={[{ bearing, color: playerColor }, ...answeredNeedles]}
                 onChange={onSetBearing}
                 size={compassSizeFor(width)}
               />

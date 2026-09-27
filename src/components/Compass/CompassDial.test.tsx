@@ -7,7 +7,7 @@ import { CompassDial } from './CompassDial';
 import { TICK_STEP_DEG } from './constants';
 import type { CompassDialProps } from './types';
 
-const baseProps: CompassDialProps = { size: 100, bearing: null, extraNeedles: [], truthBearing: null };
+const baseProps: CompassDialProps = { size: 100, needles: [], truthBearing: null };
 
 // react-native-svg renders each primitive as a native host component (RNSVGLine, RNSVGPath
 // for <Polygon>...) and turns its colors into an ARGB integer: we query by native tag name
@@ -38,21 +38,16 @@ describe('CompassDial', () => {
     expect(eastText && fillPayload(eastText)).toBe(toColorPayload(night.colors.textMuted));
   });
 
-  it('renders no player needle when bearing is null', async () => {
+  it('renders no needle when the needle list is empty', async () => {
     const { root } = await render(<CompassDial {...baseProps} />);
     expect(byType(root, 'RNSVGPath')).toHaveLength(0);
   });
 
-  it('renders the player needle with a custom color', async () => {
-    const { root } = await render(<CompassDial {...baseProps} bearing={90} color="#123456" />);
+  it('renders a needle with its given color', async () => {
+    const { root } = await render(<CompassDial {...baseProps} needles={[{ bearing: 90, color: '#123456' }]} />);
     const paths = byType(root, 'RNSVGPath');
     expect(paths).toHaveLength(1);
     expect(fillPayload(paths[0])).toBe(toColorPayload('#123456'));
-  });
-
-  it('falls back to the theme accent color when no color is given', async () => {
-    const { root } = await render(<CompassDial {...baseProps} bearing={90} />);
-    expect(fillPayload(byType(root, 'RNSVGPath')[0])).toBe(toColorPayload(night.colors.accent));
   });
 
   it('renders the truth needle in the truth color when provided', async () => {
@@ -70,22 +65,23 @@ describe('CompassDial', () => {
     expect(explicitGroups(root)).toHaveLength(0);
   });
 
-  it('renders one <G> group with a colored needle per extra needle', async () => {
-    const extraNeedles = [
+  it('renders one <G> group with a colored needle per needle', async () => {
+    const needles = [
       { bearing: 10, color: '#111111' },
       { bearing: 200, color: '#222222' },
     ];
-    const { root } = await render(<CompassDial {...baseProps} extraNeedles={extraNeedles} />);
+    const { root } = await render(<CompassDial {...baseProps} needles={needles} />);
     expect(explicitGroups(root)).toHaveLength(2);
     const paths = byType(root, 'RNSVGPath');
     expect(paths.map(fillPayload)).toEqual([toColorPayload('#111111'), toColorPayload('#222222')]);
   });
 
-  it('renders bearing, truth and extra needles all together', async () => {
-    const extraNeedles = [{ bearing: 10, color: '#111111' }];
-    const { root } = await render(
-      <CompassDial {...baseProps} bearing={0} extraNeedles={extraNeedles} truthBearing={45} />,
-    );
+  it('renders every needle and the truth needle all together', async () => {
+    const needles = [
+      { bearing: 0, color: '#000000' },
+      { bearing: 10, color: '#111111' },
+    ];
+    const { root } = await render(<CompassDial {...baseProps} needles={needles} truthBearing={45} />);
     expect(byType(root, 'RNSVGPath')).toHaveLength(3);
   });
 });

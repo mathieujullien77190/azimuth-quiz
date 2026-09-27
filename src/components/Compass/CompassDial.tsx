@@ -15,13 +15,7 @@ import type { CompassDialProps } from './types';
  * Le cadran statique (graduations, lettres cardinales) est isole dans `CompassFace`, memoise
  * separement sur des props qui ne changent pas pendant un drag — voir ce fichier.
  */
-export const CompassDial = memo(function CompassDial({
-  size,
-  bearing,
-  color,
-  extraNeedles,
-  truthBearing,
-}: CompassDialProps) {
+export const CompassDial = memo(function CompassDial({ size, needles, truthBearing }: CompassDialProps) {
   const { colors, typography } = useTheme();
   const t = useTranslation();
   const center = size / 2;
@@ -36,7 +30,7 @@ export const CompassDial = memo(function CompassDial({
     <Svg width={size} height={size}>
       <CompassFace colors={colors} size={size} typography={typography} westLabel={t.compassWestLabel} />
 
-      {extraNeedles.map((needle, index) => (
+      {needles.map((needle, index) => (
         <G key={index}>
           <Polygon
             points={needlePoints(center, needle.bearing, needleLength, needleTail, needleHalfWidth)}
@@ -54,27 +48,9 @@ export const CompassDial = memo(function CompassDial({
         </G>
       ))}
 
-      {bearing !== null && (
-        <>
-          <Polygon
-            points={needlePoints(center, bearing, needleLength, needleTail, needleHalfWidth)}
-            fill={color ?? colors.accent}
-          />
-          <Circle
-            cx={polarToPoint(center, knobRadius, bearing).x}
-            cy={polarToPoint(center, knobRadius, bearing).y}
-            r={size * 0.04}
-            fill={color ?? colors.accent}
-            stroke={colors.background}
-            strokeWidth={3}
-          />
-        </>
-      )}
-
-      {/* Drawn last (on top of every player needle, including this player's own): the solution
-          must always read clearly, never partly hidden under an overlapping player knob. Its own
-          knob is the biggest of all three knob sizes (0.045 vs the player's own 0.04 and an extra
-          needle's 0.034) so it fully covers one underneath rather than leaving a colored ring
+      {/* Drawn last (on top of every player needle): the solution must always read clearly, never
+          partly hidden under an overlapping needle. Its own knob (0.045) is bigger than a
+          needle's (0.034) so it fully covers one underneath rather than leaving a colored ring
           peeking out around a smaller yellow center. */}
       {truthBearing !== null && (
         <>

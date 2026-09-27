@@ -79,9 +79,8 @@ export const OnlineAnswerView = ({
 
       <View style={styles.compass}>
         <Compass
-          bearing={bearing}
-          color={compassColor}
           live={liveCompass}
+          needles={[{ bearing, color: compassColor }]}
           onChange={onSetBearing}
           size={compassSizeFor(width)}
         />
@@ -118,7 +117,6 @@ export const OnlineResultsView = ({
   roundNumber,
   totalRounds,
   place,
-  compassColor,
   extraNeedles,
   liveCompass,
   truthBearing,
@@ -161,14 +159,7 @@ export const OnlineResultsView = ({
       <PlaceCard description={place.description} place={place} showCountry />
 
       <View style={styles.compass}>
-        <Compass
-          bearing={null}
-          color={compassColor}
-          extraNeedles={extraNeedles}
-          live={liveCompass}
-          size={compassSizeFor(width)}
-          truthBearing={truthBearing}
-        />
+        <Compass live={liveCompass} needles={extraNeedles} size={compassSizeFor(width)} truthBearing={truthBearing} />
       </View>
 
       <Card style={styles.earthCard}>

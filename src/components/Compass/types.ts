@@ -2,12 +2,11 @@ import type { Theme } from '@/types';
 
 export type CompassProps = {
   size: number;
-  /** Heading chosen by the player (null = not chosen yet). */
-  bearing: number | null;
-  /** Color of the player's needle (default: design accent). */
-  color?: string;
-  /** Extra needles (other players' answers on reveal). */
-  extraNeedles?: CompassNeedle[];
+  /** Every needle to draw, drawn identically — Compass no longer distinguishes "my own" from
+   * anyone else's; a caller wanting one to stand out (e.g. the player currently dragging it)
+   * just includes it here like any other. Omit an entry entirely for "not answered yet" rather
+   * than a null bearing. */
+  needles?: CompassNeedle[];
   /** True heading, shown on reveal. */
   truthBearing?: number | null;
   /** On mobile: the dial rotates so N points to true north (phone sensor). */
@@ -35,9 +34,7 @@ export type CompassNeedle = {
 
 export type CompassDialProps = {
   size: number;
-  bearing: number | null;
-  color?: string;
-  extraNeedles: CompassNeedle[];
+  needles: CompassNeedle[];
   truthBearing: number | null;
 };
 

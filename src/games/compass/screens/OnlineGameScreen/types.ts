@@ -57,7 +57,6 @@ export type OnlineAnswerViewProps = OnlineHeaderProps & {
  * `pending` mode), just fed live/partial data until `confirmed`. Pure rendering. */
 export type OnlineResultsViewProps = OnlineHeaderProps & {
   place: Place;
-  compassColor: string;
   extraNeedles: Needle[];
   liveCompass: boolean;
   truthBearing: number | null;

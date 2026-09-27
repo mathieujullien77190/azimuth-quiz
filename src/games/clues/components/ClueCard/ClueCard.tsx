@@ -201,7 +201,9 @@ const revealedBody = (
       );
     }
     case 'bearing':
-      return bearingDeg !== undefined ? <Compass bearing={bearingDeg} size={COMPASS_CLUE_SIZE} /> : null;
+      return bearingDeg !== undefined ? (
+        <Compass needles={[{ bearing: bearingDeg, color: colors.accent }]} size={COMPASS_CLUE_SIZE} />
+      ) : null;
     case 'distance': {
       const stage = distanceStage ?? 1;
       return distanceKm !== undefined && bearingDeg !== undefined ? (
