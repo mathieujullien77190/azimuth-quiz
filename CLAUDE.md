@@ -65,13 +65,13 @@ src/
                        # admin importe CATEGORIES directement d'ici (meme alias `@/`)
     clues/
       screens/         # ClueGameScreen, ClueSetupScreen
-      components/      # ClueCard, ClueSettingsProvider
+      components/      # ClueCard
       helpers/         # clueHistory.ts, clueSkeleton.ts
       constants.ts     # tuning propre a Clues : CLUE_ORDER, CLUE_CATEGORIES,
                        # CLUE_ANSWER_METHODS, DEFAULT_CLUE_SETTINGS, CLUE_HISTORY_STORAGE_KEY
     contour/
       screens/         # ContourGameScreen, ContourSetupScreen
-      components/      # ContourBoard, ContourSettingsProvider
+      components/      # ContourBoard
       helpers/         # contourScoring.ts
       constants.ts     # tuning propre a Silhouette (anciennement `constants/contour.ts`) :
                        # MAX_CONTOUR_POINTS, CONTOUR_GUESS_POINTS_BY_HINTS,
@@ -84,9 +84,13 @@ src/
                        # marche toujours sans savoir ou vit le fichier reel — room.ts/roomStore.ts
                        # (Compass) restent les seuls hors barrel (`firebase/firestore` plante
                        # Jest a l'import), importes directement via leur chemin `@/games/compass/...`
-  settings/            # GameSettings (Compass) en store Zustand (`src/games/compass/store/`
-                       # n'a pas encore ete elargi a lui) ; ClueSettings/ContourSettings
-                       # restent des contexts React independants (jamais migres, hors scope)
+  settings/            # GameSettings (Compass), ClueSettings et ContourSettings : les 3 en
+                       # stores Zustand (`useSettings`/`useClueSettings`/`useContourSettings`,
+                       # fin 2026-09 pour ces deux derniers — plus de Provider React a monter
+                       # dans `_layout.tsx`, un store est un singleton global). Seul `useSettings`
+                       # (Compass) persiste sur disque (`hydrateSettings`) ; Clue/Contour
+                       # repartent des defauts a chaque lancement, comme avant la migration
+                       # (`src/games/compass/store/` n'a pas encore ete elargi a `useSettings`)
   themes/              # night.ts / day.ts / fonts.ts / ThemeContext
   types/                # types de domaine partages (Guess, GameSettings, Theme...)
 ```

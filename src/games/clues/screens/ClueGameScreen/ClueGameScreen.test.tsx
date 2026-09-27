@@ -3,7 +3,7 @@ import { fireEvent, render } from '@testing-library/react-native';
 import { CLUE_PLACES } from '@/data';
 import { DEFAULT_CLUE_SETTINGS } from '@/games/clues/constants';
 import { resolveOrigin } from '@/helpers/location';
-import { ClueSettingsContext } from '@/settings';
+import { useClueSettings } from '@/settings';
 import { ThemeSettingsContext, day } from '@/themes';
 import type { ClueSettings } from '@/types';
 
@@ -37,11 +37,8 @@ const renderGame = async (overrides: Partial<ClueSettings> = {}, onQuit = jest.f
   // other mechanics and assume a clean 30pts start — the dedicated startWithFirstLetter tests
   // below already override this explicitly.
   const settings: ClueSettings = { ...DEFAULT_CLUE_SETTINGS, startWithFirstLetter: false, ...overrides };
-  const utils = await render(
-    <ClueSettingsContext.Provider value={{ settings, updateSettings: jest.fn() }}>
-      <ClueGameScreen onQuit={onQuit} />
-    </ClueSettingsContext.Provider>,
-  );
+  useClueSettings.setState({ settings, updateSettings: jest.fn() });
+  const utils = await render(<ClueGameScreen onQuit={onQuit} />);
   return { ...utils, onQuit, settings };
 };
 
@@ -466,6 +463,7 @@ describe('ClueGameScreen — origin resolution cleanup', () => {
 describe('ClueGameScreen — theme', () => {
   it('gives the header a white background by day instead of the page background', async () => {
     const settings: ClueSettings = { ...DEFAULT_CLUE_SETTINGS, startWithFirstLetter: false };
+    useClueSettings.setState({ settings, updateSettings: jest.fn() });
     const { toJSON } = await render(
       <ThemeSettingsContext.Provider
         value={{
@@ -478,9 +476,7 @@ describe('ClueGameScreen — theme', () => {
           resetAnimationsEnabled: jest.fn(),
         }}
       >
-        <ClueSettingsContext.Provider value={{ settings, updateSettings: jest.fn() }}>
-          <ClueGameScreen onQuit={jest.fn()} />
-        </ClueSettingsContext.Provider>
+        <ClueGameScreen onQuit={jest.fn()} />
       </ThemeSettingsContext.Provider>,
     );
     expect(JSON.stringify(toJSON())).toContain(day.colors.surface);

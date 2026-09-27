@@ -2,8 +2,6 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
-import ContourSettingsProvider from '@/games/contour/components/ContourSettingsProvider';
-import ClueSettingsProvider from '@/games/clues/components/ClueSettingsProvider';
 import LanguageProvider from '@/components/LanguageProvider';
 import ThemeProvider from '@/components/ThemeProvider';
 import { disableTextSelection, polyfillFlagEmoji } from '@/helpers';
@@ -35,11 +33,7 @@ const RootLayout = () => {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <ClueSettingsProvider>
-          <ContourSettingsProvider>
-            <ThemedShell />
-          </ContourSettingsProvider>
-        </ClueSettingsProvider>
+        <ThemedShell />
       </LanguageProvider>
     </ThemeProvider>
   );

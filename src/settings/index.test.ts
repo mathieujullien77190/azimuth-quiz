@@ -1,7 +1,9 @@
+import { DEFAULT_CLUE_SETTINGS } from '@/games/clues/constants';
+import { DEFAULT_CONTOUR_SETTINGS } from '@/games/contour/constants';
 import { DEFAULT_SETTINGS } from '@/games/compass/constants';
 import { loadSettings, saveSettings } from '@/helpers';
 
-import { hydrateSettings, useSettings } from '.';
+import { hydrateSettings, useClueSettings, useContourSettings, useSettings } from '.';
 
 jest.mock('@/helpers', () => ({
   ...jest.requireActual('@/helpers'),
@@ -16,6 +18,8 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockedLoadSettings.mockResolvedValue(DEFAULT_SETTINGS);
   useSettings.setState({ settings: DEFAULT_SETTINGS, ready: false });
+  useClueSettings.setState({ settings: DEFAULT_CLUE_SETTINGS });
+  useContourSettings.setState({ settings: DEFAULT_CONTOUR_SETTINGS });
 });
 
 describe('useSettings (Zustand store)', () => {
@@ -55,6 +59,38 @@ describe('useSettings (Zustand store)', () => {
     useSettings.getState().resetSettings();
 
     expect(useSettings.getState().settings.rounds).toBe(DEFAULT_SETTINGS.rounds);
+    expect(mockedSaveSettings).not.toHaveBeenCalled();
+  });
+});
+
+// Clues/Silhouette settings: no persistence at all (see each store's own comment in
+// `settings/index.ts`) — just the default-state and merge behavior, no `loadSettings`/
+// `saveSettings` involved.
+describe('useClueSettings (Zustand store)', () => {
+  it('starts with the default settings', () => {
+    expect(useClueSettings.getState().settings).toEqual(DEFAULT_CLUE_SETTINGS);
+  });
+
+  it('updateSettings merges a partial patch without touching storage', () => {
+    useClueSettings.getState().updateSettings({ difficulty: 'hard' });
+
+    expect(useClueSettings.getState().settings.difficulty).toBe('hard');
+    // The rest of the settings is preserved (a partial merge, not a replacement).
+    expect(useClueSettings.getState().settings.rounds).toBe(DEFAULT_CLUE_SETTINGS.rounds);
+    expect(mockedSaveSettings).not.toHaveBeenCalled();
+  });
+});
+
+describe('useContourSettings (Zustand store)', () => {
+  it('starts with the default settings', () => {
+    expect(useContourSettings.getState().settings).toEqual(DEFAULT_CONTOUR_SETTINGS);
+  });
+
+  it('updateSettings merges a partial patch without touching storage', () => {
+    useContourSettings.getState().updateSettings({ rounds: 10 });
+
+    expect(useContourSettings.getState().settings.rounds).toBe(10);
+    expect(useContourSettings.getState().settings.playerNames).toEqual(DEFAULT_CONTOUR_SETTINGS.playerNames);
     expect(mockedSaveSettings).not.toHaveBeenCalled();
   });
 });

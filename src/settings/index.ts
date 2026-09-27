@@ -1,4 +1,3 @@
-import { createContext, useContext } from 'react';
 import { create } from 'zustand';
 
 import { DEFAULT_CLUE_SETTINGS } from '@/games/clues/constants';
@@ -42,28 +41,27 @@ export const hydrateSettings = (): void => {
   loadSettings().then((settings) => useSettings.setState({ settings, ready: true }));
 };
 
-/** Clues game settings: independent context, never mixed with `GameSettings` (Compass). */
+/** Clues game settings: independent store, never mixed with `GameSettings` (Compass). No
+ * persistence (unlike `useSettings` above) — resets to defaults on every launch, until the game
+ * has more than one place pool to offer, same as before this was a plain Context. */
 export type ClueSettingsContextValue = {
   settings: ClueSettings;
   updateSettings: (patch: Partial<ClueSettings>) => void;
 };
 
-export const ClueSettingsContext = createContext<ClueSettingsContextValue>({
+export const useClueSettings = create<ClueSettingsContextValue>()((set) => ({
   settings: DEFAULT_CLUE_SETTINGS,
-  updateSettings: () => {},
-});
+  updateSettings: (patch) => set((state) => ({ settings: { ...state.settings, ...patch } })),
+}));
 
-export const useClueSettings = (): ClueSettingsContextValue => useContext(ClueSettingsContext);
-
-/** Contour game settings: independent context, never mixed with `GameSettings`/`ClueSettings`. */
+/** Contour game settings: independent store, never mixed with `GameSettings`/`ClueSettings`. No
+ * persistence, same as `useClueSettings` above. */
 export type ContourSettingsContextValue = {
   settings: ContourSettings;
   updateSettings: (patch: Partial<ContourSettings>) => void;
 };
 
-export const ContourSettingsContext = createContext<ContourSettingsContextValue>({
+export const useContourSettings = create<ContourSettingsContextValue>()((set) => ({
   settings: DEFAULT_CONTOUR_SETTINGS,
-  updateSettings: () => {},
-});
-
-export const useContourSettings = (): ContourSettingsContextValue => useContext(ContourSettingsContext);
+  updateSettings: (patch) => set((state) => ({ settings: { ...state.settings, ...patch } })),
+}));

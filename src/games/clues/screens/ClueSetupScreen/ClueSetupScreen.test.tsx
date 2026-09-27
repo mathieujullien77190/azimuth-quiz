@@ -1,7 +1,15 @@
 import { fireEvent, render, within } from '@testing-library/react-native';
 
-import ClueSettingsProvider from '../../components/ClueSettingsProvider';
+import { DEFAULT_CLUE_SETTINGS } from '@/games/clues/constants';
+import { useClueSettings } from '@/settings';
+
 import ClueSetupScreen from '.';
+
+// `useClueSettings` is a module-level Zustand store (no more Provider to remount fresh per
+// test) — reset explicitly so a chip pressed in one test doesn't leak into the next.
+beforeEach(() => {
+  useClueSettings.setState({ settings: DEFAULT_CLUE_SETTINGS });
+});
 
 /** Section (Card) containing a given title: used to resolve ambiguities between labels shared
  * across sections (e.g. "5" is both a possible player count and a possible round count). */
@@ -9,11 +17,7 @@ const section = (getByText: (text: string) => Parameters<typeof within>[0], titl
   within(getByText(title).parent!.parent!);
 
 const renderScreen = async (onStart = jest.fn(), onBack = jest.fn()) => {
-  const utils = await render(
-    <ClueSettingsProvider>
-      <ClueSetupScreen onBack={onBack} onStart={onStart} />
-    </ClueSettingsProvider>,
-  );
+  const utils = await render(<ClueSetupScreen onBack={onBack} onStart={onStart} />);
   return { ...utils, onBack, onStart };
 };
 
