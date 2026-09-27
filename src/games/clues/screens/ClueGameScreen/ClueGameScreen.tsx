@@ -462,9 +462,7 @@ export const ClueGameScreen = ({ onQuit }: ClueGameScreenProps) => {
           <PlayerTabs
             activeIndex={roundOver ? -1 : turnIndex}
             activeLabel={t.game.playerTurn}
-            allowRevision
             answered={noneAnswered}
-            onSelect={() => {}}
             order={playerOrder}
             players={playerTabs}
           />

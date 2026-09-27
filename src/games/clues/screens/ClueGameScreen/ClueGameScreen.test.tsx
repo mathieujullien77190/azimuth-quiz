@@ -67,13 +67,6 @@ describe('ClueGameScreen — picking clues', () => {
     expect(getByText('29 pts en jeu')).toBeTruthy();
   });
 
-  it('pressing a header player tab is a no-op (display-only, unlike the buzz-panel tabs)', async () => {
-    const { getByText, getAllByLabelText } = await renderGame({ playerNames: ['Zoé', 'Max'] });
-    await fireEvent.press(getAllByLabelText('Max')[0]);
-    // Still Zoé's turn: the header tabs don't change the active player.
-    expect(getByText('À Zoé de jouer')).toBeTruthy();
-  });
-
   it('emoji reveals progressively over 3 clicks then locks', async () => {
     const { getByText, getAllByText } = await renderGame({ playerNames: ['Zoé'] });
     await fireEvent.press(getByText('Emoji'));
@@ -218,9 +211,9 @@ describe('ClueGameScreen — vowels bonus clue', () => {
 
 describe('ClueGameScreen — buzz flow (spoken)', () => {
   it('lets the buzzing player be picked, verified, and settled correct', async () => {
-    const { getByText, getAllByLabelText } = await renderGame({ answerMethod: 'spoken', playerNames: ['Zoé'] });
+    const { getByText, getByLabelText } = await renderGame({ answerMethod: 'spoken', playerNames: ['Zoé'] });
     await fireEvent.press(getByText('🔔 J’ai trouvé !'));
-    await fireEvent.press(getAllByLabelText('Zoé')[1]);
+    await fireEvent.press(getByLabelText('Zoé'));
     expect(getByText(/Zoé buzze/)).toBeTruthy();
     await fireEvent.press(getByText('Vérifier'));
     await fireEvent.press(getByText('✓ Bonne réponse'));
@@ -230,12 +223,12 @@ describe('ClueGameScreen — buzz flow (spoken)', () => {
   });
 
   it('settles a wrong answer with a fixed penalty and ends the round (Vérifier already revealed the place)', async () => {
-    const { getByText, getAllByLabelText } = await renderGame({
+    const { getByText, getByLabelText } = await renderGame({
       answerMethod: 'spoken',
       playerNames: ['Zoé'],
     });
     await fireEvent.press(getByText('🔔 J’ai trouvé !'));
-    await fireEvent.press(getAllByLabelText('Zoé')[1]);
+    await fireEvent.press(getByLabelText('Zoé'));
     await fireEvent.press(getByText('Vérifier'));
     await fireEvent.press(getByText('✕ Faux'));
     // Fixed penalty (WRONG_ANSWER_PENALTY = 10), regardless of how many clues had been taken.
@@ -246,12 +239,12 @@ describe('ClueGameScreen — buzz flow (spoken)', () => {
   });
 
   it('cancels a buzz (wrong player, accidental click...) without touching the score', async () => {
-    const { getByText, getAllByLabelText, queryByText } = await renderGame({
+    const { getByText, getByLabelText, queryByText } = await renderGame({
       answerMethod: 'spoken',
       playerNames: ['Zoé'],
     });
     await fireEvent.press(getByText('🔔 J’ai trouvé !'));
-    await fireEvent.press(getAllByLabelText('Zoé')[1]);
+    await fireEvent.press(getByLabelText('Zoé'));
     await fireEvent.press(getByText('Vérifier'));
     await fireEvent.press(getByText('Annuler'));
     expect(queryByText('✓ Bonne réponse')).toBeNull();
@@ -259,12 +252,12 @@ describe('ClueGameScreen — buzz flow (spoken)', () => {
   });
 
   it('asks who buzzes and lets any player be selected before verifying', async () => {
-    const { getByText, getAllByLabelText } = await renderGame({
+    const { getByText, getByLabelText } = await renderGame({
       answerMethod: 'spoken',
       playerNames: ['Zoé', 'Max'],
     });
     await fireEvent.press(getByText('🔔 J’ai trouvé !'));
-    await fireEvent.press(getAllByLabelText('Max')[1]);
+    await fireEvent.press(getByLabelText('Max'));
     expect(getByText(/Max buzze/)).toBeTruthy();
     await fireEvent.press(getByText('Vérifier'));
     await fireEvent.press(getByText('✓ Bonne réponse'));
@@ -390,7 +383,7 @@ describe('ClueGameScreen — round progression', () => {
   });
 
   it('final standings: shows a single-winner banner when totals differ', async () => {
-    const { getByText, getAllByLabelText } = await renderGame({
+    const { getByText, getByLabelText } = await renderGame({
       answerMethod: 'spoken',
       playerNames: ['Zoé', 'Max'],
       rounds: 2,
@@ -398,13 +391,13 @@ describe('ClueGameScreen — round progression', () => {
     // Round 1: Max reveals a clue then finds it, their penalty = the cost of that clue (3).
     await fireEvent.press(getByText('Population'));
     await fireEvent.press(getByText('🔔 J’ai trouvé !'));
-    await fireEvent.press(getAllByLabelText('Max')[1]);
+    await fireEvent.press(getByLabelText('Max'));
     await fireEvent.press(getByText('Vérifier'));
     await fireEvent.press(getByText('✓ Bonne réponse'));
     await fireEvent.press(getByText('Continuer'));
     // Round 2: Zoé buzzes in and finds it with no clue, their cumulative total stays at 0.
     await fireEvent.press(getByText('🔔 J’ai trouvé !'));
-    await fireEvent.press(getAllByLabelText('Zoé')[1]);
+    await fireEvent.press(getByLabelText('Zoé'));
     await fireEvent.press(getByText('Vérifier'));
     await fireEvent.press(getByText('✓ Bonne réponse'));
     await fireEvent.press(getByText('Voir le score'));
