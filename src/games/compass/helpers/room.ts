@@ -120,34 +120,54 @@ export const ROOM_MAX_PLAYERS = 10;
 export type RoomPlayer = { name: string; joinedAt: Timestamp | null; color?: string };
 export type RoomPlayers = Record<string, RoomPlayer>;
 
-/** Appends "2", "3"... to `name` until it no longer collides with another player already in the
- * room — so two "Max"s joining the same room stay tellable apart in the connected-players list. */
-const dedupeName = (name: string, players: RoomPlayers, uid: string): string => {
-  const others = Object.entries(players)
-    .filter(([otherUid]) => otherUid !== uid)
-    .map(([, player]) => player.name);
-  if (!others.includes(name)) return name;
-  let suffix = 2;
-  while (others.includes(`${name}${suffix}`)) suffix += 1;
-  return `${name}${suffix}`;
+/** Escapes `text` for use inside a `RegExp` — only ever called on a player's own display name
+ * here, but that's still arbitrary user input. */
+const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** Resolves the name this joiner should get, numbering it against `name`'s other occurrences
+ * already in the room — a first collision numbers *both* ("Matou"/"Matou" become "Matou1"/
+ * "Matou2", not "Matou"/"Matou2": leaving the earlier one bare reads as if it were the "real"
+ * Matou), a further one just picks the next free number ("Matou3"...). `renameUid`/`renameName`
+ * are only set for that retroactive rename of the earlier, still-bare player. */
+const resolveName = (
+  name: string,
+  players: RoomPlayers,
+  uid: string,
+): { name: string; renameUid?: string; renameName?: string } => {
+  const others = Object.entries(players).filter(([otherUid]) => otherUid !== uid);
+  const bareMatch = others.find(([, player]) => player.name === name);
+  if (bareMatch) {
+    const [bareUid] = bareMatch;
+    return { name: `${name}2`, renameUid: bareUid, renameName: `${name}1` };
+  }
+  const numberPattern = new RegExp(`^${escapeRegExp(name)}(\\d+)$`);
+  const numbers = others
+    .map(([, player]) => player.name.match(numberPattern)?.[1])
+    .filter((match): match is string => match !== undefined)
+    .map(Number);
+  return numbers.length === 0 ? { name } : { name: `${name}${Math.max(...numbers) + 1}` };
 };
 
 /** Registers (or renames) this device as a connected player in the room, returning its own uid
  * so the caller can tell its own entry apart from everyone else's. A no-op past
  * `ROOM_MAX_PLAYERS` distinct players, for a device that isn't already one of them. Only ever
- * touches `name`/`joinedAt`, each its own field path — never `color`, not even to preserve it:
- * writing `players.{uid}` as a whole (replacing the nested map in one shot) would otherwise wipe
- * out whatever color the host already assigned there. */
+ * touches `name`/`joinedAt` (and, on a name collision, another player's `name` — see
+ * `resolveName`), each its own field path — never `color`, not even to preserve it: writing
+ * `players.{uid}` as a whole (replacing the nested map in one shot) would otherwise wipe out
+ * whatever color the host already assigned there. */
 export const joinRoomPresence = async (code: string, name: string): Promise<string> => {
   const uid = await ensureSignedIn();
   const ref = doc(db, 'rooms', code);
   const players = ((await getDoc(ref)).data()?.players as RoomPlayers | undefined) ?? {};
   const existing = players[uid];
   if (existing || Object.keys(players).length < ROOM_MAX_PLAYERS) {
-    await updateDoc(ref, {
-      [`players.${uid}.name`]: dedupeName(name, players, uid),
+    const assignment = resolveName(name, players, uid);
+    const updates: Record<string, unknown> = {
+      [`players.${uid}.name`]: assignment.name,
       [`players.${uid}.joinedAt`]: existing?.joinedAt ?? serverTimestamp(),
-    });
+    };
+    if (assignment.renameUid !== undefined) updates[`players.${assignment.renameUid}.name`] = assignment.renameName;
+    await updateDoc(ref, updates);
   }
   return uid;
 };

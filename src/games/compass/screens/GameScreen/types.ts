@@ -2,7 +2,7 @@ import type { RefObject } from 'react';
 import type { ScrollView } from 'react-native';
 
 import type { LegendItem } from '../../components/Legend';
-import type { EarthMark } from '@/common/EarthSection';
+import type { EarthMark } from '@/components/EarthSection';
 import type { GameSettings, Place, Player, RoundRecord } from '@/types';
 
 export type GameScreenProps = {

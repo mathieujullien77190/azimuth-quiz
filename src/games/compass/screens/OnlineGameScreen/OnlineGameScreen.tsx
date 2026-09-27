@@ -1,4 +1,5 @@
-import { ActivityIndicator, Modal, StyleSheet, Text, View } from 'react-native';
+import { useRef } from 'react';
+import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PLAYER_COLORS, fontSize, spacing } from '@/data';
@@ -8,7 +9,7 @@ import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
-import type { EarthMark } from '@/common/EarthSection';
+import type { EarthMark } from '@/components/EarthSection';
 import { REVEAL_OPACITY } from '../GameScreen/constants';
 import EndScreen from '../EndScreen';
 import ThemeBackdrop from '@/components/ThemeBackdrop';
@@ -62,6 +63,12 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   const { colors } = useTheme();
   const t = useTranslation();
   const game = useOnlineGame(code, onQuit);
+
+  // Same "Suivant"/"Precedent" scroll nav as the local GameScreen (see its own comment) — kept
+  // above every early return below so the hook order never depends on which phase we're in.
+  const scrollRef = useRef<ScrollView>(null);
+  const goToCap = () => scrollRef.current?.scrollToEnd({ animated: true });
+  const goToDistance = () => scrollRef.current?.scrollTo({ animated: true, y: 0 });
 
   if (!game.roomExists) {
     return (
@@ -201,12 +208,15 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
       headerScore={headerScore}
       liveCompass={roomSettings.liveCompass}
       maxDistanceKm={maxDistanceKm}
+      onGoToCap={goToCap}
+      onGoToDistance={goToDistance}
       onQuit={game.handleQuit}
       onSetBearing={game.setBearing}
       onSetDistanceKm={game.setDistanceKm}
       onSubmit={game.submit}
       place={place}
       roundNumber={gameState.roundIndex + 1}
+      scrollRef={scrollRef}
       showCountry={roomSettings.showCountry}
       straightLine={straightLine}
       submitDisabled={!game.bearingTouched || !game.distanceTouched}

@@ -1,4 +1,7 @@
-import type { EarthMark } from '@/common/EarthSection';
+import type { RefObject } from 'react';
+import type { ScrollView } from 'react-native';
+
+import type { EarthMark } from '@/components/EarthSection';
 import type { Difficulty, Place, RoundRecord } from '@/types';
 
 export type OnlineGameScreenProps = {
@@ -29,6 +32,7 @@ export type OnlineHeaderProps = {
 /** `gameState.screen === 'game'`, not yet submitted — the only phase with an editable
  * compass/slider. Pure rendering, no hooks with side effects. */
 export type OnlineAnswerViewProps = OnlineHeaderProps & {
+  scrollRef: RefObject<ScrollView | null>;
   place: Place;
   showCountry: boolean;
   compassColor: string;
@@ -40,6 +44,8 @@ export type OnlineAnswerViewProps = OnlineHeaderProps & {
   distanceKm: number;
   onSetDistanceKm: (value: number) => void;
   maxDistanceKm: number;
+  onGoToCap: () => void;
+  onGoToDistance: () => void;
   onSubmit: () => void;
   submitDisabled: boolean;
 };

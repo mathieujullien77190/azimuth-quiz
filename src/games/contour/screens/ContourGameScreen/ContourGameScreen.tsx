@@ -33,7 +33,7 @@ import ThemeBackdrop from '@/components/ThemeBackdrop';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import NoOneFoundText from '@/components/ui/NoOneFoundText';
-import RoundProgress from '@/common/RoundProgress';
+import RoundProgress from '@/components/RoundProgress';
 import Screen from '@/components/ui/Screen';
 import { BOARD_AREA_MARGIN, INITIAL_BOARD_MAX_SIZE } from './constants';
 import { contourPlayerTotals, neighborIcon, neighborName, normalizeContourGuess, randomCountry } from './helpers';

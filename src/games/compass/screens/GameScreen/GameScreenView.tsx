@@ -7,17 +7,18 @@ import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
-import Compass from '@/common/Compass';
+import Compass from '@/components/Compass';
 import DistanceSlider from '../../components/DistanceSlider';
-import EarthSection from '@/common/EarthSection';
+import EarthSection from '@/components/EarthSection';
+import FooterNav from '../../components/FooterNav';
 import InclinationSlider from '../../components/InclinationSlider';
 import Legend from '../../components/Legend';
 import PlaceCard from '../../components/PlaceCard';
-import PlayerTabs from '@/common/PlayerTabs';
+import PlayerTabs from '@/components/PlayerTabs';
 import RoundResult from '../../components/RoundResult';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import RoundProgress from '@/common/RoundProgress';
+import RoundProgress from '@/components/RoundProgress';
 import Screen from '@/components/ui/Screen';
 import { compassSizeFor, earthSizeFor } from './helpers';
 import type { GameScreenViewProps } from './types';
@@ -64,13 +65,6 @@ const createStyles = ({ colors, isDark, typography }: Theme) =>
     earthCenter: {
       alignItems: 'center',
     },
-    footerRow: {
-      flexDirection: 'row',
-      gap: spacing.sm,
-    },
-    validateFlex: {
-      flex: 1,
-    },
     turnPopupOverlay: {
       position: 'absolute',
       top: 0,
@@ -113,52 +107,6 @@ export const TurnPopup = ({ name }: TurnPopupProps) => {
     <Pressable accessibilityRole="button" onPress={() => setVisible(false)} style={styles.turnPopupOverlay}>
       <Text style={styles.turnPopupText}>{t.game.playerTurn(name)}</Text>
     </Pressable>
-  );
-};
-
-type FooterNavProps = {
-  onGoToCap: () => void;
-  onGoToDistance: () => void;
-  validateDisabled: boolean;
-  onValidate: () => void;
-};
-
-/**
- * Bouton "Suivant"/"Precedent" (un seul affiche a la fois, selon la section vers laquelle on a
- * navigue en dernier) a cote de "Valider". Monte avec une `key` differente a chaque manche/joueur
- * (voir l'appel dans `GameScreenView`) : repart donc toujours sur "Suivant" sans effet ni ref-
- * pendant-le-rendu, juste le remontage standard React quand la key change.
- */
-const FooterNav = ({ onGoToCap, onGoToDistance, validateDisabled, onValidate }: FooterNavProps) => {
-  const styles = useThemedStyles(createStyles);
-  const t = useTranslation();
-  const [onCap, setOnCap] = useState(false);
-
-  return (
-    <View style={styles.footerRow}>
-      {onCap ? (
-        <Button
-          label={t.game.previousStep}
-          onPress={() => {
-            setOnCap(false);
-            onGoToDistance();
-          }}
-          variant="ghost"
-        />
-      ) : (
-        <Button
-          label={t.game.nextStep}
-          onPress={() => {
-            setOnCap(true);
-            onGoToCap();
-          }}
-          variant="ghost"
-        />
-      )}
-      <View style={styles.validateFlex}>
-        <Button disabled={validateDisabled} label={t.game.validate} onPress={onValidate} />
-      </View>
-    </View>
   );
 };
 

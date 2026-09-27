@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -6,7 +6,7 @@ import { fontSize, spacing } from '@/data';
 import { arcKmFromChordKm, formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
-import type { EarthMark } from '@/common/EarthSection';
+import type { EarthMark } from '@/components/EarthSection';
 import type { Theme } from '@/types';
 
 import EndScreen from '../EndScreen';
@@ -65,11 +65,6 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
   };
 
   const record = game.phase === 'reveal' ? game.currentRecord : undefined;
-  // Everyone has submitted: the reveal scrolls back to the top, instead of staying scrolled
-  // on the section where the last player submitted.
-  useEffect(() => {
-    if (record) scrollRef.current?.scrollTo({ animated: true, y: 0 });
-  }, [record]);
 
   // Other players' already-submitted answers: shown on the compass and on the Earth, faded
   // out, unless the "Hide other players' answers" option is on (each player then only sees

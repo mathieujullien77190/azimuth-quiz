@@ -11,11 +11,11 @@ import { useTheme, useThemedStyles } from '@/themes';
 import type { ClueId, Origin, Theme } from '@/types';
 
 import ClueCard from '../../components/ClueCard';
-import PlayerTabs from '@/common/PlayerTabs';
+import PlayerTabs from '@/components/PlayerTabs';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import NoOneFoundText from '@/components/ui/NoOneFoundText';
-import RoundProgress from '@/common/RoundProgress';
+import RoundProgress from '@/components/RoundProgress';
 import Screen from '@/components/ui/Screen';
 import { WRONG_ANSWER_PENALTY } from './constants';
 import {

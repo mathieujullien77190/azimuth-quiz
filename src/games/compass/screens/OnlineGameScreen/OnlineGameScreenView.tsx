@@ -6,16 +6,17 @@ import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
 
-import Compass from '@/common/Compass';
+import Compass from '@/components/Compass';
 import DistanceSlider from '../../components/DistanceSlider';
-import EarthSection from '@/common/EarthSection';
+import EarthSection from '@/components/EarthSection';
+import FooterNav from '../../components/FooterNav';
 import { compassSizeFor, earthSizeFor } from '../GameScreen/helpers';
 import InclinationSlider from '../../components/InclinationSlider';
 import PlaceCard from '../../components/PlaceCard';
 import RoundResult from '../../components/RoundResult';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import RoundProgress from '@/common/RoundProgress';
+import RoundProgress from '@/components/RoundProgress';
 import Screen from '@/components/ui/Screen';
 import type { OnlineAnswerViewProps, OnlineHeaderProps, OnlineResultsViewProps } from './types';
 
@@ -90,6 +91,7 @@ const OnlineHeader = ({ onQuit, headerScore, difficulties, roundNumber, totalRou
  * compass/slider. Pure rendering, no hooks with side effects.
  */
 export const OnlineAnswerView = ({
+  scrollRef,
   onQuit,
   headerScore,
   difficulties,
@@ -106,6 +108,8 @@ export const OnlineAnswerView = ({
   distanceKm,
   onSetDistanceKm,
   maxDistanceKm,
+  onGoToCap,
+  onGoToDistance,
   onSubmit,
   submitDisabled,
 }: OnlineAnswerViewProps) => {
@@ -115,7 +119,15 @@ export const OnlineAnswerView = ({
 
   return (
     <Screen
-      footer={<Button disabled={submitDisabled} label={t.game.validate} onPress={onSubmit} />}
+      footer={
+        <FooterNav
+          key={roundNumber}
+          onGoToCap={onGoToCap}
+          onGoToDistance={onGoToDistance}
+          onValidate={onSubmit}
+          validateDisabled={submitDisabled}
+        />
+      }
       header={
         <OnlineHeader
           difficulties={difficulties}
@@ -125,6 +137,7 @@ export const OnlineAnswerView = ({
           totalRounds={totalRounds}
         />
       }
+      scrollRef={scrollRef}
     >
       <PlaceCard place={place} showCountry={showCountry} />
 

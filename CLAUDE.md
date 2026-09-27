@@ -31,12 +31,13 @@ par `*Screen` — ce sont les seuls rendus par une route de `src/app/`) de `comp
 ```
 src/
   app/                 # Expo Router : _layout (providers + Stack), routes (re-exports minces)
-  common/              # composants partages par 2+ jeux (pas des primitives UI generiques) :
+  components/          # ce qui n'est PAS specifique a un jeu (plus de dossier `common/` a part
+                       # depuis fin 2026-09 : fusionne ici) : ui/ (Button, Card, Chip, Screen,
+                       # Section, Stat, Toggle), HomeScreen, SettingsScreen, LanguageProvider,
+                       # ThemeProvider, MascotButton/HelicopterButton/UfoButton, GameCard, et les
+                       # composants partages par 2+ jeux (pas des primitives UI generiques) :
                        # Compass, EarthSection (Compass + clue "Distance" de Clues), PlayerTabs
                        # (Compass + Clues), RoundProgress (les 3 jeux)
-  components/          # ce qui n'est PAS specifique a un jeu : ui/ (Button, Card, Chip, Screen,
-                       # Section, Stat, Toggle), HomeScreen, SettingsScreen, LanguageProvider,
-                       # ThemeProvider, MascotButton/HelicopterButton/UfoButton, GameCard
   data/                # donnees/valeurs partagees par 2+ jeux (score/geo generiques, cles de
                        # stockage app-wide, options de partie, palette joueurs...) + data/places/
                        # (lieux Compass+Clues) + data/contours/ (codec geometrie Silhouette) +

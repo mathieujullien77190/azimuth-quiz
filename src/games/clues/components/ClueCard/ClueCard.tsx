@@ -9,8 +9,8 @@ import { useTheme, useThemedStyles } from '@/themes';
 import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 import type { Theme } from '@/types';
 
-import Compass from '@/common/Compass';
-import EarthSection from '@/common/EarthSection';
+import Compass from '@/components/Compass';
+import EarthSection from '@/components/EarthSection';
 import { COMPASS_CLUE_SIZE, EARTH_CLUE_SIZE, POSITION_COORDS } from './constants';
 import { dayNightEmoji, elevationTierEmoji, localTimeFor, populationTier, vowelsOf } from './helpers';
 import type { ClueCardProps } from './types';
