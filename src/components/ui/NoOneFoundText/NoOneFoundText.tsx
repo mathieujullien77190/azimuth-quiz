@@ -1,21 +1,10 @@
-import { StyleSheet, Text } from 'react-native';
-
-import { fontSize } from '@/data';
+import { Text } from 'react-native';
 import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
-import type { Theme } from '@/types';
 
 import type { NoOneFoundTextProps } from './types';
 
-const createStyles = ({ colors, typography }: Theme) =>
-  StyleSheet.create({
-    text: {
-      ...typography.heading,
-      color: colors.danger,
-      fontSize: fontSize.caption + 1,
-      textAlign: 'center',
-    },
-  });
+import { createStyles } from './styles';
 
 /**
  * Shared "nobody found it" line for a round nobody solved (Clues' give-up, Contour's hint-tier-4
@@ -26,7 +15,9 @@ const createStyles = ({ colors, typography }: Theme) =>
 const NoOneFoundText = ({ players }: NoOneFoundTextProps) => {
   const t = useTranslation();
   const styles = useThemedStyles(createStyles);
-  return <Text style={styles.text}>{players.length === 1 ? t.common.soloNotFound(players[0]) : t.common.noOneFound}</Text>;
+  return (
+    <Text style={styles.text}>{players.length === 1 ? t.common.soloNotFound(players[0]) : t.common.noOneFound}</Text>
+  );
 };
 
 export default NoOneFoundText;

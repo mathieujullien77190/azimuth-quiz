@@ -17,7 +17,7 @@ export const fr: Translations = {
       compass: {
         title: 'Boussole',
         tagline: 'Un lieu s’affiche. Vise son cap et estime sa distance depuis ta position.',
-        meta: ['1 à 6 joueurs'],
+        meta: ['1 à 10 joueurs'],
         cta: 'Jouer',
       },
       clues: {

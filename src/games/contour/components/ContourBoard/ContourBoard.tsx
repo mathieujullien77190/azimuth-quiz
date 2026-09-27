@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import Svg, { Path, Text as SvgText } from 'react-native-svg';
 
 import { useTheme } from '@/themes';
@@ -7,6 +7,7 @@ import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 import { HINT_ICON_FONT_SIZE, HINT_LABEL_FONT_SIZE, VISIBLE_STROKE_WIDTH } from './constants';
 import { polylinePath } from './helpers';
 import type { ContourBoardProps } from './types';
+import { styles } from './styles';
 
 const NO_HINT_LABELS: ContourBoardProps['hintLabels'] = [];
 
@@ -48,9 +49,3 @@ export const ContourBoard = ({ width, height, outline, hintLabels = NO_HINT_LABE
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  board: {
-    alignSelf: 'center',
-  },
-});

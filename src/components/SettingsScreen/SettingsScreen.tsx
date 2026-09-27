@@ -1,12 +1,10 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-
-import { fontSize, spacing } from '@/data';
+import { Text, View } from 'react-native';
 import { clearAppData } from '@/helpers';
 import { useLanguage, useTranslation, type Language } from '@/i18n';
 import { useSettings } from '@/settings';
 import { useThemedStyles, useThemeSettings } from '@/themes';
-import type { Theme, ThemeId } from '@/types';
+import type { ThemeId } from '@/types';
 
 import Button from '../ui/Button';
 import Chip from '../ui/Chip';
@@ -16,33 +14,7 @@ import Toggle from '../ui/Toggle';
 import { APP_VERSION } from './constants';
 import type { SettingsScreenProps } from './types';
 
-const createStyles = ({ colors, typography }: Theme) =>
-  StyleSheet.create({
-    title: {
-      ...typography.display,
-      color: colors.accent,
-      fontSize: fontSize.title,
-      paddingTop: spacing.sm,
-    },
-    chips: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: spacing.sm,
-    },
-    about: {
-      gap: spacing.sm,
-    },
-    aboutLine: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
-    },
-    version: {
-      ...typography.label,
-      color: colors.textMuted,
-      fontSize: fontSize.caption,
-    },
-  });
+import { createStyles } from './styles';
 
 export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const styles = useThemedStyles(createStyles);

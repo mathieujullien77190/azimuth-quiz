@@ -1,170 +1,16 @@
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-
-import { fontSize, spacing } from '@/data';
+import { ActivityIndicator, Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { arcKmFromChordKm, formatBearing, formatDistance, formatInclination, formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
-import type { Theme } from '@/types';
+import type { Player, Theme } from '@/types';
 
 import Card from '@/components/ui/Card';
-import { COMPACT_FONT_SCALE, COMPACT_MAX_WIDTH } from './constants';
+import { COMPACT_MAX_WIDTH } from './constants';
 import { formatRowScore } from './helpers';
 import type { RoundResultProps } from './types';
 
-const createStyles = ({ colors, radius, typography }: Theme, compact: boolean) => {
-  const scale = compact ? COMPACT_FONT_SCALE : 1;
-  return StyleSheet.create({
-    card: {
-      gap: spacing.md,
-    },
-    truth: {
-      gap: 2,
-      padding: spacing.md,
-      borderRadius: radius.md,
-      backgroundColor: colors.surfaceHigh,
-    },
-    truthHead: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-      marginBottom: 2,
-    },
-    truthDot: {
-      width: 14,
-      height: 14,
-      borderRadius: 7,
-    },
-    truthLabel: {
-      ...typography.heading,
-      color: colors.text,
-      fontSize: fontSize.subtitle * scale,
-    },
-    // Small pill button, shared look for both the scoring-info toggle and the kick button below —
-    // only the border/text color (accent vs. danger) tells them apart.
-    miniButton: {
-      alignSelf: 'center',
-      marginTop: spacing.md,
-      paddingVertical: 6,
-      paddingHorizontal: spacing.md,
-      borderRadius: radius.button,
-      borderWidth: 1.5,
-      backgroundColor: colors.surfaceHigh,
-    },
-    scoringToggle: {
-      borderColor: colors.accent,
-    },
-    scoringToggleText: {
-      ...typography.label,
-      color: colors.accent,
-      fontSize: fontSize.caption * scale,
-    },
-    scoringInfo: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: (fontSize.caption + 1) * scale,
-      marginTop: spacing.xs,
-      textAlign: 'center',
-    },
-    truthRow: {
-      flexDirection: 'row',
-      alignItems: 'baseline',
-      gap: spacing.sm,
-    },
-    truthRowLabel: {
-      ...typography.label,
-      color: colors.textMuted,
-      fontSize: fontSize.caption * scale,
-      width: 90,
-    },
-    // Same style as a player's answer value (rowValue): the truth doesn't need to
-    // stand out by color or size, only its place at the very top of the block signals it.
-    truthValue: {
-      ...typography.body,
-      color: colors.text,
-      fontSize: (fontSize.body - 1) * scale,
-    },
-    player: {
-      gap: spacing.xs,
-    },
-    playerBorder: {
-      paddingTop: spacing.md,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-    },
-    playerHead: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-    },
-    playerDot: {
-      width: 14,
-      height: 14,
-      borderRadius: 7,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    playerDotCheck: {
-      color: colors.onAccent,
-      fontSize: 8,
-      fontWeight: '700',
-    },
-    playerName: {
-      ...typography.heading,
-      flex: 1,
-      color: colors.text,
-      fontSize: fontSize.subtitle * scale,
-    },
-    scoreBlock: {
-      alignItems: 'flex-end',
-    },
-    kick: {
-      borderColor: colors.danger,
-    },
-    kickText: {
-      ...typography.label,
-      color: colors.danger,
-      fontSize: fontSize.caption * scale,
-    },
-    playerTotal: {
-      ...typography.display,
-      color: colors.accent,
-      fontSize: fontSize.title * scale,
-    },
-    // Round score, below the detail rows: same size/weight as rowPoints, in white.
-    roundTotalRow: {
-      flexDirection: 'row',
-      justifyContent: 'flex-end',
-    },
-    roundScore: {
-      ...typography.heading,
-      color: colors.text,
-      fontSize: fontSize.body * scale,
-    },
-    row: {
-      flexDirection: 'row',
-      alignItems: 'baseline',
-      justifyContent: 'space-between',
-      gap: spacing.sm,
-    },
-    rowLabel: {
-      ...typography.label,
-      color: colors.textMuted,
-      fontSize: fontSize.caption * scale,
-      width: 90,
-    },
-    rowValue: {
-      ...typography.body,
-      flex: 1,
-      color: colors.text,
-      fontSize: (fontSize.body - 1) * scale,
-    },
-    rowPoints: {
-      ...typography.heading,
-      fontSize: fontSize.body * scale,
-    },
-  });
-};
+import { createStyles } from './styles';
 
 export const RoundResult = ({ record, players, totals, options, answered, localIndex, onKick }: RoundResultProps) => {
   const { width } = useWindowDimensions();
@@ -177,7 +23,14 @@ export const RoundResult = ({ record, players, totals, options, answered, localI
   const [showScoringInfo, setShowScoringInfo] = useState(false);
   const pending = answered !== undefined;
 
-  const entries = record.results.map((result, index) => ({ result, player: players[index], index }));
+  // Online only: a player who quits mid-reveal shrinks `players` (live) while `record.results`
+  // (fixed once the round is confirmed) keeps its original count — drop whichever entries no
+  // longer have a matching player instead of crashing on `player.name` below.
+  const entries = record.results
+    .map((result, index) => ({ result, player: players[index], index }))
+    .filter((entry): entry is { result: (typeof record.results)[number]; player: Player; index: number } =>
+      entry.player !== undefined,
+    );
   // Players are ranked by points on the round (best first) — unless pending: there's no official
   // score yet to rank by, so this device's own entry goes first instead (easiest to find while
   // everyone else trickles in), the rest kept in their given (arrival) order.

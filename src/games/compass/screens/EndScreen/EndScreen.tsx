@@ -1,11 +1,8 @@
-import { StyleSheet, Text, View } from 'react-native';
-
-import { fontSize, spacing } from '@/data';
+import { Text, View } from 'react-native';
 import { countryName } from '@/data/places/countries';
 import { formatNumber, getRank } from '@/helpers';
 import { useLanguage, useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
-import type { Theme } from '@/types';
 
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -14,70 +11,7 @@ import { MEDALS } from './constants';
 import { maxTotalScore, rankPlayers, roundWinnerIndex, winnerTitle } from './helpers';
 import type { EndScreenProps } from './types';
 
-const createStyles = ({ colors, typography }: Theme) =>
-  StyleSheet.create({
-    hero: {
-      alignItems: 'center',
-      paddingVertical: spacing.xl,
-      gap: spacing.xs,
-    },
-    rankEmoji: {
-      fontSize: 56,
-    },
-    rankTitle: {
-      ...typography.display,
-      color: colors.accent,
-      fontSize: fontSize.title,
-      textAlign: 'center',
-    },
-    score: {
-      ...typography.display,
-      color: colors.text,
-      fontSize: 64,
-      marginTop: spacing.sm,
-    },
-    list: {
-      paddingVertical: spacing.sm,
-    },
-    row: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.md,
-      paddingVertical: spacing.sm + 2,
-    },
-    rowBorder: {
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-    },
-    medal: {
-      fontSize: 28,
-      width: 36,
-      textAlign: 'center',
-    },
-    dot: {
-      width: 14,
-      height: 14,
-      borderRadius: 7,
-    },
-    rowText: {
-      flex: 1,
-    },
-    name: {
-      ...typography.heading,
-      color: colors.text,
-      fontSize: fontSize.body,
-    },
-    detail: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.caption,
-    },
-    rowScore: {
-      ...typography.heading,
-      color: colors.accent,
-      fontSize: fontSize.subtitle,
-    },
-  });
+import { createStyles } from './styles';
 
 export const EndScreen = ({ players, records, totals, onReplay, onMenu }: EndScreenProps) => {
   const styles = useThemedStyles(createStyles);
@@ -122,12 +56,18 @@ export const EndScreen = ({ players, records, totals, onReplay, onMenu }: EndScr
         {records.map((record, index) => {
           const winner = roundWinnerIndex(record);
           const best = record.results[winner];
+          // Online only: a round played before a player quit can have more `results` than the
+          // room has players left — that round's winner may no longer be one of them, even
+          // though `players[winner]` types as always-defined (no `noUncheckedIndexedAccess`).
+          const winnerPlayer: (typeof players)[number] | undefined = players[winner];
           return (
             <View key={`${record.place.name}-${index}`} style={[styles.row, index > 0 && styles.rowBorder]}>
               <View style={styles.rowText}>
                 <Text style={styles.name}>{record.place.name}</Text>
                 <Text style={styles.detail}>
-                  {isSolo ? countryName(record.place.code, language) : t.endScreen.roundBest(players[winner].name)}
+                  {isSolo
+                    ? countryName(record.place.code, language)
+                    : winnerPlayer && t.endScreen.roundBest(winnerPlayer.name)}
                 </Text>
               </View>
               <Text style={styles.rowScore}>+{best.score.total}</Text>

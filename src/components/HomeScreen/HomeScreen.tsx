@@ -1,13 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
-import { Animated, StyleSheet, Text, View } from 'react-native';
-
-import { fontSize, spacing } from '@/data';
+import { Animated, Text, View } from 'react-native';
 import { loadMascotCaught, saveMascotCaught } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useThemedStyles, useThemeSettings } from '@/themes';
-import type { Theme } from '@/types';
 
 import GameCard from '../GameCard';
 import MascotButton from '../MascotButton';
@@ -15,44 +12,7 @@ import Screen from '../ui/Screen';
 import { APP_TITLE, MASCOT_MOVE_DURATION_MS, MASCOT_SPIN_DURATION_MS, MASCOT_SPIN_PAUSE_S } from './constants';
 import { randomMascotPauseSeconds, randomMascotPosition } from './helpers';
 
-const createStyles = ({ colors, typography }: Theme) =>
-  StyleSheet.create({
-    header: {
-      alignItems: 'center',
-      gap: spacing.xs,
-      paddingTop: spacing.md,
-      paddingBottom: spacing.sm,
-    },
-    mascotButton: {
-      position: 'absolute',
-      zIndex: 10,
-      elevation: 10,
-    },
-    mascotButtonDefault: {
-      top: spacing.sm,
-      right: spacing.lg,
-    },
-    mascotButtonRoaming: {
-      top: 0,
-      left: 0,
-    },
-    title: {
-      ...typography.display,
-      color: colors.accent,
-      fontSize: fontSize.display,
-      letterSpacing: 6,
-      textAlign: 'center',
-    },
-    tagline: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
-      textAlign: 'center',
-    },
-    games: {
-      gap: spacing.md,
-    },
-  });
+import { createStyles } from './styles';
 
 export const HomeScreen = () => {
   const router = useRouter();

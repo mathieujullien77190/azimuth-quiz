@@ -1,25 +1,16 @@
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, Text, TextInput, View } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { CONTOURS, PLAYER_COLORS, fontSize, spacing } from '@/data';
+import { CONTOURS, PLAYER_COLORS } from '@/data';
 import { countryName, flagEmoji } from '@/data/places/countries';
 import { CONTOUR_GUESS_POINTS_BY_HINTS, CONTOUR_WRONG_GUESS_PENALTY } from '@/games/contour/constants';
 import { formatNumber, playerDisplayName } from '@/helpers';
 import { useLanguage, useTranslation } from '@/i18n';
 import { useContourSettings } from '@/settings';
 import { useTheme, useThemedStyles } from '@/themes';
-import { FLAG_FONT_FAMILY } from '@/themes/fonts';
-import type {
-  ContourCountry,
-  ContourNeighbor,
-  ContourPhase,
-  ContourRoundRecord,
-  Difficulty,
-  Point2D,
-  Theme,
-} from '@/types';
+import type { ContourCountry, ContourNeighbor, ContourPhase, ContourRoundRecord, Difficulty, Point2D } from '@/types';
 
 import ContourBoard, {
   BOARD_PADDING_RATIO,
@@ -29,299 +20,17 @@ import ContourBoard, {
   projectPoints,
   type ContourBoardHintLabel,
 } from '../../components/ContourBoard';
+import GameHeader from '@/components/GameHeader';
 import ThemeBackdrop from '@/components/ThemeBackdrop';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import NoOneFoundText from '@/components/ui/NoOneFoundText';
-import RoundProgress from '@/components/RoundProgress';
 import Screen from '@/components/ui/Screen';
 import { BOARD_AREA_MARGIN, INITIAL_BOARD_MAX_SIZE } from './constants';
 import { contourPlayerTotals, neighborIcon, neighborName, normalizeContourGuess, randomCountry } from './helpers';
 import type { ContourGameScreenProps } from './types';
 
-const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
-  StyleSheet.create({
-    title: {
-      ...typography.display,
-      color: colors.accent,
-      fontSize: fontSize.title,
-      paddingTop: spacing.sm,
-      textAlign: 'center',
-    },
-    header: {
-      backgroundColor: isDark ? colors.background : colors.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    // 'guess' only: no separate header/footer bands reserving their own layout space — the board
-    // measures (and fills) the entire safe area (see `fullBleedBoardArea`) and these two float on
-    // top of it instead, so the country outline can run edge to edge behind them.
-    fullBleedSafeArea: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    fullBleedBoardArea: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    // `surfaceHigh` (already the "raised panel" surface everywhere else — inputs, chips...) at
-    // high but not full opacity: reads as a floating panel over a busy outline/hint icons in
-    // both themes, without needing a separate day/night branch the way the old opaque `header`
-    // did. `F0` = ~94% opaque, enough to keep small text legible without looking like a solid bar.
-    overlayTop: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      // Night: `surfaceHigh` at ~94% opacity (see this style's own earlier doc comment). Day:
-      // plain white instead — `surfaceHigh`'s pale blue there barely reads as a distinct panel
-      // over the equally pale sky backdrop.
-      backgroundColor: isDark ? `${colors.surfaceHigh}F0` : `${colors.surface}F0`,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-      paddingBottom: spacing.xs,
-    },
-    overlayBottom: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: isDark ? `${colors.surfaceHigh}F0` : `${colors.surface}F0`,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.sm,
-    },
-    // 'reveal' phase's own footer: score alongside the "Manche suivante"/"Voir le score" button,
-    // rather than up in the header next to "Quitter" (see `Screen`'s `footer` prop below).
-    revealFooter: {
-      gap: spacing.sm,
-      alignItems: 'center',
-    },
-    topBar: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.xs,
-    },
-    quit: {
-      ...typography.heading,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
-    },
-    score: {
-      ...typography.heading,
-      color: colors.accent,
-      fontSize: fontSize.subtitle,
-    },
-    // Round icon-only button, inline in the guess-phase input row (see `buzzInputRow`).
-    hintFab: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.surfaceHigh,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-    },
-    hintFabIcon: {
-      fontSize: fontSize.subtitle,
-    },
-    countryCard: {
-      alignItems: 'center',
-      gap: spacing.xs,
-    },
-    countryName: {
-      ...typography.heading,
-      color: colors.text,
-      fontSize: fontSize.subtitle,
-    },
-    guessPoints: {
-      ...typography.display,
-      color: colors.accent,
-      fontSize: fontSize.subtitle,
-    },
-    // Flag emoji needs its own font family: Chromium on Windows has no system font that renders
-    // flag emoji as flags, falling back to the raw two-letter code (e.g. "ES") instead — see
-    // FLAG_FONT_FAMILY's own doc comment. Doesn't apply to the country name right next to it.
-    flagEmoji: {
-      fontFamily: FLAG_FONT_FAMILY,
-    },
-    hint: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.caption + 1,
-      textAlign: 'center',
-    },
-    // 'reveal' only ('guess' uses `fullBleedBoardArea` instead, see above): `flex: 1` so
-    // this card claims whatever's left of the ScrollView's own height once its siblings (the
-    // country card above, the results card below) have taken theirs — see `boardArea`, measured
-    // inside it, for the actual live sizing.
-    // The board's actual "available space" measurement (see `onBoardAreaLayout`): stretches to
-    // the screen's full width and claims the rest of its height.
-    // Centered so the board (typically smaller than this box on one axis, once fit to the
-    // country's own aspect ratio) doesn't just stick to a corner.
-    boardArea: {
-      flex: 1,
-      alignSelf: 'stretch',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    // Frames the board's exact touch/drawable rectangle: no explicit width/height on purpose, so
-    // it shrink-wraps ContourBoard's own `width` x `height` View exactly.
-    boardFrame: {
-      alignSelf: 'center',
-    },
-    resultsList: {
-      gap: spacing.sm,
-    },
-    resultRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-      paddingVertical: spacing.xs,
-    },
-    resultRowBorder: {
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-    },
-    resultDot: {
-      width: 14,
-      height: 14,
-      borderRadius: 7,
-    },
-    resultTexts: {
-      flex: 1,
-      gap: 2,
-    },
-    resultName: {
-      ...typography.heading,
-      color: colors.text,
-      fontSize: fontSize.body,
-    },
-    resultPoints: {
-      ...typography.heading,
-      color: colors.accent,
-      fontSize: fontSize.body,
-    },
-    standingRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-      paddingVertical: spacing.sm,
-    },
-    standingRowBorder: {
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-    },
-    standingRank: {
-      ...typography.heading,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
-      width: 24,
-    },
-    standingName: {
-      ...typography.heading,
-      color: colors.text,
-      fontSize: fontSize.body,
-      flex: 1,
-    },
-    standingScore: {
-      ...typography.heading,
-      color: colors.accent,
-      fontSize: fontSize.body,
-    },
-    resultBanner: {
-      ...typography.heading,
-      textAlign: 'center',
-      fontSize: fontSize.caption + 1,
-      color: colors.success,
-    },
-    guessFooter: {
-      gap: spacing.sm + 2,
-    },
-    wrongGuessText: {
-      ...typography.heading,
-      textAlign: 'center',
-      fontSize: fontSize.caption + 1,
-      color: colors.danger,
-    },
-    // Shown on the attribution overlay below for a correct guess (its wrong counterpart reuses
-    // `wrongGuessText` above) — unlike Clues, Contour's overlay covers both outcomes: the
-    // penalty/reward still needs a player picked either way, so there's no way to skip it on a
-    // miss the way Clues does.
-    resultOkText: {
-      ...typography.heading,
-      textAlign: 'center',
-      fontSize: fontSize.caption + 1,
-      color: colors.success,
-    },
-    // Post-"Valider" step (see `validateGuess`/`pendingCorrect`): covers the entire screen, same
-    // pattern as ClueGameScreen's own attribution overlay — mostly opaque (hex alpha suffix),
-    // just enough transparency to hint the board/hints are still there behind it.
-    attributeOverlay: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: `${colors.background}E6`,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: spacing.lg,
-      padding: spacing.lg,
-    },
-    attributePrompt: {
-      ...typography.heading,
-      color: colors.text,
-      fontSize: fontSize.subtitle,
-    },
-    attributeGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
-      gap: spacing.sm,
-      alignSelf: 'stretch',
-    },
-    attributeButton: {
-      minWidth: 110,
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.lg,
-      borderRadius: radius.button,
-      borderWidth: 2,
-      backgroundColor: colors.surfaceHigh,
-      alignItems: 'center',
-    },
-    attributeButtonText: {
-      ...typography.heading,
-      color: colors.text,
-      fontSize: fontSize.subtitle,
-    },
-    buzzInputRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-    },
-    guessInput: {
-      ...typography.heading,
-      minHeight: 48,
-      paddingHorizontal: spacing.md,
-      borderRadius: 10,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      backgroundColor: colors.surfaceHigh,
-      color: colors.text,
-      fontSize: fontSize.body,
-    },
-    guessInputFlex: {
-      flex: 1,
-    },
-  });
+import { createStyles } from './styles';
 
 /** What's actually random about a round: picked once (`buildRoundSeed`, in `startRound`) and kept
  * fixed until the next one. Deliberately excludes anything screen-space (that's `RoundBoard`,
@@ -657,23 +366,18 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
           </View>
         </View>
 
-        <View onLayout={onOverlayTopLayout} style={styles.overlayTop}>
-          <View style={styles.topBar}>
-            <Pressable accessibilityRole="button" hitSlop={12} onPress={onQuit}>
-              <Text style={styles.quit}>{t.game.quit}</Text>
-            </Pressable>
-            <Text style={styles.guessPoints}>
-              {formatNumber(currentGuessPoints)} {t.common.pts}
-            </Text>
-          </View>
-          <RoundProgress
+        <View onLayout={onOverlayTopLayout} style={styles.overlayTopPosition}>
+          <GameHeader
             difficulties={[settings.difficulty]}
+            onQuit={onQuit}
             roundNumber={roundIndex + 1}
+            scoreLabel={`${formatNumber(currentGuessPoints)} ${t.common.pts}`}
             totalRounds={settings.rounds}
-          />
-          <View style={styles.countryCard}>
-            <Text style={styles.countryName}>{t.contourGame.guessPrompt}</Text>
-          </View>
+          >
+            <View style={styles.countryCard}>
+              <Text style={styles.countryName}>{t.contourGame.guessPrompt}</Text>
+            </View>
+          </GameHeader>
         </View>
 
         <View onLayout={onOverlayBottomLayout} style={styles.overlayBottom}>
@@ -750,18 +454,12 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
         </View>
       }
       header={
-        <View style={styles.header}>
-          <View style={styles.topBar}>
-            <Pressable accessibilityRole="button" hitSlop={12} onPress={onQuit}>
-              <Text style={styles.quit}>{t.game.quit}</Text>
-            </Pressable>
-          </View>
-          <RoundProgress
-            difficulties={[settings.difficulty]}
-            roundNumber={roundIndex + 1}
-            totalRounds={settings.rounds}
-          />
-        </View>
+        <GameHeader
+          difficulties={[settings.difficulty]}
+          onQuit={onQuit}
+          roundNumber={roundIndex + 1}
+          totalRounds={settings.rounds}
+        />
       }
     >
       <View style={styles.countryCard}>

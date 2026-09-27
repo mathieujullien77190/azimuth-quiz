@@ -1,16 +1,14 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-
-import { fontSize, spacing } from '@/data';
+import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { formatBearing } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
-import type { Theme } from '@/types';
 
 import Compass from '@/components/Compass';
 import DistanceSlider from '../../components/DistanceSlider';
 import EarthSection from '@/components/EarthSection';
 import FooterNav from '../../components/FooterNav';
+import GameHeader from '@/components/GameHeader';
 import InclinationSlider from '../../components/InclinationSlider';
 import Legend from '../../components/Legend';
 import PlaceCard from '../../components/PlaceCard';
@@ -18,73 +16,11 @@ import PlayerTabs from '@/components/PlayerTabs';
 import RoundResult from '../../components/RoundResult';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import RoundProgress from '@/components/RoundProgress';
 import Screen from '@/components/ui/Screen';
 import { compassSizeFor, earthSizeFor } from './helpers';
 import type { GameScreenViewProps } from './types';
 
-const createStyles = ({ colors, isDark, typography }: Theme) =>
-  StyleSheet.create({
-    header: {
-      // White by day rather than the page's own light-blue background (see Screen's footer,
-      // same fix): a fixed bar reads better as its own surface than a washed-out page extension.
-      backgroundColor: isDark ? colors.background : colors.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    topBar: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-    },
-    quit: {
-      ...typography.heading,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
-    },
-    score: {
-      ...typography.heading,
-      color: colors.accent,
-      fontSize: fontSize.subtitle,
-    },
-    compass: {
-      alignItems: 'center',
-      gap: spacing.md,
-    },
-    readout: {
-      ...typography.display,
-      color: colors.accent,
-      fontSize: fontSize.title,
-      minHeight: 34,
-    },
-    earthCard: {
-      gap: spacing.md,
-    },
-    earthCenter: {
-      alignItems: 'center',
-    },
-    turnPopupOverlay: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 20,
-      elevation: 20,
-      backgroundColor: 'rgba(11, 18, 32, 0.85)',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: spacing.lg,
-    },
-    turnPopupText: {
-      ...typography.display,
-      color: colors.accent,
-      fontSize: fontSize.title,
-      textAlign: 'center',
-    },
-  });
+import { createStyles } from './GameScreenView.styles';
 
 type TurnPopupProps = {
   name: string;
@@ -142,6 +78,8 @@ export const GameScreenView = ({
   totals,
   isLastRound,
   onNext,
+  onCap,
+  onScroll,
   onGoToCap,
   onGoToDistance,
   onSubmit,
@@ -160,7 +98,7 @@ export const GameScreenView = ({
             <Button label={isLastRound ? t.game.last : t.game.next} onPress={onNext} />
           ) : (
             <FooterNav
-              key={`${roundNumber}-${activePlayerIndex}`}
+              onCap={onCap}
               onGoToCap={onGoToCap}
               onGoToDistance={onGoToDistance}
               onValidate={onSubmit}
@@ -168,18 +106,16 @@ export const GameScreenView = ({
             />
           )
         }
+        onScroll={record ? undefined : onScroll}
         scrollRef={scrollRef}
         header={
-          <View style={styles.header}>
-            <View style={styles.topBar}>
-              <Pressable accessibilityRole="button" hitSlop={12} onPress={onQuit}>
-                <Text style={styles.quit}>{t.game.quit}</Text>
-              </Pressable>
-              <Text style={styles.score}>{scoreLabel}</Text>
-            </View>
-
-            <RoundProgress difficulties={config.difficulties} roundNumber={roundNumber} totalRounds={totalRounds} />
-
+          <GameHeader
+            difficulties={config.difficulties}
+            onQuit={onQuit}
+            roundNumber={roundNumber}
+            scoreLabel={scoreLabel}
+            totalRounds={totalRounds}
+          >
             {isMultiplayer && !record && (
               <PlayerTabs
                 activeIndex={activePlayerIndex}
@@ -189,7 +125,7 @@ export const GameScreenView = ({
                 players={players}
               />
             )}
-          </View>
+          </GameHeader>
         }
       >
         <PlaceCard

@@ -1,58 +1,14 @@
 import { memo } from 'react';
-import { Linking, Pressable, StyleSheet, Text } from 'react-native';
-
-import { fontSize, spacing } from '@/data';
+import { Linking, Pressable, Text } from 'react-native';
 import { countryName } from '@/data/places/countries';
 import { useLanguage, useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
-import type { Theme } from '@/types';
 
 import Card from '@/components/ui/Card';
 import { categoryEmoji, wikiUrl } from './helpers';
 import type { PlaceCardProps } from './types';
 
-const createStyles = ({ colors, typography }: Theme) =>
-  StyleSheet.create({
-    card: {
-      alignItems: 'center',
-      paddingVertical: spacing.lg,
-      gap: spacing.xs,
-    },
-    name: {
-      ...typography.display,
-      color: colors.text,
-      fontSize: fontSize.display,
-      maxWidth: '100%',
-      textAlign: 'center',
-    },
-    country: {
-      ...typography.heading,
-      color: colors.accent,
-      fontSize: fontSize.subtitle,
-    },
-    description: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
-      marginTop: spacing.sm,
-      textAlign: 'center',
-    },
-    wikiBadge: {
-      marginTop: spacing.sm,
-      minHeight: 24,
-      paddingHorizontal: spacing.sm + 2,
-      borderRadius: 12,
-      borderWidth: 1.5,
-      borderColor: colors.accent,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    wikiBadgeText: {
-      ...typography.heading,
-      color: colors.accent,
-      fontSize: fontSize.caption,
-    },
-  });
+import { createStyles } from './styles';
 
 export const PlaceCard = memo(function PlaceCard({ place, showCountry, description }: PlaceCardProps) {
   const styles = useThemedStyles(createStyles);

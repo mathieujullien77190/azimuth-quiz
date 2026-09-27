@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 
 import {
   DIFFICULTIES,
@@ -10,10 +10,8 @@ import {
   PLAYER_COLORS,
   ROUND_OPTIONS,
   difficultyEmoji,
-  fontSize,
   isCapitalPlace,
   isFrenchCityPlace,
-  spacing,
 } from '@/data';
 import { initials } from '@/helpers';
 import { CLUE_ANSWER_METHODS, CLUE_CATEGORIES } from '@/games/clues/constants';
@@ -22,7 +20,7 @@ import { effectiveDifficulty } from '@/games/compass/helpers/places';
 import { useLanguage, useTranslation } from '@/i18n';
 import { useClueSettings } from '@/settings';
 import { useTheme, useThemedStyles } from '@/themes';
-import type { ClueCategory, Theme } from '@/types';
+import type { ClueCategory } from '@/types';
 
 import Button from '@/components/ui/Button';
 import Chip from '@/components/ui/Chip';
@@ -32,69 +30,7 @@ import Toggle from '@/components/ui/Toggle';
 import { resizeNames } from './helpers';
 import type { ClueSetupScreenProps } from './types';
 
-const createStyles = ({ colors, radius, typography }: Theme) =>
-  StyleSheet.create({
-    title: {
-      ...typography.display,
-      color: colors.accent,
-      fontSize: fontSize.title,
-      paddingTop: spacing.sm,
-    },
-    chips: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: spacing.sm,
-    },
-    names: {
-      gap: spacing.sm,
-    },
-    nameRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm + 2,
-    },
-    nameDot: {
-      width: 16,
-      height: 16,
-      borderRadius: 8,
-    },
-    inputWrap: {
-      flex: 1,
-      justifyContent: 'center',
-    },
-    input: {
-      ...typography.heading,
-      minHeight: 44,
-      paddingLeft: spacing.md,
-      paddingRight: 46,
-      borderRadius: radius.md,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      backgroundColor: colors.surfaceHigh,
-      color: colors.text,
-      fontSize: fontSize.body,
-    },
-    initialsBadge: {
-      position: 'absolute',
-      right: spacing.xs + 2,
-      width: 28,
-      height: 28,
-      borderRadius: 14,
-      borderWidth: 1.5,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.surface,
-    },
-    initialsText: {
-      ...typography.label,
-      fontSize: fontSize.caption,
-    },
-    hint: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.caption + 1,
-    },
-  });
+import { createStyles } from './styles';
 
 export const ClueSetupScreen = ({ onStart, onBack }: ClueSetupScreenProps) => {
   const styles = useThemedStyles(createStyles);

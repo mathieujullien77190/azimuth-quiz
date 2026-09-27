@@ -1,40 +1,24 @@
-import { useMemo, useRef } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, ScrollView, Text } from 'react-native';
+import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { fontSize, spacing } from '@/data';
 import { arcKmFromChordKm, formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { EarthMark } from '@/components/EarthSection';
-import type { Theme } from '@/types';
 
 import EndScreen from '../EndScreen';
 import ThemeBackdrop from '@/components/ThemeBackdrop';
 import { ANSWERED_OPACITY, REVEAL_OPACITY } from './constants';
 import { GameScreenView } from './GameScreenView';
+import { onCapFromScroll } from './helpers';
 import type { GameScreenProps, Needle } from './types';
 import { useGame } from './useGame';
+import { createStyles } from './GameScreen.styles';
 
 // Stable reference for the "hide other players' answers" branch: otherwise Legend (memoized)
 // re-renders on every compass-drag tick just from getting a fresh empty array each time.
 const NO_ANSWERED: ReturnType<typeof useGame>['answered'] = [];
-
-const createStyles = ({ colors, typography }: Theme) =>
-  StyleSheet.create({
-    loading: {
-      flex: 1,
-      backgroundColor: colors.background,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: spacing.md,
-    },
-    loadingText: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
-    },
-  });
 
 /**
  * Smart container: owns `useGame()`, the scroll orchestration, and every derived array/label —
@@ -47,19 +31,34 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
   const game = useGame();
 
   // "Next"/"Previous" navigation: all the way down (heading often off-screen once the distance
-  // is shown) / all the way up, not a scroll targeted at a specific section.
+  // is shown) / all the way up, not a scroll targeted at a specific section. `onCap` mirrors
+  // where the round is actually scrolled to — flipped here for instant feedback on a press, and
+  // by `handleScroll` below for a manual drag, so `FooterNav`'s label always matches reality.
   const scrollRef = useRef<ScrollView>(null);
-  const goToCap = () => scrollRef.current?.scrollToEnd({ animated: true });
-  const goToDistance = () => scrollRef.current?.scrollTo({ animated: true, y: 0 });
+  const [onCap, setOnCap] = useState(false);
+  const goToCap = () => {
+    setOnCap(true);
+    scrollRef.current?.scrollToEnd({ animated: true });
+  };
+  const goToDistance = () => {
+    setOnCap(false);
+    scrollRef.current?.scrollTo({ animated: true, y: 0 });
+  };
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const next = onCapFromScroll(event);
+    if (next !== null) setOnCap(next);
+  };
   // "Submit" moves to the next player (or reveals if it was the last one): either way we
   // scroll back to the top instead of staying scrolled on the previous player's heading/distance.
   const submit = () => {
+    setOnCap(false);
     scrollRef.current?.scrollTo({ animated: true, y: 0 });
     game.submit();
   };
   // "Next round" also scrolls back to the top, instead of staying scrolled on the
   // previous reveal.
   const next = () => {
+    setOnCap(false);
     scrollRef.current?.scrollTo({ animated: true, y: 0 });
     game.next();
   };
@@ -176,10 +175,12 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
       isMultiplayer={game.isMultiplayer}
       legendItems={legendItems}
       maxDistanceKm={game.maxDistanceKm}
+      onCap={onCap}
       onGoToCap={goToCap}
       onGoToDistance={goToDistance}
       onNext={next}
       onQuit={onQuit}
+      onScroll={handleScroll}
       onSetBearing={game.setBearing}
       onSetDistanceKm={game.setDistanceKm}
       onSubmit={submit}

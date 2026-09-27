@@ -1,5 +1,5 @@
 import { useMemo, useRef } from 'react';
-import { PanResponder, Platform, StyleSheet, View } from 'react-native';
+import { PanResponder, Platform, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
 import Svg, { Polygon } from 'react-native-svg';
 
@@ -12,6 +12,7 @@ import { NORTH_MARKER_HEIGHT, NORTH_MARKER_WIDTH } from './constants';
 import { bearingFromTouch } from './helpers';
 import type { CompassNeedle, CompassProps } from './types';
 import { useHeading } from './useHeading';
+import { styles } from './styles';
 
 // Stable reference: otherwise the dial's memoization would be broken on every render.
 const NO_NEEDLES: CompassNeedle[] = [];
@@ -104,13 +105,3 @@ export const Compass = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  marker: {
-    position: 'absolute',
-    top: -NORTH_MARKER_HEIGHT - 2,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-});

@@ -1,37 +1,10 @@
-import { StyleSheet, Switch, Text, View } from 'react-native';
-
-import { fontSize, spacing } from '@/data';
+import { Switch, Text, View } from 'react-native';
 import { useTheme, useThemedStyles } from '@/themes';
-import type { Theme } from '@/types';
 
 import { DAY_THUMB_ON_COLOR } from './constants';
 import type { ToggleProps } from './types';
 
-const createStyles = ({ colors, typography }: Theme) =>
-  StyleSheet.create({
-    row: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.md,
-    },
-    text: {
-      flex: 1,
-      gap: 2,
-    },
-    label: {
-      ...typography.heading,
-      color: colors.text,
-      fontSize: fontSize.body,
-    },
-    description: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.caption + 1,
-    },
-    disabled: {
-      opacity: 0.5,
-    },
-  });
+import { createStyles } from './styles';
 
 // `disabled` only dims the row and flags it for accessibility — the Switch stays interactive so
 // a caller's `onValueChange` can react to a disabled toggle (e.g. explain why) rather than have

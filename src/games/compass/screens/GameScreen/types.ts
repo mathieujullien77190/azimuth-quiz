@@ -1,5 +1,5 @@
 import type { RefObject } from 'react';
-import type { ScrollView } from 'react-native';
+import type { NativeScrollEvent, NativeSyntheticEvent, ScrollView } from 'react-native';
 
 import type { LegendItem } from '../../components/Legend';
 import type { EarthMark } from '@/components/EarthSection';
@@ -45,6 +45,9 @@ export type GameScreenViewProps = {
   totals: number[];
   isLastRound: boolean;
   onNext: () => void;
+  /** See `FooterNav`'s own comment: which section the round is scrolled to right now. */
+  onCap: boolean;
+  onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
   onGoToCap: () => void;
   onGoToDistance: () => void;
   onSubmit: () => void;

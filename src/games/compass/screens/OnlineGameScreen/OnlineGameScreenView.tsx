@@ -1,90 +1,23 @@
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-
-import { fontSize, spacing } from '@/data';
+import { Text, View, useWindowDimensions } from 'react-native';
 import { formatBearing } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
-import type { Theme } from '@/types';
 
 import Compass from '@/components/Compass';
 import DistanceSlider from '../../components/DistanceSlider';
 import EarthSection from '@/components/EarthSection';
 import FooterNav from '../../components/FooterNav';
+import GameHeader from '@/components/GameHeader';
 import { compassSizeFor, earthSizeFor } from '../GameScreen/helpers';
 import InclinationSlider from '../../components/InclinationSlider';
 import PlaceCard from '../../components/PlaceCard';
 import RoundResult from '../../components/RoundResult';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import RoundProgress from '@/components/RoundProgress';
 import Screen from '@/components/ui/Screen';
-import type { OnlineAnswerViewProps, OnlineHeaderProps, OnlineResultsViewProps } from './types';
+import type { OnlineAnswerViewProps, OnlineResultsViewProps } from './types';
 
-const createStyles = ({ colors, isDark, typography }: Theme) =>
-  StyleSheet.create({
-    header: {
-      backgroundColor: isDark ? colors.background : colors.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    topBar: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-    },
-    quit: {
-      ...typography.heading,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
-    },
-    score: {
-      ...typography.heading,
-      color: colors.accent,
-      fontSize: fontSize.subtitle,
-    },
-    compass: {
-      alignItems: 'center',
-      gap: spacing.md,
-    },
-    readout: {
-      ...typography.display,
-      color: colors.accent,
-      fontSize: fontSize.title,
-      minHeight: 34,
-    },
-    earthCard: {
-      gap: spacing.md,
-    },
-    earthCenter: {
-      alignItems: 'center',
-    },
-    waiting: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
-      textAlign: 'center',
-    },
-  });
-
-/** Quit + name/score + round progress: shared by both phases below. */
-const OnlineHeader = ({ onQuit, headerScore, difficulties, roundNumber, totalRounds }: OnlineHeaderProps) => {
-  const styles = useThemedStyles(createStyles);
-  const t = useTranslation();
-
-  return (
-    <View style={styles.header}>
-      <View style={styles.topBar}>
-        <Pressable accessibilityRole="button" hitSlop={12} onPress={onQuit}>
-          <Text style={styles.quit}>{t.game.quit}</Text>
-        </Pressable>
-        <Text style={styles.score}>{headerScore}</Text>
-      </View>
-      <RoundProgress difficulties={difficulties} roundNumber={roundNumber} totalRounds={totalRounds} />
-    </View>
-  );
-};
+import { createStyles } from './OnlineGameScreenView.styles';
 
 /**
  * `gameState.screen === 'game'`, not yet submitted — the only phase with an editable
@@ -108,6 +41,8 @@ export const OnlineAnswerView = ({
   distanceKm,
   onSetDistanceKm,
   maxDistanceKm,
+  onCap,
+  onScroll,
   onGoToCap,
   onGoToDistance,
   onSubmit,
@@ -121,7 +56,7 @@ export const OnlineAnswerView = ({
     <Screen
       footer={
         <FooterNav
-          key={roundNumber}
+          onCap={onCap}
           onGoToCap={onGoToCap}
           onGoToDistance={onGoToDistance}
           onValidate={onSubmit}
@@ -129,14 +64,15 @@ export const OnlineAnswerView = ({
         />
       }
       header={
-        <OnlineHeader
+        <GameHeader
           difficulties={difficulties}
-          headerScore={headerScore}
           onQuit={onQuit}
           roundNumber={roundNumber}
+          scoreLabel={headerScore}
           totalRounds={totalRounds}
         />
       }
+      onScroll={onScroll}
       scrollRef={scrollRef}
     >
       <PlaceCard place={place} showCountry={showCountry} />
@@ -213,11 +149,11 @@ export const OnlineResultsView = ({
         )
       }
       header={
-        <OnlineHeader
+        <GameHeader
           difficulties={difficulties}
-          headerScore={headerScore}
           onQuit={onQuit}
           roundNumber={roundNumber}
+          scoreLabel={headerScore}
           totalRounds={totalRounds}
         />
       }

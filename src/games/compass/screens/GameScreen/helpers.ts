@@ -1,7 +1,24 @@
+import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+
 import { spacing } from '@/data';
 import type { RoundRecord } from '@/types';
 
 import { MAX_COMPASS_SIZE, MAX_EARTH_SIZE } from './constants';
+
+// How close to an edge (in px) a manual scroll counts as "reached the top"/"reached the
+// bottom" — a little slack for momentum/bounce overshoot, not a hard pixel-perfect edge.
+const SCROLL_EDGE_THRESHOLD_PX = 24;
+
+/** Whether a scroll event lands the round on the cap (heading) section or the distance one —
+ * `null` while still somewhere in between, meaning "leave whichever the button already shows".
+ * Shared by `GameScreen`/`OnlineGameScreen`: both sync `FooterNav`'s label to the actual scroll
+ * position (a manual drag), not just to the button's own last press. */
+export const onCapFromScroll = (event: NativeSyntheticEvent<NativeScrollEvent>): boolean | null => {
+  const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+  if (contentOffset.y <= SCROLL_EDGE_THRESHOLD_PX) return false;
+  if (contentOffset.y + layoutMeasurement.height >= contentSize.height - SCROLL_EDGE_THRESHOLD_PX) return true;
+  return null;
+};
 
 /** Each player's point total, in player order. */
 export const playerTotals = (records: RoundRecord[], playerCount: number): number[] =>

@@ -17,7 +17,7 @@ export const en: Translations = {
       compass: {
         title: 'Compass',
         tagline: 'A place appears. Aim its heading and estimate its distance from your starting point.',
-        meta: ['1 to 6 players'],
+        meta: ['1 to 10 players'],
         cta: 'Play',
       },
       clues: {

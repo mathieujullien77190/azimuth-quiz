@@ -1,5 +1,5 @@
 import type { RefObject } from 'react';
-import type { ScrollView } from 'react-native';
+import type { NativeScrollEvent, NativeSyntheticEvent, ScrollView } from 'react-native';
 
 import type { EarthMark } from '@/components/EarthSection';
 import type { Difficulty, Place, RoundRecord } from '@/types';
@@ -44,6 +44,9 @@ export type OnlineAnswerViewProps = OnlineHeaderProps & {
   distanceKm: number;
   onSetDistanceKm: (value: number) => void;
   maxDistanceKm: number;
+  /** See `FooterNav`'s own comment: which section the round is scrolled to right now. */
+  onCap: boolean;
+  onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
   onGoToCap: () => void;
   onGoToDistance: () => void;
   onSubmit: () => void;

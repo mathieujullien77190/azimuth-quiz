@@ -1,44 +1,16 @@
 import { memo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { DIFFICULTIES, difficultyEmoji, fontSize, spacing } from '@/data';
+import { DIFFICULTIES, difficultyEmoji } from '@/data';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
-import type { Difficulty, Theme } from '@/types';
+import type { Difficulty } from '@/types';
 
 import { MAX_PROGRESS_DOTS } from './constants';
 import { formatDifficulties, formatRoundProgress } from './helpers';
 import type { RoundProgressProps } from './types';
 
-const createStyles = ({ colors, typography }: Theme) =>
-  StyleSheet.create({
-    row: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.xs,
-      paddingBottom: spacing.sm,
-    },
-    label: {
-      ...typography.label,
-      color: colors.textMuted,
-      fontSize: fontSize.caption,
-    },
-    dots: {
-      flexDirection: 'row',
-      gap: 4,
-    },
-    dot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      backgroundColor: colors.border,
-    },
-    dotDone: {
-      backgroundColor: colors.accent,
-    },
-  });
+import { createStyles } from './styles';
 
 /**
  * "ROUND N / M" line + progress dots: shared as-is between Compass (`GameScreen`) and Clues

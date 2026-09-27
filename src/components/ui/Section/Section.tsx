@@ -1,31 +1,10 @@
-import { StyleSheet, Text, View } from 'react-native';
-
-import { fontSize, spacing } from '@/data';
+import { Text, View } from 'react-native';
 import { useThemedStyles } from '@/themes';
-import type { Theme } from '@/types';
 
 import Card from '../Card';
 import type { SectionProps } from './types';
 
-const createStyles = ({ colors, typography }: Theme) =>
-  StyleSheet.create({
-    card: {
-      gap: spacing.md,
-    },
-    header: {
-      gap: spacing.xs,
-    },
-    title: {
-      ...typography.label,
-      color: colors.text,
-      fontSize: fontSize.caption,
-    },
-    hint: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.caption + 1,
-    },
-  });
+import { createStyles } from './styles';
 
 /** Titled card: groups the fields of a single subject. */
 const Section = ({ title, hint, children }: SectionProps) => {

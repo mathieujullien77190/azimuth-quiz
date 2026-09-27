@@ -1,40 +1,9 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
-
-import { fontSize, spacing } from '@/data';
+import { Pressable, Text } from 'react-native';
 import { useThemedStyles } from '@/themes';
-import type { Theme } from '@/types';
 
 import type { ChipProps } from './types';
 
-const createStyles = ({ colors, radius, typography }: Theme) =>
-  StyleSheet.create({
-    chip: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.xs + 2,
-      paddingHorizontal: spacing.md - 2,
-      paddingVertical: spacing.sm + 1,
-      borderRadius: radius.button,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      backgroundColor: colors.surfaceHigh,
-    },
-    selected: {
-      borderColor: colors.accent,
-      backgroundColor: colors.accent,
-    },
-    label: {
-      ...typography.heading,
-      color: colors.textMuted,
-      fontSize: fontSize.body - 1,
-    },
-    labelSelected: {
-      color: colors.onAccent,
-    },
-    disabled: {
-      opacity: 0.5,
-    },
-  });
+import { createStyles } from './styles';
 
 // `disabled` is a visual/accessibility cue only — the Pressable itself stays tappable so a
 // caller's `onPress` can react to a disabled press (e.g. explain why) rather than have the touch

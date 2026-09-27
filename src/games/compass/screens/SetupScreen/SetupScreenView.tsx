@@ -1,14 +1,13 @@
 import { useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Modal, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { DIFFICULTIES, ROUND_OPTIONS, difficultyEmoji, fontSize, spacing } from '@/data';
+import { DIFFICULTIES, ROUND_OPTIONS, difficultyEmoji } from '@/data';
 import { CATEGORIES } from '@/games/compass/constants';
-import { initials } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
-import type { Theme } from '@/types';
 
+import PartySection from '@/components/setup/PartySection';
 import ThemeBackdrop from '@/components/ThemeBackdrop';
 import Button from '@/components/ui/Button';
 import Chip from '@/components/ui/Chip';
@@ -18,141 +17,7 @@ import Toggle from '@/components/ui/Toggle';
 import { DISTANCE_MODES } from './constants';
 import type { SetupScreenViewProps } from './types';
 
-const createStyles = ({ colors, radius, typography }: Theme) =>
-  StyleSheet.create({
-    title: {
-      ...typography.display,
-      color: colors.accent,
-      fontSize: fontSize.title,
-      paddingTop: spacing.sm,
-    },
-    chips: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: spacing.sm,
-    },
-    names: {
-      gap: spacing.sm,
-    },
-    nameRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm + 2,
-    },
-    // Input container: positions the initials within it, never as a sibling that could
-    // push the row off-screen.
-    inputWrap: {
-      flex: 1,
-      justifyContent: 'center',
-    },
-    input: {
-      ...typography.heading,
-      minHeight: 44,
-      paddingLeft: spacing.md,
-      paddingRight: 46,
-      borderRadius: radius.md,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      backgroundColor: colors.surfaceHigh,
-      color: colors.text,
-      fontSize: fontSize.body,
-    },
-    // Same as `input`, but leaves room on the right for both the initials badge and the host's
-    // remove cross next to it (see `removeButton`), instead of just the badge.
-    inputWithRemove: {
-      paddingRight: 78,
-    },
-    initials: {
-      position: 'absolute',
-      right: spacing.xs + 2,
-      width: 28,
-      height: 28,
-      borderRadius: 14,
-      borderWidth: 1.5,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.surface,
-    },
-    initialsText: {
-      ...typography.label,
-      fontSize: fontSize.caption,
-    },
-    // Sits just left of `initials` (same absolute-right positioning scheme), inside the same
-    // input box, rather than as a separate element outside it.
-    removeButton: {
-      position: 'absolute',
-      right: spacing.xs + 2 + 28 + spacing.sm,
-      width: 24,
-      height: 28,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    removeButtonText: {
-      ...typography.heading,
-      color: colors.danger,
-      fontSize: fontSize.body,
-    },
-    hint: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.caption + 1,
-    },
-    // Full-screen splash (in a `Modal`, so it covers everything regardless of where in the
-    // layout this renders) rather than a themed banner — a fixed near-black backdrop reads the
-    // same in both themes, which a themed one wouldn't.
-    noticeOverlay: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: spacing.lg,
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    },
-    noticeText: {
-      ...typography.heading,
-      color: '#FFFFFF',
-      fontSize: fontSize.body,
-      textAlign: 'center',
-    },
-    // Same "loading" convention as GameScreen/OnlineGameScreen's own early-loading screens: the
-    // gap between pressing "Lancer la partie" (GPS resolution, then a Firestore write/round-trip
-    // before `roomScreen` flips) used to pass with no feedback at all.
-    loading: {
-      flex: 1,
-      backgroundColor: colors.background,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: spacing.md,
-    },
-    loadingText: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
-    },
-    coordRow: {
-      flexDirection: 'row',
-      gap: spacing.sm,
-    },
-    coordField: {
-      flex: 1,
-      gap: spacing.xs,
-    },
-    coordLabel: {
-      ...typography.label,
-      color: colors.textMuted,
-      fontSize: fontSize.caption,
-    },
-    coordInput: {
-      ...typography.heading,
-      minHeight: 44,
-      paddingHorizontal: spacing.md,
-      borderRadius: radius.md,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      backgroundColor: colors.surfaceHigh,
-      color: colors.text,
-      fontSize: fontSize.body,
-    },
-  });
+import { createStyles } from './styles';
 
 type CustomOriginInputsProps = {
   latitude: number;
@@ -257,7 +122,7 @@ export const SetupScreenView = ({
   onBack,
 }: SetupScreenViewProps) => {
   const styles = useThemedStyles(createStyles);
-  const { colors, isDark } = useTheme();
+  const { isDark } = useTheme();
   const t = useTranslation();
 
   return (
@@ -270,107 +135,29 @@ export const SetupScreenView = ({
       <Screen>
         <Text style={styles.title}>{t.setup.screenTitle}</Text>
 
-        <Section title={t.setup.playersSection.title}>
-          <View style={styles.names}>
-            <View style={styles.nameRow}>
-              <View style={styles.inputWrap}>
-                <TextInput
-                  accessibilityLabel={t.setup.playerNameAccessibility(1)}
-                  editable={nameEditable}
-                  maxLength={10}
-                  onChangeText={onChangeName}
-                  placeholder={soloPlaceholder}
-                  placeholderTextColor={colors.textMuted}
-                  pointerEvents={nameEditable ? 'auto' : 'none'}
-                  style={styles.input}
-                  value={soloName}
-                />
-                <View style={[styles.initials, { borderColor: soloColor }]}>
-                  <Text style={[styles.initialsText, { color: soloColor }]}>
-                    {initials(soloName.trim() || soloPlaceholder)}
-                  </Text>
-                </View>
-              </View>
-            </View>
-            {connectedPlayers.map(([uid, player]) => {
-              if (uid === localUid) return null;
-              // Falls back to the first palette color for the brief moment before the host's
-              // own color-sync effect has assigned a real one.
-              const color = player.color ?? colors.danger;
-              const displayName = uid === hostUid ? t.setup.online.hostBadge(player.name) : player.name;
-              return (
-                <View key={uid} style={styles.nameRow}>
-                  <View style={styles.inputWrap}>
-                    <TextInput
-                      editable={false}
-                      pointerEvents="none"
-                      style={[styles.input, isHost && styles.inputWithRemove]}
-                      value={displayName}
-                    />
-                    <View style={[styles.initials, { borderColor: color }]}>
-                      <Text style={[styles.initialsText, { color }]}>{initials(player.name)}</Text>
-                    </View>
-                    {isHost && (
-                      <Pressable
-                        accessibilityLabel={t.setup.online.removePlayer(player.name)}
-                        accessibilityRole="button"
-                        onPress={() => onKick(uid)}
-                        style={styles.removeButton}
-                      >
-                        <Text style={styles.removeButtonText}>✕</Text>
-                      </Pressable>
-                    )}
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-          <View style={styles.chips}>
-            <Chip label={t.setup.online.solo} onPress={onChooseSolo} selected={onlineChoice === null} />
-            <Chip label={t.setup.online.host} onPress={onChooseHost} selected={onlineChoice === 'host'} />
-            {joinStatus === 'valid' ? (
-              // Connected: the code field is locked (see the comment below), so this is the only
-              // way back to a fresh, editable one — `onChooseJoin` (not `onChooseSolo`) so this
-              // stays on "Join" rather than dropping back to solo.
-              <Chip label={t.setup.online.leave} onPress={onChooseJoin} selected />
-            ) : (
-              <Chip label={t.setup.online.join} onPress={onChooseJoin} selected={onlineChoice === 'join'} />
-            )}
-          </View>
-          {onlineChoice === 'host' && (
-            <TextInput
-              editable={false}
-              placeholder={t.setup.online.generating}
-              placeholderTextColor={colors.textMuted}
-              style={styles.coordInput}
-              value={roomCode ?? ''}
-            />
-          )}
-          {onlineChoice === 'join' && (
-            <>
-              {/* Locked once joined, like the name field above: `connectedRoomCode` is derived
-                  straight from this text, so editing it further after a successful join would
-                  silently disconnect the room (read as a spurious "kicked" notice) and unlock
-                  the name/options fields again. The chip above turns into "Leave" at that point,
-                  the only way back to a fresh, editable code. */}
-              <TextInput
-                autoCapitalize="none"
-                editable={joinStatus !== 'valid'}
-                onChangeText={onJoinCodeChange}
-                placeholder={t.setup.online.codePlaceholder}
-                placeholderTextColor={colors.textMuted}
-                style={styles.coordInput}
-                value={joinCode}
-              />
-              {joinCodeIsValid && joinStatus === 'invalid' && (
-                <Text style={styles.hint}>{t.setup.online.invalidCode}</Text>
-              )}
-              {joinCodeIsValid && joinStatus === 'valid' && (
-                <Text style={styles.hint}>{t.setup.online.joined(joinCode.trim())}</Text>
-              )}
-            </>
-          )}
-        </Section>
+        <PartySection
+          connectedPlayers={connectedPlayers}
+          hint={t.setup.playersSection.hint}
+          hostUid={hostUid}
+          isHost={isHost}
+          joinCode={joinCode}
+          joinCodeIsValid={joinCodeIsValid}
+          joinStatus={joinStatus}
+          localUid={localUid}
+          nameEditable={nameEditable}
+          onChangeName={onChangeName}
+          onChooseHost={onChooseHost}
+          onChooseJoin={onChooseJoin}
+          onChooseSolo={onChooseSolo}
+          onJoinCodeChange={onJoinCodeChange}
+          onKick={onKick}
+          onlineChoice={onlineChoice}
+          roomCode={roomCode}
+          soloColor={soloColor}
+          soloName={soloName}
+          soloPlaceholder={soloPlaceholder}
+          title={t.setup.playersSection.title}
+        />
 
         <Section hint={t.setup.categoriesAvailability(available)} title={t.setup.categoriesTitle}>
           <View style={styles.chips}>

@@ -11,7 +11,14 @@ sur le meme telephone, jusqu'a 20 manches. Deploye en web statique sur GitHub Pa
 
 Convention `react-structure` (skill du projet) : chaque composant est un dossier
 auto-contenu `index.ts` + `<Name>.tsx` (export nomme) + `helpers.ts` + `constants.ts` +
-`types.ts`. Alias `@/` → `src/`.
+`types.ts` + `styles.ts` (le `createStyles`/`StyleSheet.create` du composant, importe
+depuis `<Name>.tsx` — extrait dans son propre fichier fin 2026-09 pour tous les
+composants du projet ; jamais de logique dedans, uniquement le style). Dans les dossiers
+`screens/<Screen>/` qui contiennent a la fois le container et sa vue (`GameScreen.tsx` +
+`GameScreenView.tsx`, `OnlineGameScreen.tsx` + `OnlineGameScreenView.tsx`), chacun a son
+propre fichier de styles nomme d'apres lui (`GameScreen.styles.ts`/
+`GameScreenView.styles.ts`) plutot qu'un `styles.ts` partage, pour eviter toute ambiguite
+sur lequel des deux createStyles il contient. Alias `@/` → `src/`.
 
 Depuis la reorg par jeu (fin 2026-09) : plus un seul gros `components/`/`helpers/`
 fourre-tout — ce qui est specifique a un jeu vit dans `src/games/<jeu>/`, ce qui est

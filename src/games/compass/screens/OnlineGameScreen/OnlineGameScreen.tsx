@@ -1,54 +1,25 @@
-import { useRef } from 'react';
-import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { ActivityIndicator, Modal, ScrollView, Text, View } from 'react-native';
+import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { PLAYER_COLORS, fontSize, spacing } from '@/data';
+import { PLAYER_COLORS } from '@/data';
 import { MAX_STRAIGHT_DISTANCE_KM, MAX_SURFACE_DISTANCE_KM } from '@/games/compass/constants';
 import { arcKmFromChordKm, bearingDeg, distanceKm as computeDistanceKm, formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
-import type { Theme } from '@/types';
 
 import type { EarthMark } from '@/components/EarthSection';
 import { REVEAL_OPACITY } from '../GameScreen/constants';
 import EndScreen from '../EndScreen';
 import ThemeBackdrop from '@/components/ThemeBackdrop';
 import { buildRoundRecord } from './helpers';
+import { onCapFromScroll } from '../GameScreen/helpers';
 import { OnlineAnswerView, OnlineResultsView } from './OnlineGameScreenView';
 import type { Needle, OnlineGameScreenProps } from './types';
 import { useOnlineGame } from './useOnlineGame';
 
-const createStyles = ({ colors, typography }: Theme) =>
-  StyleSheet.create({
-    loading: {
-      flex: 1,
-      backgroundColor: colors.background,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: spacing.md,
-    },
-    loadingText: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
-    },
-    // Same fixed near-black backdrop as SetupScreen's own disconnect notice (not a themed one):
-    // reads the same in both themes, and this is the one screen where the theme itself might be
-    // about to disappear from under it.
-    noticeOverlay: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: spacing.lg,
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    },
-    noticeText: {
-      ...typography.heading,
-      color: '#FFFFFF',
-      fontSize: fontSize.body,
-      textAlign: 'center',
-    },
-  });
+import { createStyles } from './OnlineGameScreen.styles';
 
 /**
  * Online counterpart to `GameScreen`: one phone = one player (no turn-passing, no `PlayerTabs`),
@@ -67,8 +38,19 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   // Same "Suivant"/"Precedent" scroll nav as the local GameScreen (see its own comment) — kept
   // above every early return below so the hook order never depends on which phase we're in.
   const scrollRef = useRef<ScrollView>(null);
-  const goToCap = () => scrollRef.current?.scrollToEnd({ animated: true });
-  const goToDistance = () => scrollRef.current?.scrollTo({ animated: true, y: 0 });
+  const [onCap, setOnCap] = useState(false);
+  const goToCap = () => {
+    setOnCap(true);
+    scrollRef.current?.scrollToEnd({ animated: true });
+  };
+  const goToDistance = () => {
+    setOnCap(false);
+    scrollRef.current?.scrollTo({ animated: true, y: 0 });
+  };
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const next = onCapFromScroll(event);
+    if (next !== null) setOnCap(next);
+  };
 
   if (!game.roomExists) {
     return (
@@ -208,9 +190,11 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
       headerScore={headerScore}
       liveCompass={roomSettings.liveCompass}
       maxDistanceKm={maxDistanceKm}
+      onCap={onCap}
       onGoToCap={goToCap}
       onGoToDistance={goToDistance}
       onQuit={game.handleQuit}
+      onScroll={handleScroll}
       onSetBearing={game.setBearing}
       onSetDistanceKm={game.setDistanceKm}
       onSubmit={game.submit}
