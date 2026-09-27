@@ -128,13 +128,21 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
 
   // Host: quitting takes the whole room down with it (everyone else sees the room-deleted notice
   // above) — there's no "pass the host" concept here, and there's nothing left to go "back" to
-  // (SetupScreen would still be sitting on this same, now-deleted room), so home directly rather
-  // than `onQuit`. A joiner just drops its own presence instead, so it doesn't keep blocking the
-  // round for everyone else while it's answered by nobody — going back to SetupScreen still makes
-  // sense there, the room is still very much alive.
+  // (SetupScreen would still be sitting on this same, now-deleted room, since `push`ing to
+  // `/online-game` never popped it off the stack), so home directly rather than `onQuit`. Also
+  // disconnects the shared `roomStore` right here rather than leaving it to that same SetupScreen
+  // instance's own connect/disconnect effect: that effect only reacts to its `connectedRoomCode`
+  // changing, which it never will on its own (it's still sitting there, unchanged) — without this,
+  // the store stays parked on the now-deleted room (stale `code`/`gameState.screen`), and its own
+  // "go to `/online-game` once the host starts a round" effect fires again the next time that
+  // stale screen re-renders, right back into a room that no longer exists. A joiner just drops its
+  // own presence instead, so it doesn't keep blocking the round for everyone else while it's
+  // answered by nobody — going back to SetupScreen still makes sense there, the room is still very
+  // much alive.
   const handleQuit = () => {
     if (isHost) {
       deleteRoom(code).catch(() => {});
+      useRoomStore.getState().disconnect();
       router.replace('/');
       return;
     }
