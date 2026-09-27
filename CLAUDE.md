@@ -41,10 +41,13 @@ src/
   components/          # ce qui n'est PAS specifique a un jeu (plus de dossier `common/` a part
                        # depuis fin 2026-09 : fusionne ici) : ui/ (Button, Card, Chip, Screen,
                        # Section, Stat, Toggle), HomeScreen, SettingsScreen, LanguageProvider,
-                       # ThemeProvider, MascotButton/HelicopterButton/UfoButton, GameCard, et les
-                       # composants partages par 2+ jeux (pas des primitives UI generiques) :
-                       # Compass, EarthSection (Compass + clue "Distance" de Clues), PlayerTabs
-                       # (Compass + Clues), RoundProgress (les 3 jeux)
+                       # ThemeProvider, MascotButton/HelicopterButton/UfoButton, GameCard,
+                       # NoticeOverlay (splash plein ecran texte blanc sur fond noir a 0.8
+                       # d'opacite - "l'hote a supprime la partie", "vous avez ete expulse" ;
+                       # tappable, se ferme au clic), et les composants partages par 2+ jeux (pas
+                       # des primitives UI generiques) : Compass, EarthSection (Compass + clue
+                       # "Distance" de Clues), PlayerTabs (Compass + Clues), RoundProgress (les 3
+                       # jeux)
   data/                # donnees/valeurs partagees par 2+ jeux (score/geo generiques, cles de
                        # stockage app-wide, options de partie, palette joueurs...) + data/places/
                        # (lieux Compass+Clues) + data/contours/ (codec geometrie Silhouette) +
@@ -160,10 +163,12 @@ Pas d'ecran "passe le telephone" : `PlayerTabs` reste epingle en haut de `GameSc
 onglet pour changer de joueur (`onSelect` omis, voir `PlayerTabsProps`) ; `submit()`
 avance automatiquement vers le premier joueur non repondu, et c'est le seul moyen de
 changer de joueur. Une fois tous repondus, calcule les scores et passe en phase
-`reveal`. `PlayerTabs` reste interactif (onglet cliquable, verrouillage optionnel via
-`allowRevision`) pour Clues, qui a son propre flux de tour par tour. Silhouette
-n'utilise plus `PlayerTabs` du tout (plus de tour par tour dans ce jeu, voir sa propre
-section plus bas).
+`reveal`. Pour Clues, ce meme header `PlayerTabs` (avec `activeLabel` pour afficher le nom
+complet du joueur actif) est lui aussi purement informationnel (`onSelect` omis, meme
+principe que Compass) — seul le panneau de buzz separe (`buzzOpen`, dans le footer) reste
+un `PlayerTabs` interactif (`onSelect={setBuzzedIndex}`, `allowRevision`), puisque c'est
+la ou on designe reellement qui a buzze. Silhouette n'utilise plus `PlayerTabs` du tout
+(plus de tour par tour dans ce jeu, voir sa propre section plus bas).
 
 ## Silhouette (jeu "Contour" en interne) : devine un pays
 
