@@ -61,7 +61,12 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   // in `useOnlineGame` above catches up. Tappable (like `SetupScreenView`'s own notice overlay)
   // rather than only ever auto-dismissing after 2s: no reason to make a joiner wait it out.
   if (!game.roomExists && !game.isHost) {
-    return <NoticeOverlay message={t.setup.online.roomDeletedNotice} onDismiss={() => router.replace('/')} />;
+    return (
+      <SafeAreaView style={styles.loading}>
+        <ThemeBackdrop />
+        <NoticeOverlay message={t.setup.online.roomDeletedNotice} onDismiss={() => router.replace('/')} />
+      </SafeAreaView>
+    );
   }
 
   const { localUid, players, onlinePlayers, isHost, roomSettings, gameState, place, straightLine, totals, myIndex } =
