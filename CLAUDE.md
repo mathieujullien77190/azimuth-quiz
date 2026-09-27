@@ -11,26 +11,59 @@ sur le meme telephone, jusqu'a 20 manches. Deploye en web statique sur GitHub Pa
 
 Convention `react-structure` (skill du projet) : chaque composant est un dossier
 auto-contenu `index.ts` + `<Name>.tsx` (export nomme) + `helpers.ts` + `constants.ts` +
-`types.ts`. Primitives partagees dans `components/ui/`. Alias `@/` → `src/`.
+`types.ts`. Alias `@/` → `src/`.
+
+Depuis la reorg par jeu (fin 2026-09) : plus un seul gros `components/`/`helpers/`
+fourre-tout — ce qui est specifique a un jeu vit dans `src/games/<jeu>/`, ce qui est
+partage par 2+ jeux (ou generique app-wide) reste a la racine.
 
 ```
 src/
-  app/                 # Expo Router : _layout (providers + Stack), index/setup/game (re-exports minces)
-  components/          # un dossier par composant/feature
-    ui/                # primitives partagees : Button, Card, Chip, Screen, Section, Stat, Toggle
+  app/                 # Expo Router : _layout (providers + Stack), routes (re-exports minces)
+  common/              # composants partages par 2+ jeux (pas des primitives UI generiques) :
+                       # Compass, EarthSection (Boussole + clue "Distance" d'Indices), PlayerTabs
+                       # (Boussole + Indices), RoundProgress (les 3 jeux)
+  components/          # ce qui n'est PAS specifique a un jeu : ui/ (Button, Card, Chip, Screen,
+                       # Section, Stat, Toggle), HomeScreen, SettingsScreen, LanguageProvider,
+                       # ThemeProvider, MascotButton/HelicopterButton/UfoButton, GameCard
+  games/
+    boussole/
+      components/      # GameScreen, OnlineGameScreen, SetupScreen, DistanceSlider,
+                       # InclinationSlider, SliderTrack, RoundResult, Legend, EndScreen, PlaceCard
+      helpers/         # places.ts, scoring.ts, distanceScale.ts, room.ts (Firestore, hors
+                       # barrel `@/helpers` — voir plus bas)
+      store/           # gameStore.ts (jeu local), roomStore.ts (partie en ligne, hors barrel
+                       # comme room.ts, meme raison)
+    indices/
+      components/      # IndicesGameScreen, IndicesSetupScreen, IndicesSettingsProvider,
+                       # IndicesClueCard
+      helpers/         # indicesHistory.ts, indicesSkeleton.ts
+    contour/
+      components/      # ContourGameScreen, ContourSetupScreen, ContourSettingsProvider,
+                       # ContourBoard
+      helpers/         # contourScoring.ts
   constants/           # valeurs partagees (score, geo, stockage, palette...) + constants/places/
-  helpers/             # geo.ts, scoring.ts, format.ts, storage.ts, location.ts, places.ts, random.ts, web.ts
-                       # + room.ts/roomStore.ts : Boussole en ligne (Firestore), hors barrel `@/helpers`
-                       # (firebase/firestore plante Jest a l'import) ; roomStore.ts est un store Zustand
-                       # partage entre SetupScreen (seul a connecter/deconnecter) et OnlineGameScreen
-                       # (lecture seule) — voir aussi la section smart/dumb ci-dessous
-  settings/            # GameSettings (Boussole) en store Zustand ; IndicesSettings/ContourSettings
+  helpers/             # commun aux 3 jeux : geo.ts, format.ts, storage.ts, location.ts, random.ts,
+                       # web.ts, firebase.ts, settings.ts (sanitize GameSettings) — le barrel
+                       # `index.ts` re-exporte aussi les fonctions des `helpers/` par-jeu
+                       # ci-dessus (places/scoring/distanceScale/indicesHistory/indicesSkeleton/
+                       # contourScoring), donc un simple `import { pickPlaces } from '@/helpers'`
+                       # marche toujours sans savoir ou vit le fichier reel — room.ts/roomStore.ts
+                       # (Boussole) restent les seuls hors barrel (`firebase/firestore` plante
+                       # Jest a l'import), importes directement via leur chemin `@/games/boussole/...`
+  settings/            # GameSettings (Boussole) en store Zustand (`src/games/boussole/store/`
+                       # n'a pas encore ete elargi a lui) ; IndicesSettings/ContourSettings
                        # restent des contexts React independants (jamais migres, hors scope)
   themes/              # night.ts / day.ts / fonts.ts / ThemeContext
   types/                # types de domaine partages (Guess, GameSettings, Theme...)
 ```
 
-`GameScreen/useGame.ts` est un hook fin au-dessus de `GameScreen/gameStore.ts` (store Zustand :
+`admin/` (outil interne, app Vite a part) importe directement certains fichiers de `src/`
+via le meme alias `@/` (ex. `ContourEditor.tsx` → `@/games/contour/components/ContourBoard/helpers`)
+— penser a verifier `admin` (au moins `npm run build` dans `admin/`) apres tout renommage/
+deplacement cote `src/`.
+
+`GameScreen/useGame.ts` est un hook fin au-dessus de `store/gameStore.ts` (store Zustand :
 etat brut + actions `start`/`submit`/`next`/`setBearing`/`setDistanceKm`, testable sans React —
 voir `gameStore.test.ts`) ; `useGame` ne fait que resoudre les reglages/la langue, declencher
 `start()` une fois prets, et calculer les valeurs derivees (`players`, `answered`, `totals`...).
@@ -49,7 +82,8 @@ appelle le hook, calcule les tableaux/labels derives qui ont besoin de `useTrans
 d'ecran entier (`loading`, `end`, notice "room supprimee") puisque ce ne sont pas des
 "vues" du composant dumb — il mappe le reste vers un composant `*View.tsx` (`SetupScreenView`,
 `GameScreenView`, `OnlineGameScreenView`/`OnlineAnswerView`+`OnlineResultsView`) qui ne
-fait que du rendu : jamais de `@/settings`/`@/helpers/room`/`@/helpers/roomStore`, jamais
+fait que du rendu : jamais de `@/settings`/`@/games/boussole/helpers/room`/
+`@/games/boussole/store/roomStore`, jamais
 d'effet — seulement des primitives UI, constantes pures et callbacks deja decides par le
 smart (ex. `onToggleCategory(id)` decide deja du blocage `readOnly` cote container, le
 dumb ne fait qu'appeler la prop). `useTranslation`/`useTheme`/`useThemedStyles`/
@@ -72,7 +106,7 @@ Deux modes de jeu (`GameSettings.straightLine`) :
   `Guess.distanceKm` existe (pas de `distanceMode`) — c'est sa signification qui change
   selon `straightLine`.
 
-Scoring (`helpers/scoring.ts`) : courbe logarithmique sur l'ecart de distance, ecart
+Scoring (`games/boussole/helpers/scoring.ts`) : courbe logarithmique sur l'ecart de distance, ecart
 angulaire 2D (mode surface) ou 3D via `directionAngle` (mode ligne droite). 500 points
 max chacun pour la direction et la distance.
 
@@ -114,7 +148,7 @@ bougeait rien a l'ecran tant que l'angle ne changeait pas ("il ne bouge plus"). 
 fraction du plateau, le point se pose exactement ou on le lache ; et comme le jeu et
 l'apercu admin utilisent tous les deux `boardDimensionsFor(country.points, ...)` (meme
 ratio, jamais la meme taille absolue), la position relative reste identique partout —
-voir `BOARD_PADDING_RATIO`/`HINT_STACK_GAP_RATIO` (`components/ContourBoard/constants.ts`),
+voir `BOARD_PADDING_RATIO`/`HINT_STACK_GAP_RATIO` (`games/contour/components/ContourBoard/constants.ts`),
 en fraction de `Math.min(width, height)` plutot qu'en pixels fixes, meme raison.
 
 Paliers d'indices (`ContourGameScreen.tsx`, bouton "Indice", inline dans le footer a

@@ -2,8 +2,8 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
-import ContourSettingsProvider from '@/components/ContourSettingsProvider';
-import IndicesSettingsProvider from '@/components/IndicesSettingsProvider';
+import ContourSettingsProvider from '@/games/contour/components/ContourSettingsProvider';
+import IndicesSettingsProvider from '@/games/indices/components/IndicesSettingsProvider';
 import LanguageProvider from '@/components/LanguageProvider';
 import ThemeProvider from '@/components/ThemeProvider';
 import { disableTextSelection, polyfillFlagEmoji } from '@/helpers';

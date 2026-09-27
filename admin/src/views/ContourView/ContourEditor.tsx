@@ -1,11 +1,16 @@
 import { useMemo, useRef, useState } from 'react';
 
 import { countryName, flagEmoji } from '@/constants/places/countries';
-// Pure geometry only, imported directly from the file rather than `@/components/ContourBoard`
+// Pure geometry only, imported directly from the file rather than `@/games/contour/components/ContourBoard`
 // (that folder's own `index.ts` re-exports the React Native `ContourBoard` component, which
 // drags in `react-native`/`react-native-svg` — this module has none of that, safe to bundle here.
-import { boardDimensionsFor, createProjector, polylinePath, projectPoints } from '@/components/ContourBoard/helpers';
-import { BOARD_PADDING_RATIO } from '@/components/ContourBoard/constants';
+import {
+  boardDimensionsFor,
+  createProjector,
+  polylinePath,
+  projectPoints,
+} from '@/games/contour/components/ContourBoard/helpers';
+import { BOARD_PADDING_RATIO } from '@/games/contour/components/ContourBoard/constants';
 import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 import type { ContourCountry, ContourNeighbor, Point2D } from '@/types';
 
@@ -38,7 +43,10 @@ export const ContourEditor = ({ initialCountry }: { initialCountry: ContourCount
   // own outline alone — the canvas every neighbor's curated `x`/`y` (a fraction of it) scales
   // against, so this preview matches the real game's layout exactly regardless of either one's
   // absolute pixel size.
-  const boardSize = useMemo(() => boardDimensionsFor(country.points, BOARD_MAX_WIDTH, BOARD_MAX_HEIGHT), [country.points]);
+  const boardSize = useMemo(
+    () => boardDimensionsFor(country.points, BOARD_MAX_WIDTH, BOARD_MAX_HEIGHT),
+    [country.points],
+  );
   // Only the outline itself still goes through a geographic projection (lon/lat) — see
   // BOARD_PADDING_RATIO's own doc comment for why this is a ratio, not a fixed pixel count.
   // Neighbors and the country's own flag/name anchor are both plain `x`/`y` fractions of this
@@ -57,7 +65,10 @@ export const ContourEditor = ({ initialCountry }: { initialCountry: ContourCount
   // `neighbor.x`/`y` are already a fraction of this exact canvas (see `ContourNeighbor`'s own doc
   // comment) — just scale, no projection involved, and no clamping: this is the one and only
   // position, draggable, and it's exactly what the real game renders too.
-  const truePositionFor = (neighbor: ContourNeighbor): Point2D => ({ x: neighbor.x * boardSize.width, y: neighbor.y * boardSize.height });
+  const truePositionFor = (neighbor: ContourNeighbor): Point2D => ({
+    x: neighbor.x * boardSize.width,
+    y: neighbor.y * boardSize.height,
+  });
 
   const positionFor = (index: number, neighbor: ContourNeighbor): Point2D => {
     if (dragPos && dragPos.index === index) return dragPos.pos;
@@ -115,7 +126,10 @@ export const ContourEditor = ({ initialCountry }: { initialCountry: ContourCount
     const onMouseMove = (moveEvent: MouseEvent) => {
       const start = centerDragStart.current;
       if (!start) return;
-      setCenterDragPos({ x: start.pixel.x + (moveEvent.clientX - start.clientX), y: start.pixel.y + (moveEvent.clientY - start.clientY) });
+      setCenterDragPos({
+        x: start.pixel.x + (moveEvent.clientX - start.clientX),
+        y: start.pixel.y + (moveEvent.clientY - start.clientY),
+      });
     };
 
     const onMouseUp = (upEvent: MouseEvent) => {
@@ -125,7 +139,10 @@ export const ContourEditor = ({ initialCountry }: { initialCountry: ContourCount
       centerDragStart.current = null;
       setCenterDragPos(null);
       if (!start) return;
-      const finalPixel = { x: start.pixel.x + (upEvent.clientX - start.clientX), y: start.pixel.y + (upEvent.clientY - start.clientY) };
+      const finalPixel = {
+        x: start.pixel.x + (upEvent.clientX - start.clientX),
+        y: start.pixel.y + (upEvent.clientY - start.clientY),
+      };
       commitCenterDrag(finalPixel);
     };
 
@@ -144,7 +161,10 @@ export const ContourEditor = ({ initialCountry }: { initialCountry: ContourCount
       if (!start) return;
       setDragPos({
         index: start.index,
-        pos: { x: start.pixel.x + (moveEvent.clientX - start.clientX), y: start.pixel.y + (moveEvent.clientY - start.clientY) },
+        pos: {
+          x: start.pixel.x + (moveEvent.clientX - start.clientX),
+          y: start.pixel.y + (moveEvent.clientY - start.clientY),
+        },
       });
     };
 
@@ -155,7 +175,10 @@ export const ContourEditor = ({ initialCountry }: { initialCountry: ContourCount
       dragStart.current = null;
       setDragPos(null);
       if (!start) return;
-      const finalPixel = { x: start.pixel.x + (upEvent.clientX - start.clientX), y: start.pixel.y + (upEvent.clientY - start.clientY) };
+      const finalPixel = {
+        x: start.pixel.x + (upEvent.clientX - start.clientX),
+        y: start.pixel.y + (upEvent.clientY - start.clientY),
+      };
       commitDrag(index, finalPixel);
     };
 

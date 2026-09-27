@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 
-import ContourSetupScreen from '@/components/ContourSetupScreen';
+import ContourSetupScreen from '@/games/contour/components/ContourSetupScreen';
 
 const ContourSetupRoute = () => {
   const router = useRouter();

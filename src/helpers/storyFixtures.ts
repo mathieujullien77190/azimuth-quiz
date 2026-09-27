@@ -1,4 +1,9 @@
-import { BOARD_PADDING_RATIO, boardDimensionsFor, createProjector, projectPoints } from '@/components/ContourBoard';
+import {
+  BOARD_PADDING_RATIO,
+  boardDimensionsFor,
+  createProjector,
+  projectPoints,
+} from '@/games/contour/components/ContourBoard';
 import {
   CONTOURS,
   DEFAULT_DISTANCE_KM,
@@ -12,14 +17,15 @@ import {
 import type { ContourCountry, Guess, IndicesPlace, Place, Player, PlayerResult, Point2D, RoundRecord } from '@/types';
 
 import { bearingDeg, distanceKm, normalizeBearing } from './geo';
-import { applyBestBonus, scoreRound } from './scoring';
+import { applyBestBonus, scoreRound } from '@/games/boussole/helpers/scoring';
 
 // Sample data shared by every component's `.stories.tsx` — pulled from the app's own real data
 // (PLACES/INDICES_PLACES/CONTOURS) rather than invented, same spirit as the admin gallery this
 // replaced. Lives here (not in `admin/`) so a component's story never depends on admin code —
 // admin already depends on `src/` via its `@/` alias, never the other way around.
 
-const findPlace = (name: string, code: string): Place => PLACES.find((place) => place.name === name && place.code === code)!;
+const findPlace = (name: string, code: string): Place =>
+  PLACES.find((place) => place.name === name && place.code === code)!;
 
 const findIndicesPlace = (name: string, code: string): IndicesPlace =>
   INDICES_PLACES.find((place) => place.name === name && place.code === code)!;
@@ -57,7 +63,10 @@ const SAMPLE_GUESSES: Guess[] = [
 ];
 
 const SAMPLE_RESULTS: PlayerResult[] = applyBestBonus(
-  SAMPLE_GUESSES.map((guess) => ({ guess, score: scoreRound(ORIGIN, SAMPLE_PLACE_REVEALED, guess, { straightLine: false }) })),
+  SAMPLE_GUESSES.map((guess) => ({
+    guess,
+    score: scoreRound(ORIGIN, SAMPLE_PLACE_REVEALED, guess, { straightLine: false }),
+  })),
 );
 
 export const SAMPLE_ROUND_RECORD: RoundRecord = { place: SAMPLE_PLACE_REVEALED, results: SAMPLE_RESULTS };

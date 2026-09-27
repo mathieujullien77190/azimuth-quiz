@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 
-import IndicesGameScreen from '@/components/IndicesGameScreen';
+import IndicesGameScreen from '@/games/indices/components/IndicesGameScreen';
 
 const IndicesGameRoute = () => {
   const router = useRouter();

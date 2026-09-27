@@ -12,7 +12,8 @@ import {
 import type { Language } from '@/i18n';
 import type { GameSettings, ThemeId } from '@/types';
 
-import { clearIndicesHistory } from './indicesHistory';
+import { clearIndicesHistory } from '@/games/indices/helpers/indicesHistory';
+
 import { sanitizeSettings } from './settings';
 
 const isLanguage = (value: unknown): value is Language => value === 'fr' || value === 'en';
