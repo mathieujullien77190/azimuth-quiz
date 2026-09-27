@@ -38,11 +38,6 @@ export type Place = Omit<GeoPlace, 'country'> & {
    * not the full URL. Absent if nobody has filled it in yet for this place. */
   wikiFr?: string;
   wikiEn?: string;
-  /** True only for a place Contour/Silhouette's city phase should skip (a judgment call
-   * specific to that game, e.g. an island city that reads badly pinned onto the
-   * mainland-only outline) — Boussole/Indices keep using it normally. Omitted (not
-   * `false`) for every other place. */
-  excludeFromContour?: boolean;
 };
 
 export type Origin = {
@@ -309,16 +304,13 @@ export type ContourDataRow = {
 export type ContourSettings = {
   playerNames: string[];
   rounds: number;
-  /** How many named places (any category, see `randomPlacesFor`) get a city-placement step each
-   * round — 0 would skip the city phase entirely, but the setup screen only offers 1/3/5. */
-  placesCount: 1 | 3 | 5;
   /** Which `ContourCountry.difficulty` tier a round's country is drawn from (see `randomCountry`)
    * — single choice, same pattern as Indices' own `IndicesSettings.difficulty`, not Boussole's
    * multi-select `difficulties`. */
   difficulty: Difficulty;
 };
 
-export type ContourGuessScore = {
+export type ContourRoundScore = {
   /** How many hints had already been revealed (0-3) when the correct guess landed — only
    * meaningful for whichever player actually found it (`guessPoints > 0`); 0 for every other
    * player, and for a round nobody found (give-up). */
@@ -329,29 +321,13 @@ export type ContourGuessScore = {
   guessPoints: number;
   /** CONTOUR_WRONG_GUESS_PENALTY times however many wrong guesses got attributed to this player
    * this round (see ContourGameScreen's post-"Valider" attribution step) — subtracted into
-   * `ContourRoundScore.total` below. 0 for a player nobody attributed a wrong guess to. */
+   * `total` below. 0 for a player nobody attributed a wrong guess to. */
   penaltyPoints: number;
+  /** guessPoints - penaltyPoints. */
+  total: number;
 };
-
-export type ContourCityScore = {
-  /** Mean distance (board pixels) across every placed marker's distance from its true place —
-   * purely informational (not itself scored), `Infinity` if the player placed none at all. */
-  cityErrorPx: number;
-  /** Sum of the per-place scores (see `scoreCityGuess`) across every place drawn this round. */
-  cityPoints: number;
-};
-
-export type ContourRoundScore = ContourGuessScore &
-  ContourCityScore & {
-    /** guessPoints + cityPoints - penaltyPoints. */
-    total: number;
-  };
 
 export type ContourPlayerResult = {
-  /** One marker per place drawn this round (see `ContourRoundRecord.places`, same order),
-   * `undefined` for any place the player never placed one on (scores 0 for that place). Empty
-   * when the round drew no places at all (see `placesCount`/`randomPlacesFor`). */
-  cityGuesses: (Point2D | undefined)[];
   score: ContourRoundScore;
 };
 
@@ -360,22 +336,11 @@ export type ContourRoundRecord = {
   /** The country's full outline (closed ring), projected once for the round and shown as-is
    * from the very start of the 'guess' phase — no holes/gaps, no reveal animation needed. */
   outline: Point2D[];
-  /** Canvas size `outline`/every city marker was projected at for this round (the 'guess'/'city'
-   * phases' own full-bleed box, which the 'reveal' phase's ordinary Card layout never matches) —
-   * the 'reveal' board must be drawn at this exact size, not re-fit to its own (differently
-   * shaped) area, or the frozen pixel positions below stop lining up with a freshly re-projected
-   * outline. */
+  /** Canvas size `outline` was projected at for this round (the 'guess' phase's own full-bleed
+   * box, which the 'reveal' phase's ordinary Card layout never matches) — the 'reveal' board must
+   * be drawn at this exact size, not re-fit to its own (differently shaped) area. */
   width: number;
   height: number;
-  /** Screen-space scale `outline`/every city marker was projected at for this round. */
-  boardSize: number;
-  /** The round's named places (Boussole `Place`s matching the country, any category, see
-   * `randomPlacesFor`): each one's display name and true board position, projected the same way
-   * as `outline`, plus its category icon if any (`emoji`, see `placeEmoji`) for the truth marker.
-   * One city-placement step per entry, in this order — can be empty (a country with fewer
-   * matching places than `ContourSettings.placesCount`), in which case the round skips the city
-   * phase entirely. */
-  places: { name: string; position: Point2D; emoji: string | undefined }[];
   /** Index of whichever player correctly guessed the country this round, or -1 if nobody did
    * (give-up) — informational only, each player's own `results[i].score.guessPoints` already
    * reflects it (0 for everyone but the guesser, if any). */
@@ -385,13 +350,11 @@ export type ContourRoundRecord = {
 };
 
 /**
- * A round has two steps, back to back on the same board. First a shared puzzle, not turn-based
- * ('guess' — any player can reveal the next hint or type a guess; the first correct one scores
- * and moves straight on, or anyone can give up for 0), then everyone places their city marker(s)
- * turn by turn ('city'), then the final reveal ('reveal', city scores computed and combined with
- * the guess score locked in back during 'guess').
+ * A round is a single shared puzzle, not turn-based: any player can reveal the next hint or type
+ * a guess, the first correct one scores (or anyone can give up for 0), then straight to the final
+ * reveal ('reveal').
  */
-export type ContourPhase = 'guess' | 'city' | 'reveal' | 'end';
+export type ContourPhase = 'guess' | 'reveal' | 'end';
 
 /** The two available themes (see src/themes): 'night' is the default. */
 export type ThemeId = 'night' | 'day';

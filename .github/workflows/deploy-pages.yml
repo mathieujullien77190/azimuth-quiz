@@ -44,6 +44,15 @@ jobs:
           mkdir -p dist/admin
           cp -r admin/dist/. dist/admin/
 
+      - name: Build Storybook (static, hosted at /azimuth-quiz/storybook — its own build uses relative asset paths, no base config needed)
+        run: npm run build-storybook
+        working-directory: admin
+
+      - name: Merge Storybook build into the main site's dist/storybook/
+        run: |
+          mkdir -p dist/storybook
+          cp -r admin/storybook-static/. dist/storybook/
+
       # Pages ignore les dossiers "_..." si Jekyll tourne dessus ; sans effet ici (deploiement
       # par Action, pas par branche), mais inoffensif a garder au cas ou la source change.
       - run: touch dist/.nojekyll

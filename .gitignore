@@ -45,3 +45,6 @@ yarn-error.*
 
 *storybook.log
 storybook-static
+
+# local secrets
+.env

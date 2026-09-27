@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
 import { arcKmFromChordKm, formatBearing, formatDistance, formatInclination, formatNumber } from '@/helpers';
@@ -40,9 +40,19 @@ const createStyles = ({ colors, radius, typography }: Theme, compact: boolean) =
       color: colors.text,
       fontSize: fontSize.subtitle * scale,
     },
-    scoringToggle: {
-      alignItems: 'center',
+    // Small pill button, shared look for both the scoring-info toggle and the kick button below —
+    // only the border/text color (accent vs. danger) tells them apart.
+    miniButton: {
+      alignSelf: 'center',
       marginTop: spacing.md,
+      paddingVertical: 6,
+      paddingHorizontal: spacing.md,
+      borderRadius: radius.button,
+      borderWidth: 1.5,
+      backgroundColor: colors.surfaceHigh,
+    },
+    scoringToggle: {
+      borderColor: colors.accent,
     },
     scoringToggleText: {
       ...typography.label,
@@ -91,6 +101,13 @@ const createStyles = ({ colors, radius, typography }: Theme, compact: boolean) =
       width: 14,
       height: 14,
       borderRadius: 7,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    playerDotCheck: {
+      color: colors.onAccent,
+      fontSize: 8,
+      fontWeight: '700',
     },
     playerName: {
       ...typography.heading,
@@ -100,6 +117,14 @@ const createStyles = ({ colors, radius, typography }: Theme, compact: boolean) =
     },
     scoreBlock: {
       alignItems: 'flex-end',
+    },
+    kick: {
+      borderColor: colors.danger,
+    },
+    kickText: {
+      ...typography.label,
+      color: colors.danger,
+      fontSize: fontSize.caption * scale,
     },
     playerTotal: {
       ...typography.display,
@@ -141,7 +166,7 @@ const createStyles = ({ colors, radius, typography }: Theme, compact: boolean) =
   });
 };
 
-export const RoundResult = ({ record, players, totals, options }: RoundResultProps) => {
+export const RoundResult = ({ record, players, totals, options, answered, localIndex, onKick }: RoundResultProps) => {
   const { width } = useWindowDimensions();
   const compact = width < COMPACT_MAX_WIDTH;
   const styles = useThemedStyles(useCallback((theme: Theme) => createStyles(theme, compact), [compact]));
@@ -150,11 +175,17 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
   const { score: truth } = record.results[0];
   const isSolo = players.length === 1;
   const [showScoringInfo, setShowScoringInfo] = useState(false);
+  const pending = answered !== undefined;
 
-  // Players are ranked by points on the round (best first).
-  const ranked = record.results
-    .map((result, index) => ({ result, player: players[index], index }))
-    .sort((a, b) => b.result.score.total - a.result.score.total);
+  const entries = record.results.map((result, index) => ({ result, player: players[index], index }));
+  // Players are ranked by points on the round (best first) — unless pending: there's no official
+  // score yet to rank by, so this device's own entry goes first instead (easiest to find while
+  // everyone else trickles in), the rest kept in their given (arrival) order.
+  const ranked = pending
+    ? localIndex === undefined
+      ? entries
+      : [...entries.filter((e) => e.index === localIndex), ...entries.filter((e) => e.index !== localIndex)]
+    : entries.sort((a, b) => b.result.score.total - a.result.score.total);
 
   // The slider gives the chord (straight line) in straightLine mode; the equivalent
   // surface distance is used both for display and to compute the gap with the true answer.
@@ -170,98 +201,169 @@ export const RoundResult = ({ record, players, totals, options }: RoundResultPro
         </View>
         <View style={styles.truthRow}>
           <Text style={styles.truthRowLabel}>{t.roundResult.direction}</Text>
-          <Text style={styles.truthValue}>{formatBearing(truth.trueBearing, t.cardinals)}</Text>
+          <Text style={styles.truthValue}>{pending ? '' : formatBearing(truth.trueBearing, t.cardinals)}</Text>
         </View>
         <View style={styles.truthRow}>
           <Text style={styles.truthRowLabel}>{t.roundResult.distance}</Text>
-          <Text style={styles.truthValue}>{formatDistance(truth.trueSurfaceDistanceKm)}</Text>
+          <Text style={styles.truthValue}>{pending ? '' : formatDistance(truth.trueSurfaceDistanceKm)}</Text>
         </View>
         {options.straightLine && (
           <View style={styles.truthRow}>
             <Text style={styles.truthRowLabel}>{t.roundResult.inclination}</Text>
-            <Text style={styles.truthValue}>{formatInclination(truth.trueInclination)}</Text>
+            <Text style={styles.truthValue}>{pending ? '' : formatInclination(truth.trueInclination)}</Text>
           </View>
         )}
         <Pressable
           accessibilityRole="button"
           hitSlop={8}
           onPress={() => setShowScoringInfo((value) => !value)}
-          style={styles.scoringToggle}
+          style={[styles.miniButton, styles.scoringToggle]}
         >
           <Text style={styles.scoringToggleText}>{t.roundResult.scoringInfoLabel}</Text>
         </Pressable>
         {showScoringInfo && <Text style={styles.scoringInfo}>{t.roundResult.scoringInfo}</Text>}
       </View>
 
-      {ranked.map(({ result, player, index }, position) => (
-        <View key={player.name + position} style={[styles.player, position > 0 && styles.playerBorder]}>
-          <View style={styles.playerHead}>
-            {!isSolo && <View style={[styles.playerDot, { backgroundColor: player.color }]} />}
-            <Text style={styles.playerName}>{isSolo ? t.roundResult.yourScore : player.name}</Text>
-            <View style={styles.scoreBlock}>
-              <Text style={styles.playerTotal}>{formatNumber(totals[index])}</Text>
+      {ranked.map(({ result, player, index }, position) => {
+        const hasAnswered = !pending || answered[index];
+        return (
+          <View key={player.name + position} style={[styles.player, position > 0 && styles.playerBorder]}>
+            <View style={styles.playerHead}>
+              {!isSolo &&
+                (pending && !hasAnswered ? (
+                  <ActivityIndicator color={player.color} size="small" />
+                ) : (
+                  <View style={[styles.playerDot, { backgroundColor: player.color }]}>
+                    {pending && <Text style={styles.playerDotCheck}>✓</Text>}
+                  </View>
+                ))}
+              <Text style={styles.playerName}>{isSolo ? t.roundResult.yourScore : player.name}</Text>
+              <View style={styles.scoreBlock}>
+                <Text style={styles.playerTotal}>{formatNumber(totals[index])}</Text>
+              </View>
             </View>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.rowLabel}>{t.roundResult.direction}</Text>
-            <Text style={styles.rowValue}>
-              {formatBearing(result.guess.bearing, t.cardinals)}{' '}
-              {result.score.directionExactBonus > 0 ? (
-                <Text style={{ color: colors.success }}>{t.roundResult.perfect}</Text>
-              ) : (
-                `(+${Math.round(result.score.directionError)}°)`
-              )}
-            </Text>
-            <Text
-              style={[
-                styles.rowPoints,
-                { color: result.score.directionBonus > 0 || result.score.directionExactBonus > 0 ? colors.success : colors.text },
-              ]}
-            >
-              {formatRowScore(result.score.directionPoints, result.score.directionBonus + result.score.directionExactBonus)}
-            </Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.rowLabel}>{t.roundResult.distance}</Text>
-            <Text style={styles.rowValue}>
-              {formatDistance(guessSurfaceKmFor(result))}{' '}
-              {result.score.distanceExactBonus > 0 ? (
-                <Text style={{ color: colors.success }}>{t.roundResult.perfect}</Text>
-              ) : (
-                `(+${formatDistance(Math.abs(guessSurfaceKmFor(result) - truth.trueSurfaceDistanceKm))})`
-              )}
-            </Text>
-            <Text
-              style={[
-                styles.rowPoints,
-                { color: result.score.distanceBonus > 0 || result.score.distanceExactBonus > 0 ? colors.success : colors.text },
-              ]}
-            >
-              {formatRowScore(result.score.distancePoints, result.score.distanceBonus + result.score.distanceExactBonus)}
-            </Text>
-          </View>
-          {options.straightLine && (
             <View style={styles.row}>
-              <Text style={styles.rowLabel}>{t.roundResult.inclination}</Text>
-              <Text style={styles.rowValue}>{formatInclination(result.guess.inclination)}</Text>
-              {/* Same score as Distance: in straight-line mode, the chord judged by distancePoints
-                  IS the inclination (one determines the other) — so the same points pool, won
-                  and lost together, independent of the heading. */}
+              <Text style={styles.rowLabel}>{t.roundResult.direction}</Text>
+              <Text style={styles.rowValue}>
+                {pending
+                  ? hasAnswered && formatBearing(result.guess.bearing, t.cardinals)
+                  : [
+                      formatBearing(result.guess.bearing, t.cardinals),
+                      ' ',
+                      result.score.directionExactBonus > 0 ? (
+                        <Text key="perfect" style={{ color: colors.success }}>
+                          {t.roundResult.perfect}
+                        </Text>
+                      ) : (
+                        `(+${Math.round(result.score.directionError)}°)`
+                      ),
+                    ]}
+                {pending && !hasAnswered && '?'}
+              </Text>
               <Text
                 style={[
                   styles.rowPoints,
-                  { color: result.score.distanceBonus > 0 || result.score.distanceExactBonus > 0 ? colors.success : colors.text },
+                  {
+                    color:
+                      !pending && (result.score.directionBonus > 0 || result.score.directionExactBonus > 0)
+                        ? colors.success
+                        : colors.text,
+                  },
                 ]}
               >
-                {formatRowScore(result.score.distancePoints, result.score.distanceBonus + result.score.distanceExactBonus)}
+                {pending
+                  ? '?'
+                  : formatRowScore(
+                      result.score.directionPoints,
+                      result.score.directionBonus + result.score.directionExactBonus,
+                    )}
               </Text>
             </View>
-          )}
-          <View style={styles.roundTotalRow}>
-            <Text style={styles.roundScore}>+{formatNumber(result.score.total)}</Text>
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>{t.roundResult.distance}</Text>
+              <Text style={styles.rowValue}>
+                {pending
+                  ? hasAnswered && formatDistance(guessSurfaceKmFor(result))
+                  : [
+                      formatDistance(guessSurfaceKmFor(result)),
+                      ' ',
+                      result.score.distanceExactBonus > 0 ? (
+                        <Text key="perfect" style={{ color: colors.success }}>
+                          {t.roundResult.perfect}
+                        </Text>
+                      ) : (
+                        `(+${formatDistance(Math.abs(guessSurfaceKmFor(result) - truth.trueSurfaceDistanceKm))})`
+                      ),
+                    ]}
+                {pending && !hasAnswered && '?'}
+              </Text>
+              <Text
+                style={[
+                  styles.rowPoints,
+                  {
+                    color:
+                      !pending && (result.score.distanceBonus > 0 || result.score.distanceExactBonus > 0)
+                        ? colors.success
+                        : colors.text,
+                  },
+                ]}
+              >
+                {pending
+                  ? '?'
+                  : formatRowScore(
+                      result.score.distancePoints,
+                      result.score.distanceBonus + result.score.distanceExactBonus,
+                    )}
+              </Text>
+            </View>
+            {options.straightLine && (
+              <View style={styles.row}>
+                <Text style={styles.rowLabel}>{t.roundResult.inclination}</Text>
+                <Text style={styles.rowValue}>
+                  {pending
+                    ? hasAnswered && formatInclination(result.guess.inclination)
+                    : formatInclination(result.guess.inclination)}
+                  {pending && !hasAnswered && '?'}
+                </Text>
+                {/* Same score as Distance: in straight-line mode, the chord judged by distancePoints
+                    IS the inclination (one determines the other) — so the same points pool, won
+                    and lost together, independent of the heading. */}
+                <Text
+                  style={[
+                    styles.rowPoints,
+                    {
+                      color:
+                        !pending && (result.score.distanceBonus > 0 || result.score.distanceExactBonus > 0)
+                          ? colors.success
+                          : colors.text,
+                    },
+                  ]}
+                >
+                  {pending
+                    ? '?'
+                    : formatRowScore(
+                        result.score.distancePoints,
+                        result.score.distanceBonus + result.score.distanceExactBonus,
+                      )}
+                </Text>
+              </View>
+            )}
+            <View style={styles.roundTotalRow}>
+              <Text style={styles.roundScore}>{pending ? '?' : `+${formatNumber(result.score.total)}`}</Text>
+            </View>
+            {onKick && index !== localIndex && (
+              <Pressable
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={() => onKick(index)}
+                style={[styles.miniButton, styles.kick]}
+              >
+                <Text style={styles.kickText}>{t.roundResult.kick}</Text>
+              </Pressable>
+            )}
           </View>
-        </View>
-      ))}
+        );
+      })}
     </Card>
   );
 };

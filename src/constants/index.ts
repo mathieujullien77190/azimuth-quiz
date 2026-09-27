@@ -105,6 +105,11 @@ export const NAME_PLACEHOLDERS = [
 // truth color (none between 3° and 85°) so no player picks them by chance.
 export const PLAYER_COLORS = ['#EF4444', '#16A34A', '#0891B2', '#2563EB', '#9333EA', '#DB2777'] as const;
 
+/** Same idea as `PLAYER_COLORS`, extended to `ROOM_MAX_PLAYERS` (helpers/room.ts) for the online
+ * room's connected-players list — 4 more hues added the same way, still clear of the accent's
+ * amber/yellow band. */
+export const ROOM_PLAYER_COLORS = [...PLAYER_COLORS, '#0D9488', '#4F46E5', '#C026D3', '#E11D48'] as const;
+
 // Label/description: see translations.setup.categories / .difficulties (same id).
 export const CATEGORIES: { id: Category; emoji: string }[] = [
   { id: 'cities', emoji: '🏙️' },

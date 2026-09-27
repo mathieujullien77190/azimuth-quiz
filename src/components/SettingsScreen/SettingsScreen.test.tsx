@@ -24,14 +24,10 @@ jest.mock('@/themes', () => {
 });
 
 const mockedUseLanguage = useLanguage as jest.Mock;
-const mockedUseSettings = useSettings as jest.Mock;
+const mockedUseSettings = useSettings as unknown as jest.Mock;
 const mockedUseThemeSettings = useThemeSettings as jest.Mock;
 
-const renderSettings = async (
-  language: 'fr' | 'en' = 'fr',
-  themeId: ThemeId = 'night',
-  animationsEnabled = false,
-) => {
+const renderSettings = async (language: 'fr' | 'en' = 'fr', themeId: ThemeId = 'night', animationsEnabled = false) => {
   const setLanguage = jest.fn();
   const resetLanguage = jest.fn();
   const resetSettings = jest.fn();

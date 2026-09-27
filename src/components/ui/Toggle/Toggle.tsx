@@ -28,21 +28,28 @@ const createStyles = ({ colors, typography }: Theme) =>
       color: colors.textMuted,
       fontSize: fontSize.caption + 1,
     },
+    disabled: {
+      opacity: 0.5,
+    },
   });
 
-const Toggle = ({ label, description, value, onValueChange }: ToggleProps) => {
+// `disabled` only dims the row and flags it for accessibility — the Switch stays interactive so
+// a caller's `onValueChange` can react to a disabled toggle (e.g. explain why) rather than have
+// the touch silently swallowed by React Native's own disabled handling.
+const Toggle = ({ label, description, value, onValueChange, disabled = false }: ToggleProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors, isDark } = useTheme();
   const thumbOnColor = isDark ? colors.success : DAY_THUMB_ON_COLOR;
 
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, disabled && styles.disabled]}>
       <View style={styles.text}>
         <Text style={styles.label}>{label}</Text>
         {description !== undefined && <Text style={styles.description}>{description}</Text>}
       </View>
       <Switch
         accessibilityLabel={label}
+        accessibilityState={{ disabled }}
         onValueChange={onValueChange}
         thumbColor={value ? thumbOnColor : colors.textMuted}
         trackColor={{ false: colors.surfaceHigh, true: colors.accent }}

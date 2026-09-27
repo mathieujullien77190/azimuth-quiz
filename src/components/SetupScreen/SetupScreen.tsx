@@ -1,329 +1,65 @@
-import { useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
-
-import {
-  CATEGORIES,
-  DIFFICULTIES,
-  MAX_PLAYERS,
-  MIN_PLAYERS,
-  NAME_PLACEHOLDERS,
-  PLAYER_COLORS,
-  ROUND_OPTIONS,
-  difficultyEmoji,
-  fontSize,
-  spacing,
-} from '@/constants';
-import { filterPlaces, initials } from '@/helpers';
-import { useLanguage, useTranslation } from '@/i18n';
+import { filterPlaces } from '@/helpers';
+import { useLanguage } from '@/i18n';
 import { useSettings } from '@/settings';
-import { useTheme, useThemedStyles } from '@/themes';
-import type { Theme } from '@/types';
 
-import Button from '../ui/Button';
-import Chip from '../ui/Chip';
-import Screen from '../ui/Screen';
-import Section from '../ui/Section';
-import Toggle from '../ui/Toggle';
-import { DISTANCE_MODES } from './constants';
-import { resizeNames, selectDifficultyFilter, toggleCategoryFilter } from './helpers';
+import { selectDifficultyFilter, toggleCategoryFilter } from './helpers';
+import { SetupScreenLoading, SetupScreenView } from './SetupScreenView';
 import type { SetupScreenProps } from './types';
-
-const createStyles = ({ colors, radius, typography }: Theme) =>
-  StyleSheet.create({
-    title: {
-      ...typography.display,
-      color: colors.accent,
-      fontSize: fontSize.title,
-      paddingTop: spacing.sm,
-    },
-    chips: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: spacing.sm,
-    },
-    names: {
-      gap: spacing.sm,
-    },
-    nameRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm + 2,
-    },
-    nameDot: {
-      width: 16,
-      height: 16,
-      borderRadius: 8,
-    },
-    // Input container: positions the initials within it, never as a sibling that could
-    // push the row off-screen.
-    inputWrap: {
-      flex: 1,
-      justifyContent: 'center',
-    },
-    input: {
-      ...typography.heading,
-      minHeight: 44,
-      paddingLeft: spacing.md,
-      paddingRight: 46,
-      borderRadius: radius.md,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      backgroundColor: colors.surfaceHigh,
-      color: colors.text,
-      fontSize: fontSize.body,
-    },
-    initials: {
-      position: 'absolute',
-      right: spacing.xs + 2,
-      width: 28,
-      height: 28,
-      borderRadius: 14,
-      borderWidth: 1.5,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.surface,
-    },
-    initialsText: {
-      ...typography.label,
-      fontSize: fontSize.caption,
-    },
-    hint: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.caption + 1,
-    },
-    coordRow: {
-      flexDirection: 'row',
-      gap: spacing.sm,
-    },
-    coordField: {
-      flex: 1,
-      gap: spacing.xs,
-    },
-    coordLabel: {
-      ...typography.label,
-      color: colors.textMuted,
-      fontSize: fontSize.caption,
-    },
-    coordInput: {
-      ...typography.heading,
-      minHeight: 44,
-      paddingHorizontal: spacing.md,
-      borderRadius: radius.md,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      backgroundColor: colors.surfaceHigh,
-      color: colors.text,
-      fontSize: fontSize.body,
-    },
-  });
-
-type CustomOriginInputsProps = {
-  latitude: number;
-  longitude: number;
-  onChange: (patch: { customLatitude?: number; customLongitude?: number }) => void;
-};
+import { useOnlineRoom } from './useOnlineRoom';
 
 /**
- * Champs latitude/longitude controles localement (texte libre pendant la saisie, y compris "-"
- * ou "3." en cours de frappe) : ne pousse un nombre valide vers les reglages qu'une fois qu'il
- * parse vraiment, plutot que de faire sauter le champ a chaque caractere invalide.
+ * Smart container: owns `useSettings()`/`useOnlineRoom()`, resolves every readOnly-gated action
+ * into an already-decided callback, and maps everything onto `SetupScreenView` (pure rendering).
  */
-const CustomOriginInputs = ({ latitude, longitude, onChange }: CustomOriginInputsProps) => {
-  const styles = useThemedStyles(createStyles);
-  const { colors } = useTheme();
-  const t = useTranslation();
-  const [latText, setLatText] = useState(() => String(latitude));
-  const [lonText, setLonText] = useState(() => String(longitude));
-
-  const onLatChange = (text: string) => {
-    setLatText(text);
-    const value = Number(text.replace(',', '.'));
-    if (Number.isFinite(value) && value >= -90 && value <= 90) onChange({ customLatitude: value });
-  };
-  const onLonChange = (text: string) => {
-    setLonText(text);
-    const value = Number(text.replace(',', '.'));
-    if (Number.isFinite(value) && value >= -180 && value <= 180) onChange({ customLongitude: value });
-  };
-
-  return (
-    <View style={styles.coordRow}>
-      <View style={styles.coordField}>
-        <Text style={styles.coordLabel}>{t.setup.customOrigin.latitude}</Text>
-        <TextInput
-          keyboardType="numbers-and-punctuation"
-          onChangeText={onLatChange}
-          placeholderTextColor={colors.textMuted}
-          style={styles.coordInput}
-          value={latText}
-        />
-      </View>
-      <View style={styles.coordField}>
-        <Text style={styles.coordLabel}>{t.setup.customOrigin.longitude}</Text>
-        <TextInput
-          keyboardType="numbers-and-punctuation"
-          onChangeText={onLonChange}
-          placeholderTextColor={colors.textMuted}
-          style={styles.coordInput}
-          value={lonText}
-        />
-      </View>
-    </View>
-  );
-};
-
 export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
-  const styles = useThemedStyles(createStyles);
-  const { colors, isDark } = useTheme();
-  const t = useTranslation();
-  const { language } = useLanguage();
   const { settings, ready, updateSettings } = useSettings();
-  const playerCount = settings.playerNames.length;
+  const { language } = useLanguage();
+  const room = useOnlineRoom(settings, updateSettings);
   const available = filterPlaces(settings.categories, settings.difficulties, language).length;
-  // Fixed order (same name always at the same field) rather than randomized per load.
-  const placeholderNames = NAME_PLACEHOLDERS;
+
+  if (room.starting) return <SetupScreenLoading />;
+
+  const updateOrNotify = (patch: Partial<typeof settings>) =>
+    room.readOnly ? room.notifyReadOnly() : updateSettings(patch);
 
   return (
-    <Screen>
-      <Text style={styles.title}>{t.setup.screenTitle}</Text>
-
-      <Section hint={t.setup.playersSection.hint} title={t.setup.playersSection.title}>
-        <View style={styles.chips}>
-          {Array.from({ length: MAX_PLAYERS - MIN_PLAYERS + 1 }, (_, i) => MIN_PLAYERS + i).map((count) => (
-            <Chip
-              key={count}
-              label={String(count)}
-              onPress={() => updateSettings({ playerNames: resizeNames(settings.playerNames, count) })}
-              selected={playerCount === count}
-            />
-          ))}
-        </View>
-        <View style={styles.names}>
-          {settings.playerNames.map((name, index) => {
-            const placeholder = placeholderNames[index % placeholderNames.length];
-
-            return (
-              <View key={index} style={styles.nameRow}>
-                <View style={[styles.nameDot, { backgroundColor: PLAYER_COLORS[index] }]} />
-                <View style={styles.inputWrap}>
-                  <TextInput
-                    accessibilityLabel={t.setup.playerNameAccessibility(index + 1)}
-                    maxLength={10}
-                    onChangeText={(text) =>
-                      updateSettings({
-                        playerNames: settings.playerNames.map((current, i) => (i === index ? text : current)),
-                      })
-                    }
-                    placeholder={placeholder}
-                    placeholderTextColor={colors.textMuted}
-                    style={styles.input}
-                    value={name}
-                  />
-                  <View style={[styles.initials, { borderColor: PLAYER_COLORS[index] }]}>
-                    <Text style={[styles.initialsText, { color: PLAYER_COLORS[index] }]}>
-                      {initials(name.trim() || placeholder)}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            );
-          })}
-        </View>
-      </Section>
-
-      <Section hint={t.setup.categoriesAvailability(available)} title={t.setup.categoriesTitle}>
-        <View style={styles.chips}>
-          {CATEGORIES.map((category) => (
-            <Chip
-              key={category.id}
-              emoji={category.emoji}
-              label={t.setup.categories[category.id]}
-              onPress={() => updateSettings(toggleCategoryFilter(settings, category.id))}
-              selected={settings.categories.includes(category.id)}
-            />
-          ))}
-        </View>
-      </Section>
-
-      <Section hint={t.setup.difficultyHint} title={t.setup.difficultyTitle}>
-        <View style={styles.chips}>
-          {DIFFICULTIES.map((difficulty) => (
-            <Chip
-              key={difficulty.id}
-              emoji={difficultyEmoji(difficulty, isDark)}
-              label={t.setup.difficulties[difficulty.id]}
-              onPress={() => updateSettings(selectDifficultyFilter(settings, difficulty.id))}
-              selected={settings.difficulties.includes(difficulty.id)}
-            />
-          ))}
-        </View>
-      </Section>
-
-      <Section title={t.setup.roundsTitle}>
-        <View style={styles.chips}>
-          {ROUND_OPTIONS.map((rounds) => (
-            <Chip
-              key={rounds}
-              label={String(rounds)}
-              onPress={() => updateSettings({ rounds })}
-              selected={settings.rounds === rounds}
-            />
-          ))}
-        </View>
-      </Section>
-
-      <Section title={t.setup.modeTitle}>
-        <View style={styles.chips}>
-          {DISTANCE_MODES.map((mode) => (
-            <Chip
-              key={mode.id}
-              label={t.setup.distanceModes[mode.id].label}
-              onPress={() => updateSettings({ straightLine: mode.straightLine })}
-              selected={settings.straightLine === mode.straightLine}
-            />
-          ))}
-        </View>
-        <Text style={styles.hint}>
-          {t.setup.distanceModes[settings.straightLine ? 'inclination' : 'distance'].description}
-        </Text>
-      </Section>
-
-      <Section title={t.setup.optionsTitle}>
-        <Toggle
-          {...t.setup.toggles.liveCompass}
-          onValueChange={(value) => updateSettings({ liveCompass: value })}
-          value={settings.liveCompass}
-        />
-        <Toggle
-          {...t.setup.toggles.useGps}
-          onValueChange={(value) => updateSettings({ useGps: value })}
-          value={settings.useGps}
-        />
-        {!settings.useGps && (
-          <CustomOriginInputs
-            key={ready ? 'ready' : 'loading'}
-            latitude={settings.customLatitude}
-            longitude={settings.customLongitude}
-            onChange={updateSettings}
-          />
-        )}
-        <Toggle
-          {...t.setup.toggles.showCountry}
-          onValueChange={(value) => updateSettings({ showCountry: value })}
-          value={settings.showCountry}
-        />
-        {settings.playerNames.length > 1 && (
-          <Toggle
-            {...t.setup.toggles.hideOtherAnswers}
-            onValueChange={(value) => updateSettings({ hideOtherAnswers: value })}
-            value={settings.hideOtherAnswers}
-          />
-        )}
-      </Section>
-
-      <Button disabled={available === 0} label={t.setup.start} onPress={onStart} />
-      <Button label={t.setup.back} onPress={onBack} variant="ghost" />
-    </Screen>
+    <SetupScreenView
+      available={available}
+      connectedPlayers={room.connectedPlayers}
+      hostUid={room.hostUid}
+      isHost={room.isHost}
+      joinCode={room.joinCode}
+      joinCodeIsValid={room.joinCodeIsValid}
+      joinStatus={room.joinStatus}
+      localUid={room.localUid}
+      nameEditable={room.connectedRoomCode === null}
+      onBack={onBack}
+      onChangeCustomOrigin={updateSettings}
+      onChangeName={(text) => updateSettings({ playerNames: [text] })}
+      onChooseHost={room.chooseHost}
+      onChooseJoin={room.chooseJoin}
+      onChooseSolo={room.chooseSolo}
+      onJoinCodeChange={room.setJoinCode}
+      onKick={room.kick}
+      onSelectDifficulty={(id) => updateOrNotify(selectDifficultyFilter(settings, id))}
+      onSelectMode={(straightLine) => updateOrNotify({ straightLine })}
+      onSelectRounds={(rounds) => updateOrNotify({ rounds })}
+      onStartPress={room.onlineChoice === 'host' ? room.startOnlineGame : onStart}
+      onToggleCategory={(id) => updateOrNotify(toggleCategoryFilter(settings, id))}
+      onToggleHideOtherAnswers={(value) => updateOrNotify({ hideOtherAnswers: value })}
+      onToggleLiveCompass={(value) => updateOrNotify({ liveCompass: value })}
+      onToggleShowCountry={(value) => updateOrNotify({ showCountry: value })}
+      onToggleUseGps={(value) => updateOrNotify({ useGps: value })}
+      onlineChoice={room.onlineChoice}
+      overlayMessage={room.overlayMessage}
+      readOnly={room.readOnly}
+      ready={ready}
+      roomCode={room.roomCode}
+      settings={settings}
+      soloColor={room.soloColor}
+      soloName={room.soloName}
+      soloPlaceholder={room.soloPlaceholder}
+      startDisabled={available === 0}
+    />
   );
 };

@@ -20,17 +20,50 @@ src/
     ui/                # primitives partagees : Button, Card, Chip, Screen, Section, Stat, Toggle
   constants/           # valeurs partagees (score, geo, stockage, palette...) + constants/places/
   helpers/             # geo.ts, scoring.ts, format.ts, storage.ts, location.ts, places.ts, random.ts, web.ts
-  settings/            # contexte React des reglages de partie (GameSettings)
+                       # + room.ts/roomStore.ts : Boussole en ligne (Firestore), hors barrel `@/helpers`
+                       # (firebase/firestore plante Jest a l'import) ; roomStore.ts est un store Zustand
+                       # partage entre SetupScreen (seul a connecter/deconnecter) et OnlineGameScreen
+                       # (lecture seule) — voir aussi la section smart/dumb ci-dessous
+  settings/            # GameSettings (Boussole) en store Zustand ; IndicesSettings/ContourSettings
+                       # restent des contexts React independants (jamais migres, hors scope)
   themes/              # night.ts / day.ts / fonts.ts / ThemeContext
   types/                # types de domaine partages (Guess, GameSettings, Theme...)
 ```
 
-`GameScreen/useGame.ts` est la machine a etats du jeu (`GamePhase = 'loading' | 'guess' |
-'reveal' | 'end'`) ; tout le reste (composants) est pilote par ses valeurs de retour.
+`GameScreen/useGame.ts` est un hook fin au-dessus de `GameScreen/gameStore.ts` (store Zustand :
+etat brut + actions `start`/`submit`/`next`/`setBearing`/`setDistanceKm`, testable sans React —
+voir `gameStore.test.ts`) ; `useGame` ne fait que resoudre les reglages/la langue, declencher
+`start()` une fois prets, et calculer les valeurs derivees (`players`, `answered`, `totals`...).
+`GamePhase = 'loading' | 'guess' | 'reveal' | 'end'` ; tout le reste (composants) est pilote par
+les valeurs de retour de `useGame`, inchangees par ce decoupage.
+
+### Smart/dumb (container/presentational) sur les 3 ecrans Boussole
+
+`SetupScreen`, `GameScreen` et `OnlineGameScreen` suivent tous les trois le meme
+decoupage : un hook "smart" colocalise (`useOnlineRoom.ts`, `useGame.ts`,
+`useOnlineGame.ts`) porte l'etat, les effets (Firestore/settings/scroll) et les actions
+deja resolues (readOnly-gated, kick, submit...) ; le fichier principal du dossier
+(`SetupScreen.tsx`, `GameScreen.tsx`, `OnlineGameScreen.tsx`) reste le container — il
+appelle le hook, calcule les tableaux/labels derives qui ont besoin de `useTranslation`/
+`useTheme` (`legendItems`, `earthMarks`, `scoreLabel`...), et garde les early-returns
+d'ecran entier (`loading`, `end`, notice "room supprimee") puisque ce ne sont pas des
+"vues" du composant dumb — il mappe le reste vers un composant `*View.tsx` (`SetupScreenView`,
+`GameScreenView`, `OnlineGameScreenView`/`OnlineAnswerView`+`OnlineResultsView`) qui ne
+fait que du rendu : jamais de `@/settings`/`@/helpers/room`/`@/helpers/roomStore`, jamais
+d'effet — seulement des primitives UI, constantes pures et callbacks deja decides par le
+smart (ex. `onToggleCategory(id)` decide deja du blocage `readOnly` cote container, le
+dumb ne fait qu'appeler la prop). `useTranslation`/`useTheme`/`useThemedStyles`/
+`useWindowDimensions` restent utilisables dans le dumb (lectures pures, pas d'effet de
+bord) — seuls les hooks a etat/effet metier sont interdits. Les tests existants
+(`SetupScreen.test.tsx`, `GameScreen.test.tsx`) n'ont pas change : ils rendent toujours
+le container, l'arbre final est identique, seul son decoupage interne a bouge.
+`OnlineGameScreen` n'a aucun test automatise — seul un retest manuel garantit qu'il n'a
+pas regresse apres ce decoupage.
 
 ## Domaine : cap, distance, inclinaison
 
 Deux modes de jeu (`GameSettings.straightLine`) :
+
 - **Surface** (defaut) : on estime la distance parcourue a la surface du globe.
 - **Ligne droite** (`straightLine: true`) : on choisit un cap + une inclinaison sous
   l'horizon (`InclinationSlider`) ; la corde (ligne droite a travers la Terre) et la
@@ -56,17 +89,21 @@ onglet pour changer de joueur (`onSelect` omis, voir `PlayerTabsProps`) ; `submi
 avance automatiquement vers le premier joueur non repondu, et c'est le seul moyen de
 changer de joueur. Une fois tous repondus, calcule les scores et passe en phase
 `reveal`. `PlayerTabs` reste interactif (onglet cliquable, verrouillage optionnel via
-`allowRevision`) pour Indices/Silhouette, qui ont leurs propres flux de tour par tour.
+`allowRevision`) pour Indices, qui a son propre flux de tour par tour. Silhouette
+n'utilise plus `PlayerTabs` du tout (plus de tour par tour dans ce jeu, voir sa propre
+section plus bas).
 
-## Silhouette (jeu "Contour" en interne) : devine un pays, place des lieux
+## Silhouette (jeu "Contour" en interne) : devine un pays
 
 Troisieme mode (nom affiche "Silhouette" ; identifiants de code restes `Contour`/
 `ContourGameScreen`/`ContourView`...) : la silhouette d'un pays s'affiche remplie
 (`colors.surfaceHigh`, pas juste un contour), les joueurs devinent lequel via 4 paliers
 d'indices partages (n'importe qui peut reveler le palier suivant ou valider une reponse
-— pas de tour par tour, `ContourPhase` `'guess'`), puis placent chacun 1/3/5 lieux connus
-sur la silhouette revelee (`ContourPhase` `'city'`, tour par tour cette fois, via
-`PlayerTabs`).
+— pas de tour par tour, `ContourPhase` `'guess'`), puis la manche passe directement en
+revelation (`'reveal'`). Pas de second temps de placement de lieux (retire — le jeu
+s'arrete a la reconnaissance du pays) ; `ContourPhase` n'a donc plus que `'guess'` |
+`'reveal'` | `'end'`, et la notion de "joueur actif"/tour par tour n'existe plus du tout
+dans ce jeu (le palier suivant/la reponse peuvent venir de n'importe qui a tout moment).
 
 **Positions sur le plateau en fraction, pas en lon/lat.** `ContourNeighbor.x`/`y` et
 `ContourCountry.centerLabel` sont une fraction (0-1) du canvas du plateau — pas des
@@ -83,8 +120,7 @@ en fraction de `Math.min(width, height)` plutot qu'en pixels fixes, meme raison.
 Paliers d'indices (`ContourGameScreen.tsx`, bouton "Indice", inline dans le footer a
 cote de l'input) : 1) drapeau de chaque voisin, 2) drapeau du pays cible
 a son propre point curee (`ContourCountry.centerLabel`), 3) nom de chaque voisin empile
-juste sous son icone (les deux restent affiches ensemble, l'un ne remplace plus l'autre),
-4) nom du pays cible empile sous son drapeau (= abandon). Toujours centre (`textAnchor="middle"` fixe dans
+juste sous son icone (les deux restent affiches ensemble, l'un ne remplace plus l'autre), 4) nom du pays cible empile sous son drapeau (= abandon). Toujours centre (`textAnchor="middle"` fixe dans
 `ContourBoard.tsx`) : l'ancien alignement directionnel `start`/`end` n'avait plus de sens
 des que chaque hint est devenu un point fixe plutot qu'une etiquette pointant vers le bord.
 
@@ -100,28 +136,18 @@ degressifs selon le palier (`CONTOUR_GUESS_POINTS_BY_HINTS = [500, 375, 250, 125
 points fixes) au joueur designe et rouvre l'input au meme palier. Un abandon (palier 4
 confirme) ne rapporte ni ne penalise personne.
 
-Deux filtres par difficulte, meme enum `Difficulty` que Boussole/Indices mais choix
-unique (`ContourSettings.difficulty`, pas de multi-select) : le pays du tour
-(`ContourCountry.difficulty`, curee a la main via le champ optionnel `contour.difficulty`
-sur la ligne du pays dans `constants/places/countries.json` — France et Espagne en
-`easy`, seule la Norvege en `hard`, absent (= `intermediate` par defaut, voir `codec.ts`)
-pour tous les autres, y compris tous les pays generes automatiquement ; deliberement
-desequilibre, ne pas tenter de rectifier sans demande explicite) et les lieux de la
-phase 'city'
-(`Place.difficulty`, filtre en plus du `code` pays et de la categorie dans
-`randomPlacesFor` — categorie `kids` toujours exclue, et `Place.excludeFromContour`
-(4e element optionnel de chaque entree de `places.json`, sa propre petite array `[true]`
-au meme niveau que `boussole`/`indices` plutot qu'un champ dans `common` — voir `ContourRow`,
-`constants/places/codec.ts`) exclut a la main certains lieux de Silhouette uniquement sans
-toucher a Boussole/Indices ; un pays peut n'avoir aucun lieu a un palier donne, la phase
-'city' se raccourcit ou saute alors silencieusement). Sur la revelation,
-un lieu de categorie capital/mountains/landmarks/nature affiche l'emoji de sa categorie
-a la place du point jaune uni (`placeEmoji`, `ContourGameScreen/helpers.ts`) ;
-cities/citiesFr gardent le point jaune classique.
+Filtre par difficulte, meme enum `Difficulty` que Boussole/Indices mais choix unique
+(`ContourSettings.difficulty`, pas de multi-select) : determine le pool dans lequel le
+pays du tour est tire (`ContourCountry.difficulty`, curee a la main via le champ
+optionnel `contour.difficulty` sur la ligne du pays dans `constants/places/countries.json`
+— France et Espagne en `easy`, seule la Norvege en `hard`, absent (= `intermediate` par
+defaut, voir `codec.ts`) pour tous les autres, y compris tous les pays generes
+automatiquement ; deliberement desequilibre, ne pas tenter de rectifier sans demande
+explicite).
 
 Donnees Contour (points/voisins/centerLabel/difficulty) : plus de fichiers a part dans
 `constants/contours/` (qui ne garde plus que `codec.ts` — decode uniquement, plus aucune
-donnee — et `excludedPlaces.ts`, sans rapport) ; tout vit desormais comme un 7e element
+donnee) ; tout vit desormais comme un 7e element
 optionnel `contour` sur la ligne du pays concerne dans `constants/places/countries.json`
 (type `ContourDataRow`, voir `src/types/index.ts` et `CountryRow`) — absent pour la
 grande majorite des pays, qui restent un tableau a 6 elements sans padding. Les voisins
@@ -136,10 +162,11 @@ differente selon le pays qui le cite (pas de table globale par code) : chaque
 `ContourCountry.neighbors` est propre a son pays.
 
 La phase `'reveal'` fige la geometrie du round dans son propre `ContourRoundRecord`
-(`width`/`height`/`outline`, en plus des positions deja en pixels) et la reaffiche telle
-quelle plutot que de la recalculer contre la mise en page de reveal (differente de celle
-de `'guess'`/`'city'`) — sinon les points places par les joueurs (figes a l'ancienne
-taille) se retrouvaient decales par rapport a un contour redessine a une nouvelle taille.
+(`width`/`height`/`outline`) et la reaffiche telle quelle plutot que de la recalculer
+contre la mise en page de reveal (differente de celle de `'guess'`, plein ecran sans
+`Screen`) — `ContourBoard` a besoin d'un `width`/`height` explicite pour dimensionner son
+`<Svg>`, donc la taille utilisee au moment du `'guess'` est conservee telle quelle plutot
+que remesuree pour la revelation.
 
 Admin : pas d'onglet a part — un bouton "🗺️ Silhouette" apparait dans la carte pays de
 `admin/src/views/CountriesView` pour tout pays possedant deja des donnees Contour
@@ -148,17 +175,14 @@ changement d'UI necessaire puisque ce lookup a toujours ete dynamique), et depli
 `admin/src/views/ContourView/ContourEditor.tsx` juste en dessous, dans cette meme carte
 (recherche/pagination/tri deja fournis par CountriesView, partages entre pays classiques
 et Silhouette). `ContourEditor` prend un seul `initialCountry` en prop (pas de selecteur
-de pays a lui, CountriesView fait deja ce role) et ajoute sa propre
-recherche/pagination sur la liste "Lieux possibles" (`Pagination`) avec surbrillance
-jaune sur la carte au clic sur un lieu. Chaque voisin (et le point drapeau/nom du pays
-cible, un seul point desormais) se glisse a la souris et se pose exactement ou on le
-lache — rien n'est ecrit sur disque, chaque deplacement/suppression ajoute une ligne au
-journal
-(`saveNeighborPosition`, `saveCenterLabelPosition`, `deleteNeighbor`,
-`admin/src/api/contour.ts`). Supprimer un lieu depuis cette vue ne le supprime jamais de
-Boussole/Indices : `excludePlaceFromContour` l'ajoute seulement au set
-`CONTOUR_EXCLUDED_PLACES` (mis a jour a la main d'apres le journal), jamais au
-`deletePlace` partage de `admin/src/api/places.ts`.
+de pays a lui, CountriesView fait deja ce role) : chaque voisin (et le point drapeau/nom
+du pays cible, un seul point desormais) se glisse a la souris et se pose exactement ou on
+le lache — rien n'est ecrit sur disque, chaque deplacement/suppression ajoute une ligne au
+journal (`saveNeighborPosition`, `saveCenterLabelPosition`, `deleteNeighbor`,
+`admin/src/api/contour.ts`). Plus de liste "Lieux possibles"/exclusion cote Silhouette
+(retiree avec la phase de placement de lieux qu'elle servait a curer) : un lieu ne se
+supprime plus que via `deletePlace` (`admin/src/api/places.ts`), partage avec
+Boussole/Indices.
 
 ## `Screen` : header/footer fixes
 
@@ -171,21 +195,13 @@ pour : quitter + score + manche/pastilles + onglets joueurs (header), bouton Val
 sur react-native-web s'il n'a pas de `style={{ flexGrow: 0, flexShrink: 0 }}` explicite
 (pas seulement `contentContainerStyle`) — voir `PlayerTabs.tsx`.
 
-**Exception (Contour)** : les phases `'guess'`/`'city'` de `ContourGameScreen`
-n'utilisent pas `Screen` du tout — un `SafeAreaView` + `ThemeBackdrop` propres, avec
-la silhouette qui occupe tout l'ecran mesure (`onLayout`) et les anciens header/footer
-qui flottent par-dessus en `position: 'absolute'` (`overlayTop`/`overlayBottom`, fond
+**Exception (Contour)** : la phase `'guess'` de `ContourGameScreen` n'utilise pas
+`Screen` du tout — un `SafeAreaView` + `ThemeBackdrop` propres, avec la silhouette qui
+occupe tout l'ecran mesure (`onLayout`) et les anciens header/footer qui flottent
+par-dessus en `position: 'absolute'` (`overlayTop`/`overlayBottom`, fond
 `${colors.surfaceHigh}F0`) plutot que de reserver leur propre espace — pour que le
 contour du pays touche les bords de l'ecran. La phase `'reveal'` repasse par `Screen`
 classique (elle affiche un tableau de resultats sous le plateau).
-
-En phase `'city'` specifiquement, `overlayTop` affiche `PlayerTabs` (liste des joueurs,
-tour par tour) a la place du prompt de la phase `'guess'` ; le drapeau/nom du pays cible
-ne sont plus dans `overlayTop` mais flottent directement sur le plateau
-(`boardCountryBadge`, position absolue dans `fullBleedBoardArea`, `top` recale sur la
-hauteur live d'`overlayTop` pour ne jamais passer dessous) ; et `cityHint` (le lieu a
-trouver, ex. "Lieu 2/3 : place Paris sur la carte") est descendu dans `overlayBottom`,
-juste au-dessus du bouton Valider/Continuer plutot qu'en haut a cote du nom du pays.
 
 ## Theme
 
@@ -221,9 +237,16 @@ environnement).
 - `npx expo lint` vient d'etre configure (ESLint + eslint-config-expo, premier lancement
   fin 2026-09). Erreurs preexistantes non corrigees (hors scope au moment ou elles ont
   ete trouvees) : regles `react-hooks/set-state-in-effect` et `react-hooks/refs` dans
-  `Compass.tsx`, `useHeading.ts`, `useGame.ts`, `SliderTrack.tsx`, `ContourBoard.tsx`
-  (meme idiome que `SliderTrack.tsx` : un ref mis a jour a chaque rendu pour rester lisible
-  depuis le `PanResponder`, cree une seule fois).
+  `Compass.tsx`, `useHeading.ts`, `SliderTrack.tsx` (meme idiome : un ref mis a jour a
+  chaque rendu pour rester lisible depuis le `PanResponder`, cree une seule fois).
+  `useGame.ts` avait le meme idiome (refs pour transmettre reglages/langue a `start()`
+  sans recreer sa `useCallback`) mais l'a perdu en migrant vers `gameStore.ts` (Zustand) :
+  le hook fin n'a plus besoin de refs, il lit `settings`/`language` directement au moment
+  ou l'effet de lancement se declenche — baseline passee de 24 a 21 erreurs avec ce
+  changement, sans qu'aucune n'ait ete corrigee a la main. `ContourBoard.tsx` avait le
+  meme idiome mais a perdu tout son `PanResponder`/sa logique de placement en meme temps
+  que la phase de placement de lieux (voir la section Silhouette) — pur composant
+  d'affichage desormais, plus concerne.
 - `react-hooks/refs` se declenche aussi, de facon attendue et inevitable, partout ou
   l'API `Animated` de React Native est utilisee (`HomeScreen.tsx` : position/rotation de
   la mascotte, soucoupe la nuit ou helicoptere le jour — voir `MascotButton` ;

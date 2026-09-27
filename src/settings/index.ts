@@ -1,6 +1,8 @@
 import { createContext, useContext } from 'react';
+import { create } from 'zustand';
 
 import { DEFAULT_CONTOUR_SETTINGS, DEFAULT_INDICES_SETTINGS, DEFAULT_SETTINGS } from '@/constants';
+import { loadSettings, saveSettings } from '@/helpers';
 import type { ContourSettings, GameSettings, IndicesSettings } from '@/types';
 
 export type SettingsContextValue = {
@@ -14,14 +16,29 @@ export type SettingsContextValue = {
   resetSettings: () => void;
 };
 
-export const SettingsContext = createContext<SettingsContextValue>({
+/** Boussole settings — a Zustand store rather than a Context, but the same public hook shape
+ * (`useSettings()` returns `{ settings, ready, updateSettings, resetSettings }`), so every
+ * consumer (`SetupScreen`, `useGame`, `SettingsScreen`) is unaffected by this. Never hydrated at
+ * import time (see `hydrateSettings`) — a store singleton's module evaluation must stay
+ * side-effect-free, unlike a Provider's mount effect, or every test that imports this module
+ * transitively (even ones mocking `@/helpers` without `loadSettings`) would crash on import. */
+export const useSettings = create<SettingsContextValue>()((set) => ({
   settings: DEFAULT_SETTINGS,
-  ready: true,
-  updateSettings: () => {},
-  resetSettings: () => {},
-});
+  ready: false,
+  updateSettings: (patch) =>
+    set((state) => {
+      const next = { ...state.settings, ...patch };
+      saveSettings(next);
+      return { settings: next };
+    }),
+  resetSettings: () => set({ settings: DEFAULT_SETTINGS }),
+}));
 
-export const useSettings = (): SettingsContextValue => useContext(SettingsContext);
+/** Reads the persisted settings once and flips `ready` — called once from the root layout
+ * (`src/app/_layout.tsx`), replacing `SettingsProvider`'s old mount effect. */
+export const hydrateSettings = (): void => {
+  loadSettings().then((settings) => useSettings.setState({ settings, ready: true }));
+};
 
 /** Indices game settings: independent context, never mixed with `GameSettings` (Boussole). */
 export type IndicesSettingsContextValue = {

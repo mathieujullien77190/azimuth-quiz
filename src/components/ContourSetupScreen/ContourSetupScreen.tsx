@@ -1,7 +1,6 @@
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import {
-  CONTOUR_PLACES_COUNT_OPTIONS,
   DIFFICULTIES,
   MAX_PLAYERS,
   MIN_PLAYERS,
@@ -138,19 +137,6 @@ export const ContourSetupScreen = ({ onStart, onBack }: ContourSetupScreenProps)
               </View>
             );
           })}
-        </View>
-      </Section>
-
-      <Section hint={t.contourSetup.placesCountHint} title={t.contourSetup.placesCountTitle}>
-        <View style={styles.chips}>
-          {CONTOUR_PLACES_COUNT_OPTIONS.map((placesCount) => (
-            <Chip
-              key={placesCount}
-              label={String(placesCount)}
-              onPress={() => updateSettings({ placesCount })}
-              selected={settings.placesCount === placesCount}
-            />
-          ))}
         </View>
       </Section>
 

@@ -3,4 +3,5 @@ export type ToggleProps = {
   description?: string;
   value: boolean;
   onValueChange: (value: boolean) => void;
+  disabled?: boolean;
 };

@@ -10,8 +10,7 @@ Trois jeux de géographie, choisis depuis l'écran d'accueil :
 - **Indices** : devine une ville à partir d'indices qui se révèlent progressivement
   (drapeau, population, monnaie, description...).
 - **Silhouette** : la silhouette d'un pays s'affiche — devine lequel grâce à des
-  indices partagés (drapeaux et noms des pays voisins), puis place des lieux connus
-  sur sa carte une fois révélée.
+  indices partagés (drapeaux et noms des pays voisins).
 
 De 1 à 6 joueurs sur le même téléphone, chacun son tour, jusqu'à 20 manches.
 

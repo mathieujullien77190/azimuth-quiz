@@ -1,11 +1,6 @@
 import { DEFAULT_SETTINGS } from '@/constants';
 import type { Category, Difficulty, GameSettings } from '@/types';
 
-/** Resizes the name list to the player count, keeping already-entered names. New
- * slots stay empty: the random placeholder shows, no "Player N" written by default. */
-export const resizeNames = (names: string[], count: number): string[] =>
-  Array.from({ length: count }, (_, index) => names[index] ?? '');
-
 /** Adds or removes a value from a multi-select (categories, difficulties...), never
  * emptying it entirely. */
 export const toggleSelected = <T>(selected: T[], value: T): T[] => {

@@ -28,7 +28,8 @@ export const fr: Translations = {
       },
       contour: {
         title: 'Silhouette',
-        tagline: 'La silhouette d’un pays s’affiche. Devine lequel grâce aux indices, puis place des villes sur sa carte.',
+        tagline:
+          'La silhouette d’un pays s’affiche. Devine lequel grâce aux indices, puis place des villes sur sa carte.',
         meta: ['1 à 6 joueurs'],
         cta: 'Jouer',
       },
@@ -39,8 +40,8 @@ export const fr: Translations = {
     back: 'Retour',
     start: 'Lancer la partie',
     playersSection: {
-      title: 'Joueurs',
-      hint: 'Tout le monde joue sur le même téléphone, chacun son tour.',
+      title: 'Partie',
+      hint: 'Joue en solo, ou crée/rejoins une partie en ligne.',
     },
     playerNameAccessibility: (index) => `Nom du joueur ${index}`,
     categoriesTitle: 'Catégories',
@@ -62,6 +63,21 @@ export const fr: Translations = {
       hard: 'Difficile',
     },
     roundsTitle: 'Nombre de manches',
+    online: {
+      solo: 'Jouer seul',
+      host: 'Créer',
+      join: 'Rejoindre',
+      generating: 'Création du code…',
+      yourCode: (code) => `Code de la partie : ${code}`,
+      codePlaceholder: 'Code de la partie',
+      invalidCode: 'Code introuvable.',
+      joined: (code) => `Connecté à la partie ${code} !`,
+      hostBadge: (name) => `${name} (hôte)`,
+      removePlayer: (name) => `Retirer ${name}`,
+      kickedNotice: 'Vous avez été expulsé de la partie.',
+      roomDeletedNotice: 'L’hôte a supprimé la partie.',
+    },
+    readOnlyNotice: 'Seul l’hôte peut modifier les options.',
     modeTitle: 'Mode',
     distanceModes: {
       distance: {
@@ -109,6 +125,9 @@ export const fr: Translations = {
     nextStep: 'Suivant',
     previousStep: 'Précédent',
     playerTurn: (name) => `À ${name} de jouer`,
+    /** Shown once this device has submitted, while other online players haven't yet
+     * (`OnlineGameScreen`) — nothing to do but wait, so it replaces the footer's Valider button. */
+    waitingForOthers: 'En attente des autres joueurs…',
   },
   placeCard: {
     wikiLabel: 'Voir sur Wikipedia',
@@ -127,6 +146,7 @@ export const fr: Translations = {
     scoringInfo:
       'Cap et distance rapportent chacun jusqu’à 500 points, selon la précision de l’estimation. +100 points bonus sur chaque catégorie pour le(s) meilleur(s) de la manche (à plusieurs seulement). +100 points bonus supplémentaires pour un cap trouvé pile au degré près.',
     perfect: 'PERFECT',
+    kick: 'Expulser',
   },
   endScreen: {
     replay: 'Rejouer',
@@ -145,7 +165,8 @@ export const fr: Translations = {
     appearanceOptions: { night: '🌙 Nuit', day: '☀️ Jour' },
     animationsToggle: {
       label: 'Animations',
-      description: 'Mascotte qui se balade et ciel animé sur l’accueil. Désactivé par défaut (peut saccader sur certains téléphones).',
+      description:
+        'Mascotte qui se balade et ciel animé sur l’accueil. Désactivé par défaut (peut saccader sur certains téléphones).',
     },
     aboutTitle: 'À propos',
     author: 'Par Matou.',
@@ -230,8 +251,6 @@ export const fr: Translations = {
       hint: 'Tout le monde joue sur le même téléphone, chacun son tour.',
     },
     playerNameAccessibility: (index) => `Nom du joueur ${index}`,
-    placesCountTitle: 'Nombre de lieux',
-    placesCountHint: 'Combien de lieux à placer sur la carte, une fois le pays deviné.',
     difficultyTitle: 'Difficulté',
     difficultyHint: 'Détermine dans quelle réserve de pays la manche pioche.',
   },
@@ -243,12 +262,6 @@ export const fr: Translations = {
     resultNotOk: 'Mauvaise réponse.',
     whoAnswered: 'Qui a répondu ?',
     wrongGuess: (name) => `${name} perd 50 points.`,
-    cityHint: {
-      prefix: (placeNumber, totalPlaces) => `Lieu ${placeNumber}/${totalPlaces} : place `,
-      suffix: ' sur la carte.',
-    },
-    guessLabel: 'Pays',
-    cityLabel: 'Ville',
     continueLabel: 'Continuer',
     finalScoreTitle: 'Classement final',
     home: 'Accueil',

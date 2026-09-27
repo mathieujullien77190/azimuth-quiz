@@ -28,9 +28,7 @@ const findIndicesPlace = (name: string, code: string): IndicesPlace =>
  * Boussole place is needed. */
 export const SAMPLE_PLACE_REVEALED: Place = findPlace('Tokyo', 'JP');
 
-/** A different place for the "still guessing" PlaceCard state — also a `landmarks` category
- * place: gives ContourBoard's category-emoji reveal (`placeEmoji`) something to show beyond the
- * plain dot. */
+/** A different place for the "still guessing" PlaceCard state. */
 export const SAMPLE_PLACE_GUESSING: Place = findPlace('Machu Picchu', 'PE');
 
 export const SAMPLE_INDICES_PLACE: IndicesPlace = findIndicesPlace('Tokyo', 'JP');
@@ -111,16 +109,4 @@ export const SAMPLE_CONTOUR_NEIGHBORS = SAMPLE_CONTOUR_COUNTRY.neighbors.map((ne
 export const SAMPLE_CONTOUR_CENTER_POSITION: Point2D = {
   x: SAMPLE_CONTOUR_COUNTRY.centerLabel.x * SAMPLE_CONTOUR_BOARD_SIZE.width,
   y: SAMPLE_CONTOUR_COUNTRY.centerLabel.y * SAMPLE_CONTOUR_BOARD_SIZE.height,
-};
-
-/** A real French place (city phase's truth marker) and a nearby "guess" a few pixels off, to show
- * the reveal-phase truth ring + player dot + dashed connector all at once. */
-const SAMPLE_CONTOUR_CITY: Place = findPlace('Paris', 'FR');
-export const SAMPLE_CONTOUR_TRUE_POSITION: Point2D = contourProject([
-  SAMPLE_CONTOUR_CITY.coordinates.longitude,
-  SAMPLE_CONTOUR_CITY.coordinates.latitude,
-]);
-export const SAMPLE_CONTOUR_GUESS_POSITION: Point2D = {
-  x: SAMPLE_CONTOUR_TRUE_POSITION.x + 26,
-  y: SAMPLE_CONTOUR_TRUE_POSITION.y - 16,
 };

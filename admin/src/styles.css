@@ -659,52 +659,6 @@ td.muted {
   flex-shrink: 0;
 }
 
-.contour-places-panel {
-  flex: 1;
-  min-width: 220px;
-  margin: 8px 0 16px;
-}
-
-.contour-places-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 8px;
-  max-height: 420px;
-  overflow-y: auto;
-}
-
-.contour-place-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12.5px;
-  padding: 4px 6px;
-  border-bottom: 1px solid var(--border);
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.contour-place-row:hover {
-  background: var(--surface-high);
-}
-
-.contour-place-row.selected {
-  background: color-mix(in srgb, #f4c430 20%, transparent);
-}
-
-.contour-place-row .coord {
-  margin-left: auto;
-  color: var(--text-muted);
-}
-
-/* Highlights the place clicked in "Lieux possibles" — see `selectedPlacePosition`. */
-.contour-place-highlight {
-  fill: none;
-  stroke: #f4c430;
-  stroke-width: 2.5;
-}
-
 /* Same drag look as a neighbor marker, dashed ring added so it reads as distinct (there's always
    exactly one flag + one name, never deletable). */
 .contour-center-label .contour-neighbor-icon {

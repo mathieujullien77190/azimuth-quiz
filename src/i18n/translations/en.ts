@@ -28,7 +28,7 @@ export const en: Translations = {
       },
       contour: {
         title: 'Silhouette',
-        tagline: 'A country\'s silhouette shows up. Guess which one from the clues, then mark cities on its map.',
+        tagline: "A country's silhouette shows up. Guess which one from the clues, then mark cities on its map.",
         meta: ['1 to 6 players'],
         cta: 'Play',
       },
@@ -39,8 +39,8 @@ export const en: Translations = {
     back: 'Back',
     start: 'Start game',
     playersSection: {
-      title: 'Players',
-      hint: 'Everyone plays on the same phone, taking turns.',
+      title: 'Game',
+      hint: 'Play solo, or host/join an online game.',
     },
     playerNameAccessibility: (index) => `Player ${index} name`,
     categoriesTitle: 'Categories',
@@ -62,6 +62,21 @@ export const en: Translations = {
       hard: 'Hard',
     },
     roundsTitle: 'Number of rounds',
+    online: {
+      solo: 'Play solo',
+      host: 'Create',
+      join: 'Join',
+      generating: 'Creating the code…',
+      yourCode: (code) => `Game code: ${code}`,
+      codePlaceholder: 'Game code',
+      invalidCode: 'Code not found.',
+      joined: (code) => `Joined game ${code}!`,
+      hostBadge: (name) => `${name} (host)`,
+      removePlayer: (name) => `Remove ${name}`,
+      kickedNotice: 'You’ve been removed from the game.',
+      roomDeletedNotice: 'The host deleted the game.',
+    },
+    readOnlyNotice: 'Only the host can change the options.',
     modeTitle: 'Mode',
     distanceModes: {
       distance: {
@@ -109,6 +124,7 @@ export const en: Translations = {
     nextStep: 'Next',
     previousStep: 'Back',
     playerTurn: (name) => `${name}'s turn`,
+    waitingForOthers: 'Waiting for other players…',
   },
   placeCard: {
     wikiLabel: 'View on Wikipedia',
@@ -127,6 +143,7 @@ export const en: Translations = {
     scoringInfo:
       'Direction and distance each earn up to 500 points, based on how close your guess was. +100 bonus points on each category for whoever did best this round (multiplayer only). +100 extra bonus points for a heading nailed to the exact degree.',
     perfect: 'PERFECT',
+    kick: 'Kick',
   },
   endScreen: {
     replay: 'Play again',
@@ -229,8 +246,6 @@ export const en: Translations = {
       hint: 'Everyone plays on the same phone, taking turns.',
     },
     playerNameAccessibility: (index) => `Player ${index} name`,
-    placesCountTitle: 'Number of places',
-    placesCountHint: 'How many places to mark on the map, once the country is guessed.',
     difficultyTitle: 'Difficulty',
     difficultyHint: 'Sets which pool of countries the round draws from.',
   },
@@ -242,12 +257,6 @@ export const en: Translations = {
     resultNotOk: 'Wrong answer.',
     whoAnswered: 'Who answered?',
     wrongGuess: (name) => `${name} loses 50 points.`,
-    cityHint: {
-      prefix: (placeNumber, totalPlaces) => `Place ${placeNumber}/${totalPlaces}: mark `,
-      suffix: ' on the map.',
-    },
-    guessLabel: 'Country',
-    cityLabel: 'City',
     continueLabel: 'Continue',
     finalScoreTitle: 'Final standings',
     home: 'Home',

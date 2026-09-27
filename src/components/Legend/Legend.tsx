@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { fontSize, spacing } from '@/constants';
 import { useThemedStyles } from '@/themes';
@@ -25,9 +25,16 @@ const createStyles = ({ colors, typography }: Theme) =>
       width: DOT_SIZE,
       height: DOT_SIZE,
       borderRadius: DOT_SIZE / 2,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     ring: {
       borderWidth: 2,
+    },
+    check: {
+      color: colors.onAccent,
+      fontSize: 8,
+      fontWeight: '700',
     },
     label: {
       ...typography.heading,
@@ -36,7 +43,9 @@ const createStyles = ({ colors, typography }: Theme) =>
     },
   });
 
-/** Who is which color, on the compass and on the Earth. */
+/** Who is which color, on the compass and on the Earth. `status` (online play's waiting roster
+ * only) replaces the plain dot with a spinner or a checkmark on it — every other caller leaves
+ * it out and gets the plain dot exactly as before. */
 export const Legend = memo(function Legend({ items }: LegendProps) {
   const styles = useThemedStyles(createStyles);
 
@@ -44,13 +53,19 @@ export const Legend = memo(function Legend({ items }: LegendProps) {
     <View style={styles.row}>
       {items.map((item) => (
         <View key={item.label} style={styles.item}>
-          <View
-            style={[
-              styles.dot,
-              { backgroundColor: item.color },
-              item.ring && [styles.ring, { borderColor: item.color }],
-            ]}
-          />
+          {item.status === 'pending' ? (
+            <ActivityIndicator color={item.color} size="small" />
+          ) : (
+            <View
+              style={[
+                styles.dot,
+                { backgroundColor: item.color },
+                item.ring && [styles.ring, { borderColor: item.color }],
+              ]}
+            >
+              {item.status === 'answered' && <Text style={styles.check}>✓</Text>}
+            </View>
+          )}
           <Text style={styles.label}>{item.label}</Text>
         </View>
       ))}

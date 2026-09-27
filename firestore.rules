@@ -1,0 +1,32 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // No login screen — anonymous Firebase Auth instead (see `ensureSignedIn` in
+    // helpers/room.ts): every device gets a uid transparently, and a room stores its creator's
+    // uid as `hostUid` so only that device (not anyone who knows the code) can change its
+    // settings. Anyone can still read a room to check a code, and create one, but never
+    // overwrite an existing one (a code collision retries client-side instead).
+    match /rooms/{code} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.hostUid == request.auth.uid
+        && !exists(/databases/$(database)/documents/rooms/$(code));
+      // The host can change anything (settings, round/screen state via `startRoomGame`/
+      // `finishRoomRound`/`nextRoomRound`, and remove any player — `removeRoomPlayer`). Anyone
+      // else who's signed in can only touch *their own* entry, in `players` (join/rename —
+      // `joinRoomPresence`) and/or in `guesses` (submitting a round answer — `submitRoomGuess`)
+      // — never another uid's, and never `settings`/`screen`/`origin`/`places`/`scores`.
+      allow update: if request.auth != null
+        && (request.auth.uid == resource.data.hostUid
+          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['players', 'guesses'])
+            && request.resource.data.get('players', {}).diff(resource.data.get('players', {})).affectedKeys()
+              .hasOnly([request.auth.uid])
+            && request.resource.data.get('guesses', {}).diff(resource.data.get('guesses', {})).affectedKeys()
+              .hasOnly([request.auth.uid])));
+      // Lets `createRoom` clear out a host's previous rooms before making a new one
+      // (`deletePreviousRoomsByHost`) — no one else can delete a room.
+      allow delete: if request.auth != null && request.auth.uid == resource.data.hostUid;
+    }
+  }
+}

@@ -52,6 +52,29 @@ export type Translations = {
     difficultyHint: string;
     difficulties: Record<Difficulty, string>;
     roundsTitle: string;
+    /** No player list/count picker any more — play solo (the default), host a room (a code gets
+     * generated) or join one (type in a code someone else generated) instead. See
+     * `helpers/room.ts`. Joining shows every other setup section read-only: the host's settings
+     * apply, a joiner doesn't configure anything (see `readOnlyNotice`). */
+    online: {
+      solo: string;
+      host: string;
+      join: string;
+      generating: string;
+      yourCode: (code: string) => string;
+      codePlaceholder: string;
+      invalidCode: string;
+      joined: (code: string) => string;
+      hostBadge: (name: string) => string;
+      /** Accessibility label for the host's "kick this player" button. */
+      removePlayer: (name: string) => string;
+      /** Shown to a joiner (in the same splash as `readOnlyNotice`) once the host removes it. */
+      kickedNotice: string;
+      /** Shown to a joiner, same splash, once the room itself is gone (host started a new one). */
+      roomDeletedNotice: string;
+    };
+    /** Shown briefly (see SetupScreen's `notifyReadOnly`) when a joiner taps a read-only option. */
+    readOnlyNotice: string;
     modeTitle: string;
     distanceModes: {
       distance: { label: string; description: string };
@@ -83,6 +106,9 @@ export type Translations = {
     previousStep: string;
     /** Replaces the initials on the active player's tab ("Matou's turn"). */
     playerTurn: (name: string) => string;
+    /** Shown once this device has submitted, while other online players haven't yet
+     * (`OnlineGameScreen`) — replaces the footer's Valider button. */
+    waitingForOthers: string;
   };
   placeCard: {
     /** Accessibility label for the "W" badge that opens the place's Wikipedia page (reveal only). */
@@ -104,6 +130,8 @@ export type Translations = {
     /** Shown instead of "(+0°)" for an exact heading guess — kept in English in both
      * languages, on purpose (see git history). */
     perfect: string;
+    /** Online play, host only: full-word expel button below another player's score. */
+    kick: string;
   };
   endScreen: {
     replay: string;
@@ -180,8 +208,6 @@ export type Translations = {
     start: string;
     playersSection: { title: string; hint: string };
     playerNameAccessibility: (index: number) => string;
-    placesCountTitle: string;
-    placesCountHint: string;
     difficultyTitle: string;
     difficultyHint: string;
   };
@@ -204,16 +230,8 @@ export type Translations = {
     /** A wrong guess, naming who it got attributed to — doesn't end anything, shown until the
      * next attempt. */
     wrongGuess: (name: string) => string;
-    /** Instruction shown just above the Valider/Continuer button during a city step, naming the
-     * place to mark and which one it is out of how many this round (1-indexed). Split around the
-     * place name (rather than one interpolated string) so the component can render that name in
-     * its own bigger/bolder Text — see ContourGameScreen.tsx's own render. */
-    cityHint: { prefix: (placeNumber: number, totalPlaces: number) => string; suffix: string };
-    /** Short labels for the results card's guess/city point breakdown. */
-    guessLabel: string;
-    cityLabel: string;
-    /** Advances from one place's guess-vs-solution comparison to the next place (or the final
-     * reveal, on the last one) — single shared button, not per-player. */
+    /** Moves on from a give-up (tier 4 confirmed) to the final reveal — single shared button, not
+     * per-player. */
     continueLabel: string;
     finalScoreTitle: string;
     home: string;

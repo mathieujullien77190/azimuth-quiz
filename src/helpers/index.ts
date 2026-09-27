@@ -1,4 +1,3 @@
-export { db } from './firebase';
 export { formatBearing, formatDistance, formatInclination, formatNumber, initials } from './format';
 export {
   angleDifference,
@@ -14,7 +13,7 @@ export {
   straightDistanceKm,
 } from './geo';
 export { kmToRatio, ratioToKm, roundDistance } from './distanceScale';
-export { scoreCityGuess, scoreCountryGuess } from './contourScoring';
+export { scoreCountryGuess } from './contourScoring';
 export {
   clearIndicesHistory,
   getCachedIndicesHistory,

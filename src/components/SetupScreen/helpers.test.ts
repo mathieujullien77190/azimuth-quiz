@@ -1,19 +1,9 @@
 import { DEFAULT_SETTINGS } from '@/constants';
 import type { GameSettings } from '@/types';
 
-import { resizeNames, selectDifficultyFilter, toggleCategoryFilter, toggleSelected } from './helpers';
+import { selectDifficultyFilter, toggleCategoryFilter, toggleSelected } from './helpers';
 
 type Filter = Pick<GameSettings, 'categories' | 'difficulties'>;
-
-describe('resizeNames', () => {
-  it('keeps existing names and pads with empty strings when growing', () => {
-    expect(resizeNames(['Alice', 'Bob'], 4)).toEqual(['Alice', 'Bob', '', '']);
-  });
-
-  it('truncates when shrinking', () => {
-    expect(resizeNames(['Alice', 'Bob', 'Cid'], 1)).toEqual(['Alice']);
-  });
-});
 
 describe('toggleSelected', () => {
   it('adds a value not yet selected', () => {

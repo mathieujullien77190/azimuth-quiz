@@ -6,12 +6,17 @@ import { resolveOrigin } from '@/helpers';
 import { useSettings } from '@/settings';
 import type { GameSettings } from '@/types';
 
+import { useGameStore } from './gameStore';
 import { useGame } from './useGame';
 
 jest.mock('@/settings', () => ({ useSettings: jest.fn() }));
 jest.mock('@/helpers', () => ({ ...jest.requireActual('@/helpers'), resolveOrigin: jest.fn() }));
 
-const mockedUseSettings = useSettings as jest.Mock;
+// `useGameStore` is a module-level singleton (unlike the old per-component `useState`), so its
+// state survives across tests unless reset — captured once, before anything mutates it.
+const initialGameState = useGameStore.getState();
+
+const mockedUseSettings = useSettings as unknown as jest.Mock;
 const mockedResolveOrigin = resolveOrigin as jest.Mock;
 
 // Every category/difficulty: guarantees plenty of matching places regardless of exactly how any
@@ -41,6 +46,7 @@ const mockSettings = (overrides: Partial<GameSettings> = {}, ready = true) => {
 beforeEach(() => {
   jest.clearAllMocks();
   mockSettings();
+  useGameStore.setState(initialGameState, true);
 });
 
 describe('useGame — startup', () => {

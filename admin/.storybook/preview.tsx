@@ -6,14 +6,22 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 // by hand (see its own doc comment). `useTheme()`/`useTranslation()` need no provider here: their
 // contexts (`ThemeSettingsContext`/`LanguageContext`) both ship a default value, unlike
 // safe-area-context's.
+// The app's own themes are both dark-ish (night/day, see src/themes) — a white canvas behind
+// every story clashes with basically all of them, so the preview iframe gets its own fixed
+// background instead of Storybook's default white.
+const PREVIEW_BACKGROUND = 'rgba(11,18,32,1.00)';
+
 const preview: Preview = {
   decorators: [
     (Story) => (
-      <SafeAreaProvider
-        initialMetrics={{ frame: { x: 0, y: 0, width: 1024, height: 768 }, insets: { top: 0, right: 0, bottom: 0, left: 0 } }}
-      >
-        <Story />
-      </SafeAreaProvider>
+      <>
+        <style>{`html, body, #storybook-root { background: ${PREVIEW_BACKGROUND}; min-height: 100%; }`}</style>
+        <SafeAreaProvider
+          initialMetrics={{ frame: { x: 0, y: 0, width: 1024, height: 768 }, insets: { top: 0, right: 0, bottom: 0, left: 0 } }}
+        >
+          <Story />
+        </SafeAreaProvider>
+      </>
     ),
   ],
   parameters: {

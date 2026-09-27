@@ -6,24 +6,9 @@
  * identical regardless of absolute size — see callers for `Math.min(width, height) * BOARD_PADDING_RATIO`. */
 export const BOARD_PADDING_RATIO = 0.06;
 export const VISIBLE_STROKE_WIDTH = 3;
-export const MARKER_RADIUS = 8;
-/** A category icon (capital/mountain/landmark/nature — see ContourGameScreen's `placeEmoji`)
- * replacing the plain truth dot for a place drawn on reveal: sized to read clearly at a glance,
- * bigger than the plain dot it replaces (MARKER_RADIUS's own diameter) without dwarfing the
- * TRUTH_MARKER_RING_RADIUS ring drawn around it. */
-export const MARKER_EMOJI_FONT_SIZE = 18;
-export const MARKER_LABEL_FONT_SIZE = 11;
-/** Horizontal gap between a marker's dot and its name label. */
-export const MARKER_LABEL_GAP = 6;
-/** Extra open ring drawn around the true city marker on reveal, same idea as EarthSection's
- * ring around the true answer. */
-export const TRUTH_MARKER_RING_RADIUS = 13;
-/** Thin, dashed guess-to-solution connector line — kept subtle so it reads as a measuring line,
- * not another marker competing with the dots at either end. */
-export const CONNECTOR_STROKE_WIDTH = 1.5;
-export const CONNECTOR_DASH_PATTERN = '4,4';
-/** Font size for a `ContourBoardHintLabel` marked `icon` (a flag or the sea/ocean fish glyph) —
- * bigger than plain hint-label text so the icon reads clearly at a glance. */
+export const HINT_LABEL_FONT_SIZE = 11;
+/** Font size for a `ContourBoardHintLabel` marked `icon` (a flag) — bigger than plain hint-label
+ * text so the icon reads clearly at a glance. */
 export const HINT_ICON_FONT_SIZE = 22;
 /** Vertical gap (fraction of `Math.min(width, height)`, same reasoning as BOARD_PADDING_RATIO)
  * between a revealed hint's icon and its name stacked just below — used both for a neighbor

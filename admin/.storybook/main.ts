@@ -8,13 +8,13 @@ const config: StorybookConfig = {
   stories: ['../../src/**/*.stories.@(ts|tsx)'],
   addons: ['@storybook/addon-a11y', '@storybook/addon-docs'],
   framework: '@storybook/react-vite',
-  async viteFinal(viteConfig) {
+  async viteFinal(viteConfig, { configType }) {
     const { mergeConfig } = await import('vite');
     const { sharedDefine, sharedOptimizeDeps, sharedResolve } = await import('../vite.shared.ts');
 
     return mergeConfig(viteConfig, {
       resolve: sharedResolve,
-      define: sharedDefine('serve'),
+      define: sharedDefine(configType === 'PRODUCTION' ? 'build' : 'serve'),
       optimizeDeps: sharedOptimizeDeps,
     });
   },

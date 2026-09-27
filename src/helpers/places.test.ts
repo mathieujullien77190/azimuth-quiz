@@ -9,11 +9,35 @@ jest.mock('@/constants', () => {
   return {
     ...actual,
     PLACES: [
-      { name: 'Paris', code: 'FR', coordinates: { latitude: 48.8566, longitude: 2.3522 }, category: 'cities', difficulty: 'easy' },
-      { name: 'Berlin', code: 'DE', coordinates: { latitude: 52.52, longitude: 13.405 }, category: 'cities', difficulty: 'easy' },
-      { name: 'Tokyo', code: 'JP', coordinates: { latitude: 35.6762, longitude: 139.6503 }, category: 'landmarks', difficulty: 'hard' },
+      {
+        name: 'Paris',
+        code: 'FR',
+        coordinates: { latitude: 48.8566, longitude: 2.3522 },
+        category: 'cities',
+        difficulty: 'easy',
+      },
+      {
+        name: 'Berlin',
+        code: 'DE',
+        coordinates: { latitude: 52.52, longitude: 13.405 },
+        category: 'cities',
+        difficulty: 'easy',
+      },
+      {
+        name: 'Tokyo',
+        code: 'JP',
+        coordinates: { latitude: 35.6762, longitude: 139.6503 },
+        category: 'landmarks',
+        difficulty: 'hard',
+      },
       // Less than MIN_PLACE_DISTANCE_KM (150km) from Paris.
-      { name: 'Rouen', code: 'FR', coordinates: { latitude: 49.4431, longitude: 1.0993 }, category: 'mountains', difficulty: 'intermediate' },
+      {
+        name: 'Rouen',
+        code: 'FR',
+        coordinates: { latitude: 49.4431, longitude: 1.0993 },
+        category: 'mountains',
+        difficulty: 'intermediate',
+      },
     ],
   };
 });

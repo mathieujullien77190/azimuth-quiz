@@ -3,4 +3,5 @@ export type ChipProps = {
   emoji?: string;
   selected: boolean;
   onPress: () => void;
+  disabled?: boolean;
 };

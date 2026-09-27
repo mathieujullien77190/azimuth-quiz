@@ -5,9 +5,9 @@ import { useEffect } from 'react';
 import ContourSettingsProvider from '@/components/ContourSettingsProvider';
 import IndicesSettingsProvider from '@/components/IndicesSettingsProvider';
 import LanguageProvider from '@/components/LanguageProvider';
-import SettingsProvider from '@/components/SettingsProvider';
 import ThemeProvider from '@/components/ThemeProvider';
 import { disableTextSelection, polyfillFlagEmoji } from '@/helpers';
+import { hydrateSettings } from '@/settings';
 import { useTheme } from '@/themes';
 
 const ThemedShell = () => {
@@ -30,17 +30,16 @@ const ThemedShell = () => {
 const RootLayout = () => {
   useEffect(disableTextSelection, []);
   useEffect(polyfillFlagEmoji, []);
+  useEffect(hydrateSettings, []);
 
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <SettingsProvider>
-          <IndicesSettingsProvider>
-            <ContourSettingsProvider>
-              <ThemedShell />
-            </ContourSettingsProvider>
-          </IndicesSettingsProvider>
-        </SettingsProvider>
+        <IndicesSettingsProvider>
+          <ContourSettingsProvider>
+            <ThemedShell />
+          </ContourSettingsProvider>
+        </IndicesSettingsProvider>
       </LanguageProvider>
     </ThemeProvider>
   );

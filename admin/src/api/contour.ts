@@ -2,7 +2,6 @@ import { countryName } from '@/constants/places/countries';
 import type { ContourCountry, ContourNeighbor } from '@/types';
 
 import { logChange } from '../changelog';
-import type { PlaceRow } from './places';
 
 const neighborIdentity = (neighbor: ContourNeighbor): string => countryName(neighbor.code, 'fr');
 
@@ -38,15 +37,4 @@ export const saveCenterLabelPosition = async (
 ): Promise<{ x: number; y: number }> => {
   logChange(`[Contour] ${countryName(country.code, 'fr')} — drapeau/nom du pays : ${fmtXY(previous.x, previous.y)} -> ${fmtXY(next.x, next.y)}`);
   return next;
-};
-
-/** Removes a place from Contour's own city-phase pool ONLY — unlike `deletePlace` (PlacesView's
- * own, a real deletion from the shared places.json), this place must stay untouched in
- * Boussole/Indices. Logged distinctly so applying the journal doesn't delete the place row: the
- * actual fix is adding a 4th element `[true]` (a `ContourRow`) to that place's entry in
- * places.json, next to its `boussole`/`indices` rows — see `constants/places/codec.ts`. */
-export const excludePlaceFromContour = async (row: PlaceRow): Promise<void> => {
-  logChange(
-    `[Contour] ${row.name} (${row.code}) — ajouter [true] en 4e element de son entree dans places.json (exclu de Silhouette uniquement, reste inchangé dans Boussole/Indices)`,
-  );
 };
