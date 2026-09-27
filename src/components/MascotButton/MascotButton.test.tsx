@@ -8,14 +8,14 @@ jest.mock('@/themes', () => {
   const actual = jest.requireActual('@/themes');
   return { ...actual, useTheme: () => ({ isDark: mockIsDark }) };
 });
-jest.mock('../UfoButton', () => {
+jest.mock('./UfoButton', () => {
   const { Text } = jest.requireActual('react-native');
   return {
     __esModule: true,
     default: ({ accessibilityLabel }: { accessibilityLabel: string }) => <Text>ufo:{accessibilityLabel}</Text>,
   };
 });
-jest.mock('../HelicopterButton', () => {
+jest.mock('./HelicopterButton', () => {
   const { Text } = jest.requireActual('react-native');
   return {
     __esModule: true,

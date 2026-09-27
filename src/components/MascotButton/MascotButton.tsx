@@ -1,7 +1,7 @@
 import { useTheme } from '@/themes';
 
-import HelicopterButton from '../HelicopterButton';
-import UfoButton from '../UfoButton';
+import HelicopterButton from './HelicopterButton';
+import UfoButton from './UfoButton';
 import type { MascotButtonProps } from './types';
 
 /**
