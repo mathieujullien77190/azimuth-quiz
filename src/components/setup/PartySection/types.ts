@@ -19,6 +19,8 @@ export type PartySectionProps = {
    * supported, see SetupScreen's own comment on `connectedRoomCode`. */
   nameEditable: boolean;
   onChangeName: (text: string) => void;
+  /** Why the name isn't accepted ("already taken"), shown under the field; null when it is. */
+  nameError?: string | null;
 
   connectedPlayers: [string, PartySectionPlayer][];
   localUid: string | null;

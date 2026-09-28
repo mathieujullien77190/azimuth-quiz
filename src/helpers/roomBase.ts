@@ -16,6 +16,7 @@ import {
 
 import { db } from '@/helpers/firebase';
 import { generateRoomCode, getLocalUid } from '@/helpers/roomCode';
+import { isNameTaken, nameTakenError } from '@/helpers/roomName';
 
 // Not re-exported from `helpers/index.ts`'s barrel: `firebase/firestore` is ESM-only and crashes
 // Jest the moment anything requires it transitively (see `helpers/firebase.ts`'s own note) —
@@ -39,34 +40,6 @@ export const ROOM_MAX_PLAYERS = 10;
 // snapshots ("did it change lately?") — never against a local clock, which can be skewed.
 export type RoomPlayer = { name: string; joinedAt: Timestamp | null; color?: string; lastSeen?: Timestamp | null };
 export type RoomPlayers = Record<string, RoomPlayer>;
-
-/** Escapes `text` for use inside a `RegExp` — only ever called on a player's own display name
- * here, but that's still arbitrary user input. */
-const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-/** Resolves the name this joiner should get, numbering it against `name`'s other occurrences
- * already in the room — a first collision numbers *both* ("Matou"/"Matou" become "Matou1"/
- * "Matou2", not "Matou"/"Matou2": leaving the earlier one bare reads as if it were the "real"
- * Matou), a further one just picks the next free number ("Matou3"...). `renameUid`/`renameName`
- * are only set for that retroactive rename of the earlier, still-bare player. */
-const resolveName = (
-  name: string,
-  players: RoomPlayers,
-  uid: string,
-): { name: string; renameUid?: string; renameName?: string } => {
-  const others = Object.entries(players).filter(([otherUid]) => otherUid !== uid);
-  const bareMatch = others.find(([, player]) => player.name === name);
-  if (bareMatch) {
-    const [bareUid] = bareMatch;
-    return { name: `${name}2`, renameUid: bareUid, renameName: `${name}1` };
-  }
-  const numberPattern = new RegExp(`^${escapeRegExp(name)}(\\d+)$`);
-  const numbers = others
-    .map(([, player]) => player.name.match(numberPattern)?.[1])
-    .filter((match): match is string => match !== undefined)
-    .map(Number);
-  return numbers.length === 0 ? { name } : { name: `${name}${Math.max(...numbers) + 1}` };
-};
 
 /** The games that have online rooms: the value of a room's `game` field, set when it is created and never
  * changed (the Firestore rules refuse it). */
@@ -125,9 +98,9 @@ export const createRoomApi = <Settings extends object>(game: RoomGame) => {
 
   /** Registers (or renames) this device as a connected player in the room, returning its own uid
    * so the caller can tell its own entry apart from everyone else's. A no-op past
-   * `ROOM_MAX_PLAYERS` distinct players, for a device that isn't already one of them. Only ever
-   * touches `name`/`joinedAt` (and, on a name collision, another player's `name` — see
-   * `resolveName`), each its own field path — never `color`, not even to preserve it: writing
+   * `ROOM_MAX_PLAYERS` distinct players, for a device that isn't already one of them. Throws (see
+   * `isNameTakenError`) when another player already has the name. Only ever
+   * touches this player's own `name`/`joinedAt`, each its own field path — never `color`, not even to preserve it: writing
    * `players.{uid}` as a whole (replacing the nested map in one shot) would otherwise wipe out
    * whatever color the host already assigned there. */
   const joinRoomPresence = async (code: string, name: string): Promise<string> => {
@@ -136,13 +109,12 @@ export const createRoomApi = <Settings extends object>(game: RoomGame) => {
     const players = ((await getDoc(ref)).data()?.players as RoomPlayers | undefined) ?? {};
     const existing = players[uid];
     if (existing || Object.keys(players).length < ROOM_MAX_PLAYERS) {
-      const assignment = resolveName(name, players, uid);
-      const updates: Record<string, unknown> = {
-        [`players.${uid}.name`]: assignment.name,
+      // Two players can't share a name: the newcomer is refused and picks another (the screen says so).
+      if (isNameTaken(name, players, uid)) throw nameTakenError();
+      await updateDoc(ref, {
+        [`players.${uid}.name`]: name,
         [`players.${uid}.joinedAt`]: existing?.joinedAt ?? serverTimestamp(),
-      };
-      if (assignment.renameUid !== undefined) updates[`players.${assignment.renameUid}.name`] = assignment.renameName;
-      await updateDoc(ref, updates);
+      });
     }
     return uid;
   };

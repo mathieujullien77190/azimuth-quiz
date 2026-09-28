@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { NAME_PLACEHOLDERS, PLAYER_COLORS } from '@/data';
 import { playersByArrival } from '@/helpers/roomPlayers';
+import { freePlaceholder, isNameTakenError } from '@/helpers/roomName';
 import { useDebouncedValue } from '@/helpers/useDebouncedValue';
 import { useRoomPresence } from '@/helpers/useRoomPresence';
 import { useTranslation } from '@/i18n';
@@ -28,8 +29,6 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
   const router = useRouter();
   const t = useTranslation();
   const soloName = settings.playerNames[0] ?? '';
-  // Fixed order (same name always at the same field) rather than randomized per load.
-  const soloPlaceholder = NAME_PLACEHOLDERS[0];
 
   // Host/join is purely local UI state, not a saved preference — a fresh host/join happens
   // every time this screen is opened. Joining shows every setting section read-only (mirroring
@@ -163,6 +162,8 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
   const players = store((s) => s.players);
   const hostUid = store((s) => s.hostUid);
   const localUid = store((s) => s.localUid);
+  // What this player is called if they type nothing: the first default name nobody else in the room has.
+  const soloPlaceholder = freePlaceholder(NAME_PLACEHOLDERS, players, localUid);
   const roomSettings = store((s) => s.roomSettings);
   const roomScreen = store((s) => s.gameState.screen);
   // The game screen took over (the room left its lobby): the start is done. This screen stays
@@ -198,19 +199,22 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
   }, [mode, roomSettings, updateSettings]);
 
   // Registers this device in the room's connected-players list, for both host and joiner, and
-  // renames it there when the name changes — only a host can still edit its name once connected (a
-  // joiner's field locks). The rename waits for the typing to stop: a write per keystroke would also
-  // pass through every half-typed name, and one that happens to equal another player's name renames
-  // *that* player (see `resolveName`). Swallows a failure (e.g. this room was just deleted from
-  // under it — see the cleanup effect right below) instead of an unhandled rejection crashing the
-  // screen.
+  // renames it there when the name changes. The rename waits for the typing to stop: a write per
+  // keystroke would also pass through every half-typed name. A name another player already has is
+  // refused (`nameTaken`): the field opens up again, with the reason under it, and typing another
+  // name retries. Any other failure (e.g. this room was just deleted from under it — see the cleanup
+  // effect right below) is swallowed instead of an unhandled rejection crashing the screen.
+  const [nameTaken, setNameTaken] = useState(false);
   const roomName = useDebouncedValue(soloName, NAME_SYNC_DELAY_MS);
   useEffect(() => {
     if (connectedRoomCode === null) return;
     adapter
       .joinRoomPresence(connectedRoomCode, roomName.trim() || soloPlaceholder)
-      .then((uid) => store.setState({ localUid: uid }))
-      .catch(() => {});
+      .then((uid) => {
+        store.setState({ localUid: uid });
+        setNameTaken(false);
+      })
+      .catch((error) => setNameTaken(isNameTakenError(error)));
   }, [adapter, connectedRoomCode, roomName, soloPlaceholder, store]);
 
   // Leaves the *previous* room when switching to a different one (or leaving this screen) —
@@ -348,8 +352,9 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
     soloPlaceholder,
     soloColor,
     // Free while alone or hosting (the new name reaches the room, see `roomName` above); locked once
-    // connected as a joiner, whose name the host's room already shows.
-    nameEditable: connectedRoomCode === null || mode === 'host',
+    // connected as a joiner — unless the name was refused, and has to be changed.
+    nameEditable: connectedRoomCode === null || mode === 'host' || nameTaken,
+    nameError: nameTaken && connectedRoomCode !== null ? t.setup.online.nameTaken : null,
     onChangeName: (text) => updateSettings({ playerNames: [text] } as Partial<S>),
     connectedPlayers,
     localUid,

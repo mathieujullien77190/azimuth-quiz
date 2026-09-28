@@ -13,6 +13,7 @@ import { source } from '@/storybook/source';
 import soloCode from './Solo.source.md?raw';
 import hostingCode from './Hosting.source.md?raw';
 import joinedCode from './Joined.source.md?raw';
+import nameTakenCode from './NameTaken.source.md?raw';
 
 const t = translations.fr;
 
@@ -142,6 +143,29 @@ export const Joined: Story = {
     nameEditable: false,
     connectedPlayers,
     localUid: JOINER_UID,
+    hostUid: HOST_UID,
+    isHost: false,
+    onlineChoice: 'join',
+    joinCode: 'bagu',
+    joinCodeIsValid: true,
+    joinStatus: 'valid',
+  },
+  render: InteractiveDemo,
+};
+
+/** Joining under a name another player already has: the room refuses it, the field opens up again
+ * with the reason under it, and typing another name tries again. */
+export const NameTaken: Story = {
+  name: 'Name already taken',
+  parameters: source(nameTakenCode),
+  decorators: [localizedArgs((t) => ({ nameError: t.setup.online.nameTaken }))],
+  args: {
+    ...Solo.args,
+    soloName: 'Zoé',
+    nameEditable: true,
+    nameError: translations.fr.setup.online.nameTaken,
+    connectedPlayers,
+    localUid: null,
     hostUid: HOST_UID,
     isHost: false,
     onlineChoice: 'join',

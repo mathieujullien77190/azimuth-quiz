@@ -69,6 +69,8 @@ export type Translations = {
       generating: string;
       codePlaceholder: string;
       invalidCode: string;
+      /** Under the name field: another player of the room already has that name. */
+      nameTaken: string;
       joined: (code: string) => string;
       hostBadge: (name: string) => string;
       /** Accessibility label for the host's "kick this player" button. */
@@ -174,6 +176,8 @@ export type Translations = {
     pointsAtStake: (points: string) => string;
     giveUp: string;
     scored: (name: string, points: string) => string;
+    /** Same, on the device of the player who found it. */
+    youScored: (points: string) => string;
     missed: (name: string, points: string) => string;
     guessPlaceholder: string;
     submitGuess: string;

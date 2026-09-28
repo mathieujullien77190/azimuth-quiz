@@ -64,6 +64,11 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       bottom: 0,
       justifyContent: 'center',
     },
+    error: {
+      ...typography.body,
+      color: colors.danger,
+      fontSize: fontSize.caption + 1,
+    },
     hint: {
       ...typography.body,
       color: colors.textMuted,

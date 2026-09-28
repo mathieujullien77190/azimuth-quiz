@@ -25,6 +25,7 @@ export const PartySection = ({
   soloColor,
   nameEditable,
   onChangeName,
+  nameError = null,
   connectedPlayers,
   localUid,
   hostUid,
@@ -67,6 +68,7 @@ export const PartySection = ({
             </View>
           </View>
         </View>
+        {nameError !== null && <Text style={styles.error}>{nameError}</Text>}
         {connectedPlayers.map(([uid, player]) => {
           if (uid === localUid) return null;
           // Falls back to the first palette color for the brief moment before the host's own

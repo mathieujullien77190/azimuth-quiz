@@ -34,6 +34,17 @@ const player = (name: string, color?: string) => ({ name, joinedAt: null, color 
 beforeEach(() => jest.clearAllMocks());
 
 describe('PartySection — own name', () => {
+  it('shows why the name is refused under the field, and nothing when it is fine', async () => {
+    const refused = await renderSection({ nameError: 'Ce pseudo est déjà pris.' });
+    expect(refused.getByText('Ce pseudo est déjà pris.')).toBeTruthy();
+    await refused.unmount();
+    const fine = await renderSection({ nameError: null });
+    expect(fine.queryByText('Ce pseudo est déjà pris.')).toBeNull();
+    await fine.unmount();
+    const unset = await renderSection();
+    expect(unset.queryByText(/pris/)).toBeNull();
+  });
+
   it('shows the solo name and forwards edits while editable', async () => {
     const { getByDisplayValue } = await renderSection();
     await fireEvent.changeText(getByDisplayValue('Zoé'), 'Max');

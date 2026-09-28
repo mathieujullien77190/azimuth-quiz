@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react-native';
 
 import { createRoomStore } from '@/helpers/createRoomStore';
+import { nameTakenError } from '@/helpers/roomName';
 import type { RoomPlayers } from '@/helpers/roomBase';
 
 import type { SetupRoomAdapter } from './types';
@@ -267,6 +268,92 @@ describe('useSetupRoom — hosting', () => {
     await ctx.emitPlayers({ zoe: player('Zoe', 'red') }, 'zoe');
     await ctx.unmount();
     expect(ctx.adapter.deleteRoom).toHaveBeenCalledWith('tabofuna');
+  });
+});
+
+describe('useSetupRoom — a name that is already taken', () => {
+  const NAME_ERROR = 'Ce pseudo est déjà pris dans la partie : choisis-en un autre.';
+
+  it('refuses a joiner, opens its name field again and says why', async () => {
+    const ctx = await setup({ joinRoomPresence: jest.fn(() => Promise.reject(nameTakenError())) });
+    await joinRoom(ctx);
+    expect(ctx.result.current.party.nameEditable).toBe(true);
+    expect(ctx.result.current.party.nameError).toBe(NAME_ERROR);
+    expect(ctx.store.getState().localUid).toBeNull();
+  });
+
+  it('lets the joiner in once it types a free name, and locks the field again', async () => {
+    const joinRoomPresence = jest.fn().mockRejectedValueOnce(nameTakenError()).mockResolvedValue('max');
+    const ctx = await setup({ joinRoomPresence });
+    await joinRoom(ctx);
+    expect(ctx.result.current.party.nameError).toBe(NAME_ERROR);
+
+    await ctx.rerender({ settings: { ...SETTINGS, playerNames: ['Max'] } });
+    await act(async () => jest.advanceTimersByTime(700));
+    await flush();
+
+    expect(joinRoomPresence).toHaveBeenLastCalledWith('tabofuna', 'Max');
+    expect(ctx.result.current.party.nameError).toBeNull();
+    expect(ctx.result.current.party.nameEditable).toBe(false);
+    expect(ctx.store.getState().localUid).toBe('max');
+  });
+
+  it('tells a host who renames itself to a name a joiner already has', async () => {
+    const joinRoomPresence = jest.fn().mockResolvedValueOnce('zoe').mockRejectedValueOnce(nameTakenError());
+    const ctx = await setup({ joinRoomPresence });
+    await hostRoom(ctx);
+    expect(ctx.result.current.party.nameError).toBeNull();
+
+    await ctx.rerender({ settings: { ...SETTINGS, playerNames: ['Max'] } });
+    await act(async () => jest.advanceTimersByTime(700));
+    await flush();
+
+    expect(ctx.result.current.party.nameError).toBe(NAME_ERROR);
+    expect(ctx.result.current.party.nameEditable).toBe(true);
+  });
+
+  it('says nothing about the name for any other failure', async () => {
+    const ctx = await setup({ joinRoomPresence: jest.fn(() => Promise.reject(new Error('offline'))) });
+    await joinRoom(ctx);
+    expect(ctx.result.current.party.nameError).toBeNull();
+    expect(ctx.result.current.party.nameEditable).toBe(false);
+  });
+
+  it('shows no name error once back to playing alone', async () => {
+    const ctx = await setup({ joinRoomPresence: jest.fn(() => Promise.reject(nameTakenError())) });
+    await joinRoom(ctx);
+    await act(async () => ctx.result.current.party.onChooseSolo());
+    expect(ctx.result.current.party.nameError).toBeNull();
+    expect(ctx.result.current.party.nameEditable).toBe(true);
+  });
+});
+
+describe('useSetupRoom — the default name', () => {
+  const BLANK = { ...SETTINGS, playerNames: [''] };
+
+  it('is the first default name while alone', async () => {
+    const ctx = await setup({}, BLANK);
+    expect(ctx.result.current.party.soloPlaceholder).toBe('Zoé');
+  });
+
+  it('is the first one nobody else in the room has, so two devices never share it', async () => {
+    const ctx = await setup({ joinRoomPresence: jest.fn(() => Promise.resolve('max')) }, BLANK);
+    await joinRoom(ctx);
+    await ctx.emitPlayers({ host: player('Zoé'), other: player('Max') }, 'host');
+    expect(ctx.result.current.party.soloPlaceholder).toBe('Léo');
+  });
+
+  it('registers under that name when the field is empty, and moves to the next free one if it was just taken', async () => {
+    const joinRoomPresence = jest.fn().mockRejectedValueOnce(nameTakenError()).mockResolvedValue('max');
+    const ctx = await setup({ joinRoomPresence }, BLANK);
+    await joinRoom(ctx);
+    expect(joinRoomPresence).toHaveBeenLastCalledWith('tabofuna', 'Zoé');
+
+    // Somebody else got "Zoé" first: the placeholder moves on and the registration is retried.
+    await ctx.emitPlayers({ host: player('Zoé') }, 'host');
+    await flush();
+    expect(joinRoomPresence).toHaveBeenLastCalledWith('tabofuna', 'Max');
+    expect(ctx.result.current.party.nameError).toBeNull();
   });
 });
 

@@ -34,10 +34,11 @@ export const MIN_PLAYERS = 1;
 export const MAX_PLAYERS = 6;
 export const ROUND_OPTIONS = [5, 10, 15, 20] as const;
 
-/** Fallback first names for a name field left empty, rather than "Player 1", "Player 2"... Fixed
- * order — index 0 is always shown at the first field, etc. Used both as every setup screen's
- * cosmetic input placeholder and by playerDisplayName (stable identity for the whole game, chosen
- * by the same index). */
+/** The name a player gets when they leave their name field empty, rather than "Player 1"... One device
+ * is one player, so what matters is that the players of a room don't share one: each takes the first
+ * name of this list that no other player has (see `freePlaceholder`) — the host "Zoé", the next
+ * device "Max", and so on. More names than a room has seats (`ROOM_MAX_PLAYERS`), so one is always
+ * free. */
 export const NAME_PLACEHOLDERS = [
   'Zoé',
   'Max',

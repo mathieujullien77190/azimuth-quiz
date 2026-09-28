@@ -198,23 +198,20 @@ describe('joinRoomPresence', () => {
     expect(updates?.['players.zoe.joinedAt']).toBe(joinedAt);
   });
 
-  it('numbers a new player against a bare namesake, and renames the earlier one too', async () => {
-    const updates = await joinWith({ max: player('Zoe') });
-    expect(updates).toMatchObject({
-      'players.zoe.name': 'Zoe2',
-      'players.max.name': 'Zoe1',
-    });
+  it('refuses a name another player already has, and writes nothing', async () => {
+    jest.mocked(getDoc).mockResolvedValue(snapshot({ players: { max: player('Zoe') } }) as never);
+    await expect(api.joinRoomPresence('tabofuna', 'zoe ')).rejects.toMatchObject({ code: 'name-taken' });
+    expect(updateDoc).not.toHaveBeenCalled();
   });
 
-  it('picks the next free number after existing numbered namesakes', async () => {
-    const updates = await joinWith({ a: player('Zoe1'), b: player('Zoe4') });
-    expect(updates?.['players.zoe.name']).toBe('Zoe5');
-    expect(updates).not.toHaveProperty(['players.a.name']);
+  it('lets a player keep, or re-register with, its own name', async () => {
+    const updates = await joinWith({ zoe: player('Zoe') });
+    expect(updates?.['players.zoe.name']).toBe('Zoe');
   });
 
-  it('does not treat a name with special characters as a pattern', async () => {
-    const updates = await joinWith({ a: player('Zoe1') }, 'Z.e');
-    expect(updates?.['players.zoe.name']).toBe('Z.e');
+  it('accepts a name that only looks like a taken one', async () => {
+    const updates = await joinWith({ max: player('Zoe1') }, 'Zoe');
+    expect(updates?.['players.zoe.name']).toBe('Zoe');
   });
 
   it('does nothing past the player cap for a device that is not already in', async () => {
