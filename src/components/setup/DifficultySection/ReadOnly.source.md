@@ -5,7 +5,7 @@ import DifficultySection from '@/components/setup/DifficultySection';
   disabled
   hint={t.setup.difficultyHint}
   onSelect={notifyReadOnly}
-  selected={hostSettings.difficulties}
+  selected={hostSettings.difficulty}
   title={t.setup.difficultyTitle}
 />
 ```

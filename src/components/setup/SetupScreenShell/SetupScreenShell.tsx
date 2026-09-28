@@ -1,4 +1,4 @@
-import { Text } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
@@ -12,12 +12,13 @@ import type { SetupScreenShellProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * Everything every game's setup screen has in common — dumb: notice overlay, title, the
+ * Everything every game's setup screen has in common — dumb: notice overlay, the icon + title with a close cross at the far right, the
  * solo/host/join `PartySection`, then the game's own sections as `children`, then "start" (hidden
  * for a joiner, only the host launches) and "back".
  */
 export const SetupScreenShell = ({
   title,
+  icon,
   party,
   overlayMessage,
   overlayLoading = false,
@@ -36,7 +37,21 @@ export const SetupScreenShell = ({
     <>
       <NoticeOverlay loading={overlayLoading} message={overlayMessage} onDismiss={onDismissOverlay} />
       <Screen>
-        <Text style={styles.title}>{title}</Text>
+        <View style={styles.header}>
+          <View style={styles.heading}>
+            <Text style={styles.icon}>{icon}</Text>
+            <Text style={styles.title}>{title}</Text>
+          </View>
+          <Pressable
+            accessibilityLabel={backLabel}
+            accessibilityRole="button"
+            hitSlop={12}
+            onPress={onBack}
+            style={styles.close}
+          >
+            <Text style={styles.closeText}>✕</Text>
+          </Pressable>
+        </View>
 
         <PartySection {...party} hint={t.setup.playersSection.hint} title={t.setup.playersSection.title} />
 

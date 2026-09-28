@@ -163,7 +163,7 @@ export const RoundResult = ({ record, players, totals, answered, localIndex, onK
             </View>
             {onKick && index !== localIndex && (
               <MiniButton
-                label={t.roundResult.kick}
+                label={t.setup.online.kick}
                 onPress={() => onKick(index)}
                 style={styles.miniButtonSpacing}
                 variant="danger"

@@ -1,3 +1,4 @@
+import { GAME_ICONS } from '@/data';
 import { useTranslation } from '@/i18n';
 
 import DifficultySection from '@/components/setup/DifficultySection';
@@ -27,7 +28,7 @@ export const ContourSetupScreenView = ({
 
   return (
     <SetupScreenShell
-      backLabel={t.contourSetup.back}
+      backLabel={t.setup.quit}
       onBack={onBack}
       onDismissOverlay={onDismissOverlay}
       onStartPress={onStartPress}
@@ -36,13 +37,14 @@ export const ContourSetupScreenView = ({
       party={party}
       startDisabled={false}
       startLabel={t.contourSetup.start}
+      icon={GAME_ICONS.contour}
       title={t.contourSetup.screenTitle}
     >
       <DifficultySection
         disabled={readOnly}
         hint={t.contourSetup.difficultyHint}
         onSelect={onSelectDifficulty}
-        selected={[settings.difficulty]}
+        selected={settings.difficulty}
         title={t.contourSetup.difficultyTitle}
       />
 

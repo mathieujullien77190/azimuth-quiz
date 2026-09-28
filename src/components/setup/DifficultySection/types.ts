@@ -5,9 +5,8 @@ export type DifficultySectionProps = {
    * `t.cluesSetup.difficultyTitle`...), unlike the difficulty labels/emoji below (shared). */
   title: string;
   hint?: string;
-  /** One id for a single-choice game (Clues/Silhouette), several for Compass' multi-select —
-   * `.includes()` reads right either way. */
-  selected: Difficulty[];
+  /** The chosen difficulty — always exactly one, in every game. */
+  selected: Difficulty;
   onSelect: (id: Difficulty) => void;
   disabled?: boolean;
 };

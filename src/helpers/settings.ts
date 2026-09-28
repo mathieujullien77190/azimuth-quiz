@@ -18,15 +18,14 @@ export const sanitizeSettings = (raw: unknown): GameSettings => {
     ? raw.categories.filter((category): category is Category => validCategories.includes(category as Category))
     : [];
 
-  // Single choice (radio): even old saved settings with multiple difficulties only
-  // keep the first valid one.
-  const validDifficulties = DIFFICULTIES.map((difficulty) => difficulty.id);
-  const firstValidDifficulty = Array.isArray(raw.difficulties)
-    ? raw.difficulties.find((difficulty): difficulty is Difficulty =>
-        validDifficulties.includes(difficulty as Difficulty),
-      )
-    : undefined;
-  const difficulties = firstValidDifficulty !== undefined ? [firstValidDifficulty] : DEFAULT_SETTINGS.difficulties;
+  // A single difficulty. Settings saved before that carried a `difficulties` list: its first valid
+  // entry is kept.
+  const validDifficulties = DIFFICULTIES.map((entry) => entry.id);
+  const isDifficulty = (value: unknown): value is Difficulty => validDifficulties.includes(value as Difficulty);
+  const difficulty = isDifficulty(raw.difficulty)
+    ? raw.difficulty
+    : ((Array.isArray(raw.difficulties) ? raw.difficulties.find(isDifficulty) : undefined) ??
+      DEFAULT_SETTINGS.difficulty);
 
   const rounds = ROUND_OPTIONS.some((option) => option === raw.rounds)
     ? (raw.rounds as number)
@@ -38,7 +37,7 @@ export const sanitizeSettings = (raw: unknown): GameSettings => {
   return {
     playerNames,
     categories: categories.length > 0 ? categories : DEFAULT_SETTINGS.categories,
-    difficulties,
+    difficulty,
     rounds,
     useGps: flag(raw.useGps, DEFAULT_SETTINGS.useGps),
     customLatitude: coordinate(raw.customLatitude, -90, 90, DEFAULT_SETTINGS.customLatitude),

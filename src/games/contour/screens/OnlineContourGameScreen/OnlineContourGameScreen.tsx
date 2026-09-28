@@ -17,11 +17,16 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
   const t = useTranslation();
   const game = useOnlineContourGame(code, onQuit);
 
+  // The host just quit: the store is already reset, and this screen is only on its way out. Not the
+  // "loading" splash below — that one is for a room that hasn't delivered its state yet.
+  if (!game.connected) return null;
+
   // Whoever loses the connection leaves the game — host included (see `useRoomPresence`).
   if (game.connectionLost) return <RoomDeletedScreen message={t.setup.online.connectionLostNotice} />;
 
-  // Only a joiner ever sees this — see `RoomDeletedScreen` for the full reasoning.
-  if (!game.roomExists && !game.isHost) return <RoomDeletedScreen />;
+  // The host deleting the room is no early return: a joiner keeps seeing the round it was in, under the
+  // "the host left" notice `useSetupRoom` shows (it also sends the joiner home, on a tap or after a
+  // couple of seconds) — the last state the room delivered is still in the store.
 
   const { localUid, onlinePlayers, isHost, roomSettings, gameState, country } = game;
 

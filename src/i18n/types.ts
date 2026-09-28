@@ -41,8 +41,9 @@ export type Translations = {
     };
   };
   setup: {
-    screenTitle: string;
     back: string;
+    /** The setup screens' bottom button (and close cross): leaves the game's setup. */
+    quit: string;
     start: string;
     playersSection: { title: string; hint: string };
     playerNameAccessibility: (index: number) => string;
@@ -72,6 +73,8 @@ export type Translations = {
       hostBadge: (name: string) => string;
       /** Accessibility label for the host's "kick this player" button. */
       removePlayer: (name: string) => string;
+      /** Label of the host's "kick this player" mini button. */
+      kick: string;
       /** Shown to a joiner (in the same splash as `readOnlyNotice`) once the host removes it. */
       kickedNotice: string;
       /** Shown to a joiner, same splash, once the room itself is gone (host started a new one). */
@@ -127,8 +130,6 @@ export type Translations = {
     /** Shown instead of "(+0°)" for an exact heading guess — kept in English in both
      * languages, on purpose (see git history). */
     perfect: string;
-    /** Online play, host only: full-word expel button below another player's score. */
-    kick: string;
   };
   endScreen: {
     replay: string;
@@ -159,7 +160,6 @@ export type Translations = {
   };
   cluesSetup: {
     screenTitle: string;
-    back: string;
     start: string;
     difficultyTitle: string;
     difficultyHint: string;
@@ -179,8 +179,8 @@ export type Translations = {
     continueLabel: string;
     home: string;
     /** Online only: shown to the player whose turn it is right now. */
-    /** Online only: shown to everyone else while waiting for `name`'s turn. */
-    waitingForTurn: (name: string) => string;
+    /** Online only: what a player who isn't the turn-holder is told when they tap a clue. */
+    notYourTurn: (name: string) => string;
     clues: Record<ClueId, string>;
     isCapitalYes: string;
     isCapitalNo: string;
@@ -189,7 +189,6 @@ export type Translations = {
   };
   contourSetup: {
     screenTitle: string;
-    back: string;
     start: string;
     playersSection: { title: string; hint: string };
     playerNameAccessibility: (index: number) => string;

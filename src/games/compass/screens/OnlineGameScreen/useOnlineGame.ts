@@ -24,7 +24,7 @@ import { buildRoundRecord } from './helpers';
  * `useGame`/`GameScreen.tsx`.
  */
 export const useOnlineGame = (code: string, onQuit: () => void) => {
-  const { localUid, players, roomExists, connectionLost, roomSettings, gameState, onlinePlayers, isHost, handleQuit } =
+  const { localUid, players, connectionLost, connected, roomSettings, gameState, onlinePlayers, isHost, handleQuit } =
     useOnlineRoomSession(useRoomStore, { deleteRoom, removeRoomPlayer }, code, onQuit);
   const place = gameState.places[gameState.roundIndex];
 
@@ -128,8 +128,8 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
     players,
     onlinePlayers,
     isHost,
-    roomExists,
     connectionLost,
+    connected,
     roomSettings,
     gameState,
     place,

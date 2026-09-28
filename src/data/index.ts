@@ -63,6 +63,9 @@ export const PLAYER_COLORS = ['#EF4444', '#16A34A', '#0891B2', '#2563EB', '#9333
  * amber/yellow band. */
 export const ROOM_PLAYER_COLORS = [...PLAYER_COLORS, '#0D9488', '#4F46E5', '#C026D3', '#E11D48'] as const;
 
+/** Each game's emoji — its home card and the header of its setup screen. */
+export const GAME_ICONS = { compass: '🧭', clues: '🧩', contour: '🗺️' } as const;
+
 // Label/description: see translations.setup.difficulties (same id).
 export const DIFFICULTIES: { id: Difficulty; emoji: string }[] = [
   { id: 'easy', emoji: '🟢' },

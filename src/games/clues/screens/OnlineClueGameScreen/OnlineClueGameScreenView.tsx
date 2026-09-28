@@ -5,6 +5,7 @@ import { useTheme, useThemedStyles } from '@/themes';
 
 import ClueGrid from '@/games/clues/components/ClueGrid';
 import Button from '@/components/ui/Button';
+import NoticeOverlay from '@/components/NoticeOverlay';
 import NoOneFoundText from '@/components/ui/NoOneFoundText';
 import GameFooter from '@/components/GameFooter';
 import GameHeader from '@/components/GameHeader';
@@ -16,7 +17,7 @@ import type { OnlineClueGameScreenViewProps } from './types';
 import { createStyles } from './OnlineClueGameScreenView.styles';
 
 /**
- * Pur rendu, un seul `Screen` pour les 3 etats (tour actif, en attente, manche revelee) : jamais
+ * Pur rendu, un seul `Screen` pour les 3 etats (tour actif, en attente, manche revelee) ; un indice touche hors de son tour ouvre `notice` : jamais
  * de swap de composant entre eux, meme raison que le fix scroll de `OnlineGameScreenView`
  * (Boussole) — pas question de reintroduire le bug en le copiant ici.
  */
@@ -37,7 +38,6 @@ export const OnlineClueGameScreenView = ({
   players,
   turnIndex,
   isMyTurn,
-  turnPlayerName,
   remaining,
   verdict,
   winnerName,
@@ -47,6 +47,8 @@ export const OnlineClueGameScreenView = ({
   onSubmitGuess,
   onGiveUp,
   onPickClue,
+  notice,
+  onDismissNotice,
   isHost,
   isLastRound,
   onNextRound,
@@ -63,6 +65,21 @@ export const OnlineClueGameScreenView = ({
           <View style={styles.footerContent}>
             {!roundOver && (
               <Text style={styles.pointsAtStake}>{t.cluesGame.pointsAtStake(formatNumber(remaining))}</Text>
+            )}
+            {!roundOver && skeletonGroups.length > 0 && (
+              <View style={styles.skeletonRow}>
+                {(skeletonLengthKnown ? overlayTypedLetters(skeletonGroups, guessText) : skeletonGroups).map(
+                  (group, groupIndex) => (
+                    <View key={groupIndex} style={styles.skeletonWord}>
+                      {group.map((letter, letterIndex) => (
+                        <View key={letterIndex} style={styles.skeletonSlot}>
+                          {letter !== null && <Text style={styles.skeletonLetter}>{letter}</Text>}
+                        </View>
+                      ))}
+                    </View>
+                  ),
+                )}
+              </View>
             )}
             {roundOver ? (
               <View style={styles.actions}>
@@ -86,29 +103,12 @@ export const OnlineClueGameScreenView = ({
                   <Text style={styles.waiting}>{t.game.waitingForOthers}</Text>
                 )}
               </View>
-            ) : !isMyTurn ? (
-              <Text style={styles.waitingTurn}>{t.cluesGame.waitingForTurn(turnPlayerName)}</Text>
-            ) : (
+            ) : !isMyTurn ? null : (
               <View style={styles.buzzRow}>
                 {lastWrong !== null && (
                   <Text style={[styles.resultBanner, styles.resultWrong]}>
                     {t.cluesGame.missed(lastWrong, formatNumber(WRONG_ANSWER_PENALTY))}
                   </Text>
-                )}
-                {skeletonGroups.length > 0 && (
-                  <View style={styles.skeletonRow}>
-                    {(skeletonLengthKnown ? overlayTypedLetters(skeletonGroups, guessText) : skeletonGroups).map(
-                      (group, groupIndex) => (
-                        <View key={groupIndex} style={styles.skeletonWord}>
-                          {group.map((letter, letterIndex) => (
-                            <View key={letterIndex} style={styles.skeletonSlot}>
-                              {letter !== null && <Text style={styles.skeletonLetter}>{letter}</Text>}
-                            </View>
-                          ))}
-                        </View>
-                      ),
-                    )}
-                  </View>
                 )}
                 <TextInput
                   autoCapitalize="words"
@@ -154,11 +154,12 @@ export const OnlineClueGameScreenView = ({
       <ClueGrid
         bearingDeg={bearingDeg}
         distanceKm={distanceKm}
-        onPickClue={!roundOver && isMyTurn ? onPickClue : undefined}
+        onPickClue={roundOver ? undefined : onPickClue}
         place={place}
         revealedClueIds={revealedClueIds}
         roundOver={roundOver}
       />
+      <NoticeOverlay message={notice} onDismiss={onDismissNotice} />
     </Screen>
   );
 };

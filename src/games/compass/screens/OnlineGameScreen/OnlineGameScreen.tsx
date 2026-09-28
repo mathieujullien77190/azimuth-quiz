@@ -33,17 +33,16 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   // never depends on which phase we're in.
   const { scrollRef, onCap, goToCap, goToDistance, handleScroll } = useSectionScroll();
 
+  // The host just quit: the store is already reset, and this screen is only on its way out. Not the
+  // "loading" splash below — that one is for a room that hasn't delivered its state yet.
+  if (!game.connected) return null;
+
   // Whoever loses the connection leaves the game — host included (see `useRoomPresence`).
   if (game.connectionLost) return <RoomDeletedScreen message={t.setup.online.connectionLostNotice} />;
 
-  // Only a joiner ever sees this: the host is the one who made the room disappear (see
-  // `handleQuit`), and it's already navigating itself home in that same tap — showing it this
-  // same notice too just traps it behind a modal with nothing to do until the redundant timeout
-  // in `useOnlineGame` above catches up. Tappable (like `SetupScreenView`'s own notice overlay)
-  // rather than only ever auto-dismissing after 2s: no reason to make a joiner wait it out.
-  if (!game.roomExists && !game.isHost) {
-    return <RoomDeletedScreen />;
-  }
+  // The host deleting the room is no early return: a joiner keeps seeing the round it was in, under the
+  // "the host left" notice `useSetupRoom` shows (it also sends the joiner home, on a tap or after a
+  // couple of seconds) — the last state the room delivered is still in the store.
 
   const { localUid, players, onlinePlayers, isHost, roomSettings, gameState, place, totals, myIndex } = game;
 
@@ -138,7 +137,7 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
       bearing={game.bearing}
       compassColor={myColor}
       confirmed={confirmed}
-      difficulty={roomSettings.difficulties[0]}
+      difficulty={roomSettings.difficulty}
       distanceKm={game.distanceKm}
       earthMarks={record ? resultsEarthMarks : answerEarthMarks}
       extraNeedles={extraNeedles}

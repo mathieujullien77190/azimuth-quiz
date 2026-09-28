@@ -12,7 +12,7 @@ import SetupScreenShell from '@/components/setup/SetupScreenShell';
   party={room.party}
   startDisabled={false}
   startLabel={t.setup.start}
-  title={t.setup.screenTitle}
+  title={t.home.games.compass.title}
 >
   {sections}
 </SetupScreenShell>

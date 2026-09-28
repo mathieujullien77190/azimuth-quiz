@@ -9,14 +9,8 @@ export const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
     },
     pointsAtStake: {
       ...typography.body,
-      color: colors.textMuted,
+      color: colors.text,
       fontSize: fontSize.caption + 1,
-      textAlign: 'center',
-    },
-    waitingTurn: {
-      ...typography.heading,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
       textAlign: 'center',
     },
     actions: {

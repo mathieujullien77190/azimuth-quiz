@@ -1,10 +1,11 @@
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 
 import { initials } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
 
 import Chip from '@/components/ui/Chip';
+import MiniButton from '@/components/ui/MiniButton';
 import Section from '@/components/ui/Section';
 import type { PartySectionProps } from './types';
 
@@ -85,14 +86,14 @@ export const PartySection = ({
                   <Text style={[styles.initialsText, { color }]}>{initials(player.name)}</Text>
                 </View>
                 {isHost && (
-                  <Pressable
-                    accessibilityLabel={t.setup.online.removePlayer(player.name)}
-                    accessibilityRole="button"
-                    onPress={() => onKick(uid)}
-                    style={styles.removeButton}
-                  >
-                    <Text style={styles.removeButtonText}>✕</Text>
-                  </Pressable>
+                  <View pointerEvents="box-none" style={styles.removeButton}>
+                    <MiniButton
+                      accessibilityLabel={t.setup.online.removePlayer(player.name)}
+                      label={t.setup.online.kick}
+                      onPress={() => onKick(uid)}
+                      variant="danger"
+                    />
+                  </View>
                 )}
               </View>
             </View>

@@ -34,8 +34,8 @@ export const fr: Translations = {
     },
   },
   setup: {
-    screenTitle: 'Nouvelle partie',
     back: 'Retour',
+    quit: 'Quitter',
     start: 'Lancer la partie',
     playersSection: {
       title: 'Partie',
@@ -72,6 +72,7 @@ export const fr: Translations = {
       joined: (code) => `Connecté à la partie ${code} !`,
       hostBadge: (name) => `${name} (hôte)`,
       removePlayer: (name) => `Retirer ${name}`,
+      kick: 'Expulser',
       kickedNotice: 'Vous avez été expulsé de la partie.',
       roomDeletedNotice: 'L’hôte a supprimé la partie.',
       connectionLostNotice: 'Connexion perdue : la partie est terminée pour toi.',
@@ -129,7 +130,6 @@ export const fr: Translations = {
     scoringInfo:
       'Cap et distance rapportent chacun jusqu’à 500 points, selon la précision de l’estimation. +100 points bonus sur chaque catégorie pour le(s) meilleur(s) de la manche (à plusieurs seulement). +100 points bonus supplémentaires pour un cap trouvé pile au degré près.',
     perfect: 'PERFECT',
-    kick: 'Expulser',
   },
   endScreen: {
     replay: 'Rejouer',
@@ -163,7 +163,6 @@ export const fr: Translations = {
   },
   cluesSetup: {
     screenTitle: 'Indices',
-    back: 'Retour',
     start: 'Lancer la partie',
     difficultyTitle: 'Difficulté',
     difficultyHint: 'Notoriété du lieu : détermine dans quelle réserve de villes la manche pioche.',
@@ -185,7 +184,7 @@ export const fr: Translations = {
     wasPlace: 'C’était',
     continueLabel: 'Continuer',
     home: 'Accueil',
-    waitingForTurn: (name) => `Au tour de ${name}…`,
+    notYourTurn: (name) => `C’est au tour de ${name} : tu peux seulement regarder… ou faire semblant de réfléchir 🤔`,
     clues: {
       position: 'Position',
       population: 'Population',
@@ -210,7 +209,6 @@ export const fr: Translations = {
   },
   contourSetup: {
     screenTitle: 'Silhouette',
-    back: 'Retour',
     start: 'Lancer la partie',
     playersSection: {
       title: 'Joueurs',

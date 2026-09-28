@@ -235,8 +235,12 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
   // to stay connected to.
   const dismissDisconnectNotice = useCallback(() => {
     setDisconnectReason(null);
+    // The game screen is open on top of this one (this screen stays mounted under it): leaving the
+    // room means going all the way home. Only resetting here would tear the room's state down from
+    // under the game screen, with nothing left to send it home.
+    if (store.getState().gameState.screen !== 'options') router.dismissTo('/');
     resetChoice();
-  }, [resetChoice]);
+  }, [resetChoice, router, store]);
   useEffect(() => {
     if (connectedRoomCode === null) return;
     let hasBeenPresent = false;

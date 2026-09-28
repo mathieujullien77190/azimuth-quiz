@@ -33,8 +33,8 @@ export const en: Translations = {
     },
   },
   setup: {
-    screenTitle: 'New game',
     back: 'Back',
+    quit: 'Quit',
     start: 'Start game',
     playersSection: {
       title: 'Game',
@@ -71,6 +71,7 @@ export const en: Translations = {
       joined: (code) => `Joined game ${code}!`,
       hostBadge: (name) => `${name} (host)`,
       removePlayer: (name) => `Remove ${name}`,
+      kick: 'Kick',
       kickedNotice: 'You’ve been removed from the game.',
       roomDeletedNotice: 'The host deleted the game.',
       connectionLostNotice: 'Connection lost: the game is over for you.',
@@ -126,7 +127,6 @@ export const en: Translations = {
     scoringInfo:
       'Direction and distance each earn up to 500 points, based on how close your guess was. +100 bonus points on each category for whoever did best this round (multiplayer only). +100 extra bonus points for a heading nailed to the exact degree.',
     perfect: 'PERFECT',
-    kick: 'Kick',
   },
   endScreen: {
     replay: 'Play again',
@@ -158,7 +158,6 @@ export const en: Translations = {
   },
   cluesSetup: {
     screenTitle: 'Clues',
-    back: 'Back',
     start: 'Start game',
     difficultyTitle: 'Difficulty',
     difficultyHint: 'How well-known the place is: sets which pool of cities the round draws from.',
@@ -180,7 +179,7 @@ export const en: Translations = {
     wasPlace: 'It was',
     continueLabel: 'Continue',
     home: 'Home',
-    waitingForTurn: (name) => `${name}'s turn…`,
+    notYourTurn: (name) => `It’s ${name}’s turn: you can only watch… or pretend to think 🤔`,
     clues: {
       position: 'Position',
       population: 'Population',
@@ -205,7 +204,6 @@ export const en: Translations = {
   },
   contourSetup: {
     screenTitle: 'Silhouette',
-    back: 'Back',
     start: 'Start game',
     playersSection: {
       title: 'Players',

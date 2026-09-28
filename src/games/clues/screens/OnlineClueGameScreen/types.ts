@@ -27,7 +27,6 @@ export type OnlineClueGameScreenViewProps = {
   players: OnlinePlayer[];
   turnIndex: number;
   isMyTurn: boolean;
-  turnPlayerName: string;
 
   remaining: number;
   /** Undefined outside `verdict !== null` (round in progress). */
@@ -40,6 +39,9 @@ export type OnlineClueGameScreenViewProps = {
   onSubmitGuess: () => void;
   onGiveUp: () => void;
   onPickClue: (clueId: ClueId) => void;
+  /** Why the tapped clue didn't open ("it's Zoé's turn"), shown over the board; null when nothing to say. */
+  notice: string | null;
+  onDismissNotice: () => void;
 
   isHost: boolean;
   isLastRound: boolean;

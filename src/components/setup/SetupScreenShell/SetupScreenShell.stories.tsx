@@ -4,7 +4,7 @@ import { fn } from 'storybook/test';
 import DifficultySection from '@/components/setup/DifficultySection';
 import RoundsSection from '@/components/setup/RoundsSection';
 import type { SetupPartyProps } from '@/components/setup/useSetupRoom';
-import { PLAYER_COLORS } from '@/data';
+import { GAME_ICONS, PLAYER_COLORS } from '@/data';
 import { translations } from '@/i18n/translations';
 import { source } from '@/storybook/source';
 
@@ -51,7 +51,7 @@ const meta = {
     ),
   ],
   args: {
-    backLabel: t.setup.back,
+    backLabel: t.setup.quit,
     onBack: fn(),
     onDismissOverlay: fn(),
     onStartPress: fn(),
@@ -59,13 +59,14 @@ const meta = {
     party,
     startDisabled: false,
     startLabel: t.setup.start,
-    title: t.setup.screenTitle,
+    title: t.home.games.compass.title,
+    icon: GAME_ICONS.compass,
     children: (
       <>
         <DifficultySection
           hint={t.setup.difficultyHint}
           onSelect={fn()}
-          selected={['intermediate']}
+          selected="intermediate"
           title={t.setup.difficultyTitle}
         />
         <RoundsSection onSelect={fn()} rounds={5} />
@@ -79,7 +80,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** The common frame of every game's setup: title, the solo/host/join block, the game's own sections
- * as `children`, then "Lancer la partie" and "Retour". */
+ * as `children`, then "Lancer la partie" and "Quitter". */
 export const Solo: Story = {
   parameters: source(soloCode),
 };

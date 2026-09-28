@@ -1,4 +1,5 @@
 import { CATEGORIES } from '@/games/compass/constants';
+import { GAME_ICONS } from '@/data';
 import { useTranslation } from '@/i18n';
 
 import CategorySection from '@/components/setup/CategorySection';
@@ -40,7 +41,7 @@ export const SetupScreenView = ({
 
   return (
     <SetupScreenShell
-      backLabel={t.setup.back}
+      backLabel={t.setup.quit}
       onBack={onBack}
       onDismissOverlay={onDismissOverlay}
       onStartPress={onStartPress}
@@ -49,7 +50,8 @@ export const SetupScreenView = ({
       party={party}
       startDisabled={startDisabled}
       startLabel={t.setup.start}
-      title={t.setup.screenTitle}
+      icon={GAME_ICONS.compass}
+      title={t.home.games.compass.title}
     >
       <CategorySection
         categories={CATEGORIES}
@@ -64,7 +66,7 @@ export const SetupScreenView = ({
         disabled={readOnly}
         hint={t.setup.difficultyHint}
         onSelect={onSelectDifficulty}
-        selected={settings.difficulties}
+        selected={settings.difficulty}
         title={t.setup.difficultyTitle}
       />
 

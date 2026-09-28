@@ -4,6 +4,8 @@ import type { SetupPartyProps } from '@/components/setup/useSetupRoom';
 
 export type SetupScreenShellProps = {
   title: string;
+  /** The game's emoji, beside the title. */
+  icon: string;
   /** Solo / host / join block, already resolved by `useSetupRoom`. */
   party: SetupPartyProps;
   overlayMessage: string | null;

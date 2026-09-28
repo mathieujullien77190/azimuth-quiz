@@ -176,6 +176,13 @@ leur logique de jeu :
   dedie), un joiner que l'hote ne voit plus (l'hote le retire, les autres continuent), l'hote que
   les joiners ne voient plus (ils quittent). Un appareil suspendu (arriere-plan, ecran verrouille) n'est
   pas pris pour une coupure : un controle en retard remet les references a zero.
+- **L'hote quitte** : `handleQuit` supprime le document de la room (`deleteDoc`, seul l'hote peut). Les
+  joiners ne sont pas envoyes sur un ecran a part : ils gardent la manche en cours (dernier etat recu
+  encore dans le store) sous la notice « l'hote a quitte » que `useSetupRoom` affiche, puis retournent a
+  l'accueil au clic ou apres 2 s (`dismissDisconnectNotice` fait `router.dismissTo('/')` des que l'ecran
+  de jeu est ouvert — sinon le reset du setup vide le store sous le jeu). L'ecran de jeu rend `null` une
+  fois le store deconnecte (`connected`), jamais le splash « preparation » (reserve a une room qui n'a
+  pas encore livre son etat).
 
 Ecrans de setup : blocs partages dans `components/setup/` (`PartySection`, `CategorySection`,
 `DifficultySection`, `RoundsSection`, `OptionsSection` — tableau d'options `{ id, title,
@@ -228,8 +235,10 @@ juste sous son icone (les deux restent affiches ensemble, l'un ne remplace plus 
 `ContourBoard.tsx`) : l'ancien alignement directionnel `start`/`end` n'avait plus de sens
 des que chaque hint est devenu un point fixe plutot qu'une etiquette pointant vers le bord.
 
-Filtre par difficulte, meme enum `Difficulty` que Compass/Clues mais choix unique
-(`ContourSettings.difficulty`, pas de multi-select) : determine le pool dans lequel le
+Filtre par difficulte, meme enum `Difficulty` que Compass/Clues, choix unique dans les trois jeux
+(`GameSettings.difficulty`, `ClueSettings.difficulty`, `ContourSettings.difficulty` — plus aucun
+multi-select ; d'anciens reglages Compass sauvegardes avec une liste `difficulties` gardent sa premiere
+entree valide, voir `sanitizeSettings`) : determine le pool dans lequel le
 pays du tour est tire (`ContourCountry.difficulty`, curee a la main via le champ
 optionnel `contour.difficulty` sur la ligne du pays dans `data/places/countries.json`
 — France et Espagne en `easy`, seule la Norvege en `hard`, absent (= `intermediate` par

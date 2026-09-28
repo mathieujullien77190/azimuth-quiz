@@ -10,12 +10,13 @@ import { createStyles } from './styles';
  * The small pill button ("Expulser", "Comment les points sont calculés"...): outlined, in the
  * accent color or, for a destructive action, the danger red (`variant="danger"`).
  */
-export const MiniButton = ({ label, onPress, variant = 'accent', style }: MiniButtonProps) => {
+export const MiniButton = ({ label, onPress, variant = 'accent', accessibilityLabel, style }: MiniButtonProps) => {
   const styles = useThemedStyles(createStyles);
   const danger = variant === 'danger';
 
   return (
     <Pressable
+      accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       hitSlop={8}
       onPress={onPress}

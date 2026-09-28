@@ -36,9 +36,9 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       fontSize: fontSize.body,
     },
     // Same as `input`, but leaves room on the right for both the initials badge and the host's
-    // remove cross next to it (see `removeButton`), instead of just the badge.
+    // "Kick" mini button next to it (see `removeButton`), instead of just the badge.
     inputWithRemove: {
-      paddingRight: 78,
+      paddingRight: 128,
     },
     initials: {
       position: 'absolute',
@@ -60,15 +60,9 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
     removeButton: {
       position: 'absolute',
       right: spacing.xs + 2 + 28 + spacing.sm,
-      width: 24,
-      height: 28,
-      alignItems: 'center',
+      top: 0,
+      bottom: 0,
       justifyContent: 'center',
-    },
-    removeButtonText: {
-      ...typography.heading,
-      color: colors.danger,
-      fontSize: fontSize.body,
     },
     hint: {
       ...typography.body,

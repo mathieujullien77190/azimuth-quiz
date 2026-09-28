@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import { Animated, Text, View } from 'react-native';
+import { GAME_ICONS } from '@/data';
 import { loadMascotCaught, saveMascotCaught } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useThemedStyles, useThemeSettings } from '@/themes';
@@ -120,7 +121,7 @@ export const HomeScreen = () => {
       <View style={styles.games}>
         <GameCard
           ctaLabel={t.home.games.compass.cta}
-          icon="🧭"
+          icon={GAME_ICONS.compass}
           maxPlayers={10}
           onPress={() => router.push('/setup')}
           tagline={t.home.games.compass.tagline}
@@ -128,7 +129,7 @@ export const HomeScreen = () => {
         />
         <GameCard
           ctaLabel={t.home.games.clues.cta}
-          icon="🧩"
+          icon={GAME_ICONS.clues}
           maxPlayers={10}
           onPress={() => router.push('/clues-setup')}
           tagline={t.home.games.clues.tagline}
@@ -136,7 +137,7 @@ export const HomeScreen = () => {
         />
         <GameCard
           ctaLabel={t.home.games.contour.cta}
-          icon="🗺️"
+          icon={GAME_ICONS.contour}
           maxPlayers={10}
           onPress={() => router.push('/contour-setup')}
           tagline={t.home.games.contour.tagline}

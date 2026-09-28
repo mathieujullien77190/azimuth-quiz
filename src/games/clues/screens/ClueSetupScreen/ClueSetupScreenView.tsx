@@ -1,4 +1,5 @@
 import { CLUE_CATEGORIES } from '@/games/clues/constants';
+import { GAME_ICONS } from '@/data';
 import { useTranslation } from '@/i18n';
 
 import CategorySection from '@/components/setup/CategorySection';
@@ -35,7 +36,7 @@ export const ClueSetupScreenView = ({
 
   return (
     <SetupScreenShell
-      backLabel={t.cluesSetup.back}
+      backLabel={t.setup.quit}
       onBack={onBack}
       onDismissOverlay={onDismissOverlay}
       onStartPress={onStartPress}
@@ -44,6 +45,7 @@ export const ClueSetupScreenView = ({
       party={party}
       startDisabled={startDisabled}
       startLabel={t.cluesSetup.start}
+      icon={GAME_ICONS.clues}
       title={t.cluesSetup.screenTitle}
     >
       <CategorySection
@@ -59,7 +61,7 @@ export const ClueSetupScreenView = ({
         disabled={readOnly}
         hint={t.cluesSetup.difficultyHint}
         onSelect={onSelectDifficulty}
-        selected={[settings.difficulty]}
+        selected={settings.difficulty}
         title={t.cluesSetup.difficultyTitle}
       />
 

@@ -6,7 +6,7 @@ const room = useSetupRoom(adapter, settings, updateSettings);
 
 // The frame is shared; each game only supplies its own sections as `children`.
 <SetupScreenShell
-  backLabel={t.setup.back}
+  backLabel={t.setup.quit}
   onBack={onBack}
   onDismissOverlay={room.dismissOverlay}
   onStartPress={room.startOnlineGame}
@@ -14,7 +14,8 @@ const room = useSetupRoom(adapter, settings, updateSettings);
   party={room.party}
   startDisabled={available === 0}
   startLabel={t.setup.start}
-  title={t.setup.screenTitle}
+  icon={GAME_ICONS.compass}
+  title={t.home.games.compass.title}
 >
   <DifficultySection {...difficultyProps} />
   <RoundsSection {...roundsProps} />

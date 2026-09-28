@@ -15,7 +15,7 @@ export const SetupScreen = ({ onBack }: SetupScreenProps) => {
   const { settings, ready, updateSettings } = useSettings();
   const { language } = useLanguage();
   const room = useOnlineRoom(settings, updateSettings);
-  const available = filterPlaces(settings.categories, settings.difficulties, language).length;
+  const available = filterPlaces(settings.categories, settings.difficulty, language).length;
 
   const updateOrNotify = (patch: Partial<typeof settings>) =>
     room.readOnly ? room.notifyReadOnly() : updateSettings(patch);

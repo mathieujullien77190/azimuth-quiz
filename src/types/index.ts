@@ -97,7 +97,7 @@ export type RoundRecord = {
 export type GameSettings = {
   playerNames: string[];
   categories: Category[];
-  difficulties: Difficulty[];
+  difficulty: Difficulty;
   rounds: number;
   useGps: boolean;
   /** Starting point when `useGps` is off: latitude/longitude entered by hand,
@@ -289,8 +289,7 @@ export type ContourSettings = {
   playerNames: string[];
   rounds: number;
   /** Which `ContourCountry.difficulty` tier a round's country is drawn from (see `randomCountry`)
-   * — single choice, same pattern as Clues' own `ClueSettings.difficulty`, not Compass's
-   * multi-select `difficulties`. */
+   * — single choice, like Compass' `GameSettings.difficulty` and Clues' `ClueSettings.difficulty`. */
   difficulty: Difficulty;
 };
 

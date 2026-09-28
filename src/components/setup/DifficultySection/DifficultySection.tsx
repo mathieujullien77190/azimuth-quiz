@@ -30,7 +30,7 @@ export const DifficultySection = ({ title, hint, selected, onSelect, disabled = 
             emoji={difficultyEmoji(difficulty, isDark)}
             label={t.setup.difficulties[difficulty.id]}
             onPress={() => onSelect(difficulty.id)}
-            selected={selected.includes(difficulty.id)}
+            selected={difficulty.id === selected}
           />
         ))}
       </View>

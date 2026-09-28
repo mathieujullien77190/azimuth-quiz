@@ -26,13 +26,16 @@ export const useOnlineRoomSession = <Settings, GameState>(
   const hostUid = store((s) => s.hostUid);
   const roomExists = store((s) => s.roomExists);
   const connectionLost = store((s) => s.connectionLost);
+  // False once this device has left the room's store (the host quitting: see `handleQuit`).
+  const connected = store((s) => s.code !== null);
   const roomSettings = store((s) => s.roomSettings);
   const gameState = store((s) => s.gameState);
 
   // Once the room itself has disappeared (the host quit/deleted it — see `handleQuit` below),
-  // every other device freezes on a "the host left" notice instead of carrying on with whatever
-  // stale players/game state its last snapshot left behind — straight to the home screen, not
-  // just "back" (the setup screen would still show this same, now-gone room).
+  // every other device freezes on the round it was in, under a "the host left" notice (shown by
+  // `useSetupRoom`, which also sends it home on a tap) instead of carrying on with whatever stale
+  // state its last snapshot left behind — this is the fallback if that hasn't: straight to the home
+  // screen, not just "back" (the setup screen would still show this same, now-gone room).
   useEffect(() => {
     if (roomExists && !connectionLost) return;
     const timeout = setTimeout(() => router.dismissTo('/'), 2000);
@@ -79,8 +82,8 @@ export const useOnlineRoomSession = <Settings, GameState>(
     localUid,
     players,
     hostUid,
-    roomExists,
     connectionLost,
+    connected,
     roomSettings,
     gameState,
     onlinePlayers,

@@ -63,7 +63,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   playerNames: [''],
   categories: ['cities', 'capital', 'citiesFr', 'mountains', 'landmarks', 'nature'],
   // Single choice (radio).
-  difficulties: ['intermediate'],
+  difficulty: 'intermediate',
   rounds: 5,
   useGps: true,
   // Paris by default, like DEFAULT_ORIGIN (see @/data).
