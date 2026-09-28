@@ -3,10 +3,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { NAME_PLACEHOLDERS, PLAYER_COLORS } from '@/data';
 import { playersByArrival } from '@/helpers/roomPlayers';
+import { useDebouncedValue } from '@/helpers/useDebouncedValue';
 import { useRoomPresence } from '@/helpers/useRoomPresence';
 import { useTranslation } from '@/i18n';
 
 import type { SetupPartyProps, SetupRoomAdapter } from './types';
+
+/** How long the name field must stay still before a rename is sent to the room. */
+const NAME_SYNC_DELAY_MS = 600;
 
 /**
  * All the online-room business logic behind a game's setup screen, identical for every game —
@@ -193,18 +197,21 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
     updateSettings(roomSettings);
   }, [mode, roomSettings, updateSettings]);
 
-  // Registers this device in the room's connected-players list, for both host and joiner — the
-  // name field locks once connected, so in practice this only ever fires once per room, but still
-  // keys off `soloName` rather than a snapshot of it taken at connect time, in case that ever
-  // changes. Swallows a failure (e.g. this room was just deleted from under it — see the cleanup
-  // effect right below) instead of an unhandled rejection crashing the screen.
+  // Registers this device in the room's connected-players list, for both host and joiner, and
+  // renames it there when the name changes — only a host can still edit its name once connected (a
+  // joiner's field locks). The rename waits for the typing to stop: a write per keystroke would also
+  // pass through every half-typed name, and one that happens to equal another player's name renames
+  // *that* player (see `resolveName`). Swallows a failure (e.g. this room was just deleted from
+  // under it — see the cleanup effect right below) instead of an unhandled rejection crashing the
+  // screen.
+  const roomName = useDebouncedValue(soloName, NAME_SYNC_DELAY_MS);
   useEffect(() => {
     if (connectedRoomCode === null) return;
     adapter
-      .joinRoomPresence(connectedRoomCode, soloName.trim() || soloPlaceholder)
+      .joinRoomPresence(connectedRoomCode, roomName.trim() || soloPlaceholder)
       .then((uid) => store.setState({ localUid: uid }))
       .catch(() => {});
-  }, [adapter, connectedRoomCode, soloName, soloPlaceholder, store]);
+  }, [adapter, connectedRoomCode, roomName, soloPlaceholder, store]);
 
   // Leaves the *previous* room when switching to a different one (or leaving this screen) —
   // otherwise it stays parked there forever, still listing a host nobody will ever come back to.
@@ -340,8 +347,9 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
     soloName,
     soloPlaceholder,
     soloColor,
-    // Locked once actually connected to a room (host or joiner) — renaming mid-game isn't supported.
-    nameEditable: connectedRoomCode === null,
+    // Free while alone or hosting (the new name reaches the room, see `roomName` above); locked once
+    // connected as a joiner, whose name the host's room already shows.
+    nameEditable: connectedRoomCode === null || mode === 'host',
     onChangeName: (text) => updateSettings({ playerNames: [text] } as Partial<S>),
     connectedPlayers,
     localUid,

@@ -207,13 +207,13 @@ describe('SetupScreen — host/join a game', () => {
     expect(queryByText('Zoé')).toBeNull();
   });
 
-  it('locks the player-name field once connected to a room', async () => {
+  it('keeps the player-name field editable for a host once its room exists', async () => {
     mockedCreateRoom.mockResolvedValue('tabofuna');
     const { getByLabelText, getByText, findByDisplayValue } = await renderSetup({ playerNames: ['Zoé'] });
     expect(getByLabelText('Nom du joueur 1').props.editable).not.toBe(false);
     fireEvent.press(getByText('Créer'));
     await findByDisplayValue('tabofuna');
-    expect(getByLabelText('Nom du joueur 1').props.editable).toBe(false);
+    expect(getByLabelText('Nom du joueur 1').props.editable).not.toBe(false);
   });
 
   it('marks the host entry in a joiner’s read-only players list', async () => {

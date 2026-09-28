@@ -60,7 +60,12 @@ const setup = async (overrides: Partial<SetupRoomAdapter<Settings, RoomSettings>
     ...overrides,
   };
   const updateSettings = jest.fn();
-  const hook = await renderHook(() => useSetupRoom(adapter, settings, updateSettings));
+  const hook = await renderHook(
+    (props: { settings: Settings }) => useSetupRoom(adapter, props.settings, updateSettings),
+    {
+      initialProps: { settings },
+    },
+  );
   return {
     adapter,
     store,
@@ -131,13 +136,27 @@ describe('useSetupRoom — hosting', () => {
     expect(ctx.adapter.updateRoomSettings).toHaveBeenCalledWith('tabofuna', { rounds: 5 });
   });
 
-  it('registers this device in the room and locks the name', async () => {
+  it('registers this device in the room, and the host can still change its name', async () => {
     const ctx = await setup();
     await hostRoom(ctx);
 
     expect(ctx.adapter.joinRoomPresence).toHaveBeenCalledWith('tabofuna', 'Zoe');
     expect(ctx.store.getState().localUid).toBe('zoe');
-    expect(ctx.result.current.party.nameEditable).toBe(false);
+    expect(ctx.result.current.party.nameEditable).toBe(true);
+  });
+
+  it('renames the host in the room once it stops typing, not on every keystroke', async () => {
+    const ctx = await setup();
+    await hostRoom(ctx);
+    jest.mocked(ctx.adapter.joinRoomPresence).mockClear();
+
+    const renamed = { ...SETTINGS, playerNames: ['Zoé'] };
+    await ctx.rerender({ settings: renamed });
+    await act(async () => jest.advanceTimersByTime(300));
+    expect(ctx.adapter.joinRoomPresence).not.toHaveBeenCalled();
+    await act(async () => jest.advanceTimersByTime(400));
+    expect(ctx.adapter.joinRoomPresence).toHaveBeenCalledTimes(1);
+    expect(ctx.adapter.joinRoomPresence).toHaveBeenCalledWith('tabofuna', 'Zoé');
   });
 
   it('registers with the placeholder when the name is blank', async () => {
@@ -323,6 +342,13 @@ describe('useSetupRoom — joining', () => {
     await joinRoom(ctx);
     await ctx.emitSettings({ rounds: 9 });
     expect(ctx.updateSettings).toHaveBeenCalledWith({ rounds: 9 });
+  });
+
+  it('locks the name of a joiner once connected', async () => {
+    const ctx = await setup({ joinRoomPresence: jest.fn(() => Promise.resolve('max')) });
+    expect(ctx.result.current.party.nameEditable).toBe(true);
+    await joinRoom(ctx);
+    expect(ctx.result.current.party.nameEditable).toBe(false);
   });
 
   it('does not mirror anything while hosting', async () => {
