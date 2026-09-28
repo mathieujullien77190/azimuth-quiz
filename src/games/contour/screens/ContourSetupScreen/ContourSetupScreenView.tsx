@@ -18,6 +18,7 @@ export const ContourSetupScreenView = ({
   onSelectDifficulty,
   onSelectRounds,
   overlayMessage,
+  overlayLoading,
   onDismissOverlay,
   onStartPress,
   onBack,
@@ -30,6 +31,7 @@ export const ContourSetupScreenView = ({
       onBack={onBack}
       onDismissOverlay={onDismissOverlay}
       onStartPress={onStartPress}
+      overlayLoading={overlayLoading}
       overlayMessage={overlayMessage}
       party={party}
       startDisabled={false}

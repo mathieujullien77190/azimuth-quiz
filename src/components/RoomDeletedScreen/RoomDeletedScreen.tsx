@@ -24,7 +24,7 @@ export const RoomDeletedScreen = ({ message }: { message?: string }) => {
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
       <ThemeBackdrop />
-      <NoticeOverlay message={message ?? t.setup.online.roomDeletedNotice} onDismiss={() => router.replace('/')} />
+      <NoticeOverlay message={message ?? t.setup.online.roomDeletedNotice} onDismiss={() => router.dismissTo('/')} />
     </SafeAreaView>
   );
 };

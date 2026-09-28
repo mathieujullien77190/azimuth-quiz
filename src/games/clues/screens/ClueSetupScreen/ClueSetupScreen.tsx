@@ -3,11 +3,10 @@ import { useEffect, useMemo } from 'react';
 import { CLUE_PLACES, isCapitalPlace, isFrenchCityPlace } from '@/data';
 import { loadClueHistory } from '@/games/clues/helpers/clueHistory';
 import { effectiveDifficulty } from '@/games/compass/helpers/places';
-import { useLanguage, useTranslation } from '@/i18n';
+import { useLanguage } from '@/i18n';
 import { useClueSettings } from '@/settings';
 import type { Category } from '@/types';
 
-import NoticeOverlay from '@/components/NoticeOverlay';
 import { ClueSetupScreenView } from './ClueSetupScreenView';
 import type { ClueSetupScreenProps } from './types';
 import { useOnlineClueRoom } from './useOnlineClueRoom';
@@ -18,7 +17,6 @@ import { useOnlineClueRoom } from './useOnlineClueRoom';
  * rendering) — same split as Compass' own `SetupScreen`/`SetupScreenView`.
  */
 export const ClueSetupScreen = ({ onBack }: ClueSetupScreenProps) => {
-  const t = useTranslation();
   const { settings, updateSettings } = useClueSettings();
   const { language } = useLanguage();
   const room = useOnlineClueRoom(settings, updateSettings);
@@ -37,8 +35,6 @@ export const ClueSetupScreen = ({ onBack }: ClueSetupScreenProps) => {
   useEffect(() => {
     loadClueHistory();
   }, []);
-
-  if (room.starting) return <NoticeOverlay loading message={t.game.loading} onDismiss={() => {}} />;
 
   const updateOrNotify = (patch: Partial<typeof settings>) =>
     room.readOnly ? room.notifyReadOnly() : updateSettings(patch);
@@ -61,6 +57,7 @@ export const ClueSetupScreen = ({ onBack }: ClueSetupScreenProps) => {
       onStartPress={room.startOnlineClueGame}
       onToggleCategory={toggleCategory}
       onToggleStartWithFirstLetter={(value) => updateOrNotify({ startWithFirstLetter: value })}
+      overlayLoading={room.overlayLoading}
       overlayMessage={room.overlayMessage}
       party={room.party}
       readOnly={room.readOnly}

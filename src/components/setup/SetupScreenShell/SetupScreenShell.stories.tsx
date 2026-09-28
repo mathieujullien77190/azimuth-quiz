@@ -11,6 +11,7 @@ import { source } from '@/storybook/source';
 import joinerCode from './Joiner.source.md?raw';
 import { SetupScreenShell } from './SetupScreenShell';
 import soloCode from './Solo.source.md?raw';
+import startingCode from './Starting.source.md?raw';
 
 const t = translations.fr;
 
@@ -91,4 +92,11 @@ export const Joiner: Story = {
     overlayMessage: t.setup.readOnlyNotice,
     party: { ...party, onlineChoice: 'join', joinCode: 'tabofuna', joinCodeIsValid: true, joinStatus: 'valid' },
   },
+};
+
+/** "Lancer la partie" pressed: the setup stays visible and the "Préparation de la partie…" splash
+ * (a spinner) covers it until the game screen takes over. */
+export const Starting: Story = {
+  parameters: source(startingCode),
+  args: { overlayLoading: true, overlayMessage: t.game.loading },
 };

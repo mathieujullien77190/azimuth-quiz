@@ -84,6 +84,9 @@ describe('ContourSetupScreen', () => {
     await waitFor(() => expect(createRoom).toHaveBeenCalledTimes(1));
     expect(startContourRoomGame).not.toHaveBeenCalled();
     expect(queryByText(/tabofuna/)).toBeNull();
+    // The setup stays on screen with the loading splash over it.
+    expect(getByText('Préparation de la partie…')).toBeTruthy();
+    expect(getByText('Lancer la partie')).toBeTruthy();
 
     await act(async () => {
       useContourRoomStore.setState({
@@ -93,6 +96,13 @@ describe('ContourSetupScreen', () => {
     });
 
     await waitFor(() => expect(startContourRoomGame).toHaveBeenCalledWith('tabofuna', expect.any(Array), 'local-uid'));
+
+    // Once the room leaves its lobby the game screen takes over (this screen stays mounted under it):
+    // the splash must not stay on top of it.
+    await act(async () => {
+      useContourRoomStore.setState({ gameState: { ...useContourRoomStore.getState().gameState, screen: 'game' } });
+    });
+    expect(queryByText('Préparation de la partie…')).toBeNull();
   });
 
   it('calls onBack when "Retour" is pressed', async () => {

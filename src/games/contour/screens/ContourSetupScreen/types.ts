@@ -16,6 +16,7 @@ export type ContourSetupScreenViewProps = {
   onSelectRounds: (rounds: number) => void;
 
   overlayMessage: string | null;
+  overlayLoading: boolean;
   onDismissOverlay: () => void;
   onStartPress: () => void;
   onBack: () => void;

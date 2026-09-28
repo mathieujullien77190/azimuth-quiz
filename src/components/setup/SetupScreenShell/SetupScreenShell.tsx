@@ -20,6 +20,7 @@ export const SetupScreenShell = ({
   title,
   party,
   overlayMessage,
+  overlayLoading = false,
   onDismissOverlay,
   children,
   startLabel,
@@ -33,7 +34,7 @@ export const SetupScreenShell = ({
 
   return (
     <>
-      <NoticeOverlay message={overlayMessage} onDismiss={onDismissOverlay} />
+      <NoticeOverlay loading={overlayLoading} message={overlayMessage} onDismiss={onDismissOverlay} />
       <Screen>
         <Text style={styles.title}>{title}</Text>
 

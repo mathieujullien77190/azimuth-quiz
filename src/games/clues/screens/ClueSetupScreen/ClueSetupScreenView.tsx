@@ -25,6 +25,7 @@ export const ClueSetupScreenView = ({
   onToggleStartWithFirstLetter,
   onSelectRounds,
   overlayMessage,
+  overlayLoading,
   onDismissOverlay,
   startDisabled,
   onStartPress,
@@ -38,6 +39,7 @@ export const ClueSetupScreenView = ({
       onBack={onBack}
       onDismissOverlay={onDismissOverlay}
       onStartPress={onStartPress}
+      overlayLoading={overlayLoading}
       overlayMessage={overlayMessage}
       party={party}
       startDisabled={startDisabled}

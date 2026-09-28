@@ -30,6 +30,7 @@ export const SetupScreenView = ({
   onToggleShowCountry,
   onToggleHideOtherAnswers,
   overlayMessage,
+  overlayLoading,
   onDismissOverlay,
   startDisabled,
   onStartPress,
@@ -43,6 +44,7 @@ export const SetupScreenView = ({
       onBack={onBack}
       onDismissOverlay={onDismissOverlay}
       onStartPress={onStartPress}
+      overlayLoading={overlayLoading}
       overlayMessage={overlayMessage}
       party={party}
       startDisabled={startDisabled}

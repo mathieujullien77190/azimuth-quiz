@@ -22,6 +22,7 @@ export type ClueSetupScreenViewProps = {
   onSelectRounds: (rounds: number) => void;
 
   overlayMessage: string | null;
+  overlayLoading: boolean;
   onDismissOverlay: () => void;
 
   startDisabled: boolean;

@@ -28,6 +28,7 @@ export type SetupScreenViewProps = {
   onToggleHideOtherAnswers: (value: boolean) => void;
 
   overlayMessage: string | null;
+  overlayLoading: boolean;
   onDismissOverlay: () => void;
   startDisabled: boolean;
   onStartPress: () => void;

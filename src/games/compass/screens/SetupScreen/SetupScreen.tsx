@@ -1,8 +1,7 @@
 import { filterPlaces } from '@/helpers';
-import { useLanguage, useTranslation } from '@/i18n';
+import { useLanguage } from '@/i18n';
 import { useSettings } from '@/settings';
 
-import NoticeOverlay from '@/components/NoticeOverlay';
 import { selectDifficultyFilter, toggleCategoryFilter } from './helpers';
 import { SetupScreenView } from './SetupScreenView';
 import type { SetupScreenProps } from './types';
@@ -13,13 +12,10 @@ import { useOnlineRoom } from './useOnlineRoom';
  * into an already-decided callback, and maps everything onto `SetupScreenView` (pure rendering).
  */
 export const SetupScreen = ({ onBack }: SetupScreenProps) => {
-  const t = useTranslation();
   const { settings, ready, updateSettings } = useSettings();
   const { language } = useLanguage();
   const room = useOnlineRoom(settings, updateSettings);
   const available = filterPlaces(settings.categories, settings.difficulties, language).length;
-
-  if (room.starting) return <NoticeOverlay loading message={t.game.loading} onDismiss={() => {}} />;
 
   const updateOrNotify = (patch: Partial<typeof settings>) =>
     room.readOnly ? room.notifyReadOnly() : updateSettings(patch);
@@ -38,6 +34,7 @@ export const SetupScreen = ({ onBack }: SetupScreenProps) => {
       onToggleLiveCompass={(value) => updateOrNotify({ liveCompass: value })}
       onToggleShowCountry={(value) => updateOrNotify({ showCountry: value })}
       onToggleUseGps={(value) => updateOrNotify({ useGps: value })}
+      overlayLoading={room.overlayLoading}
       overlayMessage={room.overlayMessage}
       party={room.party}
       readOnly={room.readOnly}

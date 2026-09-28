@@ -35,7 +35,7 @@ export const useOnlineRoomSession = <Settings, GameState>(
   // just "back" (the setup screen would still show this same, now-gone room).
   useEffect(() => {
     if (roomExists && !connectionLost) return;
-    const timeout = setTimeout(() => router.replace('/'), 2000);
+    const timeout = setTimeout(() => router.dismissTo('/'), 2000);
     return () => clearTimeout(timeout);
   }, [roomExists, connectionLost, router]);
 
@@ -45,7 +45,11 @@ export const useOnlineRoomSession = <Settings, GameState>(
   // Host: quitting takes the whole room down with it (everyone else sees the room-deleted notice
   // above) — there's no "pass the host" concept here, and there's nothing left to go "back" to
   // (the setup screen would still be sitting on this same, now-deleted room, since `push`ing to
-  // the game route never popped it off the stack), so home directly rather than `onQuit`. Also
+  // the game route never popped it off the stack), so home directly rather than `onQuit` — with
+  // `dismissTo`, which pops the game *and* that setup screen: a plain `replace('/')` only swapped
+  // the game route, leaving the old setup instance mounted (and, with its old room's state, reacting
+  // to the next game's room in the shared store — the "preparation" splash coming back after a
+  // second quit). Also
   // disconnects the shared store right here rather than leaving it to that same setup screen's own
   // connect/disconnect effect: that effect only reacts to its `connectedRoomCode` changing, which
   // it never will on its own — without this, the store stays parked on the now-deleted room (stale
@@ -58,7 +62,7 @@ export const useOnlineRoomSession = <Settings, GameState>(
     if (isHost) {
       roomApi.deleteRoom(code).catch(() => {});
       store.getState().disconnect();
-      router.replace('/');
+      router.dismissTo('/');
       return;
     }
     if (localUid !== null) {

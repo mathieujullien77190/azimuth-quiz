@@ -13,7 +13,14 @@ import { createStyles } from './styles';
  * across every game's translations. `categories` (which ids/emoji this game's pool actually
  * offers) and `title`/`hint` (own translation namespace) are the only per-game props.
  */
-export const CategorySection = ({ title, hint, categories, selected, onToggle, disabled = false }: CategorySectionProps) => {
+export const CategorySection = ({
+  title,
+  hint,
+  categories,
+  selected,
+  onToggle,
+  disabled = false,
+}: CategorySectionProps) => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
 

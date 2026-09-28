@@ -161,6 +161,11 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
   const localUid = store((s) => s.localUid);
   const roomSettings = store((s) => s.roomSettings);
   const roomScreen = store((s) => s.gameState.screen);
+  // The game screen took over (the room left its lobby): the start is done. This screen stays
+  // mounted underneath it, and its loading splash is a modal that would otherwise stay on top of the
+  // game — hence the reset, done while rendering (React's pattern for state derived from a value
+  // that changed) rather than in an effect.
+  if (starting && roomScreen !== 'options') setStarting(false);
   const connectionLost = store((s) => s.connectionLost);
   // Connection-loss detection for the whole life of the room (this screen stays mounted under the
   // game screen): see `useRoomPresence`. Whoever loses the connection just leaves the game.
@@ -304,18 +309,25 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
     return () => clearTimeout(timeout);
   }, [readOnlyNotice]);
   const notifyReadOnly = () => setReadOnlyNotice(true);
+  // "Préparation de la partie…" (a spinner, `overlayLoading`) covers the setup while the game is
+  // being started, unless a disconnect notice takes precedence.
+  const overlayLoading = starting && !connectionLost && disconnectReason === null;
   const overlayMessage = connectionLost
     ? t.setup.online.connectionLostNotice
     : disconnectReason === 'kicked'
       ? t.setup.online.kickedNotice
       : disconnectReason === 'deleted'
         ? t.setup.online.roomDeletedNotice
-        : readOnlyNotice
-          ? t.setup.readOnlyNotice
-          : null;
+        : overlayLoading
+          ? t.game.loading
+          : readOnlyNotice
+            ? t.setup.readOnlyNotice
+            : null;
   // Tapping the notice dismisses whichever one is showing early, instead of only ever waiting
-  // out its own 2s auto-dismiss timeout above.
+  // out its own 2s auto-dismiss timeout above. The loading splash isn't dismissable: it goes away
+  // by itself once the game screen takes over.
   const dismissOverlay = () => {
+    if (overlayLoading) return;
     if (disconnectReason !== null || connectionLost) dismissDisconnectNotice();
     else setReadOnlyNotice(false);
   };
@@ -355,6 +367,7 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
     starting,
     connectedRoomCode,
     overlayMessage,
+    overlayLoading,
     dismissOverlay,
     notifyReadOnly,
     startOnlineGame,
