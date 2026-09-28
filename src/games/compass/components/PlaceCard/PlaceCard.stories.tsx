@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { SAMPLE_PLACE_GUESSING, SAMPLE_PLACE_REVEALED } from '@/helpers/storyFixtures';
+import { SAMPLE_PLACE_REVEALED } from '@/helpers/storyFixtures';
 
 import { PlaceCard } from './PlaceCard';
 import { source } from '@/storybook/source';
@@ -18,7 +18,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Guessing: Story = {
   parameters: source(guessingCode),
-  args: { place: SAMPLE_PLACE_GUESSING, showCountry: false },
+  args: { place: SAMPLE_PLACE_REVEALED, showCountry: false },
 };
 
 export const Revealed: Story = {

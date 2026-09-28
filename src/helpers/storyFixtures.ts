@@ -22,12 +22,9 @@ const findPlace = (name: string, code: string): Place =>
 const findCluePlace = (name: string, code: string): CluePlace =>
   CLUE_PLACES.find((place) => place.name === name && place.code === code)!;
 
-/** Has a French trivia description (see PlaceCard's reveal state) — used wherever a "revealed"
- * Compass place is needed. */
+/** Has a French trivia description (see PlaceCard's reveal state) — the sample Compass place, used by
+ * every story that needs one (the guessing and the revealed states alike). */
 export const SAMPLE_PLACE_REVEALED: Place = findPlace('Tokyo', 'JP');
-
-/** A different place for the "still guessing" PlaceCard state. */
-export const SAMPLE_PLACE_GUESSING: Place = findPlace('Machu Picchu', 'PE');
 
 export const SAMPLE_CLUE_PLACE: CluePlace = findCluePlace('Tokyo', 'JP');
 

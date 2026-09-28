@@ -14,7 +14,7 @@ import type { Theme } from '../../src/types';
 const storybookTheme = (theme: Theme) =>
   create({
     base: theme.isDark ? 'dark' : 'light',
-    brandTitle: 'Azimuth Quiz',
+    brandTitle: 'Azimuth Quiz Storybook',
     fontBase: FONT_FAMILY,
     colorPrimary: theme.colors.accent,
     colorSecondary: theme.colors.accent,
