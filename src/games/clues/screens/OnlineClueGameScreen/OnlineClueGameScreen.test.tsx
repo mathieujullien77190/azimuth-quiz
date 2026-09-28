@@ -167,6 +167,12 @@ describe('OnlineClueGameScreen — the turn-holder', () => {
       expect(mockGame.setGuessText).toHaveBeenCalledWith('Parisiens');
     });
 
+    it('shows a hyphen of the name in place, outside of any letter slot', async () => {
+      setGame({ skeletonGroups: [['A', '-', null]], skeletonLengthKnown: true });
+      const { getByText } = await renderScreen();
+      expect(getByText('-')).toBeTruthy();
+    });
+
     it('overlays the typed letters and refuses more letters than there are slots once the length is known', async () => {
       setGame({ skeletonGroups: [['P', null, null]], skeletonLengthKnown: true, guessText: 'Pa' });
       const { getByText, getByPlaceholderText } = await renderScreen();

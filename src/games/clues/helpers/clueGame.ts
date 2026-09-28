@@ -1,7 +1,7 @@
 import { CLUE_PLACES, isCapitalPlace, isFrenchCityPlace } from '@/data';
 import { CLUE_ORDER } from '@/games/clues/constants';
 import { pickLeastDrawn, type ClueDrawHistory } from '@/games/clues/helpers/clueHistory';
-import type { NameSkeletonSlot } from '@/games/clues/helpers/clueSkeleton';
+import { HYPHEN_SLOT, type NameSkeletonSlot } from '@/games/clues/helpers/clueSkeleton';
 import { effectiveDifficulty } from '@/games/compass/helpers/places';
 import type { Language } from '@/i18n';
 import type { ClueId, Difficulty, ClueCategory, CluePlace } from '@/types';
@@ -80,7 +80,7 @@ export const normalizePlaceGuess = (value: string): string =>
  * separators excluded) — the cap on how many letters can be typed once the "letter" clue's 3rd
  * click (the real per-word length) is known, see `overlayTypedLetters`. */
 export const skeletonLetterCount = (groups: NameSkeletonSlot[][]): number =>
-  groups.reduce((total, group) => total + group.length, 0);
+  groups.reduce((total, group) => total + group.filter((slot) => slot !== HYPHEN_SLOT).length, 0);
 
 /** Live-fills a name skeleton with what's been typed so far, once the real shape is known (the
  * "letter" clue's 3rd click): each slot shows the typed letter at its position once typed that
@@ -92,6 +92,7 @@ export const overlayTypedLetters = (groups: NameSkeletonSlot[][], typed: string)
   let index = 0;
   return groups.map((group) =>
     group.map((slot) => {
+      if (slot === HYPHEN_SLOT) return slot;
       const typedLetter = typedLetters[index];
       index += 1;
       return typedLetter !== undefined ? typedLetter.toUpperCase() : slot;

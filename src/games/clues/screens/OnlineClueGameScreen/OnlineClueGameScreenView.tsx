@@ -12,6 +12,7 @@ import GameHeader from '@/components/GameHeader';
 import Screen from '@/components/ui/Screen';
 import { WRONG_ANSWER_PENALTY } from '@/games/clues/constants';
 import { skeletonLetterCount, overlayTypedLetters } from '@/games/clues/helpers/clueGame';
+import { HYPHEN_SLOT } from '@/games/clues/helpers/clueSkeleton';
 import type { OnlineClueGameScreenViewProps } from './types';
 
 import { createStyles } from './OnlineClueGameScreenView.styles';
@@ -73,7 +74,7 @@ export const OnlineClueGameScreenView = ({
                   (group, groupIndex) => (
                     <View key={groupIndex} style={styles.skeletonWord}>
                       {group.map((letter, letterIndex) => (
-                        <View key={letterIndex} style={styles.skeletonSlot}>
+                        <View key={letterIndex} style={letter === HYPHEN_SLOT ? styles.skeletonHyphen : styles.skeletonSlot}>
                           {letter !== null && <Text style={styles.skeletonLetter}>{letter}</Text>}
                         </View>
                       ))}

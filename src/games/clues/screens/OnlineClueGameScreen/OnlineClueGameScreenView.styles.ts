@@ -39,6 +39,12 @@ export const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       borderBottomWidth: 2,
       borderBottomColor: colors.accent,
     },
+    skeletonHyphen: {
+      width: 12,
+      height: 26,
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+    },
     skeletonLetter: {
       ...typography.display,
       color: colors.accent,

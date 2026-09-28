@@ -145,6 +145,11 @@ describe('skeletonLetterCount', () => {
   it('is 0 for an empty skeleton', () => {
     expect(skeletonLetterCount([])).toBe(0);
   });
+
+  it('does not count a hyphen as a letter', () => {
+    const groups = nameSkeleton('Abu-Dhabi', { groupByWord: true, lengthKnown: true });
+    expect(skeletonLetterCount(groups)).toBe(8);
+  });
 });
 
 describe('overlayTypedLetters', () => {
@@ -160,6 +165,11 @@ describe('overlayTypedLetters', () => {
   it('falls back to the clue-revealed letter (or blank) once past what has been typed', () => {
     const groups = nameSkeleton('Paris', { groupByWord: true, lengthKnown: true });
     expect(overlayTypedLetters(groups, 'Pa')).toEqual([['P', 'A', null, null, null]]);
+  });
+
+  it('keeps a hyphen in place and does not consume a typed letter for it', () => {
+    const groups = nameSkeleton('Abu-Dhabi', { groupByWord: true, lengthKnown: true });
+    expect(overlayTypedLetters(groups, 'abudh')).toEqual([['A', 'B', 'U', '-', 'D', 'H', null, null, null]]);
   });
 
   it('an empty guess leaves the skeleton untouched', () => {

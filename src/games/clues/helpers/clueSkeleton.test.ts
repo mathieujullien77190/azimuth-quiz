@@ -32,10 +32,19 @@ describe('nameSkeleton', () => {
     ]);
   });
 
-  it('ignores spaces/hyphens/apostrophes, keeps accented letters', () => {
+  it('ignores spaces/apostrophes, keeps accented letters', () => {
     expect(nameSkeleton("Côte d'Ivoire", { groupByWord: true, lengthKnown: true })).toEqual([
       ['C', null, null, null],
       [null, null, null, null, null, null, null],
+    ]);
+  });
+
+  it('shows a hyphen in place, in the middle of its word, without counting it as a letter', () => {
+    expect(nameSkeleton('Aix-en-Provence', { groupByWord: true, lengthKnown: true })).toEqual([
+      ['A', null, null, '-', null, null, '-', null, null, null, null, null, null, null, null],
+    ]);
+    expect(nameSkeleton('Abu-Dhabi', { groupByWord: true, lengthKnown: true, revealVowels: true })).toEqual([
+      ['A', null, 'U', '-', null, null, 'A', null, 'I'],
     ]);
   });
 
