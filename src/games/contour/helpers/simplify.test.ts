@@ -52,14 +52,15 @@ describe('seeds', () => {
 });
 
 describe('levelVertexCounts', () => {
-  it('keeps about 10, 25 %, 55 % and all of the vertices', () => {
-    expect(levelVertexCounts(100)).toEqual([10, 25, 55, 100]);
-    expect(levelVertexCounts(40)).toEqual([10, 13, 22, 40]);
+  it('grows the levels much slower than the ring: a few vertices for a small country, a few dozen for a huge one', () => {
+    expect(levelVertexCounts(29)).toEqual([6, 10, 16, 29]);
+    expect(levelVertexCounts(100)).toEqual([8, 15, 27, 100]);
+    expect(levelVertexCounts(245)).toEqual([10, 20, 39, 245]);
   });
 
   it('still adds a few vertices at every level for a small ring', () => {
-    expect(levelVertexCounts(19)).toEqual([10, 13, 16, 19]);
-    expect(levelVertexCounts(12)).toEqual([10, 12, 12, 12]);
+    expect(levelVertexCounts(19)).toEqual([5, 9, 13, 19]);
+    expect(levelVertexCounts(12)).toEqual([5, 8, 11, 12]);
   });
 
   it('never decreases and never exceeds the ring, whatever its size', () => {
@@ -78,8 +79,9 @@ describe('levelVertexCounts', () => {
     expect(levelVertexCounts(2)).toEqual([2, 2, 2, 2]);
   });
 
-  it('keeps the whole ring on the coarse level when it has fewer than 10 vertices', () => {
-    expect(levelVertexCounts(7)).toEqual([7, 7, 7, 7]);
+  it('never draws fewer than 4 vertices on the coarse level, and keeps the ring when it has fewer', () => {
+    expect(levelVertexCounts(7)).toEqual([4, 7, 7, 7]);
+    expect(levelVertexCounts(4)).toEqual([4, 4, 4, 4]);
   });
 });
 
@@ -126,23 +128,23 @@ describe('simplificationLevels', () => {
   });
 
   it('keeps the ring as it is when it is too small to simplify', () => {
-    const small = polygon(6);
+    const small = polygon(4);
     const levels = simplificationLevels(small, 1);
     expect(levels.every((level) => level === small)).toBe(true);
   });
 
   it('simplifies a regular polygon down to the announced counts, never below a triangle', () => {
     const levels = simplificationLevels(polygon(40), 5);
-    expect(levels.map((level) => level.length - 1)).toEqual([10, 13, 22, 40]);
+    expect(levels.map((level) => level.length - 1)).toEqual([7, 11, 18, 40]);
     const tiny = simplificationLevels(polygon(12), 5);
-    expect(tiny.map((level) => level.length - 1)).toEqual([10, 12, 12, 12]);
+    expect(tiny.map((level) => level.length - 1)).toEqual([5, 8, 11, 12]);
   });
 
   it('accepts a ring that is not closed (its last point is a vertex like any other)', () => {
     const open = polygon(30).slice(0, -1);
     const levels = simplificationLevels(open, 4);
     expect(levels[3]).toBe(open);
-    expect(levels[0]).toHaveLength(10 + 1);
+    expect(levels[0]).toHaveLength(6 + 1);
   });
 
   it('runs fast enough to be done on the fly, even for the biggest ring of the game', () => {

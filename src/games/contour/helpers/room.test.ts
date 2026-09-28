@@ -45,6 +45,18 @@ describe('contourRoomSettingsFrom', () => {
     expect(shared).not.toHaveProperty('playerName');
     expect(shared).toMatchObject({ rounds: DEFAULT_CONTOUR_SETTINGS.rounds });
   });
+
+  it('shares the hint categories the host picked (all four by default)', () => {
+    expect(contourRoomSettingsFrom(DEFAULT_CONTOUR_SETTINGS).hintCategories).toEqual([
+      'silhouette',
+      'neighbors',
+      'cities',
+      'capital',
+    ]);
+    expect(
+      contourRoomSettingsFrom({ ...DEFAULT_CONTOUR_SETTINGS, hintCategories: ['capital'] }).hintCategories,
+    ).toEqual(['capital']);
+  });
 });
 
 describe('game writes', () => {

@@ -5,10 +5,18 @@ export const PRECISION_LEVELS = 4;
 /** Index of the last level: the full, unsimplified ring. */
 export const FULL_PRECISION = PRECISION_LEVELS - 1;
 
-/** Vertex count of the coarsest level (or the whole ring when it has fewer vertices). */
-const COARSE_VERTICES = 10;
-/** Share of the ring's vertices kept at levels 1 and 2. */
-const LEVEL_SHARES = [0.25, 0.55] as const;
+/** Vertex count aimed at by levels 0, 1 and 2 for a ring of `n` vertices: `factor * n ** exponent`. The
+ * exponents are well under 1, so the levels grow much slower than the ring: a small country gets a
+ * handful of vertices (Austria, 29: 6 / 10 / 16) and a huge one only a few dozen (Australia, 245: 10 /
+ * 20 / 39), which gives little away at the start and leaves the big jump in precision to the last
+ * level (the ring itself). */
+const LEVEL_SCALES = [
+  [2.7, 0.24],
+  [3.3, 0.325],
+  [3.7, 0.43],
+] as const;
+/** The coarsest level never goes below this (or the whole ring when it has fewer vertices). */
+const MIN_COARSE_VERTICES = 4;
 /** Each level adds at least this many vertices to the previous one (while the ring has any left),
  * so that a small country still gets a visibly more precise outline at every hint. */
 const MIN_STEP = 3;
@@ -49,13 +57,14 @@ export const roundSimplifySeed = (roomSeed: number, roundIndex: number, countryC
 };
 
 /** Vertex counts (closed-ring duplicate excluded) of levels 0 to 3 for a ring of `n` vertices: about
- * 10, 25 % and 55 % of them, then all (at least `MIN_STEP` more at each level while there are any
- * left); never decreasing, never above `n`, all equal to `n` for a ring too small to be simplified. */
+ * a sub-linear share of them (`LEVEL_SCALES`), then all (at least `MIN_STEP` more at each level while
+ * there are any left, and room kept for the next levels on a small ring); never decreasing, never above `n`, all equal to `n` for a ring too small to be simplified. */
 export const levelVertexCounts = (n: number): number[] => {
   if (n <= MIN_VERTICES) return Array<number>(PRECISION_LEVELS).fill(n);
-  const coarse = Math.min(n, Math.max(MIN_VERTICES, COARSE_VERTICES));
-  const level1 = Math.min(n, Math.max(coarse + MIN_STEP, Math.round(n * LEVEL_SHARES[0])));
-  const level2 = Math.min(n, Math.max(level1 + MIN_STEP, Math.round(n * LEVEL_SHARES[1])));
+  const target = (level: number) => Math.round(LEVEL_SCALES[level][0] * n ** LEVEL_SCALES[level][1]);
+  const coarse = Math.min(n, Math.max(MIN_COARSE_VERTICES, target(0)));
+  const level1 = Math.min(n, Math.max(coarse + MIN_STEP, Math.min(target(1), n - 2 * MIN_STEP)));
+  const level2 = Math.min(n, Math.max(level1 + MIN_STEP, Math.min(target(2), n - MIN_STEP)));
   return [coarse, level1, level2, n];
 };
 

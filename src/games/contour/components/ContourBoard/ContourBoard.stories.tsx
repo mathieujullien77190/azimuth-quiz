@@ -10,10 +10,12 @@ import {
   SAMPLE_CONTOUR_OUTLINE,
 } from '@/helpers/storyFixtures';
 
-import { boardShapeFor } from '../../helpers/roundBoard';
+import { buildHintPlan } from '../../helpers/hintPlan';
+import { boardShapeFor, buildHintLabels } from '../../helpers/roundBoard';
 import { ContourBoard } from './ContourBoard';
 import { source } from '@/storybook/source';
 import allHintsRevealedCode from './AllHintsRevealed.source.md?raw';
+import citiesAndCapitalCode from './CitiesAndCapital.source.md?raw';
 import precisionLevelsCode from './PrecisionLevels.source.md?raw';
 import withNeighborsCode from './WithNeighbors.source.md?raw';
 
@@ -25,6 +27,11 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+// Silhouette hints only: level k of the outline is reached after k hints.
+const SILHOUETTE_PLAN = buildHintPlan(['silhouette'], SAMPLE_CONTOUR_COUNTRY);
+// City and capital hints only: positions first, then names.
+const PLACES_PLAN = buildHintPlan(['cities', 'capital'], SAMPLE_CONTOUR_COUNTRY);
 
 /** France's real outline (same source and simplification as every other country) with its curated
  * neighbors/centerLabel (see CLAUDE.md's Silhouette section), at every hint tier revealed at once: neighbor flags, the
@@ -66,10 +73,9 @@ export const WithNeighbors: Story = {
 };
 
 /** The same round at the four precision levels a hint refines one after the other (France, one
- * fixed seed): a handful of segments, then more, then more, then the full ring — where the
- * neighbors and the single-stroked borders appear (see the previous story). Every level shares the
- * full ring's frame, so the shape only ever gains detail; below the full ring there are no
- * neighbors, since their shared edges only line up on the full ring. */
+ * fixed seed): a handful of segments, then more, then more, then the full ring. Every level shares
+ * the full ring's frame, so the shape only ever gains detail; neighbors are only drawn on the full
+ * ring (see the previous story), since their shared edges only line up on it. */
 export const PrecisionLevels: Story = {
   parameters: source(precisionLevelsCode),
   render: () => (
@@ -82,7 +88,7 @@ export const PrecisionLevels: Story = {
           <ContourBoard
             height={SAMPLE_CONTOUR_BOARD.height}
             width={SAMPLE_CONTOUR_BOARD.width}
-            {...boardShapeFor(SAMPLE_CONTOUR_BOARD, level)}
+            {...boardShapeFor(SAMPLE_CONTOUR_BOARD, SILHOUETTE_PLAN, level)}
           />
         </div>
       ))}
@@ -91,6 +97,18 @@ export const PrecisionLevels: Story = {
   args: {
     height: SAMPLE_CONTOUR_BOARD.height,
     outline: SAMPLE_CONTOUR_BOARD.outline,
+    width: SAMPLE_CONTOUR_BOARD.width,
+  },
+};
+
+/** The cities and the capital as hints: the positions first (a dot per city, a star for the capital), then
+ * each name under its marker. France's capital and its best-known cities, on the full ring. */
+export const CitiesAndCapital: Story = {
+  parameters: source(citiesAndCapitalCode),
+  args: {
+    ...boardShapeFor(SAMPLE_CONTOUR_BOARD, PLACES_PLAN, 0),
+    height: SAMPLE_CONTOUR_BOARD.height,
+    hintLabels: buildHintLabels(SAMPLE_CONTOUR_BOARD, PLACES_PLAN, 4, 'fr'),
     width: SAMPLE_CONTOUR_BOARD.width,
   },
 };

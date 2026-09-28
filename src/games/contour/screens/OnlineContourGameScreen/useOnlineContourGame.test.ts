@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import { CONTOUR_GUESS_POINTS_BY_HINTS } from '@/games/contour/constants';
+import { MAX_CONTOUR_POINTS } from '@/games/contour/constants';
+import { contourGuessPoints } from '@/games/contour/helpers/hintPlan';
 import {
   applyContourRoomScore,
   giveUpContourRoom,
@@ -99,14 +100,47 @@ describe('useOnlineContourGame — the round', () => {
     expect(noTurn.result.current.isMyTurn).toBe(false);
   });
 
-  it('drops the points at stake with every hint, down to 0 once the name is out', async () => {
+  it('drops the points at stake with every hint, down to 0 once the country is revealed', async () => {
+    // A room without `hintCategories` (an old one) plays every category: 11 steps for France.
     const { result } = await setup();
-    expect(result.current.pointsAtStake).toBe(CONTOUR_GUESS_POINTS_BY_HINTS[0]);
+    expect(result.current.plan).toHaveLength(11);
+    expect(result.current.pointsAtStake).toBe(MAX_CONTOUR_POINTS);
     await act(async () => useContourRoomStore.setState({ gameState: gameState({ hintsRevealed: 2 }) }));
-    expect(result.current.pointsAtStake).toBe(CONTOUR_GUESS_POINTS_BY_HINTS[2]);
-    await act(async () => useContourRoomStore.setState({ gameState: gameState({ hintsRevealed: 6 }) }));
-    expect(result.current.pointsAtStake).toBe(CONTOUR_GUESS_POINTS_BY_HINTS[6]);
-    await act(async () => useContourRoomStore.setState({ gameState: gameState({ hintsRevealed: 7 }) }));
+    expect(result.current.pointsAtStake).toBe(contourGuessPoints(2, 11));
+    await act(async () => useContourRoomStore.setState({ gameState: gameState({ hintsRevealed: 10 }) }));
+    expect(result.current.pointsAtStake).toBe(contourGuessPoints(10, 11));
+    expect(result.current.pointsAtStake).toBeGreaterThan(0);
+    await act(async () => useContourRoomStore.setState({ gameState: gameState({ hintsRevealed: 11 }) }));
+    expect(result.current.pointsAtStake).toBe(0);
+  });
+});
+
+describe('useOnlineContourGame — the hint plan', () => {
+  it('follows the categories the host picked in the room settings', async () => {
+    const { result } = await setup({ roomSettings: { difficulty: 'easy', hintCategories: ['capital'] } as never });
+    expect(result.current.plan).toEqual(['capitalPosition', 'capitalName', 'reveal']);
+  });
+
+  it('scales the points to the length of the plan', async () => {
+    const { result } = await setup({
+      roomSettings: { difficulty: 'easy', hintCategories: ['capital'] } as never,
+      gameState: gameState({ hintsRevealed: 1 }),
+    });
+    expect(result.current.pointsAtStake).toBe(contourGuessPoints(1, 3));
+  });
+
+  it('is the same list on every device for the same room settings and country', async () => {
+    const roomSettings = { difficulty: 'easy', hintCategories: ['silhouette', 'cities'] } as never;
+    const first = await setup({ roomSettings });
+    const plan = first.result.current.plan;
+    await first.unmount();
+    const second = await setup({ roomSettings, localUid: 'guest' });
+    expect(second.result.current.plan).toEqual(plan);
+  });
+
+  it('has an empty plan (no points) while the round country is unknown', async () => {
+    const { result } = await setup({ gameState: gameState({ countryCodes: [] }) });
+    expect(result.current.plan).toEqual([]);
     expect(result.current.pointsAtStake).toBe(0);
   });
 });
@@ -160,7 +194,7 @@ describe('useOnlineContourGame — revealing a hint', () => {
     const guest = await setup({ localUid: 'guest' });
     await act(async () => guest.result.current.revealHint());
     await guest.unmount();
-    const allOut = await setup({ gameState: gameState({ hintsRevealed: 7 }) });
+    const allOut = await setup({ gameState: gameState({ hintsRevealed: 11 }) });
     await act(async () => allOut.result.current.revealHint());
     expect(revealContourRoomHint).not.toHaveBeenCalled();
   });
@@ -264,7 +298,7 @@ describe('useOnlineContourGame — host duties', () => {
     });
     expect(applyContourRoomScore).toHaveBeenCalledWith('tabofuna', {
       host: 5,
-      guest: CONTOUR_GUESS_POINTS_BY_HINTS[1],
+      guest: contourGuessPoints(1, 11),
     });
   });
 

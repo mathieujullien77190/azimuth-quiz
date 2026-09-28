@@ -1,12 +1,8 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { CONTOURS } from '@/data';
 import { countryName } from '@/data/places/countries';
-import {
-  CONTOUR_GUESS_POINTS_BY_HINTS,
-  CONTOUR_MAX_HINTS,
-  CONTOUR_WRONG_GUESS_PENALTY,
-} from '@/games/contour/constants';
+import { CONTOUR_WRONG_GUESS_PENALTY } from '@/games/contour/constants';
 import {
   applyContourRoomScore,
   deleteRoom,
@@ -20,6 +16,7 @@ import {
   revealContourRoomHint,
 } from '@/games/contour/helpers/room';
 import { normalizeContourGuess } from '@/games/contour/helpers/contourCountry';
+import { buildHintPlan, contourGuessPoints, normalizeHintCategories } from '@/games/contour/helpers/hintPlan';
 import { roundSimplifySeed } from '@/games/contour/helpers/simplify';
 import { useContourRoomStore } from '@/games/contour/store/roomStore';
 import { nextPlayerUid } from '@/helpers/roomPlayers';
@@ -50,14 +47,21 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
     gameState.roundIndex,
     gameState.countryCodes[gameState.roundIndex] ?? '',
   );
+  // The round's hint steps: rebuilt on every device from the host's categories (in the room's
+  // settings) and the country, so there is nothing more to store per round.
+  const roomCategories = roomSettings?.hintCategories;
+  const plan = useMemo(
+    () => (country === undefined ? [] : buildHintPlan(normalizeHintCategories(roomCategories), country)),
+    [country, roomCategories],
+  );
   const isMyTurn = localUid !== null && localUid === gameState.turnUid;
   const { hintsRevealed } = gameState;
 
   // This device's own in-progress guess text, and the "you got it wrong" banner.
   const { guessText, setGuessText, lastWrong, setLastWrong } = useGuessDraft(gameState.roundIndex, gameState.turnUid);
 
-  /** What a correct guess earns right now: drops one tier with each hint, 0 once the name is out. */
-  const pointsAtStake = hintsRevealed >= CONTOUR_MAX_HINTS ? 0 : CONTOUR_GUESS_POINTS_BY_HINTS[hintsRevealed];
+  /** What a correct guess earns right now: drops with each hint, 0 once the country is revealed. */
+  const pointsAtStake = contourGuessPoints(hintsRevealed, plan.length);
 
   // Host-only: the turn-holder only ever self-reports a find/miss, this is the only thing that
   // writes `totalScores` (see `room.ts`'s own comment on `applyContourRoomScore`).
@@ -71,7 +75,7 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
 
   const revealHint = () => {
     const next = nextPlayerUid(onlinePlayers, localUid);
-    if (!isMyTurn || hintsRevealed >= CONTOUR_MAX_HINTS || next === undefined) return;
+    if (!isMyTurn || hintsRevealed >= plan.length || next === undefined) return;
     revealContourRoomHint(code, hintsRevealed + 1, next).catch(() => {});
   };
 
@@ -87,7 +91,7 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
     setGuessText('');
   };
 
-  /** Once the name has been revealed (tier 7) nobody scores — a deliberate explicit click rather
+  /** Once the name has been revealed (the last step of the plan) nobody scores — a deliberate explicit click rather
    * than an automatic transition the instant the name appears, like the local game. */
   const giveUp = () => {
     if (!isMyTurn) return;
@@ -109,6 +113,7 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
     onlinePlayers,
     isHost,
     country,
+    plan,
     simplifySeed,
     isMyTurn,
     pointsAtStake,

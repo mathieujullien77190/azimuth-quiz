@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 
+import type { HintStep } from '@/games/contour/helpers/hintPlan';
 import type { RoundBoard } from '@/games/contour/helpers/roundBoard';
 
 import type { ContourBoardHintLabel } from '../ContourBoard';
@@ -8,9 +9,10 @@ import type { ContourBoardHintLabel } from '../ContourBoard';
 export type ContourFullBleedScreenProps = {
   /** From `useRoundBoard`: the country's board, fit to the measured area. */
   board: RoundBoard;
-  /** Precision level of the outline, 0 (a handful of segments) to 3 (the full ring, with the
-   * neighbors around it) — see `boardShapeFor`. Defaults to the full ring. */
-  precision?: number;
+  /** The round's hint steps (`buildHintPlan`) and how many of them are out: they set the outline's
+   * precision and whether the neighbors are drawn — see `boardShapeFor`. */
+  plan: HintStep[];
+  hintsRevealed: number;
   hintLabels: ContourBoardHintLabel[];
   /** Remounts the board on every round (its own internal state, if any, starts fresh). */
   roundKey: number;

@@ -1,5 +1,5 @@
 import type { SetupPartyProps } from '@/components/setup/useSetupRoom';
-import type { ContourSettings, Difficulty } from '@/types';
+import type { ContourHintCategory, ContourSettings, Difficulty } from '@/types';
 
 export type ContourSetupScreenProps = {
   onBack: () => void;
@@ -14,6 +14,7 @@ export type ContourSetupScreenViewProps = {
   readOnly: boolean;
   onSelectDifficulty: (id: Difficulty) => void;
   onSelectRounds: (rounds: number) => void;
+  onToggleHintCategory: (id: ContourHintCategory) => void;
 
   overlayMessage: string | null;
   overlayLoading: boolean;

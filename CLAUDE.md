@@ -74,9 +74,10 @@ src/
     contour/
       screens/         # OnlineContourGameScreen, ContourSetupScreen
       components/      # ContourBoard, ContourFullBleedScreen, ContourGuessBar
-      helpers/         # contourCountry.ts, roundBoard.ts, useRoundBoard.ts, room.ts
+      helpers/         # contourCountry.ts, hintPlan.ts, contourPlaces.ts, simplify.ts, borders.ts,
+                       # roundBoard.ts, useRoundBoard.ts, room.ts
       constants.ts     # tuning propre a Silhouette (anciennement `constants/contour.ts`) :
-                       # CONTOUR_GUESS_POINTS_BY_HINTS,
+                       # MAX_CONTOUR_POINTS, CONTOUR_HINT_CATEGORIES, MAX_CITY_HINTS,
                        # CONTOUR_WRONG_GUESS_PENALTY, DEFAULT_CONTOUR_SETTINGS
   helpers/             # commun aux 3 jeux : geo.ts, format.ts, storage.ts, location.ts, random.ts,
                        # web.ts, firebase.ts, settings.ts (sanitize GameSettings) — le barrel
@@ -213,14 +214,14 @@ peut rien y taper. Le joueur qui a la main change quand il revele un indice.
 
 Troisieme mode (nom affiche "Silhouette" ; identifiants de code restes `Contour`/`OnlineContourGameScreen`...) :
 la silhouette d'un pays s'affiche remplie (`colors.surfaceHigh`, pas juste un contour), les joueurs
-devinent lequel via 7 paliers d'indices partages (les 3 premiers precisent le trait, voir plus bas). Pas de second temps de placement de lieux (retire —
+devinent lequel via des indices partages, dont les TYPES sont choisis au setup (voir "Indices par categories"). Pas de second temps de placement de lieux (retire —
 le jeu s'arrete a la reconnaissance du pays).
 
 **Multijoueur (rooms `game: 'silhouette'`), modele Indices** : un plateau partage, un joueur actif a la fois
-(`turnUid`, l'ordre d'arrivee des joueurs). Son tour, il revele le palier suivant (`hintsRevealed` 0-7,
+(`turnUid`, l'ordre d'arrivee des joueurs). Son tour, il revele le palier suivant (`hintsRevealed` 0 a N, N = nombre d'etapes du plan d'indices,
 ce qui passe la main au joueur suivant) ou tente une reponse (bonne : `verdict: 'correct'`, gain
-`CONTOUR_GUESS_POINTS_BY_HINTS[hintsRevealed]` ; mauvaise : `wrongGuessSeq` +1, penalite
-`CONTOUR_WRONG_GUESS_PENALTY`, il garde la main) ; une fois le nom revele (palier 7) il confirme
+`contourGuessPoints(hintsRevealed, plan.length)` ; mauvaise : `wrongGuessSeq` +1, penalite
+`CONTOUR_WRONG_GUESS_PENALTY`, il garde la main) ; une fois le pays revele (derniere etape du plan) il confirme
 l'abandon (`verdict: 'giveUp'`, personne ne marque). L'hote tire tous les pays d'avance (`countryCodes`,
 `pickContourRoundCodes` — la room ne porte que les codes, chaque appareil reconstruit le plateau depuis
 ses propres donnees) et seul l'hote ecrit les scores (`useHostTurnScoring`). Le setup local de
@@ -237,12 +238,29 @@ ratio, jamais la meme taille absolue), la position relative reste identique part
 voir `BOARD_PADDING_RATIO`/`HINT_STACK_GAP_RATIO` (`games/contour/components/ContourBoard/constants.ts`),
 en fraction de `Math.min(width, height)` plutot qu'en pixels fixes, meme raison.
 
-Paliers d'indices (`hintsRevealed` 0-7, `CONTOUR_MAX_HINTS`, bouton "Indice", inline dans le footer a
-cote de l'input) : 1-3) le trait se precise (voir "Silhouette progressive"), 4) drapeau de chaque voisin,
-5) drapeau du pays cible a son propre point curee (`ContourCountry.centerLabel`), 6) nom de chaque voisin
-empile juste sous son icone (les deux restent affiches ensemble, l'un ne remplace plus l'autre), 7) nom du
-pays cible empile sous son drapeau (= abandon) ; les paliers 4-7 sont `buildHintLabels` dans `helpers/roundBoard.ts`.
-Bareme `CONTOUR_GUESS_POINTS_BY_HINTS` = 500 x [1, .85, .7, .55, .4, .3, .2] (0 au palier 7). Toujours centre (`textAnchor="middle"` fixe dans
+**Indices par categories (plan d'indices).** Le setup Silhouette propose 4 categories en chips multi-select
+(au moins une, `ContourSettings.hintCategories`, defaut les 4, `HintCategorySection`) : `silhouette` (le trait
+se precise), `neighbors` (voisins), `cities` (villes hors capitale), `capital`. Le reglage est un champ des
+reglages de la room (l'hote le fixe, les joiners le lisent comme `difficulty`/`rounds` ; `firestore.rules` ne
+contraint pas la forme des reglages, seulement qui les ecrit) ; une room ou un reglage sans le champ = les 4
+(`normalizeHintCategories`). `buildHintPlan(categories, country)` (`helpers/hintPlan.ts`, pur) donne la liste
+ordonnee des etapes, ordre fixe des categories : silhouette (`silhouette1-3`), neighbors (`neighborShapes` =
+formes + frontieres en decor, `neighborFlags`, `neighborNames`), cities (`cityPositions`, `cityNames`),
+capital (`capitalPosition`, `capitalName`), puis toujours `reveal` (drapeau + nom du pays = abandon). Une etape
+que le pays ne peut pas offrir est omise (pas de voisins curees, pas de capitale/villes dans les donnees) : le
+plan s'adapte. `hintsRevealed` (0..N, N = `plan.length`) indexe ce plan ; chaque appareil le recalcule depuis les
+reglages de la room + le pays, rien de plus n'est stocke par manche. Le niveau de precision du trait
+(`silhouetteLevel`) est 0 au depart si `silhouette` est active, sinon l'anneau complet d'emblee ; les voisins en decor
+n'apparaissent qu'a `neighborShapes` (jamais sans, meme categorie `neighbors` desactivee). Les etiquettes sont
+`buildHintLabels(board, plan, hints, language)` ; la forme `boardShapeFor(board, plan, hints)`. Bareme
+`contourGuessPoints(hints, N)` : 500 x (1 - 0.85 * hints / (N - 1)) arrondi pour hints < N, 0 a N (un plan reduit
+au seul `reveal` donne 500 puis 0). Villes et capitale (`helpers/contourPlaces.ts`, `contourPlacesFor`) viennent de
+`PLACES` (categories `capital`, `cities`, `citiesFr`, code pays), limitees a l'emprise (bbox) de l'anneau principal
+(exclut l'outre-mer), au plus `MAX_CITY_HINTS` (5) villes hors capitale, choix deterministe (les plus faciles
+d'abord, ordre des donnees) ; les lieux n'ont qu'un nom (pas de traduction). Elles sont projetees avec le MEME
+projecteur que le contour (`RoundBoard.cityMarks`/`capitalMark`) : un point `●` par ville, une etoile pour la
+capitale, puis le nom empile dessous comme les voisins (pas d'anti-collision). Pas de fleuves (pas de donnees).
+Toujours centre (`textAnchor="middle"` fixe dans
 `ContourBoard.tsx`) : l'ancien alignement directionnel `start`/`end` n'avait plus de sens
 des que chaque hint est devenu un point fixe plutot qu'une etiquette pointant vers le bord.
 
@@ -298,23 +316,22 @@ Dans l'admin, la carte pays a un bouton "Afficher les voisins" (liste drapeau + 
 Silhouette du pays est deplie, dessine aussi les voisins en decor avec la frontiere en un seul trait
 (`computeBorders`, comme le jeu).
 
-**Silhouette progressive (palier 0 a 3).** Avant tout indice le pays est dessine avec une dizaine de
-sommets ; chaque appui sur "Indice" precise le trait (niveaux 0-3, `precisionLevel(hintsRevealed)` =
-`min(hints, 3)`), le niveau 3 etant l'anneau complet. `helpers/simplify.ts` (pur, aussi utilise par l'admin) :
+**Silhouette progressive (categorie `silhouette`, niveaux 0 a 3).** Avant tout indice le pays est dessine avec quelques
+sommets ; chaque appui sur "Indice" precise le trait (niveaux 0-3, un par etape `silhouetteN` du plan), le niveau 3 etant l'anneau complet. `helpers/simplify.ts` (pur, aussi utilise par l'admin) :
 Visvalingam-Whyatt sur l'anneau, aire de chaque sommet multipliee par un facteur aleatoire seede
 (mulberry32, 0.6-1.4) pour que les versions grossieres varient un peu d'une graine a l'autre ; l'ordre de
 suppression donne des niveaux EMBOITES (jamais de saut de forme), le premier sommet et le sens sont
-conserves, taille des niveaux ~ 10 / 25 % / 55 % / tout (au moins 3 sommets de plus par niveau tant qu'il en
+conserves, taille des niveaux `k * n^p` (LEVEL_SCALES, sous-lineaire : Autriche 29 sommets = 6 / 10 / 16, Australie 245 = 10 / 20 / 39) puis tout (au moins 3 sommets de plus par niveau tant qu'il en
 reste, anneau entier si < 10 sommets). Calcule A LA VOLEE, une fois par (pays, graine) (`roundGeometry`,
 memoise dans `useRoundBoard`, O(n^2) sur n <= ~700), rien dans `countries.json`. **Graine partagee** :
 l'hote tire `simplifySeed` (`newSimplifySeed`) a `startContourRoomGame` (champ de la room, 0 par defaut
 pour une ancienne room) ; la graine d'une manche est `roundSimplifySeed(simplifySeed, roundIndex, code)`
 (FNV-1a), donc tous les appareils dessinent exactement la meme silhouette. Le cadrage du plateau (ratio,
 projecteur) reste celui de l'anneau COMPLET : la forme ne bouge ni ne change d'echelle en se precisant. **Voisins
-en decor seulement a l'anneau complet** : aux niveaux 0-2 (`boardShapeFor`) on ne dessine que la silhouette
-simplifiee, en un seul trait et sans voisins (leurs aretes communes ne coincident qu'avec l'anneau complet) ;
-fin de manche = anneau complet. Admin : dans l'editeur Silhouette, "Aperçu simplification" (niveaux 0-3 avec
-leur nombre de sommets, "Autre variante" tire une nouvelle graine) ; l'edition a la souris reste sur le tracé complet.
+en decor a leur propre etape (`neighborShapes`)** : tant que le trait n'est pas l'anneau complet, ou que cette etape n'est pas
+sortie (`boardShapeFor`), on ne dessine que la silhouette, en un seul trait et sans voisins (leurs aretes communes ne
+coincident qu'avec l'anneau complet) ; ensuite anneau complet + voisins + frontieres ; fin de manche = tout. Admin : dans l'editeur Silhouette, "Aperçu simplification" (niveaux 0-3 avec
+leur nombre de sommets, puis niveau 4 = voisins, "Autre variante" tire une nouvelle graine) ; l'edition a la souris reste sur le tracé complet.
 
 **Frontieres dessinees une seule fois.** `helpers/borders.ts` (`computeBorders`, appele par
 `useRoundBoard` une fois par pays puis passe a `projectRound`) trouve les pays voisins par

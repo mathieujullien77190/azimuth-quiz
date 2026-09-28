@@ -1,6 +1,7 @@
 import { fireEvent, render } from '@testing-library/react-native';
 
 import { CONTOURS } from '@/data';
+import { buildHintPlan } from '@/games/contour/helpers/hintPlan';
 import type { ContourRoomGameState } from '@/games/contour/helpers/room';
 import { translations } from '@/i18n/translations';
 
@@ -15,6 +16,9 @@ let mockGame: Record<string, unknown> = {};
 jest.mock('./useOnlineContourGame', () => ({ useOnlineContourGame: () => mockGame }));
 
 const FRANCE = CONTOURS.find((country) => country.code === 'FR')!;
+
+// Every kind of hint: 11 steps for France (3 silhouette, 3 neighbors, 2 cities, 2 capital, the reveal).
+const FULL_PLAN = buildHintPlan(['silhouette', 'neighbors', 'cities', 'capital'], FRANCE);
 
 const ZOE = { uid: 'zoe', name: 'Zoé', color: '#EF4444' };
 const MAX = { uid: 'max', name: 'Max', color: '#3B82F6' };
@@ -44,6 +48,7 @@ const setGame = (overrides: Record<string, unknown> = {}) => {
     roomSettings: { difficulty: 'easy' },
     gameState: gameState(),
     country: FRANCE,
+    plan: FULL_PLAN,
     simplifySeed: 11,
     isMyTurn: true,
     pointsAtStake: 500,
@@ -135,7 +140,7 @@ describe('OnlineContourGameScreen — the turn-holder', () => {
   });
 
   it('lets the player give up once the name is out', async () => {
-    setGame({ gameState: gameState({ hintsRevealed: 7 }), pointsAtStake: 0 });
+    setGame({ gameState: gameState({ hintsRevealed: FULL_PLAN.length }), pointsAtStake: 0 });
     const { getByText } = await renderScreen();
     await fireEvent.press(getByText(t.contourGame.continueLabel));
     expect((mockGame.giveUp as jest.Mock).mock.calls).toHaveLength(1);
@@ -159,16 +164,50 @@ describe('OnlineContourGameScreen — the outline gets precise with the hints', 
     expect(await paths()).toBe(2);
   });
 
-  it('stays a bare silhouette until the outline is the full ring (tiers 1 and 2)', async () => {
-    for (const hintsRevealed of [1, 2]) {
+  it('stays a bare silhouette while the outline gets precise (tiers 1 to 3)', async () => {
+    for (const hintsRevealed of [1, 2, 3]) {
       setGame({ gameState: gameState({ hintsRevealed }) });
       expect(await paths()).toBe(2);
     }
   });
 
-  it('draws the neighbors around it, and the borders once, from the full ring on (tier 3)', async () => {
-    setGame({ gameState: gameState({ hintsRevealed: 3 }) });
+  it('draws the neighbors around it, and the borders once, from tier 4 on', async () => {
+    setGame({ gameState: gameState({ hintsRevealed: 4 }) });
     expect(await paths()).toBeGreaterThan(3);
+    // a step earlier (the full ring alone), no neighbor yet
+    setGame({ gameState: gameState({ hintsRevealed: 3 }) });
+    expect(await paths()).toBe(2);
+  });
+
+  it('draws the cities as dots, then their names, at their position', async () => {
+    setGame({ gameState: gameState({ hintsRevealed: 7 }) });
+    const dots = await renderScreen();
+    expect(JSON.stringify(dots.toJSON())).toContain('●');
+    expect(JSON.stringify(dots.toJSON())).not.toContain('Marseille');
+    setGame({ gameState: gameState({ hintsRevealed: 8 }) });
+    const names = await renderScreen();
+    expect(JSON.stringify(names.toJSON())).toContain('Marseille');
+  });
+
+  it('follows the plan of the room: capital hints only means the full ring from the start, then the star', async () => {
+    const plan = buildHintPlan(['capital'], FRANCE);
+    setGame({ plan, gameState: gameState({ hintsRevealed: 0 }) });
+    const start = await renderScreen();
+    expect(JSON.stringify(start.toJSON())).not.toContain('⭐');
+    setGame({ plan, gameState: gameState({ hintsRevealed: 1 }) });
+    const star = await renderScreen();
+    expect(JSON.stringify(star.toJSON())).toContain('⭐');
+    setGame({ plan, gameState: gameState({ hintsRevealed: 2 }) });
+    const named = await renderScreen();
+    expect(JSON.stringify(named.toJSON())).toContain('Paris');
+  });
+
+  it('lets the player give up on the last step of a shorter plan', async () => {
+    const plan = buildHintPlan(['capital'], FRANCE);
+    setGame({ plan, gameState: gameState({ hintsRevealed: plan.length }), pointsAtStake: 0 });
+    const { getByText } = await renderScreen();
+    await fireEvent.press(getByText(t.contourGame.continueLabel));
+    expect((mockGame.giveUp as jest.Mock).mock.calls).toHaveLength(1);
   });
 
   it('shows the full ring when the round is over, whatever the tier', async () => {

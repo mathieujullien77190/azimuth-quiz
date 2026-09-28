@@ -10,15 +10,11 @@ import Button from '@/components/ui/Button';
 import NoOneFoundText from '@/components/ui/NoOneFoundText';
 import ContourFullBleedScreen from '../../components/ContourFullBleedScreen';
 import ContourGuessBar from '../../components/ContourGuessBar';
-import { CONTOUR_MAX_HINTS } from '../../constants';
-import { buildHintLabels, precisionLevel } from '../../helpers/roundBoard';
+import { buildHintLabels } from '../../helpers/roundBoard';
 import { useRoundBoard } from '../../helpers/useRoundBoard';
 import type { OnlineContourGameScreenViewProps } from './types';
 
 import { createStyles } from './OnlineContourGameScreenView.styles';
-
-/** Tier at which the board shows everything, name included (see `buildHintLabels`). */
-const ALL_HINTS = CONTOUR_MAX_HINTS;
 
 /**
  * Pur rendu, un seul ecran plein cadre pour les 3 etats (tour actif, en attente, manche revelee) :
@@ -34,6 +30,7 @@ export const OnlineContourGameScreenView = ({
   totalRounds,
   difficulty,
   country,
+  plan,
   hintsRevealed,
   simplifySeed,
   pointsAtStake,
@@ -63,8 +60,9 @@ export const OnlineContourGameScreenView = ({
     true,
     simplifySeed,
   );
-  const shownHints = roundOver ? ALL_HINTS : hintsRevealed;
-  const hintLabels = buildHintLabels(board, shownHints, language);
+  // A finished round shows everything, the country included.
+  const shownHints = roundOver ? plan.length : hintsRevealed;
+  const hintLabels = buildHintLabels(board, plan, shownHints, language);
 
   const footer = roundOver ? (
     <View style={styles.footer}>
@@ -81,7 +79,7 @@ export const OnlineContourGameScreenView = ({
     </View>
   ) : !isMyTurn ? (
     <Text style={styles.waiting}>{t.contourGame.waitingForTurn(turnPlayerName)}</Text>
-  ) : hintsRevealed >= ALL_HINTS ? (
+  ) : hintsRevealed >= plan.length ? (
     <View style={styles.footer}>
       <NoOneFoundText players={players.map((player) => player.name)} />
       <Button label={t.contourGame.continueLabel} onPress={onGiveUp} />
@@ -118,7 +116,8 @@ export const OnlineContourGameScreenView = ({
         />
       }
       hintLabels={hintLabels}
-      precision={precisionLevel(shownHints)}
+      hintsRevealed={shownHints}
+      plan={plan}
       onBoardAreaLayout={onBoardAreaLayout}
       onOverlayBottomLayout={onOverlayBottomLayout}
       onOverlayTopLayout={onOverlayTopLayout}

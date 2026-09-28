@@ -4,6 +4,7 @@ import { useTranslation } from '@/i18n';
 import DifficultySection from '@/components/setup/DifficultySection';
 import RoundsSection from '@/components/setup/RoundsSection';
 import SetupScreenShell from '@/components/setup/SetupScreenShell';
+import HintCategorySection from '../../components/HintCategorySection';
 import type { ContourSetupScreenViewProps } from './types';
 
 /**
@@ -18,6 +19,7 @@ export const ContourSetupScreenView = ({
   readOnly,
   onSelectDifficulty,
   onSelectRounds,
+  onToggleHintCategory,
   overlayMessage,
   overlayLoading,
   onDismissOverlay,
@@ -40,6 +42,8 @@ export const ContourSetupScreenView = ({
       icon={GAME_ICONS.contour}
       title={t.contourSetup.screenTitle}
     >
+      <HintCategorySection disabled={readOnly} onToggle={onToggleHintCategory} selected={settings.hintCategories} />
+
       <DifficultySection
         disabled={readOnly}
         hint={t.contourSetup.difficultyHint}

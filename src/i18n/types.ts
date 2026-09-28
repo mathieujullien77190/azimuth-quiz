@@ -1,4 +1,4 @@
-import type { Category, Difficulty, ClueId } from '@/types';
+import type { Category, ContourHintCategory, Difficulty, ClueId } from '@/types';
 
 export type Language = 'fr' | 'en';
 
@@ -195,15 +195,18 @@ export type Translations = {
     playerNameAccessibility: (index: number) => string;
     difficultyTitle: string;
     difficultyHint: string;
+    hintCategoriesTitle: string;
+    hintCategoriesHint: string;
+    hintCategories: Record<ContourHintCategory, string>;
   };
   contourGame: {
     /** Shown in the country-identity slot during the 'guess' phase, in place of the (not yet
      * known) country name/flag. */
     guessPrompt: string;
     /** The shared "reveal a hint" icon button, inline with the guess input, clickable by any
-     * player — reveals one more of the 4 on-board hint tiers each click (every neighbor's icon,
-     * then its name, then the target country's own flag, then its name) and disappears once all
-     * 4 are out. */
+     * player — reveals the next hint of the round each click (a more precise outline, the neighbors,
+     * the cities, the capital, depending on the categories picked in the setup), the last one
+     * revealing the country itself. */
     hintButton: string;
     /** Online only: the turn-holder's banner, "Zoé's turn…" (everyone else waits). */
     waitingForTurn: (name: string) => string;

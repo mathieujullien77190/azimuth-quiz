@@ -127,7 +127,7 @@ export type ContourRoomGameState = {
    * room that has none: the silhouettes then just come out the same for everyone). */
   simplifySeed: number;
   roundIndex: number;
-  /** How many of the 7 hint tiers are revealed (0-7), see `CONTOUR_GUESS_POINTS_BY_HINTS`. */
+  /** How many steps of the round hint plan are revealed (0 to its length, the last step reveals the country), see `buildHintPlan`/`contourGuessPoints`. */
   hintsRevealed: number;
   turnUid: string | null;
   verdict: 'correct' | 'giveUp' | null;

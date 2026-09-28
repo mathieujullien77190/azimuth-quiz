@@ -11,13 +11,19 @@ import {
   projectPoints,
   type ContourBoardHintLabel,
 } from '../components/ContourBoard';
-import { CONTOUR_MAX_HINTS } from '../constants';
 import { computeBorders, type CountryBorders } from './borders';
 import { neighborIcon, neighborName } from './contourCountry';
+import { contourPlacesFor, type ContourPlaces } from './contourPlaces';
+import { revealedSteps, silhouetteLevel, type HintStep } from './hintPlan';
 import { FULL_PRECISION, simplificationLevels } from './simplify';
 
-/** Hint tiers 1-3 only make the outline more precise; the first label tier is the next one. */
-const PRECISION_HINTS = FULL_PRECISION;
+/** Marker of the capital, then of the other cities, on the board: the capital gets a star (bigger, like
+ * a flag), a city a plain dot — a position is what these hints give, and the name comes on the next step. */
+const CAPITAL_MARKER = '⭐';
+const CITY_MARKER = '●';
+
+/** A place on the board: its name and where it is, in pixels. */
+export type BoardMark = { name: string; position: Point2D };
 
 /** Board data for a round's country, fit to a `maxWidth`/`maxHeight` box: re-derived (not
  * re-rolled) whenever the box changes, so the same round reflows to fill whatever space is
@@ -42,7 +48,12 @@ export type RoundBoard = {
   coastlines: Point2D[][];
   /** Stretches of the outline shared with a neighbor: stroked once, thinner. */
   borders: Point2D[][];
-  /** Tier 2/4's own on-board anchor for the target country's own flag, then its name stacked just
+  /** The country's cities offered as hints (capital excluded, see `contourPlacesFor`), projected with
+   * the very same projector as the outline. */
+  cityMarks: BoardMark[];
+  /** Same for the capital, `null` for a country without one in the data. */
+  capitalMark: BoardMark | null;
+  /** The `reveal` step's own on-board anchor for the target country's own flag, then its name stacked just
    * below it (see `HINT_STACK_GAP_RATIO`) — curated per country (`ContourCountry.centerLabel`,
    * a fraction of this canvas, same model as `ContourNeighbor`), rather than a fixed geometric
    * center: lets an oddly-shaped country (or an admin, via the Contour view) place it somewhere
@@ -60,12 +71,15 @@ export type RoundGeometry = {
   borders: CountryBorders;
   /** The nested simplified rings, level 0 to 3 (`simplificationLevels`). */
   rings: (readonly (readonly [number, number])[])[];
+  /** The capital and cities offered as hints (`contourPlacesFor`). */
+  places: ContourPlaces;
 };
 
 /** `RoundGeometry` of a country for a round's seed; the borders come from the whole game dataset. */
 export const roundGeometry = (country: ContourCountry, simplifySeed: number): RoundGeometry => ({
   borders: computeBorders(country, CONTOURS),
   rings: simplificationLevels(country.points, simplifySeed),
+  places: contourPlacesFor(country),
 });
 
 export const projectRound = (
@@ -74,7 +88,7 @@ export const projectRound = (
   maxHeight: number,
   geometry: RoundGeometry = roundGeometry(country, 0),
 ): RoundBoard => {
-  const { borders, rings } = geometry;
+  const { borders, rings, places } = geometry;
   const { width, height } = boardDimensionsFor(country.points, maxWidth, maxHeight);
   // Ratio of Math.min(width, height), not a fixed pixel count — see BOARD_PADDING_RATIO's own doc
   // comment for why: keeps the admin's differently-sized preview canvas laid out proportionally
@@ -90,6 +104,10 @@ export const projectRound = (
     neighborOutlines: borders.neighborRings.map((ring) => projectPoints(ring, project)),
     coastlines: borders.coastRuns.map((run) => projectPoints(run, project)),
     borders: borders.borderRuns.map((run) => projectPoints(run, project)),
+    cityMarks: places.cities.map((city) => ({ name: city.name, position: project([city.longitude, city.latitude]) })),
+    capitalMark: places.capital
+      ? { name: places.capital.name, position: project([places.capital.longitude, places.capital.latitude]) }
+      : null,
     centerPosition: { x: country.centerLabel.x * width, y: country.centerLabel.y * height },
     // `neighbor.x`/`y` are already a fraction of this exact board canvas (see `ContourNeighbor`'s
     // own doc comment) — just scale, no reprojection or edge-clamping needed.
@@ -100,55 +118,57 @@ export const projectRound = (
   };
 };
 
-/** What is drawn on the board at `hintsRevealed` tiers: the outline's precision level and, past it,
- * the neighbors (which only appear once the outline is the full ring, see `borders.ts`). */
-export const precisionLevel = (hintsRevealed: number): number => Math.min(hintsRevealed, PRECISION_HINTS);
+/** The shape props `ContourBoard` gets after `hintsRevealed` steps of `plan`. Below the full ring
+ * (the silhouette hints): the outline at its current precision level, as one single stroke and with
+ * no neighbors. On the full ring: the outline alone until the `neighborShapes` step, then the
+ * neighbors as a backdrop and coast/borders drawn once (their shared edges only line up on the full
+ * ring, see `borders.ts` — the plan puts the silhouette steps before the neighbors' anyway). */
+export const boardShapeFor = (board: RoundBoard, plan: readonly HintStep[], hintsRevealed: number) => {
+  const level = silhouetteLevel(plan, hintsRevealed);
+  if (level < FULL_PRECISION) return { outline: board.precisionOutlines[level] };
+  if (!revealedSteps(plan, hintsRevealed).has('neighborShapes')) return { outline: board.outline };
+  return {
+    outline: board.outline,
+    neighborOutlines: board.neighborOutlines,
+    coastlines: board.coastlines,
+    borders: board.borders,
+  };
+};
 
-/** The shape props `ContourBoard` gets at a precision level: below the full ring only the simplified
- * outline, as one single stroke and with no neighbors (their shared edges only line up on the full
- * ring); at the full ring, the neighbors as a backdrop and coast/borders drawn once. */
-export const boardShapeFor = (board: RoundBoard, level: number) =>
-  level < FULL_PRECISION
-    ? { outline: board.precisionOutlines[level] }
-    : {
-        outline: board.outline,
-        neighborOutlines: board.neighborOutlines,
-        coastlines: board.coastlines,
-        borders: board.borders,
-      };
-
-/** The 7 hint tiers. 1-3 refine the outline itself (see `boardShapeFor`); the labels are all drawn
- * straight on the board: tier 4 shows every neighbor's flag at its own curated spot, tier 5 adds the
- * target country's own flag at its curated spot, tier 6 stacks each neighbor's name just below its
- * own icon (not swapped — both stay up so the icon keeps reading as "this is what that name refers
- * to"), tier 7 stacks the country's name below its flag the same way (effectively the answer). */
+/** The labels of the steps out after `hintsRevealed` steps of `plan`, all drawn straight on the
+ * board. Neighbors: every flag at its own curated spot, then each name stacked just below its icon
+ * (both stay up so the icon keeps reading as "this is what that name refers to"). Cities and capital:
+ * a marker at the place's position, then its name stacked below. `reveal`: the country's own flag at
+ * its curated spot with its name below (effectively the answer). */
 export const buildHintLabels = (
   board: RoundBoard,
+  plan: readonly HintStep[],
   hintsRevealed: number,
   language: Language,
 ): ContourBoardHintLabel[] => {
+  const out = revealedSteps(plan, hintsRevealed);
   const stackGap = Math.min(board.width, board.height) * HINT_STACK_GAP_RATIO;
-  const neighborLabels: ContourBoardHintLabel[] =
-    hintsRevealed >= PRECISION_HINTS + 1
-      ? board.neighborHints.flatMap(({ neighbor, position }) => [
-          { position, icon: true, text: neighborIcon(neighbor) },
-          ...(hintsRevealed >= PRECISION_HINTS + 3
-            ? [{ position: { x: position.x, y: position.y + stackGap }, text: neighborName(neighbor, language) }]
-            : []),
-        ])
-      : [];
-  const centerLabels: ContourBoardHintLabel[] = [
-    ...(hintsRevealed >= PRECISION_HINTS + 2
-      ? [{ position: board.centerPosition, icon: true, text: flagEmoji(board.country.code) }]
-      : []),
-    ...(hintsRevealed >= CONTOUR_MAX_HINTS
-      ? [
-          {
-            position: { x: board.centerPosition.x, y: board.centerPosition.y + stackGap },
-            text: countryName(board.country.code, language),
-          },
-        ]
-      : []),
-  ];
-  return [...neighborLabels, ...centerLabels];
+  const below = (position: Point2D): Point2D => ({ x: position.x, y: position.y + stackGap });
+
+  const neighborLabels = board.neighborHints.flatMap(({ neighbor, position }) => [
+    ...(out.has('neighborFlags') ? [{ position, icon: true, text: neighborIcon(neighbor) }] : []),
+    ...(out.has('neighborNames') ? [{ position: below(position), text: neighborName(neighbor, language) }] : []),
+  ]);
+  const cityLabels = board.cityMarks.flatMap(({ name, position }) => [
+    ...(out.has('cityPositions') ? [{ position, text: CITY_MARKER }] : []),
+    ...(out.has('cityNames') ? [{ position: below(position), text: name }] : []),
+  ]);
+  const capitalLabels: ContourBoardHintLabel[] = board.capitalMark
+    ? [
+        ...(out.has('capitalPosition') ? [{ position: board.capitalMark.position, icon: true, text: CAPITAL_MARKER }] : []),
+        ...(out.has('capitalName') ? [{ position: below(board.capitalMark.position), text: board.capitalMark.name }] : []),
+      ]
+    : [];
+  const revealLabels: ContourBoardHintLabel[] = out.has('reveal')
+    ? [
+        { position: board.centerPosition, icon: true, text: flagEmoji(board.country.code) },
+        { position: below(board.centerPosition), text: countryName(board.country.code, language) },
+      ]
+    : [];
+  return [...neighborLabels, ...cityLabels, ...capitalLabels, ...revealLabels];
 };

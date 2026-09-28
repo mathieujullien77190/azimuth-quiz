@@ -206,6 +206,14 @@ export const en: Translations = {
     playerNameAccessibility: (index) => `Player ${index} name`,
     difficultyTitle: 'Difficulty',
     difficultyHint: 'Sets which pool of countries the round draws from.',
+    hintCategoriesTitle: 'Hints',
+    hintCategoriesHint: 'The kinds of hints in play (at least one). The last hint always reveals the country.',
+    hintCategories: {
+      silhouette: 'Silhouette',
+      neighbors: 'Neighbors',
+      cities: 'Cities',
+      capital: 'Capital',
+    },
   },
   contourGame: {
     guessPrompt: 'Which country is this?',

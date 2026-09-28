@@ -211,6 +211,14 @@ export const fr: Translations = {
     playerNameAccessibility: (index) => `Nom du joueur ${index}`,
     difficultyTitle: 'Difficulté',
     difficultyHint: 'Détermine dans quelle réserve de pays la manche pioche.',
+    hintCategoriesTitle: 'Indices',
+    hintCategoriesHint: 'Les types d’indices en jeu (au moins un). Le dernier indice révèle toujours le pays.',
+    hintCategories: {
+      silhouette: 'Silhouette',
+      neighbors: 'Voisins',
+      cities: 'Villes',
+      capital: 'Capitale',
+    },
   },
   contourGame: {
     guessPrompt: 'Quel est ce pays ?',

@@ -1,3 +1,4 @@
+import type { HintStep } from '@/games/contour/helpers/hintPlan';
 import type { OnlinePlayer } from '@/helpers/roomPlayers';
 import type { ContourCountry, Difficulty } from '@/types';
 
@@ -19,7 +20,9 @@ export type OnlineContourGameScreenViewProps = {
   difficulty: Difficulty;
 
   country: ContourCountry;
-  /** How many of the 7 hint tiers are on the board (0-7). */
+  /** The round's hint steps (`buildHintPlan`, the last one reveals the country) and how many of them
+   * are on the board. */
+  plan: HintStep[];
   hintsRevealed: number;
   /** Seed of this round's random simplification of the outline, the same on every device. */
   simplifySeed: number;
@@ -40,7 +43,7 @@ export type OnlineContourGameScreenViewProps = {
   onChangeGuessText: (text: string) => void;
   onSubmitGuess: () => void;
   onRevealHint: () => void;
-  /** The name is out (tier 7) and nobody found it: closes the round for nobody. */
+  /** The country is revealed (last step) and nobody found it: closes the round for nobody. */
   onGiveUp: () => void;
 
   isHost: boolean;

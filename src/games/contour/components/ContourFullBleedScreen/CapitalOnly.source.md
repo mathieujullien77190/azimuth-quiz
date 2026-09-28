@@ -1,16 +1,18 @@
 ```tsx
 import ContourFullBleedScreen from '@/games/contour/components/ContourFullBleedScreen';
+import { buildHintPlan } from '@/games/contour/helpers/hintPlan';
 import { buildHintLabels } from '@/games/contour/helpers/roundBoard';
 
-// Nothing revealed: with the silhouette hints on, the outline is the coarsest one (a handful of
-// vertices, drawn from the round's seed) and there is no neighbor around it. The first three hints
-// refine it up to the full ring, the following ones draw the neighbors and the labels.
+// The room only picked the capital: the plan is capitalPosition, capitalName, reveal. With no
+// silhouette hint the country is the full ring from the start; one hint puts the star on the capital.
+const plan = buildHintPlan(['capital'], country);
+
 <ContourFullBleedScreen
   board={board}
   footer={footer}
   header={header}
-  hintLabels={buildHintLabels(board, plan, 0, language)}
-  hintsRevealed={0}
+  hintLabels={buildHintLabels(board, plan, 1, language)}
+  hintsRevealed={1}
   onBoardAreaLayout={onBoardAreaLayout}
   onOverlayBottomLayout={onOverlayBottomLayout}
   onOverlayTopLayout={onOverlayTopLayout}

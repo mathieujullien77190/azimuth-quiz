@@ -279,6 +279,11 @@ export type ContourDataRow = {
   difficulty?: Difficulty;
 };
 
+/** The kinds of hints a Silhouette game can use, picked in the setup (at least one): the outline
+ * getting more precise, the neighboring countries, the country's cities (capital excluded), its
+ * capital. See `buildHintPlan` for the steps each one contributes. */
+export type ContourHintCategory = 'silhouette' | 'neighbors' | 'cities' | 'capital';
+
 export type ContourSettings = {
   /** This device's player name; empty means "use a default name". Stays local. */
   playerName: string;
@@ -286,6 +291,9 @@ export type ContourSettings = {
   /** Which `ContourCountry.difficulty` tier a round's country is drawn from (see `randomCountry`)
    * — single choice, like Compass' `GameSettings.difficulty` and Clues' `ClueSettings.difficulty`. */
   difficulty: Difficulty;
+  /** Which kinds of hints are in play (shared by the room, at least one). A room or a saved setting
+   * without it means all of them, see `normalizeHintCategories`. */
+  hintCategories: ContourHintCategory[];
 };
 
 /** The two available themes (see src/themes): 'night' is the default. */

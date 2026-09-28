@@ -79,17 +79,18 @@ export const ContourEditor = ({
   const outlinePath = useMemo(() => polylinePath(projectPoints(country.points, project)), [country.points, project]);
 
   const levels = useMemo(() => simplificationLevels(country.points, seed), [country.points, seed]);
-  // Below the full ring the game draws the simplified outline alone: no neighbors, one stroke.
+  // Below the full ring the game draws the simplified outline alone: no neighbors, one stroke; the
+  // neighbors are their own tier, after the full ring.
   const simplified = previewing && level < FULL_PRECISION;
   const simplifiedPath = useMemo(
-    () => polylinePath(projectPoints(levels[level], project)),
+    () => polylinePath(projectPoints(levels[Math.min(level, FULL_PRECISION)], project)),
     [levels, level, project],
   );
   const vertexDots = useMemo(
     () => (simplified ? projectPoints(levels[level].slice(0, -1), project) : []),
     [simplified, levels, level, project],
   );
-  const drawNeighbors = previewing ? level === FULL_PRECISION : showNeighbors;
+  const drawNeighbors = previewing ? level > FULL_PRECISION : showNeighbors;
 
   // Same layering as the game's ContourBoard: neighbors filled without a stroke, the country filled
   // without a stroke, then its coast (heavy) and its shared borders (thin) on top — so a border is one
@@ -257,6 +258,14 @@ export const ContourEditor = ({
                 Niveau {index} — {ring.length - 1} sommets
               </button>
             ))}
+            <button
+              type="button"
+              className="chip"
+              aria-pressed={level > FULL_PRECISION}
+              onClick={() => setLevel(FULL_PRECISION + 1)}
+            >
+              Niveau {FULL_PRECISION + 1} — voisins
+            </button>
             <button type="button" className="chip" onClick={() => setSeed(newSimplifySeed())}>
               Autre variante
             </button>

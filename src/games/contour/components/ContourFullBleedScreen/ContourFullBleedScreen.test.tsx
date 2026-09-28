@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
+import { buildHintPlan } from '@/games/contour/helpers/hintPlan';
 import type { RoundBoard } from '@/games/contour/helpers/roundBoard';
 
 import ContourFullBleedScreen from '.';
@@ -32,12 +33,19 @@ const board: RoundBoard = {
     ],
   ],
   borders: [],
+  cityMarks: [],
+  capitalMark: null,
   centerPosition: { x: 50, y: 25 },
   neighborHints: [],
 };
 
+// Silhouette hints only: 3 precision steps, then the reveal (4 steps).
+const plan = buildHintPlan(['silhouette'], board.country);
+
 const baseProps = {
   board,
+  plan,
+  hintsRevealed: plan.length,
   hintLabels: [{ position: { x: 10, y: 10 }, text: 'France' }],
   roundKey: 0,
   onBoardAreaLayout: jest.fn(),
@@ -55,13 +63,13 @@ describe('ContourFullBleedScreen', () => {
     expect(getByText('Footer')).toBeTruthy();
   });
 
-  it('draws the full ring, with its coast, by default', async () => {
+  it('draws the full ring once the silhouette hints are out', async () => {
     const { toJSON } = await render(<ContourFullBleedScreen {...baseProps} />);
     expect(JSON.stringify(toJSON())).not.toContain('L 60 7');
   });
 
   it('draws the simplified outline of the requested precision level', async () => {
-    const { toJSON } = await render(<ContourFullBleedScreen {...baseProps} precision={0} />);
+    const { toJSON } = await render(<ContourFullBleedScreen {...baseProps} hintsRevealed={0} />);
     expect(JSON.stringify(toJSON())).toContain('L 60 7');
   });
 
