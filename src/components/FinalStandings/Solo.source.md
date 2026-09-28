@@ -3,8 +3,8 @@ import FinalStandings from '@/components/FinalStandings';
 
 <FinalStandings
   entries={[{ name: 'Zoé', total: 1250 }]}
-  homeLabel={t.contourGame.home}
+  homeLabel={t.endScreen.menu}
   onHome={handleQuit}
-  title={t.contourGame.finalScoreTitle}
+  title={t.endScreen.title}
 />
 ```

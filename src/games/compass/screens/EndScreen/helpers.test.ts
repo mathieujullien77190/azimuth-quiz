@@ -1,8 +1,7 @@
 import { MAX_ROUND_POINTS } from '@/games/compass/constants';
 import type { Player, PlayerResult, RoundRecord } from '@/types';
 
-import { maxTotalScore, rankPlayers, roundWinnerIndex, winnerTitle } from './helpers';
-import type { RankedPlayer } from './types';
+import { maxTotalScore, roundBest } from './helpers';
 
 const players: Player[] = [
   { name: 'Alice', color: '#EF4444' },
@@ -10,83 +9,66 @@ const players: Player[] = [
   { name: 'Cid', color: '#0891B2' },
 ];
 
-const result = (total: number): PlayerResult => ({
+const result = (directionPoints: number, distancePoints: number): PlayerResult => ({
   guess: { bearing: 0, distanceKm: 0 },
   score: {
     trueBearing: 0,
     trueSurfaceDistanceKm: 0,
     directionError: 0,
     distanceError: 0,
-    directionPoints: 0,
-    distancePoints: 0,
+    directionPoints,
+    distancePoints,
     directionBonus: 0,
     distanceBonus: 0,
     directionExactBonus: 0,
     distanceExactBonus: 0,
-    total,
+    total: directionPoints + distancePoints,
   },
 });
 
-describe('maxTotalScore', () => {
-  it('is rounds * MAX_ROUND_POINTS', () => {
-    const records = [{} as RoundRecord, {} as RoundRecord, {} as RoundRecord];
-    expect(maxTotalScore(records)).toBe(3 * MAX_ROUND_POINTS);
-  });
+const recordOf = (...results: PlayerResult[]): RoundRecord => ({
+  place: {
+    name: 'Paris',
+    code: 'FR',
+    coordinates: { latitude: 0, longitude: 0 },
+    category: 'cities',
+    difficulty: 'easy',
+  },
+  results,
+});
 
-  it('is 0 for no rounds', () => {
+describe('maxTotalScore', () => {
+  it('is the best possible round score times the number of rounds', () => {
+    expect(maxTotalScore([recordOf(), recordOf(), recordOf()])).toBe(3 * MAX_ROUND_POINTS);
     expect(maxTotalScore([])).toBe(0);
   });
 });
 
-describe('rankPlayers', () => {
-  it('ranks by descending total', () => {
-    const ranking = rankPlayers(players, [100, 300, 200]);
-    expect(ranking.map((r) => r.player.name)).toEqual(['Bob', 'Cid', 'Alice']);
-    expect(ranking.map((r) => r.rank)).toEqual([1, 2, 3]);
+describe('roundBest', () => {
+  const record = recordOf(result(300, 100), result(450, 100), result(200, 400));
+
+  it('is the player with the most points on the criterion, and how many', () => {
+    expect(roundBest(record, players, 'directionPoints')).toEqual({ players: [players[1]], points: 450 });
+    expect(roundBest(record, players, 'distancePoints')).toEqual({ players: [players[2]], points: 400 });
   });
 
-  it('gives tied players the same rank', () => {
-    const ranking = rankPlayers(players, [300, 300, 100]);
-    const [first, second, third] = ranking;
-    expect(first.rank).toBe(1);
-    expect(second.rank).toBe(1);
-    expect(third.rank).toBe(3);
+  it('names everybody who ties for the top score', () => {
+    const tied = recordOf(result(300, 100), result(300, 100), result(200, 100));
+    expect(roundBest(tied, players, 'directionPoints')?.players).toEqual([players[0], players[1]]);
+    expect(roundBest(tied, players, 'distancePoints')?.players).toEqual(players);
   });
 
-  it('defaults a missing total to 0', () => {
-    const ranking = rankPlayers(players, [100]);
-    expect(ranking.find((r) => r.player.name === 'Cid')?.total).toBe(0);
-  });
-});
-
-describe('winnerTitle', () => {
-  it('names the single winner', () => {
-    const ranking: RankedPlayer[] = [
-      { player: players[0], total: 300, rank: 1 },
-      { player: players[1], total: 100, rank: 2 },
-    ];
-    const t = { and: 'et', tie: (names: string) => `Egalite : ${names}`, winner: (name: string) => `${name} gagne !` };
-    expect(winnerTitle(ranking, t as never)).toBe('Alice gagne !');
+  it('is null when nobody scored on the criterion', () => {
+    const none = recordOf(result(0, 0), result(0, 0));
+    expect(roundBest(none, players, 'directionPoints')).toBeNull();
+    expect(roundBest(recordOf(), players, 'distancePoints')).toBeNull();
   });
 
-  it('joins tied winners with "and"', () => {
-    const ranking: RankedPlayer[] = [
-      { player: players[0], total: 300, rank: 1 },
-      { player: players[1], total: 300, rank: 1 },
-    ];
-    const t = { and: 'et', tie: (names: string) => `Egalite : ${names}`, winner: (name: string) => `${name} gagne !` };
-    expect(winnerTitle(ranking, t as never)).toBe('Egalite : Alice et Bob');
-  });
-});
-
-describe('roundWinnerIndex', () => {
-  it('picks the highest score', () => {
-    const record: RoundRecord = { place: {} as RoundRecord['place'], results: [result(100), result(300), result(200)] };
-    expect(roundWinnerIndex(record)).toBe(1);
-  });
-
-  it('picks the first player on a tie', () => {
-    const record: RoundRecord = { place: {} as RoundRecord['place'], results: [result(300), result(300)] };
-    expect(roundWinnerIndex(record)).toBe(0);
+  it('ignores a result whose player has left the room', () => {
+    // Three results, two players left: the third player (best on distance) is gone.
+    expect(roundBest(record, players.slice(0, 2), 'distancePoints')).toEqual({
+      players: [players[0], players[1]],
+      points: 100,
+    });
   });
 });

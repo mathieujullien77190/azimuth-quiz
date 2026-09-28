@@ -1,83 +1,52 @@
-import { Text, View } from 'react-native';
-import { countryName } from '@/data/places/countries';
-import { formatNumber, getRank } from '@/helpers';
-import { useLanguage, useTranslation } from '@/i18n';
-import { useThemedStyles } from '@/themes';
+import FinalStandings from '@/components/FinalStandings';
+import type { RecapCell, RoundsRecap } from '@/components/FinalStandings';
+import { getRank } from '@/helpers';
+import { useTranslation } from '@/i18n';
 
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
-import Screen from '@/components/ui/Screen';
-import { MEDALS } from './constants';
-import { maxTotalScore, rankPlayers, roundWinnerIndex, winnerTitle } from './helpers';
+import { maxTotalScore, roundBest } from './helpers';
+import type { RoundBest } from './helpers';
 import type { EndScreenProps } from './types';
 
-import { createStyles } from './styles';
+/** How a round's best player shows in the recap: their name and points, or just the points when alone. */
+const bestCell = (best: RoundBest | null, alone: boolean): RecapCell => {
+  if (best === null) return { text: '–' };
+  if (alone) return { text: `+${best.points}` };
+  return {
+    text: best.players.map((player) => player.name).join(', '),
+    detail: `+${best.points}`,
+    color: best.players.length === 1 ? best.players[0].color : undefined,
+  };
+};
 
-export const EndScreen = ({ players, records, totals, onReplay, onMenu }: EndScreenProps) => {
-  const styles = useThemedStyles(createStyles);
+/**
+ * Compass' end of game: the shared `FinalStandings` (scores, medals, winner) fed with this game's
+ * own extras — the rank title when playing alone, and the round-by-round recap of who was best at the
+ * heading and at the distance.
+ */
+export const EndScreen = ({ players, records, totals, onMenu }: EndScreenProps) => {
   const t = useTranslation();
-  const { language } = useLanguage();
-  const isSolo = players.length === 1;
-  const maxTotal = maxTotalScore(records);
-  const ranking = rankPlayers(players, totals);
-  const rank = getRank(totals[0] ?? 0, maxTotal, t.endScreen.ranks);
+  const alone = players.length === 1;
+
+  const recap: RoundsRecap = {
+    title: t.endScreen.recapTitle,
+    columns: [t.roundResult.direction, t.roundResult.distance],
+    rows: records.map((record) => ({
+      label: record.place.name,
+      cells: [
+        bestCell(roundBest(record, players, 'directionPoints'), alone),
+        bestCell(roundBest(record, players, 'distancePoints'), alone),
+      ],
+    })),
+  };
 
   return (
-    <Screen>
-      <Card style={styles.hero}>
-        {isSolo ? (
-          <>
-            <Text style={styles.rankEmoji}>{rank.emoji}</Text>
-            <Text style={styles.rankTitle}>{rank.title}</Text>
-            <Text style={styles.score}>{formatNumber(totals[0] ?? 0)}</Text>
-          </>
-        ) : (
-          <>
-            <Text style={styles.rankEmoji}>🏆</Text>
-            <Text style={styles.rankTitle}>{winnerTitle(ranking, t.endScreen)}</Text>
-          </>
-        )}
-      </Card>
-
-      {!isSolo && (
-        <Card style={styles.list}>
-          {ranking.map(({ player, total, rank: position }, index) => (
-            <View key={player.name + index} style={[styles.row, index > 0 && styles.rowBorder]}>
-              <Text style={styles.medal}>{MEDALS[position - 1] ?? ''}</Text>
-              <View style={[styles.dot, { backgroundColor: player.color }]} />
-              <Text style={[styles.name, styles.rowText]}>{player.name}</Text>
-              <Text style={styles.rowScore}>{formatNumber(total)}</Text>
-            </View>
-          ))}
-        </Card>
-      )}
-
-      <Card style={styles.list}>
-        {records.map((record, index) => {
-          const winner = roundWinnerIndex(record);
-          const best = record.results[winner];
-          // Online only: a round played before a player quit can have more `results` than the
-          // room has players left — that round's winner may no longer be one of them, even
-          // though `players[winner]` types as always-defined (no `noUncheckedIndexedAccess`).
-          const winnerPlayer: (typeof players)[number] | undefined = players[winner];
-          return (
-            <View key={`${record.place.name}-${index}`} style={[styles.row, index > 0 && styles.rowBorder]}>
-              <View style={styles.rowText}>
-                <Text style={styles.name}>{record.place.name}</Text>
-                <Text style={styles.detail}>
-                  {isSolo
-                    ? countryName(record.place.code, language)
-                    : winnerPlayer && t.endScreen.roundBest(winnerPlayer.name)}
-                </Text>
-              </View>
-              <Text style={styles.rowScore}>+{best.score.total}</Text>
-            </View>
-          );
-        })}
-      </Card>
-
-      <Button label={t.endScreen.replay} onPress={onReplay} />
-      <Button label={t.endScreen.menu} onPress={onMenu} variant="ghost" />
-    </Screen>
+    <FinalStandings
+      entries={players.map((player, index) => ({ name: player.name, total: totals[index] ?? 0, color: player.color }))}
+      hero={alone ? getRank(totals[0] ?? 0, maxTotalScore(records), t.endScreen.ranks) : undefined}
+      homeLabel={t.endScreen.menu}
+      onHome={onMenu}
+      recap={recap}
+      title={t.endScreen.title}
+    />
   );
 };

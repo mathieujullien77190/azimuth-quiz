@@ -13,111 +13,111 @@ const place = (name: string, code: string): Place => ({
   difficulty: 'easy',
 });
 
-const result = (total: number): PlayerResult => ({
+const result = (directionPoints: number, distancePoints: number): PlayerResult => ({
   guess: { bearing: 0, distanceKm: 0 },
   score: {
     trueBearing: 0,
     trueSurfaceDistanceKm: 0,
     directionError: 0,
     distanceError: 0,
-    directionPoints: 0,
-    distancePoints: 0,
+    directionPoints,
+    distancePoints,
     directionBonus: 0,
     distanceBonus: 0,
     directionExactBonus: 0,
     distanceExactBonus: 0,
-    total,
+    total: directionPoints + distancePoints,
   },
 });
 
-describe('EndScreen — solo', () => {
-  const alice: Player = { name: 'Alice', color: '#EF4444' };
-  const records: RoundRecord[] = [{ place: place('Paris', 'FR'), results: [result(900)] }];
+const alice: Player = { name: 'Alice', color: '#EF4444' };
+const bob: Player = { name: 'Bob', color: '#16A34A' };
 
-  it('shows the rank hero and score, not the multiplayer ranking card', async () => {
+describe('EndScreen — alone', () => {
+  const records: RoundRecord[] = [{ place: place('Paris', 'FR'), results: [result(400, 350)] }];
+
+  it('shows the rank title and the score, and the points won on each criterion per round', async () => {
     const { getByText, queryByText } = await render(
-      <EndScreen onMenu={jest.fn()} onReplay={jest.fn()} players={[alice]} records={records} totals={[900]} />,
+      <EndScreen onMenu={jest.fn()} players={[alice]} records={records} totals={[900]} />,
     );
+    expect(getByText('Classement final')).toBeTruthy();
     expect(getByText(formatNumber(900))).toBeTruthy();
-    // Solo round detail: country name, not "Best: ..."
-    expect(queryByText(/Meilleur/)).toBeNull();
+    expect(getByText('Paris')).toBeTruthy();
+    expect(getByText('+400')).toBeTruthy();
+    expect(getByText('+350')).toBeTruthy();
+    // Alone, "the best" is always you: no name, no winner banner.
+    expect(queryByText('Alice')).toBeNull();
+    expect(queryByText(/gagne/)).toBeNull();
   });
 
   it('defaults the score to 0 when totals is empty', async () => {
     const { getByText } = await render(
-      <EndScreen onMenu={jest.fn()} onReplay={jest.fn()} players={[alice]} records={records} totals={[]} />,
+      <EndScreen onMenu={jest.fn()} players={[alice]} records={records} totals={[]} />,
     );
     expect(getByText(formatNumber(0))).toBeTruthy();
   });
 
-  it('calls onReplay and onMenu', async () => {
-    const onReplay = jest.fn();
+  it('goes home', async () => {
     const onMenu = jest.fn();
     const { getByText } = await render(
-      <EndScreen onMenu={onMenu} onReplay={onReplay} players={[alice]} records={records} totals={[900]} />,
+      <EndScreen onMenu={onMenu} players={[alice]} records={records} totals={[900]} />,
     );
-    await fireEvent.press(getByText('Rejouer'));
     await fireEvent.press(getByText('Accueil'));
-    expect(onReplay).toHaveBeenCalledTimes(1);
     expect(onMenu).toHaveBeenCalledTimes(1);
   });
 });
 
-describe('EndScreen — multiplayer', () => {
-  const alice: Player = { name: 'Alice', color: '#EF4444' };
-  const bob: Player = { name: 'Bob', color: '#16A34A' };
+describe('EndScreen — several players', () => {
   const records: RoundRecord[] = [
-    { place: place('Paris', 'FR'), results: [result(300), result(500)] },
-    { place: place('Berlin', 'DE'), results: [result(300), result(300)] },
+    // Paris: Alice best on direction, Bob best on distance.
+    { place: place('Paris', 'FR'), results: [result(400, 100), result(200, 300)] },
+    // Berlin: a tie on direction, nobody scored on distance.
+    { place: place('Berlin', 'DE'), results: [result(250, 0), result(250, 0)] },
   ];
 
-  it('shows the winner title, ranking rows with medals, and per-round best', async () => {
+  it('announces the winner and lists the totals with medals', async () => {
     const { getByText } = await render(
-      <EndScreen
-        onMenu={jest.fn()}
-        onReplay={jest.fn()}
-        players={[alice, bob]}
-        records={records}
-        totals={[600, 800]}
-      />,
+      <EndScreen onMenu={jest.fn()} players={[alice, bob]} records={records} totals={[600, 800]} />,
     );
     expect(getByText('Bob gagne !')).toBeTruthy();
-    expect(getByText(formatNumber(800))).toBeTruthy();
-    expect(getByText(formatNumber(600))).toBeTruthy();
-    // Round 1: Bob wins (500 > 300).
-    expect(getByText('Meilleur : Bob')).toBeTruthy();
-    // Round 2: tie -> first player (Alice) wins by convention.
-    expect(getByText('Meilleur : Alice')).toBeTruthy();
+    expect(getByText(`${formatNumber(800)} pts`)).toBeTruthy();
+    expect(getByText('🥇')).toBeTruthy();
+    expect(getByText('🥈')).toBeTruthy();
   });
 
-  it('shows a tie title when several players share the top rank', async () => {
+  it('shows, round by round, who was best at the heading and at the distance', async () => {
+    const { getAllByText, getByText } = await render(
+      <EndScreen onMenu={jest.fn()} players={[alice, bob]} records={records} totals={[600, 800]} />,
+    );
+    expect(getByText('Manche par manche')).toBeTruthy();
+    expect(getByText('Direction')).toBeTruthy();
+    expect(getByText('Distance')).toBeTruthy();
+    // Paris
+    expect(getByText('+400')).toBeTruthy();
+    expect(getByText('+300')).toBeTruthy();
+    // Berlin: both share the direction, nobody has a distance
+    expect(getByText('Alice, Bob')).toBeTruthy();
+    expect(getByText('+250')).toBeTruthy();
+    expect(getAllByText('–')).toHaveLength(1);
+  });
+
+  it('shows a tie as such', async () => {
     const { getByText } = await render(
-      <EndScreen
-        onMenu={jest.fn()}
-        onReplay={jest.fn()}
-        players={[alice, bob]}
-        records={records}
-        totals={[800, 800]}
-      />,
+      <EndScreen onMenu={jest.fn()} players={[alice, bob]} records={records} totals={[800, 800]} />,
     );
     expect(getByText('Égalité : Alice et Bob')).toBeTruthy();
   });
 
-  it('shows medals for the top 3 and none for 4th place and beyond', async () => {
-    const cid: Player = { name: 'Cid', color: '#0891B2' };
-    const dee: Player = { name: 'Dee', color: '#2563EB' };
-    const { getByText, getAllByText } = await render(
-      <EndScreen
-        onMenu={jest.fn()}
-        onReplay={jest.fn()}
-        players={[alice, bob, cid, dee]}
-        records={records}
-        totals={[400, 300, 200, 100]}
-      />,
+  it('copes with a round that has more results than the players left', async () => {
+    // Three results, two players left: the third one (best on both) has quit.
+    const withLeaver: RoundRecord[] = [
+      { place: place('Paris', 'FR'), results: [result(100, 100), result(200, 200), result(900, 900)] },
+    ];
+    const { getAllByText, queryByText } = await render(
+      <EndScreen onMenu={jest.fn()} players={[alice, bob]} records={withLeaver} totals={[100, 200]} />,
     );
-    expect(getAllByText('🥇')).toHaveLength(1);
-    expect(getAllByText('🥈')).toHaveLength(1);
-    expect(getAllByText('🥉')).toHaveLength(1);
-    expect(getByText('Dee')).toBeTruthy();
+    expect(getAllByText('Bob')).toHaveLength(3);
+    expect(getAllByText('+200').length).toBeGreaterThan(0);
+    expect(queryByText('+900')).toBeNull();
   });
 });

@@ -1,2 +1,2 @@
 export { FinalStandings as default } from './FinalStandings';
-export type { FinalStandingsProps, StandingEntry } from './types';
+export type { FinalStandingsProps, RecapCell, RecapRow, RoundsRecap, StandingEntry, StandingsHero } from './types';

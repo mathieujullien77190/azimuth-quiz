@@ -132,13 +132,15 @@ export type Translations = {
     perfect: string;
   };
   endScreen: {
-    replay: string;
+    /** Title of every game's end screen. */
+    title: string;
+    /** Heading of the round-by-round recap (who was best at what). */
+    recapTitle: string;
     menu: string;
     winner: (name: string) => string;
     tie: (names: string) => string;
     /** Connector word between two tied names ("et" / "and"). */
     and: string;
-    roundBest: (name: string) => string;
     /** Rank titles (solo), same order as RANKS in games/compass/constants.ts. */
     ranks: readonly [string, string, string, string, string];
   };
@@ -177,7 +179,6 @@ export type Translations = {
     submitGuess: string;
     wasPlace: string;
     continueLabel: string;
-    home: string;
     /** Online only: shown to the player whose turn it is right now. */
     /** Online only: what a player who isn't the turn-holder is told when they tap a clue. */
     notYourTurn: (name: string) => string;
@@ -185,7 +186,6 @@ export type Translations = {
     isCapitalYes: string;
     isCapitalNo: string;
     populationUnit: string;
-    finalScoreTitle: string;
   };
   contourSetup: {
     screenTitle: string;
@@ -217,7 +217,5 @@ export type Translations = {
     /** Moves on from a give-up (tier 4 confirmed) to the final reveal — single shared button, not
      * per-player. */
     continueLabel: string;
-    finalScoreTitle: string;
-    home: string;
   };
 };

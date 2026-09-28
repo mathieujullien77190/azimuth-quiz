@@ -1,33 +1,25 @@
 import { MAX_ROUND_POINTS } from '@/games/compass/constants';
-import type { Translations } from '@/i18n';
-import type { Player, RoundRecord } from '@/types';
-
-import type { RankedPlayer } from './types';
+import type { Player, RoundRecord, RoundScore } from '@/types';
 
 export const maxTotalScore = (records: RoundRecord[]): number => records.length * MAX_ROUND_POINTS;
 
-/** Ranking: best total first, tied players share the same rank. */
-export const rankPlayers = (players: Player[], totals: number[]): RankedPlayer[] => {
-  const sorted = players
-    .map((player, index) => ({ player, total: totals[index] ?? 0 }))
-    .sort((a, b) => b.total - a.total);
+/** Who scored the most in one round on one criterion, and how much. */
+export type RoundBest = { players: Player[]; points: number };
 
-  return sorted.map((entry) => ({
-    ...entry,
-    rank: sorted.findIndex((other) => other.total === entry.total) + 1,
-  }));
+/**
+ * Best player(s) of a round on `directionPoints` or `distancePoints` — everybody on the top score when
+ * several tie. `null` when nobody scored on it. Only players still in the room count: online, a round
+ * can hold more `results` than there are players left, and `players[index]` is then missing.
+ */
+export const roundBest = (
+  record: RoundRecord,
+  players: Player[],
+  criterion: keyof Pick<RoundScore, 'directionPoints' | 'distancePoints'>,
+): RoundBest | null => {
+  const contenders = record.results
+    .map((result, index) => ({ player: players[index] as Player | undefined, points: result.score[criterion] }))
+    .filter((entry): entry is { player: Player; points: number } => entry.player !== undefined);
+  const points = Math.max(0, ...contenders.map((entry) => entry.points));
+  if (points === 0) return null;
+  return { players: contenders.filter((entry) => entry.points === points).map((entry) => entry.player), points };
 };
-
-export const winnerTitle = (ranking: RankedPlayer[], t: Translations['endScreen']): string => {
-  const winners = ranking.filter((entry) => entry.rank === 1);
-  return winners.length === 1
-    ? t.winner(winners[0].player.name)
-    : t.tie(winners.map((entry) => entry.player.name).join(` ${t.and} `));
-};
-
-/** Best player of a round (the first one in case of a tie). */
-export const roundWinnerIndex = (record: RoundRecord): number =>
-  record.results.reduce(
-    (best, result, index) => (result.score.total > record.results[best].score.total ? index : best),
-    0,
-  );

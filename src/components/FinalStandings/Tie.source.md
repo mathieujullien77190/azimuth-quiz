@@ -8,8 +8,8 @@ import FinalStandings from '@/components/FinalStandings';
     { name: 'Max', total: 1500 },
     { name: 'Léa', total: 800 },
   ]}
-  homeLabel={t.cluesGame.home}
+  homeLabel={t.endScreen.menu}
   onHome={handleQuit}
-  title={t.cluesGame.finalScoreTitle}
+  title={t.endScreen.title}
 />
 ```

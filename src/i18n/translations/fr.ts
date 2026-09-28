@@ -132,12 +132,12 @@ export const fr: Translations = {
     perfect: 'PERFECT',
   },
   endScreen: {
-    replay: 'Rejouer',
+    title: 'Classement final',
+    recapTitle: 'Manche par manche',
     menu: 'Accueil',
     winner: (name) => `${name} gagne !`,
     tie: (names) => `Égalité : ${names}`,
     and: 'et',
-    roundBest: (name) => `Meilleur : ${name}`,
     ranks: ['Maître des vents', 'Capitaine', 'Navigateur', 'Mousse', 'Naufragé'],
   },
   settings: {
@@ -183,7 +183,6 @@ export const fr: Translations = {
     submitGuess: 'Valider',
     wasPlace: 'C’était',
     continueLabel: 'Continuer',
-    home: 'Accueil',
     notYourTurn: (name) => `C’est au tour de ${name} : tu peux seulement regarder… ou faire semblant de réfléchir 🤔`,
     clues: {
       position: 'Position',
@@ -205,7 +204,6 @@ export const fr: Translations = {
     isCapitalYes: 'Oui',
     isCapitalNo: 'Non',
     populationUnit: 'hab.',
-    finalScoreTitle: 'Classement final',
   },
   contourSetup: {
     screenTitle: 'Silhouette',
@@ -227,7 +225,5 @@ export const fr: Translations = {
     guessPlaceholder: 'Nom du pays…',
     wrongGuess: (name) => `${name} perd 50 points.`,
     continueLabel: 'Continuer',
-    finalScoreTitle: 'Classement final',
-    home: 'Accueil',
   },
 };
