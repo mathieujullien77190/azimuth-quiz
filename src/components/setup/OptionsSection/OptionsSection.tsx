@@ -15,7 +15,7 @@ import { createStyles } from './styles';
  * "3."): only pushes a number up once it actually parses and is in range, instead of the field
  * jumping back on every invalid keystroke.
  */
-const CustomOriginInputs = ({ latitude, longitude, onChange, disabled = false }: CustomOriginInputsProps) => {
+const CustomOriginInputs = ({ latitude, longitude, onChange, disabled }: CustomOriginInputsProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
   const t = useTranslation();

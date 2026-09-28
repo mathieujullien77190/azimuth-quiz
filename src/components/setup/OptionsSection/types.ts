@@ -36,5 +36,5 @@ export type CustomOriginInputsProps = {
   latitude: number;
   longitude: number;
   onChange: (patch: { customLatitude?: number; customLongitude?: number }) => void;
-  disabled?: boolean;
+  disabled: boolean;
 };
