@@ -2,7 +2,9 @@ import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 
+import type { Translations } from '@/i18n';
 import { translations } from '@/i18n/translations';
+import { localizedArgs } from '@/storybook/localized';
 
 import { OptionsSection } from './OptionsSection';
 import type { OptionsSectionProps } from './types';
@@ -14,6 +16,49 @@ import readOnlyCode from './ReadOnly.source.md?raw';
 
 const t = translations.fr;
 
+/** Title/description of every option and of the GPS block, by id, in the toolbar's language. */
+const optionTexts = (texts: Translations): Record<string, { title: string; description?: string }> => ({
+  startWithFirstLetter: {
+    title: texts.cluesSetup.toggles.startWithFirstLetter.label,
+    description: texts.cluesSetup.toggles.startWithFirstLetter.description,
+  },
+  liveCompass: {
+    title: texts.setup.toggles.liveCompass.label,
+    description: texts.setup.toggles.liveCompass.description,
+  },
+  showCountry: {
+    title: texts.setup.toggles.showCountry.label,
+    description: texts.setup.toggles.showCountry.description,
+  },
+  hideOtherAnswers: {
+    title: texts.setup.toggles.hideOtherAnswers.label,
+    description: texts.setup.toggles.hideOtherAnswers.description,
+  },
+});
+
+/** Re-texts a story's section title, its options and its GPS block, keeping their handlers. */
+const localizedTexts =
+  (title: (texts: Translations) => string) => (texts: Translations, args: Record<string, unknown>) => {
+    const options = (args.options as OptionsSectionProps['options']).map((option) => ({
+      ...option,
+      ...optionTexts(texts)[option.id],
+    }));
+    const gps = args.gps as OptionsSectionProps['gps'];
+    return {
+      title: title(texts),
+      options,
+      ...(gps && {
+        gps: {
+          ...gps,
+          title: texts.setup.toggles.useGps.label,
+          description: texts.setup.toggles.useGps.description,
+        },
+      }),
+    };
+  };
+const cluesOptionsTitle = (texts: Translations) => texts.cluesSetup.optionsTitle;
+const compassOptionsTitle = (texts: Translations) => texts.setup.optionsTitle;
+
 /** Named (capitalized) so eslint's rules-of-hooks recognizes it as a component and allows the
  * `useState` below — an inline arrow assigned to a story's `render` doesn't qualify. Every toggle
  * (options + GPS) and the custom origin are wired to local state so the whole block is clickable;
@@ -22,28 +67,30 @@ const InteractiveDemo = (args: OptionsSectionProps) => {
   const [values, setValues] = useState<Record<string, boolean>>(
     Object.fromEntries(args.options.map((option) => [option.id, option.value])),
   );
-  const [gps, setGps] = useState(args.gps);
+  const [gpsValues, setGpsValues] = useState({
+    useGps: args.gps?.useGps ?? false,
+    latitude: args.gps?.latitude ?? 0,
+    longitude: args.gps?.longitude ?? 0,
+  });
 
   return (
     <OptionsSection
       {...args}
       gps={
-        gps && {
-          ...gps,
+        args.gps && {
+          ...args.gps,
+          ...gpsValues,
           onChangeCustomOrigin: (patch) => {
             args.gps?.onChangeCustomOrigin(patch);
-            setGps(
-              (current) =>
-                current && {
-                  ...current,
-                  latitude: patch.customLatitude ?? current.latitude,
-                  longitude: patch.customLongitude ?? current.longitude,
-                },
-            );
+            setGpsValues((current) => ({
+              ...current,
+              latitude: patch.customLatitude ?? current.latitude,
+              longitude: patch.customLongitude ?? current.longitude,
+            }));
           },
           onToggleUseGps: (value) => {
             args.gps?.onToggleUseGps(value);
-            setGps((current) => current && { ...current, useGps: value });
+            setGpsValues((current) => ({ ...current, useGps: value }));
           },
         }
       }
@@ -89,6 +136,7 @@ const gpsOption = {
 /** Clues' own block: one plain option, no GPS. */
 export const WithoutGps: Story = {
   parameters: source(withoutGpsCode),
+  decorators: [localizedArgs(localizedTexts(cluesOptionsTitle))],
   args: {
     title: t.cluesSetup.optionsTitle,
     options: [
@@ -107,6 +155,7 @@ export const WithoutGps: Story = {
  * reveal the custom latitude/longitude fields. */
 export const WithGps: Story = {
   parameters: source(withGpsCode),
+  decorators: [localizedArgs(localizedTexts(compassOptionsTitle))],
   args: {
     title: t.setup.optionsTitle,
     options: [
@@ -133,6 +182,7 @@ export const WithGps: Story = {
  * which Compass only shows with 2+ players). */
 export const HiddenOption: Story = {
   parameters: source(hiddenOptionCode),
+  decorators: [localizedArgs(localizedTexts(compassOptionsTitle))],
   args: {
     title: t.setup.optionsTitle,
     options: [
@@ -158,5 +208,6 @@ export const HiddenOption: Story = {
 
 export const ReadOnly: Story = {
   parameters: source(readOnlyCode),
+  decorators: [localizedArgs(localizedTexts(compassOptionsTitle))],
   args: { ...WithGps.args, disabled: true } as OptionsSectionProps,
 };

@@ -2,7 +2,9 @@ import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 
+import type { Translations } from '@/i18n';
 import { translations } from '@/i18n/translations';
+import { localizedArgs } from '@/storybook/localized';
 import type { Difficulty } from '@/types';
 
 import { DifficultySection } from './DifficultySection';
@@ -29,6 +31,15 @@ const SingleSelectDemo = (args: DifficultySectionProps) => {
 
 const t = translations.fr;
 
+const singleSelectText = (texts: Translations) => ({
+  title: texts.cluesSetup.difficultyTitle,
+  hint: texts.cluesSetup.difficultyHint,
+});
+const readOnlyText = (texts: Translations) => ({
+  title: texts.setup.difficultyTitle,
+  hint: texts.setup.difficultyHint,
+});
+
 const meta = {
   title: 'Setup/DifficultySection',
   component: DifficultySection,
@@ -50,21 +61,21 @@ type Story = StoryObj<typeof meta>;
 export const SingleSelect: Story = {
   parameters: source(singleSelectCode),
   args: {
-    title: t.cluesSetup.difficultyTitle,
-    hint: t.cluesSetup.difficultyHint,
+    ...singleSelectText(t),
     selected: 'intermediate',
     onSelect: fn(),
   },
+  decorators: [localizedArgs(singleSelectText)],
   render: SingleSelectDemo,
 };
 
 export const ReadOnly: Story = {
   parameters: source(readOnlyCode),
   args: {
-    title: t.setup.difficultyTitle,
-    hint: t.setup.difficultyHint,
+    ...readOnlyText(t),
     selected: 'intermediate',
     onSelect: fn(),
     disabled: true,
   },
+  decorators: [localizedArgs(readOnlyText)],
 };

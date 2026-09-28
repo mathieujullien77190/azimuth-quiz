@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 
 import { translations } from '@/i18n/translations';
+import { localizedArgs } from '@/storybook/localized';
 import { source } from '@/storybook/source';
 
 import { ContourGuessBar } from './ContourGuessBar';
@@ -43,5 +44,6 @@ export const Empty: Story = {
 /** The turn-holder guessed wrong: the penalty banner sits above the input, which stays open. */
 export const AfterAMiss: Story = {
   parameters: source(afterAMissCode),
+  decorators: [localizedArgs((t) => ({ wrongText: t.contourGame.wrongGuess('Zoé') }))],
   args: { guessText: 'Espagn', wrongText: translations.fr.contourGame.wrongGuess('Zoé') },
 };

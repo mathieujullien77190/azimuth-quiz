@@ -5,7 +5,9 @@ import GameFooter from '@/components/GameFooter';
 import GameHeader from '@/components/GameHeader';
 import Button from '@/components/ui/Button';
 import { SAMPLE_CONTOUR_COUNTRY } from '@/helpers/storyFixtures';
+import type { Language, Translations } from '@/i18n';
 import { translations } from '@/i18n/translations';
+import { localizedArgs } from '@/storybook/localized';
 import { source } from '@/storybook/source';
 
 import ContourGuessBar from '../ContourGuessBar';
@@ -20,10 +22,45 @@ const t = translations.fr;
 // fixed box here; in the game, `useRoundBoard` measures the real one.
 const board = projectRound(SAMPLE_CONTOUR_COUNTRY, 380, 300);
 
+/** The header (with the round's question), in the toolbar's language. */
+const headerArgs = (texts: Translations) => ({
+  header: (
+    <GameHeader
+      code="tabofuna"
+      difficulty="easy"
+      name="Zoé"
+      onQuit={fn()}
+      points={375}
+      question={texts.contourGame.guessPrompt}
+      roundNumber={2}
+      totalRounds={5}
+    />
+  ),
+});
+
+/** The board's hint labels (country names follow the language) and the footer, per story. */
+const guessingArgs = (_texts: Translations, _args: Record<string, unknown>, language: Language) => ({
+  hintLabels: buildHintLabels(board, 2, language),
+  footer: (
+    <GameFooter>
+      <ContourGuessBar guessText="" onChangeGuessText={fn()} onHint={fn()} onSubmit={fn()} />
+    </GameFooter>
+  ),
+});
+const revealedArgs = (texts: Translations, _args: Record<string, unknown>, language: Language) => ({
+  hintLabels: buildHintLabels(board, 4, language),
+  footer: (
+    <GameFooter>
+      <Button label={texts.contourGame.continueLabel} onPress={fn()} />
+    </GameFooter>
+  ),
+});
+
 const meta = {
   title: 'Silhouette/ContourFullBleedScreen',
   component: ContourFullBleedScreen,
   decorators: [
+    localizedArgs(headerArgs),
     (Story) => (
       <div style={{ display: 'flex', height: 560, width: 420 }}>
         <Story />
@@ -36,18 +73,7 @@ const meta = {
     onBoardAreaLayout: fn(),
     onOverlayTopLayout: fn(),
     onOverlayBottomLayout: fn(),
-    header: (
-      <GameHeader
-        code="tabofuna"
-        difficulty="easy"
-        name="Zoé"
-        onQuit={fn()}
-        points={375}
-        question={t.contourGame.guessPrompt}
-        roundNumber={2}
-        totalRounds={5}
-      />
-    ),
+    ...headerArgs(t),
   },
 } satisfies Meta<typeof ContourFullBleedScreen>;
 
@@ -59,25 +85,13 @@ type Story = StoryObj<typeof meta>;
  * the bottom of the board. */
 export const Guessing: Story = {
   parameters: source(guessingCode),
-  args: {
-    hintLabels: buildHintLabels(board, 2, 'fr'),
-    footer: (
-      <GameFooter>
-        <ContourGuessBar guessText="" onChangeGuessText={fn()} onHint={fn()} onSubmit={fn()} />
-      </GameFooter>
-    ),
-  },
+  decorators: [localizedArgs(guessingArgs)],
+  args: guessingArgs(t, {}, 'fr'),
 };
 
 /** Round over: every tier is shown, name included, and the footer carries the result. */
 export const Revealed: Story = {
   parameters: source(revealedCode),
-  args: {
-    hintLabels: buildHintLabels(board, 4, 'fr'),
-    footer: (
-      <GameFooter>
-        <Button label={t.contourGame.continueLabel} onPress={fn()} />
-      </GameFooter>
-    ),
-  },
+  decorators: [localizedArgs(revealedArgs)],
+  args: revealedArgs(t, {}, 'fr'),
 };

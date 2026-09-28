@@ -3,7 +3,9 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 
 import { PLAYER_COLORS } from '@/data';
+import type { Translations } from '@/i18n';
 import { translations } from '@/i18n/translations';
+import { localizedArgs } from '@/storybook/localized';
 
 import { PartySection } from './PartySection';
 import type { PartySectionPlayer, PartySectionProps } from './types';
@@ -13,6 +15,11 @@ import hostingCode from './Hosting.source.md?raw';
 import joinedCode from './Joined.source.md?raw';
 
 const t = translations.fr;
+
+const partyText = (texts: Translations) => ({
+  title: texts.setup.playersSection.title,
+  hint: texts.setup.playersSection.hint,
+});
 
 const HOST_UID = 'host-uid';
 const JOINER_UID = 'joiner-uid';
@@ -65,6 +72,7 @@ const meta = {
   title: 'Setup/PartySection',
   component: PartySection,
   decorators: [
+    localizedArgs(partyText),
     (Story) => (
       <div style={{ width: 420 }}>
         <Story />
@@ -82,8 +90,7 @@ type Story = StoryObj<typeof meta>;
 export const Solo: Story = {
   parameters: source(soloCode),
   args: {
-    title: t.setup.playersSection.title,
-    hint: t.setup.playersSection.hint,
+    ...partyText(t),
     soloName: '',
     soloPlaceholder: 'Zoé',
     soloColor: PLAYER_COLORS[0],

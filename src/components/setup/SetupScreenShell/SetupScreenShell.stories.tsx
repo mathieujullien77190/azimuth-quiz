@@ -5,7 +5,9 @@ import DifficultySection from '@/components/setup/DifficultySection';
 import RoundsSection from '@/components/setup/RoundsSection';
 import type { SetupPartyProps } from '@/components/setup/useSetupRoom';
 import { GAME_ICONS, PLAYER_COLORS } from '@/data';
+import type { Translations } from '@/i18n';
 import { translations } from '@/i18n/translations';
+import { localizedArgs } from '@/storybook/localized';
 import { source } from '@/storybook/source';
 
 import joinerCode from './Joiner.source.md?raw';
@@ -39,11 +41,30 @@ const party: SetupPartyProps = {
   joinStatus: 'idle',
 };
 
+/** Every text of the frame, and the game's own sections it wraps, in the toolbar's language. */
+const textArgs = (texts: Translations) => ({
+  backLabel: texts.setup.quit,
+  startLabel: texts.setup.start,
+  title: texts.home.games.compass.title,
+  children: (
+    <>
+      <DifficultySection
+        hint={texts.setup.difficultyHint}
+        onSelect={fn()}
+        selected="intermediate"
+        title={texts.setup.difficultyTitle}
+      />
+      <RoundsSection onSelect={fn()} rounds={5} />
+    </>
+  ),
+});
+
 const meta = {
   title: 'Setup/SetupScreenShell',
   component: SetupScreenShell,
   // `Screen` reserves its full height (SafeAreaView -> ScrollView): it needs a fixed-height flex box.
   decorators: [
+    localizedArgs(textArgs),
     (Story) => (
       <div style={{ display: 'flex', height: 640, width: 420 }}>
         <Story />
@@ -51,27 +72,14 @@ const meta = {
     ),
   ],
   args: {
-    backLabel: t.setup.quit,
+    ...textArgs(t),
     onBack: fn(),
     onDismissOverlay: fn(),
     onStartPress: fn(),
     overlayMessage: null,
     party,
     startDisabled: false,
-    startLabel: t.setup.start,
-    title: t.home.games.compass.title,
     icon: GAME_ICONS.compass,
-    children: (
-      <>
-        <DifficultySection
-          hint={t.setup.difficultyHint}
-          onSelect={fn()}
-          selected="intermediate"
-          title={t.setup.difficultyTitle}
-        />
-        <RoundsSection onSelect={fn()} rounds={5} />
-      </>
-    ),
   },
 } satisfies Meta<typeof SetupScreenShell>;
 
@@ -89,6 +97,7 @@ export const Solo: Story = {
  * notice is the overlay a tap on a locked option raises. */
 export const Joiner: Story = {
   parameters: source(joinerCode),
+  decorators: [localizedArgs((texts) => ({ overlayMessage: texts.setup.readOnlyNotice }))],
   args: {
     overlayMessage: t.setup.readOnlyNotice,
     party: { ...party, onlineChoice: 'join', joinCode: 'tabofuna', joinCodeIsValid: true, joinStatus: 'valid' },
@@ -99,5 +108,6 @@ export const Joiner: Story = {
  * (a spinner) covers it until the game screen takes over. */
 export const Starting: Story = {
   parameters: source(startingCode),
+  decorators: [localizedArgs((texts) => ({ overlayMessage: texts.game.loading }))],
   args: { overlayLoading: true, overlayMessage: t.game.loading },
 };

@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 
+import type { Translations } from '@/i18n';
 import { translations } from '@/i18n/translations';
+import { localizedArgs } from '@/storybook/localized';
 import { source } from '@/storybook/source';
 
 import { FinalStandings } from './FinalStandings';
@@ -9,12 +11,13 @@ import multiplayerCode from './Multiplayer.source.md?raw';
 import soloCode from './Solo.source.md?raw';
 import tieCode from './Tie.source.md?raw';
 
-const t = translations.fr;
+const textArgs = (t: Translations) => ({ homeLabel: t.contourGame.home, title: t.contourGame.finalScoreTitle });
 
 const meta = {
   title: 'Common/FinalStandings',
   component: FinalStandings,
-  args: { homeLabel: t.contourGame.home, onHome: fn(), title: t.contourGame.finalScoreTitle },
+  args: { ...textArgs(translations.fr), onHome: fn() },
+  decorators: [localizedArgs(textArgs)],
 } satisfies Meta<typeof FinalStandings>;
 
 export default meta;

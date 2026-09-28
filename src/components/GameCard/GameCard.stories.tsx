@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
+import type { Translations } from '@/i18n';
 import { translations } from '@/i18n/translations';
+import { localizedArgs } from '@/storybook/localized';
 
 import { GameCard } from './GameCard';
 import { source } from '@/storybook/source';
@@ -9,6 +11,13 @@ import cluesCode from './Clues.source.md?raw';
 import contourCode from './Contour.source.md?raw';
 
 const t = translations.fr;
+
+/** The card's texts, in the toolbar's language. */
+const textArgs = (game: 'compass' | 'clues' | 'contour') => (texts: Translations) => ({
+  ctaLabel: texts.home.games[game].cta,
+  tagline: texts.home.games[game].tagline,
+  title: texts.home.games[game].title,
+});
 
 const meta = {
   title: 'Common/GameCard',
@@ -28,37 +37,34 @@ type Story = StoryObj<typeof meta>;
 
 export const Compass: Story = {
   parameters: source(compassCode),
+  decorators: [localizedArgs(textArgs('compass'))],
   args: {
-    ctaLabel: t.home.games.compass.cta,
+    ...textArgs('compass')(t),
     icon: '🧭',
     maxPlayers: 10,
     onPress: () => {},
-    tagline: t.home.games.compass.tagline,
-    title: t.home.games.compass.title,
   },
 };
 
 export const Clues: Story = {
   parameters: source(cluesCode),
+  decorators: [localizedArgs(textArgs('clues'))],
   args: {
-    ctaLabel: t.home.games.clues.cta,
+    ...textArgs('clues')(t),
     icon: '🧩',
     maxPlayers: 10,
     onPress: () => {},
-    tagline: t.home.games.clues.tagline,
-    title: t.home.games.clues.title,
   },
 };
 
 export const Contour: Story = {
   parameters: source(contourCode),
+  decorators: [localizedArgs(textArgs('contour'))],
   name: 'Silhouette',
   args: {
-    ctaLabel: t.home.games.contour.cta,
+    ...textArgs('contour')(t),
     icon: '🗺️',
     maxPlayers: 10,
     onPress: () => {},
-    tagline: t.home.games.contour.tagline,
-    title: t.home.games.contour.title,
   },
 };

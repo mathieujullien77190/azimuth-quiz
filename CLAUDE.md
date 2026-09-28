@@ -306,6 +306,13 @@ jamais sur le `meta`. Menu : `Common`, `Compass`, `Clues`, `Silhouette`, puis en
 `UI` (primitives), ordre fixe dans `admin/.storybook/preview.tsx` (`storySort`) — une nouvelle section de premier
 niveau doit y etre ajoutee. Un composant sans store ni routeur (dumb) a sa story ; les containers smart, non.
 
+La barre d'outils propose le theme (Night / Day) et la langue (Francais / English) : `preview.tsx` fournit
+`ThemeSettingsContext` et `LanguageContext` a chaque story (une story qui fige un theme s'entoure de son propre
+Provider, qui l'emporte). Les `args` qui portent du texte sont calcules au chargement du fichier : pour qu'ils
+suivent la langue, une story les construit avec une fonction `(t) => ({...})` utilisee deux fois — dans `args`
+(avec `translations.fr`) et dans `decorators: [localizedArgs(build)]` (`@/storybook/localized`), qui les refait
+avec la langue courante. Du JSX de story qui contient du texte passe par le meme `build` (voir `SetupScreenShell`).
+
 ## Theme
 
 Deux themes, `night` (sombre, bleu nuit + ambre, ciel etoile) et `day` (clair, ciel

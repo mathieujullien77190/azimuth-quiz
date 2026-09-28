@@ -6,6 +6,7 @@ import { DISTANCE_MARKS_KM } from '@/games/compass/constants';
 import { formatDistance, kmToRatio, ratioToKm } from '@/helpers';
 import { SAMPLE_DISTANCE_KM, SAMPLE_MAX_SURFACE_KM } from '@/helpers/storyFixtures';
 import { translations } from '@/i18n/translations';
+import { localizedArgs } from '@/storybook/localized';
 import { source } from '@/storybook/source';
 
 import distanceCode from './Distance.source.md?raw';
@@ -86,6 +87,7 @@ export const Percentage: Story = {
  * `kmToRatio`), so the first hundred kilometres get as much room as the last ten thousand. */
 export const Distance: Story = {
   parameters: source(distanceCode),
+  decorators: [localizedArgs((t) => ({ label: t.sliders.distance }))],
   args: {
     label: translations.fr.sliders.distance,
     marks: DISTANCE_MARKS_KM.filter((km) => km < SAMPLE_MAX_SURFACE_KM).map((km) => ({
