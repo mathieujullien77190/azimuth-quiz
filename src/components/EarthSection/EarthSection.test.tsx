@@ -16,30 +16,21 @@ const nearMark: EarthMark = { bearing: 90, distanceKm: 5, color: '#EF4444' };
 const farMark: EarthMark = { bearing: 90, distanceKm: EARTH_RADIUS_KM * Math.PI, color: '#16A34A' };
 
 describe('EarthSection — marks rendering', () => {
-  it('renders without the straight-line chord or zoom controls by default', async () => {
-    const { queryByText } = await render(<EarthSection marks={[nearMark]} showStraightLine={false} size={240} />);
-    expect(queryByText('horizon')).toBeNull();
+  it('renders without zoom controls by default', async () => {
+    const { queryByText } = await render(<EarthSection marks={[nearMark]} size={240} />);
     // No zoomControls -> no +/- buttons.
     expect(queryByText('−')).toBeNull();
     expect(queryByText('+')).toBeNull();
   });
 
-  it('shows the horizon line/label and caption in straight-line mode', async () => {
-    const { getByText, toJSON } = await render(<EarthSection marks={[nearMark]} showStraightLine size={240} />);
-    expect(getByText('COUPE DE LA TERRE')).toBeTruthy();
-    // The "horizon" label is SVG text (RNSVGText/TSpan), not matchable by getByText: we
-    // check its presence directly in the rendered tree.
-    expect(JSON.stringify(toJSON())).toContain('horizon');
-  });
-
-  it('shows the surface caption when not in straight-line mode', async () => {
-    const { getByText } = await render(<EarthSection marks={[nearMark]} showStraightLine={false} size={240} />);
+  it('shows the surface caption', async () => {
+    const { getByText } = await render(<EarthSection marks={[nearMark]} size={240} />);
     expect(getByText('LA TERRE')).toBeTruthy();
   });
 
-  it('renders a truth mark distinctly (ring, no arc/chord) without crashing', async () => {
+  it('renders a truth mark distinctly (ring, no arc) without crashing', async () => {
     const truthMark: EarthMark = { ...nearMark, isTruth: true };
-    const { toJSON } = await render(<EarthSection marks={[truthMark]} showStraightLine size={240} />);
+    const { toJSON } = await render(<EarthSection marks={[truthMark]} size={240} />);
     expect(toJSON()).toBeTruthy();
   });
 });
@@ -47,7 +38,7 @@ describe('EarthSection — marks rendering', () => {
 describe('EarthSection — zoom controls', () => {
   it('starts at the ideal zoom, − decreases and can reach the disabled minimum', async () => {
     const { getAllByRole } = await render(
-      <EarthSection marks={[nearMark]} showStraightLine={false} size={240} zoomControls />,
+      <EarthSection marks={[nearMark]} size={240} zoomControls />,
     );
     const [minus] = getAllByRole('button');
     for (let i = 0; i < ZOOM_STEPS.length; i += 1) {
@@ -58,7 +49,7 @@ describe('EarthSection — zoom controls', () => {
 
   it('+ increases zoom and can reach the disabled maximum', async () => {
     const { getAllByRole } = await render(
-      <EarthSection marks={[nearMark]} showStraightLine={false} size={240} zoomControls />,
+      <EarthSection marks={[nearMark]} size={240} zoomControls />,
     );
     const [, plus] = getAllByRole('button');
     for (let i = 0; i < ZOOM_STEPS.length; i += 1) {
@@ -69,7 +60,7 @@ describe('EarthSection — zoom controls', () => {
 
   it('using a far mark (ideal zoom at the minimum), + starts enabled and increases the zoom', async () => {
     const { getAllByRole } = await render(
-      <EarthSection marks={[farMark]} showStraightLine={false} size={240} zoomControls />,
+      <EarthSection marks={[farMark]} size={240} zoomControls />,
     );
     const [minus, plus] = getAllByRole('button');
     expect(minus.props.accessibilityState.disabled).toBe(true);
@@ -96,7 +87,7 @@ describe('EarthSection — satellite', () => {
 
   it('does not show the satellite when allowSatellite is false', async () => {
     const { queryByText } = await render(
-      <EarthSection allowSatellite={false} marks={[farMark]} showStraightLine={false} size={240} />,
+      <EarthSection allowSatellite={false} marks={[farMark]} size={240} />,
     );
     expect(queryByText('🛰️')).toBeNull();
     expect(startMock).not.toHaveBeenCalled();
@@ -104,14 +95,14 @@ describe('EarthSection — satellite', () => {
 
   it('does not show the satellite when zoomed in past scale 1, even if allowed', async () => {
     const { queryByText } = await render(
-      <EarthSection allowSatellite marks={[nearMark]} showStraightLine={false} size={240} />,
+      <EarthSection allowSatellite marks={[nearMark]} size={240} />,
     );
     expect(queryByText('🛰️')).toBeNull();
   });
 
   it('shows the satellite at zoom 1 with allowSatellite, and loops the orbit animation', async () => {
     const { getByText } = await render(
-      <EarthSection allowSatellite marks={[farMark]} showStraightLine={false} size={240} />,
+      <EarthSection allowSatellite marks={[farMark]} size={240} />,
     );
     expect(getByText('🛰️')).toBeTruthy();
     expect(timingSpy).toHaveBeenCalledWith(
@@ -133,7 +124,7 @@ describe('EarthSection — satellite', () => {
 
   it('stops looping after unmount even if the in-flight animation reports finished', async () => {
     const { unmount, getByText } = await render(
-      <EarthSection allowSatellite marks={[farMark]} showStraightLine={false} size={240} />,
+      <EarthSection allowSatellite marks={[farMark]} size={240} />,
     );
     getByText('🛰️');
     const callsBeforeUnmount = startMock.mock.calls.length;
@@ -157,7 +148,7 @@ describe('EarthSection — satellite', () => {
           resetAnimationsEnabled: jest.fn(),
         }}
       >
-        <EarthSection allowSatellite marks={[farMark]} showStraightLine={false} size={240} />
+        <EarthSection allowSatellite marks={[farMark]} size={240} />
       </ThemeSettingsContext.Provider>,
     );
     expect(getByText(DAY_ORBIT_EMOJI)).toBeTruthy();
@@ -166,7 +157,7 @@ describe('EarthSection — satellite', () => {
 
   it('toggles the joke bubble on tap and hides it again on a second tap', async () => {
     const { getByText, queryByText } = await render(
-      <EarthSection allowSatellite marks={[farMark]} showStraightLine={false} size={240} />,
+      <EarthSection allowSatellite marks={[farMark]} size={240} />,
     );
     expect(queryByText(SATELLITE_QUIP)).toBeNull();
     await fireEvent.press(getByText('🛰️'));

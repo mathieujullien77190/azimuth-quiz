@@ -1,15 +1,10 @@
-import type { RoomPlayers } from '@/games/compass/helpers/room';
+import type { SetupPartyProps } from '@/components/setup/useSetupRoom';
 import type { Category, Difficulty, GameSettings } from '@/types';
 
 export type SetupScreenProps = {
   onStart: () => void;
   onBack: () => void;
 };
-
-// A type-only import from `room.ts` is erased at compile time, so it never actually pulls in
-// `firebase/firestore` at runtime — safe for `SetupScreenView` (the dumb component) to use for
-// this shape alone, unlike importing any of `room.ts`'s actual values/functions.
-export type SetupScreenPlayer = RoomPlayers[string];
 
 /** Pure rendering, no hooks with side effects (no `@/settings`, `@/games/compass/helpers/room`,
  * `@/games/compass/store/roomStore`) — every value here is already resolved, every callback already
@@ -20,32 +15,13 @@ export type SetupScreenViewProps = {
   ready: boolean;
   available: number;
 
-  soloName: string;
-  soloPlaceholder: string;
-  soloColor: string;
-  nameEditable: boolean;
-  onChangeName: (text: string) => void;
-  connectedPlayers: [string, SetupScreenPlayer][];
-  localUid: string | null;
-  hostUid: string | null;
-  isHost: boolean;
-  onKick: (uid: string) => void;
-
-  onlineChoice: 'host' | 'join' | null;
-  onChooseSolo: () => void;
-  onChooseHost: () => void;
-  onChooseJoin: () => void;
-  roomCode: string | null;
-  joinCode: string;
-  onJoinCodeChange: (text: string) => void;
-  joinCodeIsValid: boolean;
-  joinStatus: 'idle' | 'valid' | 'invalid';
+  /** Solo / host / join block, shared with every other game's setup (`useSetupRoom`). */
+  party: SetupPartyProps;
 
   readOnly: boolean;
   onToggleCategory: (id: Category) => void;
   onSelectDifficulty: (id: Difficulty) => void;
   onSelectRounds: (rounds: number) => void;
-  onSelectMode: (straightLine: boolean) => void;
   onToggleLiveCompass: (value: boolean) => void;
   onToggleUseGps: (value: boolean) => void;
   onChangeCustomOrigin: (patch: { customLatitude?: number; customLongitude?: number }) => void;

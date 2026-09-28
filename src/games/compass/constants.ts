@@ -25,12 +25,9 @@ export const SCORE_CURVE_EXPONENT = 1.5;
 export const MIN_DISTANCE_KM = 10;
 /** Largest surface distance: half the Earth's circumference. */
 export const MAX_SURFACE_DISTANCE_KM = 20000;
-/** Largest straight-line distance: the Earth's diameter (vertical inclination). */
-export const MAX_STRAIGHT_DISTANCE_KM = 12742;
 // Marks shown below the distance sliders (logarithmic scale).
 export const DISTANCE_MARKS_KM = [100, 1000, 10000] as const;
 export const DEFAULT_DISTANCE_KM = 1000;
-export const MAX_INCLINATION_DEG = 90;
 
 // Places closer than this to the starting point: excluded (too easy, unstable heading).
 export const MIN_PLACE_DISTANCE_KM = 150;
@@ -73,7 +70,6 @@ export const DEFAULT_SETTINGS: GameSettings = {
   // Single choice (radio).
   difficulties: ['intermediate'],
   rounds: 5,
-  straightLine: false,
   useGps: true,
   // Paris by default, like DEFAULT_ORIGIN (see @/data).
   customLatitude: DEFAULT_ORIGIN.coordinates.latitude,

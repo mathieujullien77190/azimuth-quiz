@@ -4,7 +4,7 @@ import { pickLeastDrawn, type ClueDrawHistory } from '@/games/clues/helpers/clue
 import type { NameSkeletonSlot } from '@/games/clues/helpers/clueSkeleton';
 import { effectiveDifficulty } from '@/games/compass/helpers/places';
 import type { Language } from '@/i18n';
-import type { Difficulty, ClueCategory, CluePlace } from '@/types';
+import type { ClueId, Difficulty, ClueCategory, CluePlace } from '@/types';
 
 /** Clues that reveal in 2 clicks: tier/symbol/day-night on the 1st, exact value on the 2nd
  * (distance/elevation/population/currency/localTime); letter: first letter alone, then every
@@ -29,6 +29,18 @@ export const totalRevealCount = (): number =>
  * by 1 for each clue picked (they all have the same "cost" now): finding it fast (few clues
  * used) leaves a higher — and thus more won — remaining score. */
 export const maxScoreForRound = (totalReveals: number): number => Math.ceil(totalReveals / 10) * 10;
+
+/** The round's current countdown score, from `revealedClueIds` alone — shared by the local game
+ * and the online host's own scoring effect (`useOnlineClueGame`), so both compute the exact same
+ * number from the exact same input. `vowels` isn't a normal clue (see its own doc comment in
+ * `types/index.ts`): it's excluded from the linear countdown and instead drops the round straight
+ * to 1, if it was still above that. */
+export const remainingScore = (revealedClueIds: ClueId[]): number => {
+  const maxScore = maxScoreForRound(totalRevealCount());
+  const vowelsRevealed = revealedClueIds.includes('vowels');
+  const countdownRemaining = maxScore - revealedClueIds.filter((id) => id !== 'vowels').length;
+  return vowelsRevealed ? Math.min(countdownRemaining, 1) : countdownRemaining;
+};
 
 /** Round's place: among places matching both the chosen difficulty and the chosen categories
  * (falls back to the whole pool if the filter is empty), prefers whichever have been drawn the

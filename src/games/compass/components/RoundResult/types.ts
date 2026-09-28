@@ -1,12 +1,10 @@
-import type { GameSettings, Player, RoundRecord } from '@/types';
+import type { Player, RoundRecord } from '@/types';
 
 export type RoundResultProps = {
   record: RoundRecord;
   players: Player[];
   /** Each player's cumulative score, previous rounds + this one (same order as `players`). */
   totals: number[];
-  /** Game modes: decides whether the straight-line gap/inclination is shown. */
-  options: Pick<GameSettings, 'straightLine'>;
   /** Online play only, while waiting for the round to be scored: one flag per player (same order
    * as `players`/`record.results`). Blanks the truth row and swaps every player's per-category
    * value/points for a raw guess (if that player has answered) or "?" (points always, since no

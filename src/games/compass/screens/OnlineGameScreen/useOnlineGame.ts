@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 
 import { DEFAULT_DISTANCE_KM } from '@/games/compass/constants';
-import { applyBestBonus, inclinationFromChordKm, scoreRound } from '@/helpers';
+import { applyBestBonus, scoreRound } from '@/helpers';
 import {
   deleteRoom,
   finishRoomRound,
@@ -46,7 +46,6 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
   const onlinePlayers = onlinePlayersFrom(players);
   const isHost = localUid !== null && localUid === hostUid;
   const place = gameState.places[gameState.roundIndex];
-  const straightLine = roomSettings?.straightLine ?? false;
 
   // This device's own in-progress answer — reset at the top of every round. Adjusted during
   // render rather than in an effect (React's own recommended pattern for "reset state when a
@@ -106,7 +105,7 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
         const guess = gameState.guesses[uid];
         return {
           guess,
-          score: scoreRound(origin.coordinates, place, guess, { straightLine }),
+          score: scoreRound(origin.coordinates, place, guess),
         };
       }),
     );
@@ -117,7 +116,7 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
       totalScores[uid] = (gameState.totalScores[uid] ?? 0) + results[index].score.total;
     });
     finishRoomRound(code, scores, totalScores).catch(() => {});
-  }, [isHost, gameState, onlinePlayers, straightLine, place, code]);
+  }, [isHost, gameState, onlinePlayers, place, code]);
 
   // Keyed by uid (not derived from `records`' array position): the host writes this to the room
   // after every round (see `finishRoomRound`), so it survives a kick reshuffling `onlinePlayers`'
@@ -146,13 +145,19 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
       router.replace('/');
       return;
     }
-    if (localUid !== null) removeRoomPlayer(code, localUid).catch(() => {});
+    if (localUid !== null) {
+      // Marked *before* the write goes out: SetupScreen's own "was I kicked?" listener reacts to
+      // the same players update this produces, and can't otherwise tell "I just quit" apart from
+      // "the host removed me" — both look identical in Firestore (present, then not).
+      useRoomStore.getState().markVoluntaryLeave();
+      removeRoomPlayer(code, localUid).catch(() => {});
+    }
     onQuit();
   };
 
   const submit = async () => {
     if (localUid === null) return;
-    const guess = { bearing, distanceKm, inclination: straightLine ? inclinationFromChordKm(distanceKm) : 0 };
+    const guess = { bearing, distanceKm };
     await submitRoomGuess(code, localUid, guess).catch(() => {});
   };
 
@@ -176,7 +181,6 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
     roomSettings,
     gameState,
     place,
-    straightLine,
     bearing,
     distanceKm,
     bearingTouched,

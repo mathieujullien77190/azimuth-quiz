@@ -9,8 +9,6 @@ import DistanceSlider from '../../components/DistanceSlider';
 import EarthSection from '@/components/EarthSection';
 import FooterNav from '../../components/FooterNav';
 import GameHeader from '@/components/GameHeader';
-import InclinationSlider from '../../components/InclinationSlider';
-import Legend from '../../components/Legend';
 import PlaceCard from '../../components/PlaceCard';
 import PlayerTabs from '@/components/PlayerTabs';
 import RoundResult from '../../components/RoundResult';
@@ -70,7 +68,6 @@ export const GameScreenView = ({
   onSetBearing,
   answeredNeedles,
   revealNeedles,
-  legendItems,
   earthMarks,
   distanceKm,
   onSetDistanceKm,
@@ -88,7 +85,6 @@ export const GameScreenView = ({
   const { width } = useWindowDimensions();
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
-  const straightLine = config.straightLine;
 
   return (
     <>
@@ -154,7 +150,6 @@ export const GameScreenView = ({
               <Text style={styles.readout}>{formatBearing(bearing, t.cardinals)}</Text>
             </>
           )}
-          {legendItems.length > 0 && <Legend items={legendItems} />}
         </View>
 
         <Card style={styles.earthCard}>
@@ -162,20 +157,14 @@ export const GameScreenView = ({
             <EarthSection
               key={roundNumber}
               marks={earthMarks}
-              showStraightLine={straightLine}
               size={earthSizeFor(width)}
               zoomControls={record !== undefined}
             />
           </View>
-          {!record &&
-            (straightLine ? (
-              <InclinationSlider distanceKm={distanceKm} maxKm={maxDistanceKm} onChange={onSetDistanceKm} />
-            ) : (
-              <DistanceSlider maxKm={maxDistanceKm} onChange={onSetDistanceKm} valueKm={distanceKm} />
-            ))}
+          {!record && <DistanceSlider maxKm={maxDistanceKm} onChange={onSetDistanceKm} valueKm={distanceKm} />}
         </Card>
 
-        {record && <RoundResult options={config} players={players} record={record} totals={totals} />}
+        {record && <RoundResult players={players} record={record} totals={totals} />}
       </Screen>
 
       {isMultiplayer && !record && <TurnPopup key={roundNumber} name={currentPlayerName} />}

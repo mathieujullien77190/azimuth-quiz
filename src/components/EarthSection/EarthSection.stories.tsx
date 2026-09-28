@@ -18,16 +18,13 @@ type Story = StoryObj<typeof meta>;
 export const Surface: Story = {
   args: {
     marks: [{ bearing: 60, distanceKm: 3000, color: SAMPLE_PLAYERS[0].color, isTruth: true }],
-    showStraightLine: false,
     size: 160,
   },
 };
 
-export const StraightLineWithZoomControls: Story = {
-  name: 'Straight line, with zoom controls',
+export const WithZoomControls: Story = {
   args: {
     marks: [{ bearing: 30, distanceKm: 9000, color: SAMPLE_PLAYERS[1].color, isTruth: true }],
-    showStraightLine: true,
     size: 160,
     zoomControls: true,
   },

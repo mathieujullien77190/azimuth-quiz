@@ -209,66 +209,9 @@ describe('ClueGameScreen — vowels bonus clue', () => {
   });
 });
 
-describe('ClueGameScreen — buzz flow (spoken)', () => {
-  it('lets the buzzing player be picked, verified, and settled correct', async () => {
-    const { getByText, getByLabelText } = await renderGame({ answerMethod: 'spoken', playerNames: ['Zoé'] });
-    await fireEvent.press(getByText('🔔 J’ai trouvé !'));
-    await fireEvent.press(getByLabelText('Zoé'));
-    expect(getByText(/Zoé buzze/)).toBeTruthy();
-    await fireEvent.press(getByText('Vérifier'));
-    await fireEvent.press(getByText('✓ Bonne réponse'));
-    // No clue taken: the remaining (thus won) score is still at the maximum (30).
-    expect(getByText('Zoé marque 30 points !')).toBeTruthy();
-    expect(getByText('Continuer')).toBeTruthy();
-  });
-
-  it('settles a wrong answer with a fixed penalty and ends the round (Vérifier already revealed the place)', async () => {
-    const { getByText, getByLabelText } = await renderGame({
-      answerMethod: 'spoken',
-      playerNames: ['Zoé'],
-    });
-    await fireEvent.press(getByText('🔔 J’ai trouvé !'));
-    await fireEvent.press(getByLabelText('Zoé'));
-    await fireEvent.press(getByText('Vérifier'));
-    await fireEvent.press(getByText('✕ Faux'));
-    // Fixed penalty (WRONG_ANSWER_PENALTY = 10), regardless of how many clues had been taken.
-    expect(getByText('Zoé se trompe — perd 10 points.')).toBeTruthy();
-    // Round over: pretending it's still a mystery would be pointless, Vérifier already showed it.
-    expect(getByText(new RegExp(PARIS.name))).toBeTruthy();
-    expect(getByText('Continuer')).toBeTruthy();
-  });
-
-  it('cancels a buzz (wrong player, accidental click...) without touching the score', async () => {
-    const { getByText, getByLabelText, queryByText } = await renderGame({
-      answerMethod: 'spoken',
-      playerNames: ['Zoé'],
-    });
-    await fireEvent.press(getByText('🔔 J’ai trouvé !'));
-    await fireEvent.press(getByLabelText('Zoé'));
-    await fireEvent.press(getByText('Vérifier'));
-    await fireEvent.press(getByText('Annuler'));
-    expect(queryByText('✓ Bonne réponse')).toBeNull();
-    expect(getByText('🔔 J’ai trouvé !')).toBeTruthy();
-  });
-
-  it('asks who buzzes and lets any player be selected before verifying', async () => {
-    const { getByText, getByLabelText } = await renderGame({
-      answerMethod: 'spoken',
-      playerNames: ['Zoé', 'Max'],
-    });
-    await fireEvent.press(getByText('🔔 J’ai trouvé !'));
-    await fireEvent.press(getByLabelText('Max'));
-    expect(getByText(/Max buzze/)).toBeTruthy();
-    await fireEvent.press(getByText('Vérifier'));
-    await fireEvent.press(getByText('✓ Bonne réponse'));
-    expect(getByText('Max marque 30 points !')).toBeTruthy();
-  });
-});
-
 describe('ClueGameScreen — typed answer flow', () => {
-  it('the input is visible from the start (no buzz-first step), wrong guess is scored as wrong', async () => {
+  it('the input is visible from the start, wrong guess is scored as wrong', async () => {
     const { getByText, getByPlaceholderText } = await renderGame({
-      answerMethod: 'typed',
       playerNames: ['Zoé', 'Max'],
     });
     const input = getByPlaceholderText('Nom de la ville…');
@@ -280,7 +223,6 @@ describe('ClueGameScreen — typed answer flow', () => {
 
   it('solo play settles immediately on "Valider" without the "who answered" overlay (only one possible answerer)', async () => {
     const { getByText, queryByText, getByPlaceholderText } = await renderGame({
-      answerMethod: 'typed',
       playerNames: ['Zoé'],
     });
     const input = getByPlaceholderText('Nom de la ville…');
@@ -292,7 +234,6 @@ describe('ClueGameScreen — typed answer flow', () => {
 
   it('keeps the round open and the miss banner/letter recap visible after a wrong typed guess (no reveal, unlike spoken mode)', async () => {
     const { getByText, getAllByText, queryByText, getByPlaceholderText } = await renderGame({
-      answerMethod: 'typed',
       playerNames: ['Zoé', 'Max'],
     });
     await fireEvent.press(getAllByText('Lettres')[0]);
@@ -315,7 +256,6 @@ describe('ClueGameScreen — typed answer flow', () => {
 
   it('correct guess scores correctly', async () => {
     const { getByText, getByPlaceholderText } = await renderGame({
-      answerMethod: 'typed',
       playerNames: ['Zoé', 'Max'],
     });
     const input = getByPlaceholderText('Nom de la ville…');
@@ -327,7 +267,6 @@ describe('ClueGameScreen — typed answer flow', () => {
 
   it('once the real length is known (letter, 2nd click), typing live-fills the skeleton and blocks extra letters', async () => {
     const { getAllByText, getByPlaceholderText } = await renderGame({
-      answerMethod: 'typed',
       playerNames: ['Zoé'],
     });
     await fireEvent.press(getAllByText('Lettres')[0]);
@@ -383,25 +322,22 @@ describe('ClueGameScreen — round progression', () => {
   });
 
   it('final standings: shows a single-winner banner when totals differ', async () => {
-    const { getByText, getByLabelText } = await renderGame({
-      answerMethod: 'spoken',
+    const { getByText, getByPlaceholderText } = await renderGame({
       playerNames: ['Zoé', 'Max'],
       rounds: 2,
     });
-    // Round 1: Max reveals a clue then finds it, their penalty = the cost of that clue (3).
+    // Round 1: Max reveals a clue then finds it — remaining score is 29, not the full 30.
     await fireEvent.press(getByText('Population'));
-    await fireEvent.press(getByText('🔔 J’ai trouvé !'));
-    await fireEvent.press(getByLabelText('Max'));
-    await fireEvent.press(getByText('Vérifier'));
-    await fireEvent.press(getByText('✓ Bonne réponse'));
+    await fireEvent.changeText(getByPlaceholderText('Nom de la ville…'), 'Paris');
+    await fireEvent.press(getByText('Valider'));
+    await fireEvent.press(getByText('Max'));
     await fireEvent.press(getByText('Continuer'));
-    // Round 2: Zoé buzzes in and finds it with no clue, their cumulative total stays at 0.
-    await fireEvent.press(getByText('🔔 J’ai trouvé !'));
-    await fireEvent.press(getByLabelText('Zoé'));
-    await fireEvent.press(getByText('Vérifier'));
-    await fireEvent.press(getByText('✓ Bonne réponse'));
+    // Round 2: Zoé finds it with no clue picked at all — the full 30.
+    await fireEvent.changeText(getByPlaceholderText('Nom de la ville…'), 'Paris');
+    await fireEvent.press(getByText('Valider'));
+    await fireEvent.press(getByText('Zoé'));
     await fireEvent.press(getByText('Voir le score'));
-    // Zoé (0) beats Max (3): a single winner, no tie.
+    // Zoé (30) beats Max (29): a single winner, no tie.
     expect(getByText('Zoé gagne !')).toBeTruthy();
   });
 

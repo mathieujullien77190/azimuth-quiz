@@ -1,8 +1,8 @@
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text } from 'react-native';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { arcKmFromChordKm, formatNumber } from '@/helpers';
+import { formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { EarthMark } from '@/components/EarthSection';
@@ -16,8 +16,8 @@ import type { GameScreenProps, Needle } from './types';
 import { useGame } from './useGame';
 import { createStyles } from './GameScreen.styles';
 
-// Stable reference for the "hide other players' answers" branch: otherwise Legend (memoized)
-// re-renders on every compass-drag tick just from getting a fresh empty array each time.
+// Stable reference for the "hide other players' answers" branch: otherwise memoized children
+// would re-render on every compass-drag tick just from getting a fresh empty array each time.
 const NO_ANSWERED: ReturnType<typeof useGame>['answered'] = [];
 
 /**
@@ -48,18 +48,12 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
     const next = onCapFromScroll(event);
     if (next !== null) setOnCap(next);
   };
-  // "Submit" moves to the next player (or reveals if it was the last one): either way we
-  // scroll back to the top instead of staying scrolled on the previous player's heading/distance.
   const submit = () => {
     setOnCap(false);
-    scrollRef.current?.scrollTo({ animated: true, y: 0 });
     game.submit();
   };
-  // "Next round" also scrolls back to the top, instead of staying scrolled on the
-  // previous reveal.
   const next = () => {
     setOnCap(false);
-    scrollRef.current?.scrollTo({ animated: true, y: 0 });
     game.next();
   };
 
@@ -70,26 +64,6 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
   // their own arrow/estimate during the round; the reveal always shows everything either way).
   const showOthersWhileGuessing = !game.config.hideOtherAnswers;
   const answered = showOthersWhileGuessing ? game.answered : NO_ANSWERED;
-
-  // useMemo: passed to Legend (memoized) as `items` — a stable reference (when its own
-  // dependencies haven't changed) lets it bail out of re-rendering on every compass-drag tick.
-  const legendItems = useMemo(
-    () =>
-      record
-        ? game.isMultiplayer
-          ? [
-              ...game.players.map((player) => ({ label: player.name, color: player.color })),
-              { label: t.game.reality, color: colors.truth, ring: true },
-            ]
-          : [
-              { label: t.game.yourAnswer, color: game.players[0].color },
-              { label: t.game.reality, color: colors.truth, ring: true },
-            ]
-        : game.isMultiplayer
-          ? answered.map((entry) => ({ label: entry.player.name, color: entry.player.color }))
-          : [],
-    [record, game.isMultiplayer, game.players, answered, colors.truth, t.game.reality, t.game.yourAnswer],
-  );
 
   if (game.phase === 'loading' || game.place === undefined || game.currentPlayer === undefined) {
     return (
@@ -113,14 +87,10 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
     );
   }
 
-  const straightLine = game.config.straightLine;
   // Always the player's real color (the one chosen on the settings screen), even solo: no
   // fallback to colors.accent that would no longer match what was shown at selection.
   const playerColor = game.currentPlayer.color;
   const playerColorAt = (index: number) => game.players[index].color;
-  // The slider gives the chord (straight line) in straightLine mode; the Earth draws an arc,
-  // so we need the equivalent ground distance (same destination, cf. helpers/geo).
-  const earthDistanceKm = (km: number) => (straightLine ? arcKmFromChordKm(km) : km);
 
   const answeredNeedles: Needle[] = answered.map((entry) => ({
     bearing: entry.guess.bearing,
@@ -140,7 +110,7 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
         },
         ...record.results.map((result, index): EarthMark => ({
           bearing: result.guess.bearing,
-          distanceKm: earthDistanceKm(result.guess.distanceKm),
+          distanceKm: result.guess.distanceKm,
           color: playerColorAt(index),
           opacity: REVEAL_OPACITY,
         })),
@@ -148,11 +118,11 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
     : [
         ...answered.map((entry): EarthMark => ({
           bearing: entry.guess.bearing,
-          distanceKm: earthDistanceKm(entry.guess.distanceKm),
+          distanceKm: entry.guess.distanceKm,
           color: entry.player.color,
           opacity: ANSWERED_OPACITY,
         })),
-        { bearing: game.bearing, distanceKm: earthDistanceKm(game.distanceKm), color: playerColor },
+        { bearing: game.bearing, distanceKm: game.distanceKm, color: playerColor },
       ];
 
   const scoreLabel = record
@@ -173,7 +143,6 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
       earthMarks={earthMarks}
       isLastRound={game.roundNumber === game.totalRounds}
       isMultiplayer={game.isMultiplayer}
-      legendItems={legendItems}
       maxDistanceKm={game.maxDistanceKm}
       onCap={onCap}
       onGoToCap={goToCap}

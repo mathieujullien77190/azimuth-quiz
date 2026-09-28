@@ -24,7 +24,6 @@ type Story = StoryObj<typeof meta>;
  * guesses (one near-perfect, one overshooting, one wide off) — not invented numbers. */
 export const SurfaceMode: Story = {
   args: {
-    options: { straightLine: false },
     players: SAMPLE_PLAYERS,
     record: SAMPLE_ROUND_RECORD,
     totals: SAMPLE_TOTALS,

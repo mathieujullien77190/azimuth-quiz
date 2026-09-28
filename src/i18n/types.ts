@@ -1,4 +1,4 @@
-import type { Category, Difficulty, ClueAnswerMethod, ClueId } from '@/types';
+import type { Category, Difficulty, ClueId } from '@/types';
 
 export type Language = 'fr' | 'en';
 
@@ -6,7 +6,6 @@ export type Language = 'fr' | 'en';
 export type HomeGameCopy = {
   title: string;
   tagline: string;
-  meta: readonly string[];
   cta: string;
 };
 
@@ -33,6 +32,8 @@ export type Translations = {
   home: {
     tagline: string;
     settingsButtonLabel: string;
+    /** Player-count line of a game card ("1 à 10 joueurs"). */
+    playersRange: (max: number) => string;
     games: {
       compass: HomeGameCopy;
       clues: HomeGameCopy;
@@ -79,11 +80,6 @@ export type Translations = {
     };
     /** Shown briefly (see SetupScreen's `notifyReadOnly`) when a joiner taps a read-only option. */
     readOnlyNotice: string;
-    modeTitle: string;
-    distanceModes: {
-      distance: { label: string; description: string };
-      inclination: { label: string; description: string };
-    };
     optionsTitle: string;
     toggles: {
       liveCompass: { label: string; description: string };
@@ -102,11 +98,9 @@ export type Translations = {
     last: string;
     round: string;
     roundOver: string;
-    reality: string;
-    yourAnswer: string;
     /** Navigates to the "heading" (compass) section while answering, without submitting. */
     nextStep: string;
-    /** Goes back to the "distance"/"inclination" section while answering, without submitting. */
+    /** Goes back to the "distance" section while answering, without submitting. */
     previousStep: string;
     /** Replaces the initials on the active player's tab ("Matou's turn"). */
     playerTurn: (name: string) => string;
@@ -120,13 +114,11 @@ export type Translations = {
   };
   sliders: {
     distance: string;
-    inclination: string;
   };
   roundResult: {
     truth: string;
     direction: string;
     distance: string;
-    inclination: string;
     yourScore: string;
     /** Accessibility label for the ⓘ button that shows/hides scoringInfo. */
     scoringInfoLabel: string;
@@ -168,12 +160,8 @@ export type Translations = {
     screenTitle: string;
     back: string;
     start: string;
-    playersSection: { title: string; hint: string };
-    playerNameAccessibility: (index: number) => string;
     difficultyTitle: string;
     difficultyHint: string;
-    answerMethodTitle: string;
-    answerMethods: Record<ClueAnswerMethod, string>;
     optionsTitle: string;
     toggles: {
       startWithFirstLetter: { label: string; description: string };
@@ -181,13 +169,7 @@ export type Translations = {
   };
   cluesGame: {
     pointsAtStake: (points: string) => string;
-    buzz: string;
     giveUp: string;
-    buzzedPrompt: (name: string) => string;
-    verify: string;
-    cancel: string;
-    correct: string;
-    wrong: string;
     /** Shown on the full-screen attribution overlay right after "Valider" (typed mode only),
      * before picking who answered — only on a correct guess, nothing shown for a wrong one. */
     resultOk: string;
@@ -200,6 +182,10 @@ export type Translations = {
     wasPlace: string;
     continueLabel: string;
     home: string;
+    /** Online only: shown to the player whose turn it is right now. */
+    yourTurn: string;
+    /** Online only: shown to everyone else while waiting for `name`'s turn. */
+    waitingForTurn: (name: string) => string;
     clues: Record<ClueId, string>;
     isCapitalYes: string;
     isCapitalNo: string;

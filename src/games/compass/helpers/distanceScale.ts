@@ -13,7 +13,7 @@ export const roundDistance = (km: number, maxKm: number): number => {
 /**
  * Position [0, 1] on a logarithmic-scale slider -> distance in km.
  * No rounding at either extreme: otherwise the 100 km step would round, say,
- * 12,742 km (90° inclination) down to 12,700 km (~85° inclination), making 90° unreachable.
+ * 20,000 km down to 19,900 km — the maximum must stay reachable exactly.
  */
 export const ratioToKm = (ratio: number, maxKm: number): number => {
   const clamped = clamp01(ratio);

@@ -121,7 +121,7 @@ export const HomeScreen = () => {
         <GameCard
           ctaLabel={t.home.games.compass.cta}
           icon="🧭"
-          meta={t.home.games.compass.meta}
+          maxPlayers={10}
           onPress={() => router.push('/setup')}
           tagline={t.home.games.compass.tagline}
           title={t.home.games.compass.title}
@@ -129,7 +129,7 @@ export const HomeScreen = () => {
         <GameCard
           ctaLabel={t.home.games.clues.cta}
           icon="🧩"
-          meta={t.home.games.clues.meta}
+          maxPlayers={6}
           onPress={() => router.push('/clues-setup')}
           tagline={t.home.games.clues.tagline}
           title={t.home.games.clues.title}
@@ -137,7 +137,7 @@ export const HomeScreen = () => {
         <GameCard
           ctaLabel={t.home.games.contour.cta}
           icon="🗺️"
-          meta={t.home.games.contour.meta}
+          maxPlayers={6}
           onPress={() => router.push('/contour-setup')}
           tagline={t.home.games.contour.tagline}
           title={t.home.games.contour.title}

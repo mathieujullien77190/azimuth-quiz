@@ -57,7 +57,7 @@ src/
   games/
     compass/
       screens/         # GameScreen, OnlineGameScreen, SetupScreen, EndScreen
-      components/      # DistanceSlider, InclinationSlider, SliderTrack, RoundResult, Legend,
+      components/      # DistanceSlider, SliderTrack, RoundResult,
                        # PlaceCard
       helpers/         # places.ts, scoring.ts, distanceScale.ts, room.ts (Firestore, hors
                        # barrel `@/helpers` — voir plus bas)
@@ -135,21 +135,26 @@ le container, l'arbre final est identique, seul son decoupage interne a bouge.
 `OnlineGameScreen` n'a aucun test automatise — seul un retest manuel garantit qu'il n'a
 pas regresse apres ce decoupage.
 
-## Domaine : cap, distance, inclinaison
+## Domaine : cap et distance
 
-Deux modes de jeu (`GameSettings.straightLine`) :
-
-- **Surface** (defaut) : on estime la distance parcourue a la surface du globe.
-- **Ligne droite** (`straightLine: true`) : on choisit un cap + une inclinaison sous
-  l'horizon (`InclinationSlider`) ; la corde (ligne droite a travers la Terre) et la
-  distance de surface equivalente en sont deduites (`helpers/geo.ts` :
-  `inclinationFromChordKm`, `arcKmFromInclination`, `arcKmFromChordKm`). Un seul champ
-  `Guess.distanceKm` existe (pas de `distanceMode`) — c'est sa signification qui change
-  selon `straightLine`.
+On choisit un cap et on estime la distance parcourue a la surface du globe (`Guess` = `bearing` +
+`distanceKm`). L'ancien mode "ligne droite"/inclinaison (`straightLine`, `InclinationSlider`, corde a
+travers la Terre) a ete retire de Compass : la distance de surface est le seul mode.
 
 Scoring (`games/compass/helpers/scoring.ts`) : courbe logarithmique sur l'ecart de distance, ecart
-angulaire 2D (mode surface) ou 3D via `directionAngle` (mode ligne droite). 500 points
-max chacun pour la direction et la distance.
+angulaire 2D. 500 points max chacun pour la direction et la distance.
+
+Setup Compass/Clues : tout le multijoueur (host/join, presence, couleurs, kick, notices, navigation
+vers l'ecran de jeu) vit une seule fois dans `components/setup/useSetupRoom` — chaque jeu lui passe un
+`SetupRoomAdapter` (son store + ses fonctions Firestore `games/<jeu>/helpers/room.ts`, couleurs, route)
+et n'ecrit que ce qui lui est propre (`useOnlineRoom`/`useOnlineClueRoom` : ce que "Lancer la partie"
+ecrit dans la room). Cote rendu, `SetupScreenShell` (overlay, titre, `PartySection`, boutons) et
+`SetupLoading` sont partages ; la vue de chaque jeu ne fournit que ses sections en `children`.
+
+Ecrans de setup : blocs partages dans `components/setup/` (`PartySection`, `CategorySection`,
+`DifficultySection`, `RoundsSection`, `OptionsSection` — tableau d'options `{ id, title,
+description, value, onChange, hidden? }` + bloc GPS optionnel via la prop `gps`, avec ses champs
+lat/lon), tous documentes dans Storybook (`Common/Setup/*`).
 
 `EarthSection` dessine la Terre vue de profil (le joueur en haut, cap = gauche/ouest ou
 droite/est seulement — pas de vrai nord/sud dans ce schema). Son zoom est **continu** :

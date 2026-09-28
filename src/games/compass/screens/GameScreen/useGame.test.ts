@@ -2,7 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import * as Haptics from 'expo-haptics';
 
 import { DIFFICULTIES } from '@/data';
-import { CATEGORIES, DEFAULT_SETTINGS, MAX_STRAIGHT_DISTANCE_KM } from '@/games/compass/constants';
+import { CATEGORIES, DEFAULT_SETTINGS } from '@/games/compass/constants';
 import { resolveOrigin } from '@/helpers';
 import { useSettings } from '@/settings';
 import type { GameSettings } from '@/types';
@@ -176,20 +176,6 @@ describe('useGame — multiplayer', () => {
     await act(() => result.current.submit());
     expect(result.current.phase).toBe('guess');
     expect(result.current.activePlayerIndex).not.toBe(starter);
-  });
-});
-
-describe('useGame — straight-line mode', () => {
-  it('caps the distance at MAX_STRAIGHT_DISTANCE_KM and derives an inclination from the guess', async () => {
-    mockSettings({ straightLine: true });
-    const { result } = await renderHook(() => useGame());
-    await waitFor(() => expect(result.current.phase).toBe('guess'));
-    expect(result.current.maxDistanceKm).toBe(MAX_STRAIGHT_DISTANCE_KM);
-
-    await act(() => result.current.setBearing(10));
-    await act(() => result.current.setDistanceKm(4000));
-    await act(() => result.current.submit());
-    expect(result.current.currentRecord?.results[0].guess.inclination).toBeGreaterThan(0);
   });
 });
 

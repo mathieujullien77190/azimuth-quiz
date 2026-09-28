@@ -7,9 +7,6 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
     card: {
       gap: spacing.sm + 2,
     },
-    disabled: {
-      opacity: 0.55,
-    },
     top: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -38,14 +35,9 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       fontSize: fontSize.body - 1,
       lineHeight: 19,
     },
-    meta: {
+    players: {
       ...typography.label,
       color: colors.textMuted,
       fontSize: fontSize.caption - 2,
-    },
-    note: {
-      ...typography.heading,
-      color: colors.textMuted,
-      fontSize: fontSize.caption,
     },
   });

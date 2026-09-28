@@ -11,12 +11,10 @@ const players: Player[] = [
 ];
 
 const result = (total: number): PlayerResult => ({
-  guess: { bearing: 0, distanceKm: 0, inclination: 0 },
+  guess: { bearing: 0, distanceKm: 0 },
   score: {
     trueBearing: 0,
-    trueInclination: 0,
     trueSurfaceDistanceKm: 0,
-    trueStraightDistanceKm: 0,
     directionError: 0,
     distanceError: 0,
     directionPoints: 0,

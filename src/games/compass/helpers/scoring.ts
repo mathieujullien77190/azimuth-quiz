@@ -1,32 +1,25 @@
-import { BEST_BONUS_RATIO, DIRECTION_TOLERANCE_DEG, DISTANCE_TOLERANCE_RATIO, EXACT_DIRECTION_BONUS, EXACT_DISTANCE_BONUS, MAX_DIRECTION_POINTS, MAX_DISTANCE_POINTS, MAX_STRAIGHT_DISTANCE_KM, MAX_SURFACE_DISTANCE_KM, RANKS, SCORE_CURVE_EXPONENT } from '@/games/compass/constants';
-import type { Coordinates, GameSettings, Guess, Place, PlayerResult, Rank, RoundScore } from '@/types';
+import { BEST_BONUS_RATIO, DIRECTION_TOLERANCE_DEG, DISTANCE_TOLERANCE_RATIO, EXACT_DIRECTION_BONUS, EXACT_DISTANCE_BONUS, MAX_DIRECTION_POINTS, MAX_DISTANCE_POINTS, MAX_SURFACE_DISTANCE_KM, RANKS, SCORE_CURVE_EXPONENT } from '@/games/compass/constants';
+import type { Coordinates, Guess, Place, PlayerResult, Rank, RoundScore } from '@/types';
 
-import { angleDifference, bearingDeg, distanceKm, inclinationDeg, straightDistanceKm } from '@/helpers/geo';
+import { angleDifference, bearingDeg, distanceKm } from '@/helpers/geo';
 import { roundDistance } from './distanceScale';
-
-export type ScoringOptions = Pick<GameSettings, 'straightLine'>;
 
 const curve = (ratio: number): number => Math.max(0, Math.min(1, ratio)) ** SCORE_CURVE_EXPONENT;
 
 /**
- * Scores an answer. Direction (heading) and distance/inclination are two independent axes, each
- * capped at MAX_DIRECTION_POINTS / MAX_DISTANCE_POINTS: a perfect heading gives the full 500
- * direction points regardless of the chosen inclination, and vice versa. In "straightLine" mode,
- * the distance comparison is done on the chord (so on the inclination), never mixed with the heading.
+ * Scores an answer. Direction (heading) and distance are two independent axes, each capped at
+ * MAX_DIRECTION_POINTS / MAX_DISTANCE_POINTS: a perfect heading gives the full 500 direction
+ * points regardless of the chosen distance, and vice versa.
  */
-export const scoreRound = (origin: Coordinates, place: Place, guess: Guess, options: ScoringOptions): RoundScore => {
+export const scoreRound = (origin: Coordinates, place: Place, guess: Guess): RoundScore => {
   const trueBearing = bearingDeg(origin, place.coordinates);
-  const trueInclination = inclinationDeg(origin, place.coordinates);
   const trueSurfaceDistanceKm = distanceKm(origin, place.coordinates);
-  const trueStraightDistanceKm = straightDistanceKm(origin, place.coordinates);
-  const trueDistanceForGuess = options.straightLine ? trueStraightDistanceKm : trueSurfaceDistanceKm;
-  const maxDistanceKm = options.straightLine ? MAX_STRAIGHT_DISTANCE_KM : MAX_SURFACE_DISTANCE_KM;
 
   const directionError = angleDifference(guess.bearing, trueBearing);
   const directionPoints = Math.round(MAX_DIRECTION_POINTS * curve(1 - directionError / DIRECTION_TOLERANCE_DEG));
   const directionExactBonus = Math.round(directionError) === 0 ? EXACT_DIRECTION_BONUS : 0;
 
-  const distanceError = Math.abs(Math.log(guess.distanceKm / trueDistanceForGuess));
+  const distanceError = Math.abs(Math.log(guess.distanceKm / trueSurfaceDistanceKm));
   const distancePoints = Math.round(
     MAX_DISTANCE_POINTS * curve(1 - distanceError / Math.log(DISTANCE_TOLERANCE_RATIO)),
   );
@@ -34,13 +27,11 @@ export const scoreRound = (origin: Coordinates, place: Place, guess: Guess, opti
   // step it can actually be set to (see `roundDistance`), so "exact" means landing on the
   // closest reachable step, not matching the true value bit-for-bit.
   const distanceExactBonus =
-    roundDistance(trueDistanceForGuess, maxDistanceKm) === guess.distanceKm ? EXACT_DISTANCE_BONUS : 0;
+    roundDistance(trueSurfaceDistanceKm, MAX_SURFACE_DISTANCE_KM) === guess.distanceKm ? EXACT_DISTANCE_BONUS : 0;
 
   return {
     trueBearing,
-    trueInclination,
     trueSurfaceDistanceKm,
-    trueStraightDistanceKm,
     directionError,
     distanceError,
     directionPoints,

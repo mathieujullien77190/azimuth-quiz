@@ -1,9 +1,30 @@
 import { fireEvent, render, within } from '@testing-library/react-native';
 
 import { DEFAULT_CLUE_SETTINGS } from '@/games/clues/constants';
+import { useClueRoomStore } from '@/games/clues/store/roomStore';
 import { useClueSettings } from '@/settings';
 
 import ClueSetupScreen from '.';
+
+// `helpers/room.ts` pulls in `firebase/firestore`, which is ESM-only and crashes Jest the moment
+// anything requires it transitively — mocked out here since these tests exercise the setup UI,
+// not real Firestore calls. Same mock shape as Compass' own `SetupScreen.test.tsx`.
+jest.mock('@/games/clues/helpers/room', () => ({
+  CLUE_ROOM_MAX_PLAYERS: 10,
+  createRoom: jest.fn(),
+  deleteRoom: jest.fn(() => Promise.resolve()),
+  isValidRoomCode: jest.fn((code: string) => code.length === 8),
+  joinRoomPresence: jest.fn(() => Promise.resolve('local-uid')),
+  removeRoomPlayer: jest.fn(() => Promise.resolve()),
+  roomExists: jest.fn(() => Promise.resolve(false)),
+  clueRoomSettingsFrom: jest.fn((settings) => settings),
+  startClueRoomGame: jest.fn(() => Promise.resolve()),
+  subscribeToRoomPlayers: jest.fn(() => jest.fn()),
+  subscribeToRoomSettings: jest.fn(() => jest.fn()),
+  subscribeToRoomGame: jest.fn(() => jest.fn()),
+  updateRoomPlayerColors: jest.fn(() => Promise.resolve()),
+  updateRoomSettings: jest.fn(() => Promise.resolve()),
+}));
 
 // `useClueSettings` is a module-level Zustand store (no more Provider to remount fresh per
 // test) — reset explicitly so a chip pressed in one test doesn't leak into the next.
@@ -11,8 +32,15 @@ beforeEach(() => {
   useClueSettings.setState({ settings: DEFAULT_CLUE_SETTINGS });
 });
 
+// `useClueRoomStore` is also a module-level singleton — reset the same way as Compass' own
+// `useRoomStore` in its `SetupScreen.test.tsx`.
+const initialRoomState = useClueRoomStore.getState();
+beforeEach(() => {
+  useClueRoomStore.setState(initialRoomState, true);
+});
+
 /** Section (Card) containing a given title: used to resolve ambiguities between labels shared
- * across sections (e.g. "5" is both a possible player count and a possible round count). */
+ * across sections (e.g. "5" is both a possible round count and something else). */
 const section = (getByText: (text: string) => Parameters<typeof within>[0], title: string) =>
   within(getByText(title).parent!.parent!);
 
@@ -22,45 +50,22 @@ const renderScreen = async (onStart = jest.fn(), onBack = jest.fn()) => {
 };
 
 describe('ClueSetupScreen', () => {
-  it('renders one name input per default player and selects the default difficulty/answer/rounds chips', async () => {
-    const { getByText, getByDisplayValue } = await renderScreen();
+  it('renders the solo name field and selects the default difficulty/rounds chips', async () => {
+    const { getByText, getByPlaceholderText } = await renderScreen();
 
-    expect(getByDisplayValue('')).toBeTruthy(); // 1 player by default, empty name
+    expect(getByPlaceholderText(/./)).toBeTruthy(); // solo player's name field, empty by default
 
     expect(getByText('Facile').parent?.props.accessibilityState.selected).toBe(true);
-    expect(getByText('Je tape la ville').parent?.props.accessibilityState.selected).toBe(true);
 
     const rounds = section(getByText, 'Nombre de manches');
     expect(rounds.getByText('5').parent?.props.accessibilityState.selected).toBe(true);
   });
 
-  it('resizes the player list when a player-count chip is pressed, keeping already-typed names', async () => {
-    const { getByText, getByPlaceholderText, getAllByDisplayValue } = await renderScreen();
-
-    const nameInput = getByPlaceholderText(/./); // single player, only one input for now
-    await fireEvent.changeText(nameInput, 'Zoé');
-
-    const players = section(getByText, 'Joueurs');
-    await fireEvent.press(players.getByText('3'));
-
-    let inputs = getAllByDisplayValue(/^.*$/);
-    expect(inputs).toHaveLength(3);
-    expect(inputs[0].props.value).toBe('Zoé');
-    expect(inputs[1].props.value).toBe('');
-    expect(inputs[2].props.value).toBe('');
-
-    // Editing the 2nd player should only affect them (covers the i !== index branch of the map).
-    await fireEvent.changeText(inputs[1], 'Max');
-    inputs = getAllByDisplayValue(/^.*$/);
-    expect(inputs[0].props.value).toBe('Zoé');
-    expect(inputs[1].props.value).toBe('Max');
-    expect(inputs[2].props.value).toBe('');
-  });
-
-  it('both category chips are selected by default, and can be toggled off and back on', async () => {
+  it('every category chip is selected by default, and can be toggled off and back on', async () => {
     const { getByText } = await renderScreen();
 
     expect(getByText('Villes').parent?.props.accessibilityState.selected).toBe(true);
+    expect(getByText('Villes FR').parent?.props.accessibilityState.selected).toBe(true);
     expect(getByText('Capitales').parent?.props.accessibilityState.selected).toBe(true);
 
     await fireEvent.press(getByText('Capitales'));
@@ -78,15 +83,6 @@ describe('ClueSetupScreen', () => {
 
     expect(getByText('Difficile').parent?.props.accessibilityState.selected).toBe(true);
     expect(getByText('Facile').parent?.props.accessibilityState.selected).toBe(false);
-  });
-
-  it('updates the answer method when a chip is pressed', async () => {
-    const { getByText } = await renderScreen();
-
-    await fireEvent.press(getByText('À voix haute'));
-
-    expect(getByText('À voix haute').parent?.props.accessibilityState.selected).toBe(true);
-    expect(getByText('Je tape la ville').parent?.props.accessibilityState.selected).toBe(false);
   });
 
   it('the "reveal first letter" toggle is on by default, and can be wired off and back on', async () => {
@@ -111,7 +107,7 @@ describe('ClueSetupScreen', () => {
     expect(rounds.getByText('5').parent?.props.accessibilityState.selected).toBe(false);
   });
 
-  it('calls onStart when "Lancer la partie" is pressed', async () => {
+  it('calls onStart when "Lancer la partie" is pressed (solo, not hosting online)', async () => {
     const { getByText, onStart } = await renderScreen();
     await fireEvent.press(getByText('Lancer la partie'));
     expect(onStart).toHaveBeenCalledTimes(1);

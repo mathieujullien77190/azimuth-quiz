@@ -1,4 +1,10 @@
-import type { ClueAnswerMethod, ClueCategory, ClueId, ClueSettings } from '@/types';
+import { PLAYER_COLORS } from '@/data';
+import type { ClueCategory, ClueId, ClueSettings } from '@/types';
+
+// Same palette as Compass' own `ROOM_PLAYER_COLORS` (games/compass/constants.ts) — kept as its
+// own copy rather than a shared import: it's just a color list, no behavior to diverge, and each
+// game's room-player colors are its own tuning concern.
+export const CLUE_ROOM_PLAYER_COLORS = [...PLAYER_COLORS, '#0D9488', '#4F46E5', '#C026D3', '#E11D48'] as const;
 
 /** How many times each Clues place has been drawn, across every game — lets rounds avoid
  * repeats (see helpers/clueHistory.ts). */
@@ -33,13 +39,10 @@ export const CLUE_CATEGORIES: { id: ClueCategory; emoji: string }[] = [
   { id: 'capital', emoji: '⭐' },
 ];
 
-export const CLUE_ANSWER_METHODS: { id: ClueAnswerMethod }[] = [{ id: 'spoken' }, { id: 'typed' }];
-
 export const DEFAULT_CLUE_SETTINGS: ClueSettings = {
   playerNames: [''],
   difficulty: 'easy',
   categories: ['cities', 'citiesFr', 'capital'],
-  answerMethod: 'typed',
   rounds: 5,
   startWithFirstLetter: true,
 };

@@ -46,8 +46,6 @@ export const sanitizeSettings = (raw: unknown): GameSettings => {
     categories: categories.length > 0 ? categories : DEFAULT_SETTINGS.categories,
     difficulties,
     rounds,
-    // Old settings: the two separate "straight line" options collapse into a single mode.
-    straightLine: flag(raw.straightLine, raw.straightDistance === true || raw.straightDirection === true),
     useGps: flag(raw.useGps, DEFAULT_SETTINGS.useGps),
     customLatitude: coordinate(raw.customLatitude, -90, 90, DEFAULT_SETTINGS.customLatitude),
     customLongitude: coordinate(raw.customLongitude, -180, 180, DEFAULT_SETTINGS.customLongitude),

@@ -1,18 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, Text, View } from 'react-native';
-import Svg, { Circle, Defs, G, Line, Path, RadialGradient, Stop, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Defs, G, Path, RadialGradient, Stop, Text as SvgText } from 'react-native-svg';
 
 import { useTheme, useThemedStyles } from '@/themes';
 
 import {
   AVAILABLE_X_RATIO,
   BOTTOM_MARGIN,
-  CAPTION_STRAIGHT,
   CAPTION_SURFACE,
   DAY_ORBIT_EMOJI,
   EARTH_RADIUS_RATIO,
   HEIGHT_RATIO,
-  HORIZON_LABEL,
   PLAYER_LABEL,
   PLAYER_Y_RATIO,
   SATELLITE_CLEARANCE,
@@ -29,20 +27,18 @@ import { createStyles } from './styles';
 /**
  * The Earth seen from the side, the player at the very top. Each answer starts from the side of
  * its heading (heading west = left, heading east = right) and draws as an arc following the circle
- * (surface distance). In straight-line mode, a chord also joins the same endpoint:
- * the chosen inclination fixes both the arc and the chord, the surface distance is only indicative.
+ * (surface distance).
  * The circle zooms continuously on its apex so nearby markers stay legible: the shorter
  * `marks`' distances are, the higher the "ideal" zoom (`fitZoom`) climbs, among `ZOOM_STEPS`.
  * On reveal (`zoomControls`), +/- buttons allow moving away from that ideal: you can
  * always go back down to 1 (the whole Earth) or up to the last tier. A different `key`
  * on every round (caller side) remounts the component and resets that choice to the ideal.
- * The true answer (isTruth) only draws as its circled point: no arc or chord, so as to
+ * The true answer (isTruth) only draws as its circled point: no arc, so as to
  * not drown players' answers under its own lines.
  */
 export const EarthSection = ({
   size,
   marks,
-  showStraightLine,
   zoomControls = false,
   allowSatellite = zoomControls,
   forceSide,
@@ -68,11 +64,10 @@ export const EarthSection = ({
 
   const radius = baseRadius * zoom;
   const center: Point = { x: player.x, y: player.y + radius };
-  const horizonReach = Math.min(radius * 1.15, size * 0.32);
 
   // Orbiting satellite, just for fun: only when `allowSatellite` (Compass reveal,
   // or the always-revealed mini-Earth of Clues' "Distance" clue), zoomed out to
-  // the real scale (zoom 1, otherwise off-screen or grotesque) — regardless of the mode.
+  // the real scale (zoom 1, otherwise off-screen or grotesque).
   const showSatellite = allowSatellite && zoom === 1;
   const satelliteAngle = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -112,25 +107,13 @@ export const EarthSection = ({
 
     return (
       <G key={key} opacity={opacity}>
-        {!showStraightLine && item.isTruth !== true && (
+        {item.isTruth !== true && (
           <Path
             d={arcPath(center, radius, angle, side)}
             fill="none"
             stroke={color}
             strokeLinecap="round"
             strokeWidth={3.5}
-          />
-        )}
-        {showStraightLine && item.isTruth !== true && (
-          <Line
-            x1={player.x}
-            y1={player.y}
-            x2={end.x}
-            y2={end.y}
-            stroke={color}
-            strokeDasharray="2 5"
-            strokeLinecap="round"
-            strokeWidth={2}
           />
         )}
         <Circle cx={end.x} cy={end.y} r={5.5} fill={color} stroke={colors.surface} strokeWidth={2} />
@@ -142,7 +125,7 @@ export const EarthSection = ({
   return (
     <View style={styles.wrap}>
       <View style={styles.header}>
-        <Text style={styles.caption}>{(showStraightLine ? CAPTION_STRAIGHT : CAPTION_SURFACE).toUpperCase()}</Text>
+        <Text style={styles.caption}>{CAPTION_SURFACE.toUpperCase()}</Text>
         {zoomControls && (
           <View style={styles.zoomControls}>
             <Pressable
@@ -168,7 +151,7 @@ export const EarthSection = ({
       </View>
 
       <View style={styles.svgWrap}>
-        <Svg accessibilityLabel={CAPTION_STRAIGHT} height={height} width={size}>
+        <Svg accessibilityLabel={CAPTION_SURFACE} height={height} width={size}>
           <Defs>
             <RadialGradient id="earth" cx="50%" cy="40%" r="65%">
               <Stop offset="0%" stopColor={compass.faceInner} />
@@ -186,30 +169,6 @@ export const EarthSection = ({
             strokeWidth={1}
             strokeDasharray="3 5"
           />
-
-          {showStraightLine && (
-            <>
-              <Line
-                x1={player.x - horizonReach}
-                y1={player.y}
-                x2={player.x + horizonReach}
-                y2={player.y}
-                stroke={colors.textMuted}
-                strokeWidth={1.5}
-                strokeDasharray="4 5"
-              />
-              <SvgText
-                x={player.x + horizonReach}
-                y={player.y - 6}
-                fill={colors.textMuted}
-                fontFamily={typography.body.fontFamily}
-                fontSize={11}
-                textAnchor="end"
-              >
-                {HORIZON_LABEL}
-              </SvgText>
-            </>
-          )}
 
           {marks.map((item, index) => mark(item, `mark-${index}`))}
 

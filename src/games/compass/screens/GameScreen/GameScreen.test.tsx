@@ -21,9 +21,7 @@ const place: Place = {
 
 const scoreFixture = {
   trueBearing: 90,
-  trueInclination: 0,
   trueSurfaceDistanceKm: 1000,
-  trueStraightDistanceKm: 900,
   directionError: 10,
   distanceError: 0.1,
   directionPoints: 400,
@@ -43,7 +41,7 @@ const multiPlayers: Player[] = [
 
 const record: RoundRecord = {
   place,
-  results: [{ guess: { bearing: 80, distanceKm: 950, inclination: 0 }, score: scoreFixture }],
+  results: [{ guess: { bearing: 80, distanceKm: 950 }, score: scoreFixture }],
 };
 
 const baseGame = {
@@ -148,13 +146,6 @@ describe('GameScreen — guess phase, solo', () => {
     expect(getByText('Suivant')).toBeTruthy();
   });
 
-  it('shows the straight-line inclination slider instead of the distance slider when straightLine is on', async () => {
-    mockGame({ config: { ...DEFAULT_SETTINGS, straightLine: true } });
-    const { getByLabelText, queryByLabelText } = await render(<GameScreen onQuit={jest.fn()} />);
-    expect(getByLabelText('Inclinaison')).toBeTruthy();
-    expect(queryByLabelText('Distance estimée')).toBeNull();
-  });
-
   it('shows the country when showCountry is on', async () => {
     mockGame({ config: { ...DEFAULT_SETTINGS, showCountry: true } });
     const { getByText } = await render(<GameScreen onQuit={jest.fn()} />);
@@ -179,37 +170,6 @@ describe('GameScreen — guess phase, multiplayer', () => {
     // Dismissing the popup leaves only the PlayerTabs label.
     expect(getAllByText(/de jouer/)).toHaveLength(1);
   });
-
-  it('shows already-answered players faded on the compass/earth unless hideOtherAnswers is on', async () => {
-    mockGame({
-      players: multiPlayers,
-      isMultiplayer: true,
-      currentPlayer: multiPlayers[1],
-      activePlayerIndex: 1,
-      roundOrder: [0, 1],
-      answered: [{ player: multiPlayers[0], guess: { bearing: 45, distanceKm: 500, inclination: 0 }, index: 0 }],
-      answeredByPlayer: [true, false],
-      totals: [0, 0],
-    });
-    const { getByText } = await render(<GameScreen onQuit={jest.fn()} />);
-    expect(getByText('Zoé')).toBeTruthy();
-  });
-
-  it('hides other answers entirely when hideOtherAnswers is on', async () => {
-    mockGame({
-      config: { ...DEFAULT_SETTINGS, hideOtherAnswers: true },
-      players: multiPlayers,
-      isMultiplayer: true,
-      currentPlayer: multiPlayers[1],
-      activePlayerIndex: 1,
-      roundOrder: [0, 1],
-      answered: [{ player: multiPlayers[0], guess: { bearing: 45, distanceKm: 500, inclination: 0 }, index: 0 }],
-      answeredByPlayer: [true, false],
-      totals: [0, 0],
-    });
-    const { queryByText } = await render(<GameScreen onQuit={jest.fn()} />);
-    expect(queryByText('Zoé')).toBeNull();
-  });
 });
 
 describe('GameScreen — reveal phase', () => {
@@ -228,12 +188,12 @@ describe('GameScreen — reveal phase', () => {
     expect(queryByText('Manche suivante')).toBeNull();
   });
 
-  it('shows every player plus the truth in the legend, multiplayer', async () => {
+  it('shows every player in the round result, multiplayer', async () => {
     const multiRecord: RoundRecord = {
       place,
       results: [
-        { guess: { bearing: 80, distanceKm: 950, inclination: 0 }, score: scoreFixture },
-        { guess: { bearing: 95, distanceKm: 1010, inclination: 0 }, score: { ...scoreFixture, total: 900 } },
+        { guess: { bearing: 80, distanceKm: 950 }, score: scoreFixture },
+        { guess: { bearing: 95, distanceKm: 1010 }, score: { ...scoreFixture, total: 900 } },
       ],
     };
     mockGame({

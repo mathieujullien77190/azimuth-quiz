@@ -1,4 +1,3 @@
-import { signInAnonymously } from 'firebase/auth';
 import {
   type Timestamp,
   collection,
@@ -17,37 +16,15 @@ import {
 
 import type { GameSettings, Guess, Origin, Place, RoundScore } from '@/types';
 
-import { auth, db } from '@/helpers/firebase';
+import { db } from '@/helpers/firebase';
+import { generateRoomCode, getLocalUid } from '@/helpers/roomCode';
 
 // Not re-exported from `helpers/index.ts`'s barrel: `firebase/firestore` is ESM-only and crashes
 // Jest the moment anything requires it transitively (see `helpers/firebase.ts`'s own note) —
 // keeping this out of the barrel means only whatever actually calls into Firestore pays that
 // cost, not every test that imports `@/helpers` for something unrelated.
 
-// No c/h/w/z/g/q/x/j — awkward to say out loud in French, dropped by request.
-const CODE_CONSONANTS = 'bdfklmnprstv';
-// Only a/i/o — e and u dropped by request (too easy to confuse said out loud).
-const CODE_VOWELS = 'aio';
-const CODE_SYLLABLES = 4;
-
-/** Every room code is `CODE_SYLLABLES` consonant+vowel pairs — a code is complete once it
- * reaches this length, before that it's still being typed. */
-export const ROOM_CODE_LENGTH = CODE_SYLLABLES * 2;
-
-const ROOM_CODE_PATTERN = new RegExp(`^([${CODE_CONSONANTS}][${CODE_VOWELS}]){${CODE_SYLLABLES}}$`);
-
-/** Whether a string has the exact consonant+vowel shape of a generated room code — checked
- * before ever querying Firestore, so typing something the wrong shape (however long) never
- * fires a "code not found" against the backend for no reason. */
-export const isValidRoomCode = (code: string): boolean => ROOM_CODE_PATTERN.test(code);
-
-const randomChar = (chars: string): string => chars[Math.floor(Math.random() * chars.length)];
-
-/** A short, easy-to-say room code: 4 consonant+vowel syllables (e.g. "tarabota"), not a random
- * alphanumeric string — (12 consonants × 3 vowels)^4 ≈ 1.7M combinations, plenty for a handful of
- * friends playing together. Collisions aren't checked here: `createRoom` retries on one. */
-export const generateRoomCode = (): string =>
-  Array.from({ length: CODE_SYLLABLES }, () => randomChar(CODE_CONSONANTS) + randomChar(CODE_VOWELS)).join('');
+export { ROOM_CODE_LENGTH, isValidRoomCode, getLocalUid } from '@/helpers/roomCode';
 
 /** What a room shares with its joiners: every game setting except `playerNames`, which stays
  * local to each device/player. */
@@ -57,17 +34,6 @@ export const roomSettingsFrom = (settings: GameSettings): RoomSettings => {
   const { playerNames, ...roomSettings } = settings;
   return roomSettings;
 };
-
-/** An anonymous Firebase Auth uid, signing in if needed — proves "the device that created this
- * room" to security rules without any actual login screen. Exported as `getLocalUid` for any
- * screen that needs to know its own uid outside of a presence/room write (e.g. the online game
- * screen, to tell its own guess apart from everyone else's). */
-const ensureSignedIn = async (): Promise<string> => {
-  if (auth.currentUser) return auth.currentUser.uid;
-  const credential = await signInAnonymously(auth);
-  return credential.user.uid;
-};
-export const getLocalUid = ensureSignedIn;
 
 /** Deletes every room this uid previously hosted — called right before creating a new one, so a
  * host never accumulates abandoned rooms every time it starts a fresh game. */
@@ -81,7 +47,7 @@ const deletePreviousRoomsByHost = async (hostUid: string): Promise<void> => {
  * that same uid update the room's settings afterwards. Returns the code that ended up winning.
  * First clears out any room this uid hosted before (see `deletePreviousRoomsByHost`). */
 export const createRoom = async (settings: RoomSettings): Promise<string> => {
-  const hostUid = await ensureSignedIn();
+  const hostUid = await getLocalUid();
   await deletePreviousRoomsByHost(hostUid);
   for (;;) {
     const code = generateRoomCode();
@@ -156,7 +122,7 @@ const resolveName = (
  * `players.{uid}` as a whole (replacing the nested map in one shot) would otherwise wipe out
  * whatever color the host already assigned there. */
 export const joinRoomPresence = async (code: string, name: string): Promise<string> => {
-  const uid = await ensureSignedIn();
+  const uid = await getLocalUid();
   const ref = doc(db, 'rooms', code);
   const players = ((await getDoc(ref)).data()?.players as RoomPlayers | undefined) ?? {};
   const existing = players[uid];

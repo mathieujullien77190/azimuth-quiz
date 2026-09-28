@@ -212,7 +212,6 @@ const revealedBody = (
             allowSatellite
             forceSide={1}
             marks={[{ bearing: bearingDeg, color: colors.accent, distanceKm }]}
-            showStraightLine={false}
             size={EARTH_CLUE_SIZE}
           />
           <View pointerEvents="none" style={styles.distanceOverlay}>

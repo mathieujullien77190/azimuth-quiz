@@ -12,24 +12,22 @@ export const en: Translations = {
   compassAccessibilityLabel: 'Compass',
   home: {
     tagline: 'Choose your geography game',
+    playersRange: (max) => `1 to ${max} players`,
     settingsButtonLabel: 'Settings',
     games: {
       compass: {
         title: 'Compass',
         tagline: 'A place appears. Aim its heading and estimate its distance from your starting point.',
-        meta: ['1 to 10 players'],
         cta: 'Play',
       },
       clues: {
         title: 'Clues',
         tagline: 'Guess a city from clues revealed one by one.',
-        meta: ['1 to 6 players'],
         cta: 'Play',
       },
       contour: {
         title: 'Silhouette',
         tagline: "A country's silhouette shows up. Guess which one from the clues, then mark cities on its map.",
-        meta: ['1 to 6 players'],
         cta: 'Play',
       },
     },
@@ -78,18 +76,6 @@ export const en: Translations = {
       roomDeletedNotice: 'The host deleted the game.',
     },
     readOnlyNotice: 'Only the host can change the options.',
-    modeTitle: 'Mode',
-    distanceModes: {
-      distance: {
-        label: 'Distance',
-        description: 'You estimate directly the distance travelled along the surface of the globe.',
-      },
-      inclination: {
-        label: 'Tilt',
-        description:
-          'Harder: you choose the angle below the horizon, with no distance shown. The straight line through the Earth follows from it.',
-      },
-    },
     optionsTitle: 'Options',
     toggles: {
       liveCompass: {
@@ -120,8 +106,6 @@ export const en: Translations = {
     last: 'See the score',
     round: 'Round',
     roundOver: 'Round over',
-    reality: 'Answer',
-    yourAnswer: 'Your answer',
     nextStep: 'Next',
     previousStep: 'Back',
     playerTurn: (name) => `${name}'s turn`,
@@ -132,13 +116,11 @@ export const en: Translations = {
   },
   sliders: {
     distance: 'Estimated distance',
-    inclination: 'Tilt',
   },
   roundResult: {
     truth: 'Answer',
     direction: 'Direction',
     distance: 'Distance',
-    inclination: 'Tilt',
     yourScore: 'Your score',
     scoringInfoLabel: 'How points are calculated',
     scoringInfo:
@@ -178,18 +160,8 @@ export const en: Translations = {
     screenTitle: 'Clues',
     back: 'Back',
     start: 'Start game',
-    playersSection: {
-      title: 'Players',
-      hint: 'Everyone plays on the same phone, taking turns.',
-    },
-    playerNameAccessibility: (index) => `Player ${index} name`,
     difficultyTitle: 'Difficulty',
     difficultyHint: 'How well-known the place is: sets which pool of cities the round draws from.',
-    answerMethodTitle: 'Answer',
-    answerMethods: {
-      spoken: 'Out loud',
-      typed: 'Type the city',
-    },
     optionsTitle: 'Options',
     toggles: {
       startWithFirstLetter: {
@@ -200,13 +172,7 @@ export const en: Translations = {
   },
   cluesGame: {
     pointsAtStake: (points) => `${points} pts at stake`,
-    buzz: '🔔 I know it!',
     giveUp: '🤷 No idea',
-    buzzedPrompt: (name) => `${name} buzzes`,
-    verify: 'Verify',
-    cancel: 'Cancel',
-    correct: '✓ Correct',
-    wrong: '✕ Wrong',
     resultOk: 'Correct!',
     whoAnswered: 'Who answered?',
     scored: (name, points) => `${name} scores ${points} points!`,
@@ -216,6 +182,8 @@ export const en: Translations = {
     wasPlace: 'It was',
     continueLabel: 'Continue',
     home: 'Home',
+    yourTurn: 'Your turn',
+    waitingForTurn: (name) => `${name}'s turn…`,
     clues: {
       position: 'Position',
       population: 'Population',

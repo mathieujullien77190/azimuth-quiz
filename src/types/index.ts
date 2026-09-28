@@ -49,18 +49,14 @@ export type Origin = {
 export type Guess = {
   /** Heading on the horizontal plane, 0 = north. */
   bearing: number;
-  /** Estimated distance: along the surface (classic mode), or straight-line (mode "straightLine"). */
+  /** Estimated distance along the surface. */
   distanceKm: number;
-  /** Angle below the horizon, in degrees (0 outside "straightLine" mode). */
-  inclination: number;
 };
 
 export type RoundScore = {
   trueBearing: number;
-  trueInclination: number;
   trueSurfaceDistanceKm: number;
-  trueStraightDistanceKm: number;
-  /** Angular error: on the plane (surface mode), or in 3D (straight-line mode). */
+  /** Angular error on the plane. */
   directionError: number;
   /** |ln(estimate / true distance)| : raw error used to break ties for the "closest" bonus
    * (see `applyBestBonus`), uncapped unlike `distancePoints` — two players both out of
@@ -103,11 +99,6 @@ export type GameSettings = {
   categories: Category[];
   difficulties: Difficulty[];
   rounds: number;
-  /**
-   * Straight line through the Earth: you choose the heading and the inclination below the
-   * horizon, the distance (chord) is derived from it.
-   */
-  straightLine: boolean;
   useGps: boolean;
   /** Starting point when `useGps` is off: latitude/longitude entered by hand,
    * Paris by default. Ignored when `useGps` is on (device position used). */
@@ -215,15 +206,10 @@ export type CluePlace = GeoPlace & {
   emojis: readonly [string, string, string];
 };
 
-/** How the answer is verified: said out loud (manual right/wrong arbitration),
- * or typed and automatically compared to the place's name. */
-export type ClueAnswerMethod = 'spoken' | 'typed';
-
 export type ClueSettings = {
   playerNames: string[];
   difficulty: Difficulty;
   categories: ClueCategory[];
-  answerMethod: ClueAnswerMethod;
   rounds: number;
   /** Each round starts with the first-letter clue already revealed for free, instead of
    * everything locked. */

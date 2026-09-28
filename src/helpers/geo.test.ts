@@ -2,16 +2,11 @@ import { EARTH_RADIUS_KM } from '@/data';
 
 import {
   angleDifference,
-  arcKmFromChordKm,
-  arcKmFromInclination,
   bearingDeg,
   bearingToCardinal,
   centralAngleDeg,
   distanceKm,
-  inclinationDeg,
-  inclinationFromChordKm,
   normalizeBearing,
-  straightDistanceKm,
 } from './geo';
 
 const paris = { latitude: 48.8566, longitude: 2.3522 };
@@ -36,55 +31,6 @@ describe('centralAngleDeg', () => {
 
   it('is 0 for identical points', () => {
     expect(centralAngleDeg(paris, same)).toBeCloseTo(0, 5);
-  });
-});
-
-describe('straightDistanceKm', () => {
-  it('equals the Earth diameter for antipodal points', () => {
-    expect(straightDistanceKm(paris, antipode)).toBeCloseTo(2 * EARTH_RADIUS_KM, 0);
-  });
-
-  it('is always <= the surface distance', () => {
-    const tokyo = { latitude: 35.6762, longitude: 139.6503 };
-    expect(straightDistanceKm(paris, tokyo)).toBeLessThanOrEqual(distanceKm(paris, tokyo));
-  });
-});
-
-describe('inclinationDeg / arcKmFromInclination / arcKmFromChordKm', () => {
-  it('is 90 for antipodal points (straight through the core)', () => {
-    expect(inclinationDeg(paris, antipode)).toBeCloseTo(90, 0);
-  });
-
-  it('is 0 for identical points', () => {
-    expect(inclinationDeg(paris, same)).toBeCloseTo(0, 5);
-  });
-
-  it('arcKmFromInclination(0) is 0 and arcKmFromInclination(90) is half the circumference', () => {
-    expect(arcKmFromInclination(0)).toBeCloseTo(0, 5);
-    expect(arcKmFromInclination(90)).toBeCloseTo(Math.PI * EARTH_RADIUS_KM, 0);
-  });
-
-  it('arcKmFromChordKm matches arcKmFromInclination(inclinationFromChordKm(x))', () => {
-    const chord = 5000;
-    expect(arcKmFromChordKm(chord)).toBeCloseTo(arcKmFromInclination(inclinationFromChordKm(chord)), 5);
-  });
-});
-
-describe('inclinationFromChordKm', () => {
-  it('is 90 for a chord equal to the Earth diameter', () => {
-    expect(inclinationFromChordKm(2 * EARTH_RADIUS_KM)).toBeCloseTo(90, 5);
-  });
-
-  it('is 0 for a chord of length 0', () => {
-    expect(inclinationFromChordKm(0)).toBeCloseTo(0, 5);
-  });
-
-  it('clamps chords longer than the diameter to 90', () => {
-    expect(inclinationFromChordKm(10 * EARTH_RADIUS_KM)).toBeCloseTo(90, 5);
-  });
-
-  it('clamps negative chords to 0', () => {
-    expect(inclinationFromChordKm(-100)).toBeCloseTo(0, 5);
   });
 });
 

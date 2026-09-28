@@ -68,11 +68,6 @@ export const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       fontSize: fontSize.caption + 1,
       textAlign: 'center',
     },
-    clueGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: spacing.sm,
-    },
     skeletonRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
@@ -105,15 +100,6 @@ export const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       color: colors.text,
       fontSize: fontSize.subtitle,
     },
-    buzzPanel: {
-      gap: spacing.sm + 2,
-    },
-    buzzTitle: {
-      ...typography.heading,
-      color: colors.textMuted,
-      fontSize: fontSize.caption + 1,
-      textAlign: 'center',
-    },
     // The round's own live/countdown score (see `remaining`): distinct from the top-right
     // header, which now shows each player's real cumulative total instead.
     pointsAtStake: {
@@ -126,51 +112,6 @@ export const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
     // top-level elements (points-at-stake text, then the actions/buzz panel/result banner).
     footerContent: {
       gap: spacing.sm + 2,
-    },
-    // Same pill look as the active tab in PlayerTabs (see its `active`/`labelActive` styles):
-    // reads as "this is the player who's currently doing something", same as up there.
-    buzzerBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      alignSelf: 'center',
-      gap: spacing.xs + 2,
-      paddingHorizontal: spacing.md - 2,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.button,
-      backgroundColor: colors.accent,
-    },
-    buzzerBadgeDot: {
-      width: 10,
-      height: 10,
-      borderRadius: 5,
-    },
-    buzzerBadgeText: {
-      ...typography.heading,
-      color: colors.onAccent,
-      fontSize: fontSize.body - 1,
-    },
-    verdictRow: {
-      flexDirection: 'row',
-      gap: spacing.sm,
-    },
-    verdictBtn: {
-      flex: 1,
-      paddingVertical: spacing.sm + 3,
-      borderRadius: 10,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      backgroundColor: colors.surfaceHigh,
-      alignItems: 'center',
-    },
-    verdictLabelCorrect: {
-      ...typography.heading,
-      color: colors.success,
-      fontSize: fontSize.body,
-    },
-    verdictLabelWrong: {
-      ...typography.heading,
-      color: colors.danger,
-      fontSize: fontSize.body,
     },
     resultBanner: {
       ...typography.heading,

@@ -27,6 +27,11 @@ const DEFAULT_GAME_STATE: RoomGameState = {
  * yet") — module fields rather than store state, same as `gameStore`'s `startId`. */
 let unsubscribers: (() => void)[] = [];
 let hasSeenRoom = false;
+/** Set right before this device removes its own presence on purpose (see `markVoluntaryLeave`) —
+ * otherwise a joiner quitting on their own looks, from Firestore's point of view, identical to
+ * the host kicking them (their uid was present, now it's not), and `SetupScreen`'s own listener
+ * would show them a "you were kicked" notice for leaving by their own choice. */
+let leftVoluntarily = false;
 
 type RoomStoreState = {
   code: string | null;
@@ -50,6 +55,12 @@ type RoomStoreState = {
   connect: (code: string) => void;
   /** Tears down the three listeners and resets to defaults. */
   disconnect: () => void;
+  /** Call right before removing this device's own presence on purpose (a joiner quitting from
+   * `OnlineGameScreen`) — see `leftVoluntarily`'s own comment above. */
+  markVoluntaryLeave: () => void;
+  /** Non-reactive read, consumed once by `SetupScreen`'s own "was I kicked?" check and cleared
+   * right after — a getter rather than store state, since nothing should ever render off it. */
+  consumeVoluntaryLeave: () => boolean;
 };
 
 export const useRoomStore = create<RoomStoreState>()((set, get) => ({
@@ -66,6 +77,7 @@ export const useRoomStore = create<RoomStoreState>()((set, get) => ({
     get().disconnect();
 
     hasSeenRoom = false;
+    leftVoluntarily = false;
     set({ code, roomExists: true });
 
     unsubscribers = [
@@ -95,5 +107,15 @@ export const useRoomStore = create<RoomStoreState>()((set, get) => ({
       gameState: DEFAULT_GAME_STATE,
       localUid: null,
     });
+  },
+
+  markVoluntaryLeave: () => {
+    leftVoluntarily = true;
+  },
+
+  consumeVoluntaryLeave: () => {
+    const value = leftVoluntarily;
+    leftVoluntarily = false;
+    return value;
   },
 }));

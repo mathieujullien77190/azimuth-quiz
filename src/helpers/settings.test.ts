@@ -66,16 +66,6 @@ describe('sanitizeSettings', () => {
     expect(sanitizeSettings({ rounds: 7 }).rounds).toBe(DEFAULT_SETTINGS.rounds);
   });
 
-  it('migrates the old two-flag straightDistance/straightDirection into straightLine', () => {
-    expect(sanitizeSettings({ straightDistance: true }).straightLine).toBe(true);
-    expect(sanitizeSettings({ straightDirection: true }).straightLine).toBe(true);
-    expect(sanitizeSettings({}).straightLine).toBe(false);
-  });
-
-  it('keeps an explicit straightLine flag over the legacy migration', () => {
-    expect(sanitizeSettings({ straightLine: true, straightDistance: false }).straightLine).toBe(true);
-  });
-
   it('keeps boolean flags when present, falls back to defaults for non-booleans', () => {
     const result = sanitizeSettings({ useGps: false, showCountry: 'yes', hideOtherAnswers: 1 });
     expect(result.useGps).toBe(false);

@@ -29,18 +29,24 @@ export type OnlineHeaderProps = {
   totalRounds: number;
 };
 
-/** `gameState.screen === 'game'`, not yet submitted — the only phase with an editable
- * compass/slider. Pure rendering, no hooks with side effects. */
-export type OnlineAnswerViewProps = OnlineHeaderProps & {
+/**
+ * Single view for both phases (answer / submitted-or-revealed) sharing one `Screen`/`ScrollView`
+ * instance — kept mounted across the submit so the scroll position survives it, instead of
+ * unmounting into a separate `Screen` (which used to reset the native scroll to the top). `record`
+ * is the discriminant, same convention as the local `GameScreen`'s own view: `undefined` while
+ * still answering, always set (pending or confirmed) once submitted — see `OnlineGameScreen`'s
+ * `record: confirmedRecord ?? buildRoundRecord(...)`.
+ */
+export type OnlineGameScreenViewProps = OnlineHeaderProps & {
   scrollRef: RefObject<ScrollView | null>;
   place: Place;
+  liveCompass: boolean;
+  earthMarks: EarthMark[];
+  // Answer phase only (ignored once `record` is set).
   showCountry: boolean;
   compassColor: string;
-  liveCompass: boolean;
   bearing: number;
   onSetBearing: (value: number) => void;
-  earthMarks: EarthMark[];
-  straightLine: boolean;
   distanceKm: number;
   onSetDistanceKm: (value: number) => void;
   maxDistanceKm: number;
@@ -51,25 +57,17 @@ export type OnlineAnswerViewProps = OnlineHeaderProps & {
   onGoToDistance: () => void;
   onSubmit: () => void;
   submitDisabled: boolean;
-};
-
-/** Submitted-and-waiting or officially revealed — same layout either way (see `RoundResult`'s own
- * `pending` mode), just fed live/partial data until `confirmed`. Pure rendering. */
-export type OnlineResultsViewProps = OnlineHeaderProps & {
-  place: Place;
-  extraNeedles: Needle[];
-  liveCompass: boolean;
-  truthBearing: number | null;
-  earthMarks: EarthMark[];
-  straightLine: boolean;
+  // Submitted-or-revealed phase only (present once `record` is set).
+  extraNeedles?: Needle[];
+  truthBearing?: number | null;
   answered?: boolean[];
-  localIndex: number;
+  localIndex?: number;
   onKick?: (index: number) => void;
-  players: OnlinePlayer[];
-  record: RoundRecord;
-  totals: number[];
-  confirmed: boolean;
-  isHost: boolean;
-  isLastRound: boolean;
-  onNextRound: () => void;
+  players?: OnlinePlayer[];
+  record?: RoundRecord;
+  totals?: number[];
+  confirmed?: boolean;
+  isHost?: boolean;
+  isLastRound?: boolean;
+  onNextRound?: () => void;
 };

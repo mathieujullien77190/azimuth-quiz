@@ -5,9 +5,7 @@ import type { RoundScore } from '@/types';
  * a vanished player's row is more useful than a crash. */
 export const ZERO_SCORE: RoundScore = {
   trueBearing: 0,
-  trueInclination: 0,
   trueSurfaceDistanceKm: 0,
-  trueStraightDistanceKm: 0,
   directionError: 0,
   distanceError: 0,
   directionPoints: 0,

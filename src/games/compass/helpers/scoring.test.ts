@@ -19,8 +19,8 @@ const trueSurfaceKm = distanceKm(origin, place.coordinates);
 
 describe('scoreRound', () => {
   it('awards the full 1000 points plus the exact-heading bonus for a perfect guess (surface mode)', () => {
-    const guess: Guess = { bearing: trueBearing, distanceKm: trueSurfaceKm, inclination: 0 };
-    const score = scoreRound(origin, place, guess, { straightLine: false });
+    const guess: Guess = { bearing: trueBearing, distanceKm: trueSurfaceKm };
+    const score = scoreRound(origin, place, guess);
     expect(score.directionPoints).toBe(MAX_DIRECTION_POINTS);
     expect(score.distancePoints).toBe(MAX_DISTANCE_POINTS);
     expect(score.directionExactBonus).toBe(EXACT_DIRECTION_BONUS);
@@ -31,8 +31,8 @@ describe('scoreRound', () => {
 
   it('awards the exact-distance bonus when the guess lands on the closest step the slider can reach', () => {
     const onStepGuess = roundDistance(trueSurfaceKm, MAX_SURFACE_DISTANCE_KM);
-    const guess: Guess = { bearing: trueBearing, distanceKm: onStepGuess, inclination: 0 };
-    const score = scoreRound(origin, place, guess, { straightLine: false });
+    const guess: Guess = { bearing: trueBearing, distanceKm: onStepGuess };
+    const score = scoreRound(origin, place, guess);
     expect(score.distanceExactBonus).toBe(EXACT_DISTANCE_BONUS);
     expect(score.total).toBe(
       score.directionPoints + score.distancePoints + score.directionExactBonus + EXACT_DISTANCE_BONUS,
@@ -41,42 +41,33 @@ describe('scoreRound', () => {
 
   it('does not award the exact-distance bonus for a guess one step off', () => {
     const onStepGuess = roundDistance(trueSurfaceKm, MAX_SURFACE_DISTANCE_KM);
-    const guess: Guess = { bearing: trueBearing, distanceKm: onStepGuess * 1.5, inclination: 0 };
-    const score = scoreRound(origin, place, guess, { straightLine: false });
+    const guess: Guess = { bearing: trueBearing, distanceKm: onStepGuess * 1.5 };
+    const score = scoreRound(origin, place, guess);
     expect(score.distanceExactBonus).toBe(0);
   });
 
   it('awards 0 direction points for a guess opposite the true bearing', () => {
-    const guess: Guess = { bearing: (trueBearing + 180) % 360, distanceKm: trueSurfaceKm, inclination: 0 };
-    const score = scoreRound(origin, place, guess, { straightLine: false });
+    const guess: Guess = { bearing: (trueBearing + 180) % 360, distanceKm: trueSurfaceKm };
+    const score = scoreRound(origin, place, guess);
     expect(score.directionPoints).toBe(0);
     expect(score.directionExactBonus).toBe(0);
   });
 
   it('does not award the exact-heading bonus for a guess off by even half a degree', () => {
-    const guess: Guess = { bearing: (trueBearing + 0.6) % 360, distanceKm: trueSurfaceKm, inclination: 0 };
-    const score = scoreRound(origin, place, guess, { straightLine: false });
+    const guess: Guess = { bearing: (trueBearing + 0.6) % 360, distanceKm: trueSurfaceKm };
+    const score = scoreRound(origin, place, guess);
     expect(score.directionExactBonus).toBe(0);
   });
 
   it('awards 0 distance points when the guess is far outside the tolerance ratio', () => {
-    const guess: Guess = { bearing: trueBearing, distanceKm: trueSurfaceKm * 100, inclination: 0 };
-    const score = scoreRound(origin, place, guess, { straightLine: false });
+    const guess: Guess = { bearing: trueBearing, distanceKm: trueSurfaceKm * 100 };
+    const score = scoreRound(origin, place, guess);
     expect(score.distancePoints).toBe(0);
   });
 
-  it('compares against the chord distance in straightLine mode, not the surface distance', () => {
-    const guess: Guess = { bearing: trueBearing, distanceKm: trueSurfaceKm, inclination: 0 };
-    const surfaceScore = scoreRound(origin, place, guess, { straightLine: false });
-    const straightScore = scoreRound(origin, place, guess, { straightLine: true });
-    // Same heading, same guessed distance, but compared against a different truth (chord != surface).
-    expect(straightScore.distancePoints).not.toBe(surfaceScore.distancePoints);
-    expect(straightScore.trueStraightDistanceKm).toBeLessThanOrEqual(straightScore.trueSurfaceDistanceKm);
-  });
-
   it('scores direction and distance independently', () => {
-    const guess: Guess = { bearing: (trueBearing + 180) % 360, distanceKm: trueSurfaceKm, inclination: 0 };
-    const score = scoreRound(origin, place, guess, { straightLine: false });
+    const guess: Guess = { bearing: (trueBearing + 180) % 360, distanceKm: trueSurfaceKm };
+    const score = scoreRound(origin, place, guess);
     expect(score.directionPoints).toBe(0);
     expect(score.distancePoints).toBe(MAX_DISTANCE_POINTS);
   });
@@ -84,12 +75,10 @@ describe('scoreRound', () => {
 
 describe('applyBestBonus', () => {
   const makeResult = (directionError: number, distanceError: number): PlayerResult => ({
-    guess: { bearing: 0, distanceKm: 100, inclination: 0 },
+    guess: { bearing: 0, distanceKm: 100 },
     score: {
       trueBearing: 0,
-      trueInclination: 0,
       trueSurfaceDistanceKm: 100,
-      trueStraightDistanceKm: 100,
       directionError,
       distanceError,
       directionPoints: 0,

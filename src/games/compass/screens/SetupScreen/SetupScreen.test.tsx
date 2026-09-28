@@ -104,7 +104,6 @@ describe('SetupScreen — host/join a game', () => {
     expect(getByText('Catégories')).toBeTruthy();
     expect(getByText('Difficulté')).toBeTruthy();
     expect(getByText('Nombre de manches')).toBeTruthy();
-    expect(getByText('Mode')).toBeTruthy();
     expect(getByText('Options')).toBeTruthy();
     expect(getByLabelText('Nom du joueur 1')).toBeTruthy();
     const mountainsChip = getByText('Montagnes');
@@ -400,21 +399,6 @@ describe('SetupScreen — categories / difficulty / rounds / mode', () => {
     expect(updateSettings).toHaveBeenCalledWith({ rounds: 15 });
   });
 
-  it('selects the inclination mode and shows its description', async () => {
-    const { getByText, updateSettings } = await renderSetup();
-    await fireEvent.press(getByText('Inclinaison'));
-    expect(updateSettings).toHaveBeenCalledWith({ straightLine: true });
-  });
-
-  it('shows the distance mode description by default', async () => {
-    const { getByText } = await renderSetup({ straightLine: false });
-    expect(getByText(/Tu estimes directement la distance/)).toBeTruthy();
-  });
-
-  it('shows the inclination mode description when straightLine is true', async () => {
-    const { getByText } = await renderSetup({ straightLine: true });
-    expect(getByText(/Plus dur/)).toBeTruthy();
-  });
 });
 
 describe('SetupScreen — options toggles', () => {

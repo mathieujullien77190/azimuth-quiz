@@ -1,7 +1,7 @@
-/** An answer to draw on the Earth: always an arc, plus a straight line as well if requested. */
+/** An answer to draw on the Earth, as an arc following the surface. */
 export type EarthMark = {
   bearing: number;
-  /** Surface distance (arc length): also fixes where the chord lands, in straight-line mode. */
+  /** Surface distance (arc length). */
   distanceKm: number;
   color: string;
   /** Other players' answers while the current player is answering: faded out. */
@@ -13,8 +13,6 @@ export type EarthMark = {
 export type EarthSectionProps = {
   size: number;
   marks: EarthMark[];
-  /** Adds the chord (straight line through the Earth) to the same destination as the arc. */
-  showStraightLine: boolean;
   /** Shows the +/- buttons (reveal): starts from the ideal zoom, goes down to 1 (whole Earth). */
   zoomControls?: boolean;
   /** Allows the orbiting satellite at zoom 1 (see further below) independently of the +/- buttons:

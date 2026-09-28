@@ -5,19 +5,20 @@ import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PLAYER_COLORS } from '@/data';
-import { MAX_STRAIGHT_DISTANCE_KM, MAX_SURFACE_DISTANCE_KM } from '@/games/compass/constants';
-import { arcKmFromChordKm, bearingDeg, distanceKm as computeDistanceKm, formatNumber } from '@/helpers';
+import { MAX_SURFACE_DISTANCE_KM } from '@/games/compass/constants';
+import { bearingDeg, distanceKm as computeDistanceKm, formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
 
 import type { EarthMark } from '@/components/EarthSection';
+import type { RoundRecord } from '@/types';
 import { REVEAL_OPACITY } from '../GameScreen/constants';
 import EndScreen from '../EndScreen';
 import NoticeOverlay from '@/components/NoticeOverlay';
 import ThemeBackdrop from '@/components/ThemeBackdrop';
 import { buildRoundRecord } from './helpers';
 import { onCapFromScroll } from '../GameScreen/helpers';
-import { OnlineAnswerView, OnlineResultsView } from './OnlineGameScreenView';
+import { OnlineGameScreenView } from './OnlineGameScreenView';
 import type { Needle, OnlineGameScreenProps } from './types';
 import { useOnlineGame } from './useOnlineGame';
 
@@ -69,7 +70,7 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
     );
   }
 
-  const { localUid, players, onlinePlayers, isHost, roomSettings, gameState, place, straightLine, totals, myIndex } =
+  const { localUid, players, onlinePlayers, isHost, roomSettings, gameState, place, totals, myIndex } =
     game;
 
   if (localUid === null || roomSettings === null || place === undefined || gameState.origin === null) {
@@ -81,9 +82,8 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
       </SafeAreaView>
     );
   }
-  const maxDistanceKm = straightLine ? MAX_STRAIGHT_DISTANCE_KM : MAX_SURFACE_DISTANCE_KM;
+  const maxDistanceKm = MAX_SURFACE_DISTANCE_KM;
   const myColor = players[localUid]?.color ?? PLAYER_COLORS[0];
-  const earthDistanceKm = (km: number) => (straightLine ? arcKmFromChordKm(km) : km);
   // Top-right of the header, in every phase: this device's own name and running total — never
   // "Manche terminée" or the like, the player's identity/score is more useful there at a glance.
   const headerScore = `${onlinePlayers[myIndex]?.name ?? ''} · ${formatNumber(totals[myIndex] ?? 0)} ${t.common.pts}`;
@@ -103,6 +103,18 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   // the host's "next round" button until `gameState.screen` actually flips to `'reveal'`.
   const submitted = gameState.screen === 'game' && gameState.guesses[localUid] !== undefined;
   const showResults = gameState.screen === 'reveal' || submitted;
+
+  // Everything below feeds one `OnlineGameScreenView` (single `Screen`/`ScrollView`, see its own
+  // comment): the results-only values default to `undefined`/empty while still answering, so the
+  // view's `record` discriminant is the only thing switching between the two layouts — never a
+  // full component swap, which used to reset the native scroll position on submit.
+  let record: RoundRecord | undefined;
+  let extraNeedles: Needle[] = [];
+  let truthBearing: number | null = null;
+  let answered: boolean[] | undefined;
+  let confirmed = false;
+  let isLastRound = false;
+  let resultsEarthMarks: EarthMark[] = [];
 
   if (showResults) {
     const confirmedRecord = gameState.screen === 'reveal' ? game.records[game.records.length - 1] : undefined;
@@ -135,7 +147,7 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
         ? computeDistanceKm(gameState.origin.coordinates, place.coordinates)
         : 0;
 
-    const earthMarks: EarthMark[] = [
+    resultsEarthMarks = [
       ...(allAnswered
         ? [{ bearing: trueBearing as number, distanceKm: trueSurfaceDistanceKm, color: colors.truth, isTruth: true }]
         : []),
@@ -143,74 +155,62 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
         const guess = guessFor(uid);
         return {
           bearing: guess.bearing,
-          distanceKm: earthDistanceKm(guess.distanceKm),
+          distanceKm: guess.distanceKm,
           color,
           opacity: confirmedRecord ? REVEAL_OPACITY : undefined,
         };
       }),
     ];
-    const extraNeedles: Needle[] = answeredPlayers.map(({ uid, color }) => ({ bearing: guessFor(uid).bearing, color }));
-    const isLastRound = gameState.roundIndex + 1 >= gameState.places.length;
-
-    return (
-      <OnlineResultsView
-        answered={confirmedRecord ? undefined : onlinePlayers.map(({ uid }) => gameState.guesses[uid] !== undefined)}
-        confirmed={confirmedRecord !== undefined}
-        difficulties={roomSettings.difficulties}
-        earthMarks={earthMarks}
-        extraNeedles={extraNeedles}
-        headerScore={headerScore}
-        isHost={isHost}
-        isLastRound={isLastRound}
-        liveCompass={roomSettings.liveCompass}
-        localIndex={myIndex}
-        onKick={game.kickPlayer}
-        onNextRound={game.goToNextRound}
-        onQuit={game.handleQuit}
-        place={place}
-        players={onlinePlayers}
-        record={confirmedRecord ?? buildRoundRecord(place, onlinePlayers, gameState.guesses, {})}
-        roundNumber={gameState.roundIndex + 1}
-        straightLine={straightLine}
-        totalRounds={gameState.places.length}
-        totals={totals}
-        truthBearing={trueBearing}
-      />
-    );
+    extraNeedles = answeredPlayers.map(({ uid, color }) => ({ bearing: guessFor(uid).bearing, color }));
+    truthBearing = trueBearing;
+    answered = confirmedRecord ? undefined : onlinePlayers.map(({ uid }) => gameState.guesses[uid] !== undefined);
+    confirmed = confirmedRecord !== undefined;
+    isLastRound = gameState.roundIndex + 1 >= gameState.places.length;
+    record = confirmedRecord ?? buildRoundRecord(place, onlinePlayers, gameState.guesses, {});
   }
 
-  // gameState.screen === 'game' and not yet submitted: the only phase with an editable
-  // compass/slider — everyone else's answers stay hidden until you've submitted your own (see
-  // the results-style branch above), so there's nothing of theirs to show here.
-  const earthMarks: EarthMark[] = [
-    { bearing: game.bearing, distanceKm: earthDistanceKm(game.distanceKm), color: myColor },
+  // Answer phase's own Earth mark: only this device's own guess, shown regardless of phase (the
+  // view ignores it once `record` is set).
+  const answerEarthMarks: EarthMark[] = [
+    { bearing: game.bearing, distanceKm: game.distanceKm, color: myColor },
   ];
 
   return (
-    <OnlineAnswerView
+    <OnlineGameScreenView
+      answered={answered}
       bearing={game.bearing}
       compassColor={myColor}
+      confirmed={confirmed}
       difficulties={roomSettings.difficulties}
       distanceKm={game.distanceKm}
-      earthMarks={earthMarks}
+      earthMarks={record ? resultsEarthMarks : answerEarthMarks}
+      extraNeedles={extraNeedles}
       headerScore={headerScore}
+      isHost={isHost}
+      isLastRound={isLastRound}
       liveCompass={roomSettings.liveCompass}
+      localIndex={myIndex}
       maxDistanceKm={maxDistanceKm}
       onCap={onCap}
       onGoToCap={goToCap}
       onGoToDistance={goToDistance}
+      onKick={game.kickPlayer}
+      onNextRound={game.goToNextRound}
       onQuit={game.handleQuit}
       onScroll={handleScroll}
       onSetBearing={game.setBearing}
       onSetDistanceKm={game.setDistanceKm}
       onSubmit={game.submit}
       place={place}
+      players={onlinePlayers}
+      record={record}
       roundNumber={gameState.roundIndex + 1}
       scrollRef={scrollRef}
       showCountry={roomSettings.showCountry}
-      straightLine={straightLine}
       submitDisabled={!game.bearingTouched || !game.distanceTouched}
       totalRounds={gameState.places.length}
+      totals={totals}
+      truthBearing={truthBearing}
     />
   );
 };

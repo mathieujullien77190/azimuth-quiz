@@ -1,4 +1,5 @@
 import { Text, View } from 'react-native';
+import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 
 import Button from '../ui/Button';
@@ -7,11 +8,12 @@ import type { GameCardProps } from './types';
 
 import { createStyles } from './styles';
 
-export const GameCard = ({ icon, title, tagline, meta, note, ctaLabel, onPress, disabled = false }: GameCardProps) => {
+export const GameCard = ({ icon, title, tagline, maxPlayers, ctaLabel, onPress }: GameCardProps) => {
   const styles = useThemedStyles(createStyles);
+  const t = useTranslation();
 
   return (
-    <Card style={[styles.card, disabled && styles.disabled]}>
+    <Card style={styles.card}>
       <View style={styles.top}>
         <View style={styles.icon}>
           <Text style={styles.iconText}>{icon}</Text>
@@ -19,9 +21,8 @@ export const GameCard = ({ icon, title, tagline, meta, note, ctaLabel, onPress, 
         <Text style={styles.title}>{title}</Text>
       </View>
       <Text style={styles.tagline}>{tagline}</Text>
-      <Text style={styles.meta}>{meta.join('   ·   ')}</Text>
-      {note !== undefined && <Text style={styles.note}>{note}</Text>}
-      <Button disabled={disabled} label={ctaLabel} onPress={onPress} variant={disabled ? 'ghost' : 'primary'} />
+      <Text style={styles.players}>{t.home.playersRange(maxPlayers)}</Text>
+      <Button label={ctaLabel} onPress={onPress} />
     </Card>
   );
 };

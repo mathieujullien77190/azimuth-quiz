@@ -3,7 +3,7 @@ import { create } from 'zustand';
 
 import { DEFAULT_ORIGIN } from '@/data';
 import { DEFAULT_DISTANCE_KM, DEFAULT_SETTINGS } from '@/games/compass/constants';
-import { applyBestBonus, inclinationFromChordKm, pickPlaces, resolveOrigin, scoreRound } from '@/helpers';
+import { applyBestBonus, pickPlaces, resolveOrigin, scoreRound } from '@/helpers';
 import type { Language } from '@/i18n';
 import type { GamePhase, GameSettings, Guess, Origin, Place, RoundRecord } from '@/types';
 
@@ -124,11 +124,7 @@ export const useGameStore = create<GameStoreState>()((set, get) => ({
     if (place === undefined) return;
 
     const draft = state.draftsByPlayer[state.activePlayerIndex] ?? DEFAULT_DRAFT;
-    const guess: Guess = {
-      bearing: draft.bearing,
-      distanceKm: draft.distanceKm,
-      inclination: state.config.straightLine ? inclinationFromChordKm(draft.distanceKm) : 0,
-    };
+    const guess: Guess = { bearing: draft.bearing, distanceKm: draft.distanceKm };
     const updated = state.guessesByPlayer.map((existing, index) =>
       index === state.activePlayerIndex ? guess : existing,
     );
@@ -145,7 +141,7 @@ export const useGameStore = create<GameStoreState>()((set, get) => ({
     const results = applyBestBonus(
       updated.map((playerGuess) => ({
         guess: playerGuess as Guess,
-        score: scoreRound(state.origin.coordinates, place, playerGuess as Guess, state.config),
+        score: scoreRound(state.origin.coordinates, place, playerGuess as Guess),
       })),
     );
     set((current) => ({ records: [...current.records, { place, results }], phase: 'reveal' }));

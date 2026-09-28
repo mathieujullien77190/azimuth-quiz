@@ -1,16 +1,11 @@
-export { formatBearing, formatDistance, formatInclination, formatNumber, initials } from './format';
+export { formatBearing, formatDistance, formatNumber, initials } from './format';
 export {
   angleDifference,
   bearingDeg,
   bearingToCardinal,
   centralAngleDeg,
   distanceKm,
-  arcKmFromChordKm,
-  arcKmFromInclination,
-  inclinationDeg,
-  inclinationFromChordKm,
   normalizeBearing,
-  straightDistanceKm,
 } from './geo';
 export { kmToRatio, ratioToKm, roundDistance } from '../games/compass/helpers/distanceScale';
 export { scoreCountryGuess } from '../games/contour/helpers/contourScoring';

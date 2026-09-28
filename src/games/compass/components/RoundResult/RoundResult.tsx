@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View, useWindowDimensions } from 'react-native';
-import { arcKmFromChordKm, formatBearing, formatDistance, formatInclination, formatNumber } from '@/helpers';
+import { formatBearing, formatDistance, formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Player, Theme } from '@/types';
@@ -12,7 +12,7 @@ import type { RoundResultProps } from './types';
 
 import { createStyles } from './styles';
 
-export const RoundResult = ({ record, players, totals, options, answered, localIndex, onKick }: RoundResultProps) => {
+export const RoundResult = ({ record, players, totals, answered, localIndex, onKick }: RoundResultProps) => {
   const { width } = useWindowDimensions();
   const compact = width < COMPACT_MAX_WIDTH;
   const styles = useThemedStyles(useCallback((theme: Theme) => createStyles(theme, compact), [compact]));
@@ -40,11 +40,6 @@ export const RoundResult = ({ record, players, totals, options, answered, localI
       : [...entries.filter((e) => e.index === localIndex), ...entries.filter((e) => e.index !== localIndex)]
     : entries.sort((a, b) => b.result.score.total - a.result.score.total);
 
-  // The slider gives the chord (straight line) in straightLine mode; the equivalent
-  // surface distance is used both for display and to compute the gap with the true answer.
-  const guessSurfaceKmFor = (result: (typeof record.results)[number]): number =>
-    options.straightLine ? arcKmFromChordKm(result.guess.distanceKm) : result.guess.distanceKm;
-
   return (
     <Card style={styles.card}>
       <View style={styles.truth}>
@@ -60,12 +55,6 @@ export const RoundResult = ({ record, players, totals, options, answered, localI
           <Text style={styles.truthRowLabel}>{t.roundResult.distance}</Text>
           <Text style={styles.truthValue}>{pending ? '' : formatDistance(truth.trueSurfaceDistanceKm)}</Text>
         </View>
-        {options.straightLine && (
-          <View style={styles.truthRow}>
-            <Text style={styles.truthRowLabel}>{t.roundResult.inclination}</Text>
-            <Text style={styles.truthValue}>{pending ? '' : formatInclination(truth.trueInclination)}</Text>
-          </View>
-        )}
         <Pressable
           accessibilityRole="button"
           hitSlop={8}
@@ -136,16 +125,16 @@ export const RoundResult = ({ record, players, totals, options, answered, localI
               <Text style={styles.rowLabel}>{t.roundResult.distance}</Text>
               <Text style={styles.rowValue}>
                 {pending
-                  ? hasAnswered && formatDistance(guessSurfaceKmFor(result))
+                  ? hasAnswered && formatDistance(result.guess.distanceKm)
                   : [
-                      formatDistance(guessSurfaceKmFor(result)),
+                      formatDistance(result.guess.distanceKm),
                       ' ',
                       result.score.distanceExactBonus > 0 ? (
                         <Text key="perfect" style={{ color: colors.success }}>
                           {t.roundResult.perfect}
                         </Text>
                       ) : (
-                        `(+${formatDistance(Math.abs(guessSurfaceKmFor(result) - truth.trueSurfaceDistanceKm))})`
+                        `(+${formatDistance(Math.abs(result.guess.distanceKm - truth.trueSurfaceDistanceKm))})`
                       ),
                     ]}
                 {pending && !hasAnswered && '?'}
@@ -169,38 +158,6 @@ export const RoundResult = ({ record, players, totals, options, answered, localI
                     )}
               </Text>
             </View>
-            {options.straightLine && (
-              <View style={styles.row}>
-                <Text style={styles.rowLabel}>{t.roundResult.inclination}</Text>
-                <Text style={styles.rowValue}>
-                  {pending
-                    ? hasAnswered && formatInclination(result.guess.inclination)
-                    : formatInclination(result.guess.inclination)}
-                  {pending && !hasAnswered && '?'}
-                </Text>
-                {/* Same score as Distance: in straight-line mode, the chord judged by distancePoints
-                    IS the inclination (one determines the other) — so the same points pool, won
-                    and lost together, independent of the heading. */}
-                <Text
-                  style={[
-                    styles.rowPoints,
-                    {
-                      color:
-                        !pending && (result.score.distanceBonus > 0 || result.score.distanceExactBonus > 0)
-                          ? colors.success
-                          : colors.text,
-                    },
-                  ]}
-                >
-                  {pending
-                    ? '?'
-                    : formatRowScore(
-                        result.score.distancePoints,
-                        result.score.distanceBonus + result.score.distanceExactBonus,
-                      )}
-                </Text>
-              </View>
-            )}
             <View style={styles.roundTotalRow}>
               <Text style={styles.roundScore}>{pending ? '?' : `+${formatNumber(result.score.total)}`}</Text>
             </View>

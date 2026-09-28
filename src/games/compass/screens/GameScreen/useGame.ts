@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 
 import { useLanguage, useTranslation } from '@/i18n';
 import { PLAYER_COLORS } from '@/data';
-import { MAX_STRAIGHT_DISTANCE_KM, MAX_SURFACE_DISTANCE_KM } from '@/games/compass/constants';
+import { MAX_SURFACE_DISTANCE_KM } from '@/games/compass/constants';
 import { playerDisplayName } from '@/helpers';
 import { useSettings } from '@/settings';
 import type { Guess, Player } from '@/types';
@@ -44,7 +44,7 @@ export const useGame = () => {
     [store.config.playerNames],
   );
   const isMultiplayer = players.length > 1;
-  const maxDistanceKm = store.config.straightLine ? MAX_STRAIGHT_DISTANCE_KM : MAX_SURFACE_DISTANCE_KM;
+  const maxDistanceKm = MAX_SURFACE_DISTANCE_KM;
   const currentPlayer = players[store.activePlayerIndex];
 
   /** The active player's draft: their in-progress answer (submitted or not). */

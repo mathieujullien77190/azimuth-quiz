@@ -5,7 +5,7 @@ import {
   projectPoints,
 } from '@/games/contour/components/ContourBoard';
 import { CLUE_PLACES, CONTOURS, DEFAULT_ORIGIN, PLACES, PLAYER_COLORS } from '@/data';
-import { DEFAULT_DISTANCE_KM, MAX_STRAIGHT_DISTANCE_KM, MAX_SURFACE_DISTANCE_KM } from '@/games/compass/constants';
+import { DEFAULT_DISTANCE_KM, MAX_SURFACE_DISTANCE_KM } from '@/games/compass/constants';
 import type { CluePlace, ContourCountry, Guess, Place, Player, PlayerResult, Point2D, RoundRecord } from '@/types';
 
 import { bearingDeg, distanceKm, normalizeBearing } from './geo';
@@ -49,15 +49,15 @@ const TRUE_DISTANCE_KM = distanceKm(ORIGIN, SAMPLE_PLACE_REVEALED.coordinates);
  * through the real scoring helpers — every number RoundResult shows is exactly what the real game
  * would compute for these guesses, not invented. */
 const SAMPLE_GUESSES: Guess[] = [
-  { bearing: normalizeBearing(TRUE_BEARING + 2), distanceKm: Math.round(TRUE_DISTANCE_KM * 0.97), inclination: 0 },
-  { bearing: normalizeBearing(TRUE_BEARING - 18), distanceKm: Math.round(TRUE_DISTANCE_KM * 1.35), inclination: 0 },
-  { bearing: normalizeBearing(TRUE_BEARING + 55), distanceKm: Math.round(TRUE_DISTANCE_KM * 0.4), inclination: 0 },
+  { bearing: normalizeBearing(TRUE_BEARING + 2), distanceKm: Math.round(TRUE_DISTANCE_KM * 0.97) },
+  { bearing: normalizeBearing(TRUE_BEARING - 18), distanceKm: Math.round(TRUE_DISTANCE_KM * 1.35) },
+  { bearing: normalizeBearing(TRUE_BEARING + 55), distanceKm: Math.round(TRUE_DISTANCE_KM * 0.4) },
 ];
 
 const SAMPLE_RESULTS: PlayerResult[] = applyBestBonus(
   SAMPLE_GUESSES.map((guess) => ({
     guess,
-    score: scoreRound(ORIGIN, SAMPLE_PLACE_REVEALED, guess, { straightLine: false }),
+    score: scoreRound(ORIGIN, SAMPLE_PLACE_REVEALED, guess),
   })),
 );
 
@@ -67,7 +67,7 @@ export const SAMPLE_ROUND_RECORD: RoundRecord = { place: SAMPLE_PLACE_REVEALED, 
 export const SAMPLE_TOTALS: number[] = SAMPLE_RESULTS.map((result) => result.score.total);
 
 export const SAMPLE_MAX_SURFACE_KM = MAX_SURFACE_DISTANCE_KM;
-export const SAMPLE_MAX_STRAIGHT_KM = MAX_STRAIGHT_DISTANCE_KM;
+
 export const SAMPLE_DISTANCE_KM = DEFAULT_DISTANCE_KM;
 
 /** Bearing/distance from the same default origin to the Clues sample place — real values for

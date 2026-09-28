@@ -11,12 +11,9 @@ export const ZOOM_STEPS = [1, 1.5, 2, 3, 4, 6, 8, 12, 20, 30] as const;
 export const MAX_ZOOM = 30;
 
 export const CAPTION_SURFACE = 'La Terre';
-export const CAPTION_STRAIGHT = 'Coupe de la Terre';
 export const PLAYER_LABEL = 'toi';
-export const HORIZON_LABEL = 'horizon';
 
-// Orbiting satellite, just for fun: on reveal, in distance mode (not straight line), and
-// only zoomed out to the real scale (zoom 1 = the whole Earth visible, otherwise it would be
+// Orbiting satellite, just for fun: on reveal, and only zoomed out to the real scale (zoom 1 = the whole Earth visible, otherwise it would be
 // off-screen or grotesquely close). A plane by day instead (see EarthSection), same orbit.
 export const SATELLITE_EMOJI = '🛰️';
 export const DAY_ORBIT_EMOJI = '✈️';

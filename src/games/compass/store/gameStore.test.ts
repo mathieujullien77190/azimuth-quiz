@@ -102,7 +102,7 @@ describe('gameStore — submit / next', () => {
     const state = useGameStore.getState();
     expect(state.phase).toBe('reveal');
     expect(state.records).toHaveLength(1);
-    expect(state.records[0].results[0].guess).toEqual({ bearing: 45, distanceKm: 500, inclination: 0 });
+    expect(state.records[0].results[0].guess).toEqual({ bearing: 45, distanceKm: 500 });
   });
 
   it('moves to the next unanswered player instead of revealing, in multiplayer', async () => {

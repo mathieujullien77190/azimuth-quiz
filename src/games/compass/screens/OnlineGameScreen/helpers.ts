@@ -26,7 +26,7 @@ export const buildRoundRecord = (
 ): RoundRecord => ({
   place,
   results: onlinePlayers.map(({ uid }): PlayerResult => {
-    const guess = guesses[uid] ?? { bearing: 0, distanceKm: 0, inclination: 0 };
+    const guess = guesses[uid] ?? { bearing: 0, distanceKm: 0 };
     const score = scores[uid] ?? ZERO_SCORE;
     return { guess, score };
   }),

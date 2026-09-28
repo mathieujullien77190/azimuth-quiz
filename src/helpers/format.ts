@@ -12,7 +12,5 @@ export const formatDistance = (km: number): string => `${formatNumber(km)}${NARR
 export const formatBearing = (degrees: number, cardinals: readonly string[]): string =>
   `${bearingToCardinal(degrees, cardinals)} · ${Math.round(normalizeBearing(degrees)) % 360}°`;
 
-export const formatInclination = (degrees: number): string => `${Math.round(degrees)}°`;
-
 /** A player's initials: the first 2 letters of their name, uppercase. */
 export const initials = (name: string): string => name.trim().slice(0, 2).toUpperCase();

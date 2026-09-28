@@ -109,7 +109,6 @@ describe('pickPlaces', () => {
     categories: ['cities', 'mountains', 'landmarks'],
     difficulties: ['easy', 'intermediate', 'hard'],
     rounds: 10,
-    straightLine: false,
     useGps: false,
     customLatitude: 48.8566,
     customLongitude: 2.3522,

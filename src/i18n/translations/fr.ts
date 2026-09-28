@@ -13,24 +13,22 @@ export const fr: Translations = {
   home: {
     tagline: 'Choisis ton jeu de géographie',
     settingsButtonLabel: 'Réglages',
+    playersRange: (max) => `1 à ${max} joueurs`,
     games: {
       compass: {
         title: 'Boussole',
         tagline: 'Un lieu s’affiche. Vise son cap et estime sa distance depuis ta position.',
-        meta: ['1 à 10 joueurs'],
         cta: 'Jouer',
       },
       clues: {
         title: 'Indices',
         tagline: 'Devine une ville, et en dessous des indices qui se révèlent petit à petit.',
-        meta: ['1 à 6 joueurs'],
         cta: 'Jouer',
       },
       contour: {
         title: 'Silhouette',
         tagline:
           'La silhouette d’un pays s’affiche. Devine lequel grâce aux indices, puis place des villes sur sa carte.',
-        meta: ['1 à 6 joueurs'],
         cta: 'Jouer',
       },
     },
@@ -79,18 +77,6 @@ export const fr: Translations = {
       roomDeletedNotice: 'L’hôte a supprimé la partie.',
     },
     readOnlyNotice: 'Seul l’hôte peut modifier les options.',
-    modeTitle: 'Mode',
-    distanceModes: {
-      distance: {
-        label: 'Distance',
-        description: 'Tu estimes directement la distance parcourue à la surface du globe.',
-      },
-      inclination: {
-        label: 'Inclinaison',
-        description:
-          'Plus dur : tu choisis l’inclinaison sous l’horizon, sans indication de distance. La ligne droite à travers la Terre en découle.',
-      },
-    },
     optionsTitle: 'Options',
     toggles: {
       liveCompass: {
@@ -121,8 +107,6 @@ export const fr: Translations = {
     last: 'Voir le score',
     round: 'Manche',
     roundOver: 'Manche terminée',
-    reality: 'Réponse',
-    yourAnswer: 'Ta réponse',
     nextStep: 'Suivant',
     previousStep: 'Précédent',
     playerTurn: (name) => `À ${name} de jouer`,
@@ -135,13 +119,11 @@ export const fr: Translations = {
   },
   sliders: {
     distance: 'Distance estimée',
-    inclination: 'Inclinaison',
   },
   roundResult: {
     truth: 'Réponse',
     direction: 'Direction',
     distance: 'Distance',
-    inclination: 'Inclinaison',
     yourScore: 'Ton score',
     scoringInfoLabel: 'Comment les points sont calculés',
     scoringInfo:
@@ -183,18 +165,8 @@ export const fr: Translations = {
     screenTitle: 'Indices',
     back: 'Retour',
     start: 'Lancer la partie',
-    playersSection: {
-      title: 'Joueurs',
-      hint: 'Tout le monde joue sur le même téléphone, chacun son tour.',
-    },
-    playerNameAccessibility: (index) => `Nom du joueur ${index}`,
     difficultyTitle: 'Difficulté',
     difficultyHint: 'Notoriété du lieu : détermine dans quelle réserve de villes la manche pioche.',
-    answerMethodTitle: 'Réponse',
-    answerMethods: {
-      spoken: 'À voix haute',
-      typed: 'Je tape la ville',
-    },
     optionsTitle: 'Options',
     toggles: {
       startWithFirstLetter: {
@@ -205,13 +177,7 @@ export const fr: Translations = {
   },
   cluesGame: {
     pointsAtStake: (points) => `${points} pts en jeu`,
-    buzz: '🔔 J’ai trouvé !',
     giveUp: '🤷 Je ne sais pas',
-    buzzedPrompt: (name) => `${name} buzze`,
-    verify: 'Vérifier',
-    cancel: 'Annuler',
-    correct: '✓ Bonne réponse',
-    wrong: '✕ Faux',
     resultOk: 'Bonne réponse !',
     whoAnswered: 'Qui a répondu ?',
     scored: (name, points) => `${name} marque ${points} points !`,
@@ -221,6 +187,8 @@ export const fr: Translations = {
     wasPlace: 'C’était',
     continueLabel: 'Continuer',
     home: 'Accueil',
+    yourTurn: 'À vous de jouer',
+    waitingForTurn: (name) => `Au tour de ${name}…`,
     clues: {
       position: 'Position',
       population: 'Population',

@@ -2,8 +2,9 @@ import { filterPlaces } from '@/helpers';
 import { useLanguage } from '@/i18n';
 import { useSettings } from '@/settings';
 
+import SetupLoading from '@/components/setup/SetupLoading';
 import { selectDifficultyFilter, toggleCategoryFilter } from './helpers';
-import { SetupScreenLoading, SetupScreenView } from './SetupScreenView';
+import { SetupScreenView } from './SetupScreenView';
 import type { SetupScreenProps } from './types';
 import { useOnlineRoom } from './useOnlineRoom';
 
@@ -17,7 +18,7 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
   const room = useOnlineRoom(settings, updateSettings);
   const available = filterPlaces(settings.categories, settings.difficulties, language).length;
 
-  if (room.starting) return <SetupScreenLoading />;
+  if (room.starting) return <SetupLoading />;
 
   const updateOrNotify = (patch: Partial<typeof settings>) =>
     room.readOnly ? room.notifyReadOnly() : updateSettings(patch);
@@ -25,24 +26,10 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
   return (
     <SetupScreenView
       available={available}
-      connectedPlayers={room.connectedPlayers}
-      hostUid={room.hostUid}
-      isHost={room.isHost}
-      joinCode={room.joinCode}
-      joinCodeIsValid={room.joinCodeIsValid}
-      joinStatus={room.joinStatus}
-      localUid={room.localUid}
-      nameEditable={room.connectedRoomCode === null}
       onBack={onBack}
       onChangeCustomOrigin={updateSettings}
-      onChangeName={(text) => updateSettings({ playerNames: [text] })}
-      onChooseHost={room.chooseHost}
-      onChooseJoin={room.chooseJoin}
-      onChooseSolo={room.chooseSolo}
-      onJoinCodeChange={room.setJoinCode}
-      onKick={room.kick}
+      onDismissOverlay={room.dismissOverlay}
       onSelectDifficulty={(id) => updateOrNotify(selectDifficultyFilter(settings, id))}
-      onSelectMode={(straightLine) => updateOrNotify({ straightLine })}
       onSelectRounds={(rounds) => updateOrNotify({ rounds })}
       onStartPress={room.onlineChoice === 'host' ? room.startOnlineGame : onStart}
       onToggleCategory={(id) => updateOrNotify(toggleCategoryFilter(settings, id))}
@@ -50,16 +37,11 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
       onToggleLiveCompass={(value) => updateOrNotify({ liveCompass: value })}
       onToggleShowCountry={(value) => updateOrNotify({ showCountry: value })}
       onToggleUseGps={(value) => updateOrNotify({ useGps: value })}
-      onlineChoice={room.onlineChoice}
       overlayMessage={room.overlayMessage}
-      onDismissOverlay={room.dismissOverlay}
+      party={room.party}
       readOnly={room.readOnly}
       ready={ready}
-      roomCode={room.roomCode}
       settings={settings}
-      soloColor={room.soloColor}
-      soloName={room.soloName}
-      soloPlaceholder={room.soloPlaceholder}
       startDisabled={available === 0}
     />
   );

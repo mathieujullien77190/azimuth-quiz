@@ -1,7 +1,6 @@
 import type { RefObject } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent, ScrollView } from 'react-native';
 
-import type { LegendItem } from '../../components/Legend';
 import type { EarthMark } from '@/components/EarthSection';
 import type { GameSettings, Place, Player, RoundRecord } from '@/types';
 
@@ -37,7 +36,6 @@ export type GameScreenViewProps = {
   onSetBearing: (value: number) => void;
   answeredNeedles: Needle[];
   revealNeedles: Needle[];
-  legendItems: LegendItem[];
   earthMarks: EarthMark[];
   distanceKm: number;
   onSetDistanceKm: (value: number) => void;

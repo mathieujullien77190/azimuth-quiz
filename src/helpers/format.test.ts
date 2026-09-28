@@ -1,4 +1,4 @@
-import { formatBearing, formatDistance, formatInclination, formatNumber, initials } from './format';
+import { formatBearing, formatDistance, formatNumber, initials } from './format';
 
 describe('formatNumber', () => {
   it('rounds to the nearest integer', () => {
@@ -34,13 +34,6 @@ describe('formatBearing', () => {
     // -10 normalizes to 350°, closer to N (360=0) than to NW (315).
     expect(formatBearing(-10, cardinals)).toBe('N · 350°');
     expect(formatBearing(370, cardinals)).toBe('N · 10°');
-  });
-});
-
-describe('formatInclination', () => {
-  it('rounds and appends a degree sign', () => {
-    expect(formatInclination(45.4)).toBe('45°');
-    expect(formatInclination(45.6)).toBe('46°');
   });
 });
 

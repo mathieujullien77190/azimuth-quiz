@@ -23,8 +23,7 @@ export const arcPath = (center: Point, radius: number, angle: number, side: Side
 };
 
 /**
- * Endpoint of an answer on the circle: the arc (surface) and the chord (straight line) connect the
- * same two points, so they share this endpoint - only the chosen inclination sets the distance.
+ * Endpoint of an answer on the circle, where its arc (surface distance) ends.
  */
 export const markEnd = (
   item: Pick<EarthMark, 'bearing' | 'distanceKm'>,
