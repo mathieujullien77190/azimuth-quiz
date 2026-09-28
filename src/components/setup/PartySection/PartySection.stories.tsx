@@ -62,7 +62,7 @@ const InteractiveDemo = (args: PartySectionProps) => {
 };
 
 const meta = {
-  title: 'Common/Setup/PartySection',
+  title: 'Setup/PartySection',
   component: PartySection,
   decorators: [
     (Story) => (

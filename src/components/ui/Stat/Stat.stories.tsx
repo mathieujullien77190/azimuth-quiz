@@ -8,7 +8,7 @@ import scoreCode from './Score.source.md?raw';
 import withColorCode from './WithColor.source.md?raw';
 
 const meta = {
-  title: 'Common/ui/Stat',
+  title: 'UI/Stat',
   component: Stat,
 } satisfies Meta<typeof Stat>;
 

@@ -5,7 +5,7 @@ import { source } from '@/storybook/source';
 import defaultCode from './Default.source.md?raw';
 
 const meta = {
-  title: 'Common/ui/Toggle',
+  title: 'UI/Toggle',
   component: Toggle,
   decorators: [
     (Story) => (

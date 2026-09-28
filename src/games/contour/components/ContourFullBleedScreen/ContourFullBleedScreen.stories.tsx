@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 
+import GameFooter from '@/components/GameFooter';
 import GameHeader from '@/components/GameHeader';
 import Button from '@/components/ui/Button';
 import { SAMPLE_CONTOUR_COUNTRY } from '@/helpers/storyFixtures';
@@ -60,7 +61,11 @@ export const Guessing: Story = {
   parameters: source(guessingCode),
   args: {
     hintLabels: buildHintLabels(board, 2, 'fr'),
-    footer: <ContourGuessBar guessText="" onChangeGuessText={fn()} onHint={fn()} onSubmit={fn()} />,
+    footer: (
+      <GameFooter>
+        <ContourGuessBar guessText="" onChangeGuessText={fn()} onHint={fn()} onSubmit={fn()} />
+      </GameFooter>
+    ),
   },
 };
 
@@ -69,6 +74,10 @@ export const Revealed: Story = {
   parameters: source(revealedCode),
   args: {
     hintLabels: buildHintLabels(board, 4, 'fr'),
-    footer: <Button label={t.contourGame.continueLabel} onPress={fn()} />,
+    footer: (
+      <GameFooter>
+        <Button label={t.contourGame.continueLabel} onPress={fn()} />
+      </GameFooter>
+    ),
   },
 };

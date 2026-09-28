@@ -16,7 +16,8 @@ export type ContourFullBleedScreenProps = {
   onOverlayBottomLayout: (event: LayoutChangeEvent) => void;
   /** Floats over the top of the board (a `GameHeader`). */
   header: ReactNode;
-  /** Floats over the bottom of the board (the answer input, or the round result). */
+  /** Floats over the bottom of the board (the answer input, or the round result) — pass a
+   * `GameFooter` for the panel look. */
   footer: ReactNode;
   /** Anything that should cover the whole screen on top of everything else (an overlay). */
   children?: ReactNode;

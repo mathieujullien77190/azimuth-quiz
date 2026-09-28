@@ -45,7 +45,7 @@ const SingleSelectDemo = (args: DifficultySectionProps) => {
 const t = translations.fr;
 
 const meta = {
-  title: 'Common/Setup/DifficultySection',
+  title: 'Setup/DifficultySection',
   component: DifficultySection,
   decorators: [
     (Story) => (

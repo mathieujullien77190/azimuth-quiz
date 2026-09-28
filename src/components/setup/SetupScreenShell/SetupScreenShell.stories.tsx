@@ -40,7 +40,7 @@ const party: SetupPartyProps = {
 };
 
 const meta = {
-  title: 'Common/Setup/SetupScreenShell',
+  title: 'Setup/SetupScreenShell',
   component: SetupScreenShell,
   // `Screen` reserves its full height (SafeAreaView -> ScrollView): it needs a fixed-height flex box.
   decorators: [

@@ -4,6 +4,7 @@ import { formatNumber } from '@/helpers';
 import { useLanguage, useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 
+import GameFooter from '@/components/GameFooter';
 import GameHeader from '@/components/GameHeader';
 import Button from '@/components/ui/Button';
 import NoOneFoundText from '@/components/ui/NoOneFoundText';
@@ -94,7 +95,7 @@ export const OnlineContourGameScreenView = ({
   return (
     <ContourFullBleedScreen
       board={board}
-      footer={footer}
+      footer={<GameFooter>{footer}</GameFooter>}
       header={
         <GameHeader
           code={roomCode}

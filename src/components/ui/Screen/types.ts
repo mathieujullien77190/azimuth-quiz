@@ -5,7 +5,8 @@ export type ScreenProps = {
   children: ReactNode;
   /** Stays fixed at the top, above the scrolling area (e.g. player selector). */
   header?: ReactNode;
-  /** Stays fixed at the bottom, below the scrolling area (e.g. main action button). */
+  /** Stays fixed at the bottom, below the scrolling area — rendered as given, so wrap it in a
+   * `GameFooter` for the panel look. */
   footer?: ReactNode;
   /** Optional: gives access to the internal ScrollView (e.g. programmatic scrollTo). */
   scrollRef?: Ref<ScrollView>;

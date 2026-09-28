@@ -7,7 +7,7 @@ import ghostCode from './Ghost.source.md?raw';
 import disabledCode from './Disabled.source.md?raw';
 
 const meta = {
-  title: 'Common/ui/Button',
+  title: 'UI/Button',
   component: Button,
 } satisfies Meta<typeof Button>;
 

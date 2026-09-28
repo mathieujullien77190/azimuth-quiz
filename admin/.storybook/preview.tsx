@@ -25,6 +25,11 @@ const preview: Preview = {
     ),
   ],
   parameters: {
+    // The app's own components first, then each game's, and the two generic families — the setup
+    // sections and the UI primitives — at the bottom of the sidebar.
+    options: {
+      storySort: { order: ['Common', 'Compass', 'Clues', 'Silhouette', 'Setup', 'UI'] },
+    },
     controls: {
       matchers: {
         color: /(background|color)$/i,

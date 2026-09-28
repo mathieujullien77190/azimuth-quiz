@@ -1,11 +1,13 @@
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, View, useWindowDimensions } from 'react-native';
+import { Text, View, useWindowDimensions } from 'react-native';
 import { formatBearing, formatDistance, formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Player, Theme } from '@/types';
 
 import Card from '@/components/ui/Card';
+import MiniButton from '@/components/ui/MiniButton';
+import Spinner from '@/components/ui/Spinner';
 import { COMPACT_MAX_WIDTH } from './constants';
 import { formatRowScore } from './helpers';
 import type { RoundResultProps } from './types';
@@ -28,8 +30,9 @@ export const RoundResult = ({ record, players, totals, answered, localIndex, onK
   // longer have a matching player instead of crashing on `player.name` below.
   const entries = record.results
     .map((result, index) => ({ result, player: players[index], index }))
-    .filter((entry): entry is { result: (typeof record.results)[number]; player: Player; index: number } =>
-      entry.player !== undefined,
+    .filter(
+      (entry): entry is { result: (typeof record.results)[number]; player: Player; index: number } =>
+        entry.player !== undefined,
     );
   // Players are ranked by points on the round (best first) — unless pending: there's no official
   // score yet to rank by, so this device's own entry goes first instead (easiest to find while
@@ -55,14 +58,11 @@ export const RoundResult = ({ record, players, totals, answered, localIndex, onK
           <Text style={styles.truthRowLabel}>{t.roundResult.distance}</Text>
           <Text style={styles.truthValue}>{pending ? '' : formatDistance(truth.trueSurfaceDistanceKm)}</Text>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          hitSlop={8}
+        <MiniButton
+          label={t.roundResult.scoringInfoLabel}
           onPress={() => setShowScoringInfo((value) => !value)}
-          style={[styles.miniButton, styles.scoringToggle]}
-        >
-          <Text style={styles.scoringToggleText}>{t.roundResult.scoringInfoLabel}</Text>
-        </Pressable>
+          style={styles.miniButtonSpacing}
+        />
         {showScoringInfo && <Text style={styles.scoringInfo}>{t.roundResult.scoringInfo}</Text>}
       </View>
 
@@ -73,7 +73,7 @@ export const RoundResult = ({ record, players, totals, answered, localIndex, onK
             <View style={styles.playerHead}>
               {!isSolo &&
                 (pending && !hasAnswered ? (
-                  <ActivityIndicator color={player.color} size="small" />
+                  <Spinner color={player.color} />
                 ) : (
                   <View style={[styles.playerDot, { backgroundColor: player.color }]}>
                     {pending && <Text style={styles.playerDotCheck}>✓</Text>}
@@ -162,14 +162,12 @@ export const RoundResult = ({ record, players, totals, answered, localIndex, onK
               <Text style={styles.roundScore}>{pending ? '?' : `+${formatNumber(result.score.total)}`}</Text>
             </View>
             {onKick && index !== localIndex && (
-              <Pressable
-                accessibilityRole="button"
-                hitSlop={8}
+              <MiniButton
+                label={t.roundResult.kick}
                 onPress={() => onKick(index)}
-                style={[styles.miniButton, styles.kick]}
-              >
-                <Text style={styles.kickText}>{t.roundResult.kick}</Text>
-              </Pressable>
+                style={styles.miniButtonSpacing}
+                variant="danger"
+              />
             )}
           </View>
         );

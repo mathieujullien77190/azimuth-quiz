@@ -1,8 +1,7 @@
 import { StyleSheet } from 'react-native';
-import { spacing } from '@/data';
 import type { Theme } from '@/types';
 
-export const createStyles = ({ colors, isDark }: Theme) =>
+export const createStyles = ({ colors }: Theme) =>
   StyleSheet.create({
     // No separate header/footer bands reserving their own layout space — the board measures (and
     // fills) the entire safe area (see `fullBleedBoardArea`) and these two float on top of it
@@ -29,16 +28,11 @@ export const createStyles = ({ colors, isDark }: Theme) =>
       left: 0,
       right: 0,
     },
+    // Positioning alone — the panel look itself is `GameFooter` (see `@/components/GameFooter`).
     overlayBottom: {
       position: 'absolute',
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: isDark ? `${colors.surfaceHigh}F0` : `${colors.surface}F0`,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.sm,
     },
   });

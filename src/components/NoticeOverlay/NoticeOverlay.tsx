@@ -1,6 +1,8 @@
-import { ActivityIndicator, Modal, Pressable, Text } from 'react-native';
+import { Modal, Pressable, Text } from 'react-native';
 
 import { useThemedStyles } from '@/themes';
+
+import Spinner from '@/components/ui/Spinner';
 
 import { SPINNER_COLOR } from './constants';
 import type { NoticeOverlayProps } from './types';
@@ -20,7 +22,7 @@ export const NoticeOverlay = ({ message, onDismiss, loading = false }: NoticeOve
   return (
     <Modal animationType="fade" transparent visible={message !== null}>
       <Pressable style={styles.overlay} onPress={onDismiss}>
-        {loading && <ActivityIndicator color={SPINNER_COLOR} size="large" />}
+        {loading && <Spinner color={SPINNER_COLOR} size="large" />}
         <Text style={styles.text}>{message}</Text>
       </Pressable>
     </Modal>

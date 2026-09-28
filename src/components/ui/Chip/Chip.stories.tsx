@@ -6,7 +6,7 @@ import selectedCode from './Selected.source.md?raw';
 import unselectedCode from './Unselected.source.md?raw';
 
 const meta = {
-  title: 'Common/ui/Chip',
+  title: 'UI/Chip',
   component: Chip,
 } satisfies Meta<typeof Chip>;
 

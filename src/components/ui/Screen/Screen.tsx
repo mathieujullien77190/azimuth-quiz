@@ -1,4 +1,4 @@
-import { ScrollView, View } from 'react-native';
+import { ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemedStyles } from '@/themes';
 
@@ -25,7 +25,7 @@ const Screen = ({ children, header, footer, scrollRef, onScroll }: ScreenProps) 
       >
         {children}
       </ScrollView>
-      {footer && <View style={styles.footer}>{footer}</View>}
+      {footer}
     </SafeAreaView>
   );
 };

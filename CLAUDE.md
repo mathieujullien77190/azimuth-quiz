@@ -165,7 +165,7 @@ leur logique de jeu :
 - **Ecran de jeu en ligne** : `helpers/useOnlineRoomSession.ts` (etat de la room, hote, joueurs dans
   l'ordre d'arrivee via `helpers/roomPlayers.ts`, redirection "room supprimee", `handleQuit`) et, pour les
   jeux a tour de role, `helpers/useHostTurnScoring.ts` (l'hote seul ecrit `totalScores` : gain sur
-  `verdict: 'correct'`, penalite fixe a chaque `wrongGuessSeq`). Composants partages : `NoticeOverlay` (avec `loading` pour l'attente),
+  `verdict: 'correct'`, penalite fixe a chaque `wrongGuessSeq`). Composants partages : `GameHeader`/`GameFooter` (le panneau translucide autour du pied de page, pose par chaque jeu ; `Screen` rend son `footer` tel quel), `NoticeOverlay` (avec `loading` pour l'attente),
   `RoomDeletedScreen`, `FinalStandings`.
 - **Coupure reseau** : `helpers/useRoomPresence.ts`, monte une seule fois par `useSetupRoom` (qui reste
   vivant sous l'ecran de jeu). Pendant une partie a plusieurs (pas en solo, pas dans le lobby), chaque
@@ -294,7 +294,9 @@ Stories colocalisees (`src/**/<Name>.stories.tsx`, config dans `admin/.storybook
 story porte le code qu'un consommateur ecrirait (pas le JSX reconstruit depuis les `args`) :
 `parameters: source(code)` (`@/storybook/source`) avec le snippet dans `<Story>.source.md` a cote (bloc
 ```tsx, importe en `?raw`, rien a echapper ; Prettier ne le reformate pas). `source()` va sur la story,
-jamais sur le `meta`. Un composant sans store ni routeur (dumb) a sa story ; les containers smart, non.
+jamais sur le `meta`. Menu : `Common`, `Compass`, `Clues`, `Silhouette`, puis en bas `Setup` (sections de setup) et
+`UI` (primitives), ordre fixe dans `admin/.storybook/preview.tsx` (`storySort`) — une nouvelle section de premier
+niveau doit y etre ajoutee. Un composant sans store ni routeur (dumb) a sa story ; les containers smart, non.
 
 ## Theme
 

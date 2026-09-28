@@ -25,7 +25,7 @@ const InteractiveDemo = (args: RoundsSectionProps) => {
 };
 
 const meta = {
-  title: 'Common/Setup/RoundsSection',
+  title: 'Setup/RoundsSection',
   component: RoundsSection,
   decorators: [
     (Story) => (

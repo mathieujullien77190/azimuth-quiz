@@ -1,4 +1,5 @@
 ```tsx
+import GameFooter from '@/components/GameFooter';
 import ContourFullBleedScreen from '@/games/contour/components/ContourFullBleedScreen';
 import { buildHintLabels } from '@/games/contour/helpers/roundBoard';
 import { useRoundBoard } from '@/games/contour/helpers/useRoundBoard';
@@ -9,7 +10,11 @@ const { board, onBoardAreaLayout, onOverlayTopLayout, onOverlayBottomLayout } = 
 
 <ContourFullBleedScreen
   board={board}
-  footer={<ContourGuessBar guessText={guessText} onChangeGuessText={setGuessText} onHint={revealHint} onSubmit={submitGuess} />}
+  footer={
+    <GameFooter>
+      <ContourGuessBar guessText={guessText} onChangeGuessText={setGuessText} onHint={revealHint} onSubmit={submitGuess} />
+    </GameFooter>
+  }
   header={<GameHeader {...headerProps} />}
   hintLabels={buildHintLabels(board, hintsRevealed, language)}
   onBoardAreaLayout={onBoardAreaLayout}

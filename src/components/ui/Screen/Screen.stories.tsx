@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
+import GameFooter from '../../GameFooter';
 import Button from '../Button';
 import Card from '../Card';
 
@@ -8,7 +9,7 @@ import { source } from '@/storybook/source';
 import headerAndFooterCode from './HeaderAndFooter.source.md?raw';
 
 const meta = {
-  title: 'Common/ui/Screen',
+  title: 'UI/Screen',
   component: Screen,
   // `Screen` reserves its own full height via flex:1 (SafeAreaView -> ScrollView): it needs a real
   // flex-column ancestor with a fixed height, or it collapses to 0 in a plain block box.
@@ -29,7 +30,11 @@ export const HeaderAndFooter: Story = {
   parameters: source(headerAndFooterCode),
   args: {
     header: <Card>En-tête fixe</Card>,
-    footer: <Button label="Valider" onPress={() => {}} />,
+    footer: (
+      <GameFooter>
+        <Button label="Valider" onPress={() => {}} />
+      </GameFooter>
+    ),
     children: (
       <Card>
         <p style={{ margin: 0 }}>Contenu défilant.</p>

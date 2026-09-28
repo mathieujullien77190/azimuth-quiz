@@ -7,7 +7,7 @@ import RoundProgress from './RoundProgress';
 import singleDifficultyCode from './SingleDifficulty.source.md?raw';
 
 const meta = {
-  title: 'Common/ui/RoundProgress',
+  title: 'UI/RoundProgress',
   component: RoundProgress,
 } satisfies Meta<typeof RoundProgress>;
 

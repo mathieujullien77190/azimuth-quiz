@@ -7,6 +7,7 @@ import Compass from '@/components/Compass';
 import DistanceSlider from '../../components/DistanceSlider';
 import EarthSection from '@/components/EarthSection';
 import FooterNav from '../../components/FooterNav';
+import GameFooter from '@/components/GameFooter';
 import GameHeader from '@/components/GameHeader';
 import { compassSizeFor, earthSizeFor } from './helpers';
 import PlaceCard from '../../components/PlaceCard';
@@ -65,25 +66,26 @@ export const OnlineGameScreenView = ({
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
 
+  // Nothing to show a non-host once the round is confirmed: it waits for the host's "next round".
+  const footerContent = record ? (
+    confirmed ? (
+      isHost && <Button label={isLastRound ? t.game.last : t.game.next} onPress={onNextRound ?? (() => {})} />
+    ) : (
+      <Text style={styles.waiting}>{t.game.waitingForOthers}</Text>
+    )
+  ) : (
+    <FooterNav
+      onCap={onCap}
+      onGoToCap={onGoToCap}
+      onGoToDistance={onGoToDistance}
+      onValidate={onSubmit}
+      validateDisabled={submitDisabled}
+    />
+  );
+
   return (
     <Screen
-      footer={
-        record ? (
-          confirmed ? (
-            isHost && <Button label={isLastRound ? t.game.last : t.game.next} onPress={onNextRound ?? (() => {})} />
-          ) : (
-            <Text style={styles.waiting}>{t.game.waitingForOthers}</Text>
-          )
-        ) : (
-          <FooterNav
-            onCap={onCap}
-            onGoToCap={onGoToCap}
-            onGoToDistance={onGoToDistance}
-            onValidate={onSubmit}
-            validateDisabled={submitDisabled}
-          />
-        )
-      }
+      footer={footerContent && <GameFooter>{footerContent}</GameFooter>}
       header={
         <GameHeader
           code={roomCode}

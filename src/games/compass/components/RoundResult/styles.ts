@@ -31,24 +31,9 @@ export const createStyles = ({ colors, radius, typography }: Theme, compact: boo
       color: colors.text,
       fontSize: fontSize.subtitle * scale,
     },
-    // Small pill button, shared look for both the scoring-info toggle and the kick button below —
-    // only the border/text color (accent vs. danger) tells them apart.
-    miniButton: {
-      alignSelf: 'center',
+    // Spacing around the `MiniButton`s (scoring info, kick) — the button itself carries none.
+    miniButtonSpacing: {
       marginTop: spacing.md,
-      paddingVertical: 6,
-      paddingHorizontal: spacing.md,
-      borderRadius: radius.button,
-      borderWidth: 1.5,
-      backgroundColor: colors.surfaceHigh,
-    },
-    scoringToggle: {
-      borderColor: colors.accent,
-    },
-    scoringToggleText: {
-      ...typography.label,
-      color: colors.accent,
-      fontSize: fontSize.caption * scale,
     },
     scoringInfo: {
       ...typography.body,
@@ -108,14 +93,6 @@ export const createStyles = ({ colors, radius, typography }: Theme, compact: boo
     },
     scoreBlock: {
       alignItems: 'flex-end',
-    },
-    kick: {
-      borderColor: colors.danger,
-    },
-    kickText: {
-      ...typography.label,
-      color: colors.danger,
-      fontSize: fontSize.caption * scale,
     },
     playerTotal: {
       ...typography.display,

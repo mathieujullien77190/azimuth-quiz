@@ -60,7 +60,7 @@ const InteractiveDemo = (args: OptionsSectionProps) => {
 };
 
 const meta = {
-  title: 'Common/Setup/OptionsSection',
+  title: 'Setup/OptionsSection',
   component: OptionsSection,
   decorators: [
     (Story) => (

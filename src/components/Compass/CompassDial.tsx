@@ -26,11 +26,16 @@ export const CompassDial = memo(function CompassDial({ size, needles, truthBeari
   const needleHalfWidth = radius * NEEDLE_HALF_WIDTH_RATIO;
   const knobRadius = radius * KNOB_RADIUS_RATIO;
 
+  // The solution is a needle like any other — same shape, same size, only its color (`colors.truth`)
+  // differs — and comes last so it is drawn on top of every player needle, never partly hidden
+  // under an overlapping one.
+  const drawnNeedles = truthBearing === null ? needles : [...needles, { bearing: truthBearing, color: colors.truth }];
+
   return (
     <Svg width={size} height={size}>
       <CompassFace colors={colors} size={size} typography={typography} westLabel={t.compassWestLabel} />
 
-      {needles.map((needle, index) => (
+      {drawnNeedles.map((needle, index) => (
         <G key={index}>
           <Polygon
             points={needlePoints(center, needle.bearing, needleLength, needleTail, needleHalfWidth)}
@@ -47,28 +52,6 @@ export const CompassDial = memo(function CompassDial({ size, needles, truthBeari
           />
         </G>
       ))}
-
-      {/* Drawn last (on top of every player needle): the solution must always read clearly, never
-          partly hidden under an overlapping needle. Its own knob (0.045) is bigger than a
-          needle's (0.034) so it fully covers one underneath rather than leaving a colored ring
-          peeking out around a smaller yellow center. */}
-      {truthBearing !== null && (
-        <>
-          <Polygon
-            points={needlePoints(center, truthBearing, needleLength, needleTail, needleHalfWidth)}
-            fill={colors.truth}
-            opacity={0.9}
-          />
-          <Circle
-            cx={polarToPoint(center, knobRadius, truthBearing).x}
-            cy={polarToPoint(center, knobRadius, truthBearing).y}
-            r={size * 0.045}
-            fill={colors.truth}
-            stroke={colors.background}
-            strokeWidth={2}
-          />
-        </>
-      )}
 
       <Circle cx={center} cy={center} r={size * 0.03} fill={colors.background} stroke={colors.text} strokeWidth={2} />
     </Svg>

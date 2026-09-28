@@ -7,7 +7,7 @@ import severalCode from './Several.source.md?raw';
 import soloCode from './Solo.source.md?raw';
 
 const meta = {
-  title: 'Common/ui/NoOneFoundText',
+  title: 'UI/NoOneFoundText',
   component: NoOneFoundText,
 } satisfies Meta<typeof NoOneFoundText>;
 

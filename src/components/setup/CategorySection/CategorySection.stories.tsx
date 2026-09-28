@@ -34,7 +34,7 @@ const InteractiveDemo = (args: CategorySectionProps) => {
 };
 
 const meta = {
-  title: 'Common/Setup/CategorySection',
+  title: 'Setup/CategorySection',
   component: CategorySection,
   decorators: [
     (Story) => (

@@ -6,7 +6,7 @@ import { source } from '@/storybook/source';
 import defaultCode from './Default.source.md?raw';
 
 const meta = {
-  title: 'Common/ui/QuitButton',
+  title: 'UI/QuitButton',
   component: QuitButton,
 } satisfies Meta<typeof QuitButton>;
 
