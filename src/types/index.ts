@@ -95,7 +95,8 @@ export type RoundRecord = {
 };
 
 export type GameSettings = {
-  playerNames: string[];
+  /** This device's player name; empty means "use a default name". Stays local: a room doesn't share it. */
+  playerName: string;
   categories: Category[];
   difficulty: Difficulty;
   rounds: number;
@@ -108,14 +109,6 @@ export type GameSettings = {
   liveCompass: boolean;
   /** Shows the country under the place's name. */
   showCountry: boolean;
-  /** During the round, only shows your own arrow/estimate, never the ones already submitted
-   * by other players (which remain normally visible on reveal). */
-  hideOtherAnswers: boolean;
-};
-
-export type Rank = {
-  title: string;
-  emoji: string;
 };
 
 export type ThemeColors = {
@@ -205,7 +198,8 @@ export type CluePlace = GeoPlace & {
 };
 
 export type ClueSettings = {
-  playerNames: string[];
+  /** This device's player name; empty means "use a default name". Stays local. */
+  playerName: string;
   difficulty: Difficulty;
   categories: ClueCategory[];
   rounds: number;
@@ -286,7 +280,8 @@ export type ContourDataRow = {
 };
 
 export type ContourSettings = {
-  playerNames: string[];
+  /** This device's player name; empty means "use a default name". Stays local. */
+  playerName: string;
   rounds: number;
   /** Which `ContourCountry.difficulty` tier a round's country is drawn from (see `randomCountry`)
    * — single choice, like Compass' `GameSettings.difficulty` and Clues' `ClueSettings.difficulty`. */

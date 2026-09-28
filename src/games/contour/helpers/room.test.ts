@@ -42,17 +42,18 @@ beforeEach(() => jest.clearAllMocks());
 describe('contourRoomSettingsFrom', () => {
   it('shares every setting except the local player names', () => {
     const shared = contourRoomSettingsFrom(DEFAULT_CONTOUR_SETTINGS);
-    expect(shared).not.toHaveProperty('playerNames');
+    expect(shared).not.toHaveProperty('playerName');
     expect(shared).toMatchObject({ rounds: DEFAULT_CONTOUR_SETTINGS.rounds });
   });
 });
 
 describe('game writes', () => {
-  it('startContourRoomGame seeds the countries and gives the first turn', async () => {
-    await startContourRoomGame('tabofuna', ['FR', 'ES'], 'zoe');
+  it('startContourRoomGame seeds the countries and the simplification, and gives the first turn', async () => {
+    await startContourRoomGame('tabofuna', ['FR', 'ES'], 'zoe', 1234);
     expect(updateDoc).toHaveBeenCalledWith(REF, {
       screen: 'game',
       countryCodes: ['FR', 'ES'],
+      simplifySeed: 1234,
       roundIndex: 0,
       hintsRevealed: 0,
       turnUid: 'zoe',
@@ -121,6 +122,7 @@ describe('subscribeToRoomGame', () => {
     const state = {
       screen: 'game',
       countryCodes: ['FR'],
+      simplifySeed: 99,
       roundIndex: 1,
       hintsRevealed: 3,
       turnUid: 'zoe',
@@ -136,13 +138,14 @@ describe('subscribeToRoomGame', () => {
     expect(onUpdate).toHaveBeenCalledWith(state);
   });
 
-  it('falls back to lobby defaults for missing fields', () => {
+  it('falls back to lobby defaults for missing fields (a room without a seed gets 0)', () => {
     emit(true, {});
     const onUpdate = jest.fn();
     subscribeToRoomGame('tabofuna', onUpdate);
     expect(onUpdate).toHaveBeenCalledWith({
       screen: 'options',
       countryCodes: [],
+      simplifySeed: 0,
       roundIndex: 0,
       hintsRevealed: 0,
       turnUid: null,

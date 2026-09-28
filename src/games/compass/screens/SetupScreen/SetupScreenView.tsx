@@ -29,7 +29,6 @@ export const SetupScreenView = ({
   onToggleUseGps,
   onChangeCustomOrigin,
   onToggleShowCountry,
-  onToggleHideOtherAnswers,
   overlayMessage,
   overlayLoading,
   onDismissOverlay,
@@ -98,14 +97,6 @@ export const SetupScreenView = ({
             description: t.setup.toggles.showCountry.description,
             value: settings.showCountry,
             onChange: onToggleShowCountry,
-          },
-          {
-            id: 'hideOtherAnswers',
-            title: t.setup.toggles.hideOtherAnswers.label,
-            description: t.setup.toggles.hideOtherAnswers.description,
-            value: settings.hideOtherAnswers,
-            onChange: onToggleHideOtherAnswers,
-            hidden: settings.playerNames.length <= 1,
           },
         ]}
         title={t.setup.optionsTitle}

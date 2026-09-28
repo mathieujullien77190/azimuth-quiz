@@ -10,14 +10,15 @@ import Button from '@/components/ui/Button';
 import NoOneFoundText from '@/components/ui/NoOneFoundText';
 import ContourFullBleedScreen from '../../components/ContourFullBleedScreen';
 import ContourGuessBar from '../../components/ContourGuessBar';
-import { buildHintLabels } from '../../helpers/roundBoard';
+import { CONTOUR_MAX_HINTS } from '../../constants';
+import { buildHintLabels, precisionLevel } from '../../helpers/roundBoard';
 import { useRoundBoard } from '../../helpers/useRoundBoard';
 import type { OnlineContourGameScreenViewProps } from './types';
 
 import { createStyles } from './OnlineContourGameScreenView.styles';
 
 /** Tier at which the board shows everything, name included (see `buildHintLabels`). */
-const ALL_HINTS = 4;
+const ALL_HINTS = CONTOUR_MAX_HINTS;
 
 /**
  * Pur rendu, un seul ecran plein cadre pour les 3 etats (tour actif, en attente, manche revelee) :
@@ -34,6 +35,7 @@ export const OnlineContourGameScreenView = ({
   difficulty,
   country,
   hintsRevealed,
+  simplifySeed,
   pointsAtStake,
   players,
   turnIndex,
@@ -56,8 +58,13 @@ export const OnlineContourGameScreenView = ({
   const { language } = useLanguage();
   const roundOver = verdict !== undefined;
 
-  const { board, onBoardAreaLayout, onOverlayTopLayout, onOverlayBottomLayout } = useRoundBoard(country, true);
-  const hintLabels = buildHintLabels(board, roundOver ? ALL_HINTS : hintsRevealed, language);
+  const { board, onBoardAreaLayout, onOverlayTopLayout, onOverlayBottomLayout } = useRoundBoard(
+    country,
+    true,
+    simplifySeed,
+  );
+  const shownHints = roundOver ? ALL_HINTS : hintsRevealed;
+  const hintLabels = buildHintLabels(board, shownHints, language);
 
   const footer = roundOver ? (
     <View style={styles.footer}>
@@ -111,6 +118,7 @@ export const OnlineContourGameScreenView = ({
         />
       }
       hintLabels={hintLabels}
+      precision={precisionLevel(shownHints)}
       onBoardAreaLayout={onBoardAreaLayout}
       onOverlayBottomLayout={onOverlayBottomLayout}
       onOverlayTopLayout={onOverlayTopLayout}

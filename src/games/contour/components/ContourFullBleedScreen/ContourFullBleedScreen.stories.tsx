@@ -13,6 +13,7 @@ import { source } from '@/storybook/source';
 import ContourGuessBar from '../ContourGuessBar';
 import { buildHintLabels, projectRound } from '../../helpers/roundBoard';
 import { ContourFullBleedScreen } from './ContourFullBleedScreen';
+import coarseCode from './CoarseSilhouette.source.md?raw';
 import guessingCode from './Guessing.source.md?raw';
 import revealedCode from './Revealed.source.md?raw';
 
@@ -40,15 +41,20 @@ const headerArgs = (texts: Translations) => ({
 
 /** The board's hint labels (country names follow the language) and the footer, per story. */
 const guessingArgs = (_texts: Translations, _args: Record<string, unknown>, language: Language) => ({
-  hintLabels: buildHintLabels(board, 2, language),
+  hintLabels: buildHintLabels(board, 5, language),
   footer: (
     <GameFooter>
       <ContourGuessBar guessText="" onChangeGuessText={fn()} onHint={fn()} onSubmit={fn()} />
     </GameFooter>
   ),
 });
+const coarseArgs = (_texts: Translations, _args: Record<string, unknown>, language: Language) => ({
+  ...guessingArgs(_texts, _args, language),
+  hintLabels: buildHintLabels(board, 0, language),
+  precision: 0,
+});
 const revealedArgs = (texts: Translations, _args: Record<string, unknown>, language: Language) => ({
-  hintLabels: buildHintLabels(board, 4, language),
+  hintLabels: buildHintLabels(board, 7, language),
   footer: (
     <GameFooter>
       <Button label={texts.contourGame.continueLabel} onPress={fn()} />
@@ -81,12 +87,20 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Two hint tiers out (every neighbor's flag, then the country's own): the answer bar floats over
- * the bottom of the board. */
+/** Five hint tiers out (the outline is the full ring, then every neighbor's flag, then the country's
+ * own): the answer bar floats over the bottom of the board. */
 export const Guessing: Story = {
   parameters: source(guessingCode),
   decorators: [localizedArgs(guessingArgs)],
   args: guessingArgs(t, {}, 'fr'),
+};
+
+/** Nothing revealed yet: the silhouette is a handful of segments (`precision` 0), with no neighbor
+ * around it — each hint makes the outline more precise, up to the full ring at tier 3. */
+export const CoarseSilhouette: Story = {
+  parameters: source(coarseCode),
+  decorators: [localizedArgs(coarseArgs)],
+  args: coarseArgs(t, {}, 'fr'),
 };
 
 /** Round over: every tier is shown, name included, and the footer carries the result. */

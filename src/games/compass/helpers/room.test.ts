@@ -42,7 +42,7 @@ beforeEach(() => jest.clearAllMocks());
 describe('roomSettingsFrom', () => {
   it('shares every setting except the local player names', () => {
     const shared = roomSettingsFrom(DEFAULT_SETTINGS);
-    expect(shared).not.toHaveProperty('playerNames');
+    expect(shared).not.toHaveProperty('playerName');
     expect(shared).toMatchObject({ rounds: DEFAULT_SETTINGS.rounds, difficulty: DEFAULT_SETTINGS.difficulty });
   });
 });

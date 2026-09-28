@@ -22,6 +22,7 @@ const MAX = { uid: 'max', name: 'Max', color: '#3B82F6' };
 const gameState = (overrides: Partial<ContourRoomGameState> = {}): ContourRoomGameState => ({
   screen: 'game',
   countryCodes: ['FR', 'ES'],
+  simplifySeed: 3,
   roundIndex: 0,
   hintsRevealed: 0,
   turnUid: 'zoe',
@@ -43,6 +44,7 @@ const setGame = (overrides: Record<string, unknown> = {}) => {
     roomSettings: { difficulty: 'easy' },
     gameState: gameState(),
     country: FRANCE,
+    simplifySeed: 11,
     isMyTurn: true,
     pointsAtStake: 500,
     guessText: '',
@@ -133,7 +135,7 @@ describe('OnlineContourGameScreen — the turn-holder', () => {
   });
 
   it('lets the player give up once the name is out', async () => {
-    setGame({ gameState: gameState({ hintsRevealed: 4 }), pointsAtStake: 0 });
+    setGame({ gameState: gameState({ hintsRevealed: 7 }), pointsAtStake: 0 });
     const { getByText } = await renderScreen();
     await fireEvent.press(getByText(t.contourGame.continueLabel));
     expect((mockGame.giveUp as jest.Mock).mock.calls).toHaveLength(1);
@@ -143,6 +145,35 @@ describe('OnlineContourGameScreen — the turn-holder', () => {
     setGame({ gameState: gameState({ totalScores: {} }), onlinePlayers: [MAX] });
     const { getByText } = await renderScreen();
     expect(getByText(t.contourGame.pointsAtStake('500'))).toBeTruthy();
+  });
+});
+
+describe('OnlineContourGameScreen — the outline gets precise with the hints', () => {
+  const paths = async () => {
+    const { toJSON } = await renderScreen();
+    return (JSON.stringify(toJSON()).match(/RNSVGPath/g) ?? []).length;
+  };
+
+  it('starts as a bare silhouette: one fill, one stroke, no neighbor', async () => {
+    setGame({ gameState: gameState({ hintsRevealed: 0 }) });
+    expect(await paths()).toBe(2);
+  });
+
+  it('stays a bare silhouette until the outline is the full ring (tiers 1 and 2)', async () => {
+    for (const hintsRevealed of [1, 2]) {
+      setGame({ gameState: gameState({ hintsRevealed }) });
+      expect(await paths()).toBe(2);
+    }
+  });
+
+  it('draws the neighbors around it, and the borders once, from the full ring on (tier 3)', async () => {
+    setGame({ gameState: gameState({ hintsRevealed: 3 }) });
+    expect(await paths()).toBeGreaterThan(3);
+  });
+
+  it('shows the full ring when the round is over, whatever the tier', async () => {
+    setGame({ gameState: gameState({ hintsRevealed: 0, verdict: 'giveUp' }) });
+    expect(await paths()).toBeGreaterThan(3);
   });
 });
 

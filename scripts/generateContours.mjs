@@ -1,11 +1,31 @@
 #!/usr/bin/env node
 // Dev-only, one-off generation tool (`npm run generate:contours`) — NOT part of `npm test`, CI, or
-// the shipped app. Regenerates auto-derived Contour/Silhouette outlines + country-type neighbor
-// hints for every country in `src/data/places/countries.json` that doesn't already have
-// curated Contour data (the 8 hand-curated ones — DE/ES/FR/GR/IE/IT/NO/PT — are left untouched).
-// Re-run it after adding a new country to `countries.json`, or to pick up a new `world-atlas`
-// release; it's safe to re-run repeatedly, it only ever fills in codes still missing a 7th
-// (`contour`) element.
+// the shipped app. Regenerates the Contour/Silhouette outlines (`points`) of EVERY country in
+// `src/data/places/countries.json` from one single source and one single simplification pass,
+// plus the country-type neighbor hints of the codes that don't have any yet.
+//
+// One shared definition, so shared borders are identical: the whole world topology is simplified
+// ONCE (`topojson-simplify` keeps the arcs shared between two countries as one arc), so a border
+// common to two countries is made of the very same vertices in both rings — the board relies on
+// that to draw a shared border a single time (see CLAUDE.md, "Silhouette"). Never simplify or
+// edit the `points` of a single country by hand: the shared vertices would stop matching.
+//
+// What is "curated" (kept as-is when a row already has a 7th element): `neighbors` (hand-placed
+// hint positions, a fraction of the board), `centerLabel` and `difficulty`. `points` is NOT
+// curated any more: the 8 countries that used to be drawn by hand (DE/ES/FR/GR/IE/IT/NO/PT, an
+// older, coarser definition that did not line up with the Natural Earth borders of their
+// neighbors) are regenerated like all the others — only their `points` are replaced, the rest of
+// their `contour` element is preserved. A country whose row has no `contour` yet gets points
+// + auto neighbors. Re-run it after adding a country to `countries.json`, or to pick up a new
+// `world-atlas` release; it is idempotent.
+//
+// It also writes, for EVERY country of `countries.json` (with or without a silhouette), its raw
+// land neighbors: the sorted list of ISO codes sharing a land border, as the row's 8th element
+// (`CountryRow`, index 7 — index 6 is `contour`, `null` when the country has none). Same source
+// as the hint neighbors above (`world-countries`' `borders`), kept only when BOTH sides list each
+// other (the file stays symmetric: A neighbor of B <=> B neighbor of A) and only for codes that
+// exist in `countries.json`. A country with no land neighbor (islands) has no 8th element. This list
+// is unrelated to `contour.neighbors` (the few neighbors POSITIONED on the board for the hints).
 //
 // Boundary geometry: `world-atlas`'s pre-built 50m-resolution TopoJSON Natural Earth Admin-0
 // boundaries (Natural Earth data is public domain, no attribution required).
@@ -200,54 +220,58 @@ for (const feature of collection.features) {
   featuresById.get(id).push(feature);
 }
 
-// --- Pass 1: match + simplify an outline for every code still missing one --------------------
+// --- Pass 1: match + simplify an outline for every code -----------------------------------------
 
-const alreadyCurated = [];
+/** Rows that already had a `contour` and whose outline could not be rebuilt: left untouched. */
+const keptAsIs = [];
 const nonCountry = [];
 const unmatched = [];
-/** @type {{ code: string; points: number[][]; neighbors?: { type: 'country'; code: string; x: number; y: number }[] }[]} */
+/** @type {{ code: string; points: number[][]; existing?: object; neighbors?: { type: 'country'; code: string; x: number; y: number }[] }[]} */
 const generated = [];
 
 for (const code of Object.keys(countries).sort()) {
   const row = countries[code];
-  if (row[6] !== undefined) {
-    alreadyCurated.push(code);
-    continue;
-  }
+  const existing = row[6] ?? undefined;
   if (NON_COUNTRY_CODES.has(code)) {
     nonCountry.push(code);
     continue;
   }
+  const skip = (reason) => {
+    if (existing !== undefined) keptAsIs.push(code);
+    else unmatched.push({ code, reason });
+  };
   const ccn3 = cca2ToCcn3.get(code);
   if (!ccn3) {
-    unmatched.push({ code, reason: 'not found in world-countries (no ccn3)' });
+    skip('not found in world-countries (no ccn3)');
     continue;
   }
   const features = featuresById.get(ccn3);
   if (!features) {
-    unmatched.push({ code, reason: 'no TopoJSON feature at this ccn3 (likely folded into a parent territory, or a micro-state Natural Earth omits at 50m)' });
+    skip('no TopoJSON feature at this ccn3 (likely folded into a parent territory, or a micro-state Natural Earth omits at 50m)');
     continue;
   }
   const ring = mainlandRing(features.map((feature) => feature.geometry));
   if (!ring) {
-    unmatched.push({ code, reason: 'matched feature(s) have no polygon geometry' });
+    skip('matched feature(s) have no polygon geometry');
     continue;
   }
   const rounded = roundRing(ring);
   if (rounded.length < MIN_POINTS) {
-    unmatched.push({ code, reason: `ring too degenerate after simplification (${rounded.length} points)` });
+    skip(`ring too degenerate after simplification (${rounded.length} points)`);
     continue;
   }
-  generated.push({ code, points: rounded });
+  generated.push({ code, points: rounded, existing });
 }
 
 // --- Pass 2: country-type neighbors, now that the final set of codes-with-an-outline is known --
 
-const finalizedCodes = new Set([...alreadyCurated, ...generated.map((entry) => entry.code)]);
+const finalizedCodes = new Set([...keptAsIs, ...generated.map((entry) => entry.code)]);
 let withNeighbors = 0;
 let withoutNeighbors = 0;
 
 for (const entry of generated) {
+  // Already has a `contour`: its neighbors (hand-placed or generated earlier) are kept as they are.
+  if (entry.existing) continue;
   const info = cca2ToInfo.get(entry.code);
   const neighborCodes = [...new Set((info?.borders ?? []).map((cca3) => cca3ToCca2.get(cca3)))].filter(
     (neighborCode) => neighborCode && neighborCode !== entry.code && finalizedCodes.has(neighborCode),
@@ -280,12 +304,36 @@ for (const entry of generated) {
   }
 }
 
+// --- Raw land neighbors of every country (both sides must list each other) -------------------
+
+const declaredBorders = new Map();
+for (const code of Object.keys(countries)) {
+  const borders = (cca2ToInfo.get(code)?.borders ?? []).map((cca3) => cca3ToCca2.get(cca3));
+  declaredBorders.set(code, new Set(borders.filter((other) => other && other !== code && other in countries && !NON_COUNTRY_CODES.has(other))));
+}
+const landNeighbors = new Map();
+const oneSided = [];
+for (const [code, declared] of declaredBorders) {
+  if (NON_COUNTRY_CODES.has(code)) continue;
+  const mutual = [...declared].filter((other) => declaredBorders.get(other)?.has(code));
+  for (const other of declared) if (!mutual.includes(other)) oneSided.push(`${code}>${other}`);
+  if (mutual.length > 0) landNeighbors.set(code, mutual.sort());
+}
+
 // --- Merge + write back, same one-entry-per-line format as serializeCountries ------------------
 
 for (const entry of generated) {
-  const contour = { points: entry.points };
-  if (entry.neighbors && entry.neighbors.length > 0) contour.neighbors = entry.neighbors;
-  countries[entry.code] = [...countries[entry.code], contour];
+  // `points` first, then the curated fields (neighbors/centerLabel/difficulty) of an existing row.
+  const contour = { ...entry.existing, points: entry.points };
+  if (!entry.existing && entry.neighbors && entry.neighbors.length > 0) contour.neighbors = entry.neighbors;
+  countries[entry.code][6] = contour;
+}
+// Row layout: 6 base fields, contour (null when absent), land neighbors. Trailing empties are cut.
+for (const code of Object.keys(countries)) {
+  const row = countries[code];
+  const parts = [...row.slice(0, 6), row[6] ?? null, landNeighbors.get(code) ?? null];
+  while (parts.length > 6 && parts[parts.length - 1] === null) parts.pop();
+  countries[code] = parts;
 }
 
 const lines = Object.keys(countries)
@@ -295,14 +343,17 @@ writeFileSync(countriesPath, '{\n' + lines.join(',\n') + '\n}\n', 'utf8');
 
 // --- Summary -------------------------------------------------------------------------------
 
+const refreshed = generated.filter((entry) => entry.existing).map((entry) => entry.code);
+const created = generated.filter((entry) => !entry.existing);
 const pointCounts = generated.map((entry) => entry.points.length);
 const taiwanFeature = featuresById.get(cca2ToCcn3.get('TW') ?? '');
 
 console.log('--- generateContours summary ---');
 console.log(`Codes processed: ${Object.keys(countries).length}`);
 console.log(`Skipped as non-country: ${nonCountry.join(', ') || '(none)'}`);
-console.log(`Already curated, left untouched (${alreadyCurated.length}): ${alreadyCurated.join(', ')}`);
-console.log(`Newly generated (${generated.length}): ${generated.map((entry) => entry.code).join(', ')}`);
+console.log(`Existing contour, outline rebuilt (points only, curated fields kept) (${refreshed.length}): ${refreshed.join(', ')}`);
+console.log(`Existing contour, outline NOT rebuildable, left untouched (${keptAsIs.length}): ${keptAsIs.join(', ') || '(none)'}`);
+console.log(`Newly generated (${created.length}): ${created.map((entry) => entry.code).join(', ')}`);
 console.log(`Unmatched / skipped as too hard (${unmatched.length}):`);
 for (const { code, reason } of unmatched) console.log(`  ${code}: ${reason}`);
 console.log(`Generated countries with >=1 neighbor: ${withNeighbors}, with 0 neighbors: ${withoutNeighbors}`);
@@ -310,4 +361,5 @@ if (pointCounts.length > 0) {
   console.log(`Point counts — min: ${Math.min(...pointCounts)}, median: ${median(pointCounts)}, max: ${Math.max(...pointCounts)}`);
 }
 console.log(`Taiwan (TW): ${taiwanFeature ? 'matched its own feature' : 'NOT matched — check manually'}`);
-console.log(`Total with Contour data now: ${alreadyCurated.length + generated.length} / ${Object.keys(countries).length}`);
+console.log(`Countries with land neighbors: ${landNeighbors.size}, without: ${Object.keys(countries).length - landNeighbors.size} (islands...); one-sided declarations dropped: ${oneSided.join(', ') || '(none)'}`);
+console.log(`Total with Contour data now: ${keptAsIs.length + generated.length} / ${Object.keys(countries).length}`);

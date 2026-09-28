@@ -52,7 +52,7 @@ src/
                        # stockage app-wide, options de partie, palette joueurs...) + data/places/
                        # (lieux Compass+Clues) + data/contours/ (codec geometrie Silhouette) +
                        # data/theme.ts (tokens UI). Les constantes de tuning propres a un seul
-                       # jeu (score, sliders, ranks, valeurs par defaut...) vivent plutot dans
+                       # jeu (score, sliders, valeurs par defaut...) vivent plutot dans
                        # `games/<jeu>/constants.ts` (voir plus bas)
   games/
     compass/
@@ -62,8 +62,8 @@ src/
       helpers/         # places.ts, scoring.ts, distanceScale.ts, room.ts (Firestore, hors
                        # barrel `@/helpers` — voir plus bas)
       store/           # roomStore.ts (partie en ligne, hors barrel comme room.ts, meme raison)
-      constants.ts     # tuning propre a Compass : score (MAX_ROUND_POINTS, courbe...), sliders
-                       # de distance, RANKS, ROOM_PLAYER_COLORS, CATEGORIES, DEFAULT_SETTINGS —
+      constants.ts     # tuning propre a Compass : score (courbe, points max...), sliders
+                       # de distance, ROOM_PLAYER_COLORS, CATEGORIES, DEFAULT_SETTINGS —
                        # admin importe CATEGORIES directement d'ici (meme alias `@/`)
     clues/
       screens/         # OnlineClueGameScreen, ClueSetupScreen
@@ -213,14 +213,14 @@ peut rien y taper. Le joueur qui a la main change quand il revele un indice.
 
 Troisieme mode (nom affiche "Silhouette" ; identifiants de code restes `Contour`/`OnlineContourGameScreen`...) :
 la silhouette d'un pays s'affiche remplie (`colors.surfaceHigh`, pas juste un contour), les joueurs
-devinent lequel via 4 paliers d'indices partages. Pas de second temps de placement de lieux (retire —
+devinent lequel via 7 paliers d'indices partages (les 3 premiers precisent le trait, voir plus bas). Pas de second temps de placement de lieux (retire —
 le jeu s'arrete a la reconnaissance du pays).
 
 **Multijoueur (rooms `game: 'silhouette'`), modele Indices** : un plateau partage, un joueur actif a la fois
-(`turnUid`, l'ordre d'arrivee des joueurs). Son tour, il revele le palier suivant (`hintsRevealed` 0-4,
+(`turnUid`, l'ordre d'arrivee des joueurs). Son tour, il revele le palier suivant (`hintsRevealed` 0-7,
 ce qui passe la main au joueur suivant) ou tente une reponse (bonne : `verdict: 'correct'`, gain
 `CONTOUR_GUESS_POINTS_BY_HINTS[hintsRevealed]` ; mauvaise : `wrongGuessSeq` +1, penalite
-`CONTOUR_WRONG_GUESS_PENALTY`, il garde la main) ; une fois le nom revele (palier 4) il confirme
+`CONTOUR_WRONG_GUESS_PENALTY`, il garde la main) ; une fois le nom revele (palier 7) il confirme
 l'abandon (`verdict: 'giveUp'`, personne ne marque). L'hote tire tous les pays d'avance (`countryCodes`,
 `pickContourRoundCodes` — la room ne porte que les codes, chaque appareil reconstruit le plateau depuis
 ses propres donnees) et seul l'hote ecrit les scores (`useHostTurnScoring`). Le setup local de
@@ -237,10 +237,12 @@ ratio, jamais la meme taille absolue), la position relative reste identique part
 voir `BOARD_PADDING_RATIO`/`HINT_STACK_GAP_RATIO` (`games/contour/components/ContourBoard/constants.ts`),
 en fraction de `Math.min(width, height)` plutot qu'en pixels fixes, meme raison.
 
-Paliers d'indices (`buildHintLabels` dans `helpers/roundBoard.ts`, bouton "Indice", inline dans le footer a
-cote de l'input) : 1) drapeau de chaque voisin, 2) drapeau du pays cible
-a son propre point curee (`ContourCountry.centerLabel`), 3) nom de chaque voisin empile
-juste sous son icone (les deux restent affiches ensemble, l'un ne remplace plus l'autre), 4) nom du pays cible empile sous son drapeau (= abandon). Toujours centre (`textAnchor="middle"` fixe dans
+Paliers d'indices (`hintsRevealed` 0-7, `CONTOUR_MAX_HINTS`, bouton "Indice", inline dans le footer a
+cote de l'input) : 1-3) le trait se precise (voir "Silhouette progressive"), 4) drapeau de chaque voisin,
+5) drapeau du pays cible a son propre point curee (`ContourCountry.centerLabel`), 6) nom de chaque voisin
+empile juste sous son icone (les deux restent affiches ensemble, l'un ne remplace plus l'autre), 7) nom du
+pays cible empile sous son drapeau (= abandon) ; les paliers 4-7 sont `buildHintLabels` dans `helpers/roundBoard.ts`.
+Bareme `CONTOUR_GUESS_POINTS_BY_HINTS` = 500 x [1, .85, .7, .55, .4, .3, .2] (0 au palier 7). Toujours centre (`textAnchor="middle"` fixe dans
 `ContourBoard.tsx`) : l'ancien alignement directionnel `start`/`end` n'avait plus de sens
 des que chaque hint est devenu un point fixe plutot qu'une etiquette pointant vers le bord.
 
@@ -260,16 +262,70 @@ Donnees Contour (points/voisins/centerLabel/difficulty) : plus de fichiers a par
 donnee) ; tout vit desormais comme un 7e element
 optionnel `contour` sur la ligne du pays concerne dans `data/places/countries.json`
 (type `ContourDataRow`, voir `src/types/index.ts` et `CountryRow`) — absent pour la
-grande majorite des pays, qui restent un tableau a 6 elements sans padding. Les voisins
+grande majorite des pays (`null` a sa place quand la ligne porte des voisins bruts, voir plus bas). Les voisins
 (`{ type: 'country', code, x, y }` — uniquement des pays, plus de voisin mer/ocean : ca
 compliquait tout pour peu d'apport, retire) sont pour la plupart generes automatiquement
 par `scripts/generateContours.mjs` (`npm run generate:contours`, outil dev uniquement,
 hors `npm test`/CI/l'app livree — adjacence reelle + centroide via `world-countries`,
 position projetee sur le plateau du pays puis ramenee au bord via un clamp directionnel,
 voir le script pour le detail) ; seuls les 8 pays d'origine (DE/ES/FR/GR/IE/IT/NO/PT)
-gardent des positions ajustees a la main. Un meme voisin peut avoir une position
+gardent des positions de voisins ajustees a la main. Un meme voisin peut avoir une position
 differente selon le pays qui le cite (pas de table globale par code) : chaque
 `ContourCountry.neighbors` est propre a son pays.
+
+**Une seule definition pour tous les contours.** Les `points` de TOUS les pays (les 8 d'origine
+compris, qui etaient dessines a la main, plus grossiers et decales de 20-70 km par endroits) viennent
+de `world-atlas` 50m, topologie du monde entier simplifiee UNE fois (`topojson-simplify`, poids
+`1e-5`, arrondi 3 decimales) : un arc partage entre deux pays reste un seul arc, donc une frontiere
+commune a **exactement les memes sommets** des deux cotes. Le script regenere `points` a chaque
+lancement et ne conserve d'une ligne existante que ce qui est cure (`neighbors`, `centerLabel`,
+`difficulty`) ; ne jamais retoucher les `points` d'un seul pays (ni par l'admin ni a la main) : les
+sommets partages ne correspondraient plus. Seul l'anneau principal de chaque pays est garde, donc
+une frontiere portee par un autre polygone (Thrace turque, Cabinda, enclaves) n'est pas detectee.
+Relancer le script ajoute aussi DK et RU (jamais generes jusqu'ici, RU = ~700 points), a ne
+committer que si on veut ces pays dans le jeu.
+
+**Voisins bruts de chaque pays** (8e element de `CountryRow`, tous les pays de `countries.json`, pas seulement
+ceux avec une silhouette) : codes ISO tries des pays qui partagent une frontiere terrestre, ex.
+`"MC": [..., "+377", null, ["FR"]]` (le `null` est l'element `contour` absent). Meme source que les voisins
+d'indices (`borders` de `world-countries`, dans `scripts/generateContours.mjs`), gardes seulement si les deux
+pays se citent mutuellement : la liste est symetrique (A voisin de B <=> B voisin de A, verifie par
+`countries.test.ts`) et limitee aux codes presents dans le fichier. Un pays sans voisin (iles) n'a pas de 8e element ;
+lecture via `countryNeighbors(code)` / `decodeCountry(row).neighbors`. Rien a voir avec `contour.neighbors`
+(les quelques voisins POSITIONNES sur le plateau pour les indices) ; les frontieres dessinees, elles, sont
+deduites de la geometrie (ci-dessous), donc n'incluent pas les frontieres d'un autre polygone que l'anneau principal.
+Dans l'admin, la carte pays a un bouton "Afficher les voisins" (liste drapeau + nom + code) qui, si l'editeur
+Silhouette du pays est deplie, dessine aussi les voisins en decor avec la frontiere en un seul trait
+(`computeBorders`, comme le jeu).
+
+**Silhouette progressive (palier 0 a 3).** Avant tout indice le pays est dessine avec une dizaine de
+sommets ; chaque appui sur "Indice" precise le trait (niveaux 0-3, `precisionLevel(hintsRevealed)` =
+`min(hints, 3)`), le niveau 3 etant l'anneau complet. `helpers/simplify.ts` (pur, aussi utilise par l'admin) :
+Visvalingam-Whyatt sur l'anneau, aire de chaque sommet multipliee par un facteur aleatoire seede
+(mulberry32, 0.6-1.4) pour que les versions grossieres varient un peu d'une graine a l'autre ; l'ordre de
+suppression donne des niveaux EMBOITES (jamais de saut de forme), le premier sommet et le sens sont
+conserves, taille des niveaux ~ 10 / 25 % / 55 % / tout (au moins 3 sommets de plus par niveau tant qu'il en
+reste, anneau entier si < 10 sommets). Calcule A LA VOLEE, une fois par (pays, graine) (`roundGeometry`,
+memoise dans `useRoundBoard`, O(n^2) sur n <= ~700), rien dans `countries.json`. **Graine partagee** :
+l'hote tire `simplifySeed` (`newSimplifySeed`) a `startContourRoomGame` (champ de la room, 0 par defaut
+pour une ancienne room) ; la graine d'une manche est `roundSimplifySeed(simplifySeed, roundIndex, code)`
+(FNV-1a), donc tous les appareils dessinent exactement la meme silhouette. Le cadrage du plateau (ratio,
+projecteur) reste celui de l'anneau COMPLET : la forme ne bouge ni ne change d'echelle en se precisant. **Voisins
+en decor seulement a l'anneau complet** : aux niveaux 0-2 (`boardShapeFor`) on ne dessine que la silhouette
+simplifiee, en un seul trait et sans voisins (leurs aretes communes ne coincident qu'avec l'anneau complet) ;
+fin de manche = anneau complet. Admin : dans l'editeur Silhouette, "Aperçu simplification" (niveaux 0-3 avec
+leur nombre de sommets, "Autre variante" tire une nouvelle graine) ; l'edition a la souris reste sur le tracé complet.
+
+**Frontieres dessinees une seule fois.** `helpers/borders.ts` (`computeBorders`, appele par
+`useRoundBoard` une fois par pays puis passe a `projectRound`) trouve les pays voisins par
+egalite exacte d'arete (memes deux sommets, dans un sens ou dans l'autre — pas d'intersection
+geometrique) et coupe l'anneau du pays cible en tronçons `coastlines` (aucune arete partagee) et
+`borders` (arete partagee). `ContourBoard` empile : voisins remplis (`colors.border` a
+`NEIGHBOR_FILL_OPACITY`) **sans contour**, pays cible rempli sans contour, puis ses deux traits
+par-dessus — cote en `VISIBLE_STROKE_WIDTH`, frontiere plus fine en `BORDER_STROKE_WIDTH`. Comme
+seul le pays cible trace un trait, une frontiere n'est jamais doublee. Les voisins ne sont qu'un
+decor : les indices (drapeaux/noms) restent ceux de `ContourCountry.neighbors`/`buildHintLabels`.
+Aucune donnee ajoutee dans `countries.json` : les voisins se deduisent des `points` des autres pays.
 
 Admin : pas d'onglet a part — un bouton "🗺️ Silhouette" apparait dans la carte pays de
 `admin/src/views/CountriesView` pour tout pays possedant deja des donnees Contour
@@ -323,6 +379,13 @@ Provider, qui l'emporte). `admin/.storybook/manager.ts` fait suivre le meme inte
 suivent la langue, une story les construit avec une fonction `(t) => ({...})` utilisee deux fois — dans `args`
 (avec `translations.fr`) et dans `decorators: [localizedArgs(build)]` (`@/storybook/localized`), qui les refait
 avec la langue courante. Du JSX de story qui contient du texte passe par le meme `build` (voir `SetupScreenShell`).
+
+## Contrôle qualité
+
+Le skill projet `quality-check` (`.claude/skills/quality-check/`, appelable avec `/quality-check`) enchaine les
+quatre controles avant un commit ou une release : couverture (seuil 100 %, `coverage-gaps.cjs` liste les trous),
+regles d'implementation des dossiers de composants et des stories (`audit-structure.cjs`), build Storybook, et code
+mort (knip, modes dev et prod). Il rapporte, il ne corrige ni ne commit sans demande.
 
 ## Theme
 

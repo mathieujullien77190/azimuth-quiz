@@ -6,6 +6,7 @@ import {
   countryCurrencyName,
   countryFlagColors,
   countryName,
+  countryNeighbors,
   decodeCountry,
   FLAG_COLOR_FIELD,
   flagEmoji,
@@ -19,6 +20,24 @@ describe('the countries data', () => {
       expect(row[0].length).toBeGreaterThan(0);
       expect(row[1].length).toBeGreaterThan(0);
       expect(code).toMatch(/^[A-Z]{2}$/);
+    }
+  });
+
+  it('lists land neighbors as sorted, unique codes of known countries, never the country itself', () => {
+    for (const [code, row] of Object.entries(rows)) {
+      const neighbors = row[7] ?? [];
+      expect(neighbors).not.toContain(code);
+      expect([...neighbors].sort()).toEqual([...neighbors]);
+      expect(new Set(neighbors).size).toBe(neighbors.length);
+      for (const neighbor of neighbors) expect(rows).toHaveProperty(neighbor);
+      // An empty list is never stored: no neighbors means no 8th element.
+      if (row[7] !== undefined) expect(row[7].length).toBeGreaterThan(0);
+    }
+  });
+
+  it('is symmetric: A is a neighbor of B <=> B is a neighbor of A', () => {
+    for (const [code, row] of Object.entries(rows)) {
+      for (const neighbor of row[7] ?? []) expect(rows[neighbor][7]).toContain(code);
     }
   });
 
@@ -90,7 +109,14 @@ describe('decodeCountry', () => {
       currency: 'Euro',
       currencySymbol: '€',
       phoneCode: '+33',
+      neighbors: [],
     });
+  });
+
+  it('decodes the land neighbors of an 8-element row, and a null contour as no contour', () => {
+    const decoded = decodeCountry(['Monaco', 'Monaco', null, 'Euro', '€', '+377', null, ['FR']]);
+    expect(decoded.neighbors).toEqual(['FR']);
+    expect(decoded.contour).toBeUndefined();
   });
 
   it('keeps the Contour data of a 7-element row', () => {
@@ -120,5 +146,17 @@ describe('decodeCountry', () => {
       ],
       difficulty: 'hard',
     });
+  });
+});
+
+describe('countryNeighbors', () => {
+  it('returns the codes sharing a land border, sorted', () => {
+    expect(countryNeighbors('FR')).toEqual(expect.arrayContaining(['BE', 'DE', 'ES', 'IT', 'CH']));
+    expect(countryNeighbors('MC')).toEqual(['FR']);
+  });
+
+  it('returns an empty list for an island or an unknown country', () => {
+    expect(countryNeighbors('JP')).toEqual([]);
+    expect(countryNeighbors('XX')).toEqual([]);
   });
 });

@@ -1,5 +1,15 @@
-import { BEST_BONUS_RATIO, DIRECTION_TOLERANCE_DEG, DISTANCE_TOLERANCE_RATIO, EXACT_DIRECTION_BONUS, EXACT_DISTANCE_BONUS, MAX_DIRECTION_POINTS, MAX_DISTANCE_POINTS, MAX_SURFACE_DISTANCE_KM, RANKS, SCORE_CURVE_EXPONENT } from '@/games/compass/constants';
-import type { Coordinates, Guess, Place, PlayerResult, Rank, RoundScore } from '@/types';
+import {
+  BEST_BONUS_RATIO,
+  DIRECTION_TOLERANCE_DEG,
+  DISTANCE_TOLERANCE_RATIO,
+  EXACT_DIRECTION_BONUS,
+  EXACT_DISTANCE_BONUS,
+  MAX_DIRECTION_POINTS,
+  MAX_DISTANCE_POINTS,
+  MAX_SURFACE_DISTANCE_KM,
+  SCORE_CURVE_EXPONENT,
+} from '@/games/compass/constants';
+import type { Coordinates, Guess, Place, PlayerResult, RoundScore } from '@/types';
 
 import { angleDifference, bearingDeg, distanceKm } from '@/helpers/geo';
 import { roundDistance } from './distanceScale';
@@ -79,13 +89,4 @@ export const applyBestBonus = (results: PlayerResult[]): PlayerResult[] => {
       },
     };
   });
-};
-
-/** `titles` must follow the same order as RANKS (translations.endScreen.ranks). */
-export const getRank = (total: number, maxTotal: number, titles: readonly string[]): Rank => {
-  const ratio = maxTotal > 0 ? total / maxTotal : 0;
-  const index = RANKS.findIndex((candidate) => ratio >= candidate.minRatio);
-  const rank = index === -1 ? RANKS[RANKS.length - 1] : RANKS[index];
-  const title = index === -1 ? titles[titles.length - 1] : titles[index];
-  return { title, emoji: rank.emoji };
 };

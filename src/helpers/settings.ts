@@ -1,4 +1,4 @@
-import { DIFFICULTIES, MAX_PLAYERS, MIN_PLAYERS, ROUND_OPTIONS } from '@/data';
+import { DIFFICULTIES, ROUND_OPTIONS } from '@/data';
 import { CATEGORIES, DEFAULT_SETTINGS } from '@/games/compass/constants';
 import type { Category, Difficulty, GameSettings } from '@/types';
 
@@ -8,10 +8,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> => typeof va
 export const sanitizeSettings = (raw: unknown): GameSettings => {
   if (!isRecord(raw)) return DEFAULT_SETTINGS;
 
-  const names = Array.isArray(raw.playerNames)
-    ? raw.playerNames.filter((name): name is string => typeof name === 'string').slice(0, MAX_PLAYERS)
-    : [];
-  const playerNames = names.length >= MIN_PLAYERS ? names : DEFAULT_SETTINGS.playerNames;
+  // The name is a string. Settings saved when several players shared a device carried a `playerNames`
+  // list: its first entry is this player.
+  const legacyName = Array.isArray(raw.playerNames) ? raw.playerNames[0] : undefined;
+  const savedName = typeof raw.playerName === 'string' ? raw.playerName : legacyName;
+  const playerName = typeof savedName === 'string' ? savedName : DEFAULT_SETTINGS.playerName;
 
   const validCategories = CATEGORIES.map((category) => category.id);
   const categories = Array.isArray(raw.categories)
@@ -35,7 +36,7 @@ export const sanitizeSettings = (raw: unknown): GameSettings => {
     typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max ? value : fallback;
 
   return {
-    playerNames,
+    playerName,
     categories: categories.length > 0 ? categories : DEFAULT_SETTINGS.categories,
     difficulty,
     rounds,
@@ -44,6 +45,5 @@ export const sanitizeSettings = (raw: unknown): GameSettings => {
     customLongitude: coordinate(raw.customLongitude, -180, 180, DEFAULT_SETTINGS.customLongitude),
     liveCompass: flag(raw.liveCompass, DEFAULT_SETTINGS.liveCompass),
     showCountry: flag(raw.showCountry, DEFAULT_SETTINGS.showCountry),
-    hideOtherAnswers: flag(raw.hideOtherAnswers, DEFAULT_SETTINGS.hideOtherAnswers),
   };
 };

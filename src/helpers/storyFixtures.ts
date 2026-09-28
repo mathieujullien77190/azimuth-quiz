@@ -8,6 +8,8 @@ import { CLUE_PLACES, CONTOURS, DEFAULT_ORIGIN, PLACES, PLAYER_COLORS } from '@/
 import { DEFAULT_DISTANCE_KM, MAX_SURFACE_DISTANCE_KM } from '@/games/compass/constants';
 import type { CluePlace, ContourCountry, Guess, Place, Player, PlayerResult, Point2D, RoundRecord } from '@/types';
 
+import { projectRound } from '@/games/contour/helpers/roundBoard';
+
 import { bearingDeg, distanceKm, normalizeBearing } from './geo';
 import { applyBestBonus, scoreRound } from '@/games/compass/helpers/scoring';
 
@@ -93,6 +95,14 @@ const contourProject = createProjector(
 );
 
 export const SAMPLE_CONTOUR_OUTLINE: Point2D[] = projectPoints(SAMPLE_CONTOUR_COUNTRY.points, contourProject);
+
+/** France fit to the same box, with the countries touching it (`neighborOutlines`) and its outline cut
+ * into coast and shared borders (`coastlines`/`borders`): what the game passes to `ContourBoard`. */
+export const SAMPLE_CONTOUR_BOARD = projectRound(
+  SAMPLE_CONTOUR_COUNTRY,
+  CONTOUR_BOARD_MAX_WIDTH,
+  CONTOUR_BOARD_MAX_HEIGHT,
+);
 
 /** Every curated neighbor for France, already projected to board pixels (tier-1/tier-3 hints). */
 export const SAMPLE_CONTOUR_NEIGHBORS = SAMPLE_CONTOUR_COUNTRY.neighbors.map((neighbor) => ({

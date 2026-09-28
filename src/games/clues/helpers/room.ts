@@ -20,12 +20,12 @@ export {
 } from '@/helpers/roomBase';
 export { isValidRoomCode } from '@/helpers/roomCode';
 
-/** What a room shares with its joiners: every game setting except `playerNames`, which stays
+/** What a room shares with its joiners: every game setting except `playerName`, which stays
  * local to each device/player. */
-export type ClueRoomSettings = Omit<ClueSettings, 'playerNames'>;
+export type ClueRoomSettings = Omit<ClueSettings, 'playerName'>;
 
 export const clueRoomSettingsFrom = (settings: ClueSettings): ClueRoomSettings => {
-  const { playerNames, ...roomSettings } = settings;
+  const { playerName, ...roomSettings } = settings;
   return roomSettings;
 };
 

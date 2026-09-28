@@ -16,12 +16,12 @@ import { createRoomApi } from '@/helpers/roomBase';
 export { ROOM_MAX_PLAYERS, type RoomPlayer, type RoomPlayers } from '@/helpers/roomBase';
 export { isValidRoomCode } from '@/helpers/roomCode';
 
-/** What a room shares with its joiners: every game setting except `playerNames`, which stays
+/** What a room shares with its joiners: every game setting except `playerName`, which stays
  * local to each device/player. */
-export type RoomSettings = Omit<GameSettings, 'playerNames'>;
+export type RoomSettings = Omit<GameSettings, 'playerName'>;
 
 export const roomSettingsFrom = (settings: GameSettings): RoomSettings => {
-  const { playerNames, ...roomSettings } = settings;
+  const { playerName, ...roomSettings } = settings;
   return roomSettings;
 };
 

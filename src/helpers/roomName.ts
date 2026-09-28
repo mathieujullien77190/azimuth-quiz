@@ -4,7 +4,7 @@ import type { RoomPlayers } from './roomBase';
 // test or a pure screen hook): this is only about names and errors.
 
 /** The `code` of the error `joinRoomPresence` throws when the name is already someone else's. */
-export const NAME_TAKEN_CODE = 'name-taken';
+const NAME_TAKEN_CODE = 'name-taken';
 
 export const nameTakenError = (): Error =>
   Object.assign(new Error('That name is already taken in this room.'), { code: NAME_TAKEN_CODE });

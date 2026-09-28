@@ -91,7 +91,6 @@ export type Translations = {
       liveCompass: { label: string; description: string };
       useGps: { label: string; description: string };
       showCountry: { label: string; description: string };
-      hideOtherAnswers: { label: string; description: string };
     };
     /** Latitude/longitude entered by hand when "Use my position" is off. */
     customOrigin: { latitude: string; longitude: string };
@@ -143,8 +142,6 @@ export type Translations = {
     tie: (names: string) => string;
     /** Connector word between two tied names ("et" / "and"). */
     and: string;
-    /** Rank titles (solo), same order as RANKS in games/compass/constants.ts. */
-    ranks: readonly [string, string, string, string, string];
   };
   settings: {
     title: string;

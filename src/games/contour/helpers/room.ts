@@ -16,12 +16,12 @@ import { createRoomApi } from '@/helpers/roomBase';
 export { ROOM_MAX_PLAYERS } from '@/helpers/roomBase';
 export { isValidRoomCode } from '@/helpers/roomCode';
 
-/** What a room shares with its joiners: every setting except `playerNames`, which stays local to
+/** What a room shares with its joiners: every setting except `playerName`, which stays local to
  * each device/player. */
-export type ContourRoomSettings = Omit<ContourSettings, 'playerNames'>;
+export type ContourRoomSettings = Omit<ContourSettings, 'playerName'>;
 
 export const contourRoomSettingsFrom = (settings: ContourSettings): ContourRoomSettings => {
-  const { playerNames, ...roomSettings } = settings;
+  const { playerName, ...roomSettings } = settings;
   return roomSettings;
 };
 
@@ -51,11 +51,18 @@ export const subscribeToRoomPlayers = rooms.subscribeToRoomPlayers<ContourRoomSc
 
 /** Host-only: starts the online game, moving every connected device to the game screen. Every
  * round's country is drawn upfront by the host (`pickContourRoundCodes`), and whoever's first in
- * arrival order gets the first turn. */
-export const startContourRoomGame = (code: string, countryCodes: string[], firstTurnUid: string): Promise<void> =>
+ * arrival order gets the first turn. `simplifySeed` (also drawn by the host) is what makes every
+ * device draw the very same coarse silhouettes (see `roundSimplifySeed`). */
+export const startContourRoomGame = (
+  code: string,
+  countryCodes: string[],
+  firstTurnUid: string,
+  simplifySeed: number,
+): Promise<void> =>
   updateDoc(roomRef(code), {
     screen: 'game' satisfies ContourRoomScreen,
     countryCodes,
+    simplifySeed,
     roundIndex: 0,
     hintsRevealed: 0,
     turnUid: firstTurnUid,
@@ -116,8 +123,11 @@ export const nextContourRoomRound = (
 export type ContourRoomGameState = {
   screen: ContourRoomScreen;
   countryCodes: string[];
+  /** Room-wide seed of the silhouettes' random simplification, drawn by the host at launch (0 for a
+   * room that has none: the silhouettes then just come out the same for everyone). */
+  simplifySeed: number;
   roundIndex: number;
-  /** How many of the 4 hint tiers are revealed (0-4), see `CONTOUR_GUESS_POINTS_BY_HINTS`. */
+  /** How many of the 7 hint tiers are revealed (0-7), see `CONTOUR_GUESS_POINTS_BY_HINTS`. */
   hintsRevealed: number;
   turnUid: string | null;
   verdict: 'correct' | 'giveUp' | null;
@@ -138,6 +148,7 @@ export const subscribeToRoomGame = (code: string, onUpdate: (state: ContourRoomG
     onUpdate({
       screen: (data?.screen as ContourRoomScreen | undefined) ?? 'options',
       countryCodes: (data?.countryCodes as string[] | undefined) ?? [],
+      simplifySeed: (data?.simplifySeed as number | undefined) ?? 0,
       roundIndex: (data?.roundIndex as number | undefined) ?? 0,
       hintsRevealed: (data?.hintsRevealed as number | undefined) ?? 0,
       turnUid: (data?.turnUid as string | undefined) ?? null,

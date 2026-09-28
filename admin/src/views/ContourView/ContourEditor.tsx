@@ -11,6 +11,12 @@ import {
   projectPoints,
 } from '@/games/contour/components/ContourBoard/helpers';
 import { BOARD_PADDING_RATIO } from '@/games/contour/components/ContourBoard/constants';
+// Pure too (no React Native): which countries touch this one, and its outline cut into coast and
+// shared borders — the very same split the game draws.
+import { computeBorders } from '@/games/contour/helpers/borders';
+// Pure as well: the progressive, seeded simplification the game uses (level 0 = coarsest, 3 = full ring).
+import { FULL_PRECISION, newSimplifySeed, simplificationLevels } from '@/games/contour/helpers/simplify';
+import { CONTOURS } from '@/data/contours';
 import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 import type { ContourCountry, ContourNeighbor, Point2D } from '@/types';
 
@@ -31,13 +37,27 @@ const BOARD_MAX_HEIGHT = 480;
  * separate tab. `initialCountry` seeds local state; nothing here writes back up to the parent (same
  * no-backend, journal-only pattern as the rest of the admin).
  */
-export const ContourEditor = ({ initialCountry }: { initialCountry: ContourCountry }) => {
+export const ContourEditor = ({
+  initialCountry,
+  showNeighbors = false,
+}: {
+  initialCountry: ContourCountry;
+  /** Draws the countries touching this one behind it, with each shared border stroked once (as in
+   * the game) instead of the whole outline as a single line. */
+  showNeighbors?: boolean;
+}) => {
   const [country, setCountry] = useState(initialCountry);
   // Live pixel position of whichever neighbor is currently being dragged (see `beginDrag`) —
   // `null` the rest of the time, when every neighbor just renders at its stored x/y.
   const [dragPos, setDragPos] = useState<{ index: number; pos: Point2D } | null>(null);
   // Same idea as `dragPos`, for the target country's own flag/name anchor (see `ContourCountry.centerLabel`).
   const [centerDragPos, setCenterDragPos] = useState<Point2D | null>(null);
+  // "Aperçu simplification": a read-only preview of the outline at one precision level (the way the
+  // game shows it hint after hint); "Éditer" (default) is the drag-and-drop editing on the full ring.
+  const [mode, setMode] = useState<'edit' | 'preview'>('edit');
+  const [level, setLevel] = useState(0);
+  const [seed, setSeed] = useState(newSimplifySeed);
+  const previewing = mode === 'preview';
 
   // Exactly the game's own framing (`ContourGameScreen`'s `projectRound`): fit to the country's
   // own outline alone — the canvas every neighbor's curated `x`/`y` (a fraction of it) scales
@@ -57,6 +77,34 @@ export const ContourEditor = ({ initialCountry }: { initialCountry: ContourCount
   );
 
   const outlinePath = useMemo(() => polylinePath(projectPoints(country.points, project)), [country.points, project]);
+
+  const levels = useMemo(() => simplificationLevels(country.points, seed), [country.points, seed]);
+  // Below the full ring the game draws the simplified outline alone: no neighbors, one stroke.
+  const simplified = previewing && level < FULL_PRECISION;
+  const simplifiedPath = useMemo(
+    () => polylinePath(projectPoints(levels[level], project)),
+    [levels, level, project],
+  );
+  const vertexDots = useMemo(
+    () => (simplified ? projectPoints(levels[level].slice(0, -1), project) : []),
+    [simplified, levels, level, project],
+  );
+  const drawNeighbors = previewing ? level === FULL_PRECISION : showNeighbors;
+
+  // Same layering as the game's ContourBoard: neighbors filled without a stroke, the country filled
+  // without a stroke, then its coast (heavy) and its shared borders (thin) on top — so a border is one
+  // line, not one per country.
+  const decor = useMemo(() => {
+    if (!drawNeighbors) return null;
+    const borders = computeBorders(country, CONTOURS);
+    const runsPath = (runs: readonly (readonly (readonly [number, number])[])[]) =>
+      runs.map((run) => polylinePath(projectPoints(run, project))).join(' ');
+    return {
+      neighbors: borders.neighborRings.map((ring) => polylinePath(projectPoints(ring, project))),
+      coast: runsPath(borders.coastRuns),
+      border: runsPath(borders.borderRuns),
+    };
+  }, [drawNeighbors, country, project]);
 
   // Refs, not state: a drag session's own starting point never needs to trigger a re-render by
   // itself (only `dragPos`, updated on every move, does).
@@ -188,12 +236,59 @@ export const ContourEditor = ({ initialCountry }: { initialCountry: ContourCount
 
   return (
     <div className="contour-editor">
+      <div className="precision-panel">
+        <span className="field-label">Précision du tracé</span>
+        <button type="button" className="chip" aria-pressed={!previewing} onClick={() => setMode('edit')}>
+          Éditer
+        </button>
+        <button type="button" className="chip" aria-pressed={previewing} onClick={() => setMode('preview')}>
+          Aperçu simplification
+        </button>
+        {previewing && (
+          <>
+            {levels.map((ring, index) => (
+              <button
+                key={index}
+                type="button"
+                className="chip"
+                aria-pressed={level === index}
+                onClick={() => setLevel(index)}
+              >
+                Niveau {index} — {ring.length - 1} sommets
+              </button>
+            ))}
+            <button type="button" className="chip" onClick={() => setSeed(newSimplifySeed())}>
+              Autre variante
+            </button>
+            <span className="place-meta">graine {seed}</span>
+          </>
+        )}
+      </div>
       <div className="contour-main-row">
         <div className="contour-board-wrap" style={{ width: boardSize.width, height: boardSize.height }}>
           <svg className="contour-svg" width={boardSize.width} height={boardSize.height}>
-            <path className="contour-outline" d={outlinePath} />
+            {simplified ? (
+              <>
+                <path className="contour-silhouette" d={simplifiedPath} />
+                <path className="contour-outline" d={simplifiedPath} />
+                {vertexDots.map((point, index) => (
+                  <circle className="contour-vertex" cx={point.x} cy={point.y} key={index} r={3} />
+                ))}
+              </>
+            ) : decor ? (
+              <>
+                {decor.neighbors.map((d, index) => (
+                  <path className="contour-neighbor-shape" d={d} key={index} />
+                ))}
+                <path className="contour-silhouette" d={outlinePath} />
+                {decor.coast !== '' && <path className="contour-outline" d={decor.coast} />}
+                {decor.border !== '' && <path className="contour-border" d={decor.border} />}
+              </>
+            ) : (
+              <path className="contour-outline" d={outlinePath} />
+            )}
           </svg>
-          {country.neighbors.map((neighbor, index) => {
+          {!previewing && country.neighbors.map((neighbor, index) => {
             const pos = positionFor(index, neighbor);
             return (
               <div
@@ -220,7 +315,7 @@ export const ContourEditor = ({ initialCountry }: { initialCountry: ContourCount
           {/* Tier 3/4's own on-board anchor (see `ContourCountry.centerLabel`) — one single
               draggable point, never deletable (every country always has one); flag icon at the
               point, its name stacked below, same as a neighbor above. */}
-          {(() => {
+          {!previewing && (() => {
             const pos = centerLabelPosition();
             return (
               <div

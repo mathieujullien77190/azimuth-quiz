@@ -5,7 +5,14 @@
  * (the outline's own margin, and the flag/name center labels projected within it) proportionally
  * identical regardless of absolute size — see callers for `Math.min(width, height) * BOARD_PADDING_RATIO`. */
 export const BOARD_PADDING_RATIO = 0.06;
+/** Coast: the stretches of the outline that touch no neighboring country. */
 export const VISIBLE_STROKE_WIDTH = 3;
+/** Border shared with a neighbor: thinner than the coast, drawn once (the neighbors themselves are
+ * never stroked, see `ContourBoardProps.neighborOutlines`). */
+export const BORDER_STROKE_WIDTH = 1.5;
+/** Neighbors are a discreet backdrop (the `border` color at this opacity) — the silhouette to
+ * guess must stay the only thing that pops. */
+export const NEIGHBOR_FILL_OPACITY = 0.45;
 export const HINT_LABEL_FONT_SIZE = 11;
 /** Font size for a `ContourBoardHintLabel` marked `icon` (a flag) — bigger than plain hint-label
  * text so the icon reads clearly at a glance. */

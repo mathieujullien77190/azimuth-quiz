@@ -65,23 +65,21 @@ const CustomOriginInputs = ({ latitude, longitude, onChange, disabled }: CustomO
 
 /**
  * "Options" block shared by every game's setup — dumb: a table of on/off options (title,
- * description, value, callback), each one skippable via `hidden`, plus the optional GPS option
+ * description, value, callback), plus the optional GPS option
  * (`gps`, with its custom-origin fields) for the games that have a starting point.
  */
 export const OptionsSection = ({ title, options, gps, disabled = false }: OptionsSectionProps) => (
   <Section title={title}>
-    {options
-      .filter((option) => !option.hidden)
-      .map((option) => (
-        <Toggle
-          key={option.id}
-          description={option.description}
-          disabled={disabled}
-          label={option.title}
-          onValueChange={option.onChange}
-          value={option.value}
-        />
-      ))}
+    {options.map((option) => (
+      <Toggle
+        key={option.id}
+        description={option.description}
+        disabled={disabled}
+        label={option.title}
+        onValueChange={option.onChange}
+        value={option.value}
+      />
+    ))}
     {gps && (
       <>
         <Toggle

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { flagEmoji } from '@/data/places/countries';
+import { countryName, flagEmoji } from '@/data/places/countries';
 import { CONTOURS } from '@/data/contours';
 import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 
@@ -31,6 +31,16 @@ export const CountriesView = () => {
   // Which card's own Contour/Silhouette editor is expanded (see the "🗺️ Silhouette" toggle below)
   // — at most one at a time, so the page never mounts more than one interactive SVG board.
   const [expandedContourCode, setExpandedContourCode] = useState<string | null>(null);
+
+  // Cards whose "Afficher les voisins" list is open (any number at once: it is only a line of text;
+  // the map decor it also turns on lives in the Silhouette editor, which stays one at a time).
+  const [neighborsOpen, setNeighborsOpen] = useState<ReadonlySet<string>>(new Set());
+  const toggleNeighbors = (code: string) =>
+    setNeighborsOpen((current) => {
+      const next = new Set(current);
+      if (!next.delete(code)) next.add(code);
+      return next;
+    });
 
   useEffect(() => {
     fetchCountries()
@@ -126,6 +136,7 @@ export const CountriesView = () => {
         {pageRows.map((row) => {
           const contourCountry = CONTOURS.find((c) => c.code === row.code);
           const contourExpanded = expandedContourCode === row.code;
+          const showNeighbors = neighborsOpen.has(row.code);
           return (
           <div className="place-card" key={row.code}>
             <div className="place-header">
@@ -134,6 +145,9 @@ export const CountriesView = () => {
                 <span className="place-meta">{row.code}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
+                <button type="button" className="chip" aria-pressed={showNeighbors} onClick={() => toggleNeighbors(row.code)}>
+                  {showNeighbors ? 'Masquer les voisins' : 'Afficher les voisins'}
+                </button>
                 {contourCountry && (
                   <button
                     type="button"
@@ -201,7 +215,23 @@ export const CountriesView = () => {
               </tbody>
             </table>
 
-            {contourExpanded && contourCountry && <ContourEditor initialCountry={contourCountry} />}
+            {showNeighbors && (
+              <div className="neighbors-list">
+                {row.neighbors.length === 0 ? (
+                  <span className="place-meta">Aucun voisin terrestre.</span>
+                ) : (
+                  row.neighbors.map((code) => (
+                    <span className="neighbor-tag" key={code}>
+                      <span style={{ fontFamily: FLAG_FONT_FAMILY, fontSize: 18 }}>{flagEmoji(code)}</span>
+                      {countryName(code, 'fr')}
+                      <span className="place-meta">{code}</span>
+                    </span>
+                  ))
+                )}
+              </div>
+            )}
+
+            {contourExpanded && contourCountry && <ContourEditor initialCountry={contourCountry} showNeighbors={showNeighbors} />}
           </div>
           );
         })}

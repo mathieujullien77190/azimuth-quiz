@@ -93,11 +93,6 @@ export const fr: Translations = {
         label: 'Aide pays',
         description: 'Affiche le pays sous le nom du lieu.',
       },
-      hideOtherAnswers: {
-        label: 'Cacher les réponses des autres',
-        description:
-          'Pendant la manche, chacun ne voit que sa propre flèche et sa propre distance/inclinaison. Tout s’affiche à la révélation.',
-      },
     },
     customOrigin: { latitude: 'Latitude', longitude: 'Longitude' },
   },
@@ -139,7 +134,6 @@ export const fr: Translations = {
     winner: (name) => `${name} gagne !`,
     tie: (names) => `Égalité : ${names}`,
     and: 'et',
-    ranks: ['Maître des vents', 'Capitaine', 'Navigateur', 'Mousse', 'Naufragé'],
   },
   settings: {
     title: 'Réglages',

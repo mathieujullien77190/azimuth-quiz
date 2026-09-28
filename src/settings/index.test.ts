@@ -90,7 +90,7 @@ describe('useContourSettings (Zustand store)', () => {
     useContourSettings.getState().updateSettings({ rounds: 10 });
 
     expect(useContourSettings.getState().settings.rounds).toBe(10);
-    expect(useContourSettings.getState().settings.playerNames).toEqual(DEFAULT_CONTOUR_SETTINGS.playerNames);
+    expect(useContourSettings.getState().settings.playerName).toEqual(DEFAULT_CONTOUR_SETTINGS.playerName);
     expect(mockedSaveSettings).not.toHaveBeenCalled();
   });
 });

@@ -32,6 +32,10 @@ describe('decodeContours', () => {
     expect(decoded).toEqual([]);
   });
 
+  it('skips a row whose contour is null (padding before the land neighbors)', () => {
+    expect(decodeContours({ XX: row(null) })).toEqual([]);
+  });
+
   it('falls back to an empty neighbor list, the default center label and intermediate difficulty when the contour omits them', () => {
     const decoded = decodeContours({
       XX: row({

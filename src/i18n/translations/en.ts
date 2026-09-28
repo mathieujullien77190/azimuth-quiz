@@ -92,11 +92,6 @@ export const en: Translations = {
         label: 'Country hint',
         description: 'Shows the country under the place name.',
       },
-      hideOtherAnswers: {
-        label: 'Hide other answers',
-        description:
-          'During the round, each player only sees their own arrow and their own distance/tilt. Everything shows at the reveal.',
-      },
     },
     customOrigin: { latitude: 'Latitude', longitude: 'Longitude' },
   },
@@ -136,7 +131,6 @@ export const en: Translations = {
     winner: (name) => `${name} wins!`,
     tie: (names) => `Tie: ${names}`,
     and: 'and',
-    ranks: ['Master of the Winds', 'Captain', 'Navigator', 'Deckhand', 'Castaway'],
   },
   settings: {
     title: 'Settings',

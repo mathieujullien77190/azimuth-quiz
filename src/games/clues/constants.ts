@@ -34,7 +34,7 @@ export const CLUE_CATEGORIES: { id: ClueCategory; emoji: string }[] = [
 ];
 
 export const DEFAULT_CLUE_SETTINGS: ClueSettings = {
-  playerNames: [''],
+  playerName: '',
   difficulty: 'easy',
   categories: ['cities', 'citiesFr', 'capital'],
   rounds: 5,

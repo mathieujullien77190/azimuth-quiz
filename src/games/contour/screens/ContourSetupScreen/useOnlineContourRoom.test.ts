@@ -33,14 +33,13 @@ describe('useOnlineContourRoom', () => {
     await result.current.startOnlineContourGame();
 
     expect(startContourRoomGame).toHaveBeenCalledTimes(1);
-    const [code, countryCodes, firstTurnUid] = jest.mocked(startContourRoomGame).mock.calls[0] as unknown as [
-      string,
-      string[],
-      string,
-    ];
+    const [code, countryCodes, firstTurnUid, simplifySeed] = jest.mocked(startContourRoomGame).mock
+      .calls[0] as unknown as [string, string[], string, number];
     expect(code).toBe('tabofuna');
     expect(countryCodes).toHaveLength(3);
     expect(firstTurnUid).toBe('early');
+    // The host draws the room-wide seed of the silhouettes' simplification.
+    expect(Number.isInteger(simplifySeed)).toBe(true);
   });
 
   it('refuses to start when nobody is in the room', async () => {

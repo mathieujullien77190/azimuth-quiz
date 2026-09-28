@@ -1,7 +1,6 @@
-import { MAX_ROUND_POINTS } from '@/games/compass/constants';
 import type { Player, PlayerResult, RoundRecord } from '@/types';
 
-import { maxTotalScore, roundBest } from './helpers';
+import { roundBest } from './helpers';
 
 const players: Player[] = [
   { name: 'Alice', color: '#EF4444' },
@@ -35,13 +34,6 @@ const recordOf = (...results: PlayerResult[]): RoundRecord => ({
     difficulty: 'easy',
   },
   results,
-});
-
-describe('maxTotalScore', () => {
-  it('is the best possible round score times the number of rounds', () => {
-    expect(maxTotalScore([recordOf(), recordOf(), recordOf()])).toBe(3 * MAX_ROUND_POINTS);
-    expect(maxTotalScore([])).toBe(0);
-  });
 });
 
 describe('roundBest', () => {

@@ -11,7 +11,6 @@ import type { OptionsSectionProps } from './types';
 import { source } from '@/storybook/source';
 import withoutGpsCode from './WithoutGps.source.md?raw';
 import withGpsCode from './WithGps.source.md?raw';
-import hiddenOptionCode from './HiddenOption.source.md?raw';
 import readOnlyCode from './ReadOnly.source.md?raw';
 
 const t = translations.fr;
@@ -29,10 +28,6 @@ const optionTexts = (texts: Translations): Record<string, { title: string; descr
   showCountry: {
     title: texts.setup.toggles.showCountry.label,
     description: texts.setup.toggles.showCountry.description,
-  },
-  hideOtherAnswers: {
-    title: texts.setup.toggles.hideOtherAnswers.label,
-    description: texts.setup.toggles.hideOtherAnswers.description,
   },
 });
 
@@ -175,34 +170,6 @@ export const WithGps: Story = {
       },
     ],
     gps: gpsOption,
-  },
-};
-
-/** `hidden` skips an option without touching the array (here "Cacher les réponses des autres",
- * which Compass only shows with 2+ players). */
-export const HiddenOption: Story = {
-  parameters: source(hiddenOptionCode),
-  decorators: [localizedArgs(localizedTexts(compassOptionsTitle))],
-  args: {
-    title: t.setup.optionsTitle,
-    options: [
-      {
-        id: 'showCountry',
-        ...t.setup.toggles.showCountry,
-        title: t.setup.toggles.showCountry.label,
-        value: true,
-        onChange: fn(),
-      },
-      {
-        id: 'hideOtherAnswers',
-        ...t.setup.toggles.hideOtherAnswers,
-        title: t.setup.toggles.hideOtherAnswers.label,
-        value: false,
-        onChange: fn(),
-        hidden: true,
-      },
-    ],
-    gps: { ...gpsOption, useGps: false },
   },
 };
 

@@ -4,7 +4,7 @@ import type { LayoutChangeEvent } from 'react-native';
 import { spacing } from '@/data';
 import type { ContourCountry } from '@/types';
 
-import { projectRound } from './roundBoard';
+import { projectRound, roundGeometry } from './roundBoard';
 
 /** Fallback box for the very first render, before the board area's own `onLayout` has measured
  * anything real yet — just needs to be a sane placeholder for one frame, not a sizing heuristic:
@@ -26,7 +26,7 @@ const BOARD_AREA_MARGIN = spacing.sm;
  * underneath them — pass `fullBleed: false` (overlays don't apply) to skip that subtraction.
  * Shared by the local game and the online one.
  */
-export const useRoundBoard = (country: ContourCountry, fullBleed: boolean) => {
+export const useRoundBoard = (country: ContourCountry, fullBleed: boolean, simplifySeed = 0) => {
   // The board area's live measured size — `null` for the one frame before its first `onLayout`
   // fires, so `board` falls back to a sane placeholder box.
   const [boardAreaSize, setBoardAreaSize] = useState<{ width: number; height: number } | null>(null);
@@ -42,6 +42,10 @@ export const useRoundBoard = (country: ContourCountry, fullBleed: boolean) => {
   const onOverlayTopLayout = (event: LayoutChangeEvent) => setOverlayTopHeight(event.nativeEvent.layout.height);
   const onOverlayBottomLayout = (event: LayoutChangeEvent) => setOverlayBottomHeight(event.nativeEvent.layout.height);
 
+  // Neighbors, coast/border split and the simplified rings only depend on the country and the
+  // round's seed: computed once per round, not on every re-fit of the box.
+  const geometry = useMemo(() => roundGeometry(country, simplifySeed), [country, simplifySeed]);
+
   // Re-fit (not re-roll) `country` to the live measured box: recomputes whenever the country
   // changes or the box itself does. Shaved by `BOARD_AREA_MARGIN` on every side first.
   const board = useMemo(
@@ -52,8 +56,9 @@ export const useRoundBoard = (country: ContourCountry, fullBleed: boolean) => {
         (boardAreaSize?.height ?? INITIAL_BOARD_MAX_SIZE) -
           BOARD_AREA_MARGIN * 2 -
           (fullBleed ? overlayTopHeight + overlayBottomHeight : 0),
+        geometry,
       ),
-    [country, boardAreaSize, fullBleed, overlayTopHeight, overlayBottomHeight],
+    [country, geometry, boardAreaSize, fullBleed, overlayTopHeight, overlayBottomHeight],
   );
 
   return { board, onBoardAreaLayout, onOverlayTopLayout, onOverlayBottomLayout };

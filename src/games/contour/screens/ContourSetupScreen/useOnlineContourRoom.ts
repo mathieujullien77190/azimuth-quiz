@@ -16,6 +16,7 @@ import {
   updateRoomSettings,
 } from '@/games/contour/helpers/room';
 import { pickContourRoundCodes } from '@/games/contour/helpers/contourCountry';
+import { newSimplifySeed } from '@/games/contour/helpers/simplify';
 import { useContourRoomStore } from '@/games/contour/store/roomStore';
 import { playersByArrival } from '@/helpers/roomPlayers';
 import type { ContourSettings } from '@/types';
@@ -39,7 +40,8 @@ const adapter: SetupRoomAdapter<ContourSettings, ContourRoomSettings> = {
 
 /** Silhouette's side of the online setup: the room lifecycle is `useSetupRoom`'s (shared with the
  * other games), only what "Lancer la partie" writes is specific — every round's country, drawn
- * upfront, and the first turn, handed to whoever's first in arrival order. */
+ * upfront, the seed of the silhouettes' simplification, and the first turn, handed to whoever's first in
+ * arrival order. */
 export const useOnlineContourRoom = (
   settings: ContourSettings,
   updateSettings: (patch: Partial<ContourSettings>) => void,
@@ -55,6 +57,7 @@ export const useOnlineContourRoom = (
         code,
         pickContourRoundCodes(CONTOURS, settings.difficulty, settings.rounds),
         firstTurnUid,
+        newSimplifySeed(),
       );
     });
 

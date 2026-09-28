@@ -4,9 +4,6 @@ export type OptionItem = {
   description?: string;
   value: boolean;
   onChange: (value: boolean) => void;
-  /** Keeps the option out of the list without removing it from the array — lets a game decide
-   * from its own state (e.g. "hide other answers" only makes sense with 2+ players). */
-  hidden?: boolean;
 };
 
 export type GpsOption = {

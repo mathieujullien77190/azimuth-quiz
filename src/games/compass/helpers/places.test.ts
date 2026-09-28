@@ -108,7 +108,7 @@ describe('pickPlaces', () => {
   // Far from every fixture place except Tokyo itself.
   const tokyo = { latitude: 35.6762, longitude: 139.6503 };
   const baseSettings: GameSettings = {
-    playerNames: [''],
+    playerName: '',
     categories: ['cities', 'mountains', 'landmarks'],
     difficulty: 'intermediate',
     rounds: 10,
@@ -117,7 +117,6 @@ describe('pickPlaces', () => {
     customLongitude: 2.3522,
     liveCompass: false,
     showCountry: false,
-    hideOtherAnswers: false,
   };
 
   it('excludes places closer than MIN_PLACE_DISTANCE_KM to the origin', () => {

@@ -14,6 +14,7 @@ import {
 const DEFAULT_GAME_STATE: ContourRoomGameState = {
   screen: 'options',
   countryCodes: [],
+  simplifySeed: 0,
   roundIndex: 0,
   hintsRevealed: 0,
   turnUid: null,

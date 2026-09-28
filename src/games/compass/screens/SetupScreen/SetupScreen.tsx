@@ -30,7 +30,6 @@ export const SetupScreen = ({ onBack }: SetupScreenProps) => {
       onSelectRounds={(rounds) => updateOrNotify({ rounds })}
       onStartPress={room.startOnlineGame}
       onToggleCategory={(id) => updateOrNotify(toggleCategoryFilter(settings, id))}
-      onToggleHideOtherAnswers={(value) => updateOrNotify({ hideOtherAnswers: value })}
       onToggleLiveCompass={(value) => updateOrNotify({ liveCompass: value })}
       onToggleShowCountry={(value) => updateOrNotify({ showCountry: value })}
       onToggleUseGps={(value) => updateOrNotify({ useGps: value })}

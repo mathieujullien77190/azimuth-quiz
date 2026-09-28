@@ -29,9 +29,7 @@ export const MASCOT_CAUGHT_STORAGE_KEY = 'azimuthquiz:ufo-caught';
  * stutter on them), opt-in via Settings. */
 export const ANIMATIONS_ENABLED_STORAGE_KEY = 'azimuthquiz:animations-enabled';
 
-// --- Game options (shared: player setup is the same shape in all 3 games) ---
-export const MIN_PLAYERS = 1;
-export const MAX_PLAYERS = 6;
+// --- Game options (shared by all 3 games) ---
 export const ROUND_OPTIONS = [5, 10, 15, 20] as const;
 
 /** The name a player gets when they leave their name field empty, rather than "Player 1"... One device

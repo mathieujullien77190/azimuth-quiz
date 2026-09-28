@@ -4,7 +4,7 @@ export { kmToRatio, ratioToKm } from '../games/compass/helpers/distanceScale';
 export { nameSkeleton } from '../games/clues/helpers/clueSkeleton';
 export { resolveOrigin } from './location';
 export { filterPlaces, pickPlaces } from '../games/compass/helpers/places';
-export { applyBestBonus, getRank, scoreRound } from '../games/compass/helpers/scoring';
+export { applyBestBonus, scoreRound } from '../games/compass/helpers/scoring';
 export {
   clearAppData,
   loadAnimationsEnabled,

@@ -45,7 +45,7 @@ beforeEach(() => jest.clearAllMocks());
 describe('clueRoomSettingsFrom', () => {
   it('shares every setting except the local player names', () => {
     const shared = clueRoomSettingsFrom(DEFAULT_CLUE_SETTINGS);
-    expect(shared).not.toHaveProperty('playerNames');
+    expect(shared).not.toHaveProperty('playerName');
     expect(shared).toMatchObject({ rounds: DEFAULT_CLUE_SETTINGS.rounds });
   });
 });

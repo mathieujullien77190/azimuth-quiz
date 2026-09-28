@@ -95,7 +95,7 @@ describe('ContourSetupScreen', () => {
       });
     });
 
-    await waitFor(() => expect(startContourRoomGame).toHaveBeenCalledWith('tabofuna', expect.any(Array), 'local-uid'));
+    await waitFor(() => expect(startContourRoomGame).toHaveBeenCalledWith('tabofuna', expect.any(Array), 'local-uid', expect.any(Number)));
 
     // Once the room leaves its lobby the game screen takes over (this screen stays mounted under it):
     // the splash must not stay on top of it.

@@ -66,6 +66,7 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
       name={myName}
       points={gameState.totalScores[localUid] ?? 0}
       hintsRevealed={gameState.hintsRevealed}
+      simplifySeed={game.simplifySeed}
       isHost={isHost}
       isLastRound={gameState.roundIndex + 1 >= gameState.countryCodes.length}
       isMyTurn={game.isMyTurn}

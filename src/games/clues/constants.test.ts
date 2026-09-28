@@ -27,7 +27,7 @@ describe('CLUE_ORDER', () => {
 
 describe('DEFAULT_CLUE_SETTINGS', () => {
   it('is a valid, playable settings object', () => {
-    expect(DEFAULT_CLUE_SETTINGS.playerNames.length).toBeGreaterThan(0);
+    expect(DEFAULT_CLUE_SETTINGS.playerName).toBe('');
     expect(DEFAULT_CLUE_SETTINGS.rounds).toBeGreaterThan(0);
   });
 });

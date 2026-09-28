@@ -15,11 +15,11 @@ jest.mock('expo-router', () => ({ useRouter: () => mockRouter }));
 // Connection-loss detection has its own tests (`useRoomPresence.test.ts`).
 jest.mock('@/helpers/useRoomPresence', () => ({ useRoomPresence: jest.fn() }));
 
-type Settings = { playerNames: string[]; rounds: number };
+type Settings = { playerName: string; rounds: number };
 type RoomSettings = { rounds: number };
 type GameState = { screen: string };
 
-const SETTINGS: Settings = { playerNames: ['Zoe'], rounds: 5 };
+const SETTINGS: Settings = { playerName: 'Zoe', rounds: 5 };
 const player = (name: string, color?: string) => ({ name, joinedAt: null, color });
 
 const flush = () => act(async () => {});
@@ -116,11 +116,11 @@ describe('useSetupRoom — solo', () => {
   it('pushes the typed name into the settings', async () => {
     const { result, updateSettings } = await setup();
     await act(async () => result.current.party.onChangeName('Max'));
-    expect(updateSettings).toHaveBeenCalledWith({ playerNames: ['Max'] });
+    expect(updateSettings).toHaveBeenCalledWith({ playerName: 'Max' });
   });
 
   it('falls back to the placeholder as the solo name when settings have none', async () => {
-    const { result } = await setup({}, { ...SETTINGS, playerNames: [] });
+    const { result } = await setup({}, { ...SETTINGS, playerName: '' });
     expect(result.current.party.soloName).toBe('');
   });
 });
@@ -151,7 +151,7 @@ describe('useSetupRoom — hosting', () => {
     await hostRoom(ctx);
     jest.mocked(ctx.adapter.joinRoomPresence).mockClear();
 
-    const renamed = { ...SETTINGS, playerNames: ['Zoé'] };
+    const renamed = { ...SETTINGS, playerName: 'Zoé' };
     await ctx.rerender({ settings: renamed });
     await act(async () => jest.advanceTimersByTime(300));
     expect(ctx.adapter.joinRoomPresence).not.toHaveBeenCalled();
@@ -161,7 +161,7 @@ describe('useSetupRoom — hosting', () => {
   });
 
   it('registers with the placeholder when the name is blank', async () => {
-    const ctx = await setup({}, { ...SETTINGS, playerNames: ['  '] });
+    const ctx = await setup({}, { ...SETTINGS, playerName: '  ' });
     await hostRoom(ctx);
     expect(jest.mocked(ctx.adapter.joinRoomPresence).mock.calls[0][1]).toBe(ctx.result.current.party.soloPlaceholder);
   });
@@ -288,7 +288,7 @@ describe('useSetupRoom — a name that is already taken', () => {
     await joinRoom(ctx);
     expect(ctx.result.current.party.nameError).toBe(NAME_ERROR);
 
-    await ctx.rerender({ settings: { ...SETTINGS, playerNames: ['Max'] } });
+    await ctx.rerender({ settings: { ...SETTINGS, playerName: 'Max' } });
     await act(async () => jest.advanceTimersByTime(700));
     await flush();
 
@@ -304,7 +304,7 @@ describe('useSetupRoom — a name that is already taken', () => {
     await hostRoom(ctx);
     expect(ctx.result.current.party.nameError).toBeNull();
 
-    await ctx.rerender({ settings: { ...SETTINGS, playerNames: ['Max'] } });
+    await ctx.rerender({ settings: { ...SETTINGS, playerName: 'Max' } });
     await act(async () => jest.advanceTimersByTime(700));
     await flush();
 
@@ -329,7 +329,7 @@ describe('useSetupRoom — a name that is already taken', () => {
 });
 
 describe('useSetupRoom — the default name', () => {
-  const BLANK = { ...SETTINGS, playerNames: [''] };
+  const BLANK = { ...SETTINGS, playerName: '' };
 
   it('is the first default name while alone', async () => {
     const ctx = await setup({}, BLANK);

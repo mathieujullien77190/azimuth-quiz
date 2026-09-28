@@ -8,6 +8,9 @@ import type { ContourBoardHintLabel } from '../ContourBoard';
 export type ContourFullBleedScreenProps = {
   /** From `useRoundBoard`: the country's board, fit to the measured area. */
   board: RoundBoard;
+  /** Precision level of the outline, 0 (a handful of segments) to 3 (the full ring, with the
+   * neighbors around it) — see `boardShapeFor`. Defaults to the full ring. */
+  precision?: number;
   hintLabels: ContourBoardHintLabel[];
   /** Remounts the board on every round (its own internal state, if any, starts fresh). */
   roundKey: number;

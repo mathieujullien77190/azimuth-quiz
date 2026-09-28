@@ -1,7 +1,4 @@
-import { MAX_ROUND_POINTS } from '@/games/compass/constants';
 import type { Player, RoundRecord, RoundScore } from '@/types';
-
-export const maxTotalScore = (records: RoundRecord[]): number => records.length * MAX_ROUND_POINTS;
 
 /** Who scored the most in one round on one criterion, and how much. */
 export type RoundBest = { players: Player[]; points: number };

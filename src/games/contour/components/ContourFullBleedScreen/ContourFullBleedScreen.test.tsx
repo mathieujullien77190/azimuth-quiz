@@ -5,6 +5,16 @@ import type { RoundBoard } from '@/games/contour/helpers/roundBoard';
 
 import ContourFullBleedScreen from '.';
 
+const FULL = [
+  { x: 0, y: 0 },
+  { x: 100, y: 50 },
+];
+const COARSE = [
+  { x: 0, y: 0 },
+  { x: 60, y: 7 },
+  { x: 100, y: 50 },
+];
+
 const board: RoundBoard = {
   country: { code: 'FR', points: [], neighbors: [], centerLabel: { x: 0.5, y: 0.5 }, difficulty: 'easy' },
   width: 100,
@@ -13,6 +23,15 @@ const board: RoundBoard = {
     { x: 0, y: 0 },
     { x: 100, y: 50 },
   ],
+  precisionOutlines: [COARSE, FULL, FULL, FULL],
+  neighborOutlines: [],
+  coastlines: [
+    [
+      { x: 0, y: 0 },
+      { x: 100, y: 50 },
+    ],
+  ],
+  borders: [],
   centerPosition: { x: 50, y: 25 },
   neighborHints: [],
 };
@@ -34,6 +53,16 @@ describe('ContourFullBleedScreen', () => {
     expect(JSON.stringify(toJSON())).toContain('France');
     expect(getByText('Header')).toBeTruthy();
     expect(getByText('Footer')).toBeTruthy();
+  });
+
+  it('draws the full ring, with its coast, by default', async () => {
+    const { toJSON } = await render(<ContourFullBleedScreen {...baseProps} />);
+    expect(JSON.stringify(toJSON())).not.toContain('L 60 7');
+  });
+
+  it('draws the simplified outline of the requested precision level', async () => {
+    const { toJSON } = await render(<ContourFullBleedScreen {...baseProps} precision={0} />);
+    expect(JSON.stringify(toJSON())).toContain('L 60 7');
   });
 
   it('renders extra children (an overlay) on top of everything', async () => {

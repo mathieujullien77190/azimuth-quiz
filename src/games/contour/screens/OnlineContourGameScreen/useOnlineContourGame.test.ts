@@ -11,6 +11,7 @@ import {
   revealContourRoomHint,
 } from '@/games/contour/helpers/room';
 import type { ContourRoomGameState } from '@/games/contour/helpers/room';
+import { roundSimplifySeed } from '@/games/contour/helpers/simplify';
 import { useContourRoomStore } from '@/games/contour/store/roomStore';
 
 import { useOnlineContourGame } from './useOnlineContourGame';
@@ -41,6 +42,7 @@ type StoreState = ReturnType<typeof useContourRoomStore.getState>;
 const gameState = (overrides: Partial<ContourRoomGameState> = {}): ContourRoomGameState => ({
   screen: 'game',
   countryCodes: ['FR', 'ES'],
+  simplifySeed: 3,
   roundIndex: 0,
   hintsRevealed: 0,
   turnUid: 'host',
@@ -102,8 +104,24 @@ describe('useOnlineContourGame — the round', () => {
     expect(result.current.pointsAtStake).toBe(CONTOUR_GUESS_POINTS_BY_HINTS[0]);
     await act(async () => useContourRoomStore.setState({ gameState: gameState({ hintsRevealed: 2 }) }));
     expect(result.current.pointsAtStake).toBe(CONTOUR_GUESS_POINTS_BY_HINTS[2]);
-    await act(async () => useContourRoomStore.setState({ gameState: gameState({ hintsRevealed: 4 }) }));
+    await act(async () => useContourRoomStore.setState({ gameState: gameState({ hintsRevealed: 6 }) }));
+    expect(result.current.pointsAtStake).toBe(CONTOUR_GUESS_POINTS_BY_HINTS[6]);
+    await act(async () => useContourRoomStore.setState({ gameState: gameState({ hintsRevealed: 7 }) }));
     expect(result.current.pointsAtStake).toBe(0);
+  });
+});
+
+describe('useOnlineContourGame — the simplification seed', () => {
+  it('derives the round seed from the room seed, the round and the country', async () => {
+    const { result } = await setup();
+    expect(result.current.simplifySeed).toBe(roundSimplifySeed(3, 0, 'FR'));
+    await act(async () => useContourRoomStore.setState({ gameState: gameState({ roundIndex: 1 }) }));
+    expect(result.current.simplifySeed).toBe(roundSimplifySeed(3, 1, 'ES'));
+  });
+
+  it('still gives a seed when no country is loaded yet', async () => {
+    const { result } = await setup({ gameState: gameState({ countryCodes: [] }) });
+    expect(result.current.simplifySeed).toBe(roundSimplifySeed(3, 0, ''));
   });
 });
 
@@ -142,7 +160,7 @@ describe('useOnlineContourGame — revealing a hint', () => {
     const guest = await setup({ localUid: 'guest' });
     await act(async () => guest.result.current.revealHint());
     await guest.unmount();
-    const allOut = await setup({ gameState: gameState({ hintsRevealed: 4 }) });
+    const allOut = await setup({ gameState: gameState({ hintsRevealed: 7 }) });
     await act(async () => allOut.result.current.revealHint());
     expect(revealContourRoomHint).not.toHaveBeenCalled();
   });

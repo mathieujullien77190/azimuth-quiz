@@ -679,6 +679,59 @@ td.muted {
   stroke-linecap: round;
 }
 
+/* "Afficher les voisins": the neighbors are a discreet backdrop, the country itself (silhouette) stays
+   the raised shape, and a shared border is one thin line stroked by the country's own side. */
+.contour-neighbor-shape {
+  fill: var(--border);
+  fill-opacity: 0.45;
+  stroke: none;
+}
+
+.contour-silhouette {
+  fill: var(--surface-high);
+  stroke: none;
+}
+
+.contour-border {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.precision-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.contour-vertex {
+  fill: var(--accent);
+  stroke: none;
+}
+
+.neighbors-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 4px;
+}
+
+.neighbor-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--surface-high);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
 /* Zero-size anchor at the neighbor's own point, not a visual box: `positionFor`'s pixel already
    sits here via inline `left`/`top`. Icon and name (below) are its only visible children, each
    centering itself on this same point independently — this div just supplies the shared origin,

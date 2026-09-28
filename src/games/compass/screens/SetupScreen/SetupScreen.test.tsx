@@ -80,11 +80,11 @@ describe('SetupScreen — defaults', () => {
   it('typing a name updates the solo player', async () => {
     const { getByLabelText, updateSettings } = await renderSetup();
     await fireEvent.changeText(getByLabelText('Nom du joueur 1'), 'Bob');
-    expect(updateSettings).toHaveBeenCalledWith({ playerNames: ['Bob'] });
+    expect(updateSettings).toHaveBeenCalledWith({ playerName: 'Bob' });
   });
 
   it('shows the initials of a typed name, or of the placeholder when empty', async () => {
-    const { getByText } = await renderSetup({ playerNames: ['Alice'] });
+    const { getByText } = await renderSetup({ playerName: 'Alice' });
     expect(getByText('AL')).toBeTruthy();
   });
 });
@@ -191,7 +191,7 @@ describe('SetupScreen — host/join a game', () => {
       return jest.fn();
     });
     const { getByText, queryByText, findByDisplayValue, getByDisplayValue } = await renderSetup({
-      playerNames: ['Zoé'],
+      playerName: 'Zoé',
     });
     fireEvent.press(getByText('Créer'));
     await findByDisplayValue('tabofuna');
@@ -209,7 +209,7 @@ describe('SetupScreen — host/join a game', () => {
 
   it('keeps the player-name field editable for a host once its room exists', async () => {
     mockedCreateRoom.mockResolvedValue('tabofuna');
-    const { getByLabelText, getByText, findByDisplayValue } = await renderSetup({ playerNames: ['Zoé'] });
+    const { getByLabelText, getByText, findByDisplayValue } = await renderSetup({ playerName: 'Zoé' });
     expect(getByLabelText('Nom du joueur 1').props.editable).not.toBe(false);
     fireEvent.press(getByText('Créer'));
     await findByDisplayValue('tabofuna');
@@ -220,7 +220,7 @@ describe('SetupScreen — host/join a game', () => {
     mockedRoomExists.mockResolvedValue(true);
     mockedJoinRoomPresence.mockResolvedValue('guest');
     mockedSubscribeToRoomPlayers.mockClear();
-    const { getByText, findByPlaceholderText, getByDisplayValue } = await renderSetup({ playerNames: ['Max'] });
+    const { getByText, findByPlaceholderText, getByDisplayValue } = await renderSetup({ playerName: 'Max' });
     await fireEvent.press(getByText('Rejoindre'));
     fireEvent.changeText(await findByPlaceholderText('Code de la partie'), 'tabofuna');
     await waitFor(() => expect(mockedSubscribeToRoomPlayers).toHaveBeenCalledWith('tabofuna', expect.any(Function)));
@@ -248,7 +248,7 @@ describe('SetupScreen — host/join a game', () => {
       onPlayers.mockImplementation(callback);
       return jest.fn();
     });
-    const { getByText, getByLabelText, findByDisplayValue } = await renderSetup({ playerNames: ['Zoé'] });
+    const { getByText, getByLabelText, findByDisplayValue } = await renderSetup({ playerName: 'Zoé' });
     fireEvent.press(getByText('Créer'));
     await findByDisplayValue('tabofuna');
     onPlayers(
@@ -290,7 +290,7 @@ describe('SetupScreen — host/join a game', () => {
     // Explicit rather than relying on the default mock — an earlier test in this file may have
     // left `joinRoomPresence` resolving to a different uid (mocks are never reset between tests).
     mockedJoinRoomPresence.mockResolvedValue('local-uid');
-    const { getByText, getByLabelText, findByPlaceholderText } = await renderSetup({ playerNames: ['Zoé'] });
+    const { getByText, getByLabelText, findByPlaceholderText } = await renderSetup({ playerName: 'Zoé' });
     await fireEvent.press(getByText('Rejoindre'));
     fireEvent.changeText(await findByPlaceholderText('Code de la partie'), 'coloreja');
     await waitFor(() => expect(mockedSubscribeToRoomPlayers).toHaveBeenCalledWith('coloreja', expect.any(Function)));
@@ -321,7 +321,7 @@ describe('SetupScreen — host/join a game', () => {
     // component (mocks here are never reset between tests) also using the common 'tabofuna'.
     mockedCreateRoom.mockResolvedValue('batiroko');
     mockedJoinRoomPresence.mockResolvedValue('host');
-    const { getByText, findByDisplayValue } = await renderSetup({ playerNames: ['Zoé'] });
+    const { getByText, findByDisplayValue } = await renderSetup({ playerName: 'Zoé' });
     fireEvent.press(getByText('Créer'));
     await findByDisplayValue('batiroko');
     await waitFor(() => expect(mockedSubscribeToRoomPlayers).toHaveBeenCalledWith('batiroko', expect.any(Function)));
@@ -366,14 +366,6 @@ describe('SetupScreen — host/join a game', () => {
     await waitFor(() => expect(queryByText('L’hôte a supprimé la partie.')).toBeNull(), { timeout: 3000 });
     expect(getByText('Lancer la partie')).toBeTruthy();
   }, 10000);
-});
-
-describe('SetupScreen — multiplayer-only toggles', () => {
-  it('shows and wires hideOtherAnswers with 2+ players', async () => {
-    const { getByLabelText, updateSettings } = await renderSetup({ playerNames: ['A', 'B'] });
-    await fireEvent(getByLabelText('Cacher les réponses des autres'), 'valueChange', true);
-    expect(updateSettings).toHaveBeenCalledWith({ hideOtherAnswers: true });
-  });
 });
 
 describe('SetupScreen — categories / difficulty / rounds / mode', () => {

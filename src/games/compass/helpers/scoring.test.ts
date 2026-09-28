@@ -1,9 +1,15 @@
-import { EXACT_DIRECTION_BONUS, EXACT_DISTANCE_BONUS, MAX_DIRECTION_POINTS, MAX_DISTANCE_POINTS, MAX_SURFACE_DISTANCE_KM, RANKS } from '@/games/compass/constants';
+import {
+  EXACT_DIRECTION_BONUS,
+  EXACT_DISTANCE_BONUS,
+  MAX_DIRECTION_POINTS,
+  MAX_DISTANCE_POINTS,
+  MAX_SURFACE_DISTANCE_KM,
+} from '@/games/compass/constants';
 import type { Coordinates, Guess, Place, PlayerResult } from '@/types';
 
 import { roundDistance } from './distanceScale';
 import { bearingDeg, distanceKm } from '@/helpers/geo';
-import { applyBestBonus, getRank, scoreRound } from './scoring';
+import { applyBestBonus, scoreRound } from './scoring';
 
 const origin: Coordinates = { latitude: 48.8566, longitude: 2.3522 };
 const place: Place = {
@@ -119,30 +125,5 @@ describe('applyBestBonus', () => {
     expect(a.score.total).toBe(
       a.score.directionPoints + a.score.distancePoints + a.score.directionBonus + a.score.distanceBonus,
     );
-  });
-});
-
-describe('getRank', () => {
-  const titles = RANKS.map((_, index) => `title-${index}`);
-
-  it('picks the top rank at a perfect ratio', () => {
-    expect(getRank(1000, 1000, titles).title).toBe('title-0');
-  });
-
-  it('picks the lowest rank at ratio 0', () => {
-    expect(getRank(0, 1000, titles).title).toBe(titles[titles.length - 1]);
-  });
-
-  it('falls back to the lowest rank when maxTotal is 0 (avoids a division by 0)', () => {
-    expect(getRank(0, 0, titles).title).toBe(titles[titles.length - 1]);
-  });
-
-  it('picks a middle rank for a middling ratio', () => {
-    const rank = getRank(550, 1000, titles);
-    expect(titles).toContain(rank.title);
-  });
-
-  it('falls back to the lowest rank for a negative ratio (defensive, should not happen in practice)', () => {
-    expect(getRank(-100, 1000, titles).title).toBe(titles[titles.length - 1]);
   });
 });

@@ -19,8 +19,10 @@ export type OnlineContourGameScreenViewProps = {
   difficulty: Difficulty;
 
   country: ContourCountry;
-  /** How many of the 4 hint tiers are on the board (0-4). */
+  /** How many of the 7 hint tiers are on the board (0-7). */
   hintsRevealed: number;
+  /** Seed of this round's random simplification of the outline, the same on every device. */
+  simplifySeed: number;
   /** What a correct guess earns right now (drops one tier per hint, 0 once the name is out). */
   pointsAtStake: number;
 
@@ -38,7 +40,7 @@ export type OnlineContourGameScreenViewProps = {
   onChangeGuessText: (text: string) => void;
   onSubmitGuess: () => void;
   onRevealHint: () => void;
-  /** The name is out (tier 4) and nobody found it: closes the round for nobody. */
+  /** The name is out (tier 7) and nobody found it: closes the round for nobody. */
   onGiveUp: () => void;
 
   isHost: boolean;

@@ -15,14 +15,14 @@ const DEFAULT_CONTOUR_DIFFICULTY: Difficulty = 'intermediate';
 
 /**
  * Builds the fully-resolved `ContourCountry` list from `countries.json` rows: only a row with a
- * 7th (`contour`) element produces one, everyone else is skipped outright (see `CountryRow`) —
+ * 7th (`contour`, non-`null`) element produces one, everyone else is skipped outright (see `CountryRow`) —
  * `neighbors`/`centerLabel`/`difficulty` each fall back to their own default when the row's
  * `contour` doesn't specify it, same defaults regardless of whether the country was hand-curated
  * or auto-generated.
  */
 export const decodeContours = (rows: Record<string, CountryRow>): ContourCountry[] =>
   Object.entries(rows)
-    .filter((entry) => entry[1][6] !== undefined)
+    .filter((entry) => entry[1][6])
     .map(([code, row]) => {
       const contour = row[6]!;
       return {

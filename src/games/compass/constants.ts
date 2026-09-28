@@ -2,7 +2,6 @@ import { DEFAULT_ORIGIN } from '@/data';
 import type { Category, GameSettings } from '@/types';
 
 // --- Score ---
-export const MAX_ROUND_POINTS = 1000;
 export const MAX_DIRECTION_POINTS = 500;
 export const MAX_DISTANCE_POINTS = 500;
 // Bonus for the player(s) closest in the round (1/5 of their category's max), in
@@ -36,15 +35,6 @@ export const MIN_PLACE_DISTANCE_KM = 150;
 export const BEST_SCORE_STORAGE_KEY = 'azimuthquiz:best-score';
 export const SETTINGS_STORAGE_KEY = 'azimuthquiz:settings';
 
-// --- Ranks (solo): the title comes from translations.endScreen.ranks (same order). ---
-export const RANKS = [
-  { minRatio: 0.85, emoji: '🧭' },
-  { minRatio: 0.65, emoji: '⚓' },
-  { minRatio: 0.45, emoji: '⛵' },
-  { minRatio: 0.25, emoji: '🪢' },
-  { minRatio: 0, emoji: '🌊' },
-] as const;
-
 // Label/description: see translations.setup.categories (same id).
 export const CATEGORIES: { id: Category; emoji: string }[] = [
   { id: 'cities', emoji: '🏙️' },
@@ -60,7 +50,7 @@ export const CATEGORIES: { id: Category; emoji: string }[] = [
 ];
 
 export const DEFAULT_SETTINGS: GameSettings = {
-  playerNames: [''],
+  playerName: '',
   categories: ['cities', 'capital', 'citiesFr', 'mountains', 'landmarks', 'nature'],
   // Single choice (radio).
   difficulty: 'intermediate',
@@ -71,5 +61,4 @@ export const DEFAULT_SETTINGS: GameSettings = {
   customLongitude: DEFAULT_ORIGIN.coordinates.longitude,
   liveCompass: false,
   showCountry: false,
-  hideOtherAnswers: false,
 };

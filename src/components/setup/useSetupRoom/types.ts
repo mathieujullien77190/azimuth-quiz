@@ -26,7 +26,7 @@ export type SetupRoomStore<R> = {
 
 /** Everything game-specific about "an online room" — each game has its own Firestore collection and
  * store (see `games/<game>/helpers/room.ts`), the setup flow on top of them is identical. `S` is the
- * game's full settings, `R` what the room shares with joiners (everything except `playerNames`). */
+ * game's full settings, `R` what the room shares with joiners (everything except `playerName`). */
 export type SetupRoomAdapter<S, R> = {
   store: SetupRoomStore<R>;
   /** Route both host and joiner are sent to once the host starts the game. */

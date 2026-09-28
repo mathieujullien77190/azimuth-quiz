@@ -20,7 +20,7 @@ const NAME_SYNC_DELAY_MS = 600;
  * hands `party` straight to `SetupScreenShell`, nothing here renders anything. Only starting the
  * game differs per game: see `startOnlineGame`.
  */
-export const useSetupRoom = <S extends { playerNames: string[] }, R extends Partial<S>>(
+export const useSetupRoom = <S extends { playerName: string }, R extends Partial<S>>(
   adapter: SetupRoomAdapter<S, R>,
   settings: S,
   updateSettings: (patch: Partial<S>) => void,
@@ -28,7 +28,7 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
   const { store } = adapter;
   const router = useRouter();
   const t = useTranslation();
-  const soloName = settings.playerNames[0] ?? '';
+  const soloName = settings.playerName;
 
   // Host/join is purely local UI state, not a saved preference — a fresh host/join happens
   // every time this screen is opened. Joining shows every setting section read-only (mirroring
@@ -355,7 +355,7 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
     // connected as a joiner — unless the name was refused, and has to be changed.
     nameEditable: connectedRoomCode === null || mode === 'host' || nameTaken,
     nameError: nameTaken && connectedRoomCode !== null ? t.setup.online.nameTaken : null,
-    onChangeName: (text) => updateSettings({ playerNames: [text] } as Partial<S>),
+    onChangeName: (text) => updateSettings({ playerName: text } as Partial<S>),
     connectedPlayers,
     localUid,
     hostUid,

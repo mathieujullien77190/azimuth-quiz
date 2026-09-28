@@ -6,17 +6,15 @@ describe('OptionsSection', () => {
   const options = [
     { id: 'a', title: 'Option A', description: 'Desc A', value: true, onChange: jest.fn() },
     { id: 'b', title: 'Option B', value: false, onChange: jest.fn() },
-    { id: 'c', title: 'Option C', value: false, onChange: jest.fn(), hidden: true },
   ];
 
   beforeEach(() => jest.clearAllMocks());
 
-  it('lists the visible options and skips hidden ones', async () => {
-    const { getByText, queryByText } = await render(<OptionsSection options={options} title="Options" />);
+  it('lists every option with its description', async () => {
+    const { getByText } = await render(<OptionsSection options={options} title="Options" />);
     expect(getByText('Option A')).toBeTruthy();
     expect(getByText('Desc A')).toBeTruthy();
     expect(getByText('Option B')).toBeTruthy();
-    expect(queryByText('Option C')).toBeNull();
   });
 
   it('forwards a toggle to its own option', async () => {

@@ -14,15 +14,23 @@ describe('sanitizeSettings', () => {
     expect(sanitizeSettings({})).toEqual(DEFAULT_SETTINGS);
   });
 
-  it('keeps valid playerNames, capped at MAX_PLAYERS and filtered to strings', () => {
-    const raw = { playerNames: ['Alice', 42, 'Bob', 'Cara', 'Dan', 'Eve', 'Fay', 'Gus'] };
-    const result = sanitizeSettings(raw);
-    expect(result.playerNames).toEqual(['Alice', 'Bob', 'Cara', 'Dan', 'Eve', 'Fay']);
+  it('keeps a saved player name', () => {
+    expect(sanitizeSettings({ playerName: 'Alice' }).playerName).toBe('Alice');
+    expect(sanitizeSettings({ playerName: '' }).playerName).toBe('');
   });
 
-  it('falls back to DEFAULT_SETTINGS.playerNames when fewer than MIN_PLAYERS remain', () => {
-    const result = sanitizeSettings({ playerNames: [42, false] });
-    expect(result.playerNames).toEqual(DEFAULT_SETTINGS.playerNames);
+  it('takes the first name of the list saved when several players shared a device', () => {
+    expect(sanitizeSettings({ playerNames: ['Alice', 'Bob'] }).playerName).toBe('Alice');
+  });
+
+  it('prefers the new setting to an old list', () => {
+    expect(sanitizeSettings({ playerName: 'Cara', playerNames: ['Alice'] }).playerName).toBe('Cara');
+  });
+
+  it('falls back to DEFAULT_SETTINGS.playerName when the name is not a string', () => {
+    expect(sanitizeSettings({ playerName: 42 }).playerName).toBe(DEFAULT_SETTINGS.playerName);
+    expect(sanitizeSettings({ playerNames: [42, false] }).playerName).toBe(DEFAULT_SETTINGS.playerName);
+    expect(sanitizeSettings({ playerNames: [] }).playerName).toBe(DEFAULT_SETTINGS.playerName);
   });
 
   it('keeps only valid category ids, ignoring unknown ones', () => {
@@ -55,10 +63,9 @@ describe('sanitizeSettings', () => {
   });
 
   it('keeps boolean flags when present, falls back to defaults for non-booleans', () => {
-    const result = sanitizeSettings({ useGps: false, showCountry: 'yes', hideOtherAnswers: 1 });
+    const result = sanitizeSettings({ useGps: false, showCountry: 'yes' });
     expect(result.useGps).toBe(false);
     expect(result.showCountry).toBe(DEFAULT_SETTINGS.showCountry);
-    expect(result.hideOtherAnswers).toBe(DEFAULT_SETTINGS.hideOtherAnswers);
   });
 
   it('keeps custom coordinates within range, falls back otherwise', () => {
