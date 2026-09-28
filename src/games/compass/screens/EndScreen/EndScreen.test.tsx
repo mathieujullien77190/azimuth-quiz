@@ -36,12 +36,12 @@ const bob: Player = { name: 'Bob', color: '#16A34A' };
 describe('EndScreen — alone', () => {
   const records: RoundRecord[] = [{ place: place('Paris', 'FR'), results: [result(400, 350)] }];
 
-  it('shows the rank title and the score, and the points won on each criterion per round', async () => {
+  it('shows the score, and the points won on each criterion per round', async () => {
     const { getByText, getAllByText, queryByText } = await render(
       <EndScreen onMenu={jest.fn()} players={[alice]} records={records} totals={[900]} />,
     );
     expect(getByText('Classement final')).toBeTruthy();
-    expect(getByText(formatNumber(900))).toBeTruthy();
+    expect(getByText(`${formatNumber(900)} pts`)).toBeTruthy();
     expect(getByText('Paris')).toBeTruthy();
     expect(getByText('+400')).toBeTruthy();
     expect(getByText('+350')).toBeTruthy();
@@ -54,7 +54,7 @@ describe('EndScreen — alone', () => {
     const { getByText } = await render(
       <EndScreen onMenu={jest.fn()} players={[alice]} records={records} totals={[]} />,
     );
-    expect(getByText(formatNumber(0))).toBeTruthy();
+    expect(getByText(`${formatNumber(0)} pts`)).toBeTruthy();
   });
 
   it('goes home', async () => {
