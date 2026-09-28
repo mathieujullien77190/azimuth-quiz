@@ -66,7 +66,6 @@ export type Translations = {
        * out of the room. */
       leave: string;
       generating: string;
-      yourCode: (code: string) => string;
       codePlaceholder: string;
       invalidCode: string;
       joined: (code: string) => string;
@@ -97,6 +96,8 @@ export type Translations = {
     next: string;
     last: string;
     round: string;
+    /** Room code shown in the header of an online game, next to the difficulty ("Code KEBA"). */
+    roomCode: (code: string) => string;
     roundOver: string;
     /** Navigates to the "heading" (compass) section while answering, without submitting. */
     nextStep: string;
@@ -183,7 +184,6 @@ export type Translations = {
     continueLabel: string;
     home: string;
     /** Online only: shown to the player whose turn it is right now. */
-    yourTurn: string;
     /** Online only: shown to everyone else while waiting for `name`'s turn. */
     waitingForTurn: (name: string) => string;
     clues: Record<ClueId, string>;
@@ -210,6 +210,12 @@ export type Translations = {
      * then its name, then the target country's own flag, then its name) and disappears once all
      * 4 are out. */
     hintButton: string;
+    /** Online only: the turn-holder's banner, "Zoé's turn…" (everyone else waits). */
+    waitingForTurn: (name: string) => string;
+    /** Online only: round result when someone found the country ("Zoé scores 375 points!"). */
+    found: (name: string, points: string) => string;
+    /** Online only: what a correct guess would earn right now, dropping with each hint. */
+    pointsAtStake: (points: string) => string;
     guessPlaceholder: string;
     /** Shown right after "Valider", before attribution — whether the typed text matched. */
     resultOk: string;

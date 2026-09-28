@@ -27,6 +27,7 @@ export const OnlineGameScreenView = ({
   scrollRef,
   onQuit,
   headerScore,
+  roomCode,
   difficulties,
   roundNumber,
   totalRounds,
@@ -86,6 +87,7 @@ export const OnlineGameScreenView = ({
         <GameHeader
           difficulties={difficulties}
           onQuit={onQuit}
+          roomCode={roomCode}
           roundNumber={roundNumber}
           scoreLabel={headerScore}
           totalRounds={totalRounds}
@@ -94,11 +96,20 @@ export const OnlineGameScreenView = ({
       onScroll={record ? undefined : onScroll}
       scrollRef={scrollRef}
     >
-      <PlaceCard description={record ? place.description : undefined} place={place} showCountry={record ? true : showCountry} />
+      <PlaceCard
+        description={record ? place.description : undefined}
+        place={place}
+        showCountry={record ? true : showCountry}
+      />
 
       <View style={styles.compass}>
         {record ? (
-          <Compass live={liveCompass} needles={extraNeedles ?? []} size={compassSizeFor(width)} truthBearing={truthBearing} />
+          <Compass
+            live={liveCompass}
+            needles={extraNeedles ?? []}
+            size={compassSizeFor(width)}
+            truthBearing={truthBearing}
+          />
         ) : (
           <>
             <Compass

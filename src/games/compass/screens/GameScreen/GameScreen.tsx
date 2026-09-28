@@ -1,20 +1,18 @@
 import { useRef, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text } from 'react-native';
+import { ScrollView } from 'react-native';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
-import { useTheme, useThemedStyles } from '@/themes';
+import { useTheme } from '@/themes';
 import type { EarthMark } from '@/components/EarthSection';
 
 import EndScreen from '../EndScreen';
-import ThemeBackdrop from '@/components/ThemeBackdrop';
+import LoadingScreen from '@/components/LoadingScreen';
 import { ANSWERED_OPACITY, REVEAL_OPACITY } from './constants';
 import { GameScreenView } from './GameScreenView';
 import { onCapFromScroll } from './helpers';
 import type { GameScreenProps, Needle } from './types';
 import { useGame } from './useGame';
-import { createStyles } from './GameScreen.styles';
 
 // Stable reference for the "hide other players' answers" branch: otherwise memoized children
 // would re-render on every compass-drag tick just from getting a fresh empty array each time.
@@ -25,7 +23,6 @@ const NO_ANSWERED: ReturnType<typeof useGame>['answered'] = [];
  * `GameScreenView` (dumb) only ever receives already-resolved values/callbacks.
  */
 export const GameScreen = ({ onQuit }: GameScreenProps) => {
-  const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
   const t = useTranslation();
   const game = useGame();
@@ -66,13 +63,7 @@ export const GameScreen = ({ onQuit }: GameScreenProps) => {
   const answered = showOthersWhileGuessing ? game.answered : NO_ANSWERED;
 
   if (game.phase === 'loading' || game.place === undefined || game.currentPlayer === undefined) {
-    return (
-      <SafeAreaView style={styles.loading}>
-        <ThemeBackdrop />
-        <ActivityIndicator color={colors.accent} size="large" />
-        <Text style={styles.loadingText}>{t.game.loading}</Text>
-      </SafeAreaView>
-    );
+    return <LoadingScreen />;
   }
 
   if (game.phase === 'end') {

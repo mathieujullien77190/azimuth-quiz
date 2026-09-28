@@ -1,4 +1,4 @@
-import { DEFAULT_ORIGIN, PLAYER_COLORS } from '@/data';
+import { DEFAULT_ORIGIN } from '@/data';
 import type { Category, GameSettings } from '@/types';
 
 // --- Score ---
@@ -44,11 +44,6 @@ export const RANKS = [
   { minRatio: 0.25, emoji: '🪢' },
   { minRatio: 0, emoji: '🌊' },
 ] as const;
-
-/** Same idea as `PLAYER_COLORS` (see `@/data`), extended to `ROOM_MAX_PLAYERS` (helpers/room.ts)
- * for the online room's connected-players list — 4 more hues added the same way, still clear of
- * the accent's amber/yellow band. */
-export const ROOM_PLAYER_COLORS = [...PLAYER_COLORS, '#0D9488', '#4F46E5', '#C026D3', '#E11D48'] as const;
 
 // Label/description: see translations.setup.categories (same id).
 export const CATEGORIES: { id: Category; emoji: string }[] = [

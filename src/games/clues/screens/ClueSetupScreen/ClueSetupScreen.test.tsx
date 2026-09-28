@@ -10,7 +10,7 @@ import ClueSetupScreen from '.';
 // anything requires it transitively — mocked out here since these tests exercise the setup UI,
 // not real Firestore calls. Same mock shape as Compass' own `SetupScreen.test.tsx`.
 jest.mock('@/games/clues/helpers/room', () => ({
-  CLUE_ROOM_MAX_PLAYERS: 10,
+  ROOM_MAX_PLAYERS: 10,
   createRoom: jest.fn(),
   deleteRoom: jest.fn(() => Promise.resolve()),
   isValidRoomCode: jest.fn((code: string) => code.length === 8),

@@ -1,28 +1,24 @@
-import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text } from 'react-native';
+import { ScrollView } from 'react-native';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PLAYER_COLORS } from '@/data';
 import { MAX_SURFACE_DISTANCE_KM } from '@/games/compass/constants';
 import { bearingDeg, distanceKm as computeDistanceKm, formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
-import { useTheme, useThemedStyles } from '@/themes';
+import { useTheme } from '@/themes';
 
 import type { EarthMark } from '@/components/EarthSection';
 import type { RoundRecord } from '@/types';
 import { REVEAL_OPACITY } from '../GameScreen/constants';
 import EndScreen from '../EndScreen';
-import NoticeOverlay from '@/components/NoticeOverlay';
-import ThemeBackdrop from '@/components/ThemeBackdrop';
+import LoadingScreen from '@/components/LoadingScreen';
+import RoomDeletedScreen from '@/components/RoomDeletedScreen';
 import { buildRoundRecord } from './helpers';
 import { onCapFromScroll } from '../GameScreen/helpers';
 import { OnlineGameScreenView } from './OnlineGameScreenView';
 import type { Needle, OnlineGameScreenProps } from './types';
 import { useOnlineGame } from './useOnlineGame';
-
-import { createStyles } from './OnlineGameScreen.styles';
 
 /**
  * Online counterpart to `GameScreen`: one phone = one player (no turn-passing, no `PlayerTabs`),
@@ -33,10 +29,8 @@ import { createStyles } from './OnlineGameScreen.styles';
  * `OnlineAnswerView`/`OnlineResultsView` (pure rendering).
  */
 export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
-  const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
   const t = useTranslation();
-  const router = useRouter();
   const game = useOnlineGame(code, onQuit);
 
   // Same "Suivant"/"Precedent" scroll nav as the local GameScreen (see its own comment) — kept
@@ -62,25 +56,13 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   // in `useOnlineGame` above catches up. Tappable (like `SetupScreenView`'s own notice overlay)
   // rather than only ever auto-dismissing after 2s: no reason to make a joiner wait it out.
   if (!game.roomExists && !game.isHost) {
-    return (
-      <SafeAreaView style={styles.loading}>
-        <ThemeBackdrop />
-        <NoticeOverlay message={t.setup.online.roomDeletedNotice} onDismiss={() => router.replace('/')} />
-      </SafeAreaView>
-    );
+    return <RoomDeletedScreen />;
   }
 
-  const { localUid, players, onlinePlayers, isHost, roomSettings, gameState, place, totals, myIndex } =
-    game;
+  const { localUid, players, onlinePlayers, isHost, roomSettings, gameState, place, totals, myIndex } = game;
 
   if (localUid === null || roomSettings === null || place === undefined || gameState.origin === null) {
-    return (
-      <SafeAreaView style={styles.loading}>
-        <ThemeBackdrop />
-        <ActivityIndicator color={colors.accent} size="large" />
-        <Text style={styles.loadingText}>{t.game.loading}</Text>
-      </SafeAreaView>
-    );
+    return <LoadingScreen />;
   }
   const maxDistanceKm = MAX_SURFACE_DISTANCE_KM;
   const myColor = players[localUid]?.color ?? PLAYER_COLORS[0];
@@ -119,13 +101,7 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   if (showResults) {
     const confirmedRecord = gameState.screen === 'reveal' ? game.records[game.records.length - 1] : undefined;
     if (gameState.screen === 'reveal' && confirmedRecord === undefined) {
-      return (
-        <SafeAreaView style={styles.loading}>
-          <ThemeBackdrop />
-          <ActivityIndicator color={colors.accent} size="large" />
-          <Text style={styles.loadingText}>{t.game.loading}</Text>
-        </SafeAreaView>
-      );
+      return <LoadingScreen />;
     }
 
     const answeredPlayers = confirmedRecord
@@ -171,9 +147,7 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
 
   // Answer phase's own Earth mark: only this device's own guess, shown regardless of phase (the
   // view ignores it once `record` is set).
-  const answerEarthMarks: EarthMark[] = [
-    { bearing: game.bearing, distanceKm: game.distanceKm, color: myColor },
-  ];
+  const answerEarthMarks: EarthMark[] = [{ bearing: game.bearing, distanceKm: game.distanceKm, color: myColor }];
 
   return (
     <OnlineGameScreenView
@@ -186,6 +160,7 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
       earthMarks={record ? resultsEarthMarks : answerEarthMarks}
       extraNeedles={extraNeedles}
       headerScore={headerScore}
+      roomCode={code}
       isHost={isHost}
       isLastRound={isLastRound}
       liveCompass={roomSettings.liveCompass}

@@ -13,7 +13,15 @@ import { createStyles } from './styles';
  * is already the same key across all three games' translations. `children` slots in whatever
  * goes below the round dots (Compass' `PlayerTabs`, Silhouette's guess prompt...).
  */
-export const GameHeader = ({ onQuit, scoreLabel, roundNumber, totalRounds, difficulties, children }: GameHeaderProps) => {
+export const GameHeader = ({
+  onQuit,
+  scoreLabel,
+  roundNumber,
+  totalRounds,
+  difficulties,
+  roomCode,
+  children,
+}: GameHeaderProps) => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
 
@@ -25,7 +33,12 @@ export const GameHeader = ({ onQuit, scoreLabel, roundNumber, totalRounds, diffi
         </Pressable>
         {scoreLabel !== undefined && <Text style={styles.score}>{scoreLabel}</Text>}
       </View>
-      <RoundProgress difficulties={difficulties} roundNumber={roundNumber} totalRounds={totalRounds} />
+      <RoundProgress
+        difficulties={difficulties}
+        roomCode={roomCode}
+        roundNumber={roundNumber}
+        totalRounds={totalRounds}
+      />
       {children}
     </View>
   );

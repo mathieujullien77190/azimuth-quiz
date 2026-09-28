@@ -129,7 +129,7 @@ export const HomeScreen = () => {
         <GameCard
           ctaLabel={t.home.games.clues.cta}
           icon="🧩"
-          maxPlayers={6}
+          maxPlayers={10}
           onPress={() => router.push('/clues-setup')}
           tagline={t.home.games.clues.tagline}
           title={t.home.games.clues.title}
@@ -137,7 +137,7 @@ export const HomeScreen = () => {
         <GameCard
           ctaLabel={t.home.games.contour.cta}
           icon="🗺️"
-          maxPlayers={6}
+          maxPlayers={10}
           onPress={() => router.push('/contour-setup')}
           tagline={t.home.games.contour.tagline}
           title={t.home.games.contour.title}

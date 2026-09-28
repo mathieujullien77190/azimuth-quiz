@@ -2,15 +2,10 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 
 import { NAME_PLACEHOLDERS, PLAYER_COLORS } from '@/data';
+import { playersByArrival } from '@/helpers/roomPlayers';
 import { useTranslation } from '@/i18n';
 
-import type { SetupPartyProps, SetupRoomAdapter, SetupRoomPlayer } from './types';
-
-/** Connected players in arrival order. A brand-new entry reads back as `joinedAt: null` on the
- * device that just wrote it, until its `serverTimestamp()` round-trips — sorted last (its real
- * arrival slot), not first, so a joiner never briefly jumps to the top of its own list. */
-export const playersByArrival = (players: Record<string, SetupRoomPlayer>): [string, SetupRoomPlayer][] =>
-  Object.entries(players).sort(([, a], [, b]) => (a.joinedAt?.toMillis() ?? Infinity) - (b.joinedAt?.toMillis() ?? Infinity));
+import type { SetupPartyProps, SetupRoomAdapter } from './types';
 
 /**
  * All the online-room business logic behind a game's setup screen, identical for every game —
@@ -236,9 +231,7 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
   // unsequenced effect), and without it we can't tell our own entry apart from everyone else's —
   // better to show nothing for a moment than to flash ourselves twice.
   const connectedPlayers =
-    connectedRoomCode === null || localUid === null
-      ? []
-      : playersByArrival(players).slice(0, adapter.maxPlayers);
+    connectedRoomCode === null || localUid === null ? [] : playersByArrival(players).slice(0, adapter.maxPlayers);
   const isHost = localUid !== null && localUid === hostUid;
   // Solo play keeps the fixed local-multiplayer red — once connected, this device's own badge
   // reflects whatever color the host assigned it too, same as everyone else's.

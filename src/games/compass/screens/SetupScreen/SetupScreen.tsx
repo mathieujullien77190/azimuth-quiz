@@ -2,7 +2,7 @@ import { filterPlaces } from '@/helpers';
 import { useLanguage } from '@/i18n';
 import { useSettings } from '@/settings';
 
-import SetupLoading from '@/components/setup/SetupLoading';
+import LoadingScreen from '@/components/LoadingScreen';
 import { selectDifficultyFilter, toggleCategoryFilter } from './helpers';
 import { SetupScreenView } from './SetupScreenView';
 import type { SetupScreenProps } from './types';
@@ -18,7 +18,7 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
   const room = useOnlineRoom(settings, updateSettings);
   const available = filterPlaces(settings.categories, settings.difficulties, language).length;
 
-  if (room.starting) return <SetupLoading />;
+  if (room.starting) return <LoadingScreen />;
 
   const updateOrNotify = (patch: Partial<typeof settings>) =>
     room.readOnly ? room.notifyReadOnly() : updateSettings(patch);

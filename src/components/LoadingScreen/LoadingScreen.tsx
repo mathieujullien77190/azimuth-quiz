@@ -9,8 +9,8 @@ import ThemeBackdrop from '@/components/ThemeBackdrop';
 import { createStyles } from './styles';
 
 /** Full-screen "Préparation de la partie…" shown between pressing "Lancer la partie" and the game
- * screen taking over — shared by every game's setup. */
-export const SetupLoading = () => {
+ * screen taking over — shared by every game's setup and online game screens. */
+export const LoadingScreen = () => {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
   const t = useTranslation();

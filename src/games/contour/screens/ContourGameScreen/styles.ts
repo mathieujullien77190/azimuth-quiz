@@ -5,46 +5,6 @@ import type { Theme } from '@/types';
 
 export const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
   StyleSheet.create({
-    title: {
-      ...typography.display,
-      color: colors.accent,
-      fontSize: fontSize.title,
-      paddingTop: spacing.sm,
-      textAlign: 'center',
-    },
-    // 'guess' only: no separate header/footer bands reserving their own layout space — the board
-    // measures (and fills) the entire safe area (see `fullBleedBoardArea`) and these two float on
-    // top of it instead, so the country outline can run edge to edge behind them.
-    fullBleedSafeArea: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    fullBleedBoardArea: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    // 'guess' only: positioning alone — the translucent floating-panel look itself now lives in
-    // the shared `GameHeader` (see `@/components/GameHeader`), adopted from what used to be this
-    // style's own `backgroundColor`/border/padding.
-    overlayTopPosition: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-    },
-    overlayBottom: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: isDark ? `${colors.surfaceHigh}F0` : `${colors.surface}F0`,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.sm,
-    },
     // 'reveal' phase's own footer: score alongside the "Manche suivante"/"Voir le score" button,
     // rather than up in the header next to "Quitter" (see `Screen`'s `footer` prop below).
     revealFooter: {
@@ -54,20 +14,6 @@ export const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
     score: {
       ...typography.heading,
       color: colors.accent,
-      fontSize: fontSize.subtitle,
-    },
-    // Round icon-only button, inline in the guess-phase input row (see `buzzInputRow`).
-    hintFab: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.surfaceHigh,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-    },
-    hintFabIcon: {
       fontSize: fontSize.subtitle,
     },
     countryCard: {
@@ -142,39 +88,6 @@ export const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       color: colors.accent,
       fontSize: fontSize.body,
     },
-    standingRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-      paddingVertical: spacing.sm,
-    },
-    standingRowBorder: {
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-    },
-    standingRank: {
-      ...typography.heading,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
-      width: 24,
-    },
-    standingName: {
-      ...typography.heading,
-      color: colors.text,
-      fontSize: fontSize.body,
-      flex: 1,
-    },
-    standingScore: {
-      ...typography.heading,
-      color: colors.accent,
-      fontSize: fontSize.body,
-    },
-    resultBanner: {
-      ...typography.heading,
-      textAlign: 'center',
-      fontSize: fontSize.caption + 1,
-      color: colors.success,
-    },
     guessFooter: {
       gap: spacing.sm + 2,
     },
@@ -234,24 +147,5 @@ export const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       ...typography.heading,
       color: colors.text,
       fontSize: fontSize.subtitle,
-    },
-    buzzInputRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-    },
-    guessInput: {
-      ...typography.heading,
-      minHeight: 48,
-      paddingHorizontal: spacing.md,
-      borderRadius: 10,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      backgroundColor: colors.surfaceHigh,
-      color: colors.text,
-      fontSize: fontSize.body,
-    },
-    guessInputFlex: {
-      flex: 1,
     },
   });

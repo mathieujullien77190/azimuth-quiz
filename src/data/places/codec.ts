@@ -12,7 +12,7 @@ import { countryName, countryPhoneCode, countryCurrencySymbol } from './countrie
  * clues.ts` and `admin/src/api/places.ts` all import from here rather than re-encoding it.
  */
 
-export const CATEGORY_CODES: Record<Category, string> = {
+const CATEGORY_CODES: Record<Category, string> = {
   cities: 'C',
   mountains: 'M',
   landmarks: 'L',
@@ -24,7 +24,7 @@ export const CATEGORY_CODES: Record<Category, string> = {
   citiesFr: 'F',
 };
 
-export const DIFFICULTY_CODES: Record<Difficulty, string> = {
+const DIFFICULTY_CODES: Record<Difficulty, string> = {
   easy: 'E',
   intermediate: 'I',
   hard: 'H',
@@ -33,7 +33,7 @@ export const DIFFICULTY_CODES: Record<Difficulty, string> = {
 /** IANA timezone (e.g. "Europe/Madrid") -> 2-letter code, arbitrary but stable (alphabetical
  * order of the timezones actually used). Repeated across 446 Clues places, a string like
  * "Europe/Copenhagen" weighs a lot for nothing next to "gh". */
-export const TIMEZONE_CODES: Record<string, string> = {
+const TIMEZONE_CODES: Record<string, string> = {
   'Africa/Abidjan': 'aa',
   'Africa/Accra': 'ab',
   'Africa/Addis_Ababa': 'ac',
@@ -269,22 +269,36 @@ export const TIMEZONE_CODES: Record<string, string> = {
   'America/Nuuk': 'ix',
 };
 
-export const CATEGORY_BY_CODE = Object.fromEntries(
+const CATEGORY_BY_CODE = Object.fromEntries(
   Object.entries(CATEGORY_CODES).map(([category, code]) => [code, category]),
 ) as Record<string, Category>;
 
-export const DIFFICULTY_BY_CODE = Object.fromEntries(
+const DIFFICULTY_BY_CODE = Object.fromEntries(
   Object.entries(DIFFICULTY_CODES).map(([difficulty, code]) => [code, difficulty]),
 ) as Record<string, Difficulty>;
 
-export const TIMEZONE_BY_CODE = Object.fromEntries(Object.entries(TIMEZONE_CODES).map(([tz, code]) => [code, tz])) as Record<string, string>;
+const TIMEZONE_BY_CODE = Object.fromEntries(Object.entries(TIMEZONE_CODES).map(([tz, code]) => [code, tz])) as Record<
+  string,
+  string
+>;
 
 /** `difficultyCode` lives here, not per-game: the two games never actually disagreed on a
  * place's difficulty in practice, so tracking it twice was pure duplication (see git history
  * for the merge). */
-export type CommonRow = readonly [name: string, code: string, latitude: number, longitude: number, difficultyCode: string];
+export type CommonRow = readonly [
+  name: string,
+  code: string,
+  latitude: number,
+  longitude: number,
+  difficultyCode: string,
+];
 
-export type CompassRow = readonly [categoryCode: string, description: string | null, wikiFr: string | null, wikiEn: string | null];
+export type CompassRow = readonly [
+  categoryCode: string,
+  description: string | null,
+  wikiFr: string | null,
+  wikiEn: string | null,
+];
 
 export type ClueRow = readonly [
   positionInCountry: CluePositionInCountry,
@@ -300,7 +314,7 @@ export type ClueRow = readonly [
 
 /** A place: common data (including difficulty) + its per-game parts. `compass`/`clues` are
  * `null` when this place doesn't exist in that game. */
-export type PlaceEntry = readonly [common: CommonRow, compass: CompassRow | null, clues: ClueRow | null];
+type PlaceEntry = readonly [common: CommonRow, compass: CompassRow | null, clues: ClueRow | null];
 
 export type MergedPlaces = readonly PlaceEntry[];
 
@@ -344,7 +358,17 @@ export const decodeCompassPlaces = (entries: MergedPlaces): Place[] => {
 
 export const decodeCluePlace = (common: CommonRow, row: ClueRow): CluePlace => {
   const [name, code, latitude, longitude, difficultyCode] = common;
-  const [positionInCountry, population, climateEmoji, elevationMeters, timezoneCode, airportCode, emoji1, emoji2, emoji3] = row;
+  const [
+    positionInCountry,
+    population,
+    climateEmoji,
+    elevationMeters,
+    timezoneCode,
+    airportCode,
+    emoji1,
+    emoji2,
+    emoji3,
+  ] = row;
   return {
     name,
     code,
@@ -364,7 +388,10 @@ export const decodeCluePlace = (common: CommonRow, row: ClueRow): CluePlace => {
 };
 
 export const encodeClueRow = (
-  place: Pick<CluePlace, 'positionInCountry' | 'population' | 'climateEmoji' | 'elevationMeters' | 'timezone' | 'airportCode' | 'emojis'>,
+  place: Pick<
+    CluePlace,
+    'positionInCountry' | 'population' | 'climateEmoji' | 'elevationMeters' | 'timezone' | 'airportCode' | 'emojis'
+  >,
 ): ClueRow => [
   place.positionInCountry,
   place.population,

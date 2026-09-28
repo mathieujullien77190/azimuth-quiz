@@ -67,7 +67,6 @@ export const fr: Translations = {
       join: 'Rejoindre',
       leave: 'Quitter',
       generating: 'Création du code…',
-      yourCode: (code) => `Code de la partie : ${code}`,
       codePlaceholder: 'Code de la partie',
       invalidCode: 'Code introuvable.',
       joined: (code) => `Connecté à la partie ${code} !`,
@@ -106,6 +105,7 @@ export const fr: Translations = {
     next: 'Manche suivante',
     last: 'Voir le score',
     round: 'Manche',
+    roomCode: (code) => `Code ${code.toUpperCase()}`,
     roundOver: 'Manche terminée',
     nextStep: 'Suivant',
     previousStep: 'Précédent',
@@ -187,7 +187,6 @@ export const fr: Translations = {
     wasPlace: 'C’était',
     continueLabel: 'Continuer',
     home: 'Accueil',
-    yourTurn: 'À vous de jouer',
     waitingForTurn: (name) => `Au tour de ${name}…`,
     clues: {
       position: 'Position',
@@ -226,6 +225,9 @@ export const fr: Translations = {
   contourGame: {
     guessPrompt: 'Quel est ce pays ?',
     hintButton: '💡 Indice',
+    waitingForTurn: (name) => `Au tour de ${name}…`,
+    found: (name, points) => `${name} marque ${points} points !`,
+    pointsAtStake: (points) => `En jeu : ${points} points`,
     guessPlaceholder: 'Nom du pays…',
     resultOk: 'Bonne réponse !',
     resultNotOk: 'Mauvaise réponse.',

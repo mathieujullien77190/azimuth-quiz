@@ -37,7 +37,7 @@ export const Clues: Story = {
   args: {
     ctaLabel: t.home.games.clues.cta,
     icon: '🧩',
-    maxPlayers: 6,
+    maxPlayers: 10,
     onPress: () => {},
     tagline: t.home.games.clues.tagline,
     title: t.home.games.clues.title,
@@ -49,7 +49,7 @@ export const Contour: Story = {
   args: {
     ctaLabel: t.home.games.contour.cta,
     icon: '🗺️',
-    maxPlayers: 6,
+    maxPlayers: 10,
     onPress: () => {},
     tagline: t.home.games.contour.tagline,
     title: t.home.games.contour.title,

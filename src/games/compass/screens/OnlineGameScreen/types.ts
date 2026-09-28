@@ -2,19 +2,12 @@ import type { RefObject } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent, ScrollView } from 'react-native';
 
 import type { EarthMark } from '@/components/EarthSection';
+import type { OnlinePlayer } from '@/helpers/roomPlayers';
 import type { Difficulty, Place, RoundRecord } from '@/types';
 
 export type OnlineGameScreenProps = {
   code: string;
   onQuit: () => void;
-};
-
-/** One connected player, in the stable arrival-order used everywhere in this screen (scores,
- * results, needles) — built once from the room's `players` map (see `onlinePlayersFrom`). */
-export type OnlinePlayer = {
-  uid: string;
-  name: string;
-  color: string;
 };
 
 /** A needle drawn on `Compass` besides the active/current one. */
@@ -24,6 +17,7 @@ export type Needle = { bearing: number; color: string };
 export type OnlineHeaderProps = {
   onQuit: () => void;
   headerScore: string;
+  roomCode: string;
   difficulties: Difficulty[];
   roundNumber: number;
   totalRounds: number;

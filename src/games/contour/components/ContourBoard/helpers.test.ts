@@ -1,4 +1,4 @@
-import { boardDimensionsFor, createProjector, createUnprojector, polylinePath, projectPoints } from './helpers';
+import { boardDimensionsFor, createProjector, polylinePath, projectPoints } from './helpers';
 
 describe('createProjector', () => {
   it('centers a square ring within the available square, padding respected', () => {
@@ -56,36 +56,6 @@ describe('createProjector', () => {
     expect(project([10, 10]).x).toBeCloseTo(50);
     expect(project([0, 10]).y).toBeCloseTo(0);
     expect(project([0, -10]).y).toBeCloseTo(100);
-  });
-});
-
-describe('createUnprojector', () => {
-  const ring: [number, number][] = [
-    [0, -10],
-    [10, -10],
-    [10, 10],
-    [0, 10],
-  ];
-
-  it('round-trips an arbitrary point through createProjector then back', () => {
-    const size = { width: 100, height: 200 };
-    const project = createProjector(ring, size, 10);
-    const unproject = createUnprojector(ring, size, 10);
-    const original: [number, number] = [4.2, -3.7];
-    const roundTripped = unproject(project(original));
-    expect(roundTripped[0]).toBeCloseTo(original[0]);
-    expect(roundTripped[1]).toBeCloseTo(original[1]);
-  });
-
-  it('recovers each corner of the ring itself', () => {
-    const size = { width: 50, height: 100 };
-    const project = createProjector(ring, size, 0);
-    const unproject = createUnprojector(ring, size, 0);
-    ring.forEach((corner) => {
-      const [lon, lat] = unproject(project(corner));
-      expect(lon).toBeCloseTo(corner[0]);
-      expect(lat).toBeCloseTo(corner[1]);
-    });
   });
 });
 

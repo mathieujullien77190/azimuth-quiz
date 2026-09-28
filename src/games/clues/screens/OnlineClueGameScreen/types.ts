@@ -1,4 +1,5 @@
 import type { NameSkeletonSlot } from '@/games/clues/helpers/clueSkeleton';
+import type { OnlinePlayer } from '@/helpers/roomPlayers';
 import type { ClueId, CluePlace, Difficulty } from '@/types';
 
 export type OnlineClueGameScreenProps = {
@@ -6,17 +7,10 @@ export type OnlineClueGameScreenProps = {
   onQuit: () => void;
 };
 
-/** One connected player, in the stable arrival-order used everywhere in this screen (scores,
- * turn order) — built once from the room's `players` map (see `onlineClueRoomPlayersFrom`). */
-export type OnlineCluePlayer = {
-  uid: string;
-  name: string;
-  color: string;
-};
-
 export type OnlineClueGameScreenViewProps = {
   onQuit: () => void;
   headerScore: string;
+  roomCode: string;
   roundNumber: number;
   totalRounds: number;
   difficulty: Difficulty;
@@ -28,7 +22,7 @@ export type OnlineClueGameScreenViewProps = {
   skeletonGroups: NameSkeletonSlot[][];
   skeletonLengthKnown: boolean;
 
-  players: OnlineCluePlayer[];
+  players: OnlinePlayer[];
   turnIndex: number;
   isMyTurn: boolean;
   turnPlayerName: string;

@@ -18,7 +18,12 @@ import { createStyles } from './styles';
  * disappear past `MAX_PROGRESS_DOTS` (unreadable once there are too many); the dot at index
  * `roundNumber - 1` (the current round) already counts as "done".
  */
-const RoundProgress = memo(function RoundProgress({ roundNumber, totalRounds, difficulties }: RoundProgressProps) {
+const RoundProgress = memo(function RoundProgress({
+  roundNumber,
+  totalRounds,
+  difficulties,
+  roomCode,
+}: RoundProgressProps) {
   const styles = useThemedStyles(createStyles);
   const { isDark } = useTheme();
   const t = useTranslation();
@@ -34,6 +39,7 @@ const RoundProgress = memo(function RoundProgress({ roundNumber, totalRounds, di
       <Text style={styles.label}>
         {t.game.round} {formatRoundProgress(roundNumber, totalRounds)} ·{' '}
         {formatDifficulties(difficulties, emojiOf, (id: Difficulty) => t.setup.difficulties[id])}
+        {roomCode !== undefined && ` · ${t.game.roomCode(roomCode)}`}
       </Text>
       {totalRounds <= MAX_PROGRESS_DOTS && (
         <View style={styles.dots}>

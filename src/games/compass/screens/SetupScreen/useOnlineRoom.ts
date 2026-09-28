@@ -1,5 +1,5 @@
 import { useSetupRoom, type SetupRoomAdapter } from '@/components/setup/useSetupRoom';
-import { ROOM_PLAYER_COLORS } from '@/games/compass/constants';
+import { ROOM_PLAYER_COLORS } from '@/data';
 import { pickPlaces, resolveOrigin } from '@/helpers';
 import {
   ROOM_MAX_PLAYERS,

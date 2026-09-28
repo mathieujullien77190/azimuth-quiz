@@ -29,32 +29,52 @@ service cloud.firestore {
       allow delete: if request.auth != null && request.auth.uid == resource.data.hostUid;
     }
 
-    // Clues' own online rooms — separate collection from `rooms` (Compass), separate shape: one
-    // shared board revealed turn-by-turn instead of everyone answering independently. Same
-    // anonymous-auth/hostUid trust model, adapted to "whoever's turn it is" instead of "each
-    // player only touches their own guess": only the player named by `turnUid` (evaluated against
-    // the document *before* this write, so a turn-passing write is authorized by the outgoing
-    // turn-holder, not the incoming one) can touch the shared round-progress fields, and only its
-    // own `players` entry — never `settings`/`screen`/`origin`/`places`/`totalScores`, which stay
-    // host-only (`startClueRoomGame`/`nextClueRoomRound`/`applyClueRoomScore` in
-    // `games/clues/helpers/room.ts`).
+    // Rules shared by every turn-based game's rooms (Clues, Silhouette): one shared board revealed
+    // turn-by-turn instead of everyone answering independently. Same anonymous-auth/hostUid trust
+    // model as `rooms`, adapted to "whoever's turn it is" instead of "each player only touches
+    // their own guess":
+    // - the host can change anything (settings, screen/round state, scores, remove any player);
+    // - anyone signed in can join/rename themselves (`joinRoomPresence`) — even in the lobby, where
+    //   `turnUid` doesn't exist yet — touching only their own `players` entry;
+    // - only the player named by `turnUid` (evaluated against the document *before* this write, so a
+    //   turn-passing write is authorized by the outgoing turn-holder, not the incoming one) can touch
+    //   `progressKeys` (the game's own shared round-progress fields, see its `helpers/room.ts`) —
+    //   never `settings`/`screen`/`totalScores`, which stay host-only.
+    function ownPlayersEntryOnly() {
+      return request.resource.data.get('players', {}).diff(resource.data.get('players', {})).affectedKeys()
+        .hasOnly([request.auth.uid]);
+    }
+
+    function canUpdateTurnRoom(progressKeys) {
+      return request.auth != null
+        && (request.auth.uid == resource.data.hostUid
+          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['players'])
+            && ownPlayersEntryOnly())
+          || (request.auth.uid == resource.data.get('turnUid', null)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(progressKeys)
+            && ownPlayersEntryOnly()));
+    }
+
+    // Clues' own online rooms — separate collection from `rooms` (Compass), see above.
     match /clueRooms/{code} {
       allow read: if true;
       allow create: if request.auth != null
         && request.resource.data.hostUid == request.auth.uid
         && !exists(/databases/$(database)/documents/clueRooms/$(code));
-      allow update: if request.auth != null
-        && (request.auth.uid == resource.data.hostUid
-          // Anyone signed in can join/rename themselves (`joinRoomPresence`) — even in the lobby,
-          // where `turnUid` doesn't exist yet — touching only their own `players` entry.
-          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['players'])
-            && request.resource.data.get('players', {}).diff(resource.data.get('players', {})).affectedKeys()
-              .hasOnly([request.auth.uid]))
-          || (request.auth.uid == resource.data.get('turnUid', null)
-            && request.resource.data.diff(resource.data).affectedKeys()
-              .hasOnly(['players', 'revealedClueIds', 'turnUid', 'verdict', 'roundWinnerUid', 'wrongGuessUid', 'wrongGuessSeq'])
-            && request.resource.data.get('players', {}).diff(resource.data.get('players', {})).affectedKeys()
-              .hasOnly([request.auth.uid])));
+      allow update: if canUpdateTurnRoom(
+        ['players', 'revealedClueIds', 'turnUid', 'verdict', 'roundWinnerUid', 'wrongGuessUid', 'wrongGuessSeq']);
+      allow delete: if request.auth != null && request.auth.uid == resource.data.hostUid;
+    }
+
+    // Silhouette's own online rooms, same turn model as Clues': the turn-holder reveals the next hint
+    // tier (`hintsRevealed`, which passes `turnUid`) or reports a find/miss/give-up.
+    match /contourRooms/{code} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.hostUid == request.auth.uid
+        && !exists(/databases/$(database)/documents/contourRooms/$(code));
+      allow update: if canUpdateTurnRoom(
+        ['players', 'hintsRevealed', 'turnUid', 'verdict', 'roundWinnerUid', 'wrongGuessUid', 'wrongGuessSeq']);
       allow delete: if request.auth != null && request.auth.uid == resource.data.hostUid;
     }
   }

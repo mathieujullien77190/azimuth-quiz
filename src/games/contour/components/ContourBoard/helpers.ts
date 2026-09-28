@@ -80,33 +80,6 @@ export const createProjector = (
 export const projectPoints = (points: readonly LonLat[], project: (point: LonLat) => Point2D): Point2D[] =>
   points.map(project);
 
-/**
- * Inverse of `createProjector`: screen-space -> lon/lat, given the exact same `ring`/`size`/
- * `padding` a projector for the same frame was built from (an affine transform, trivially
- * invertible — this just runs that same math backwards). Not used by the game itself; the admin
- * tool uses it to turn a dragged neighbor-hint marker's new pixel position back into a lon/lat
- * to log (see admin/src/views/ContourView).
- */
-export const createUnprojector = (
-  ring: readonly LonLat[],
-  size: { width: number; height: number },
-  padding: number,
-): ((point: Point2D) => LonLat) => {
-  const bounds = ringBounds(ring);
-  const { width: contentWidth, height: contentHeight } = contentSize(bounds);
-  const availableWidth = Math.max(1e-6, size.width - padding * 2);
-  const availableHeight = Math.max(1e-6, size.height - padding * 2);
-  const scale = Math.min(availableWidth / contentWidth, availableHeight / contentHeight);
-
-  const offsetX = padding + (availableWidth - contentWidth * scale) / 2;
-  const offsetY = padding + (availableHeight - contentHeight * scale) / 2;
-
-  return ({ x, y }) => [
-    (x - offsetX) / (bounds.lonScale * scale) + bounds.minLon,
-    bounds.maxLat - (y - offsetY) / scale,
-  ];
-};
-
 /** `d` attribute for an open polyline through `points` ("M x,y L x,y ..."). */
 export const polylinePath = (points: readonly Point2D[]): string =>
   points.length === 0

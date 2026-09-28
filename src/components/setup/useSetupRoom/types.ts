@@ -1,15 +1,10 @@
-import type { Timestamp } from 'firebase/firestore';
-
 import type { PartySectionProps } from '@/components/setup/PartySection';
-
-// Type-only import of `firebase/firestore`: erased at compile time, so it never pulls the ESM-only
-// module into Jest (see `helpers/firebase.ts`'s own note).
-export type SetupRoomPlayer = { name: string; joinedAt: Timestamp | null; color?: string };
+import type { RoomPlayers } from '@/helpers/roomBase';
 
 /** The slice of a game's own room store (`useRoomStore`/`useClueRoomStore`) the setup flow needs —
  * both stores expose these fields, only their `gameState` shape differs beyond `screen`. */
 export type SetupRoomStoreState<R> = {
-  players: Record<string, SetupRoomPlayer>;
+  players: RoomPlayers;
   hostUid: string | null;
   localUid: string | null;
   roomExists: boolean;
@@ -33,7 +28,7 @@ export type SetupRoomStore<R> = {
 export type SetupRoomAdapter<S, R> = {
   store: SetupRoomStore<R>;
   /** Route both host and joiner are sent to once the host starts the game. */
-  gamePath: '/online-game' | '/clues-online-game';
+  gamePath: '/online-game' | '/clues-online-game' | '/contour-online-game';
   colors: readonly string[];
   maxPlayers: number;
   roomSettingsFrom: (settings: S) => R;

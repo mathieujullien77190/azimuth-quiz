@@ -7,7 +7,7 @@ import { useLanguage } from '@/i18n';
 import { useClueSettings } from '@/settings';
 import type { Category } from '@/types';
 
-import SetupLoading from '@/components/setup/SetupLoading';
+import LoadingScreen from '@/components/LoadingScreen';
 import { ClueSetupScreenView } from './ClueSetupScreenView';
 import type { ClueSetupScreenProps } from './types';
 import { useOnlineClueRoom } from './useOnlineClueRoom';
@@ -37,7 +37,7 @@ export const ClueSetupScreen = ({ onStart, onBack }: ClueSetupScreenProps) => {
     loadClueHistory();
   }, []);
 
-  if (room.starting) return <SetupLoading />;
+  if (room.starting) return <LoadingScreen />;
 
   const updateOrNotify = (patch: Partial<typeof settings>) =>
     room.readOnly ? room.notifyReadOnly() : updateSettings(patch);

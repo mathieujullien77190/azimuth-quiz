@@ -1,7 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
-import type { LayoutChangeEvent } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 
 import { CONTOURS, PLAYER_COLORS } from '@/data';
 import { countryName, flagEmoji } from '@/data/places/countries';
@@ -9,32 +7,28 @@ import { CONTOUR_GUESS_POINTS_BY_HINTS, CONTOUR_WRONG_GUESS_PENALTY } from '@/ga
 import { formatNumber, playerDisplayName } from '@/helpers';
 import { useLanguage, useTranslation } from '@/i18n';
 import { useContourSettings } from '@/settings';
-import { useTheme, useThemedStyles } from '@/themes';
-import type { ContourCountry, ContourNeighbor, ContourPhase, ContourRoundRecord, Difficulty, Point2D } from '@/types';
+import { useThemedStyles } from '@/themes';
+import type { ContourCountry, ContourPhase, ContourRoundRecord, Difficulty } from '@/types';
 
-import ContourBoard, {
-  BOARD_PADDING_RATIO,
-  HINT_STACK_GAP_RATIO,
-  boardDimensionsFor,
-  createProjector,
-  projectPoints,
-  type ContourBoardHintLabel,
-} from '../../components/ContourBoard';
+import ContourBoard from '../../components/ContourBoard';
+import ContourFullBleedScreen from '../../components/ContourFullBleedScreen';
+import ContourGuessBar from '../../components/ContourGuessBar';
+import { normalizeContourGuess, randomCountry } from '../../helpers/contourCountry';
+import { buildHintLabels } from '../../helpers/roundBoard';
+import { useRoundBoard } from '../../helpers/useRoundBoard';
+import FinalStandings from '@/components/FinalStandings';
 import GameHeader from '@/components/GameHeader';
-import ThemeBackdrop from '@/components/ThemeBackdrop';
 import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
 import NoOneFoundText from '@/components/ui/NoOneFoundText';
 import Screen from '@/components/ui/Screen';
-import { BOARD_AREA_MARGIN, INITIAL_BOARD_MAX_SIZE } from './constants';
-import { contourPlayerTotals, neighborIcon, neighborName, normalizeContourGuess, randomCountry } from './helpers';
+import { contourPlayerTotals } from './helpers';
 import type { ContourGameScreenProps } from './types';
 
 import { createStyles } from './styles';
 
 /** What's actually random about a round: picked once (`buildRoundSeed`, in `startRound`) and kept
  * fixed until the next one. Deliberately excludes anything screen-space (that's `RoundBoard`,
- * re-derived live from this + the measured board area — see `useMemo` below) so a live resize
+ * re-derived live from this + the measured board area — see `useRoundBoard`) so a live resize
  * (e.g. rotating the device) reflows the same round instead of re-rolling it. */
 type RoundSeed = {
   country: ContourCountry;
@@ -44,59 +38,12 @@ const buildRoundSeed = (excludeCode: string | undefined, difficulty: Difficulty)
   country: randomCountry(CONTOURS, difficulty, excludeCode),
 });
 
-/** Board data for the current round, fit to `maxWidth`/`maxHeight` (the board area's live
- * measured size — see `onBoardAreaLayout`): re-derived (not re-rolled) via `useMemo` whenever
- * either changes, so the same round reflows to fill whatever space is actually available. */
-type RoundBoard = {
-  country: ContourCountry;
-  /** Canvas size, shaped to the country's own aspect ratio (see `boardDimensionsFor`) rather
-   * than a fixed square — as large as it can be within `maxWidth`/`maxHeight` without distorting it. */
-  width: number;
-  height: number;
-  /** The country's full outline, projected once for the round — shown as-is from the very start
-   * of the 'guess' phase. */
-  outline: Point2D[];
-  /** Tier 3/4's own on-board anchor for the target country's own flag, then its name stacked just
-   * below it (see `HINT_STACK_GAP_RATIO`) — curated per country (`ContourCountry.centerLabel`,
-   * a fraction of this canvas, same model as `ContourNeighbor`), rather than a fixed geometric
-   * center: lets an oddly-shaped country (or an admin, via the Contour view) place it somewhere
-   * that actually reads well over the silhouette. */
-  centerPosition: Point2D;
-  /** Every curated neighbor (see `ContourCountry.neighbors`), paired with its on-board pixel
-   * position (`neighbor.x`/`y` scaled to this round's canvas) and text alignment. */
-  neighborHints: { neighbor: ContourNeighbor; position: Point2D }[];
-};
-
-const projectRound = (seed: RoundSeed, maxWidth: number, maxHeight: number): RoundBoard => {
-  const { country } = seed;
-  const { width, height } = boardDimensionsFor(country.points, maxWidth, maxHeight);
-  // Ratio of Math.min(width, height), not a fixed pixel count — see BOARD_PADDING_RATIO's own doc
-  // comment for why: keeps the admin's differently-sized preview canvas laid out proportionally
-  // identical to this board.
-  const project = createProjector(country.points, { width, height }, Math.min(width, height) * BOARD_PADDING_RATIO);
-
-  return {
-    country,
-    width,
-    height,
-    outline: projectPoints(country.points, project),
-    centerPosition: { x: country.centerLabel.x * width, y: country.centerLabel.y * height },
-    // `neighbor.x`/`y` are already a fraction of this exact board canvas (see `ContourNeighbor`'s
-    // own doc comment) — just scale, no reprojection or edge-clamping needed.
-    neighborHints: country.neighbors.map((neighbor) => ({
-      neighbor,
-      position: { x: neighbor.x * width, y: neighbor.y * height },
-    })),
-  };
-};
-
 /** Result of the round's 'guess' phase, once resolved (a correct guess or a give-up) — carried
  * straight into `finishRound` so the round record can be built from it. */
 type GuessOutcome = { playerIndex: number; hintsUsed: number; guessPoints: number };
 
 export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
   const styles = useThemedStyles(createStyles);
-  const { colors } = useTheme();
   const t = useTranslation();
   const { language } = useLanguage();
   const { settings } = useContourSettings();
@@ -107,42 +54,13 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
 
   const [roundIndex, setRoundIndex] = useState(0);
   const [roundSeed, setRoundSeed] = useState<RoundSeed>(() => buildRoundSeed(undefined, settings.difficulty));
-  // The board area's live measured size (see `onBoardAreaLayout`) — `null` for the one frame
-  // before its first `onLayout` fires, so `board` below falls back to a sane placeholder box.
-  const [boardAreaSize, setBoardAreaSize] = useState<{ width: number; height: number } | null>(null);
-  const onBoardAreaLayout = (event: LayoutChangeEvent) => {
-    const { width, height } = event.nativeEvent.layout;
-    setBoardAreaSize((previous) =>
-      previous?.width === width && previous?.height === height ? previous : { width, height },
-    );
-  };
-  // Re-fit (not re-roll) `roundSeed` to the live measured box: recomputes whenever the round
-  // changes or the box itself does (device rotation, or the 'guess' -> 'city' phase's different
-  // surrounding chrome resizing it — see `boardArea`'s own doc comment). Shaved by
-  // `BOARD_AREA_MARGIN` on every side first, so the board's own frame doesn't touch the measured
-  // box's edges (the full screen, in 'guess'/'city' — see `fullBleedBoardArea`).
   const [phase, setPhase] = useState<ContourPhase>('guess');
-  // 'guess' only: live heights of the translucent `overlayTop`/`overlayBottom` bands that float
-  // on top of the full-bleed board (see their own onLayout below) — subtracted from the height
-  // budget the board is fit into (see `board` below), so a tall/narrow country (e.g. Portugal)
-  // doesn't fit itself edge-to-edge past those bands and end up with its top/bottom hidden
-  // underneath them. Left at 0 outside 'guess' (the 'reveal'/'end' board area is a different,
-  // ordinary-flow View with no overlays to account for).
-  const [overlayTopHeight, setOverlayTopHeight] = useState(0);
-  const [overlayBottomHeight, setOverlayBottomHeight] = useState(0);
-  const onOverlayTopLayout = (event: LayoutChangeEvent) => setOverlayTopHeight(event.nativeEvent.layout.height);
-  const onOverlayBottomLayout = (event: LayoutChangeEvent) => setOverlayBottomHeight(event.nativeEvent.layout.height);
+  // Full-bleed only in 'guess' (the reveal is an ordinary `Screen` layout, no overlays): see
+  // `useRoundBoard`, shared with the online game.
   const isFullBleedPhase = phase === 'guess';
-  const board = useMemo(
-    () =>
-      projectRound(
-        roundSeed,
-        (boardAreaSize?.width ?? INITIAL_BOARD_MAX_SIZE) - BOARD_AREA_MARGIN * 2,
-        (boardAreaSize?.height ?? INITIAL_BOARD_MAX_SIZE) -
-          BOARD_AREA_MARGIN * 2 -
-          (isFullBleedPhase ? overlayTopHeight + overlayBottomHeight : 0),
-      ),
-    [roundSeed, boardAreaSize, isFullBleedPhase, overlayTopHeight, overlayBottomHeight],
+  const { board, onBoardAreaLayout, onOverlayTopLayout, onOverlayBottomLayout } = useRoundBoard(
+    roundSeed.country,
+    isFullBleedPhase,
   );
   // --- guess phase (shared, not turn-based): the input/"Valider" pair is always on screen, no
   // buzz-in step — anyone can type an answer. Validating checks it immediately and switches to a
@@ -266,33 +184,13 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
 
   if (phase === 'end') {
     const totals = contourPlayerTotals(records, players.length);
-    const standings = players.map((name, index) => ({ name, total: totals[index] })).sort((a, b) => b.total - a.total);
-    const highest = standings[0].total;
-    const winners = standings.filter((entry) => entry.total === highest).map((entry) => entry.name);
-
     return (
-      <Screen>
-        <Text style={styles.title}>{t.contourGame.finalScoreTitle}</Text>
-        {players.length > 1 && (
-          <Text style={styles.resultBanner}>
-            {winners.length > 1
-              ? t.endScreen.tie(winners.join(` ${t.endScreen.and} `))
-              : t.endScreen.winner(winners[0])}
-          </Text>
-        )}
-        <Card>
-          {standings.map((entry, index) => (
-            <View key={entry.name + index} style={[styles.standingRow, index > 0 && styles.standingRowBorder]}>
-              <Text style={styles.standingRank}>{index + 1}.</Text>
-              <Text style={styles.standingName}>{entry.name}</Text>
-              <Text style={styles.standingScore}>
-                {formatNumber(entry.total)} {t.common.pts}
-              </Text>
-            </View>
-          ))}
-        </Card>
-        <Button label={t.contourGame.home} onPress={onQuit} />
-      </Screen>
+      <FinalStandings
+        entries={players.map((name, index) => ({ name, total: totals[index] }))}
+        homeLabel={t.contourGame.home}
+        onHome={onQuit}
+        title={t.contourGame.finalScoreTitle}
+      />
     );
   }
 
@@ -310,39 +208,7 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
   // each time "Indice" is pressed, down to 0 once tier 4 (the give-up) is revealed.
   const currentGuessPoints = hintsRevealed >= 4 ? 0 : CONTOUR_GUESS_POINTS_BY_HINTS[hintsRevealed];
 
-  // The 4 guess-phase hint tiers, all drawn straight on the board (positions computed once per
-  // round in `buildRound`): tier 1 shows every neighbor's flag at its own curated spot, tier 2
-  // adds the target country's own flag at its curated spot, tier 3 stacks each
-  // neighbor's name just below its own icon (not swapped — both stay up so the icon keeps
-  // reading as "this is what that name refers to"), tier 4 stacks the country's name below its
-  // flag the same way.
-  const stackGap = Math.min(board.width, board.height) * HINT_STACK_GAP_RATIO;
-  const neighborHintLabels: ContourBoardHintLabel[] =
-    phase === 'guess' && hintsRevealed >= 1
-      ? board.neighborHints.flatMap(({ neighbor, position }) => [
-          { position, icon: true, text: neighborIcon(neighbor) },
-          ...(hintsRevealed >= 3
-            ? [{ position: { x: position.x, y: position.y + stackGap }, text: neighborName(neighbor, language) }]
-            : []),
-        ])
-      : [];
-  const centerHintLabels: ContourBoardHintLabel[] =
-    phase === 'guess'
-      ? [
-          ...(hintsRevealed >= 2
-            ? [{ position: board.centerPosition, icon: true, text: flagEmoji(board.country.code) }]
-            : []),
-          ...(hintsRevealed >= 4
-            ? [
-                {
-                  position: { x: board.centerPosition.x, y: board.centerPosition.y + stackGap },
-                  text: countryName(board.country.code, language),
-                },
-              ]
-            : []),
-        ]
-      : [];
-  const guessHintLabels: ContourBoardHintLabel[] = [...neighborHintLabels, ...centerHintLabels];
+  const guessHintLabels = phase === 'guess' ? buildHintLabels(board, hintsRevealed, language) : [];
 
   // 'guess': the board fills the entire safe area (see `fullBleedBoardArea`, measured by
   // `onBoardAreaLayout`) instead of whatever's left between a header and a footer band — the
@@ -352,21 +218,25 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
   // results table to show beneath the board, not just a couple of floating controls over it.
   if (phase === 'guess') {
     return (
-      <SafeAreaView style={styles.fullBleedSafeArea}>
-        <ThemeBackdrop />
-        <View onLayout={onBoardAreaLayout} style={styles.fullBleedBoardArea}>
-          <View style={styles.boardFrame}>
-            <ContourBoard
-              height={board.height}
-              hintLabels={guessHintLabels}
-              key={roundIndex}
-              outline={board.outline}
-              width={board.width}
+      <ContourFullBleedScreen
+        board={board}
+        footer={
+          hintsRevealed >= 4 ? (
+            <View style={styles.guessFooter}>
+              <NoOneFoundText players={players} />
+              <Button label={t.contourGame.continueLabel} onPress={confirmNoGuess} />
+            </View>
+          ) : (
+            <ContourGuessBar
+              guessText={guessText}
+              onChangeGuessText={setGuessText}
+              onHint={revealHint}
+              onSubmit={submitGuess}
+              wrongText={penalizedPlayer !== null ? t.contourGame.wrongGuess(penalizedPlayer) : null}
             />
-          </View>
-        </View>
-
-        <View onLayout={onOverlayTopLayout} style={styles.overlayTopPosition}>
+          )
+        }
+        header={
           <GameHeader
             difficulties={[settings.difficulty]}
             onQuit={onQuit}
@@ -378,45 +248,13 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
               <Text style={styles.countryName}>{t.contourGame.guessPrompt}</Text>
             </View>
           </GameHeader>
-        </View>
-
-        <View onLayout={onOverlayBottomLayout} style={styles.overlayBottom}>
-          {hintsRevealed >= 4 ? (
-            <View style={styles.guessFooter}>
-              <NoOneFoundText players={players} />
-              <Button label={t.contourGame.continueLabel} onPress={confirmNoGuess} />
-            </View>
-          ) : (
-            <View style={styles.guessFooter}>
-              {penalizedPlayer !== null && (
-                <Text style={styles.wrongGuessText}>{t.contourGame.wrongGuess(penalizedPlayer)}</Text>
-              )}
-              <View style={styles.buzzInputRow}>
-                <Pressable
-                  accessibilityLabel={t.contourGame.hintButton}
-                  accessibilityRole="button"
-                  hitSlop={8}
-                  onPress={revealHint}
-                  style={styles.hintFab}
-                >
-                  <Text style={styles.hintFabIcon}>💡</Text>
-                </Pressable>
-                <TextInput
-                  autoCapitalize="words"
-                  onChangeText={setGuessText}
-                  onSubmitEditing={submitGuess}
-                  placeholder={t.contourGame.guessPlaceholder}
-                  placeholderTextColor={colors.textMuted}
-                  returnKeyType="done"
-                  style={[styles.guessInput, styles.guessInputFlex]}
-                  value={guessText}
-                />
-              </View>
-              <Button disabled={guessText.trim().length === 0} label={t.game.validate} onPress={submitGuess} />
-            </View>
-          )}
-        </View>
-
+        }
+        hintLabels={guessHintLabels}
+        onBoardAreaLayout={onBoardAreaLayout}
+        onOverlayBottomLayout={onOverlayBottomLayout}
+        onOverlayTopLayout={onOverlayTopLayout}
+        roundKey={roundIndex}
+      >
         {/* Post-"Valider" step (see `validateGuess`/`pendingCorrect`): covers the whole screen,
             same full-screen "who answered" pattern as ClueGameScreen — a mis-tap on "Valider"
             still needs a player picked either way (the penalty/reward can't be skipped on a
@@ -441,7 +279,7 @@ export const ContourGameScreen = ({ onQuit }: ContourGameScreenProps) => {
             </View>
           </View>
         )}
-      </SafeAreaView>
+      </ContourFullBleedScreen>
     );
   }
 

@@ -16,10 +16,6 @@ const CODE_CONSONANTS = 'bdfklmnprstv';
 const CODE_VOWELS = 'aio';
 const CODE_SYLLABLES = 4;
 
-/** Every room code is `CODE_SYLLABLES` consonant+vowel pairs — a code is complete once it
- * reaches this length, before that it's still being typed. */
-export const ROOM_CODE_LENGTH = CODE_SYLLABLES * 2;
-
 const ROOM_CODE_PATTERN = new RegExp(`^([${CODE_CONSONANTS}][${CODE_VOWELS}]){${CODE_SYLLABLES}}$`);
 
 /** Whether a string has the exact consonant+vowel shape of a generated room code — checked

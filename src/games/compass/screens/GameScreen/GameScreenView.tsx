@@ -30,7 +30,7 @@ type TurnPopupProps = {
  * differente a chaque manche/joueur (voir l'appel plus bas) : repart donc toujours visible, sans
  * effet ni ref-pendant-le-rendu, juste le remontage standard React quand la key change.
  */
-export const TurnPopup = ({ name }: TurnPopupProps) => {
+const TurnPopup = ({ name }: TurnPopupProps) => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
   const [visible, setVisible] = useState(true);
@@ -135,7 +135,9 @@ export const GameScreenView = ({
           {record ? (
             <Compass
               live={config.liveCompass}
-              needles={isMultiplayer ? revealNeedles : [{ bearing: record.results[0].guess.bearing, color: playerColor }]}
+              needles={
+                isMultiplayer ? revealNeedles : [{ bearing: record.results[0].guess.bearing, color: playerColor }]
+              }
               size={compassSizeFor(width)}
               truthBearing={record.results[0].score.trueBearing}
             />

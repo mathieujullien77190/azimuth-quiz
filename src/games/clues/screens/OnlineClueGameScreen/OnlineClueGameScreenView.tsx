@@ -23,6 +23,7 @@ import { createStyles } from './OnlineClueGameScreenView.styles';
 export const OnlineClueGameScreenView = ({
   onQuit,
   headerScore,
+  roomCode,
   roundNumber,
   totalRounds,
   difficulty,
@@ -108,7 +109,10 @@ export const OnlineClueGameScreenView = ({
               <TextInput
                 autoCapitalize="words"
                 onChangeText={(next) => {
-                  if (skeletonLengthKnown && [...next.replace(/[^\p{L}]/gu, '')].length > skeletonLetterCount(skeletonGroups))
+                  if (
+                    skeletonLengthKnown &&
+                    [...next.replace(/[^\p{L}]/gu, '')].length > skeletonLetterCount(skeletonGroups)
+                  )
                     return;
                   onChangeGuessText(next);
                 }}
@@ -136,7 +140,12 @@ export const OnlineClueGameScreenView = ({
             </Pressable>
             <Text style={styles.score}>{headerScore}</Text>
           </View>
-          <RoundProgress difficulties={[difficulty]} roundNumber={roundNumber} totalRounds={totalRounds} />
+          <RoundProgress
+            difficulties={[difficulty]}
+            roomCode={roomCode}
+            roundNumber={roundNumber}
+            totalRounds={totalRounds}
+          />
           <PlayerTabs
             activeIndex={roundOver ? -1 : turnIndex}
             activeLabel={t.game.playerTurn}

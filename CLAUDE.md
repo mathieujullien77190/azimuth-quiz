@@ -144,12 +144,29 @@ travers la Terre) a ete retire de Compass : la distance de surface est le seul m
 Scoring (`games/compass/helpers/scoring.ts`) : courbe logarithmique sur l'ecart de distance, ecart
 angulaire 2D. 500 points max chacun pour la direction et la distance.
 
-Setup Compass/Clues : tout le multijoueur (host/join, presence, couleurs, kick, notices, navigation
-vers l'ecran de jeu) vit une seule fois dans `components/setup/useSetupRoom` — chaque jeu lui passe un
-`SetupRoomAdapter` (son store + ses fonctions Firestore `games/<jeu>/helpers/room.ts`, couleurs, route)
-et n'ecrit que ce qui lui est propre (`useOnlineRoom`/`useOnlineClueRoom` : ce que "Lancer la partie"
-ecrit dans la room). Cote rendu, `SetupScreenShell` (overlay, titre, `PartySection`, boutons) et
-`SetupLoading` sont partages ; la vue de chaque jeu ne fournit que ses sections en `children`.
+### Multijoueur en ligne : une couche commune, trois jeux
+
+Compass (`rooms`), Indices (`clueRooms`) et Silhouette (`contourRooms`) partagent tout ce qui n'est pas
+leur logique de jeu :
+
+- **Firestore** : `helpers/roomBase.ts` (`createRoomApi(collection)` — creer/rejoindre/quitter, presence,
+  couleurs, reglages ; hors barrel `@/helpers`, importe `firebase/firestore`) ; chaque
+  `games/<jeu>/helpers/room.ts` le lie a sa collection et n'ajoute que l'etat de manche propre au jeu
+  (via `roomRef(code)`). Les regles (`firestore.rules`) des deux jeux a tour de role partagent la
+  fonction `canUpdateTurnRoom`.
+- **Store** : `helpers/createRoomStore.ts` (connexion, joueurs, hote, reglages, `gameState`, depart
+  volontaire) — chaque jeu fournit ses abonnements et son etat par defaut.
+- **Setup** : `components/setup/useSetupRoom` (host/join, presence, couleurs, kick, notices, navigation
+  vers l'ecran de jeu) — chaque jeu lui passe un `SetupRoomAdapter` (store + fonctions Firestore,
+  couleurs `ROOM_PLAYER_COLORS` de `@/data`, route) et n'ecrit que ce que "Lancer la partie" ecrit dans la
+  room (`useOnlineRoom`/`useOnlineClueRoom`/`useOnlineContourRoom`). Cote rendu, `SetupScreenShell`
+  (overlay, titre, `PartySection`, boutons) est partage ; la vue de chaque jeu ne fournit que ses sections
+  en `children`.
+- **Ecran de jeu en ligne** : `helpers/useOnlineRoomSession.ts` (etat de la room, hote, joueurs dans
+  l'ordre d'arrivee via `helpers/roomPlayers.ts`, redirection "room supprimee", `handleQuit`) et, pour les
+  jeux a tour de role, `helpers/useHostTurnScoring.ts` (l'hote seul ecrit `totalScores` : gain sur
+  `verdict: 'correct'`, penalite fixe a chaque `wrongGuessSeq`). Composants partages : `LoadingScreen`,
+  `RoomDeletedScreen`, `FinalStandings`.
 
 Ecrans de setup : blocs partages dans `components/setup/` (`PartySection`, `CategorySection`,
 `DifficultySection`, `RoundsSection`, `OptionsSection` — tableau d'options `{ id, title,
@@ -172,8 +189,8 @@ changer de joueur. Une fois tous repondus, calcule les scores et passe en phase
 complet du joueur actif) est lui aussi purement informationnel (`onSelect` omis, meme
 principe que Compass) — seul le panneau de buzz separe (`buzzOpen`, dans le footer) reste
 un `PlayerTabs` interactif (`onSelect={setBuzzedIndex}`, `allowRevision`), puisque c'est
-la ou on designe reellement qui a buzze. Silhouette n'utilise plus `PlayerTabs` du tout
-(plus de tour par tour dans ce jeu, voir sa propre section plus bas).
+la ou on designe reellement qui a buzze. Silhouette local n'utilise pas `PlayerTabs` (pas de tour
+par tour sur un meme telephone) ; en ligne, il l'utilise comme Indices pour montrer qui a la main.
 
 ## Silhouette (jeu "Contour" en interne) : devine un pays
 
@@ -186,6 +203,16 @@ revelation (`'reveal'`). Pas de second temps de placement de lieux (retire — l
 s'arrete a la reconnaissance du pays) ; `ContourPhase` n'a donc plus que `'guess'` |
 `'reveal'` | `'end'`, et la notion de "joueur actif"/tour par tour n'existe plus du tout
 dans ce jeu (le palier suivant/la reponse peuvent venir de n'importe qui a tout moment).
+
+**En ligne (`contourRooms`), modele Indices** : un plateau partage, un joueur actif a la fois
+(`turnUid`, l'ordre d'arrivee des joueurs). Son tour, il revele le palier suivant (`hintsRevealed` 0-4,
+ce qui passe la main au joueur suivant) ou tente une reponse (bonne : `verdict: 'correct'`, gain
+`CONTOUR_GUESS_POINTS_BY_HINTS[hintsRevealed]` ; mauvaise : `wrongGuessSeq` +1, penalite
+`CONTOUR_WRONG_GUESS_PENALTY`, il garde la main) ; une fois le nom revele (palier 4) il confirme
+l'abandon (`verdict: 'giveUp'`, personne ne marque). L'hote tire tous les pays d'avance (`countryCodes`,
+`pickContourRoundCodes` — la room ne porte que les codes, chaque appareil reconstruit le plateau depuis
+ses propres donnees) et seul l'hote ecrit les scores (`useHostTurnScoring`). Le setup local de
+Silhouette n'a plus de choix "nombre de joueurs sur le meme telephone" : un nom solo, comme Indices.
 
 **Positions sur le plateau en fraction, pas en lon/lat.** `ContourNeighbor.x`/`y` et
 `ContourCountry.centerLabel` sont une fraction (0-1) du canvas du plateau — pas des
@@ -277,12 +304,12 @@ pour : quitter + score + manche/pastilles + onglets joueurs (header), bouton Val
 sur react-native-web s'il n'a pas de `style={{ flexGrow: 0, flexShrink: 0 }}` explicite
 (pas seulement `contentContainerStyle`) — voir `PlayerTabs.tsx`.
 
-**Exception (Contour)** : la phase `'guess'` de `ContourGameScreen` n'utilise pas
-`Screen` du tout — un `SafeAreaView` + `ThemeBackdrop` propres, avec la silhouette qui
-occupe tout l'ecran mesure (`onLayout`) et les anciens header/footer qui flottent
-par-dessus en `position: 'absolute'` (`overlayTop`/`overlayBottom`, fond
-`${colors.surfaceHigh}F0`) plutot que de reserver leur propre espace — pour que le
-contour du pays touche les bords de l'ecran. La phase `'reveal'` repasse par `Screen`
+**Exception (Contour)** : la phase `'guess'` de `ContourGameScreen` (et tout l'ecran de
+`OnlineContourGameScreen`) n'utilise pas `Screen` du tout — `ContourFullBleedScreen`, un `SafeAreaView` +
+`ThemeBackdrop` propres, avec la silhouette qui occupe tout l'ecran mesure (`useRoundBoard`, `onLayout`) et
+les header/footer qui flottent par-dessus en `position: 'absolute'` (fond `${colors.surfaceHigh}F0`)
+plutot que de reserver leur propre espace — pour que le contour du pays touche les bords de l'ecran.
+La barre de reponse (indice + champ + Valider) est `ContourGuessBar`, partagee local/en ligne. La phase `'reveal'` repasse par `Screen`
 classique (elle affiche un tableau de resultats sous le plateau).
 
 ## Theme

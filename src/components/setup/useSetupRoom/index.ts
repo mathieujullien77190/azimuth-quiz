@@ -1,2 +1,2 @@
-export { playersByArrival, useSetupRoom } from './useSetupRoom';
-export type { SetupPartyProps, SetupRoomAdapter, SetupRoomPlayer, SetupRoomStore, SetupRoomStoreState } from './types';
+export { useSetupRoom } from './useSetupRoom';
+export type { SetupPartyProps, SetupRoomAdapter, SetupRoomStore, SetupRoomStoreState } from './types';

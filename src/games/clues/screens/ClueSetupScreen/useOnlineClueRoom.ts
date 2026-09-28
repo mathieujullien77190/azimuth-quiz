@@ -1,8 +1,9 @@
-import { playersByArrival, useSetupRoom, type SetupRoomAdapter } from '@/components/setup/useSetupRoom';
-import { CLUE_ROOM_PLAYER_COLORS } from '@/games/clues/constants';
+import { useSetupRoom, type SetupRoomAdapter } from '@/components/setup/useSetupRoom';
+import { ROOM_PLAYER_COLORS } from '@/data';
 import { resolveOrigin } from '@/helpers';
+import { playersByArrival } from '@/helpers/roomPlayers';
 import {
-  CLUE_ROOM_MAX_PLAYERS,
+  ROOM_MAX_PLAYERS,
   type ClueRoomSettings,
   clueRoomSettingsFrom,
   createRoom,
@@ -24,8 +25,8 @@ import { pickClueRoundPlaces } from './helpers';
 const adapter: SetupRoomAdapter<ClueSettings, ClueRoomSettings> = {
   store: useClueRoomStore,
   gamePath: '/clues-online-game',
-  colors: CLUE_ROOM_PLAYER_COLORS,
-  maxPlayers: CLUE_ROOM_MAX_PLAYERS,
+  colors: ROOM_PLAYER_COLORS,
+  maxPlayers: ROOM_MAX_PLAYERS,
   roomSettingsFrom: clueRoomSettingsFrom,
   isValidRoomCode,
   createRoom,
