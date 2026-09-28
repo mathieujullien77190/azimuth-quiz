@@ -1,4 +1,4 @@
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
@@ -6,6 +6,7 @@ import { useThemedStyles } from '@/themes';
 import NoticeOverlay from '@/components/NoticeOverlay';
 import PartySection from '@/components/setup/PartySection';
 import Button from '@/components/ui/Button';
+import QuitButton from '@/components/ui/QuitButton';
 import Screen from '@/components/ui/Screen';
 import type { SetupScreenShellProps } from './types';
 
@@ -42,15 +43,7 @@ export const SetupScreenShell = ({
             <Text style={styles.icon}>{icon}</Text>
             <Text style={styles.title}>{title}</Text>
           </View>
-          <Pressable
-            accessibilityLabel={backLabel}
-            accessibilityRole="button"
-            hitSlop={12}
-            onPress={onBack}
-            style={styles.close}
-          >
-            <Text style={styles.closeText}>✕</Text>
-          </Pressable>
+          <QuitButton onPress={onBack} variant="accent" />
         </View>
 
         <PartySection {...party} hint={t.setup.playersSection.hint} title={t.setup.playersSection.title} />

@@ -26,13 +26,4 @@ export const createStyles = ({ colors, typography }: Theme) =>
       color: colors.accent,
       fontSize: fontSize.title,
     },
-    // Plain cross, no circle (unlike the in-game `QuitButton`), in the accent color.
-    close: {
-      paddingHorizontal: spacing.xs,
-    },
-    closeText: {
-      ...typography.heading,
-      color: colors.accent,
-      fontSize: fontSize.title,
-    },
   });

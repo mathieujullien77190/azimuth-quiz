@@ -1,12 +1,12 @@
 import { StyleSheet } from 'react-native';
-import { fontSize } from '@/data';
+import { fontSize, spacing } from '@/data';
 import type { Theme } from '@/types';
 
 const SIZE = 32;
 
 export const createStyles = ({ colors, typography }: Theme) =>
   StyleSheet.create({
-    circle: {
+    base: {
       width: SIZE,
       height: SIZE,
       borderRadius: SIZE / 2,
@@ -20,5 +20,13 @@ export const createStyles = ({ colors, typography }: Theme) =>
       color: colors.text,
       fontSize: fontSize.body,
       lineHeight: fontSize.body + 2,
+    },
+    accent: {
+      paddingHorizontal: spacing.xs,
+    },
+    crossAccent: {
+      ...typography.heading,
+      color: colors.accent,
+      fontSize: fontSize.title,
     },
   });

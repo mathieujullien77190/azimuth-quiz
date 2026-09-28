@@ -7,11 +7,12 @@ import type { QuitButtonProps } from './types';
 
 import { createStyles } from './styles';
 
-/** "Quit the game": a cross in a circle, in the normal text color, top-left of every game header. Icon only —
- * the label ("Quitter") lives in the accessibility label. */
-export const QuitButton = ({ onPress }: QuitButtonProps) => {
+/** "Quit": a cross, icon only — the label ("Quitter") lives in the accessibility label. `base` is the
+ * circled cross of every game header, `accent` the plain accent-colored one of the setup screens. */
+export const QuitButton = ({ onPress, variant = 'base' }: QuitButtonProps) => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
+  const accent = variant === 'accent';
 
   return (
     <Pressable
@@ -19,9 +20,9 @@ export const QuitButton = ({ onPress }: QuitButtonProps) => {
       accessibilityRole="button"
       hitSlop={12}
       onPress={onPress}
-      style={styles.circle}
+      style={accent ? styles.accent : styles.base}
     >
-      <Text style={styles.cross}>✕</Text>
+      <Text style={accent ? styles.crossAccent : styles.cross}>✕</Text>
     </Pressable>
   );
 };
