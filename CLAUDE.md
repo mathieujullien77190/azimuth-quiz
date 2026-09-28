@@ -46,8 +46,8 @@ src/
                        # d'opacite - "l'hote a supprime la partie", "vous avez ete expulse" ;
                        # tappable, se ferme au clic), et les composants partages par 2+ jeux (pas
                        # des primitives UI generiques) : Compass, EarthSection (Compass + clue
-                       # "Distance" de Clues), PlayerTabs (Compass + Clues), RoundProgress (les 3
-                       # jeux)
+                       # "Distance" de Clues), PlayerTabs (Compass + Clues), RoundCounter et DifficultyBadge
+                       # (en-tete des 3 jeux)
   data/                # donnees/valeurs partagees par 2+ jeux (score/geo generiques, cles de
                        # stockage app-wide, options de partie, palette joueurs...) + data/places/
                        # (lieux Compass+Clues) + data/contours/ (codec geometrie Silhouette) +
@@ -164,8 +164,13 @@ leur logique de jeu :
 - **Ecran de jeu en ligne** : `helpers/useOnlineRoomSession.ts` (etat de la room, hote, joueurs dans
   l'ordre d'arrivee via `helpers/roomPlayers.ts`, redirection "room supprimee", `handleQuit`) et, pour les
   jeux a tour de role, `helpers/useHostTurnScoring.ts` (l'hote seul ecrit `totalScores` : gain sur
-  `verdict: 'correct'`, penalite fixe a chaque `wrongGuessSeq`), `helpers/useHostTurnRecovery.ts` (l'hote passe la main si le joueur actif est parti), `helpers/useGuessDraft.ts` (texte saisi + banniere « rate » du joueur, remis a zero a chaque manche/changement de tour), `nextPlayerUid` (`helpers/roomPlayers.ts`, qui joue apres qui) et `helpers/useTransientFlag.ts` (un drapeau qui retombe seul, pour les notices). Composants partages : `GameHeader`/`GameFooter` (le panneau translucide autour du pied de page, pose par chaque jeu ; `Screen` rend son `footer` tel quel), `NoticeOverlay` (avec `loading` pour l'attente),
+  `verdict: 'correct'`, penalite fixe a chaque `wrongGuessSeq`), `helpers/useHostTurnRecovery.ts` (l'hote passe la main si le joueur actif est parti), `helpers/useGuessDraft.ts` (texte saisi + banniere « rate » du joueur, remis a zero a chaque manche/changement de tour), `nextPlayerUid` (`helpers/roomPlayers.ts`, qui joue apres qui) et `helpers/useTransientFlag.ts` (un drapeau qui retombe seul, pour les notices). Composants partages : `GameHeader`/`GameFooter` (le panneau translucide autour du pied de page, pose par chaque jeu ; `Screen` rend son `footer` tel quel), `NoticeOverlay` (avec `loading` pour l'attente : un tap n'y fait rien, pas de `onDismiss`),
   `RoomDeletedScreen`, `FinalStandings`.
+- **Un joueur part** (quitte, expulse, coupure) : il n'est pas seulement retire de `players` — l'hote efface aussi ce
+  qu'il a laisse dans les donnees de manche (`guesses`, `scores`, `totalScores` : `helpers/useHostPruneLeavers.ts`,
+  `pruneRoomPlayerData` de `roomBase`). S'il revient, c'est un nouveau joueur : ni points ni reponse, dernier dans
+  l'ordre d'arrivee. L'ecran de resultats de Compass relit `guesses`/`scores` dans la room (par uid) plutot qu'un
+  enregistrement fige a l'arrivee de la revelation, indexe par les joueurs de l'epoque.
 - **Coupure reseau** : `helpers/useRoomPresence.ts`, monte une seule fois par `useSetupRoom` (qui reste
   vivant sous l'ecran de jeu). Pendant une partie a plusieurs (pas en solo, pas dans le lobby), chaque
   appareil ecrit un heartbeat `players.{uid}.lastSeen` toutes les 30 s (cout : chaque ecriture est relue
