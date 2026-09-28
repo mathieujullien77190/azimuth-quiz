@@ -1,7 +1,3 @@
-import { useRef, useState } from 'react';
-import { ScrollView } from 'react-native';
-import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-
 import { PLAYER_COLORS } from '@/data';
 import { MAX_SURFACE_DISTANCE_KM } from '@/games/compass/constants';
 import { bearingDeg, distanceKm as computeDistanceKm } from '@/helpers';
@@ -14,7 +10,8 @@ import EndScreen from '../EndScreen';
 import NoticeOverlay from '@/components/NoticeOverlay';
 import RoomDeletedScreen from '@/components/RoomDeletedScreen';
 import { REVEAL_OPACITY } from './constants';
-import { buildRoundRecord, onCapFromScroll } from './helpers';
+import { buildRoundRecord } from './helpers';
+import { useSectionScroll } from './useSectionScroll';
 import { OnlineGameScreenView } from './OnlineGameScreenView';
 import type { Needle, OnlineGameScreenProps } from './types';
 import { useOnlineGame } from './useOnlineGame';
@@ -32,22 +29,9 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   const t = useTranslation();
   const game = useOnlineGame(code, onQuit);
 
-  // Same "Suivant"/"Precedent" scroll nav as the local GameScreen (see its own comment) — kept
-  // above every early return below so the hook order never depends on which phase we're in.
-  const scrollRef = useRef<ScrollView>(null);
-  const [onCap, setOnCap] = useState(false);
-  const goToCap = () => {
-    setOnCap(true);
-    scrollRef.current?.scrollToEnd({ animated: true });
-  };
-  const goToDistance = () => {
-    setOnCap(false);
-    scrollRef.current?.scrollTo({ animated: true, y: 0 });
-  };
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const next = onCapFromScroll(event);
-    if (next !== null) setOnCap(next);
-  };
+  // The "Suivant"/"Précédent" scroll nav — kept above every early return below so the hook order
+  // never depends on which phase we're in.
+  const { scrollRef, onCap, goToCap, goToDistance, handleScroll } = useSectionScroll();
 
   // Whoever loses the connection leaves the game — host included (see `useRoomPresence`).
   if (game.connectionLost) return <RoomDeletedScreen message={t.setup.online.connectionLostNotice} />;
