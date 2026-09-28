@@ -141,3 +141,62 @@ describe('useRoomPresence — losing a connection', () => {
     expect(api.removeRoomPlayer).not.toHaveBeenCalled();
   });
 });
+
+describe('useRoomPresence — edge cases', () => {
+  const setupWith = async (me: string, players: RoomPlayers, api: Record<string, jest.Mock>) => {
+    const store = makeStore();
+    store.setState({ localUid: me, hostUid: 'host', players, gameState: { screen: 'game' } });
+    await renderHook(() => useRoomPresence(store, api as never, 'room'));
+    return store;
+  };
+  const failingApi = () => ({
+    sendHeartbeat: jest.fn(() => Promise.resolve()),
+    deleteRoom: jest.fn(() => Promise.reject(new Error('gone'))),
+    removeRoomPlayer: jest.fn(() => Promise.reject(new Error('gone'))),
+  });
+
+  it('a host that never wrote a heartbeat counts as silent too', async () => {
+    const { store } = await setup({ me: 'max', players: { host: player('Zoé'), max: player('Max') } });
+    await advance(110);
+    expect(store.getState().connectionLost).toBe(true);
+  });
+
+  it('forgets a player that left the room instead of judging it later', async () => {
+    const { store, api } = await setup({
+      me: 'host',
+      players: { host: player('Zoé'), max: player('Max', 1) },
+    });
+    await advance(60);
+    await act(async () => store.setState({ players: { host: player('Zoé') } }));
+    await advance(60);
+    expect(api.removeRoomPlayer).not.toHaveBeenCalled();
+  });
+
+  it('a joiner survives a failing presence removal when leaving', async () => {
+    const api = failingApi();
+    const store = await setupWith('max', { host: player('Zoé', 1), max: player('Max') }, api);
+    await advance(110);
+    expect(store.getState().connectionLost).toBe(true);
+    expect(api.removeRoomPlayer).toHaveBeenCalledWith('room', 'max');
+  });
+
+  it('a host survives a failing room deletion when leaving', async () => {
+    const api = failingApi();
+    api.sendHeartbeat = jest.fn(() => new Promise<void>(() => {}));
+    const store = await setupWith('host', { host: player('Zoé'), max: player('Max', 1) }, api);
+    for (let second = 10; second <= 110; second += 10) {
+      await advance(10);
+      await act(async () => store.setState({ players: { host: player('Zoé'), max: player('Max', second) } }));
+    }
+    expect(store.getState().connectionLost).toBe(true);
+    expect(api.deleteRoom).toHaveBeenCalledWith('room');
+  });
+
+  it('a host survives a failing removal of a silent joiner', async () => {
+    const api = failingApi();
+    const store = await setupWith('host', { host: player('Zoé'), max: player('Max', 1) }, api);
+    await advance(110);
+    expect(api.removeRoomPlayer).toHaveBeenCalledWith('room', 'max');
+    expect(store.getState().connectionLost).toBe(false);
+  });
+});

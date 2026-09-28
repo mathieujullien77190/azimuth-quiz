@@ -66,21 +66,22 @@ const rouen: Place = {
 };
 
 describe('filterPlaces', () => {
-  it('keeps only matching categories and difficulties', () => {
-    const result = filterPlaces(['cities'], ['easy'], 'fr');
+  it('keeps only matching categories and difficulty', () => {
+    const result = filterPlaces(['cities'], 'easy', 'fr');
     expect(result).toEqual([paris, berlin]);
   });
 
-  it('matches across every country when several categories/difficulties are selected', () => {
-    const result = filterPlaces(['cities', 'mountains', 'landmarks'], ['easy', 'intermediate', 'hard'], 'fr');
-    expect(result).toHaveLength(4);
+  it('matches across every category selected', () => {
+    const result = filterPlaces(['cities', 'mountains', 'landmarks'], 'intermediate', 'fr');
+    expect(result.every((place) => place.difficulty === 'intermediate')).toBe(true);
+    expect(result).toContainEqual(rouen);
   });
 
   it('in English, a French place only matches the difficulty filter one tier up', () => {
     // Paris is 'easy': in English it behaves as 'intermediate', so an 'easy'-only filter drops it...
-    expect(filterPlaces(['cities'], ['easy'], 'en')).not.toContainEqual(paris);
+    expect(filterPlaces(['cities'], 'easy', 'en')).not.toContainEqual(paris);
     // ...while an 'intermediate'-only filter picks it up.
-    expect(filterPlaces(['cities'], ['intermediate'], 'en')).toContainEqual(paris);
+    expect(filterPlaces(['cities'], 'intermediate', 'en')).toContainEqual(paris);
   });
 });
 
@@ -104,10 +105,12 @@ describe('effectiveDifficulty', () => {
 });
 
 describe('pickPlaces', () => {
+  // Far from every fixture place except Tokyo itself.
+  const tokyo = { latitude: 35.6762, longitude: 139.6503 };
   const baseSettings: GameSettings = {
     playerNames: [''],
     categories: ['cities', 'mountains', 'landmarks'],
-    difficulties: ['easy', 'intermediate', 'hard'],
+    difficulty: 'intermediate',
     rounds: 10,
     useGps: false,
     customLatitude: 48.8566,
@@ -118,13 +121,20 @@ describe('pickPlaces', () => {
   };
 
   it('excludes places closer than MIN_PLACE_DISTANCE_KM to the origin', () => {
-    const picked = pickPlaces(paris.coordinates, baseSettings, 'fr');
+    // Paris is 'easy' and sits right on the origin: only Berlin is far enough.
+    const picked = pickPlaces(paris.coordinates, { ...baseSettings, difficulty: 'easy' }, 'fr');
+    expect(picked).toEqual([berlin]);
+  });
+
+  it('only draws places of the chosen difficulty', () => {
+    const picked = pickPlaces(tokyo, { ...baseSettings, difficulty: 'easy' }, 'fr');
+    expect(picked).toHaveLength(2);
     expect(picked).not.toContainEqual(rouen);
   });
 
   it('caps the result at settings.rounds', () => {
-    const picked = pickPlaces(paris.coordinates, { ...baseSettings, rounds: 2 }, 'fr');
-    expect(picked).toHaveLength(2);
+    const picked = pickPlaces(tokyo, { ...baseSettings, difficulty: 'easy', rounds: 1 }, 'fr');
+    expect(picked).toHaveLength(1);
   });
 
   it('falls back to every candidate (including near ones) if none is far enough', () => {
@@ -133,7 +143,6 @@ describe('pickPlaces', () => {
       {
         ...baseSettings,
         categories: ['mountains'],
-        difficulties: ['intermediate'],
       },
       'fr',
     );

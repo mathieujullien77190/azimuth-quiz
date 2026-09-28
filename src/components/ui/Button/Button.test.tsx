@@ -1,6 +1,24 @@
 import { fireEvent, render, userEvent } from '@testing-library/react-native';
 
+import { ThemeSettingsContext } from '@/themes';
+
 import Button from '.';
+
+const inDay = (children: React.ReactNode) => (
+  <ThemeSettingsContext.Provider
+    value={{
+      themeId: 'day',
+      ready: true,
+      setThemeId: jest.fn(),
+      resetThemeId: jest.fn(),
+      animationsEnabled: false,
+      setAnimationsEnabled: jest.fn(),
+      resetAnimationsEnabled: jest.fn(),
+    }}
+  >
+    {children}
+  </ThemeSettingsContext.Provider>
+);
 
 describe('Button', () => {
   it('renders the label and calls onPress when pressed (primary by default)', async () => {
@@ -31,5 +49,10 @@ describe('Button', () => {
     const { getByRole } = await render(<Button label="Go" onPress={onPress} />);
     await user.press(getByRole('button'));
     expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders the ghost variant by day', async () => {
+    const { getByRole } = await render(inDay(<Button label="Back" onPress={jest.fn()} variant="ghost" />));
+    expect(getByRole('button')).toBeTruthy();
   });
 });

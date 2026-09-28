@@ -43,4 +43,10 @@ describe('useHostTurnRecovery', () => {
     expect((await setup(true, inGame, [])).passTurn).not.toHaveBeenCalled();
     expect((await setup(true, { ...inGame, turnUid: null }, [zoe])).passTurn).not.toHaveBeenCalled();
   });
+
+  it('swallows a rejected turn hand-over', async () => {
+    const passTurn = jest.fn(() => Promise.reject(new Error('offline')));
+    await renderHook(() => useHostTurnRecovery(true, inGame, [zoe], passTurn));
+    expect(passTurn).toHaveBeenCalledWith('zoe');
+  });
 });

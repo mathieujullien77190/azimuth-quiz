@@ -1,4 +1,4 @@
-import { fireEvent, render, waitFor, within } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor, within } from '@testing-library/react-native';
 
 import { DEFAULT_CLUE_SETTINGS } from '@/games/clues/constants';
 import { createRoom } from '@/games/clues/helpers/room';
@@ -119,9 +119,26 @@ describe('ClueSetupScreen', () => {
     expect(queryByText(/tabofuna/)).toBeNull();
   });
 
-  it('calls onBack when "Retour" is pressed', async () => {
+  it('a joiner changing an option only gets the read-only notice, nothing is updated', async () => {
+    jest.useFakeTimers();
+    try {
+      const { getByText, queryByText } = await renderScreen();
+      await fireEvent.press(getByText('Rejoindre'));
+
+      await fireEvent.press(getByText('Difficile'));
+      expect(getByText('Seul l’hôte peut modifier les options.')).toBeTruthy();
+      expect(getByText('Facile').parent?.props.accessibilityState.selected).toBe(true);
+
+      await act(() => jest.advanceTimersByTimeAsync(2000));
+      expect(queryByText('Seul l’hôte peut modifier les options.')).toBeNull();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('calls onBack when "Quitter" is pressed', async () => {
     const { getByText, onBack } = await renderScreen();
-    await fireEvent.press(getByText('Retour'));
+    await fireEvent.press(getByText('Quitter'));
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 });

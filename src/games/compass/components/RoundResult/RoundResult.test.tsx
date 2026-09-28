@@ -1,6 +1,7 @@
 import { act, fireEvent, render } from '@testing-library/react-native';
 import { Dimensions } from 'react-native';
 
+import { formatDistance } from '@/helpers';
 import type { Place, Player, RoundRecord } from '@/types';
 
 import RoundResult from '.';
@@ -154,3 +155,96 @@ describe('RoundResult — multiplayer', () => {
     expect(getByText('Max')).toBeTruthy();
   });
 });
+
+describe('RoundResult — waiting for the other players (online, pending)', () => {
+  const renderPending = (answered: boolean[], localIndex?: number) =>
+    render(
+      <RoundResult
+        answered={answered}
+        localIndex={localIndex}
+        players={multiPlayers}
+        record={multiRecord}
+        totals={[500, 900]}
+      />,
+    );
+
+  it('blanks the truth row: nobody is officially scored yet', async () => {
+    const pending = await renderPending([true, true]);
+    expect(pending.queryByText(formatDistance(1000))).toBeNull();
+    await pending.unmount();
+    const scored = await render(<RoundResult players={multiPlayers} record={multiRecord} totals={[500, 900]} />);
+    expect(scored.getByText(formatDistance(1000))).toBeTruthy();
+  });
+
+  it('shows "?" instead of every official points value and round total', async () => {
+    const { getAllByText } = await renderPending([true, true]);
+    // 2 players x (direction points + distance points + round total).
+    expect(getAllByText('?')).toHaveLength(6);
+  });
+
+  it('marks an answered player with a check; a silent one shows "?" instead of their guess', async () => {
+    const { getAllByText } = await renderPending([true, false]);
+    expect(getAllByText('✓')).toHaveLength(1);
+    // The 6 pending points/totals, plus the silent player direction and distance.
+    expect(getAllByText('?')).toHaveLength(8);
+  });
+
+  it('keeps the given order instead of ranking by score, without a local index', async () => {
+    const { getAllByText } = await renderPending([true, true]);
+    const names = getAllByText(/Zoé|Max/);
+    expect(names[0].props.children).toBe('Zoé');
+    expect(names[1].props.children).toBe('Max');
+  });
+
+  it('pins this device own entry first, the others keeping their order', async () => {
+    const { getAllByText } = await renderPending([true, true], 1);
+    const names = getAllByText(/Zoé|Max/);
+    expect(names[0].props.children).toBe('Max');
+    expect(names[1].props.children).toBe('Zoé');
+  });
+});
+
+describe('RoundResult — host kick button', () => {
+  it('offers one "Expulser" button per other player, wired to that player index', async () => {
+    const onKick = jest.fn();
+    const { getAllByText } = await render(
+      <RoundResult localIndex={0} onKick={onKick} players={multiPlayers} record={multiRecord} totals={[500, 900]} />,
+    );
+    const buttons = getAllByText('Expulser');
+    expect(buttons).toHaveLength(1);
+    await fireEvent.press(buttons[0]);
+    expect(onKick).toHaveBeenCalledWith(1);
+  });
+
+  it('offers no button without onKick', async () => {
+    const { queryByText } = await render(
+      <RoundResult players={multiPlayers} record={multiRecord} totals={[500, 900]} />,
+    );
+    expect(queryByText('Expulser')).toBeNull();
+  });
+});
+
+describe('RoundResult — a player left mid-reveal', () => {
+  it('drops the results that no longer have a matching player', async () => {
+    const { queryByText, getByText } = await render(
+      <RoundResult
+        players={[multiPlayers[0], { name: 'Eve', color: '#000000' }]}
+        record={soloRecordFor(3)}
+        totals={[1, 2]}
+      />,
+    );
+    expect(getByText('Zoé')).toBeTruthy();
+    expect(getByText('Eve')).toBeTruthy();
+    expect(queryByText('Max')).toBeNull();
+  });
+});
+
+function soloRecordFor(count: number): RoundRecord {
+  return {
+    place,
+    results: Array.from({ length: count }, () => ({
+      guess: { bearing: 80, distanceKm: 950 },
+      score: scoreFixture,
+    })),
+  };
+}

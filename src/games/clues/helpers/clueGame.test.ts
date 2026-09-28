@@ -8,6 +8,7 @@ import {
   normalizePlaceGuess,
   overlayTypedLetters,
   randomCluePlace,
+  remainingScore,
   skeletonLetterCount,
   totalRevealCount,
 } from './clueGame';
@@ -31,6 +32,28 @@ describe('maxScoreForRound', () => {
     expect(maxScoreForRound(21)).toBe(30);
     expect(maxScoreForRound(20)).toBe(20);
     expect(maxScoreForRound(1)).toBe(10);
+  });
+});
+
+describe('remainingScore', () => {
+  const maxScore = maxScoreForRound(totalRevealCount());
+
+  it('starts at the round maximum when nothing is revealed', () => {
+    expect(remainingScore([])).toBe(maxScore);
+  });
+
+  it('loses one point per revealed clue', () => {
+    expect(remainingScore(['distance', 'elevation', 'distance'])).toBe(maxScore - 3);
+  });
+
+  it('drops straight to 1 once the vowels are revealed', () => {
+    expect(remainingScore(['vowels'])).toBe(1);
+    expect(remainingScore(['distance', 'vowels'])).toBe(1);
+  });
+
+  it('keeps the lower plain countdown when it is already under 1', () => {
+    const everything = Array<ClueId>(maxScore).fill('distance');
+    expect(remainingScore([...everything, 'vowels'])).toBe(0);
   });
 });
 

@@ -1,5 +1,5 @@
 import { Text } from 'react-native';
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 
 import Screen from '.';
 
@@ -22,5 +22,16 @@ describe('Screen', () => {
       </Screen>,
     );
     expect(queryByText('Footer')).toBeNull();
+  });
+
+  it('forwards scroll events to the given handler', async () => {
+    const onScroll = jest.fn();
+    const { getByText } = await render(
+      <Screen onScroll={onScroll}>
+        <Text>Body</Text>
+      </Screen>,
+    );
+    await fireEvent.scroll(getByText('Body'), { nativeEvent: { contentOffset: { x: 0, y: 40 } } });
+    expect(onScroll).toHaveBeenCalledTimes(1);
   });
 });

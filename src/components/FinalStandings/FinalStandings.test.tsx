@@ -38,10 +38,23 @@ describe('FinalStandings', () => {
   it('shows no banner for a single player, and calls onHome', async () => {
     const onHome = jest.fn();
     const { queryByText, getByText } = await render(
-      <FinalStandings entries={[{ name: 'Zoé', total: 250 }]} homeLabel="Accueil" onHome={onHome} title="Classement final" />,
+      <FinalStandings
+        entries={[{ name: 'Zoé', total: 250 }]}
+        homeLabel="Accueil"
+        onHome={onHome}
+        title="Classement final"
+      />,
     );
     expect(queryByText(/gagne|Égalité/)).toBeNull();
     await fireEvent.press(getByText('Accueil'));
     expect(onHome).toHaveBeenCalledTimes(1);
+  });
+
+  it('copes with nobody in the standings', async () => {
+    const { getByText, queryByText } = await render(
+      <FinalStandings entries={[]} homeLabel="Accueil" onHome={jest.fn()} title="Classement final" />,
+    );
+    expect(getByText('Classement final')).toBeTruthy();
+    expect(queryByText(/gagne|Égalité/)).toBeNull();
   });
 });

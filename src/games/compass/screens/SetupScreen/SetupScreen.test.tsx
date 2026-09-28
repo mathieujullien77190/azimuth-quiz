@@ -73,7 +73,7 @@ const renderSetup = async (overrides: Partial<GameSettings> = {}, ready = true) 
 describe('SetupScreen — defaults', () => {
   it('renders the title and does not show the hide-answers toggle nor custom origin with one player + GPS on', async () => {
     const { getByText, queryByLabelText } = await renderSetup();
-    expect(getByText('Nouvelle partie')).toBeTruthy();
+    expect(getByText('Boussole')).toBeTruthy();
     expect(queryByLabelText('Cacher les réponses des autres')).toBeNull();
   });
 
@@ -134,7 +134,7 @@ describe('SetupScreen — host/join a game', () => {
     await fireEvent.press(getByText('Rejoindre'));
     expect(queryByText('Lancer la partie')).toBeNull();
     expect(queryByText('Rejoindre la partie')).toBeNull();
-    expect(getByText('Retour')).toBeTruthy();
+    expect(getByText('Quitter')).toBeTruthy();
   });
 
   it('lets a joiner go back to solo play via the "Jouer seul" chip', async () => {
@@ -383,14 +383,14 @@ describe('SetupScreen — categories / difficulty / rounds / mode', () => {
     await fireEvent.press(getByText('Montagnes'));
     expect(updateSettings).toHaveBeenCalledWith({
       categories: DEFAULT_SETTINGS.categories.filter((category) => category !== 'mountains'),
-      difficulties: DEFAULT_SETTINGS.difficulties,
+      difficulty: DEFAULT_SETTINGS.difficulty,
     });
   });
 
   it('selects a difficulty filter', async () => {
     const { getByText, updateSettings } = await renderSetup();
     await fireEvent.press(getByText('Difficile'));
-    expect(updateSettings).toHaveBeenCalledWith(expect.objectContaining({ difficulties: ['hard'] }));
+    expect(updateSettings).toHaveBeenCalledWith(expect.objectContaining({ difficulty: 'hard' }));
   });
 
   it('selects a round count', async () => {
@@ -496,7 +496,7 @@ describe('SetupScreen — start/back', () => {
 
   it('calls onBack when pressed', async () => {
     const { getByText, onBack } = await renderSetup();
-    await fireEvent.press(getByText('Retour'));
+    await fireEvent.press(getByText('Quitter'));
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 });

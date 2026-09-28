@@ -35,14 +35,18 @@ describe('sanitizeSettings', () => {
     expect(result.categories).toEqual(DEFAULT_SETTINGS.categories);
   });
 
-  it('keeps only the first valid difficulty (single choice)', () => {
-    const result = sanitizeSettings({ difficulties: ['bogus', 'hard', 'easy'] });
-    expect(result.difficulties).toEqual(['hard']);
+  it('keeps a valid difficulty', () => {
+    expect(sanitizeSettings({ difficulty: 'hard' }).difficulty).toBe('hard');
   });
 
-  it('falls back to DEFAULT_SETTINGS.difficulties when none are valid', () => {
-    const result = sanitizeSettings({ difficulties: ['bogus'] });
-    expect(result.difficulties).toEqual(DEFAULT_SETTINGS.difficulties);
+  it('keeps the first valid entry of the old saved `difficulties` list', () => {
+    const result = sanitizeSettings({ difficulties: ['bogus', 'hard', 'easy'] });
+    expect(result.difficulty).toBe('hard');
+  });
+
+  it('falls back to DEFAULT_SETTINGS.difficulty when none is valid', () => {
+    expect(sanitizeSettings({ difficulty: 'bogus' }).difficulty).toBe(DEFAULT_SETTINGS.difficulty);
+    expect(sanitizeSettings({ difficulties: ['bogus'] }).difficulty).toBe(DEFAULT_SETTINGS.difficulty);
   });
 
   it('keeps a valid rounds option, falls back otherwise', () => {

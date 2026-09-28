@@ -73,3 +73,24 @@ describe('useHostTurnScoring — a miss', () => {
     expect(applyScore).not.toHaveBeenCalled();
   });
 });
+
+describe('useHostTurnScoring — first points', () => {
+  it('starts from zero for a player with no total yet, on a miss', async () => {
+    const { applyScore, rerender } = await setup(true, { ...baseState, totalScores: {} });
+    await rerender({ isHost: true, state: { ...baseState, totalScores: {}, wrongGuessUid: 'max', wrongGuessSeq: 1 } });
+    expect(applyScore).toHaveBeenCalledWith({ max: -50 });
+  });
+});
+
+describe('useHostTurnScoring — failing writes', () => {
+  it('swallows a rejected score write, for a find as for a miss', async () => {
+    const applyScore = jest.fn(() => Promise.reject(new Error('offline')));
+    const { rerender } = await renderHook(
+      (props: { state: State }) => useHostTurnScoring(true, props.state, 375, 50, applyScore),
+      { initialProps: { state: baseState } },
+    );
+    await rerender({ state: { ...baseState, verdict: 'correct', roundWinnerUid: 'zoe' } });
+    await rerender({ state: { ...baseState, wrongGuessUid: 'zoe', wrongGuessSeq: 1 } });
+    expect(applyScore).toHaveBeenCalledTimes(2);
+  });
+});
