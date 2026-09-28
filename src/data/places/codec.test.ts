@@ -3,42 +3,13 @@ import {
   decodeCompassPlaces,
   decodeCluePlace,
   decodeCluePlaces,
-  encodeCompassRow,
-  encodeCommonRow,
-  encodeClueRow,
-  serializeMergedPlaces,
   type CompassRow,
   type CommonRow,
   type ClueRow,
   type MergedPlaces,
 } from './codec';
 
-describe('serializeMergedPlaces', () => {
-  it('prints one entry per line, matching the source JSON shape', () => {
-    const entries: MergedPlaces = [
-      [['Testville', 'FR', 1.5, -2.5, 'E'], ['C', null, null, null], null],
-      [['Otherville', 'DE', 3, 4, 'H'], null, ['n', 1000, '☀️', 10, 'gb', 'BER', '🏰', '🎡', '🍺']],
-    ];
-    expect(serializeMergedPlaces(entries)).toBe(
-      '[\n' +
-        '  ' +
-        JSON.stringify(entries[0]) +
-        ',\n' +
-        '  ' +
-        JSON.stringify(entries[1]) +
-        '\n]\n',
-    );
-  });
-});
-
-describe('encodeCommonRow', () => {
-  it('replaces only the difficulty code, keeping name/code/coordinates', () => {
-    const common: CommonRow = ['Testville', 'FR', 1.5, -2.5, 'E'];
-    expect(encodeCommonRow(common, 'hard')).toEqual(['Testville', 'FR', 1.5, -2.5, 'H']);
-  });
-});
-
-describe('decodeCompassPlace / encodeCompassRow', () => {
+describe('decodeCompassPlace', () => {
   const common: CommonRow = ['Testville', 'FR', 1.5, -2.5, 'E'];
   const row: CompassRow = ['C', 'Une anecdote.', 'Testville_fr', 'Testville_en'];
 
@@ -55,11 +26,6 @@ describe('decodeCompassPlace / encodeCompassRow', () => {
     });
   });
 
-  it('round-trips through encodeCompassRow', () => {
-    const place = decodeCompassPlace(common, row);
-    expect(encodeCompassRow(place)).toEqual(row);
-  });
-
   it('omits optional fields when null', () => {
     const bareRow: CompassRow = ['M', null, null, null];
     const place = decodeCompassPlace(common, bareRow);
@@ -67,12 +33,6 @@ describe('decodeCompassPlace / encodeCompassRow', () => {
     expect(place.wikiFr).toBeUndefined();
     expect(place.wikiEn).toBeUndefined();
   });
-
-  it('encodeCompassRow turns missing optional fields into null', () => {
-    const place = decodeCompassPlace(common, ['M', null, null, null]);
-    expect(encodeCompassRow(place)).toEqual(['M', null, null, null]);
-  });
-
 });
 
 describe('decodeCompassPlaces / decodeCluePlaces', () => {
@@ -94,7 +54,7 @@ describe('decodeCompassPlaces / decodeCluePlaces', () => {
   });
 });
 
-describe('decodeCluePlace / encodeClueRow', () => {
+describe('decodeCluePlace', () => {
   const common: CommonRow = ['Testville', 'FR', 1.5, -2.5, 'E'];
   const row: ClueRow = ['ne', 12345, '☀️', 42, 'gw', 'TST', '🗼', '🎨', '🌳'];
 
@@ -117,16 +77,10 @@ describe('decodeCluePlace / encodeClueRow', () => {
     });
   });
 
-  it('round-trips through encodeClueRow', () => {
-    const place = decodeCluePlace(common, row);
-    expect(encodeClueRow(place)).toEqual(row);
-  });
-
-  it('passes an unmapped timezone through as-is, both ways', () => {
+  it('passes an unmapped timezone through as-is', () => {
     const unmappedRow: ClueRow = [...row.slice(0, 4), 'Europe/Nowhere', ...row.slice(5)] as unknown as ClueRow;
     const place = decodeCluePlace(common, unmappedRow);
     expect(place.timezone).toBe('Europe/Nowhere');
-    expect(encodeClueRow(place)).toEqual(unmappedRow);
   });
 
   it('falls back to an empty phone code and currency for an unknown country', () => {

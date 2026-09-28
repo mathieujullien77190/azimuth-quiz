@@ -1,13 +1,6 @@
 import { EARTH_RADIUS_KM } from '@/data';
 
-import {
-  angleDifference,
-  bearingDeg,
-  bearingToCardinal,
-  centralAngleDeg,
-  distanceKm,
-  normalizeBearing,
-} from './geo';
+import { angleDifference, bearingDeg, bearingToCardinal, distanceKm, normalizeBearing } from './geo';
 
 const paris = { latitude: 48.8566, longitude: 2.3522 };
 const same = { latitude: 48.8566, longitude: 2.3522 };
@@ -21,16 +14,6 @@ describe('distanceKm', () => {
 
   it('is close to half the Earth circumference for antipodal points', () => {
     expect(distanceKm(paris, antipode)).toBeCloseTo(Math.PI * EARTH_RADIUS_KM, 0);
-  });
-});
-
-describe('centralAngleDeg', () => {
-  it('is 180 for antipodal points', () => {
-    expect(centralAngleDeg(paris, antipode)).toBeCloseTo(180, 0);
-  });
-
-  it('is 0 for identical points', () => {
-    expect(centralAngleDeg(paris, same)).toBeCloseTo(0, 5);
   });
 });
 

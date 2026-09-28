@@ -14,10 +14,6 @@ export const distanceKm = (from: Coordinates, to: Coordinates): number => {
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.min(1, Math.sqrt(a)));
 };
 
-/** Central angle of the Earth between two points, in degrees [0, 180]. */
-export const centralAngleDeg = (from: Coordinates, to: Coordinates): number =>
-  toDegrees(distanceKm(from, to) / EARTH_RADIUS_KM);
-
 /** Initial heading from `from` to `to`, in degrees [0, 360[ (0 = north, 90 = east). */
 export const bearingDeg = (from: Coordinates, to: Coordinates): number => {
   const lat1 = toRadians(from.latitude);

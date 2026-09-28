@@ -1,23 +1,9 @@
 import { DEFAULT_SETTINGS } from '@/games/compass/constants';
 import type { GameSettings } from '@/types';
 
-import { selectDifficultyFilter, toggleCategoryFilter, toggleSelected } from './helpers';
+import { selectDifficultyFilter, toggleCategoryFilter } from './helpers';
 
 type Filter = Pick<GameSettings, 'categories' | 'difficulty'>;
-
-describe('toggleSelected', () => {
-  it('adds a value not yet selected', () => {
-    expect(toggleSelected(['a'], 'b')).toEqual(['a', 'b']);
-  });
-
-  it('removes a selected value when more than one remains', () => {
-    expect(toggleSelected(['a', 'b'], 'a')).toEqual(['b']);
-  });
-
-  it('refuses to empty the selection entirely', () => {
-    expect(toggleSelected(['a'], 'a')).toEqual(['a']);
-  });
-});
 
 describe('toggleCategoryFilter', () => {
   it('toggles a regular category without touching the difficulty', () => {

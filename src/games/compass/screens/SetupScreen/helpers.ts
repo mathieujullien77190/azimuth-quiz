@@ -1,13 +1,6 @@
 import { DEFAULT_SETTINGS } from '@/games/compass/constants';
 import type { Category, Difficulty, GameSettings } from '@/types';
 
-/** Adds or removes a value from a multi-select (the categories), never
- * emptying it entirely. */
-export const toggleSelected = <T>(selected: T[], value: T): T[] => {
-  if (!selected.includes(value)) return [...selected, value];
-  return selected.length > 1 ? selected.filter((candidate) => candidate !== value) : selected;
-};
-
 /**
  * "Kids" category: only easy places by construction. Checking it therefore forces the
  * difficulty to Easy.

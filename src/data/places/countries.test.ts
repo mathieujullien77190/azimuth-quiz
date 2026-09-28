@@ -1,29 +1,29 @@
 import { PLACES } from '@/data';
 
 import type { CountryRow } from './countries';
+import countriesData from './countries.json';
 import {
-  COUNTRY_NAMES,
   countryCurrencyName,
   countryFlagColors,
   countryName,
   decodeCountry,
-  encodeCountry,
   FLAG_COLOR_FIELD,
   flagEmoji,
-  serializeCountries,
 } from './countries';
 
-describe('COUNTRY_NAMES', () => {
+describe('the countries data', () => {
+  const rows = countriesData as unknown as Record<string, CountryRow>;
+
   it('gives both fr and en names for every entry', () => {
-    for (const [code, names] of Object.entries(COUNTRY_NAMES)) {
-      expect(names.fr.length).toBeGreaterThan(0);
-      expect(names.en.length).toBeGreaterThan(0);
+    for (const [code, row] of Object.entries(rows)) {
+      expect(row[0].length).toBeGreaterThan(0);
+      expect(row[1].length).toBeGreaterThan(0);
       expect(code).toMatch(/^[A-Z]{2}$/);
     }
   });
 
   it('covers every country code used by PLACES', () => {
-    const missing = [...new Set(PLACES.map((place) => place.code))].filter((code) => !(code in COUNTRY_NAMES));
+    const missing = [...new Set(PLACES.map((place) => place.code))].filter((code) => !(code in rows));
     expect(missing).toEqual([]);
   });
 });
@@ -42,7 +42,7 @@ describe('countryName', () => {
 
 describe('countryFlagColors', () => {
   it('every color row has a valid hex and a percent between 1 and 100', () => {
-    for (const code of Object.keys(COUNTRY_NAMES)) {
+    for (const code of Object.keys(countriesData)) {
       for (const row of countryFlagColors(code) ?? []) {
         expect(row[FLAG_COLOR_FIELD.HEX]).toMatch(/^#[0-9A-F]{6}$/);
         expect(row[FLAG_COLOR_FIELD.PERCENT]).toBeGreaterThan(0);
@@ -79,7 +79,7 @@ describe('countryCurrencyName', () => {
   });
 });
 
-describe('decodeCountry / encodeCountry', () => {
+describe('decodeCountry', () => {
   const row: CountryRow = ['France', 'France', [['blue', '#0055A4', 33]], 'Euro', '€', '+33'];
 
   it('decodeCountry turns a positional row into a named entry', () => {
@@ -93,11 +93,7 @@ describe('decodeCountry / encodeCountry', () => {
     });
   });
 
-  it('encodeCountry is the inverse of decodeCountry', () => {
-    expect(encodeCountry(decodeCountry(row))).toEqual(row);
-  });
-
-  it('round-trips a 7-element row (with Contour data) without padding a 6-element one', () => {
+  it('keeps the Contour data of a 7-element row', () => {
     const rowWithContour: CountryRow = [
       'Norvège',
       'Norway',
@@ -105,30 +101,24 @@ describe('decodeCountry / encodeCountry', () => {
       'Couronne',
       'kr',
       '+47',
-      { points: [[0, 0], [1, 1], [2, 2]], difficulty: 'hard' },
+      {
+        points: [
+          [0, 0],
+          [1, 1],
+          [2, 2],
+        ],
+        difficulty: 'hard',
+      },
     ];
 
     const decoded = decodeCountry(rowWithContour);
-    expect(decoded.contour).toEqual({ points: [[0, 0], [1, 1], [2, 2]], difficulty: 'hard' });
-
-    const reencoded = encodeCountry(decoded);
-    expect(reencoded).toEqual(rowWithContour);
-    expect(reencoded).toHaveLength(7);
-
-    // A plain row (no contour) must never re-encode with a trailing `undefined`/`null`.
-    const reencodedPlain = encodeCountry(decodeCountry(row));
-    expect(reencodedPlain).toHaveLength(6);
-  });
-});
-
-describe('serializeCountries', () => {
-  it('sorts by code and prints one entry per line', () => {
-    const countries: Record<string, CountryRow> = {
-      GB: ['Royaume-Uni', 'United Kingdom', null, null, null, '+44'],
-      FR: ['France', 'France', null, null, null, '+33'],
-    };
-    expect(serializeCountries(countries)).toBe(
-      '{\n' + '  "FR": ["France","France",null,null,null,"+33"],\n' + '  "GB": ["Royaume-Uni","United Kingdom",null,null,null,"+44"]\n' + '}\n',
-    );
+    expect(decoded.contour).toEqual({
+      points: [
+        [0, 0],
+        [1, 1],
+        [2, 2],
+      ],
+      difficulty: 'hard',
+    });
   });
 });

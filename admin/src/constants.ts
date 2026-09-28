@@ -42,8 +42,6 @@ export const DIFFICULTY_COLORS: Record<Difficulty, string> = {
   hard: '#FF6B6B',
 };
 
-export const POSITION_ORDER: CluePositionInCountry[] = ['center', 'n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
-
 export const POSITION_LABELS: Record<CluePositionInCountry, string> = {
   center: 'Centre',
   n: 'Nord',

@@ -318,14 +318,6 @@ type PlaceEntry = readonly [common: CommonRow, compass: CompassRow | null, clues
 
 export type MergedPlaces = readonly PlaceEntry[];
 
-export const encodeCommonRow = (common: CommonRow, difficulty: Difficulty): CommonRow => [
-  common[0],
-  common[1],
-  common[2],
-  common[3],
-  DIFFICULTY_CODES[difficulty],
-];
-
 export const decodeCompassPlace = (common: CommonRow, row: CompassRow): Place => {
   const [name, code, latitude, longitude, difficultyCode] = common;
   const [categoryCode, description, wikiFr, wikiEn] = row;
@@ -340,13 +332,6 @@ export const decodeCompassPlace = (common: CommonRow, row: CompassRow): Place =>
     ...(wikiEn !== null && { wikiEn }),
   };
 };
-
-export const encodeCompassRow = (place: Pick<Place, 'category' | 'description' | 'wikiFr' | 'wikiEn'>): CompassRow => [
-  CATEGORY_CODES[place.category],
-  place.description ?? null,
-  place.wikiFr ?? null,
-  place.wikiEn ?? null,
-];
 
 export const decodeCompassPlaces = (entries: MergedPlaces): Place[] => {
   const places: Place[] = [];
@@ -387,23 +372,6 @@ export const decodeCluePlace = (common: CommonRow, row: ClueRow): CluePlace => {
   };
 };
 
-export const encodeClueRow = (
-  place: Pick<
-    CluePlace,
-    'positionInCountry' | 'population' | 'climateEmoji' | 'elevationMeters' | 'timezone' | 'airportCode' | 'emojis'
-  >,
-): ClueRow => [
-  place.positionInCountry,
-  place.population,
-  place.climateEmoji,
-  place.elevationMeters,
-  TIMEZONE_CODES[place.timezone] ?? place.timezone,
-  place.airportCode,
-  place.emojis[0],
-  place.emojis[1],
-  place.emojis[2],
-];
-
 export const decodeCluePlaces = (entries: MergedPlaces): CluePlace[] => {
   const places: CluePlace[] = [];
   for (const [common, , clues] of entries) {
@@ -411,8 +379,3 @@ export const decodeCluePlaces = (entries: MergedPlaces): CluePlace[] => {
   }
   return places;
 };
-
-/** One place per line (instead of the multi-line default of `JSON.stringify(_, null, 2)`): a
- * `git diff` touching a single modified field only touches one line. */
-export const serializeMergedPlaces = (entries: MergedPlaces): string =>
-  '[\n' + entries.map((entry) => '  ' + JSON.stringify(entry)).join(',\n') + '\n]\n';

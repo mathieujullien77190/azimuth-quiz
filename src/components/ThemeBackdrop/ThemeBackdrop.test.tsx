@@ -9,7 +9,7 @@ jest.mock('@/themes', () => {
   const actual = jest.requireActual('@/themes');
   return {
     ...actual,
-    useTheme: () => (mockIsDark ? actual.night : actual.day),
+    useTheme: () => (mockIsDark ? actual.night : jest.requireActual('@/themes/day').day),
     useThemeSettings: () => ({ animationsEnabled: mockAnimationsEnabled }),
   };
 });

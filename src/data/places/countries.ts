@@ -44,17 +44,6 @@ export const decodeCountry = (row: CountryRow): CountryEntry => {
   return { fr, en, flag, currency, currencySymbol, phoneCode, contour };
 };
 
-/** Inverse of `decodeCountry` — round-trips losslessly: a `contour`-less entry re-encodes to a
- * plain 6-element row (no trailing `undefined`), one with `contour` set re-encodes to 7. */
-export const encodeCountry = (entry: CountryEntry): CountryRow =>
-  entry.contour === undefined
-    ? [entry.fr, entry.en, entry.flag, entry.currency, entry.currencySymbol, entry.phoneCode]
-    : [entry.fr, entry.en, entry.flag, entry.currency, entry.currencySymbol, entry.phoneCode, entry.contour];
-
-export const COUNTRY_NAMES: Record<string, { fr: string; en: string }> = Object.fromEntries(
-  Object.entries(COUNTRIES).map(([code, row]) => [code, { fr: row[0], en: row[1] }]),
-);
-
 export const countryName = (code: string, language: Language): string => {
   const row = COUNTRIES[code];
   if (!row) return code;
@@ -91,13 +80,3 @@ export const flagEmoji = (code: string): string =>
     .split('')
     .map((letter) => String.fromCodePoint(0x1f1e6 + letter.charCodeAt(0) - 65))
     .join('');
-
-/** One entry per line (instead of the multi-line default of `JSON.stringify(_, null, 2)`): a
- * `git diff` touching a single country's data only touches one line. Used by `admin/vite.config.ts`
- * to rewrite `countries.json` after an edit. */
-export const serializeCountries = (countries: Record<string, CountryRow>): string => {
-  const lines = Object.keys(countries)
-    .sort()
-    .map((code) => '  ' + JSON.stringify(code) + ': ' + JSON.stringify(countries[code]));
-  return '{\n' + lines.join(',\n') + '\n}\n';
-};
