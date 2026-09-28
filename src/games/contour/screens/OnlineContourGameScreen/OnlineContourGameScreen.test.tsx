@@ -85,7 +85,6 @@ describe('OnlineContourGameScreen — before the round', () => {
   ])('shows the loading splash with %s', async (_, overrides) => {
     setGame(overrides);
     const { getByText } = await renderScreen();
-    await fireEvent.press(getByText(t.game.loading));
     expect(getByText(t.game.loading)).toBeTruthy();
   });
 });
@@ -94,9 +93,18 @@ describe('OnlineContourGameScreen — the end', () => {
   it('lists the final scores and goes home', async () => {
     setGame({ gameState: gameState({ screen: 'end', totalScores: { zoe: 900 } }) });
     const { getByText } = await renderScreen();
-    expect(getByText(t.contourGame.finalScoreTitle)).toBeTruthy();
-    await fireEvent.press(getByText(t.contourGame.home));
+    expect(getByText(t.endScreen.title)).toBeTruthy();
+    await fireEvent.press(getByText(t.endScreen.menu));
     expect((mockGame.handleQuit as jest.Mock).mock.calls).toHaveLength(1);
+  });
+});
+
+describe('OnlineContourGameScreen — after the last round', () => {
+  it('shows the final scores, not the loading splash, although no round is left to load', async () => {
+    setGame({ gameState: gameState({ screen: 'end', roundIndex: 2 }), country: undefined });
+    const { getByText, queryByText } = await renderScreen();
+    expect(queryByText(t.game.loading)).toBeNull();
+    expect(getByText(t.endScreen.title)).toBeTruthy();
   });
 });
 

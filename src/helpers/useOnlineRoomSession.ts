@@ -1,8 +1,10 @@
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import type { RoomStoreHook } from './createRoomStore';
 import { onlinePlayersFrom } from './roomPlayers';
+import { useHostPruneLeavers } from './useHostPruneLeavers';
+import type { StaleRoomData } from './useHostPruneLeavers';
 
 /**
  * What every game's online screen needs about the room it's in, identical for all of them: the
@@ -15,6 +17,7 @@ export const useOnlineRoomSession = <Settings, GameState>(
   roomApi: {
     deleteRoom: (code: string) => Promise<void>;
     removeRoomPlayer: (code: string, uid: string) => Promise<void>;
+    pruneRoomPlayerData: (code: string, stale: StaleRoomData) => Promise<void>;
   },
   code: string,
   onQuit: () => void,
@@ -44,6 +47,11 @@ export const useOnlineRoomSession = <Settings, GameState>(
 
   const onlinePlayers = onlinePlayersFrom(players);
   const isHost = localUid !== null && localUid === hostUid;
+
+  // Whoever left takes their answer, score and total with them (see `useHostPruneLeavers`).
+  const { pruneRoomPlayerData } = roomApi;
+  const prune = useCallback((stale: StaleRoomData) => pruneRoomPlayerData(code, stale), [pruneRoomPlayerData, code]);
+  useHostPruneLeavers(isHost, localUid, players, gameState, prune);
 
   // Host: quitting takes the whole room down with it (everyone else sees the room-deleted notice
   // above) — there's no "pass the host" concept here, and there's nothing left to go "back" to

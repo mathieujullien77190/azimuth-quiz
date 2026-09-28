@@ -25,6 +25,7 @@ const ORIGIN = { name: 'Paris', coordinates: { latitude: 48.8566, longitude: 2.3
 
 const ZOE = { uid: 'zoe', name: 'Zoé', color: '#EF4444' };
 const MAX = { uid: 'max', name: 'Max', color: '#3B82F6' };
+const EVE = { uid: 'eve', name: 'Eve', color: '#16A34A' };
 
 const score: RoundScore = {
   trueBearing: 60,
@@ -115,26 +116,33 @@ describe('OnlineGameScreen — before the round', () => {
   ])('shows the loading splash with %s', async (_, overrides) => {
     setGame(overrides);
     const { getByText } = await renderScreen();
-    await fireEvent.press(getByText(t.game.loading));
     expect(getByText(t.game.loading)).toBeTruthy();
   });
 
-  it("shows the loading splash on the reveal until this device has the round's record", async () => {
-    setGame({ gameState: gameState({ screen: 'reveal' }), records: [] });
+  it("shows the loading splash on the reveal until the round's scores arrive", async () => {
+    setGame({ gameState: gameState({ screen: 'reveal', scores: null }) });
     const { getByText } = await renderScreen();
-    await fireEvent.press(getByText(t.game.loading));
     expect(getByText(t.game.loading)).toBeTruthy();
   });
 });
 
 describe('OnlineGameScreen — the end', () => {
-  it('shows the final standings, and leaves from either button', async () => {
+  it('shows the final standings, and leaves through the home button', async () => {
     const onQuit = jest.fn();
     setGame({ gameState: gameState({ screen: 'end' }), records: [record] });
     const { getByText } = await renderScreen(onQuit);
-    await fireEvent.press(getByText(t.endScreen.replay));
     await fireEvent.press(getByText(t.endScreen.menu));
-    expect(onQuit).toHaveBeenCalledTimes(2);
+    expect(onQuit).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('OnlineGameScreen — after the last round', () => {
+  it('shows the final standings, not the loading splash, although no round is left to load', async () => {
+    // `roundIndex` points past the rounds, so `place` is undefined: that is the end, not a wait.
+    setGame({ gameState: gameState({ screen: 'end', roundIndex: 2 }), place: undefined, records: [record] });
+    const { getByText, queryByText } = await renderScreen();
+    expect(queryByText(t.game.loading)).toBeNull();
+    expect(getByText(t.endScreen.menu)).toBeTruthy();
   });
 });
 
@@ -185,6 +193,7 @@ describe('OnlineGameScreen — revealed', () => {
       gameState: gameState({
         screen: 'reveal',
         guesses: { zoe: { bearing: 50, distanceKm: 900 }, max: { bearing: 70, distanceKm: 800 } },
+        scores: { zoe: record.results[0].score, max: record.results[1].score },
         ...screenOverrides,
       }),
       records: [record],
@@ -202,6 +211,25 @@ describe('OnlineGameScreen — revealed', () => {
     revealed({}, { roundIndex: 1 });
     const { getByText } = await renderScreen();
     expect(getByText(t.game.last)).toBeTruthy();
+  });
+
+  it('does not crash when a player who never answered comes back during the reveal', async () => {
+    // Zoé and Max answered, the round was scored without Eve; Eve is back in the room now.
+    revealed({ onlinePlayers: [ZOE, MAX, EVE], totals: [850, 300, 0] });
+    const { getByText } = await renderScreen();
+    expect(getByText(t.game.next)).toBeTruthy();
+  });
+
+  it('does not crash when the players were reordered since the round was scored', async () => {
+    revealed({ onlinePlayers: [MAX, ZOE], myIndex: 1, totals: [300, 850] });
+    const { getByText } = await renderScreen();
+    expect(getByText(t.game.next)).toBeTruthy();
+  });
+
+  it('does not crash when a player who answered has left', async () => {
+    revealed({ onlinePlayers: [ZOE], totals: [850] });
+    const { getByText } = await renderScreen();
+    expect(getByText(t.game.next)).toBeTruthy();
   });
 
   it('gives a joiner nothing to press: it waits for the host', async () => {

@@ -37,6 +37,7 @@ const setup = async (overrides: Partial<State> = {}) => {
   const store = makeStore(overrides);
   const roomApi = {
     deleteRoom: jest.fn(() => Promise.resolve()),
+    pruneRoomPlayerData: jest.fn(() => Promise.resolve()),
     removeRoomPlayer: jest.fn(() => Promise.resolve()),
   };
   const onQuit = jest.fn();
@@ -155,5 +156,29 @@ describe('useOnlineRoomSession — handleQuit', () => {
     await act(async () => result.current.handleQuit());
     expect(roomApi.removeRoomPlayer).not.toHaveBeenCalled();
     expect(onQuit).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('useOnlineRoomSession — players who left', () => {
+  it('the host erases their leftovers from the round data', async () => {
+    const players: RoomPlayers = { host: { name: 'Zoé', joinedAt: null } };
+    const { roomApi } = await setup({
+      players,
+      hostUid: 'host',
+      localUid: 'host',
+      gameState: { screen: 'playing', totalScores: { host: 10, max: 20 } } as never,
+    });
+    expect(roomApi.pruneRoomPlayerData).toHaveBeenCalledWith('tabofuna', { totalScores: ['max'] });
+  });
+
+  it('a joiner leaves that to the host', async () => {
+    const players: RoomPlayers = { host: { name: 'Zoé', joinedAt: null }, joiner: { name: 'Max', joinedAt: null } };
+    const { roomApi } = await setup({
+      players,
+      hostUid: 'host',
+      localUid: 'joiner',
+      gameState: { screen: 'playing', totalScores: { eve: 20 } } as never,
+    });
+    expect(roomApi.pruneRoomPlayerData).not.toHaveBeenCalled();
   });
 });

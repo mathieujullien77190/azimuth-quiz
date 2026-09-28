@@ -25,7 +25,7 @@ const InteractiveDemo = (args: NoticeOverlayProps) => {
         {...args}
         message={message}
         onDismiss={() => {
-          args.onDismiss();
+          args.onDismiss?.();
           setMessage(null);
         }}
       />

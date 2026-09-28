@@ -13,6 +13,7 @@ import {
   nextClueRoomRound,
   passRoomTurn,
   pickClueRoomClue,
+  pruneRoomPlayerData,
   removeRoomPlayer,
   reportClueRoomCorrect,
   reportClueRoomWrong,
@@ -31,7 +32,7 @@ import type { ClueId } from '@/types';
  */
 export const useOnlineClueGame = (code: string, onQuit: () => void) => {
   const { localUid, players, connectionLost, connected, roomSettings, gameState, onlinePlayers, isHost, handleQuit } =
-    useOnlineRoomSession(useClueRoomStore, { deleteRoom, removeRoomPlayer }, code, onQuit);
+    useOnlineRoomSession(useClueRoomStore, { deleteRoom, removeRoomPlayer, pruneRoomPlayerData }, code, onQuit);
 
   const place = gameState.places[gameState.roundIndex];
   const isMyTurn = localUid !== null && localUid === gameState.turnUid;

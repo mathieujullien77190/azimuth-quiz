@@ -23,6 +23,7 @@ jest.mock('@/games/clues/helpers/room', () => ({
   nextClueRoomRound: jest.fn(() => Promise.resolve()),
   passRoomTurn: jest.fn(() => Promise.resolve()),
   pickClueRoomClue: jest.fn(() => Promise.resolve()),
+  pruneRoomPlayerData: jest.fn(() => Promise.resolve()),
   removeRoomPlayer: jest.fn(() => Promise.resolve()),
   reportClueRoomCorrect: jest.fn(() => Promise.resolve()),
   reportClueRoomWrong: jest.fn(() => Promise.resolve()),

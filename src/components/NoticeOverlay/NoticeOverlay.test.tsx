@@ -11,6 +11,19 @@ describe('NoticeOverlay', () => {
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 
+  it('ignores a tap while loading: a wait ends by itself', async () => {
+    const onDismiss = jest.fn();
+    const { getByText } = await render(<NoticeOverlay loading message="Préparation" onDismiss={onDismiss} />);
+    await fireEvent.press(getByText('Préparation'));
+    expect(onDismiss).not.toHaveBeenCalled();
+  });
+
+  it('needs no handler at all while loading', async () => {
+    const { getByText } = await render(<NoticeOverlay loading message="Préparation" />);
+    await fireEvent.press(getByText('Préparation'));
+    expect(getByText('Préparation')).toBeTruthy();
+  });
+
   it('shows nothing while the message is null', async () => {
     const { queryByText } = await render(<NoticeOverlay message={null} onDismiss={jest.fn()} />);
     expect(queryByText(/./)).toBeNull();

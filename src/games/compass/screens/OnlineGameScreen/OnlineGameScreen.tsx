@@ -46,17 +46,17 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
 
   const { localUid, players, onlinePlayers, isHost, roomSettings, gameState, place, totals, myIndex } = game;
 
+  // The final standings come first: once the last round is over `roundIndex` points past the rounds, so
+  // there is no round left to load — reading that as "not ready yet" showed the loading splash instead.
+  if (gameState.screen === 'end') {
+    return <EndScreen onMenu={onQuit} players={onlinePlayers} records={game.records} totals={totals} />;
+  }
+
   if (localUid === null || roomSettings === null || place === undefined || gameState.origin === null) {
-    return <NoticeOverlay loading message={t.game.loading} onDismiss={() => {}} />;
+    return <NoticeOverlay loading message={t.game.loading} />;
   }
   const maxDistanceKm = MAX_SURFACE_DISTANCE_KM;
   const myColor = players[localUid]?.color ?? PLAYER_COLORS[0];
-
-  if (gameState.screen === 'end') {
-    return (
-      <EndScreen onMenu={onQuit} onReplay={onQuit} players={onlinePlayers} records={game.records} totals={totals} />
-    );
-  }
 
   // Once this device has submitted, it moves to the *exact same* results-style screen as the
   // official reveal — just with a live, partial version of it: whichever players have answered so
@@ -81,50 +81,40 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   let resultsEarthMarks: EarthMark[] = [];
 
   if (showResults) {
-    const confirmedRecord = gameState.screen === 'reveal' ? game.records[game.records.length - 1] : undefined;
-    if (gameState.screen === 'reveal' && confirmedRecord === undefined) {
-      return <NoticeOverlay loading message={t.game.loading} onDismiss={() => {}} />;
+    const revealed = gameState.screen === 'reveal';
+    // The revealed round is read from the room itself (`guesses` and `scores`, both keyed by uid),
+    // never from a record stored when the reveal first arrived: that one is indexed by the players
+    // *at that moment*, so a player who left before answering and came back — or joined late — no
+    // longer lined up with it.
+    if (revealed && gameState.scores === null) {
+      return <NoticeOverlay loading message={t.game.loading} />;
     }
 
-    const answeredPlayers = confirmedRecord
-      ? onlinePlayers
-      : onlinePlayers.filter(({ uid }) => gameState.guesses[uid] !== undefined);
-    const allAnswered = confirmedRecord !== undefined || answeredPlayers.length === onlinePlayers.length;
-    const guessFor = (uid: string) =>
-      confirmedRecord
-        ? confirmedRecord.results[onlinePlayers.findIndex((p) => p.uid === uid)].guess
-        : gameState.guesses[uid];
-    const trueBearing = confirmedRecord
-      ? confirmedRecord.results[0].score.trueBearing
-      : allAnswered
-        ? bearingDeg(gameState.origin.coordinates, place.coordinates)
-        : null;
-    const trueSurfaceDistanceKm = confirmedRecord
-      ? confirmedRecord.results[0].score.trueSurfaceDistanceKm
-      : allAnswered
-        ? computeDistanceKm(gameState.origin.coordinates, place.coordinates)
-        : 0;
+    const answeredPlayers = onlinePlayers.filter(({ uid }) => gameState.guesses[uid] !== undefined);
+    const allAnswered = revealed || answeredPlayers.length === onlinePlayers.length;
+    const trueBearing = allAnswered ? bearingDeg(gameState.origin.coordinates, place.coordinates) : null;
+    const trueSurfaceDistanceKm = allAnswered ? computeDistanceKm(gameState.origin.coordinates, place.coordinates) : 0;
 
     resultsEarthMarks = [
       ...(allAnswered
         ? [{ bearing: trueBearing as number, distanceKm: trueSurfaceDistanceKm, color: colors.truth, isTruth: true }]
         : []),
       ...answeredPlayers.map(({ uid, color }): EarthMark => {
-        const guess = guessFor(uid);
+        const guess = gameState.guesses[uid];
         return {
           bearing: guess.bearing,
           distanceKm: guess.distanceKm,
           color,
-          opacity: confirmedRecord ? REVEAL_OPACITY : undefined,
+          opacity: revealed ? REVEAL_OPACITY : undefined,
         };
       }),
     ];
-    extraNeedles = answeredPlayers.map(({ uid, color }) => ({ bearing: guessFor(uid).bearing, color }));
+    extraNeedles = answeredPlayers.map(({ uid, color }) => ({ bearing: gameState.guesses[uid].bearing, color }));
     truthBearing = trueBearing;
-    answered = confirmedRecord ? undefined : onlinePlayers.map(({ uid }) => gameState.guesses[uid] !== undefined);
-    confirmed = confirmedRecord !== undefined;
+    answered = revealed ? undefined : onlinePlayers.map(({ uid }) => gameState.guesses[uid] !== undefined);
+    confirmed = revealed;
     isLastRound = gameState.roundIndex + 1 >= gameState.places.length;
-    record = confirmedRecord ?? buildRoundRecord(place, onlinePlayers, gameState.guesses, {});
+    record = buildRoundRecord(place, onlinePlayers, gameState.guesses, gameState.scores ?? {});
   }
 
   // Answer phase's own Earth mark: only this device's own guess, shown regardless of phase (the

@@ -150,6 +150,15 @@ export const createRoomApi = <Settings extends object>(collectionName: string) =
   const sendHeartbeat = (code: string, uid: string): Promise<void> =>
     updateDoc(roomRef(code), { [`players.${uid}.lastSeen`]: serverTimestamp() });
 
+  /** Host-only: erases what players who left the room still have in the round data — one entry per uid
+   * in each given map (`guesses`, `scores`, `totalScores`...), see `useHostPruneLeavers`. */
+  const pruneRoomPlayerData = (code: string, stale: Record<string, string[]>): Promise<void> => {
+    const updates = Object.fromEntries(
+      Object.entries(stale).flatMap(([field, uids]) => uids.map((uid) => [`${field}.${uid}`, deleteField()])),
+    );
+    return Object.keys(updates).length === 0 ? Promise.resolve() : updateDoc(roomRef(code), updates);
+  };
+
   /** Host-only: hands the turn to `uid` — turn-based games only (see `useHostTurnRecovery`). */
   const passRoomTurn = (code: string, uid: string): Promise<void> => updateDoc(roomRef(code), { turnUid: uid });
 
@@ -192,6 +201,7 @@ export const createRoomApi = <Settings extends object>(collectionName: string) =
     joinRoomPresence,
     removeRoomPlayer,
     deleteRoom,
+    pruneRoomPlayerData,
     sendHeartbeat,
     passRoomTurn,
     updateRoomPlayerColors,

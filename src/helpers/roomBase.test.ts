@@ -101,6 +101,19 @@ describe('simple room writes', () => {
     expect(updateDoc).toHaveBeenCalledWith({ path: 'rooms/tabofuna' }, { 'players.max': 'DELETE_FIELD' });
   });
 
+  it('pruneRoomPlayerData erases each given uid from each given map', async () => {
+    await api.pruneRoomPlayerData('tabofuna', { guesses: ['eve'], totalScores: ['eve', 'ghost'] });
+    expect(updateDoc).toHaveBeenCalledWith(
+      { path: 'rooms/tabofuna' },
+      { 'guesses.eve': 'DELETE_FIELD', 'totalScores.eve': 'DELETE_FIELD', 'totalScores.ghost': 'DELETE_FIELD' },
+    );
+  });
+
+  it('pruneRoomPlayerData writes nothing when there is nothing to erase', async () => {
+    await api.pruneRoomPlayerData('tabofuna', {});
+    expect(updateDoc).not.toHaveBeenCalled();
+  });
+
   it('deleteRoom deletes the room document', async () => {
     await api.deleteRoom('tabofuna');
     expect(deleteDoc).toHaveBeenCalledWith({ path: 'rooms/tabofuna' });

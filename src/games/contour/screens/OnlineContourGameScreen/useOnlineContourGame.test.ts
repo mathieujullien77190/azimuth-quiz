@@ -22,6 +22,7 @@ jest.mock('@/games/contour/helpers/room', () => ({
   giveUpContourRoom: jest.fn(() => Promise.resolve()),
   nextContourRoomRound: jest.fn(() => Promise.resolve()),
   passRoomTurn: jest.fn(() => Promise.resolve()),
+  pruneRoomPlayerData: jest.fn(() => Promise.resolve()),
   removeRoomPlayer: jest.fn(() => Promise.resolve()),
   reportContourRoomCorrect: jest.fn(() => Promise.resolve()),
   reportContourRoomWrong: jest.fn(() => Promise.resolve()),

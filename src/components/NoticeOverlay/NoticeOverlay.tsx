@@ -21,7 +21,7 @@ export const NoticeOverlay = ({ message, onDismiss, loading = false }: NoticeOve
 
   return (
     <Modal animationType="fade" transparent visible={message !== null}>
-      <Pressable style={styles.overlay} onPress={onDismiss}>
+      <Pressable style={styles.overlay} onPress={loading ? undefined : onDismiss}>
         {loading && <Spinner color={SPINNER_COLOR} size="large" />}
         <Text style={styles.text}>{message}</Text>
       </Pressable>

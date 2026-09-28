@@ -33,21 +33,27 @@ export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps
 
   const { localUid, onlinePlayers, isHost, roomSettings, gameState, place } = game;
 
-  if (localUid === null || roomSettings === null || place === undefined || gameState.origin === null) {
-    return <NoticeOverlay loading message={t.game.loading} onDismiss={() => {}} />;
-  }
-
+  // The final standings come first: once the last round is over `roundIndex` points past the rounds, so
+  // there is no round left to load — reading that as "not ready yet" showed the loading splash instead.
   if (gameState.screen === 'end') {
     // The score is a countdown you win (see `remainingScore`): the HIGHEST total wins, same as the
     // local game's own `finished` screen.
     return (
       <FinalStandings
-        entries={onlinePlayers.map((player) => ({ name: player.name, total: gameState.totalScores[player.uid] ?? 0 }))}
-        homeLabel={t.cluesGame.home}
+        entries={onlinePlayers.map((player) => ({
+          name: player.name,
+          total: gameState.totalScores[player.uid] ?? 0,
+          color: player.color,
+        }))}
+        homeLabel={t.endScreen.menu}
         onHome={game.handleQuit}
-        title={t.cluesGame.finalScoreTitle}
+        title={t.endScreen.title}
       />
     );
+  }
+
+  if (localUid === null || roomSettings === null || place === undefined || gameState.origin === null) {
+    return <NoticeOverlay loading message={t.game.loading} />;
   }
 
   const myName = onlinePlayers.find((p) => p.uid === localUid)?.name ?? '';

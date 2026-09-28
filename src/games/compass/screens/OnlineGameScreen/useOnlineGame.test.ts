@@ -14,6 +14,7 @@ jest.mock('@/games/compass/helpers/room', () => ({
   deleteRoom: jest.fn(() => Promise.resolve()),
   finishRoomRound: jest.fn(() => Promise.resolve()),
   nextRoomRound: jest.fn(() => Promise.resolve()),
+  pruneRoomPlayerData: jest.fn(() => Promise.resolve()),
   removeRoomPlayer: jest.fn(() => Promise.resolve()),
   submitRoomGuess: jest.fn(() => Promise.resolve()),
   subscribeToRoomGame: jest.fn(),

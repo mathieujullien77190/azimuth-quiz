@@ -9,6 +9,7 @@ import {
   giveUpContourRoom,
   nextContourRoomRound,
   passRoomTurn,
+  pruneRoomPlayerData,
   removeRoomPlayer,
   reportContourRoomCorrect,
   reportContourRoomWrong,
@@ -36,7 +37,7 @@ const MAX_HINTS = 4;
 export const useOnlineContourGame = (code: string, onQuit: () => void) => {
   const { language } = useLanguage();
   const { localUid, connectionLost, connected, roomSettings, gameState, onlinePlayers, isHost, handleQuit } =
-    useOnlineRoomSession(useContourRoomStore, { deleteRoom, removeRoomPlayer }, code, onQuit);
+    useOnlineRoomSession(useContourRoomStore, { deleteRoom, removeRoomPlayer, pruneRoomPlayerData }, code, onQuit);
 
   // Countries ship with the app: the room only carries their codes, every device rebuilds the same
   // board from its own copy.

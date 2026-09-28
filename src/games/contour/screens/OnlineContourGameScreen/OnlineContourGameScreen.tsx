@@ -30,19 +30,25 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
 
   const { localUid, onlinePlayers, isHost, roomSettings, gameState, country } = game;
 
-  if (localUid === null || roomSettings === null || country === undefined)
-    return <NoticeOverlay loading message={t.game.loading} onDismiss={() => {}} />;
-
+  // The final standings come first: once the last round is over `roundIndex` points past the rounds, so
+  // there is no round left to load — reading that as "not ready yet" showed the loading splash instead.
   if (gameState.screen === 'end') {
     return (
       <FinalStandings
-        entries={onlinePlayers.map((player) => ({ name: player.name, total: gameState.totalScores[player.uid] ?? 0 }))}
-        homeLabel={t.contourGame.home}
+        entries={onlinePlayers.map((player) => ({
+          name: player.name,
+          total: gameState.totalScores[player.uid] ?? 0,
+          color: player.color,
+        }))}
+        homeLabel={t.endScreen.menu}
         onHome={game.handleQuit}
-        title={t.contourGame.finalScoreTitle}
+        title={t.endScreen.title}
       />
     );
   }
+
+  if (localUid === null || roomSettings === null || country === undefined)
+    return <NoticeOverlay loading message={t.game.loading} />;
 
   const myName = onlinePlayers.find((player) => player.uid === localUid)?.name ?? '';
   const turnIndex = onlinePlayers.findIndex((player) => player.uid === gameState.turnUid);
