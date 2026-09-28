@@ -165,7 +165,7 @@ leur logique de jeu :
 - **Ecran de jeu en ligne** : `helpers/useOnlineRoomSession.ts` (etat de la room, hote, joueurs dans
   l'ordre d'arrivee via `helpers/roomPlayers.ts`, redirection "room supprimee", `handleQuit`) et, pour les
   jeux a tour de role, `helpers/useHostTurnScoring.ts` (l'hote seul ecrit `totalScores` : gain sur
-  `verdict: 'correct'`, penalite fixe a chaque `wrongGuessSeq`). Composants partages : `LoadingScreen`,
+  `verdict: 'correct'`, penalite fixe a chaque `wrongGuessSeq`). Composants partages : `NoticeOverlay` (avec `loading` pour l'attente),
   `RoomDeletedScreen`, `FinalStandings`.
 - **Coupure reseau** : `helpers/useRoomPresence.ts`, monte une seule fois par `useSetupRoom` (qui reste
   vivant sous l'ecran de jeu). Pendant une partie a plusieurs (pas en solo, pas dans le lobby), chaque
