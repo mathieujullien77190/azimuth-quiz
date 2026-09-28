@@ -7,6 +7,7 @@ import { useTheme, useThemedStyles } from '@/themes';
 import Chip from '@/components/ui/Chip';
 import MiniButton from '@/components/ui/MiniButton';
 import Section from '@/components/ui/Section';
+import Spinner from '@/components/ui/Spinner';
 import type { PartySectionProps } from './types';
 
 import { createStyles } from './styles';
@@ -115,13 +116,20 @@ export const PartySection = ({
         )}
       </View>
       {onlineChoice === 'host' && (
-        <TextInput
-          editable={false}
-          placeholder={t.setup.online.generating}
-          placeholderTextColor={colors.textMuted}
-          style={styles.coordInput}
-          value={roomCode ?? ''}
-        />
+        <View style={styles.coordInputWrap}>
+          <TextInput
+            editable={false}
+            placeholder={t.setup.online.generating}
+            placeholderTextColor={colors.textMuted}
+            style={styles.coordInput}
+            value={roomCode ?? ''}
+          />
+          {roomCode === null && (
+            <View style={styles.coordSpinner}>
+              <Spinner color={colors.textMuted} size="small" />
+            </View>
+          )}
+        </View>
       )}
       {onlineChoice === 'join' && (
         <>

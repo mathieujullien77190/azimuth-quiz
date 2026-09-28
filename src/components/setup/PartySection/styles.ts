@@ -74,6 +74,9 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       color: colors.textMuted,
       fontSize: fontSize.caption + 1,
     },
+    coordInputWrap: {
+      justifyContent: 'center',
+    },
     coordInput: {
       ...typography.heading,
       minHeight: 44,
@@ -84,5 +87,11 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       backgroundColor: colors.surfaceHigh,
       color: colors.text,
       fontSize: fontSize.body,
+    },
+    // Room code still generating: the field's own placeholder already says so in words, this is
+    // just the spinning affordance next to it — same spot the joiner's initials badge sits in.
+    coordSpinner: {
+      position: 'absolute',
+      right: spacing.md,
     },
   });

@@ -12,6 +12,7 @@ import type { PartySectionPlayer, PartySectionProps } from './types';
 import { source } from '@/storybook/source';
 import soloCode from './Solo.source.md?raw';
 import hostingCode from './Hosting.source.md?raw';
+import generatingCodeCode from './GeneratingCode.source.md?raw';
 import joinedCode from './Joined.source.md?raw';
 import nameTakenCode from './NameTaken.source.md?raw';
 
@@ -129,6 +130,23 @@ export const Hosting: Story = {
     isHost: true,
     onlineChoice: 'host',
     roomCode: 'bagu',
+  },
+  render: InteractiveDemo,
+};
+
+/** Just chose "Héberger": the room code hasn't come back from Firestore yet (a couple of seconds
+ * on a slow connection), so the field shows its "creating…" placeholder with a spinner next to
+ * it rather than sitting empty. */
+export const GeneratingCode: Story = {
+  parameters: source(generatingCodeCode),
+  args: {
+    ...Solo.args,
+    soloName: 'Zoé',
+    localUid: HOST_UID,
+    hostUid: HOST_UID,
+    isHost: true,
+    onlineChoice: 'host',
+    roomCode: null,
   },
   render: InteractiveDemo,
 };
