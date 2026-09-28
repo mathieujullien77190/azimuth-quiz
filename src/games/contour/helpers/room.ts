@@ -7,7 +7,7 @@ import { createRoomApi } from '@/helpers/roomBase';
 // Not re-exported from `helpers/index.ts`'s barrel: `firebase/firestore` is ESM-only and crashes
 // Jest the moment anything requires it transitively (see `helpers/firebase.ts`'s own note).
 //
-// Silhouette's own `contourRooms` collection, same turn-by-turn model as Clues' (`clueRooms`): one
+// Rooms with `game: 'silhouette'` in the shared `rooms` collection, same turn-by-turn model as Clues': one
 // shared board, hints revealed one tier at a time, one active player at a time. The room lifecycle
 // (create/join/leave/colors/settings sync) is the shared `createRoomApi`; only the round state
 // below is Silhouette-specific. Countries are shipped with the app, so the room only carries their
@@ -25,7 +25,7 @@ export const contourRoomSettingsFrom = (settings: ContourSettings): ContourRoomS
   return roomSettings;
 };
 
-const rooms = createRoomApi<ContourRoomSettings>('contourRooms');
+const rooms = createRoomApi<ContourRoomSettings>('silhouette');
 export const {
   createRoom,
   roomExists,

@@ -25,7 +25,7 @@ export const roomSettingsFrom = (settings: GameSettings): RoomSettings => {
   return roomSettings;
 };
 
-const rooms = createRoomApi<RoomSettings>('rooms');
+const rooms = createRoomApi<RoomSettings>('compass');
 export const {
   createRoom,
   roomExists,

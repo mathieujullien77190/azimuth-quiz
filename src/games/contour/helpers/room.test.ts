@@ -35,7 +35,7 @@ jest.mock('@/helpers/roomCode', () => ({
   isValidRoomCode: jest.fn(),
 }));
 
-const REF = { path: 'contourRooms/tabofuna' };
+const REF = { path: 'rooms/tabofuna' };
 
 beforeEach(() => jest.clearAllMocks());
 

@@ -23,8 +23,9 @@ import { generateRoomCode, getLocalUid } from '@/helpers/roomCode';
 // cost, not every test that imports `@/helpers` for something unrelated.
 //
 // Everything about an online room that has no game-specific coupling — lifecycle (create/join/
-// leave/delete), presence, player colors, settings sync — written once and bound to a game's own
-// Firestore collection (`createRoomApi('rooms')` for Compass, `'clueRooms'`, `'contourRooms'`...).
+// leave/delete), presence, player colors, settings sync — written once and bound to a game: every
+// game's rooms live in the one `rooms` collection, told apart by their immutable `game` field
+// (`createRoomApi('compass')`, `'clues'`, `'silhouette'`).
 // What a game writes into its room to actually play (round state, guesses, turns...) stays in that
 // game's own `helpers/room.ts`, built on `roomRef`.
 
@@ -67,19 +68,27 @@ const resolveName = (
   return numbers.length === 0 ? { name } : { name: `${name}${Math.max(...numbers) + 1}` };
 };
 
-export const createRoomApi = <Settings extends object>(collectionName: string) => {
-  const roomRef = (code: string) => doc(db, collectionName, code);
+/** The games that have online rooms: the value of a room's `game` field, set when it is created and never
+ * changed (the Firestore rules refuse it). */
+export type RoomGame = 'compass' | 'clues' | 'silhouette';
+
+/** Every game's rooms share this one collection. */
+const ROOMS_COLLECTION = 'rooms';
+
+export const createRoomApi = <Settings extends object>(game: RoomGame) => {
+  const roomRef = (code: string) => doc(db, ROOMS_COLLECTION, code);
 
   /** Deletes every room this uid previously hosted — called right before creating a new one, so a
-   * host never accumulates abandoned rooms every time it starts a fresh game. */
+   * host never accumulates abandoned rooms every time it starts a fresh game — whichever game they were
+   * for: a host has one room at a time. */
   const deletePreviousRoomsByHost = async (hostUid: string): Promise<void> => {
-    const snapshot = await getDocs(query(collection(db, collectionName), where('hostUid', '==', hostUid)));
+    const snapshot = await getDocs(query(collection(db, ROOMS_COLLECTION), where('hostUid', '==', hostUid)));
     await Promise.all(snapshot.docs.map((roomDoc) => deleteDoc(roomDoc.ref)));
   };
 
   /** Creates a new room under a fresh code, retrying on the rare collision with an existing one,
-   * seeded with the host's current settings and stamped with its uid — security rules only let
-   * that same uid update the room's settings afterwards. Returns the code that ended up winning.
+   * seeded with the host's current settings and stamped with its uid and its game — security rules
+   * only let that same uid update the room's settings afterwards, and nobody change the game. Returns the code that ended up winning.
    * First clears out any room this uid hosted before (see `deletePreviousRoomsByHost`). */
   const createRoom = async (settings: Settings): Promise<string> => {
     const hostUid = await getLocalUid();
@@ -89,13 +98,18 @@ export const createRoomApi = <Settings extends object>(collectionName: string) =
       const ref = roomRef(code);
       if ((await getDoc(ref)).exists()) continue;
 
-      await setDoc(ref, { createdAt: serverTimestamp(), hostUid, settings });
+      await setDoc(ref, { createdAt: serverTimestamp(), hostUid, game, settings });
       return code;
     }
   };
 
-  /** Whether a room with this code currently exists (join flow: validate before moving on). */
-  const roomExists = async (code: string): Promise<boolean> => (await getDoc(roomRef(code))).exists();
+  /** Whether a room of *this game* with this code currently exists (join flow: validate before moving
+   * on). A code that belongs to another game's room doesn't count: joining it from here would land in
+   * a game this screen can't play. */
+  const roomExists = async (code: string): Promise<boolean> => {
+    const snapshot = await getDoc(roomRef(code));
+    return snapshot.exists() && snapshot.data()?.game === game;
+  };
 
   /** Pushes the host's settings to its room, so joiners watching it pick up the change. */
   const updateRoomSettings = (code: string, settings: Settings): Promise<void> =>

@@ -36,7 +36,7 @@ jest.mock('@/helpers/roomCode', () => ({
   isValidRoomCode: jest.fn(),
 }));
 
-const REF = { path: 'clueRooms/tabofuna' };
+const REF = { path: 'rooms/tabofuna' };
 const ORIGIN = { name: 'Paris' } as Origin;
 const PLACES = [{ name: 'Rome' }] as CluePlace[];
 

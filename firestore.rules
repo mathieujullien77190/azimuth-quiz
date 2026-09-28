@@ -2,80 +2,90 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // No login screen — anonymous Firebase Auth instead (see `ensureSignedIn` in
-    // helpers/room.ts): every device gets a uid transparently, and a room stores its creator's
-    // uid as `hostUid` so only that device (not anyone who knows the code) can change its
-    // settings. Anyone can still read a room to check a code, and create one, but never
-    // overwrite an existing one (a code collision retries client-side instead).
-    match /rooms/{code} {
-      allow read: if true;
-      allow create: if request.auth != null
-        && request.resource.data.hostUid == request.auth.uid
-        && !exists(/databases/$(database)/documents/rooms/$(code));
-      // The host can change anything (settings, round/screen state via `startRoomGame`/
-      // `finishRoomRound`/`nextRoomRound`, and remove any player — `removeRoomPlayer`). Anyone
-      // else who's signed in can only touch *their own* entry, in `players` (join/rename —
-      // `joinRoomPresence`) and/or in `guesses` (submitting a round answer — `submitRoomGuess`)
-      // — never another uid's, and never `settings`/`screen`/`origin`/`places`/`scores`.
-      allow update: if request.auth != null
-        && (request.auth.uid == resource.data.hostUid
-          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['players', 'guesses'])
-            && request.resource.data.get('players', {}).diff(resource.data.get('players', {})).affectedKeys()
-              .hasOnly([request.auth.uid])
-            && request.resource.data.get('guesses', {}).diff(resource.data.get('guesses', {})).affectedKeys()
-              .hasOnly([request.auth.uid])));
-      // Lets `createRoom` clear out a host's previous rooms before making a new one
-      // (`deletePreviousRoomsByHost`) — no one else can delete a room.
-      allow delete: if request.auth != null && request.auth.uid == resource.data.hostUid;
+
+    // ---------------------------------------------------------------------------------------------
+    // Une seule collection `rooms` pour les trois jeux : Boussole (`game: 'compass'`), Indices
+    // (`'clues'`) et Silhouette (`'silhouette'`). Le champ `game` est fixé à la création et ne change
+    // plus jamais (voir `gameUnchanged`) : c'est lui qui dit quelles règles de mise à jour s'appliquent.
+    //
+    // Pas d'écran de connexion : chaque appareil reçoit un uid via l'authentification anonyme de
+    // Firebase (voir `ensureSignedIn` dans helpers/roomCode.ts). La room garde l'uid de son créateur
+    // dans `hostUid` : c'est ce qui distingue l'hôte de tous les autres.
+    // ---------------------------------------------------------------------------------------------
+
+    // Vrai si l'appareil connecté est l'hôte de la room (évalué sur le document *avant* l'écriture).
+    function isHost() {
+      return request.auth != null && request.auth.uid == resource.data.hostUid;
     }
 
-    // Rules shared by every turn-based game's rooms (Clues, Silhouette): one shared board revealed
-    // turn-by-turn instead of everyone answering independently. Same anonymous-auth/hostUid trust
-    // model as `rooms`, adapted to "whoever's turn it is" instead of "each player only touches
-    // their own guess":
-    // - the host can change anything (settings, screen/round state, scores, remove any player);
-    // - anyone signed in can join/rename themselves (`joinRoomPresence`) — even in the lobby, where
-    //   `turnUid` doesn't exist yet — touching only their own `players` entry;
-    // - only the player named by `turnUid` (evaluated against the document *before* this write, so a
-    //   turn-passing write is authorized by the outgoing turn-holder, not the incoming one) can touch
-    //   `progressKeys` (the game's own shared round-progress fields, see its `helpers/room.ts`) —
-    //   never `settings`/`screen`/`totalScores`, which stay host-only.
-    function ownPlayersEntryOnly() {
+    // Le jeu d'une room ne change jamais, pas même par l'hôte.
+    function gameUnchanged() {
+      return request.resource.data.game == resource.data.game;
+    }
+
+    // Vrai si, dans la map `players`, seule l'entrée de l'appareil connecté est ajoutée, modifiée ou
+    // supprimée : on peut se déclarer ou se renommer, jamais toucher à un autre joueur.
+    function onlyOwnPlayerEntry() {
       return request.resource.data.get('players', {}).diff(resource.data.get('players', {})).affectedKeys()
         .hasOnly([request.auth.uid]);
     }
 
-    function canUpdateTurnRoom(progressKeys) {
+    // Boussole : tout le monde répond en même temps. Un joueur qui n'est pas l'hôte ne peut toucher
+    // qu'à sa propre entrée dans `players` (rejoindre, se renommer) et/ou dans `guesses` (envoyer sa
+    // réponse de la manche) — jamais à celle d'un autre, ni à `settings`, `screen`, `origin`,
+    // `places`, `scores` ou `totalScores`.
+    function compassPlayer() {
       return request.auth != null
-        && (request.auth.uid == resource.data.hostUid
-          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['players'])
-            && ownPlayersEntryOnly())
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['players', 'guesses'])
+        && onlyOwnPlayerEntry()
+        && request.resource.data.get('guesses', {}).diff(resource.data.get('guesses', {})).affectedKeys()
+          .hasOnly([request.auth.uid]);
+    }
+
+    // Jeux à tour de rôle (Indices, Silhouette) : un plateau partagé, révélé tour par tour. Un joueur
+    // qui n'est pas l'hôte peut :
+    // - rejoindre ou se renommer (`joinRoomPresence`), même au salon où `turnUid` n'existe pas
+    //   encore : il ne touche alors qu'à sa propre entrée de `players` ;
+    // - s'il est le joueur dont c'est le tour (`turnUid`, lu dans le document *avant* l'écriture, donc
+    //   c'est celui qui sortait qui autorise le passage de main, pas celui qui entre), modifier les
+    //   champs de progression de la manche listés dans `turnFields` (voir helpers/room.ts de chaque
+    //   jeu). `settings`, `screen` et `totalScores` restent réservés à l'hôte.
+    function turnBasedPlayer(turnFields) {
+      return request.auth != null
+        && ((request.resource.data.diff(resource.data).affectedKeys().hasOnly(['players'])
+            && onlyOwnPlayerEntry())
           || (request.auth.uid == resource.data.get('turnUid', null)
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(progressKeys)
-            && ownPlayersEntryOnly()));
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(turnFields)
+            && onlyOwnPlayerEntry()));
     }
 
-    // Clues' own online rooms — separate collection from `rooms` (Compass), see above.
-    match /clueRooms/{code} {
+    match /rooms/{code} {
+      // N'importe qui peut lire une room (c'est ainsi qu'on vérifie un code avant de la rejoindre).
       allow read: if true;
-      allow create: if request.auth != null
-        && request.resource.data.hostUid == request.auth.uid
-        && !exists(/databases/$(database)/documents/clueRooms/$(code));
-      allow update: if canUpdateTurnRoom(
-        ['players', 'revealedClueIds', 'turnUid', 'verdict', 'roundWinnerUid', 'wrongGuessUid', 'wrongGuessSeq']);
-      allow delete: if request.auth != null && request.auth.uid == resource.data.hostUid;
-    }
 
-    // Silhouette's own online rooms, same turn model as Clues': the turn-holder reveals the next hint
-    // tier (`hintsRevealed`, which passes `turnUid`) or reports a find/miss/give-up.
-    match /contourRooms/{code} {
-      allow read: if true;
+      // Tout appareil connecté peut créer une room à son nom, pour l'un des trois jeux, mais jamais
+      // écraser une room existante (en cas de collision de code, le client réessaie avec un autre).
       allow create: if request.auth != null
         && request.resource.data.hostUid == request.auth.uid
-        && !exists(/databases/$(database)/documents/contourRooms/$(code));
-      allow update: if canUpdateTurnRoom(
-        ['players', 'hintsRevealed', 'turnUid', 'verdict', 'roundWinnerUid', 'wrongGuessUid', 'wrongGuessSeq']);
-      allow delete: if request.auth != null && request.auth.uid == resource.data.hostUid;
+        && request.resource.data.game in ['compass', 'clues', 'silhouette']
+        && !exists(/databases/$(database)/documents/rooms/$(code));
+
+      // L'hôte peut tout modifier (réglages, état de la manche, scores, retirer un joueur...), sauf le
+      // jeu. Les autres joueurs ne peuvent faire que ce que permet le jeu de la room.
+      allow update: if request.auth != null
+        && gameUnchanged()
+        && (isHost()
+          || (resource.data.game == 'compass' && compassPlayer())
+          || (resource.data.game == 'clues'
+            && turnBasedPlayer(['players', 'revealedClueIds', 'turnUid', 'verdict', 'roundWinnerUid',
+              'wrongGuessUid', 'wrongGuessSeq']))
+          || (resource.data.game == 'silhouette'
+            && turnBasedPlayer(['players', 'hintsRevealed', 'turnUid', 'verdict', 'roundWinnerUid',
+              'wrongGuessUid', 'wrongGuessSeq'])));
+
+      // Seul l'hôte supprime sa room : à la fermeture de la partie, et avant d'en créer une nouvelle
+      // (`deletePreviousRoomsByHost`, qui efface toutes ses anciennes rooms, quel que soit le jeu).
+      allow delete: if isHost();
     }
   }
 }

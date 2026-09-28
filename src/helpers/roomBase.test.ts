@@ -1,4 +1,4 @@
-import { deleteDoc, getDoc, getDocs, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, deleteDoc, getDoc, getDocs, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
 
 import { generateRoomCode, getLocalUid } from '@/helpers/roomCode';
 
@@ -22,7 +22,7 @@ jest.mock('@/helpers/firebase', () => ({ db: {} }));
 jest.mock('@/helpers/roomCode', () => ({ generateRoomCode: jest.fn(), getLocalUid: jest.fn() }));
 
 type Settings = { rounds: number };
-const api = createRoomApi<Settings>('rooms');
+const api = createRoomApi<Settings>('compass');
 
 const snapshot = (data: Record<string, unknown> | undefined) => ({
   exists: () => data !== undefined,
@@ -51,7 +51,7 @@ describe('createRoom', () => {
 
     expect(setDoc).toHaveBeenCalledWith(
       { path: 'rooms/tabofuna' },
-      { createdAt: 'SERVER_TIMESTAMP', hostUid: 'zoe', settings: { rounds: 5 } },
+      { createdAt: 'SERVER_TIMESTAMP', hostUid: 'zoe', game: 'compass', settings: { rounds: 5 } },
     );
   });
 
@@ -80,13 +80,46 @@ describe('createRoom', () => {
 });
 
 describe('roomExists', () => {
-  it('reflects whether the room document exists', async () => {
+  it('reflects whether a room of this game exists under the code', async () => {
     jest
       .mocked(getDoc)
-      .mockResolvedValueOnce(snapshot({}) as never)
+      .mockResolvedValueOnce(snapshot({ game: 'compass' }) as never)
       .mockResolvedValueOnce(snapshot(undefined) as never);
     await expect(api.roomExists('tabofuna')).resolves.toBe(true);
     await expect(api.roomExists('kilobani')).resolves.toBe(false);
+  });
+
+  it("does not count another game's room, nor a room with no game (created before the games were merged)", async () => {
+    jest
+      .mocked(getDoc)
+      .mockResolvedValueOnce(snapshot({ game: 'clues' }) as never)
+      .mockResolvedValueOnce(snapshot({}) as never);
+    await expect(api.roomExists('tabofuna')).resolves.toBe(false);
+    await expect(api.roomExists('kilobani')).resolves.toBe(false);
+  });
+});
+
+describe('one collection for every game', () => {
+  it('stamps each game on its rooms, all in the same collection', async () => {
+    jest.mocked(generateRoomCode).mockReturnValue('tabofuna');
+    jest.mocked(getDoc).mockResolvedValue(snapshot(undefined) as never);
+    for (const game of ['compass', 'clues', 'silhouette'] as const) {
+      await createRoomApi<Settings>(game).createRoom({ rounds: 5 });
+    }
+    expect(setDoc).toHaveBeenNthCalledWith(1, { path: 'rooms/tabofuna' }, expect.objectContaining({ game: 'compass' }));
+    expect(setDoc).toHaveBeenNthCalledWith(2, { path: 'rooms/tabofuna' }, expect.objectContaining({ game: 'clues' }));
+    expect(setDoc).toHaveBeenNthCalledWith(
+      3,
+      { path: 'rooms/tabofuna' },
+      expect.objectContaining({ game: 'silhouette' }),
+    );
+  });
+
+  it("clears a host's previous rooms whatever their game", async () => {
+    jest.mocked(generateRoomCode).mockReturnValue('tabofuna');
+    jest.mocked(getDoc).mockResolvedValue(snapshot(undefined) as never);
+    await createRoomApi<Settings>('clues').createRoom({ rounds: 5 });
+    expect(collection).toHaveBeenCalledWith(expect.anything(), 'rooms');
   });
 });
 

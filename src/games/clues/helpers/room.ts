@@ -8,7 +8,7 @@ import { createRoomApi } from '@/helpers/roomBase';
 // Jest the moment anything requires it transitively (see `helpers/firebase.ts`'s own note) —
 // same reason Compass's own `games/compass/helpers/room.ts` stays out of it too.
 //
-// Its own collection (`clueRooms`, not Compass' `rooms`), since Clues' round state is a single
+// Rooms with `game: 'clues'` in the shared `rooms` collection. Clues' round state is a single
 // shared board revealed turn-by-turn (one active player at a time), not Compass' "everyone
 // answers independently, then reveal" model. The room lifecycle itself (create/join/leave/colors/
 // settings sync) is the shared `createRoomApi`; only the round state below is Clues-specific.
@@ -29,7 +29,7 @@ export const clueRoomSettingsFrom = (settings: ClueSettings): ClueRoomSettings =
   return roomSettings;
 };
 
-const rooms = createRoomApi<ClueRoomSettings>('clueRooms');
+const rooms = createRoomApi<ClueRoomSettings>('clues');
 export const {
   createRoom,
   roomExists,
