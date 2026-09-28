@@ -172,6 +172,28 @@ describe('useRoomPresence — edge cases', () => {
     expect(api.removeRoomPlayer).not.toHaveBeenCalled();
   });
 
+  it('keeps judging the others once one of several players left', async () => {
+    const { store, api } = await setup({
+      me: 'host',
+      players: { host: player('Zoé'), max: player('Max', 1), eve: player('Eve', 1) },
+    });
+    await advance(60);
+    // Max leaves; Eve is still there and stays silent.
+    await act(async () => store.setState({ players: { host: player('Zoé'), eve: player('Eve', 1) } }));
+    await advance(60);
+    expect(api.removeRoomPlayer).toHaveBeenCalledWith('room', 'eve');
+    expect(api.removeRoomPlayer).not.toHaveBeenCalledWith('room', 'max');
+  });
+
+  it('survives a heartbeat that is rejected', async () => {
+    const api = failingApi();
+    api.sendHeartbeat = jest.fn(() => Promise.reject(new Error('offline')));
+    const store = await setupWith('host', { host: player('Zoé'), max: player('Max', 1) }, api);
+    await advance(30);
+    expect(api.sendHeartbeat).toHaveBeenCalled();
+    expect(store.getState().connectionLost).toBe(false);
+  });
+
   it('a joiner survives a failing presence removal when leaving', async () => {
     const api = failingApi();
     const store = await setupWith('max', { host: player('Zoé', 1), max: player('Max') }, api);

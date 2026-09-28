@@ -191,6 +191,20 @@ describe('useSetupRoom — hosting', () => {
     expect(ctx.adapter.removeRoomPlayer).toHaveBeenCalledWith('tabofuna', 'max');
   });
 
+  it('swallows a failing kick', async () => {
+    const ctx = await setup({ removeRoomPlayer: jest.fn(() => Promise.reject(new Error('gone'))) });
+    await hostRoom(ctx);
+    await act(async () => ctx.result.current.party.onKick('max'));
+    expect(ctx.adapter.removeRoomPlayer).toHaveBeenCalledWith('tabofuna', 'max');
+  });
+
+  it('swallows a failing color sync', async () => {
+    const ctx = await setup({ updateRoomPlayerColors: jest.fn(() => Promise.reject(new Error('gone'))) });
+    await hostRoom(ctx);
+    await ctx.emitPlayers({ zoe: player('Zoe'), max: player('Max', 'blue') }, 'zoe');
+    expect(ctx.adapter.updateRoomPlayerColors).toHaveBeenCalled();
+  });
+
   it('does nothing when kicking without a room', async () => {
     const ctx = await setup();
     await act(async () => ctx.result.current.party.onKick('max'));
@@ -234,6 +248,27 @@ describe('useSetupRoom — hosting', () => {
     await ctx.emitPlayers({ zoe: player('Zoe', 'red') }, 'zoe');
     await ctx.unmount();
     expect(ctx.adapter.deleteRoom).toHaveBeenCalledWith('tabofuna');
+  });
+});
+
+describe('useSetupRoom — cleanup that fails', () => {
+  it('host: survives a failing deletion of its room on unmount', async () => {
+    const ctx = await setup({ deleteRoom: jest.fn(() => Promise.reject(new Error('gone'))) });
+    await hostRoom(ctx);
+    await ctx.emitPlayers({ zoe: player('Zoe', 'red') }, 'zoe');
+    await ctx.unmount();
+    expect(ctx.adapter.deleteRoom).toHaveBeenCalledWith('tabofuna');
+  });
+
+  it('joiner: survives a failing removal of its presence on unmount', async () => {
+    const ctx = await setup({
+      joinRoomPresence: jest.fn(() => Promise.resolve('max')),
+      removeRoomPlayer: jest.fn(() => Promise.reject(new Error('gone'))),
+    });
+    await joinRoom(ctx);
+    await ctx.emitPlayers({ zoe: player('Host'), max: player('Max') }, 'zoe');
+    await ctx.unmount();
+    expect(ctx.adapter.removeRoomPlayer).toHaveBeenCalledWith('tabofuna', 'max');
   });
 });
 

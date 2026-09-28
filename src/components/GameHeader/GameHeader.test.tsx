@@ -1,5 +1,7 @@
 import { fireEvent, render } from '@testing-library/react-native';
 
+import { ThemeSettingsContext } from '@/themes';
+
 import GameHeader from '.';
 
 const baseProps = {
@@ -49,6 +51,25 @@ describe('GameHeader', () => {
     const { getByText, queryByText } = await render(<GameHeader {...baseProps} players={players} />);
     expect(getByText('ZO')).toBeTruthy();
     expect(queryByText(/de jouer/)).toBeNull();
+  });
+
+  it('renders by day too', async () => {
+    const { getByText } = await render(
+      <ThemeSettingsContext.Provider
+        value={{
+          themeId: 'day',
+          ready: true,
+          setThemeId: jest.fn(),
+          resetThemeId: jest.fn(),
+          animationsEnabled: false,
+          setAnimationsEnabled: jest.fn(),
+          resetAnimationsEnabled: jest.fn(),
+        }}
+      >
+        <GameHeader {...baseProps} />
+      </ThemeSettingsContext.Provider>,
+    );
+    expect(getByText('TABOFUNA')).toBeTruthy();
   });
 
   it('shows the round question', async () => {
