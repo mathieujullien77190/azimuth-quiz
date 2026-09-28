@@ -1,2 +1,2 @@
-export { default } from './NoOneFoundText';
+export { NoOneFoundText as default } from './NoOneFoundText';
 export type { NoOneFoundTextProps } from './types';

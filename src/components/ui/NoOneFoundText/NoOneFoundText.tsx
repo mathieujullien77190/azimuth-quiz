@@ -12,12 +12,10 @@ import { createStyles } from './styles';
  * "nobody" (`t.common.noOneFound`) — there's no one else it could have been. Always the same
  * red/danger look regardless of where it's nested, same as an actual wrong guess.
  */
-const NoOneFoundText = ({ players }: NoOneFoundTextProps) => {
+export const NoOneFoundText = ({ players }: NoOneFoundTextProps) => {
   const t = useTranslation();
   const styles = useThemedStyles(createStyles);
   return (
     <Text style={styles.text}>{players.length === 1 ? t.common.soloNotFound(players[0]) : t.common.noOneFound}</Text>
   );
 };
-
-export default NoOneFoundText;

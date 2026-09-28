@@ -5,7 +5,7 @@ import type { ButtonProps } from './types';
 
 import { createStyles } from './styles';
 
-const Button = ({ label, onPress, variant = 'primary', disabled = false }: ButtonProps) => {
+export const Button = ({ label, onPress, variant = 'primary', disabled = false }: ButtonProps) => {
   const styles = useThemedStyles(createStyles);
 
   return (
@@ -25,5 +25,3 @@ const Button = ({ label, onPress, variant = 'primary', disabled = false }: Butto
     </Pressable>
   );
 };
-
-export default Button;

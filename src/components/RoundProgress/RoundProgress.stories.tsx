@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { source } from '@/storybook/source';
 
 import mixedDifficultiesCode from './MixedDifficulties.source.md?raw';
-import RoundProgress from './RoundProgress';
+import { RoundProgress } from './RoundProgress';
 import singleDifficultyCode from './SingleDifficulty.source.md?raw';
 
 const meta = {

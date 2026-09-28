@@ -7,7 +7,7 @@ import type { ScreenProps } from './types';
 
 import { createStyles } from './styles';
 
-const Screen = ({ children, header, footer, scrollRef, onScroll }: ScreenProps) => {
+export const Screen = ({ children, header, footer, scrollRef, onScroll }: ScreenProps) => {
   const styles = useThemedStyles(createStyles);
 
   return (
@@ -29,5 +29,3 @@ const Screen = ({ children, header, footer, scrollRef, onScroll }: ScreenProps) 
     </SafeAreaView>
   );
 };
-
-export default Screen;

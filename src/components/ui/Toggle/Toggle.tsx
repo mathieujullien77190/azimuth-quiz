@@ -9,7 +9,7 @@ import { createStyles } from './styles';
 // `disabled` only dims the row and flags it for accessibility — the Switch stays interactive so
 // a caller's `onValueChange` can react to a disabled toggle (e.g. explain why) rather than have
 // the touch silently swallowed by React Native's own disabled handling.
-const Toggle = ({ label, description, value, onValueChange, disabled = false }: ToggleProps) => {
+export const Toggle = ({ label, description, value, onValueChange, disabled = false }: ToggleProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors, isDark } = useTheme();
   const thumbOnColor = isDark ? colors.success : DAY_THUMB_ON_COLOR;
@@ -31,5 +31,3 @@ const Toggle = ({ label, description, value, onValueChange, disabled = false }: 
     </View>
   );
 };
-
-export default Toggle;

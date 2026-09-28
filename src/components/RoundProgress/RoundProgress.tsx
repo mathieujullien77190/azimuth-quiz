@@ -15,7 +15,7 @@ import { createStyles } from './styles';
  * "MANCHE 3 / 10 · 🟡 Moyen", one line, aligned left: the round, then the round's difficulty.
  * Shared by every game's header.
  */
-const RoundProgress = memo(function RoundProgress({ roundNumber, totalRounds, difficulty }: RoundProgressProps) {
+export const RoundProgress = memo(function RoundProgress({ roundNumber, totalRounds, difficulty }: RoundProgressProps) {
   const styles = useThemedStyles(createStyles);
   const { isDark } = useTheme();
   const t = useTranslation();
@@ -35,5 +35,3 @@ const RoundProgress = memo(function RoundProgress({ roundNumber, totalRounds, di
     </View>
   );
 });
-
-export default RoundProgress;

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import Toggle from './Toggle';
+import { Toggle } from './Toggle';
 import { source } from '@/storybook/source';
 import defaultCode from './Default.source.md?raw';
 

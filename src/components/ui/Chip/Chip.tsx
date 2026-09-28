@@ -8,7 +8,7 @@ import { createStyles } from './styles';
 // `disabled` is a visual/accessibility cue only — the Pressable itself stays tappable so a
 // caller's `onPress` can react to a disabled press (e.g. explain why) rather than have the touch
 // silently swallowed by React Native's own disabled handling.
-const Chip = ({ label, emoji, selected, onPress, disabled = false }: ChipProps) => {
+export const Chip = ({ label, emoji, selected, onPress, disabled = false }: ChipProps) => {
   const styles = useThemedStyles(createStyles);
 
   return (
@@ -23,5 +23,3 @@ const Chip = ({ label, emoji, selected, onPress, disabled = false }: ChipProps) 
     </Pressable>
   );
 };
-
-export default Chip;

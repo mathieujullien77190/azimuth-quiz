@@ -1,5 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
+import { source } from '@/storybook/source';
+
+import defaultCode from './Default.source.md?raw';
 import { ThemeBackdrop } from './ThemeBackdrop';
 
 const meta = {
@@ -20,4 +23,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  parameters: source(defaultCode),
+};

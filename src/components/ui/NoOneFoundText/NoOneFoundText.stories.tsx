@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { source } from '@/storybook/source';
 
-import NoOneFoundText from './NoOneFoundText';
+import { NoOneFoundText } from './NoOneFoundText';
 import severalCode from './Several.source.md?raw';
 import soloCode from './Solo.source.md?raw';
 

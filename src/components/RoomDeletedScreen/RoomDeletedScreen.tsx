@@ -1,5 +1,4 @@
 import { useRouter } from 'expo-router';
-import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useTranslation } from '@/i18n';
@@ -7,6 +6,8 @@ import { useTheme } from '@/themes';
 
 import NoticeOverlay from '@/components/NoticeOverlay';
 import ThemeBackdrop from '@/components/ThemeBackdrop';
+
+import { styles } from './styles';
 
 /**
  * "The host deleted the room" notice, shared by every online game screen. Only a joiner ever sees
@@ -28,7 +29,3 @@ export const RoomDeletedScreen = ({ message }: { message?: string }) => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  screen: { flex: 1 },
-});

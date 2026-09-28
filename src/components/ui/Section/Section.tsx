@@ -7,7 +7,7 @@ import type { SectionProps } from './types';
 import { createStyles } from './styles';
 
 /** Titled card: groups the fields of a single subject. */
-const Section = ({ title, hint, children }: SectionProps) => {
+export const Section = ({ title, hint, children }: SectionProps) => {
   const styles = useThemedStyles(createStyles);
 
   return (
@@ -20,5 +20,3 @@ const Section = ({ title, hint, children }: SectionProps) => {
     </Card>
   );
 };
-
-export default Section;

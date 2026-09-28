@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import Chip from './Chip';
+import { Chip } from './Chip';
 import { source } from '@/storybook/source';
 import selectedCode from './Selected.source.md?raw';
 import unselectedCode from './Unselected.source.md?raw';

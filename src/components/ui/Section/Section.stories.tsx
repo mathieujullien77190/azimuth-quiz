@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import Section from './Section';
+import { Section } from './Section';
 import { source } from '@/storybook/source';
 import defaultCode from './Default.source.md?raw';
 
