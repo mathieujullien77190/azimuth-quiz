@@ -10,7 +10,9 @@ export type OnlineContourGameScreenProps = {
  * chaque valeur ici est deja resolue par `OnlineContourGameScreen`, chaque callback deja decide. */
 export type OnlineContourGameScreenViewProps = {
   onQuit: () => void;
-  headerScore: string;
+  /** This device's player and running total, for the header. */
+  name: string;
+  points: number;
   roomCode: string;
   roundNumber: number;
   totalRounds: number;

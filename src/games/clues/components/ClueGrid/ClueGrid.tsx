@@ -13,10 +13,8 @@ import { createStyles } from './styles';
 const MAX_FLAG_STAGE = 3;
 
 /**
- * The grid of clue cards, plus the hidden "vowels" card once unlocked — extracted out of
- * `ClueGameScreen` so both the local game and the online one render exactly the same board from
- * the same shared state (`revealedClueIds`), rather than duplicating the per-clue stage-counting
- * logic. Dumb: everything it needs is already resolved by the caller.
+ * The grid of clue cards, plus the hidden "vowels" card once unlocked — rendered from the room's
+ * shared state (`revealedClueIds`) with the per-clue stage-counting logic kept out of the screen. Dumb: everything it needs is already resolved by the caller.
  */
 export const ClueGrid = ({ place, bearingDeg, distanceKm, revealedClueIds, roundOver, onPickClue }: ClueGridProps) => {
   const styles = useThemedStyles(createStyles);

@@ -18,6 +18,7 @@ jest.mock('@/games/contour/helpers/room', () => ({
   joinRoomPresence: jest.fn(() => Promise.resolve('local-uid')),
   removeRoomPlayer: jest.fn(() => Promise.resolve()),
   roomExists: jest.fn(() => Promise.resolve(false)),
+  sendHeartbeat: jest.fn(() => Promise.resolve()),
   contourRoomSettingsFrom: jest.fn((settings) => settings),
   startContourRoomGame: jest.fn(() => Promise.resolve()),
   subscribeToRoomPlayers: jest.fn(() => jest.fn()),
@@ -85,12 +86,13 @@ describe('ContourSetupScreen', () => {
     expect(queryByText(/tabofuna/)).toBeNull();
 
     await act(async () => {
-      useContourRoomStore.setState({ localUid: 'local-uid', players: { 'local-uid': { name: 'Zoé', joinedAt: null } } });
+      useContourRoomStore.setState({
+        localUid: 'local-uid',
+        players: { 'local-uid': { name: 'Zoé', joinedAt: null } },
+      });
     });
 
-    await waitFor(() =>
-      expect(startContourRoomGame).toHaveBeenCalledWith('tabofuna', expect.any(Array), 'local-uid'),
-    );
+    await waitFor(() => expect(startContourRoomGame).toHaveBeenCalledWith('tabofuna', expect.any(Array), 'local-uid'));
   });
 
   it('calls onBack when "Retour" is pressed', async () => {

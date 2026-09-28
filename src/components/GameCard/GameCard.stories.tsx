@@ -3,6 +3,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { translations } from '@/i18n/translations';
 
 import { GameCard } from './GameCard';
+import { source } from '@/storybook/source';
+import compassCode from './Compass.source.md?raw';
+import cluesCode from './Clues.source.md?raw';
+import contourCode from './Contour.source.md?raw';
 
 const t = translations.fr;
 
@@ -23,6 +27,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Compass: Story = {
+  parameters: source(compassCode),
   args: {
     ctaLabel: t.home.games.compass.cta,
     icon: '🧭',
@@ -34,6 +39,7 @@ export const Compass: Story = {
 };
 
 export const Clues: Story = {
+  parameters: source(cluesCode),
   args: {
     ctaLabel: t.home.games.clues.cta,
     icon: '🧩',
@@ -45,6 +51,7 @@ export const Clues: Story = {
 };
 
 export const Contour: Story = {
+  parameters: source(contourCode),
   name: 'Silhouette',
   args: {
     ctaLabel: t.home.games.contour.cta,

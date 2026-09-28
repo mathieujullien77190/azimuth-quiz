@@ -5,5 +5,13 @@
   "trailingComma": "all",
   "printWidth": 120,
   "tabWidth": 2,
-  "arrowParens": "always"
+  "arrowParens": "always",
+  "overrides": [
+    {
+      "files": "*.source.md",
+      "options": {
+        "embeddedLanguageFormatting": "off"
+      }
+    }
+  ]
 }

@@ -7,6 +7,10 @@ import { translations } from '@/i18n/translations';
 
 import { PartySection } from './PartySection';
 import type { PartySectionPlayer, PartySectionProps } from './types';
+import { source } from '@/storybook/source';
+import soloCode from './Solo.source.md?raw';
+import hostingCode from './Hosting.source.md?raw';
+import joinedCode from './Joined.source.md?raw';
 
 const t = translations.fr;
 
@@ -76,6 +80,7 @@ type Story = StoryObj<typeof meta>;
 /** Not connected to any room: just this device's own name field, and the Solo/Host/Join chip
  * row — clicking a chip actually switches which one is shown below. */
 export const Solo: Story = {
+  parameters: source(soloCode),
   args: {
     title: t.setup.playersSection.title,
     hint: t.setup.playersSection.hint,
@@ -106,6 +111,7 @@ export const Solo: Story = {
  * "kick" cross next to their name (this device is `localUid`, so it never shows a cross on its
  * own row — there isn't one here, `soloName` is that row instead). */
 export const Hosting: Story = {
+  parameters: source(hostingCode),
   args: {
     ...Solo.args,
     soloName: 'Zoé',
@@ -122,6 +128,7 @@ export const Hosting: Story = {
 /** Joined someone else's room: the code field locks and the chip turns into "Leave" — every
  * other field (including this device's own name) stays visible but read-only. */
 export const Joined: Story = {
+  parameters: source(joinedCode),
   args: {
     ...Solo.args,
     soloName: 'Max',

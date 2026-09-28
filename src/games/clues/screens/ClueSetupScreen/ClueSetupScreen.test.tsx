@@ -18,6 +18,7 @@ jest.mock('@/games/clues/helpers/room', () => ({
   joinRoomPresence: jest.fn(() => Promise.resolve('local-uid')),
   removeRoomPlayer: jest.fn(() => Promise.resolve()),
   roomExists: jest.fn(() => Promise.resolve(false)),
+  sendHeartbeat: jest.fn(() => Promise.resolve()),
   clueRoomSettingsFrom: jest.fn((settings) => settings),
   startClueRoomGame: jest.fn(() => Promise.resolve()),
   subscribeToRoomPlayers: jest.fn(() => jest.fn()),

@@ -26,9 +26,10 @@ import { createStyles } from './OnlineGameScreenView.styles';
 export const OnlineGameScreenView = ({
   scrollRef,
   onQuit,
-  headerScore,
+  name,
+  points,
   roomCode,
-  difficulties,
+  difficulty,
   roundNumber,
   totalRounds,
   place,
@@ -85,11 +86,12 @@ export const OnlineGameScreenView = ({
       }
       header={
         <GameHeader
-          difficulties={difficulties}
+          code={roomCode}
+          difficulty={difficulty}
+          name={name}
           onQuit={onQuit}
-          roomCode={roomCode}
+          points={points}
           roundNumber={roundNumber}
-          scoreLabel={headerScore}
           totalRounds={totalRounds}
         />
       }

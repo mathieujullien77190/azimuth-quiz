@@ -34,7 +34,9 @@ export const ROOM_MAX_PLAYERS = 10;
 // `color` is assigned by the host alone (see `updateRoomPlayerColors`), never computed locally —
 // a joiner just reads whatever's there, so every device always agrees on who's which color
 // without needing to agree on how to compute it.
-export type RoomPlayer = { name: string; joinedAt: Timestamp | null; color?: string };
+// `lastSeen` is this device's own heartbeat (see `sendHeartbeat`), only ever compared between
+// snapshots ("did it change lately?") — never against a local clock, which can be skewed.
+export type RoomPlayer = { name: string; joinedAt: Timestamp | null; color?: string; lastSeen?: Timestamp | null };
 export type RoomPlayers = Record<string, RoomPlayer>;
 
 /** Escapes `text` for use inside a `RegExp` — only ever called on a player's own display name
@@ -141,6 +143,13 @@ export const createRoomApi = <Settings extends object>(collectionName: string) =
    * will never advance again. */
   const deleteRoom = (code: string): Promise<void> => deleteDoc(roomRef(code));
 
+  /** "I'm still here": bumps this device's own `lastSeen`. The promise only settles once the server
+   * acknowledged the write, so a device that can't reach it never sees it resolve — that's how
+   * `useRoomPresence` notices its own connection dropping. Covered by the same "own `players` entry"
+   * rule as `joinRoomPresence`. */
+  const sendHeartbeat = (code: string, uid: string): Promise<void> =>
+    updateDoc(roomRef(code), { [`players.${uid}.lastSeen`]: serverTimestamp() });
+
   /** Host-only: hands the turn to `uid` — turn-based games only (see `useHostTurnRecovery`). */
   const passRoomTurn = (code: string, uid: string): Promise<void> => updateDoc(roomRef(code), { turnUid: uid });
 
@@ -183,6 +192,7 @@ export const createRoomApi = <Settings extends object>(collectionName: string) =
     joinRoomPresence,
     removeRoomPlayer,
     deleteRoom,
+    sendHeartbeat,
     passRoomTurn,
     updateRoomPlayerColors,
     subscribeToRoomPlayers,

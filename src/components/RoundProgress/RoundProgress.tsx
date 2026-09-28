@@ -6,24 +6,16 @@ import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Difficulty } from '@/types';
 
-import { MAX_PROGRESS_DOTS } from './constants';
-import { formatDifficulties, formatRoundProgress } from './helpers';
+import { formatDifficulty, formatRoundProgress } from './helpers';
 import type { RoundProgressProps } from './types';
 
 import { createStyles } from './styles';
 
 /**
- * "ROUND N / M" line + progress dots: shared as-is between Compass (`GameScreen`) and Clues
- * (`ClueGameScreen`) — only the round count and the active difficulty/ies differ. The dots
- * disappear past `MAX_PROGRESS_DOTS` (unreadable once there are too many); the dot at index
- * `roundNumber - 1` (the current round) already counts as "done".
+ * "MANCHE 3 / 10 · 🟡 Moyen", one line, aligned left: the round, then the round's difficulty.
+ * Shared by every game's header.
  */
-const RoundProgress = memo(function RoundProgress({
-  roundNumber,
-  totalRounds,
-  difficulties,
-  roomCode,
-}: RoundProgressProps) {
+const RoundProgress = memo(function RoundProgress({ roundNumber, totalRounds, difficulty }: RoundProgressProps) {
   const styles = useThemedStyles(createStyles);
   const { isDark } = useTheme();
   const t = useTranslation();
@@ -38,16 +30,8 @@ const RoundProgress = memo(function RoundProgress({
     <View style={styles.row}>
       <Text style={styles.label}>
         {t.game.round} {formatRoundProgress(roundNumber, totalRounds)} ·{' '}
-        {formatDifficulties(difficulties, emojiOf, (id: Difficulty) => t.setup.difficulties[id])}
-        {roomCode !== undefined && ` · ${t.game.roomCode(roomCode)}`}
+        {formatDifficulty(difficulty, emojiOf, (id) => t.setup.difficulties[id])}
       </Text>
-      {totalRounds <= MAX_PROGRESS_DOTS && (
-        <View style={styles.dots}>
-          {Array.from({ length: totalRounds }, (_, index) => (
-            <View key={index} style={[styles.dot, index < roundNumber && styles.dotDone]} />
-          ))}
-        </View>
-      )}
     </View>
   );
 });

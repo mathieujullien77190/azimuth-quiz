@@ -1,13 +1,12 @@
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 import { formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
 
 import ClueGrid from '@/games/clues/components/ClueGrid';
-import PlayerTabs from '@/components/PlayerTabs';
 import Button from '@/components/ui/Button';
 import NoOneFoundText from '@/components/ui/NoOneFoundText';
-import RoundProgress from '@/components/RoundProgress';
+import GameHeader from '@/components/GameHeader';
 import Screen from '@/components/ui/Screen';
 import { WRONG_ANSWER_PENALTY } from '@/games/clues/constants';
 import { skeletonLetterCount, overlayTypedLetters } from '@/games/clues/helpers/clueGame';
@@ -22,7 +21,8 @@ import { createStyles } from './OnlineClueGameScreenView.styles';
  */
 export const OnlineClueGameScreenView = ({
   onQuit,
-  headerScore,
+  name,
+  points,
   roomCode,
   roundNumber,
   totalRounds,
@@ -133,27 +133,17 @@ export const OnlineClueGameScreenView = ({
         </View>
       }
       header={
-        <View style={styles.header}>
-          <View style={styles.topBar}>
-            <Pressable accessibilityRole="button" hitSlop={12} onPress={onQuit}>
-              <Text style={styles.quit}>{t.game.quit}</Text>
-            </Pressable>
-            <Text style={styles.score}>{headerScore}</Text>
-          </View>
-          <RoundProgress
-            difficulties={[difficulty]}
-            roomCode={roomCode}
-            roundNumber={roundNumber}
-            totalRounds={totalRounds}
-          />
-          <PlayerTabs
-            activeIndex={roundOver ? -1 : turnIndex}
-            activeLabel={t.game.playerTurn}
-            answered={players.map(() => false)}
-            order={players.map((_, index) => index)}
-            players={players}
-          />
-        </View>
+        <GameHeader
+          code={roomCode}
+          difficulty={difficulty}
+          name={name}
+          onQuit={onQuit}
+          players={players}
+          points={points}
+          roundNumber={roundNumber}
+          totalRounds={totalRounds}
+          turnIndex={roundOver ? -1 : turnIndex}
+        />
       }
     >
       <ClueGrid

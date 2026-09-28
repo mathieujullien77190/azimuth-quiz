@@ -1,4 +1,3 @@
-import { formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
 
 import FinalStandings from '@/components/FinalStandings';
@@ -17,6 +16,9 @@ import { useOnlineClueGame } from './useOnlineClueGame';
 export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps) => {
   const t = useTranslation();
   const game = useOnlineClueGame(code, onQuit);
+
+  // Whoever loses the connection leaves the game — host included (see `useRoomPresence`).
+  if (game.connectionLost) return <RoomDeletedScreen message={t.setup.online.connectionLostNotice} />;
 
   // Only a joiner ever sees this — see Compass' own `OnlineGameScreen` for the full reasoning.
   if (!game.roomExists && !game.isHost) {
@@ -43,7 +45,6 @@ export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps
   }
 
   const myName = onlinePlayers.find((p) => p.uid === localUid)?.name ?? '';
-  const headerScore = `${myName} · ${formatNumber(gameState.totalScores[localUid] ?? 0)} ${t.common.pts}`;
   const turnIndex = onlinePlayers.findIndex((p) => p.uid === gameState.turnUid);
   const turnPlayerName = onlinePlayers[turnIndex]?.name ?? '';
   const winnerName =
@@ -58,7 +59,8 @@ export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps
       difficulty={roomSettings.difficulty}
       distanceKm={game.distance}
       guessText={game.guessText}
-      headerScore={headerScore}
+      name={myName}
+      points={gameState.totalScores[localUid] ?? 0}
       roomCode={code}
       isHost={isHost}
       isLastRound={isLastRound}

@@ -6,6 +6,8 @@ import { SAMPLE_DISTANCE_KM, SAMPLE_MAX_SURFACE_KM } from '@/helpers/storyFixtur
 import { translations } from '@/i18n/translations';
 
 import { SliderTrack } from './SliderTrack';
+import { source } from '@/storybook/source';
+import defaultCode from './Default.source.md?raw';
 
 const meta = {
   title: 'Compass/SliderTrack',
@@ -26,6 +28,7 @@ type Story = StoryObj<typeof meta>;
 /** The ratio-only primitive `DistanceSlider` wraps: no domain knowledge of its own, everything
  * (marks, label, value text) is converted to/from a plain 0-1 ratio by the caller. */
 export const Default: Story = {
+  parameters: source(defaultCode),
   args: {
     label: translations.fr.sliders.distance,
     marks: DISTANCE_MARKS_KM.filter((km) => km < SAMPLE_MAX_SURFACE_KM).map((km) => ({

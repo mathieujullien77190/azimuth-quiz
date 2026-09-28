@@ -6,6 +6,9 @@ import { SAMPLE_PLAYERS } from '@/helpers/storyFixtures';
 
 import { Compass } from './Compass';
 import type { CompassProps } from './types';
+import { source } from '@/storybook/source';
+import guessingCode from './Guessing.source.md?raw';
+import revealedCode from './Revealed.source.md?raw';
 
 /** Named (capitalized) so eslint's rules-of-hooks recognizes it as a component and allows the
  * `useState` below — an inline arrow assigned to a story's `render` doesn't qualify. */
@@ -37,11 +40,13 @@ type Story = StoryObj<typeof meta>;
  * Local state in the story, not the component — `Compass` stays fully controlled by its caller —
  * and shows up in the Actions panel below, `onChange` wrapped in `fn()`. */
 export const Guessing: Story = {
+  parameters: source(guessingCode),
   args: { needles: [{ bearing: 42, color: SAMPLE_PLAYERS[0].color }], onChange: fn(), size: 140 },
   render: InteractiveDemo,
 };
 
 export const Revealed: Story = {
+  parameters: source(revealedCode),
   args: {
     needles: [
       { bearing: 110, color: SAMPLE_PLAYERS[0].color },

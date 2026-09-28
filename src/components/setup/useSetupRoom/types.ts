@@ -10,6 +10,8 @@ export type SetupRoomStoreState<R> = {
   roomExists: boolean;
   roomSettings: R | null;
   gameState: { screen: string };
+  connectionLost: boolean;
+  markConnectionLost: () => void;
   connect: (code: string) => void;
   disconnect: () => void;
   consumeVoluntaryLeave: () => boolean;
@@ -39,6 +41,7 @@ export type SetupRoomAdapter<S, R> = {
   joinRoomPresence: (code: string, name: string) => Promise<string>;
   removeRoomPlayer: (code: string, uid: string) => Promise<void>;
   deleteRoom: (code: string) => Promise<void>;
+  sendHeartbeat: (code: string, uid: string) => Promise<void>;
   updateRoomPlayerColors: (code: string, colorByUid: Record<string, string>) => Promise<void>;
 };
 

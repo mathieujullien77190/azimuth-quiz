@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import Toggle from './Toggle';
+import { source } from '@/storybook/source';
+import defaultCode from './Default.source.md?raw';
 
 const meta = {
   title: 'Common/ui/Toggle',
@@ -19,6 +21,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  parameters: source(defaultCode),
   args: {
     label: 'Une option',
     description: 'Une description optionnelle.',

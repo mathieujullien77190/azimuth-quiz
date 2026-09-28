@@ -5,7 +5,6 @@ import { useLanguage, useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 
 import GameHeader from '@/components/GameHeader';
-import PlayerTabs from '@/components/PlayerTabs';
 import Button from '@/components/ui/Button';
 import NoOneFoundText from '@/components/ui/NoOneFoundText';
 import ContourFullBleedScreen from '../../components/ContourFullBleedScreen';
@@ -26,7 +25,8 @@ const ALL_HINTS = 4;
  */
 export const OnlineContourGameScreenView = ({
   onQuit,
-  headerScore,
+  name,
+  points,
   roomCode,
   roundNumber,
   totalRounds,
@@ -97,26 +97,17 @@ export const OnlineContourGameScreenView = ({
       footer={footer}
       header={
         <GameHeader
-          difficulties={[difficulty]}
+          code={roomCode}
+          difficulty={difficulty}
+          name={name}
           onQuit={onQuit}
-          roomCode={roomCode}
+          players={players}
+          points={points}
+          question={roundOver ? undefined : t.contourGame.guessPrompt}
           roundNumber={roundNumber}
-          scoreLabel={headerScore}
           totalRounds={totalRounds}
-        >
-          <PlayerTabs
-            activeIndex={roundOver ? -1 : turnIndex}
-            activeLabel={t.game.playerTurn}
-            answered={players.map(() => false)}
-            order={players.map((_, index) => index)}
-            players={players}
-          />
-          {!roundOver && (
-            <View style={styles.prompt}>
-              <Text style={styles.promptText}>{t.contourGame.guessPrompt}</Text>
-            </View>
-          )}
-        </GameHeader>
+          turnIndex={roundOver ? -1 : turnIndex}
+        />
       }
       hintLabels={hintLabels}
       onBoardAreaLayout={onBoardAreaLayout}

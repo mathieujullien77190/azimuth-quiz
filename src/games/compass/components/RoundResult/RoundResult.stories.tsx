@@ -3,6 +3,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { SAMPLE_PLAYERS, SAMPLE_ROUND_RECORD, SAMPLE_TOTALS } from '@/helpers/storyFixtures';
 
 import { RoundResult } from './RoundResult';
+import { source } from '@/storybook/source';
+import surfaceModeCode from './SurfaceMode.source.md?raw';
 
 const meta = {
   title: 'Compass/RoundResult',
@@ -23,6 +25,7 @@ type Story = StoryObj<typeof meta>;
 /** Every score here comes from the real `scoreRound`/`applyBestBonus` helpers fed three plausible
  * guesses (one near-perfect, one overshooting, one wide off) — not invented numbers. */
 export const SurfaceMode: Story = {
+  parameters: source(surfaceModeCode),
   args: {
     players: SAMPLE_PLAYERS,
     record: SAMPLE_ROUND_RECORD,

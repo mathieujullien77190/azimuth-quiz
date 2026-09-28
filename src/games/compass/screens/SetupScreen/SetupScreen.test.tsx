@@ -32,6 +32,7 @@ jest.mock('@/games/compass/helpers/room', () => ({
   // permission error is the whole point of that, see SetupScreen.tsx.
   removeRoomPlayer: jest.fn(() => Promise.resolve()),
   roomExists: jest.fn(() => Promise.resolve(false)),
+  sendHeartbeat: jest.fn(() => Promise.resolve()),
   roomSettingsFrom: jest.fn((settings) => settings),
   subscribeToRoomPlayers: jest.fn(() => jest.fn()),
   subscribeToRoomSettings: jest.fn(() => jest.fn()),
@@ -397,7 +398,6 @@ describe('SetupScreen — categories / difficulty / rounds / mode', () => {
     await fireEvent.press(getByText('15'));
     expect(updateSettings).toHaveBeenCalledWith({ rounds: 15 });
   });
-
 });
 
 describe('SetupScreen — options toggles', () => {

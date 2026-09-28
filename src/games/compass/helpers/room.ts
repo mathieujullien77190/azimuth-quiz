@@ -34,6 +34,7 @@ export const {
   joinRoomPresence,
   removeRoomPlayer,
   deleteRoom,
+  sendHeartbeat,
   updateRoomPlayerColors,
 } = rooms;
 const { roomRef } = rooms;

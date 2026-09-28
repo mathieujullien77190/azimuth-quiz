@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { NAME_PLACEHOLDERS, PLAYER_COLORS } from '@/data';
 import { playersByArrival } from '@/helpers/roomPlayers';
+import { useRoomPresence } from '@/helpers/useRoomPresence';
 import { useTranslation } from '@/i18n';
 
 import type { SetupPartyProps, SetupRoomAdapter } from './types';
@@ -121,11 +122,7 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
   // Code this device is currently connected to (as host or as a validated joiner) — null while
   // just browsing the host/join chips with nothing confirmed yet.
   const connectedRoomCode =
-    mode === 'host'
-      ? roomCode
-      : mode === 'join' && joinStatus === 'valid'
-        ? joinCode.trim().toLowerCase()
-        : null;
+    mode === 'host' ? roomCode : mode === 'join' && joinStatus === 'valid' ? joinCode.trim().toLowerCase() : null;
 
   // "Lancer la partie": each game decides what to write (origin, places, first turn...) in `run`,
   // this only owns the connected-room guard and the `starting` loading state covering the gap
@@ -164,6 +161,10 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
   const localUid = store((s) => s.localUid);
   const roomSettings = store((s) => s.roomSettings);
   const roomScreen = store((s) => s.gameState.screen);
+  const connectionLost = store((s) => s.connectionLost);
+  // Connection-loss detection for the whole life of the room (this screen stays mounted under the
+  // game screen): see `useRoomPresence`. Whoever loses the connection just leaves the game.
+  useRoomPresence(store, adapter, connectedRoomCode);
   useEffect(() => {
     if (connectedRoomCode === null) return;
     store.getState().connect(connectedRoomCode);
@@ -261,10 +262,10 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
   }, [adapter.gamePath, roomScreen, connectedRoomCode, router]);
 
   useEffect(() => {
-    if (disconnectReason === null) return;
+    if (disconnectReason === null && !connectionLost) return;
     const timeout = setTimeout(dismissDisconnectNotice, 2000);
     return () => clearTimeout(timeout);
-  }, [disconnectReason, dismissDisconnectNotice]);
+  }, [disconnectReason, connectionLost, dismissDisconnectNotice]);
 
   // Guarded on `connectedRoomCode` rather than reset to `{}` on leaving it: stale entries from
   // the last room just never render once disconnected. Also guarded on `localUid`: the players
@@ -303,8 +304,9 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
     return () => clearTimeout(timeout);
   }, [readOnlyNotice]);
   const notifyReadOnly = () => setReadOnlyNotice(true);
-  const overlayMessage =
-    disconnectReason === 'kicked'
+  const overlayMessage = connectionLost
+    ? t.setup.online.connectionLostNotice
+    : disconnectReason === 'kicked'
       ? t.setup.online.kickedNotice
       : disconnectReason === 'deleted'
         ? t.setup.online.roomDeletedNotice
@@ -314,7 +316,7 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
   // Tapping the notice dismisses whichever one is showing early, instead of only ever waiting
   // out its own 2s auto-dismiss timeout above.
   const dismissOverlay = () => {
-    if (disconnectReason !== null) dismissDisconnectNotice();
+    if (disconnectReason !== null || connectionLost) dismissDisconnectNotice();
     else setReadOnlyNotice(false);
   };
 

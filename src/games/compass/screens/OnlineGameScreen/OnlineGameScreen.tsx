@@ -4,7 +4,7 @@ import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 import { PLAYER_COLORS } from '@/data';
 import { MAX_SURFACE_DISTANCE_KM } from '@/games/compass/constants';
-import { bearingDeg, distanceKm as computeDistanceKm, formatNumber } from '@/helpers';
+import { bearingDeg, distanceKm as computeDistanceKm } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useTheme } from '@/themes';
 
@@ -49,6 +49,9 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
     if (next !== null) setOnCap(next);
   };
 
+  // Whoever loses the connection leaves the game — host included (see `useRoomPresence`).
+  if (game.connectionLost) return <RoomDeletedScreen message={t.setup.online.connectionLostNotice} />;
+
   // Only a joiner ever sees this: the host is the one who made the room disappear (see
   // `handleQuit`), and it's already navigating itself home in that same tap — showing it this
   // same notice too just traps it behind a modal with nothing to do until the redundant timeout
@@ -65,9 +68,6 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   }
   const maxDistanceKm = MAX_SURFACE_DISTANCE_KM;
   const myColor = players[localUid]?.color ?? PLAYER_COLORS[0];
-  // Top-right of the header, in every phase: this device's own name and running total — never
-  // "Manche terminée" or the like, the player's identity/score is more useful there at a glance.
-  const headerScore = `${onlinePlayers[myIndex]?.name ?? ''} · ${formatNumber(totals[myIndex] ?? 0)} ${t.common.pts}`;
 
   if (gameState.screen === 'end') {
     return (
@@ -154,11 +154,12 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
       bearing={game.bearing}
       compassColor={myColor}
       confirmed={confirmed}
-      difficulties={roomSettings.difficulties}
+      difficulty={roomSettings.difficulties[0]}
       distanceKm={game.distanceKm}
       earthMarks={record ? resultsEarthMarks : answerEarthMarks}
       extraNeedles={extraNeedles}
-      headerScore={headerScore}
+      name={onlinePlayers[myIndex]?.name ?? ''}
+      points={totals[myIndex] ?? 0}
       roomCode={code}
       isHost={isHost}
       isLastRound={isLastRound}

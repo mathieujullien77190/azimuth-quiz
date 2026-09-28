@@ -16,9 +16,11 @@ export type Needle = { bearing: number; color: string };
 /** Header shared by both phases: quit + name/score + round progress. Pure rendering. */
 export type OnlineHeaderProps = {
   onQuit: () => void;
-  headerScore: string;
+  /** This device's player and running total, for the header. */
+  name: string;
+  points: number;
   roomCode: string;
-  difficulties: Difficulty[];
+  difficulty: Difficulty;
   roundNumber: number;
   totalRounds: number;
 };

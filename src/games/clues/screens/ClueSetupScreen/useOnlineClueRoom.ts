@@ -12,6 +12,7 @@ import {
   joinRoomPresence,
   removeRoomPlayer,
   roomExists,
+  sendHeartbeat,
   startClueRoomGame,
   updateRoomPlayerColors,
   updateRoomSettings,
@@ -35,6 +36,7 @@ const adapter: SetupRoomAdapter<ClueSettings, ClueRoomSettings> = {
   joinRoomPresence,
   removeRoomPlayer,
   deleteRoom,
+  sendHeartbeat,
   updateRoomPlayerColors,
 };
 

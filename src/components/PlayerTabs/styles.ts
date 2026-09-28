@@ -17,9 +17,10 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       paddingTop: spacing.sm,
       paddingBottom: spacing.sm + 2,
     },
+    // Only the gap tightens on a narrow screen: the side padding stays `spacing.lg`, the same as the
+    // rest of the header (cross, round line...), so the tabs line up with them on a phone too.
     rowCompact: {
       gap: spacing.xs + 2,
-      paddingHorizontal: spacing.sm - 1,
     },
     tab: {
       flexDirection: 'row',

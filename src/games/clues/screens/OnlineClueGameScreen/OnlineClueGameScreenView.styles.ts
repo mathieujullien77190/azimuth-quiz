@@ -4,28 +4,6 @@ import type { Theme } from '@/types';
 
 export const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
   StyleSheet.create({
-    header: {
-      backgroundColor: isDark ? colors.background : colors.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    topBar: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-    },
-    quit: {
-      ...typography.heading,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
-    },
-    score: {
-      ...typography.heading,
-      color: colors.accent,
-      fontSize: fontSize.subtitle,
-    },
     footerContent: {
       gap: spacing.sm + 2,
     },

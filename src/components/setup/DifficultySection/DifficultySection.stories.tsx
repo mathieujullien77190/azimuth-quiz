@@ -7,6 +7,10 @@ import type { Difficulty } from '@/types';
 
 import { DifficultySection } from './DifficultySection';
 import type { DifficultySectionProps } from './types';
+import { source } from '@/storybook/source';
+import multiSelectCode from './MultiSelect.source.md?raw';
+import singleSelectCode from './SingleSelect.source.md?raw';
+import readOnlyCode from './ReadOnly.source.md?raw';
 
 /** Named (capitalized) so eslint's rules-of-hooks recognizes it as a component and allows the
  * `useState` below — an inline arrow assigned to a story's `render` doesn't qualify. */
@@ -59,6 +63,7 @@ type Story = StoryObj<typeof meta>;
 /** Compass' own multi-select: clicking a chip toggles it in/out of `selected`, several can stay
  * active at once — each click also logged in the Actions panel (`onSelect` wrapped in `fn()`). */
 export const MultiSelect: Story = {
+  parameters: source(multiSelectCode),
   args: {
     title: t.setup.difficultyTitle,
     hint: t.setup.difficultyHint,
@@ -70,6 +75,7 @@ export const MultiSelect: Story = {
 
 /** Clues/Silhouette's own single-select: clicking a chip replaces the whole selection. */
 export const SingleSelect: Story = {
+  parameters: source(singleSelectCode),
   args: {
     title: t.cluesSetup.difficultyTitle,
     hint: t.cluesSetup.difficultyHint,
@@ -80,6 +86,7 @@ export const SingleSelect: Story = {
 };
 
 export const ReadOnly: Story = {
+  parameters: source(readOnlyCode),
   args: {
     title: t.setup.difficultyTitle,
     hint: t.setup.difficultyHint,

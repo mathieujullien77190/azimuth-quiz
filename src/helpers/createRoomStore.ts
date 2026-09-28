@@ -29,6 +29,11 @@ export type RoomStoreState<Settings, GameState> = {
   connect: (code: string) => void;
   /** Tears down the three listeners and resets to defaults. */
   disconnect: () => void;
+  /** Set by `useRoomPresence` when a connection was lost — this device's own, or the host's (for a
+   * joiner): the game is over for this device, screens show a notice and head home. Reset on
+   * connect/disconnect. */
+  connectionLost: boolean;
+  markConnectionLost: () => void;
   /** Call right before removing this device's own presence on purpose (a joiner quitting from the
    * online game screen): otherwise that looks, from Firestore's point of view, identical to the
    * host kicking them (their uid was present, now it's not), and the setup screen's own listener
@@ -72,6 +77,7 @@ export const createRoomStore = <Settings, GameState>({
     roomSettings: null,
     gameState: defaultGameState,
     localUid: null,
+    connectionLost: false,
 
     connect: (code) => {
       if (get().code === code) return;
@@ -79,7 +85,7 @@ export const createRoomStore = <Settings, GameState>({
 
       hasSeenRoom = false;
       leftVoluntarily = false;
-      set({ code, roomExists: true });
+      set({ code, roomExists: true, connectionLost: false });
 
       unsubscribers = [
         subscribeToRoomPlayers(code, (players, hostUid, exists) => {
@@ -107,8 +113,11 @@ export const createRoomStore = <Settings, GameState>({
         roomSettings: null,
         gameState: defaultGameState,
         localUid: null,
+        connectionLost: false,
       });
     },
+
+    markConnectionLost: () => set({ connectionLost: true }),
 
     markVoluntaryLeave: () => {
       leftVoluntarily = true;

@@ -10,6 +10,7 @@ import {
   joinRoomPresence,
   removeRoomPlayer,
   roomExists,
+  sendHeartbeat,
   startContourRoomGame,
   updateRoomPlayerColors,
   updateRoomSettings,
@@ -32,6 +33,7 @@ const adapter: SetupRoomAdapter<ContourSettings, ContourRoomSettings> = {
   joinRoomPresence,
   removeRoomPlayer,
   deleteRoom,
+  sendHeartbeat,
   updateRoomPlayerColors,
 };
 
@@ -49,7 +51,11 @@ export const useOnlineContourRoom = (
       // Read here, not before: in solo the room only exists (and lists this device) by the time this runs.
       const firstTurnUid = playersByArrival(useContourRoomStore.getState().players)[0]?.[0];
       if (firstTurnUid === undefined) throw new Error('no player in the room');
-      await startContourRoomGame(code, pickContourRoundCodes(CONTOURS, settings.difficulty, settings.rounds), firstTurnUid);
+      await startContourRoomGame(
+        code,
+        pickContourRoundCodes(CONTOURS, settings.difficulty, settings.rounds),
+        firstTurnUid,
+      );
     });
 
   return { ...room, startOnlineContourGame };

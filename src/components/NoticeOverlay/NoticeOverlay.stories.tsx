@@ -7,6 +7,8 @@ import Button from '@/components/ui/Button';
 
 import { NoticeOverlay } from './NoticeOverlay';
 import type { NoticeOverlayProps } from './types';
+import { source } from '@/storybook/source';
+import defaultCode from './Default.source.md?raw';
 
 /** Named (capitalized) so eslint's rules-of-hooks recognizes it as a component and allows the
  * `useState` below — an inline arrow assigned to a story's `render` doesn't qualify. Mocks the
@@ -43,6 +45,7 @@ type Story = StoryObj<typeof meta>;
  * fixed near-black backdrop at 0.8 opacity over whatever screen was showing, tap anywhere to
  * dismiss early instead of only ever waiting out the caller's own auto-dismiss timeout. */
 export const Default: Story = {
+  parameters: source(defaultCode),
   args: { message: 'L’hôte a supprimé la partie.', onDismiss: fn() },
   render: InteractiveDemo,
 };

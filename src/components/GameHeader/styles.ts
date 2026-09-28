@@ -4,10 +4,10 @@ import type { Theme } from '@/types';
 
 export const createStyles = ({ colors, isDark, typography }: Theme) =>
   StyleSheet.create({
-    // Silhouette's floating-panel look (see ContourGameScreen's own `overlayTop`), adopted here
-    // for every game's header rather than each one picking its own bar color: `surfaceHigh`/
-    // `surface` at ~94% opacity (`F0`) reads as a raised panel in both themes, translucent enough
-    // to stay legible without looking like a fully solid bar.
+    // Silhouette's floating-panel look, adopted here for every game's header rather than each one
+    // picking its own bar color: `surfaceHigh`/`surface` at ~94% opacity (`F0`) reads as a raised
+    // panel in both themes, translucent enough to stay legible without looking like a fully solid
+    // bar.
     header: {
       backgroundColor: isDark ? `${colors.surfaceHigh}F0` : `${colors.surface}F0`,
       borderBottomWidth: 1,
@@ -22,14 +22,30 @@ export const createStyles = ({ colors, isDark, typography }: Theme) =>
       paddingTop: spacing.sm,
       paddingBottom: spacing.xs,
     },
-    quit: {
-      ...typography.heading,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
+    // The cross and, right next to it, the room code.
+    left: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    code: {
+      ...typography.label,
+      color: colors.text,
+      fontSize: fontSize.body + 2,
     },
     score: {
       ...typography.heading,
       color: colors.accent,
+      fontSize: fontSize.body + 2,
+    },
+    // The round's question, centered at the bottom of the header.
+    question: {
+      ...typography.heading,
+      color: colors.text,
       fontSize: fontSize.subtitle,
+      textAlign: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.xs,
     },
   });

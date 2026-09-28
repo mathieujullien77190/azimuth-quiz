@@ -4,6 +4,8 @@ import Button from '../Button';
 import Card from '../Card';
 
 import Screen from './Screen';
+import { source } from '@/storybook/source';
+import headerAndFooterCode from './HeaderAndFooter.source.md?raw';
 
 const meta = {
   title: 'Common/ui/Screen',
@@ -24,6 +26,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const HeaderAndFooter: Story = {
+  parameters: source(headerAndFooterCode),
   args: {
     header: <Card>En-tête fixe</Card>,
     footer: <Button label="Valider" onPress={() => {}} />,

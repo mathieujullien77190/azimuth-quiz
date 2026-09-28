@@ -4,6 +4,8 @@ import { SAMPLE_PLAYERS } from '@/helpers/storyFixtures';
 import { translations } from '@/i18n/translations';
 
 import { PlayerTabs } from './PlayerTabs';
+import { source } from '@/storybook/source';
+import turnByTurnCode from './TurnByTurn.source.md?raw';
 
 const meta = {
   title: 'Common/PlayerTabs',
@@ -23,6 +25,7 @@ type Story = StoryObj<typeof meta>;
 
 /** Status only, no tab is tappable: the active one says whose turn it is. */
 export const TurnByTurn: Story = {
+  parameters: source(turnByTurnCode),
   args: {
     activeIndex: 1,
     activeLabel: (name) => translations.fr.game.playerTurn(name),

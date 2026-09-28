@@ -1,18 +1,22 @@
-import type { ReactNode } from 'react';
-
-import type { Difficulty } from '@/types';
+import type { Difficulty, Player } from '@/types';
 
 export type GameHeaderProps = {
   onQuit: () => void;
-  /** Omitted for a phase that shows the score elsewhere instead (e.g. Silhouette's reveal
-   * footer, next to its "next round" button). */
-  scoreLabel?: string;
+  /** The room code, next to the quit cross (every game is an online room). */
+  code: string;
+  /** This device's player and running total, top right ("Zoé · 350 pts"). */
+  name: string;
+  points: number;
+  /** Shown as "Manche 3 / 10 · difficulty", aligned left under the top row. */
   roundNumber: number;
   totalRounds: number;
-  difficulties: Difficulty[];
-  /** Online games only: forwarded to RoundProgress, shown next to the difficulty. */
-  roomCode?: string;
-  /** Slotted below the round progress dots — Compass' `PlayerTabs` during local turns,
-   * Silhouette's guess prompt text, or nothing at all (Compass online, Silhouette's reveal). */
-  children?: ReactNode;
+  difficulty: Difficulty;
+  /** Given: shows who's playing and whose turn it is (`PlayerTabs`, status only). Omitted: no tabs,
+   * for a game with no turns (Compass: everyone answers at once). */
+  players?: Player[];
+  /** Index into `players` of whoever has the turn; -1 (the default) when nobody does, e.g. once
+   * the round is over. Only meaningful with `players`. */
+  turnIndex?: number;
+  /** The round's question, centered at the bottom of the header ("Quel est ce pays ?"). */
+  question?: string;
 };

@@ -25,6 +25,7 @@ export const useOnlineRoomSession = <Settings, GameState>(
   const players = store((s) => s.players);
   const hostUid = store((s) => s.hostUid);
   const roomExists = store((s) => s.roomExists);
+  const connectionLost = store((s) => s.connectionLost);
   const roomSettings = store((s) => s.roomSettings);
   const gameState = store((s) => s.gameState);
 
@@ -33,10 +34,10 @@ export const useOnlineRoomSession = <Settings, GameState>(
   // stale players/game state its last snapshot left behind — straight to the home screen, not
   // just "back" (the setup screen would still show this same, now-gone room).
   useEffect(() => {
-    if (roomExists) return;
+    if (roomExists && !connectionLost) return;
     const timeout = setTimeout(() => router.replace('/'), 2000);
     return () => clearTimeout(timeout);
-  }, [roomExists, router]);
+  }, [roomExists, connectionLost, router]);
 
   const onlinePlayers = onlinePlayersFrom(players);
   const isHost = localUid !== null && localUid === hostUid;
@@ -70,5 +71,16 @@ export const useOnlineRoomSession = <Settings, GameState>(
     onQuit();
   };
 
-  return { localUid, players, hostUid, roomExists, roomSettings, gameState, onlinePlayers, isHost, handleQuit };
+  return {
+    localUid,
+    players,
+    hostUid,
+    roomExists,
+    connectionLost,
+    roomSettings,
+    gameState,
+    onlinePlayers,
+    isHost,
+    handleQuit,
+  };
 };

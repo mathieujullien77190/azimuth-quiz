@@ -13,9 +13,10 @@ import ThemeBackdrop from '@/components/ThemeBackdrop';
  * this: the host is the one who made the room disappear (see `useOnlineRoomSession`'s
  * `handleQuit`), and it's already navigating itself home in that same tap — showing it this same
  * notice too just traps it behind a modal with nothing to do until the redundant redirect timeout
- * catches up. Tappable rather than only ever auto-dismissing: no reason to make a joiner wait it out.
+ * catches up. Also used, with its own `message`, when a connection was lost (`useRoomPresence`).
+ * Tappable rather than only ever auto-dismissing: no reason to make a joiner wait it out.
  */
-export const RoomDeletedScreen = () => {
+export const RoomDeletedScreen = ({ message }: { message?: string }) => {
   const router = useRouter();
   const t = useTranslation();
   const { colors } = useTheme();
@@ -23,7 +24,7 @@ export const RoomDeletedScreen = () => {
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
       <ThemeBackdrop />
-      <NoticeOverlay message={t.setup.online.roomDeletedNotice} onDismiss={() => router.replace('/')} />
+      <NoticeOverlay message={message ?? t.setup.online.roomDeletedNotice} onDismiss={() => router.replace('/')} />
     </SafeAreaView>
   );
 };

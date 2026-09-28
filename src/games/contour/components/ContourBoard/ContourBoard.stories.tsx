@@ -10,6 +10,8 @@ import {
 } from '@/helpers/storyFixtures';
 
 import { ContourBoard } from './ContourBoard';
+import { source } from '@/storybook/source';
+import allHintsRevealedCode from './AllHintsRevealed.source.md?raw';
 
 const meta = {
   title: 'Silhouette/ContourBoard',
@@ -24,6 +26,7 @@ type Story = StoryObj<typeof meta>;
  * CLAUDE.md's Silhouette section), at every hint tier revealed at once: neighbor flags, the
  * target's own flag, and every neighbor name stacked under its icon. */
 export const AllHintsRevealed: Story = {
+  parameters: source(allHintsRevealedCode),
   args: {
     height: SAMPLE_CONTOUR_BOARD_SIZE.height,
     hintLabels: [

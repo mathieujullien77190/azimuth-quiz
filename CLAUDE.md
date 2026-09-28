@@ -167,6 +167,15 @@ leur logique de jeu :
   jeux a tour de role, `helpers/useHostTurnScoring.ts` (l'hote seul ecrit `totalScores` : gain sur
   `verdict: 'correct'`, penalite fixe a chaque `wrongGuessSeq`). Composants partages : `LoadingScreen`,
   `RoomDeletedScreen`, `FinalStandings`.
+- **Coupure reseau** : `helpers/useRoomPresence.ts`, monte une seule fois par `useSetupRoom` (qui reste
+  vivant sous l'ecran de jeu). Pendant une partie a plusieurs (pas en solo, pas dans le lobby), chaque
+  appareil ecrit un heartbeat `players.{uid}.lastSeen` toutes les 30 s (cout : chaque ecriture est relue
+  par tous les joueurs) et surveille celui des autres (a-t-il change ? jamais compare a l'horloge locale).
+  Rien n'est recupere : qui perd la connexion quitte la partie — soi-meme (ecriture jamais acquittee
+  90 s : `connectionLost` dans le store, les ecrans affichent `RoomDeletedScreen` avec un message
+  dedie), un joiner que l'hote ne voit plus (l'hote le retire, les autres continuent), l'hote que
+  les joiners ne voient plus (ils quittent). Un appareil suspendu (arriere-plan, ecran verrouille) n'est
+  pas pris pour une coupure : un controle en retard remet les references a zero.
 
 Ecrans de setup : blocs partages dans `components/setup/` (`PartySection`, `CategorySection`,
 `DifficultySection`, `RoundsSection`, `OptionsSection` — tableau d'options `{ id, title,
@@ -278,6 +287,14 @@ les header/footer qui flottent par-dessus en `position: 'absolute'` (fond `${col
 plutot que de reserver leur propre espace — pour que le contour du pays touche les bords de l'ecran.
 La barre de reponse (indice + champ + Valider) est `ContourGuessBar`. La fin de manche garde ce meme
 ecran : tous les paliers s'affichent et le pied de page montre le resultat.
+
+## Storybook
+
+Stories colocalisees (`src/**/<Name>.stories.tsx`, config dans `admin/.storybook`, `npm run storybook`). Chaque
+story porte le code qu'un consommateur ecrirait (pas le JSX reconstruit depuis les `args`) :
+`parameters: source(code)` (`@/storybook/source`) avec le snippet dans `<Story>.source.md` a cote (bloc
+```tsx, importe en `?raw`, rien a echapper ; Prettier ne le reformate pas). `source()` va sur la story,
+jamais sur le `meta`. Un composant sans store ni routeur (dumb) a sa story ; les containers smart, non.
 
 ## Theme
 

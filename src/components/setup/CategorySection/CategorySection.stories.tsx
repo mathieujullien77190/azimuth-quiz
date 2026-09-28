@@ -9,6 +9,10 @@ import type { Category } from '@/types';
 
 import { CategorySection } from './CategorySection';
 import type { CategorySectionProps } from './types';
+import { source } from '@/storybook/source';
+import compassCode from './Compass.source.md?raw';
+import cluesCode from './Clues.source.md?raw';
+import readOnlyCode from './ReadOnly.source.md?raw';
 
 const t = translations.fr;
 
@@ -48,6 +52,7 @@ type Story = StoryObj<typeof meta>;
 
 /** Compass' full pool of categories. */
 export const Compass: Story = {
+  parameters: source(compassCode),
   args: {
     title: t.setup.categoriesTitle,
     hint: t.setup.categoriesAvailability(120),
@@ -59,6 +64,7 @@ export const Compass: Story = {
 
 /** Clues' own subset: city-only categories. */
 export const Clues: Story = {
+  parameters: source(cluesCode),
   args: {
     title: t.setup.categoriesTitle,
     hint: t.setup.categoriesAvailability(42),
@@ -69,5 +75,6 @@ export const Clues: Story = {
 };
 
 export const ReadOnly: Story = {
+  parameters: source(readOnlyCode),
   args: { ...Compass.args, disabled: true } as CategorySectionProps,
 };

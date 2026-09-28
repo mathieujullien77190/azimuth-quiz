@@ -3,7 +3,6 @@ import { useTranslation } from '@/i18n';
 import FinalStandings from '@/components/FinalStandings';
 import LoadingScreen from '@/components/LoadingScreen';
 import RoomDeletedScreen from '@/components/RoomDeletedScreen';
-import { formatNumber } from '@/helpers';
 import { OnlineContourGameScreenView } from './OnlineContourGameScreenView';
 import type { OnlineContourGameScreenProps } from './types';
 import { useOnlineContourGame } from './useOnlineContourGame';
@@ -17,6 +16,9 @@ import { useOnlineContourGame } from './useOnlineContourGame';
 export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScreenProps) => {
   const t = useTranslation();
   const game = useOnlineContourGame(code, onQuit);
+
+  // Whoever loses the connection leaves the game — host included (see `useRoomPresence`).
+  if (game.connectionLost) return <RoomDeletedScreen message={t.setup.online.connectionLostNotice} />;
 
   // Only a joiner ever sees this — see `RoomDeletedScreen` for the full reasoning.
   if (!game.roomExists && !game.isHost) return <RoomDeletedScreen />;
@@ -48,7 +50,8 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
       country={country}
       difficulty={roomSettings.difficulty}
       guessText={game.guessText}
-      headerScore={`${myName} · ${formatNumber(gameState.totalScores[localUid] ?? 0)} ${t.common.pts}`}
+      name={myName}
+      points={gameState.totalScores[localUid] ?? 0}
       hintsRevealed={gameState.hintsRevealed}
       isHost={isHost}
       isLastRound={gameState.roundIndex + 1 >= gameState.countryCodes.length}

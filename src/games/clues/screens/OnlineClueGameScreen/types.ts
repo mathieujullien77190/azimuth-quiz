@@ -9,7 +9,9 @@ export type OnlineClueGameScreenProps = {
 
 export type OnlineClueGameScreenViewProps = {
   onQuit: () => void;
-  headerScore: string;
+  /** This device's player and running total, for the header. */
+  name: string;
+  points: number;
   roomCode: string;
   roundNumber: number;
   totalRounds: number;

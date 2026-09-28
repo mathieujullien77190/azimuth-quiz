@@ -76,6 +76,8 @@ export type Translations = {
       kickedNotice: string;
       /** Shown to a joiner, same splash, once the room itself is gone (host started a new one). */
       roomDeletedNotice: string;
+      /** Whoever loses the connection during a game leaves it (see `useRoomPresence`). */
+      connectionLostNotice: string;
     };
     /** Shown briefly (see SetupScreen's `notifyReadOnly`) when a joiner taps a read-only option. */
     readOnlyNotice: string;
@@ -92,12 +94,10 @@ export type Translations = {
   game: {
     loading: string;
     quit: string;
+    round: string;
     validate: string;
     next: string;
     last: string;
-    round: string;
-    /** Room code shown in the header of an online game, next to the difficulty ("Code KEBA"). */
-    roomCode: (code: string) => string;
     roundOver: string;
     /** Navigates to the "heading" (compass) section while answering, without submitting. */
     nextStep: string;

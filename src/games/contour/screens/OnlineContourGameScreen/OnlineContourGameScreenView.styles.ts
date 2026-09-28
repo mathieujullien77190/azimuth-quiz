@@ -4,14 +4,6 @@ import type { Theme } from '@/types';
 
 export const createStyles = ({ colors, typography }: Theme) =>
   StyleSheet.create({
-    prompt: {
-      alignItems: 'center',
-    },
-    promptText: {
-      ...typography.heading,
-      color: colors.text,
-      fontSize: fontSize.subtitle,
-    },
     footer: {
       gap: spacing.sm + 2,
     },

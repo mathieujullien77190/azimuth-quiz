@@ -28,7 +28,7 @@ import type { ClueId } from '@/types';
  * `useOnlineGame`/`OnlineGameScreen.tsx`.
  */
 export const useOnlineClueGame = (code: string, onQuit: () => void) => {
-  const { localUid, players, roomExists, roomSettings, gameState, onlinePlayers, isHost, handleQuit } =
+  const { localUid, players, roomExists, connectionLost, roomSettings, gameState, onlinePlayers, isHost, handleQuit } =
     useOnlineRoomSession(useClueRoomStore, { deleteRoom, removeRoomPlayer }, code, onQuit);
 
   const place = gameState.places[gameState.roundIndex];
@@ -119,6 +119,7 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     onlinePlayers,
     isHost,
     roomExists,
+    connectionLost,
     roomSettings,
     gameState,
     place,

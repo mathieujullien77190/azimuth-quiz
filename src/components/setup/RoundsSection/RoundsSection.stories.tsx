@@ -4,6 +4,9 @@ import { fn } from 'storybook/test';
 
 import { RoundsSection } from './RoundsSection';
 import type { RoundsSectionProps } from './types';
+import { source } from '@/storybook/source';
+import defaultCode from './Default.source.md?raw';
+import readOnlyCode from './ReadOnly.source.md?raw';
 
 /** Named (capitalized) so eslint's rules-of-hooks recognizes it as a component and allows the
  * `useState` below — an inline arrow assigned to a story's `render` doesn't qualify. */
@@ -41,10 +44,12 @@ type Story = StoryObj<typeof meta>;
  * component — `RoundsSection` itself stays fully controlled by its caller) — and shows up in the
  * Actions panel below, `onSelect` wrapped in `fn()`. */
 export const Default: Story = {
+  parameters: source(defaultCode),
   args: { rounds: 10, onSelect: fn() },
   render: InteractiveDemo,
 };
 
 export const ReadOnly: Story = {
+  parameters: source(readOnlyCode),
   args: { rounds: 5, onSelect: fn(), disabled: true },
 };

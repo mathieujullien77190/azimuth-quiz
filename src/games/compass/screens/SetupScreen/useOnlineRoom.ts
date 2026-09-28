@@ -11,6 +11,7 @@ import {
   removeRoomPlayer,
   roomExists,
   roomSettingsFrom,
+  sendHeartbeat,
   startRoomGame,
   updateRoomPlayerColors,
   updateRoomSettings,
@@ -32,6 +33,7 @@ const adapter: SetupRoomAdapter<GameSettings, RoomSettings> = {
   joinRoomPresence,
   removeRoomPlayer,
   deleteRoom,
+  sendHeartbeat,
   updateRoomPlayerColors,
 };
 
