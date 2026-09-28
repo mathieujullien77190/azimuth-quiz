@@ -40,7 +40,7 @@ src/
   app/                 # Expo Router : _layout (providers + Stack), routes (re-exports minces)
   components/          # ce qui n'est PAS specifique a un jeu (plus de dossier `common/` a part
                        # depuis fin 2026-09 : fusionne ici) : ui/ (Button, Card, Chip, Screen,
-                       # Section, Stat, Toggle), HomeScreen, SettingsScreen, LanguageProvider,
+                       # Section, SliderTrack, Toggle...), HomeScreen, SettingsScreen, LanguageProvider,
                        # ThemeProvider, MascotButton/HelicopterButton/UfoButton, GameCard,
                        # NoticeOverlay (splash plein ecran texte blanc sur fond noir a 0.8
                        # d'opacite - "l'hote a supprime la partie", "vous avez ete expulse" ;
@@ -74,15 +74,14 @@ src/
     contour/
       screens/         # OnlineContourGameScreen, ContourSetupScreen
       components/      # ContourBoard, ContourFullBleedScreen, ContourGuessBar
-      helpers/         # contourScoring.ts, contourCountry.ts, roundBoard.ts, useRoundBoard.ts, room.ts
+      helpers/         # contourCountry.ts, roundBoard.ts, useRoundBoard.ts, room.ts
       constants.ts     # tuning propre a Silhouette (anciennement `constants/contour.ts`) :
-                       # MAX_CONTOUR_POINTS, CONTOUR_GUESS_POINTS_BY_HINTS,
+                       # CONTOUR_GUESS_POINTS_BY_HINTS,
                        # CONTOUR_WRONG_GUESS_PENALTY, DEFAULT_CONTOUR_SETTINGS
   helpers/             # commun aux 3 jeux : geo.ts, format.ts, storage.ts, location.ts, random.ts,
                        # web.ts, firebase.ts, settings.ts (sanitize GameSettings) — le barrel
                        # `index.ts` re-exporte aussi les fonctions des `helpers/` par-jeu
-                       # ci-dessus (places/scoring/distanceScale/clueHistory/clueSkeleton/
-                       # contourScoring), donc un simple `import { pickPlaces } from '@/helpers'`
+                       # ci-dessus (places/scoring/distanceScale/clueHistory/clueSkeleton), donc un simple `import { pickPlaces } from '@/helpers'`
                        # marche toujours sans savoir ou vit le fichier reel — room.ts/roomStore.ts
                        # (Compass) restent les seuls hors barrel (`firebase/firestore` plante
                        # Jest a l'import), importes directement via leur chemin `@/games/compass/...`
@@ -165,7 +164,7 @@ leur logique de jeu :
 - **Ecran de jeu en ligne** : `helpers/useOnlineRoomSession.ts` (etat de la room, hote, joueurs dans
   l'ordre d'arrivee via `helpers/roomPlayers.ts`, redirection "room supprimee", `handleQuit`) et, pour les
   jeux a tour de role, `helpers/useHostTurnScoring.ts` (l'hote seul ecrit `totalScores` : gain sur
-  `verdict: 'correct'`, penalite fixe a chaque `wrongGuessSeq`). Composants partages : `GameHeader`/`GameFooter` (le panneau translucide autour du pied de page, pose par chaque jeu ; `Screen` rend son `footer` tel quel), `NoticeOverlay` (avec `loading` pour l'attente),
+  `verdict: 'correct'`, penalite fixe a chaque `wrongGuessSeq`), `helpers/useHostTurnRecovery.ts` (l'hote passe la main si le joueur actif est parti), `helpers/useGuessDraft.ts` (texte saisi + banniere « rate » du joueur, remis a zero a chaque manche/changement de tour), `nextPlayerUid` (`helpers/roomPlayers.ts`, qui joue apres qui) et `helpers/useTransientFlag.ts` (un drapeau qui retombe seul, pour les notices). Composants partages : `GameHeader`/`GameFooter` (le panneau translucide autour du pied de page, pose par chaque jeu ; `Screen` rend son `footer` tel quel), `NoticeOverlay` (avec `loading` pour l'attente),
   `RoomDeletedScreen`, `FinalStandings`.
 - **Coupure reseau** : `helpers/useRoomPresence.ts`, monte une seule fois par `useSetupRoom` (qui reste
   vivant sous l'ecran de jeu). Pendant une partie a plusieurs (pas en solo, pas dans le lobby), chaque
