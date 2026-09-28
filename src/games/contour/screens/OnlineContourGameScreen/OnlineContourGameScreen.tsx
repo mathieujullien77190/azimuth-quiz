@@ -1,6 +1,7 @@
 import { useTranslation } from '@/i18n';
 
 import FinalStandings from '@/components/FinalStandings';
+import Button from '@/components/ui/Button';
 import NoticeOverlay from '@/components/NoticeOverlay';
 import RoomDeletedScreen from '@/components/RoomDeletedScreen';
 import { OnlineContourGameScreenView } from './OnlineContourGameScreenView';
@@ -40,10 +41,10 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
           total: gameState.totalScores[player.uid] ?? 0,
           color: player.color,
         }))}
-        homeLabel={t.endScreen.menu}
-        onHome={game.handleQuit}
         title={t.endScreen.title}
-      />
+      >
+        <Button label={t.endScreen.menu} onPress={game.handleQuit} />
+      </FinalStandings>
     );
   }
 

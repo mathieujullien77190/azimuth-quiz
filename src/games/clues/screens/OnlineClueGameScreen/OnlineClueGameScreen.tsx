@@ -2,6 +2,7 @@ import { useTransientFlag } from '@/helpers/useTransientFlag';
 import { useTranslation } from '@/i18n';
 
 import FinalStandings from '@/components/FinalStandings';
+import Button from '@/components/ui/Button';
 import NoticeOverlay from '@/components/NoticeOverlay';
 import RoomDeletedScreen from '@/components/RoomDeletedScreen';
 import { OnlineClueGameScreenView } from './OnlineClueGameScreenView';
@@ -45,10 +46,10 @@ export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps
           total: gameState.totalScores[player.uid] ?? 0,
           color: player.color,
         }))}
-        homeLabel={t.endScreen.menu}
-        onHome={game.handleQuit}
         title={t.endScreen.title}
-      />
+      >
+        <Button label={t.endScreen.menu} onPress={game.handleQuit} />
+      </FinalStandings>
     );
   }
 

@@ -37,7 +37,7 @@ describe('EndScreen — alone', () => {
   const records: RoundRecord[] = [{ place: place('Paris', 'FR'), results: [result(400, 350)] }];
 
   it('shows the rank title and the score, and the points won on each criterion per round', async () => {
-    const { getByText, queryByText } = await render(
+    const { getByText, getAllByText, queryByText } = await render(
       <EndScreen onMenu={jest.fn()} players={[alice]} records={records} totals={[900]} />,
     );
     expect(getByText('Classement final')).toBeTruthy();
@@ -45,8 +45,8 @@ describe('EndScreen — alone', () => {
     expect(getByText('Paris')).toBeTruthy();
     expect(getByText('+400')).toBeTruthy();
     expect(getByText('+350')).toBeTruthy();
-    // Alone, "the best" is always you: no name, no winner banner.
-    expect(queryByText('Alice')).toBeNull();
+    // Alone, "the best" is always you: the recap names nobody (only the ranking lists Alice), no banner.
+    expect(getAllByText('Alice')).toHaveLength(1);
     expect(queryByText(/gagne/)).toBeNull();
   });
 

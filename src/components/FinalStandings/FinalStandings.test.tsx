@@ -1,9 +1,9 @@
-import { fireEvent, render } from '@testing-library/react-native';
+import { render } from '@testing-library/react-native';
+import { Text } from 'react-native';
 
 import FinalStandings from '.';
-import type { RoundsRecap } from './types';
 
-const baseProps = { homeLabel: 'Accueil', onHome: jest.fn(), title: 'Classement final' };
+const baseProps = { title: 'Classement final' };
 
 beforeEach(() => jest.clearAllMocks());
 
@@ -41,14 +41,12 @@ describe('FinalStandings — the scores', () => {
     expect(getAllByText('🥇')).toHaveLength(2);
   });
 
-  it('shows no banner for a single player, and calls onHome', async () => {
-    const onHome = jest.fn();
+  it('shows no banner for a single player', async () => {
     const { queryByText, getByText } = await render(
-      <FinalStandings {...baseProps} entries={[{ name: 'Zoé', total: 250 }]} onHome={onHome} />,
+      <FinalStandings {...baseProps} entries={[{ name: 'Zoé', total: 250 }]} />,
     );
     expect(queryByText(/gagne|Égalité/)).toBeNull();
-    await fireEvent.press(getByText('Accueil'));
-    expect(onHome).toHaveBeenCalledTimes(1);
+    expect(getByText('Zoé')).toBeTruthy();
   });
 
   it('shows a dot in the player color when there is one', async () => {
@@ -59,64 +57,18 @@ describe('FinalStandings — the scores', () => {
   });
 });
 
-describe('FinalStandings — the rank card', () => {
-  const hero = { emoji: '🧭', title: 'Navigateur' };
-
-  it('replaces the list with the title and the big score when playing alone', async () => {
-    const { getByText, queryByText } = await render(
-      <FinalStandings {...baseProps} entries={[{ name: 'Zoé', total: 900 }]} hero={hero} />,
+describe('FinalStandings — what the game adds', () => {
+  it('shows its children under the scores', async () => {
+    const { getByText } = await render(
+      <FinalStandings {...baseProps} entries={[{ name: 'Zoé', total: 1 }]}>
+        <Text>Récapitulatif</Text>
+      </FinalStandings>,
     );
-    expect(getByText('🧭')).toBeTruthy();
-    expect(getByText('Navigateur')).toBeTruthy();
-    expect(getByText(/900/)).toBeTruthy();
-    expect(queryByText('Zoé')).toBeNull();
-    expect(queryByText(/pts/)).toBeNull();
+    expect(getByText('Récapitulatif')).toBeTruthy();
   });
 
-  it('keeps the list beside the card with several players, without the banner', async () => {
-    const { getByText, queryByText } = await render(
-      <FinalStandings
-        {...baseProps}
-        entries={[
-          { name: 'Zoé', total: 900 },
-          { name: 'Max', total: 100 },
-        ]}
-        hero={hero}
-      />,
-    );
-    expect(getByText('Zoé')).toBeTruthy();
-    expect(queryByText(/gagne/)).toBeNull();
-  });
-});
-
-describe('FinalStandings — the rounds recap', () => {
-  const recap: RoundsRecap = {
-    title: 'Manche par manche',
-    columns: ['Direction', 'Distance'],
-    rows: [
-      {
-        label: 'Paris',
-        cells: [{ text: 'Zoé', detail: '+400', color: '#EF4444' }, { text: '–' }],
-      },
-    ],
-  };
-
-  it('is absent unless given', async () => {
+  it('shows nothing more without children', async () => {
     const { queryByText } = await render(<FinalStandings {...baseProps} entries={[{ name: 'Zoé', total: 1 }]} />);
-    expect(queryByText('Manche par manche')).toBeNull();
-  });
-
-  it('lays out one row per round, one cell per column, with the detail and the dot', async () => {
-    const { getByText, getAllByText, toJSON } = await render(
-      <FinalStandings {...baseProps} entries={[{ name: 'Zoé', total: 1 }]} recap={recap} />,
-    );
-    expect(getByText('Manche par manche')).toBeTruthy();
-    expect(getByText('Direction')).toBeTruthy();
-    expect(getByText('Distance')).toBeTruthy();
-    expect(getByText('Paris')).toBeTruthy();
-    expect(getAllByText('Zoé')).toHaveLength(2); // the ranking, and the recap's cell
-    expect(getByText('+400')).toBeTruthy();
-    expect(getByText('–')).toBeTruthy();
-    expect(JSON.stringify(toJSON())).toContain('#EF4444');
+    expect(queryByText('Récapitulatif')).toBeNull();
   });
 });

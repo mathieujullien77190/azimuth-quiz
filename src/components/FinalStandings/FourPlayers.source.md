@@ -2,6 +2,7 @@
 import FinalStandings from '@/components/FinalStandings';
 import Button from '@/components/ui/Button';
 
+// The podium gets medals, the fourth player and beyond their rank number; tied totals share a rank.
 <FinalStandings
   entries={onlinePlayers.map((player) => ({
     name: player.name,
