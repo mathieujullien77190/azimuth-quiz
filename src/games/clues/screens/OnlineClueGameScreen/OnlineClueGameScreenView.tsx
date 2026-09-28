@@ -60,7 +60,10 @@ export const OnlineClueGameScreenView = ({
   const { colors } = useTheme();
   const t = useTranslation();
   const roundOver = verdict !== undefined;
-  const turnPlayerName = players[turnIndex]?.name ?? '';
+  // What the letter clue's skeleton (boxes, or the plain line below when the shape isn't known
+  // yet) overlays: the turn-holder's own draft while typing it, the mirrored `typing` text for
+  // everyone else — same value, same live update, whoever is looking at it.
+  const previewText = isMyTurn ? guessText : typedByActivePlayer;
 
   return (
     <Screen
@@ -72,18 +75,21 @@ export const OnlineClueGameScreenView = ({
             )}
             {!roundOver && skeletonGroups.length > 0 && (
               <View style={styles.skeletonRow}>
-                {(skeletonLengthKnown ? overlayTypedLetters(skeletonGroups, guessText) : skeletonGroups).map(
-                  (group, groupIndex) => (
-                    <View key={groupIndex} style={styles.skeletonWord}>
-                      {group.map((letter, letterIndex) => (
-                        <View key={letterIndex} style={letter === HYPHEN_SLOT ? styles.skeletonHyphen : styles.skeletonSlot}>
-                          {letter !== null && <Text style={styles.skeletonLetter}>{letter}</Text>}
-                        </View>
-                      ))}
-                    </View>
-                  ),
-                )}
+                {overlayTypedLetters(skeletonGroups, previewText).map((group, groupIndex) => (
+                  <View key={groupIndex} style={styles.skeletonWord}>
+                    {group.map((letter, letterIndex) => (
+                      <View key={letterIndex} style={letter === HYPHEN_SLOT ? styles.skeletonHyphen : styles.skeletonSlot}>
+                        {letter !== null && <Text style={styles.skeletonLetter}>{letter}</Text>}
+                      </View>
+                    ))}
+                  </View>
+                ))}
               </View>
+            )}
+            {/* No letter clue picked at all yet: no shape to box the typed word into, but it's
+                still worth showing, live, to everyone — self included. */}
+            {!roundOver && skeletonGroups.length === 0 && previewText !== '' && (
+              <Text style={styles.typingPreview}>{previewText}</Text>
             )}
             {roundOver ? (
               <View style={styles.actions}>
@@ -109,11 +115,7 @@ export const OnlineClueGameScreenView = ({
                   <Button label={isLastRound ? t.game.last : t.cluesGame.continueLabel} onPress={onNextRound} />
                 )}
               </View>
-            ) : !isMyTurn ? (
-              typedByActivePlayer !== '' && (
-                <Text style={styles.typingPreview}>{t.cluesGame.someoneTyping(turnPlayerName, typedByActivePlayer)}</Text>
-              )
-            ) : (
+            ) : isMyTurn ? (
               <View style={styles.buzzRow}>
                 {lastWrong !== null && (
                   <Text style={[styles.resultBanner, styles.resultWrong]}>
@@ -137,12 +139,17 @@ export const OnlineClueGameScreenView = ({
                   style={styles.guessInput}
                   value={guessText}
                 />
-                {guessText.trim().length === 0 ? (
-                  <Button label={t.cluesGame.giveUp} onPress={onGiveUp} variant="ghost" />
-                ) : (
+                {guessText.trim().length > 0 ? (
                   <Button label={t.cluesGame.submitGuess} onPress={onSubmitGuess} />
+                ) : (
+                  // Giving up is a host call (below), not the turn-holder's own — even when it's
+                  // the host's own turn, it goes through the very same button, not a duplicate.
+                  isHost && <Button label={t.cluesGame.giveUp} onPress={onGiveUp} variant="ghost" />
                 )}
               </View>
+            ) : (
+              // Not this device's turn: only the host can still cut the round short from here.
+              isHost && <Button label={t.cluesGame.giveUp} onPress={onGiveUp} variant="ghost" />
             )}
           </View>
         </GameFooter>

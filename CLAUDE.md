@@ -113,6 +113,22 @@ donc en charge les deux cas, et ce que `run` lit dans la room (le premier joueur
 jamais avant. Consequence assumee : il faut du reseau, meme seul. Pas de `gameStore`/`useGame`/routes
 `/game`, `/clues-game`, `/contour-game`.
 
+### Nom du joueur partage entre les 3 jeux
+
+Un seul nom pour les 3 jeux, toujours le meme : `usePlayerName` (`settings/index.ts`, store Zustand
+persiste, hydrate au demarrage comme `useSettings` — `hydratePlayerName` dans `_layout.tsx`) en est
+l'unique source. Chaque jeu garde quand meme un `playerName` dans ses propres reglages (`GameSettings`/
+`ClueSettings`/`ContourSettings`, requis par `useSetupRoom<S extends { playerName: string }>` et par
+`roomSettingsFrom`, meme si ce dernier l'exclut toujours de ce qui part dans la room), mais seulement
+comme miroir : `useSetupRoom` (commun aux 3 setups) affiche `usePlayerName` des qu'il est hydrate (avant,
+celui du jeu courant, pour eviter un champ vide le temps de la lecture disque), et `onChangeName` ecrit
+dans les deux a la fois. Un effet a usage unique reconcilie les deux au premier montage suivant
+l'hydratation : si le store partage a deja un nom, ce jeu l'adopte ; sinon, si CE jeu en a deja un (seul
+Compass persiste sur disque, donc c'est le seul cas possible), c'est lui qui alimente le store partage —
+migration pour les joueurs qui avaient deja un nom Compass avant que ce store existe. Concretement :
+changer son nom dans Indices le change aussi dans Boussole et Silhouette, y compris apres avoir deja
+ouvert ces ecrans.
+
 ### Smart/dumb (container/presentational) sur les ecrans Compass
 
 `SetupScreen` et `OnlineGameScreen` suivent le meme decoupage : un hook "smart" colocalise
@@ -173,9 +189,18 @@ commentees en francais :
   detenteur du tour est en train de taper. Seul lui ecrit (`setClueRoomTyping`, cote `useOnlineClueGame` : texte
   debounce a 500 ms via `useDebouncedValue`, une seule ecriture par valeur stabilisee grace a un ref, jamais en solo
   ni hors de son tour ni manche terminee — meme souci de cout qu'un heartbeat de presence, chaque ecriture est relue
-  par tous), remis a `''` quand le champ se vide ou apres envoi. Cote lecture, un spectateur ne voit le texte que si
-  `typing.uid === turnUid` (evite un texte perime d'un tour precedent) et la manche est en cours ; le detenteur ne se
-  voit pas lui-meme. Pas de champ equivalent pour Silhouette (pas demande).
+  par tous), remis a `''` quand le champ se vide ou apres envoi. Cote lecture, un spectateur ne lit le texte que si
+  `typing.uid === turnUid` (evite un texte perime d'un tour precedent) et la manche est en cours. `previewText`
+  (`OnlineClueGameScreenView`) unifie ce texte (le detenteur : son propre `guessText` ; les autres : `typedByActivePlayer`)
+  et l'affiche pareil pour tout le monde : dans les cases de l'indice "Lettre" des qu'un tir de cet indice a eu lieu
+  (`overlayTypedLetters`, en temps reel — meme la case "premiere lettre seule" du 1er clic se met a jour avec ce qui
+  est tape), sinon en simple texte accent (`typingPreview`) tant qu'aucun indice "Lettre" n'a encore ete pris. Pas de
+  champ equivalent pour Silhouette (pas demande).
+- **Indices : "Je ne sais pas" reserve a l'hote** — `giveUp` (`useOnlineClueGame`) coupe court a la manche
+  (`verdict: 'giveUp'`) pour n'importe quel hote, meme hors de son propre tour, jamais pour un joueur non-hote
+  meme quand c'est le sien (le detenteur du tour ne voit plus ce bouton s'il n'est pas l'hote, `OnlineClueGameScreenView`).
+  Ne demande aucune regle Firestore a part : `isHost()` autorise deja l'hote a ecrire n'importe quel champ,
+  avant meme la clause `turnBasedPlayer` qui, elle, reste liee a `turnUid`.
   `RoomDeletedScreen`, `FinalStandings` (ecran de fin commun aux trois jeux : classement, medailles, egalites ;
   Compass y ajoute en `children` son propre `RoundsRecap`, qui dit qui a ete le meilleur en direction et en distance
   a chaque manche).

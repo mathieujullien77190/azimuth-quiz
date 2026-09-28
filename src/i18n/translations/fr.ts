@@ -180,7 +180,6 @@ export const fr: Translations = {
     wasPlace: 'C’était',
     continueLabel: 'Continuer',
     notYourTurn: (name) => `C’est au tour de ${name} : tu peux seulement regarder… ou faire semblant de réfléchir 🤔`,
-    someoneTyping: (name, text) => `${name} tape : ${text}`,
     clues: {
       position: 'Position',
       population: 'Population',

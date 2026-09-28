@@ -183,9 +183,6 @@ export type Translations = {
     /** Online only: shown to the player whose turn it is right now. */
     /** Online only: what a player who isn't the turn-holder is told when they tap a clue. */
     notYourTurn: (name: string) => string;
-    /** Online only: what a spectator (not the turn-holder) sees, live, while that player types their
-     * answer — nothing shown once it's empty or the round is over. */
-    someoneTyping: (name: string, text: string) => string;
     clues: Record<ClueId, string>;
     isCapitalYes: string;
     isCapitalNo: string;

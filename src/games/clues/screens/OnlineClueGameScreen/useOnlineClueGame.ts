@@ -114,8 +114,11 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     setGuessText('');
   };
 
+  // Host-only, whoever's turn it is: cuts the round short rather than let it drag on. The Firestore
+  // rules let the host write any field (`isHost()`, ahead of `turnBasedPlayer`'s own turn-holder
+  // check), so no rule change is needed for this to work off the host's own turn too.
   const giveUp = () => {
-    if (!isMyTurn) return;
+    if (!isHost) return;
     giveUpClueRoom(code).catch(() => {});
   };
 

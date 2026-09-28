@@ -121,11 +121,17 @@ describe('OnlineClueGameScreen — after the last round', () => {
 });
 
 describe('OnlineClueGameScreen — the turn-holder', () => {
-  it('shows the points at stake and lets the player give up while the field is empty', async () => {
+  it('shows the points at stake and lets the host give up while the field is empty', async () => {
     const { getByText } = await renderScreen();
     expect(getByText(t.cluesGame.pointsAtStake('24'))).toBeTruthy();
     await fireEvent.press(getByText(t.cluesGame.giveUp));
     expect((mockGame.giveUp as jest.Mock).mock.calls).toHaveLength(1);
+  });
+
+  it('gives a non-host turn-holder nothing to press while the field is empty — only the host gives up', async () => {
+    setGame({ isMyTurn: true, isHost: false });
+    const { queryByText } = await renderScreen();
+    expect(queryByText(t.cluesGame.giveUp)).toBeNull();
   });
 
   it('submits once something is typed, from the button or the keyboard', async () => {
@@ -190,22 +196,44 @@ describe('OnlineClueGameScreen — the turn-holder', () => {
 describe("OnlineClueGameScreen — somebody else's turn", () => {
   beforeEach(() => setGame({ isMyTurn: false, gameState: gameState({ turnUid: 'max' }) }));
 
-  it('shows only the points at stake in the footer', async () => {
+  it('shows only the points at stake in the footer, no submit button', async () => {
     const { getByText, queryByText } = await renderScreen();
     expect(getByText(t.cluesGame.pointsAtStake('24'))).toBeTruthy();
-    expect(queryByText(t.cluesGame.giveUp)).toBeNull();
     expect(queryByText(t.cluesGame.submitGuess)).toBeNull();
   });
 
-  it('shows what the turn-holder is typing, live', async () => {
+  it('still lets the host give up from here, cutting the round short off their own turn', async () => {
+    const { getByText } = await renderScreen();
+    expect(getByText(t.cluesGame.giveUp)).toBeTruthy();
+  });
+
+  it('gives a non-host spectator no way to give up', async () => {
+    setGame({ isMyTurn: false, isHost: false, gameState: gameState({ turnUid: 'max' }) });
+    const { queryByText } = await renderScreen();
+    expect(queryByText(t.cluesGame.giveUp)).toBeNull();
+  });
+
+  it('shows what the turn-holder is typing, live, plainly when no letter clue is out yet', async () => {
     setGame({ isMyTurn: false, gameState: gameState({ turnUid: 'max' }), typedByActivePlayer: 'Pari' });
     const { getByText } = await renderScreen();
-    expect(getByText(t.cluesGame.someoneTyping('Max', 'Pari'))).toBeTruthy();
+    expect(getByText('Pari')).toBeTruthy();
+  });
+
+  it('overlays it onto the letter clue skeleton once one is out, same as the turn-holder sees for themselves', async () => {
+    setGame({
+      isMyTurn: false,
+      gameState: gameState({ turnUid: 'max' }),
+      typedByActivePlayer: 'Pa',
+      skeletonGroups: [['P', null, null]],
+      skeletonLengthKnown: true,
+    });
+    const { getByText } = await renderScreen();
+    expect(getByText('A')).toBeTruthy();
   });
 
   it('shows nothing while nothing has been typed yet', async () => {
     const { queryByText } = await renderScreen();
-    expect(queryByText(/tape :/)).toBeNull();
+    expect(queryByText('Pari')).toBeNull();
   });
 
   it('answers a tap on a clue with a short notice, that closes by itself', async () => {

@@ -343,16 +343,24 @@ describe('useOnlineClueGame — guessing', () => {
     expect(reportClueRoomWrong).not.toHaveBeenCalled();
   });
 
-  it('gives up for the turn-holder only', async () => {
+  it('gives up for the host, whoever holds the turn (cutting the round short is a host call)', async () => {
     jest.mocked(giveUpClueRoom).mockRejectedValueOnce(new Error('offline'));
     const { result, unmount } = await setup();
     await act(async () => result.current.giveUp());
     expect(giveUpClueRoom).toHaveBeenCalledWith('tabofuna');
 
     await unmount();
-    const guest = await setup({ localUid: 'guest' });
-    await act(async () => guest.result.current.giveUp());
-    expect(giveUpClueRoom).toHaveBeenCalledTimes(1);
+    // Still the host, but not the turn-holder this time — the Firestore rules let the host write
+    // any field regardless of `turnUid` (see `giveUp`'s own comment), so this must still work.
+    const hostNotTurnHolder = await setup({ gameState: gameState({ turnUid: 'guest' }) });
+    await act(async () => hostNotTurnHolder.result.current.giveUp());
+    expect(giveUpClueRoom).toHaveBeenCalledTimes(2);
+    await hostNotTurnHolder.unmount();
+
+    // The turn-holder, but not the host: no longer enough on its own.
+    const guestTurnHolder = await setup({ localUid: 'guest', gameState: gameState({ turnUid: 'guest' }) });
+    await act(async () => guestTurnHolder.result.current.giveUp());
+    expect(giveUpClueRoom).toHaveBeenCalledTimes(2);
   });
 });
 

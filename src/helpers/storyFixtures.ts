@@ -30,6 +30,14 @@ export const SAMPLE_PLACE_REVEALED: Place = findPlace('Tokyo', 'JP');
 
 export const SAMPLE_CLUE_PLACE: CluePlace = findCluePlace('Tokyo', 'JP');
 
+/** A multi-word name with a space ("New York"), for the letter clue's skeleton (one group per
+ * word) — see `SAMPLE_CLUE_PLACE_HYPHEN` for the hyphen case. */
+export const SAMPLE_CLUE_PLACE_SPACE: CluePlace = findCluePlace('New York', 'US');
+
+/** A name with a hyphen ("Saint-Malo"), for the letter clue's skeleton (the hyphen sits in place,
+ * outside any letter slot — see `HYPHEN_SLOT`). */
+export const SAMPLE_CLUE_PLACE_HYPHEN: CluePlace = findCluePlace('Saint-Malo', 'FR');
+
 export const SAMPLE_PLAYERS: Player[] = [
   { name: 'Zoé', color: PLAYER_COLORS[0] },
   { name: 'Max', color: PLAYER_COLORS[1] },
