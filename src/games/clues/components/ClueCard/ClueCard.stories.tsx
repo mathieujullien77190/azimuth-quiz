@@ -1,6 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { SAMPLE_CLUE_BEARING, SAMPLE_CLUE_DISTANCE_KM, SAMPLE_CLUE_PLACE } from '@/helpers/storyFixtures';
+import {
+  SAMPLE_CLUE_BEARING,
+  SAMPLE_CLUE_DISTANCE_KM,
+  SAMPLE_CLUE_PLACE,
+  SAMPLE_CLUE_PLACE_HYPHEN,
+  SAMPLE_CLUE_PLACE_SPACE,
+} from '@/helpers/storyFixtures';
 
 import { ClueCard } from './ClueCard';
 import { source } from '@/storybook/source';
@@ -9,7 +15,8 @@ import populationRevealedCode from './PopulationRevealed.source.md?raw';
 import bearingRevealedCode from './BearingRevealed.source.md?raw';
 import distanceRevealedCode from './DistanceRevealed.source.md?raw';
 import flagColorsRevealedCode from './FlagColorsRevealed.source.md?raw';
-import letterRevealedCode from './LetterRevealed.source.md?raw';
+import letterRevealedSpaceCode from './LetterRevealedSpace.source.md?raw';
+import letterRevealedHyphenCode from './LetterRevealedHyphen.source.md?raw';
 
 const meta = {
   title: 'Clues/ClueCard',
@@ -65,7 +72,15 @@ export const FlagColorsRevealed: Story = {
   args: { clueId: 'flagColors', flagStage: 3, label: 'Drapeau', place: SAMPLE_CLUE_PLACE, state: 'revealed' },
 };
 
-export const LetterRevealed: Story = {
-  parameters: source(letterRevealedCode),
-  args: { clueId: 'letter', label: 'Lettres', letterStage: 2, place: SAMPLE_CLUE_PLACE, state: 'revealed' },
+/** A multi-word name ("New York"): the letter clue splits it into one skeleton group per word. */
+export const LetterRevealedSpace: Story = {
+  parameters: source(letterRevealedSpaceCode),
+  args: { clueId: 'letter', label: 'Lettres', letterStage: 2, place: SAMPLE_CLUE_PLACE_SPACE, state: 'revealed' },
+};
+
+/** A hyphenated name ("Saint-Malo"): the hyphen is drawn in place, outside any letter slot, and
+ * is never itself a slot to fill. */
+export const LetterRevealedHyphen: Story = {
+  parameters: source(letterRevealedHyphenCode),
+  args: { clueId: 'letter', label: 'Lettres', letterStage: 2, place: SAMPLE_CLUE_PLACE_HYPHEN, state: 'revealed' },
 };
