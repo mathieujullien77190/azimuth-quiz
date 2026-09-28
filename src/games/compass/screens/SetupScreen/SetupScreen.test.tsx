@@ -17,7 +17,10 @@ import type { GameSettings } from '@/types';
 
 import SetupScreen from '.';
 
-jest.mock('@/settings', () => ({ useSettings: jest.fn() }));
+jest.mock('@/settings', () => {
+  const actual = jest.requireActual('@/settings');
+  return { ...actual, useSettings: jest.fn() };
+});
 // `helpers/room.ts` pulls in `firebase/firestore`, which is ESM-only and crashes Jest the moment
 // anything requires it transitively — mocked out here since these tests exercise the setup UI,
 // not real Firestore calls.

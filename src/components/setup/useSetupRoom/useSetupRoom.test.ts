@@ -1,8 +1,11 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, renderHook } from '@testing-library/react-native';
 
+import { PLAYER_NAME_STORAGE_KEY } from '@/data';
 import { createRoomStore } from '@/helpers/createRoomStore';
 import { nameTakenError } from '@/helpers/roomName';
 import type { RoomPlayers } from '@/helpers/roomBase';
+import { usePlayerName } from '@/settings';
 
 import type { SetupRoomAdapter } from './types';
 import { useSetupRoom } from './useSetupRoom';
@@ -96,6 +99,8 @@ beforeEach(() => {
   jest.useFakeTimers();
   mockPush.mockClear();
   mockDismissTo.mockClear();
+  AsyncStorage.clear();
+  usePlayerName.setState({ playerName: '', ready: false });
 });
 afterEach(() => jest.useRealTimers());
 
@@ -636,5 +641,58 @@ describe('useSetupRoom — starting the game', () => {
     expect(ctx.adapter.createRoom).toHaveBeenCalledTimes(1);
     expect(ctx.result.current.party.onlineChoice).toBe('host');
     expect(ctx.result.current.party.roomCode).toBe('tabofuna');
+  });
+});
+
+describe('useSetupRoom — the player name is shared across the 3 games', () => {
+  it('shows this game’s own settings before the shared name has hydrated (no blank flash)', async () => {
+    usePlayerName.setState({ playerName: '', ready: false });
+    const { result } = await setup(); // SETTINGS.playerName is 'Zoe'
+    expect(result.current.party.soloName).toBe('Zoe');
+  });
+
+  it('once hydrated, shows the shared name even if it differs from this game’s own settings', async () => {
+    usePlayerName.setState({ playerName: 'Max', ready: true });
+    const { result } = await setup(); // SETTINGS.playerName is 'Zoe'
+    expect(result.current.party.soloName).toBe('Max');
+  });
+
+  it('adopts the shared name into this game’s own settings, the first time it hydrates with one', async () => {
+    usePlayerName.setState({ playerName: 'Max', ready: true });
+    const { updateSettings } = await setup(); // SETTINGS.playerName is 'Zoe'
+    await flush();
+    expect(updateSettings).toHaveBeenCalledWith({ playerName: 'Max' });
+  });
+
+  it('does nothing once hydrated if this game’s settings already match the shared name', async () => {
+    usePlayerName.setState({ playerName: 'Zoe', ready: true });
+    const { updateSettings } = await setup();
+    await flush();
+    expect(updateSettings).not.toHaveBeenCalled();
+  });
+
+  it('migrates this game’s own name (e.g. Compass, persisted on disk) into the shared store when that was still empty', async () => {
+    usePlayerName.setState({ playerName: '', ready: true });
+    await setup(); // SETTINGS.playerName is 'Zoe'
+    await flush();
+    expect(usePlayerName.getState().playerName).toBe('Zoe');
+    expect(await AsyncStorage.getItem(PLAYER_NAME_STORAGE_KEY)).toBe('Zoe');
+  });
+
+  it('leaves both empty when neither side has a name yet', async () => {
+    usePlayerName.setState({ playerName: '', ready: true });
+    const { updateSettings } = await setup({}, { playerName: '', rounds: 5 });
+    await flush();
+    expect(updateSettings).not.toHaveBeenCalled();
+    expect(usePlayerName.getState().playerName).toBe('');
+  });
+
+  it('typing here updates the shared store (persisted right away) and this game’s own settings', async () => {
+    usePlayerName.setState({ playerName: '', ready: true });
+    const { result, updateSettings } = await setup();
+    await act(async () => result.current.party.onChangeName('Léo'));
+    expect(usePlayerName.getState().playerName).toBe('Léo');
+    expect(updateSettings).toHaveBeenCalledWith({ playerName: 'Léo' });
+    expect(await AsyncStorage.getItem(PLAYER_NAME_STORAGE_KEY)).toBe('Léo');
   });
 });

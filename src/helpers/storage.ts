@@ -1,7 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLocales } from 'expo-localization';
 
-import { ANIMATIONS_ENABLED_STORAGE_KEY, MASCOT_CAUGHT_STORAGE_KEY, LANGUAGE_STORAGE_KEY, THEME_STORAGE_KEY } from '@/data';
+import {
+  ANIMATIONS_ENABLED_STORAGE_KEY,
+  MASCOT_CAUGHT_STORAGE_KEY,
+  LANGUAGE_STORAGE_KEY,
+  PLAYER_NAME_STORAGE_KEY,
+  THEME_STORAGE_KEY,
+} from '@/data';
 import { BEST_SCORE_STORAGE_KEY, SETTINGS_STORAGE_KEY } from '@/games/compass/constants';
 import type { Language } from '@/i18n';
 import type { GameSettings, ThemeId } from '@/types';
@@ -83,6 +89,24 @@ export const saveThemeId = async (themeId: ThemeId): Promise<void> => {
   }
 };
 
+/** Last name typed in any game's setup — `null` until one has been (see `useSetupRoom`'s prefill,
+ * the only reader/writer of this key). */
+export const loadPlayerName = async (): Promise<string | null> => {
+  try {
+    return await AsyncStorage.getItem(PLAYER_NAME_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+};
+
+export const savePlayerName = async (name: string): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(PLAYER_NAME_STORAGE_KEY, name);
+  } catch {
+    // Not saved: at worst the other games don't get it prefilled, not critical.
+  }
+};
+
 /** Off by default: some devices stutter on the mascot roaming/backdrop drift animations. */
 export const loadAnimationsEnabled = async (): Promise<boolean> => {
   try {
@@ -101,9 +125,9 @@ export const saveAnimationsEnabled = async (enabled: boolean): Promise<void> => 
 };
 
 /** Clears everything the app saves on the device: Compass settings, language, theme, whether
- * the home screen's mascot has been caught, whether animations are enabled, and Clues' draw
- * history (+ a possible "best score" left over from an earlier version). Clues' own settings
- * aren't persisted in the first place (reset every launch). */
+ * the home screen's mascot has been caught, whether animations are enabled, the shared player
+ * name, and Clues' draw history (+ a possible "best score" left over from an earlier version).
+ * Clues'/Contour's own settings aren't persisted in the first place (reset every launch). */
 export const clearAppData = async (): Promise<void> => {
   clearClueHistory();
   try {
@@ -114,6 +138,7 @@ export const clearAppData = async (): Promise<void> => {
       THEME_STORAGE_KEY,
       MASCOT_CAUGHT_STORAGE_KEY,
       ANIMATIONS_ENABLED_STORAGE_KEY,
+      PLAYER_NAME_STORAGE_KEY,
     ]);
   } catch {
     // Nothing to do: at worst the old data sticks around, not critical.

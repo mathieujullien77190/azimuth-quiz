@@ -7,6 +7,7 @@ import { freePlaceholder, isNameTakenError } from '@/helpers/roomName';
 import { useDebouncedValue } from '@/helpers/useDebouncedValue';
 import { useRoomPresence } from '@/helpers/useRoomPresence';
 import { useTranslation } from '@/i18n';
+import { usePlayerName } from '@/settings';
 
 import type { SetupPartyProps, SetupRoomAdapter } from './types';
 
@@ -28,7 +29,34 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
   const { store } = adapter;
   const router = useRouter();
   const t = useTranslation();
-  const soloName = settings.playerName;
+  // The player's name is the one thing shared by the 3 games (see `usePlayerName`'s own doc
+  // comment): every game's setup reads and writes this same store instead of its own
+  // `settings.playerName` directly, so renaming in one game is immediately the name everywhere
+  // else too. Before it has hydrated, this game's own settings avoid a blank flash (it may
+  // already have a name — Compass persists its own settings on disk); the one-time sync effect
+  // below then reconciles the two, in whichever direction actually has something to give.
+  const sharedPlayerName = usePlayerName((s) => s.playerName);
+  const playerNameReady = usePlayerName((s) => s.ready);
+  const setSharedPlayerName = usePlayerName((s) => s.setPlayerName);
+  const soloName = playerNameReady ? sharedPlayerName : settings.playerName;
+
+  // Runs exactly once, the first time the shared name has hydrated: if it already holds a name
+  // (typed in some other game, this session or an earlier one), this game's own settings adopt
+  // it; otherwise, if THIS game's settings already had one (only ever possible for Compass, the
+  // only one of the 3 that persists on its own), that one seeds the shared store instead — a
+  // one-time migration for players who had a Compass name before this existed. Never runs again,
+  // so it never fights with `onChangeName` below.
+  const syncedPlayerNameRef = useRef(false);
+  useEffect(() => {
+    if (!playerNameReady || syncedPlayerNameRef.current) return;
+    syncedPlayerNameRef.current = true;
+    if (sharedPlayerName !== '') {
+      if (settings.playerName !== sharedPlayerName) updateSettings({ playerName: sharedPlayerName } as Partial<S>);
+    } else if (settings.playerName !== '') {
+      setSharedPlayerName(settings.playerName);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playerNameReady]);
 
   // Host/join is purely local UI state, not a saved preference — a fresh host/join happens
   // every time this screen is opened. Joining shows every setting section read-only (mirroring
@@ -355,7 +383,10 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     // connected as a joiner — unless the name was refused, and has to be changed.
     nameEditable: connectedRoomCode === null || mode === 'host' || nameTaken,
     nameError: nameTaken && connectedRoomCode !== null ? t.setup.online.nameTaken : null,
-    onChangeName: (text) => updateSettings({ playerName: text } as Partial<S>),
+    onChangeName: (text) => {
+      setSharedPlayerName(text);
+      updateSettings({ playerName: text } as Partial<S>);
+    },
     connectedPlayers,
     localUid,
     hostUid,

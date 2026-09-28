@@ -1,25 +1,31 @@
 import { DEFAULT_CLUE_SETTINGS } from '@/games/clues/constants';
 import { DEFAULT_CONTOUR_SETTINGS } from '@/games/contour/constants';
 import { DEFAULT_SETTINGS } from '@/games/compass/constants';
-import { loadSettings, saveSettings } from '@/helpers';
+import { loadPlayerName, loadSettings, savePlayerName, saveSettings } from '@/helpers';
 
-import { hydrateSettings, useClueSettings, useContourSettings, useSettings } from '.';
+import { hydratePlayerName, hydrateSettings, useClueSettings, useContourSettings, usePlayerName, useSettings } from '.';
 
 jest.mock('@/helpers', () => ({
   ...jest.requireActual('@/helpers'),
+  loadPlayerName: jest.fn(),
   loadSettings: jest.fn(),
+  savePlayerName: jest.fn(),
   saveSettings: jest.fn(),
 }));
 
+const mockedLoadPlayerName = loadPlayerName as jest.Mock;
 const mockedLoadSettings = loadSettings as jest.Mock;
+const mockedSavePlayerName = savePlayerName as jest.Mock;
 const mockedSaveSettings = saveSettings as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockedLoadPlayerName.mockResolvedValue(null);
   mockedLoadSettings.mockResolvedValue(DEFAULT_SETTINGS);
   useSettings.setState({ settings: DEFAULT_SETTINGS, ready: false });
   useClueSettings.setState({ settings: DEFAULT_CLUE_SETTINGS });
   useContourSettings.setState({ settings: DEFAULT_CONTOUR_SETTINGS });
+  usePlayerName.setState({ playerName: '', ready: false });
 });
 
 describe('useSettings (Zustand store)', () => {
@@ -92,5 +98,45 @@ describe('useContourSettings (Zustand store)', () => {
     expect(useContourSettings.getState().settings.rounds).toBe(10);
     expect(useContourSettings.getState().settings.playerName).toEqual(DEFAULT_CONTOUR_SETTINGS.playerName);
     expect(mockedSaveSettings).not.toHaveBeenCalled();
+  });
+});
+
+describe('usePlayerName (Zustand store)', () => {
+  it('starts not ready with an empty name, becomes ready once storage is read', async () => {
+    expect(usePlayerName.getState().ready).toBe(false);
+    expect(usePlayerName.getState().playerName).toBe('');
+
+    hydratePlayerName();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(usePlayerName.getState().ready).toBe(true);
+  });
+
+  it('exposes the name loaded from storage once hydrated', async () => {
+    mockedLoadPlayerName.mockResolvedValue('Zoé');
+
+    hydratePlayerName();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(usePlayerName.getState().playerName).toBe('Zoé');
+  });
+
+  it('falls back to an empty name when nothing was ever saved', async () => {
+    mockedLoadPlayerName.mockResolvedValue(null);
+
+    hydratePlayerName();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(usePlayerName.getState().playerName).toBe('');
+  });
+
+  it('setPlayerName updates and persists it', () => {
+    usePlayerName.getState().setPlayerName('Max');
+
+    expect(usePlayerName.getState().playerName).toBe('Max');
+    expect(mockedSavePlayerName).toHaveBeenCalledWith('Max');
   });
 });

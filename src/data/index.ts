@@ -28,6 +28,10 @@ export const MASCOT_CAUGHT_STORAGE_KEY = 'azimuthquiz:ufo-caught';
 /** Home screen mascot roaming + starry/cloudy backdrop drift: off by default (some devices
  * stutter on them), opt-in via Settings. */
 export const ANIMATIONS_ENABLED_STORAGE_KEY = 'azimuthquiz:animations-enabled';
+/** The player's name, shared by the 3 games (see `useSetupRoom`'s prefill): typing it in one
+ * game's setup fills it in for the others too, even though only Compass' own `GameSettings`
+ * otherwise persists across launches. */
+export const PLAYER_NAME_STORAGE_KEY = 'azimuthquiz:player-name';
 
 // --- Game options (shared by all 3 games) ---
 export const ROUND_OPTIONS = [5, 10, 15, 20] as const;

@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import LanguageProvider from '@/components/LanguageProvider';
 import ThemeProvider from '@/components/ThemeProvider';
 import { disableTextSelection, polyfillFlagEmoji } from '@/helpers';
-import { hydrateSettings } from '@/settings';
+import { hydratePlayerName, hydrateSettings } from '@/settings';
 import { useTheme } from '@/themes';
 
 const ThemedShell = () => {
@@ -29,6 +29,7 @@ const RootLayout = () => {
   useEffect(disableTextSelection, []);
   useEffect(polyfillFlagEmoji, []);
   useEffect(hydrateSettings, []);
+  useEffect(hydratePlayerName, []);
 
   return (
     <ThemeProvider>

@@ -5,6 +5,7 @@ import {
   ANIMATIONS_ENABLED_STORAGE_KEY,
   MASCOT_CAUGHT_STORAGE_KEY,
   LANGUAGE_STORAGE_KEY,
+  PLAYER_NAME_STORAGE_KEY,
   THEME_STORAGE_KEY,
 } from '@/data';
 import { BEST_SCORE_STORAGE_KEY, SETTINGS_STORAGE_KEY } from '@/games/compass/constants';
@@ -14,11 +15,13 @@ import {
   loadAnimationsEnabled,
   loadMascotCaught,
   loadLanguage,
+  loadPlayerName,
   loadSettings,
   loadThemeId,
   saveAnimationsEnabled,
   saveMascotCaught,
   saveLanguage,
+  savePlayerName,
   saveSettings,
   saveThemeId,
   systemLanguage,
@@ -171,6 +174,22 @@ describe('loadAnimationsEnabled / saveAnimationsEnabled', () => {
   });
 });
 
+describe('loadPlayerName / savePlayerName', () => {
+  it('is null until saved', async () => {
+    expect(await loadPlayerName()).toBeNull();
+    await savePlayerName('Zoé');
+    expect(await loadPlayerName()).toBe('Zoé');
+  });
+
+  it('tolerates read/write failures', async () => {
+    (AsyncStorage.getItem as jest.Mock).mockRejectedValueOnce(new Error('boom'));
+    expect(await loadPlayerName()).toBeNull();
+
+    (AsyncStorage.setItem as jest.Mock).mockRejectedValueOnce(new Error('boom'));
+    await expect(savePlayerName('Zoé')).resolves.toBeUndefined();
+  });
+});
+
 describe('clearAppData', () => {
   it('removes every known storage key', async () => {
     await AsyncStorage.setItem(BEST_SCORE_STORAGE_KEY, '1');
@@ -179,6 +198,7 @@ describe('clearAppData', () => {
     await AsyncStorage.setItem(THEME_STORAGE_KEY, 'day');
     await AsyncStorage.setItem(MASCOT_CAUGHT_STORAGE_KEY, 'true');
     await AsyncStorage.setItem(ANIMATIONS_ENABLED_STORAGE_KEY, 'true');
+    await AsyncStorage.setItem(PLAYER_NAME_STORAGE_KEY, 'Zoé');
 
     await clearAppData();
 
@@ -188,6 +208,7 @@ describe('clearAppData', () => {
     expect(await AsyncStorage.getItem(THEME_STORAGE_KEY)).toBeNull();
     expect(await AsyncStorage.getItem(MASCOT_CAUGHT_STORAGE_KEY)).toBeNull();
     expect(await AsyncStorage.getItem(ANIMATIONS_ENABLED_STORAGE_KEY)).toBeNull();
+    expect(await AsyncStorage.getItem(PLAYER_NAME_STORAGE_KEY)).toBeNull();
   });
 
   it('tolerates a failure clearing storage', async () => {
