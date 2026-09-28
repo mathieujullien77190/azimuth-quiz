@@ -70,16 +70,9 @@
       "!src/**/index.ts",
       "!src/**/types.ts",
       "!src/app/**",
-      "!src/components/DistanceSlider/constants.ts",
-      "!src/components/DistanceSlider/helpers.ts",
-      "!src/components/InclinationSlider/constants.ts",
-      "!src/components/LanguageProvider/constants.ts",
-      "!src/components/LanguageProvider/helpers.ts",
-      "!src/components/Legend/helpers.ts",
-      "!src/components/PlaceCard/constants.ts",
-      "!src/components/SettingsProvider/constants.ts",
-      "!src/components/SettingsProvider/helpers.ts",
-      "!src/components/SettingsScreen/helpers.ts"
+      "!src/**/*.stories.tsx",
+      "!src/helpers/storyFixtures.ts",
+      "!src/storybook/**"
     ],
     "coverageThreshold": {
       "global": {
