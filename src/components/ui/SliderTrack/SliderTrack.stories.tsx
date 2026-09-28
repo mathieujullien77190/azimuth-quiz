@@ -17,8 +17,9 @@ import type { SliderTrackProps } from './types';
 /** Named (capitalized) so eslint's rules-of-hooks recognizes it as a component and allows the
  * `useState` below — an inline arrow assigned to a story's `render` doesn't qualify. The track is
  * controlled by its caller: the ratio lives here, so dragging the thumb (or clicking the track)
- * really moves it — and each change also shows up in the Actions panel (`onRatioChange` in `fn()`). */
-const InteractiveDemo = (args: SliderTrackProps) => {
+ * really moves it and the value text follows (`valueText` is derived from the ratio, not a fixed arg) —
+ * each change also shows up in the Actions panel (`onRatioChange` in `fn()`). */
+const PercentageDemo = (args: SliderTrackProps) => {
   const [ratio, setRatio] = useState(args.ratio);
   return (
     <SliderTrack
@@ -28,11 +29,12 @@ const InteractiveDemo = (args: SliderTrackProps) => {
         setRatio(value);
       }}
       ratio={ratio}
+      valueText={`${Math.round(ratio * 100)} %`}
     />
   );
 };
 
-/** Same, for a value derived from the ratio (`valueText` and `caption` follow the thumb). */
+/** Same, for a distance derived from the ratio (`valueText` follows the thumb). */
 const DistanceDemo = (args: SliderTrackProps) => {
   const [ratio, setRatio] = useState(args.ratio);
   const km = ratioToKm(ratio, SAMPLE_MAX_SURFACE_KM);
@@ -80,7 +82,7 @@ export const Percentage: Story = {
     ratio: 0.3,
     valueText: '30 %',
   },
-  render: InteractiveDemo,
+  render: PercentageDemo,
 };
 
 /** Compass' distance slider: a logarithmic distance scale (`ratioToKm` /
