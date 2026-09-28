@@ -308,7 +308,8 @@ niveau doit y etre ajoutee. Un composant sans store ni routeur (dumb) a sa story
 
 La barre d'outils propose le theme (Night / Day) et la langue (Francais / English) : `preview.tsx` fournit
 `ThemeSettingsContext` et `LanguageContext` a chaque story (une story qui fige un theme s'entoure de son propre
-Provider, qui l'emporte). Les `args` qui portent du texte sont calcules au chargement du fichier : pour qu'ils
+Provider, qui l'emporte). `admin/.storybook/manager.ts` fait suivre le meme interrupteur de theme a l'interface de Storybook elle-meme
+(sidebar, barre d'outils, panneaux : theme Storybook construit depuis `night`/`day`, applique via `api.setOptions`). Les `args` qui portent du texte sont calcules au chargement du fichier : pour qu'ils
 suivent la langue, une story les construit avec une fonction `(t) => ({...})` utilisee deux fois — dans `args`
 (avec `translations.fr`) et dans `decorators: [localizedArgs(build)]` (`@/storybook/localized`), qui les refait
 avec la langue courante. Du JSX de story qui contient du texte passe par le meme `build` (voir `SetupScreenShell`).
