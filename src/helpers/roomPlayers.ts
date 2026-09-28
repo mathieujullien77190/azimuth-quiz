@@ -21,6 +21,11 @@ export const playersByArrival = (players: RoomPlayers): [string, RoomPlayer][] =
     ([, a], [, b]) => (a.joinedAt?.toMillis() ?? Infinity) - (b.joinedAt?.toMillis() ?? Infinity),
   );
 
+/** Who plays after `uid`, in arrival order, wrapping around to the first player after the last one —
+ * `undefined` with nobody in the room. A `uid` that isn't listed hands over to the first player. */
+export const nextPlayerUid = (players: OnlinePlayer[], uid: string | null): string | undefined =>
+  players[(players.findIndex((player) => player.uid === uid) + 1) % players.length]?.uid;
+
 /** Stable player order for a room: arrival order (same as the setup screen's connected-players
  * list), so scores/turns/results index consistently across every device without agreeing on
  * anything beyond what's already in Firestore. Falls back to the first palette color for the

@@ -1,6 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 
 import { bearingDeg, distanceKm, nameSkeleton } from '@/helpers';
+import { nextPlayerUid } from '@/helpers/roomPlayers';
+import { useGuessDraft } from '@/helpers/useGuessDraft';
 import { useHostTurnRecovery } from '@/helpers/useHostTurnRecovery';
 import { useHostTurnScoring } from '@/helpers/useHostTurnScoring';
 import { useOnlineRoomSession } from '@/helpers/useOnlineRoomSession';
@@ -34,18 +36,8 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
   const place = gameState.places[gameState.roundIndex];
   const isMyTurn = localUid !== null && localUid === gameState.turnUid;
 
-  // This device's own in-progress guess text, and the "you got it wrong" banner — reset whenever
-  // the round or the turn-holder changes, same "reset state during render" pattern as
-  // `useOnlineGame`'s own draft answer (an effect here would mean an extra, avoidable render).
-  const [guessText, setGuessTextState] = useState('');
-  const [lastWrong, setLastWrong] = useState<string | null>(null);
-  const [draftKey, setDraftKey] = useState(`${gameState.roundIndex}:${gameState.turnUid ?? ''}`);
-  const currentKey = `${gameState.roundIndex}:${gameState.turnUid ?? ''}`;
-  if (currentKey !== draftKey) {
-    setDraftKey(currentKey);
-    setGuessTextState('');
-    setLastWrong(null);
-  }
+  // This device's own in-progress guess text, and the "you got it wrong" banner.
+  const { guessText, setGuessText, lastWrong, setLastWrong } = useGuessDraft(gameState.roundIndex, gameState.turnUid);
 
   const originReady = gameState.origin !== null && place !== undefined;
   const bearing = originReady ? bearingDeg(gameState.origin!.coordinates, place!.coordinates) : 0;
@@ -77,8 +69,7 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
 
   const pickClue = (clueId: ClueId) => {
     if (!isMyTurn || localUid === null) return;
-    const myIndex = onlinePlayers.findIndex((p) => p.uid === localUid);
-    const nextTurnUid = onlinePlayers[(myIndex + 1) % onlinePlayers.length]?.uid;
+    const nextTurnUid = nextPlayerUid(onlinePlayers, localUid);
     if (nextTurnUid === undefined) return;
     pickClueRoomClue(code, [...gameState.revealedClueIds, clueId], nextTurnUid).catch(() => {});
   };
@@ -92,7 +83,7 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     }
     reportClueRoomWrong(code, localUid, gameState.wrongGuessSeq + 1).catch(() => {});
     setLastWrong(onlinePlayers.find((p) => p.uid === localUid)?.name ?? '');
-    setGuessTextState('');
+    setGuessText('');
   };
 
   const giveUp = () => {
@@ -130,7 +121,7 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     skeletonLengthKnown,
     remaining,
     guessText,
-    setGuessText: setGuessTextState,
+    setGuessText,
     lastWrong,
     pickClue,
     submitGuess,

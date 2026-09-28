@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 
 import { CONTOURS } from '@/data';
 import { countryName } from '@/data/places/countries';
@@ -16,6 +16,8 @@ import {
 } from '@/games/contour/helpers/room';
 import { normalizeContourGuess } from '@/games/contour/helpers/contourCountry';
 import { useContourRoomStore } from '@/games/contour/store/roomStore';
+import { nextPlayerUid } from '@/helpers/roomPlayers';
+import { useGuessDraft } from '@/helpers/useGuessDraft';
 import { useHostTurnRecovery } from '@/helpers/useHostTurnRecovery';
 import { useHostTurnScoring } from '@/helpers/useHostTurnScoring';
 import { useOnlineRoomSession } from '@/helpers/useOnlineRoomSession';
@@ -42,18 +44,8 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
   const isMyTurn = localUid !== null && localUid === gameState.turnUid;
   const { hintsRevealed } = gameState;
 
-  // This device's own in-progress guess text, and the "you got it wrong" banner — reset whenever the
-  // round or the turn-holder changes, same "reset state during render" pattern as `useOnlineClueGame`
-  // (an effect here would mean an extra, avoidable render).
-  const [guessText, setGuessText] = useState('');
-  const [lastWrong, setLastWrong] = useState<string | null>(null);
-  const [draftKey, setDraftKey] = useState(`${gameState.roundIndex}:${gameState.turnUid ?? ''}`);
-  const currentKey = `${gameState.roundIndex}:${gameState.turnUid ?? ''}`;
-  if (currentKey !== draftKey) {
-    setDraftKey(currentKey);
-    setGuessText('');
-    setLastWrong(null);
-  }
+  // This device's own in-progress guess text, and the "you got it wrong" banner.
+  const { guessText, setGuessText, lastWrong, setLastWrong } = useGuessDraft(gameState.roundIndex, gameState.turnUid);
 
   /** What a correct guess earns right now: drops one tier with each hint, 0 once the name is out. */
   const pointsAtStake = hintsRevealed >= MAX_HINTS ? 0 : CONTOUR_GUESS_POINTS_BY_HINTS[hintsRevealed];
@@ -68,13 +60,8 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
   const passTurn = useCallback((uid: string) => passRoomTurn(code, uid), [code]);
   useHostTurnRecovery(isHost, gameState, onlinePlayers, passTurn);
 
-  const nextTurnUid = () => {
-    const myIndex = onlinePlayers.findIndex((player) => player.uid === localUid);
-    return onlinePlayers[(myIndex + 1) % onlinePlayers.length]?.uid;
-  };
-
   const revealHint = () => {
-    const next = nextTurnUid();
+    const next = nextPlayerUid(onlinePlayers, localUid);
     if (!isMyTurn || hintsRevealed >= MAX_HINTS || next === undefined) return;
     revealContourRoomHint(code, hintsRevealed + 1, next).catch(() => {});
   };
