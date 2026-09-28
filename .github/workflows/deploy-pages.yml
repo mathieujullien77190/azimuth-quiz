@@ -28,6 +28,11 @@ jobs:
 
       - run: npm ci
 
+      # Une publication ne part que si tous les tests passent, avec la couverture a 100 % exigee par
+      # le `coverageThreshold` de package.json (jest echoue sinon).
+      - name: Unit tests (with the coverage threshold)
+        run: npx jest --ci --coverage
+
       - name: Export web build (static, base path /azimuth-quiz)
         run: npx expo export --platform web
         env:
