@@ -79,10 +79,4 @@ export const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       fontSize: fontSize.caption,
       marginTop: 2,
     },
-    waiting: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
-      textAlign: 'center',
-    },
   });

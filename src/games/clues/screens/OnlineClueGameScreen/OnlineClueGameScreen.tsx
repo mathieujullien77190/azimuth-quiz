@@ -9,6 +9,9 @@ import { OnlineClueGameScreenView } from './OnlineClueGameScreenView';
 import type { OnlineClueGameScreenProps } from './types';
 import { useOnlineClueGame } from './useOnlineClueGame';
 
+/** How long the "it's not your turn" notice stays up before closing by itself. */
+const NOT_YOUR_TURN_NOTICE_MS = 4000;
+
 /**
  * Online counterpart to `ClueGameScreen`: one phone = one player, one shared board revealed turn
  * by turn instead of Compass' "everyone answers independently, then reveal". Smart container:
@@ -19,7 +22,7 @@ export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps
   const t = useTranslation();
   const game = useOnlineClueGame(code, onQuit);
   // Tapping a clue when it isn't your turn: a short notice, closing by itself or on a tap.
-  const notYourTurn = useTransientFlag();
+  const notYourTurn = useTransientFlag(NOT_YOUR_TURN_NOTICE_MS);
 
   // The host just quit: the store is already reset, and this screen is only on its way out. Not the
   // "loading" splash below — that one is for a room that hasn't delivered its state yet.
@@ -77,6 +80,7 @@ export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps
       roomCode={code}
       isHost={isHost}
       isLastRound={isLastRound}
+      iWon={gameState.roundWinnerUid !== null && gameState.roundWinnerUid === localUid}
       isMyTurn={game.isMyTurn}
       lastWrong={game.lastWrong}
       onChangeGuessText={game.setGuessText}

@@ -193,7 +193,10 @@ describe("OnlineClueGameScreen — somebody else's turn", () => {
     const { getAllByText, queryByText } = await renderScreen();
     await fireEvent.press(getAllByText('🔒')[0]);
     expect(queryByText(t.cluesGame.notYourTurn('Max'))).toBeTruthy();
-    await act(async () => jest.advanceTimersByTime(2100));
+    // Still there after the usual 2 s: it stays up for 4.
+    await act(async () => jest.advanceTimersByTime(3900));
+    expect(queryByText(t.cluesGame.notYourTurn('Max'))).toBeTruthy();
+    await act(async () => jest.advanceTimersByTime(200));
     expect(queryByText(t.cluesGame.notYourTurn('Max'))).toBeNull();
     expect((mockGame.pickClue as jest.Mock).mock.calls).toHaveLength(0);
   });
@@ -232,11 +235,18 @@ describe('OnlineClueGameScreen — the round is over', () => {
     expect(getByText(t.game.last)).toBeTruthy();
   });
 
-  it('gives a joiner nothing to press: it waits for the host', async () => {
+  it('gives a joiner nothing to press, and no "waiting" line either', async () => {
     over({ isHost: false });
-    const { getByText, queryByText } = await renderScreen();
-    expect(getByText(t.game.waitingForOthers)).toBeTruthy();
+    const { queryByText } = await renderScreen();
+    expect(queryByText(t.game.waitingForOthers)).toBeNull();
     expect(queryByText(t.cluesGame.continueLabel)).toBeNull();
+  });
+
+  it('tells the player who found it "you", not their own name', async () => {
+    over({}, { roundWinnerUid: 'zoe' });
+    const { getByText, queryByText } = await renderScreen();
+    expect(getByText(t.cluesGame.youScored('24'))).toBeTruthy();
+    expect(queryByText(t.cluesGame.scored('Zoé', '24'))).toBeNull();
   });
 
   it('says nobody found it after a give-up', async () => {

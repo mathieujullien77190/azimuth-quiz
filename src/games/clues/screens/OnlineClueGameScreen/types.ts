@@ -32,6 +32,8 @@ export type OnlineClueGameScreenViewProps = {
   /** Undefined outside `verdict !== null` (round in progress). */
   verdict?: 'correct' | 'giveUp';
   winnerName?: string;
+  /** This device is the one who found the place (the banner then says "you"). */
+  iWon: boolean;
 
   lastWrong: string | null;
   guessText: string;

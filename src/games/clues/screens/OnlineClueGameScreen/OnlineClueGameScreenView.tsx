@@ -41,6 +41,7 @@ export const OnlineClueGameScreenView = ({
   remaining,
   verdict,
   winnerName,
+  iWon,
   lastWrong,
   guessText,
   onChangeGuessText,
@@ -85,7 +86,11 @@ export const OnlineClueGameScreenView = ({
               <View style={styles.actions}>
                 <Text style={[styles.resultBanner, verdict === 'correct' ? styles.resultCorrect : styles.resultWrong]}>
                   {verdict === 'correct' ? (
-                    t.cluesGame.scored(winnerName ?? '', formatNumber(remaining))
+                    iWon ? (
+                      t.cluesGame.youScored(formatNumber(remaining))
+                    ) : (
+                      t.cluesGame.scored(winnerName ?? '', formatNumber(remaining))
+                    )
                   ) : (
                     <NoOneFoundText players={players.map((player) => player.name)} />
                   )}
@@ -97,10 +102,8 @@ export const OnlineClueGameScreenView = ({
                     {place.country}
                   </Text>
                 </Text>
-                {isHost ? (
+                {isHost && (
                   <Button label={isLastRound ? t.game.last : t.cluesGame.continueLabel} onPress={onNextRound} />
-                ) : (
-                  <Text style={styles.waiting}>{t.game.waitingForOthers}</Text>
                 )}
               </View>
             ) : !isMyTurn ? null : (
