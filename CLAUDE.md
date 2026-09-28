@@ -145,14 +145,17 @@ angulaire 2D. 500 points max chacun pour la direction et la distance.
 
 ### Multijoueur en ligne : une couche commune, trois jeux
 
-Compass (`rooms`), Indices (`clueRooms`) et Silhouette (`contourRooms`) partagent tout ce qui n'est pas
-leur logique de jeu :
+Compass, Indices et Silhouette partagent tout ce qui n'est pas leur logique de jeu — et **une seule collection
+Firestore, `rooms`** : chaque room porte un champ `game` (`'compass'` | `'clues'` | `'silhouette'`), fixe a la
+creation et immuable (les regles le refusent), qui dit quelles regles de mise a jour s'appliquent. Un code de room
+d'un autre jeu est refuse a la jonction (`roomExists` verifie `game`). Les regles de `firestore.rules` sont
+commentees en francais :
 
-- **Firestore** : `helpers/roomBase.ts` (`createRoomApi(collection)` — creer/rejoindre/quitter, presence,
+- **Firestore** : `helpers/roomBase.ts` (`createRoomApi(game)` — creer/rejoindre/quitter, presence,
   couleurs, reglages ; hors barrel `@/helpers`, importe `firebase/firestore`) ; chaque
   `games/<jeu>/helpers/room.ts` le lie a sa collection et n'ajoute que l'etat de manche propre au jeu
   (via `roomRef(code)`). Les regles (`firestore.rules`) des deux jeux a tour de role partagent la
-  fonction `canUpdateTurnRoom`.
+  fonction `turnBasedPlayer`.
 - **Store** : `helpers/createRoomStore.ts` (connexion, joueurs, hote, reglages, `gameState`, depart
   volontaire) — chaque jeu fournit ses abonnements et son etat par defaut.
 - **Setup** : `components/setup/useSetupRoom` (host/join, presence, couleurs, kick, notices, navigation
@@ -165,7 +168,9 @@ leur logique de jeu :
   l'ordre d'arrivee via `helpers/roomPlayers.ts`, redirection "room supprimee", `handleQuit`) et, pour les
   jeux a tour de role, `helpers/useHostTurnScoring.ts` (l'hote seul ecrit `totalScores` : gain sur
   `verdict: 'correct'`, penalite fixe a chaque `wrongGuessSeq`), `helpers/useHostTurnRecovery.ts` (l'hote passe la main si le joueur actif est parti), `helpers/useGuessDraft.ts` (texte saisi + banniere « rate » du joueur, remis a zero a chaque manche/changement de tour), `nextPlayerUid` (`helpers/roomPlayers.ts`, qui joue apres qui) et `helpers/useTransientFlag.ts` (un drapeau qui retombe seul, pour les notices). Composants partages : `GameHeader`/`GameFooter` (le panneau translucide autour du pied de page, pose par chaque jeu ; `Screen` rend son `footer` tel quel), `NoticeOverlay` (avec `loading` pour l'attente : un tap n'y fait rien, pas de `onDismiss`),
-  `RoomDeletedScreen`, `FinalStandings`.
+  `RoomDeletedScreen`, `FinalStandings` (ecran de fin commun aux trois jeux : classement, medailles, egalites ;
+  Compass y ajoute en `children` son propre `RoundsRecap`, qui dit qui a ete le meilleur en direction et en distance
+  a chaque manche).
 - **Un joueur part** (quitte, expulse, coupure) : il n'est pas seulement retire de `players` — l'hote efface aussi ce
   qu'il a laisse dans les donnees de manche (`guesses`, `scores`, `totalScores` : `helpers/useHostPruneLeavers.ts`,
   `pruneRoomPlayerData` de `roomBase`). S'il revient, c'est un nouveau joueur : ni points ni reponse, dernier dans
@@ -211,7 +216,7 @@ la silhouette d'un pays s'affiche remplie (`colors.surfaceHigh`, pas juste un co
 devinent lequel via 4 paliers d'indices partages. Pas de second temps de placement de lieux (retire —
 le jeu s'arrete a la reconnaissance du pays).
 
-**Multijoueur (`contourRooms`), modele Indices** : un plateau partage, un joueur actif a la fois
+**Multijoueur (rooms `game: 'silhouette'`), modele Indices** : un plateau partage, un joueur actif a la fois
 (`turnUid`, l'ordre d'arrivee des joueurs). Son tour, il revele le palier suivant (`hintsRevealed` 0-4,
 ce qui passe la main au joueur suivant) ou tente une reponse (bonne : `verdict: 'correct'`, gain
 `CONTOUR_GUESS_POINTS_BY_HINTS[hintsRevealed]` ; mauvaise : `wrongGuessSeq` +1, penalite
