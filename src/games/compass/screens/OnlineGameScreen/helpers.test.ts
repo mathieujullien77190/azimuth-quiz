@@ -1,7 +1,9 @@
 import type { RoundScore } from '@/types';
 
 import { MAX_COMPASS_SIZE, MAX_EARTH_SIZE } from './constants';
-import { buildRoundRecord, compassSizeFor, earthSizeFor } from './helpers';
+import { formatDistance, kmToRatio } from '@/helpers';
+
+import { buildRoundRecord, compassSizeFor, distanceSliderMarks, earthSizeFor } from './helpers';
 
 const score = (total: number): RoundScore => ({
   trueBearing: 0,
@@ -82,5 +84,17 @@ describe('earthSizeFor', () => {
 
   it('falls back to MAX_EARTH_SIZE when the computed size would be <= 0', () => {
     expect(earthSizeFor(0)).toBe(MAX_EARTH_SIZE);
+  });
+});
+
+describe('distanceSliderMarks', () => {
+  it('keeps only the reference distances below the maximum, placed on the logarithmic scale', () => {
+    const marks = distanceSliderMarks(5000);
+    expect(marks.map((mark) => mark.label)).toEqual([formatDistance(100), formatDistance(1000)]);
+    expect(marks[0].ratio).toBeCloseTo(kmToRatio(100, 5000));
+  });
+
+  it('shows them all for the full surface scale', () => {
+    expect(distanceSliderMarks(20000)).toHaveLength(3);
   });
 });

@@ -1,16 +1,55 @@
+import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { fn } from 'storybook/test';
 
 import { DISTANCE_MARKS_KM } from '@/games/compass/constants';
-import { formatDistance, kmToRatio } from '@/helpers';
+import { formatDistance, kmToRatio, ratioToKm } from '@/helpers';
 import { SAMPLE_DISTANCE_KM, SAMPLE_MAX_SURFACE_KM } from '@/helpers/storyFixtures';
 import { translations } from '@/i18n/translations';
-
-import { SliderTrack } from './SliderTrack';
 import { source } from '@/storybook/source';
-import defaultCode from './Default.source.md?raw';
+
+import distanceCode from './Distance.source.md?raw';
+import percentageCode from './Percentage.source.md?raw';
+import { SliderTrack } from './SliderTrack';
+import type { SliderTrackProps } from './types';
+
+/** Named (capitalized) so eslint's rules-of-hooks recognizes it as a component and allows the
+ * `useState` below — an inline arrow assigned to a story's `render` doesn't qualify. The track is
+ * controlled by its caller: the ratio lives here, so dragging the thumb (or clicking the track)
+ * really moves it — and each change also shows up in the Actions panel (`onRatioChange` in `fn()`). */
+const InteractiveDemo = (args: SliderTrackProps) => {
+  const [ratio, setRatio] = useState(args.ratio);
+  return (
+    <SliderTrack
+      {...args}
+      onRatioChange={(value) => {
+        args.onRatioChange(value);
+        setRatio(value);
+      }}
+      ratio={ratio}
+    />
+  );
+};
+
+/** Same, for a value derived from the ratio (`valueText` and `caption` follow the thumb). */
+const DistanceDemo = (args: SliderTrackProps) => {
+  const [ratio, setRatio] = useState(args.ratio);
+  const km = ratioToKm(ratio, SAMPLE_MAX_SURFACE_KM);
+  return (
+    <SliderTrack
+      {...args}
+      onRatioChange={(value) => {
+        args.onRatioChange(value);
+        setRatio(value);
+      }}
+      ratio={ratio}
+      valueText={formatDistance(km)}
+    />
+  );
+};
 
 const meta = {
-  title: 'Compass/SliderTrack',
+  title: 'UI/SliderTrack',
   component: SliderTrack,
   decorators: [
     (Story) => (
@@ -19,24 +58,42 @@ const meta = {
       </div>
     ),
   ],
+  args: { onRatioChange: fn() },
 } satisfies Meta<typeof SliderTrack>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The ratio-only primitive `DistanceSlider` wraps: no domain knowledge of its own, everything
- * (marks, label, value text) is converted to/from a plain 0-1 ratio by the caller. */
-export const Default: Story = {
-  parameters: source(defaultCode),
+/** The ratio-only primitive: no domain knowledge of its own, the caller converts whatever it
+ * measures to and from a plain 0-1 ratio. Drag the thumb or click the track. */
+export const Percentage: Story = {
+  parameters: source(percentageCode),
+  args: {
+    label: 'Volume',
+    marks: [
+      { ratio: 0, label: '0 %' },
+      { ratio: 0.5, label: '50 %' },
+      { ratio: 1, label: '100 %' },
+    ],
+    ratio: 0.3,
+    valueText: '30 %',
+  },
+  render: InteractiveDemo,
+};
+
+/** Compass' distance slider: a logarithmic distance scale (`ratioToKm` /
+ * `kmToRatio`), so the first hundred kilometres get as much room as the last ten thousand. */
+export const Distance: Story = {
+  parameters: source(distanceCode),
   args: {
     label: translations.fr.sliders.distance,
     marks: DISTANCE_MARKS_KM.filter((km) => km < SAMPLE_MAX_SURFACE_KM).map((km) => ({
       ratio: kmToRatio(km, SAMPLE_MAX_SURFACE_KM),
       label: formatDistance(km),
     })),
-    onRatioChange: () => {},
     ratio: kmToRatio(SAMPLE_DISTANCE_KM, SAMPLE_MAX_SURFACE_KM),
     valueText: formatDistance(SAMPLE_DISTANCE_KM),
   },
+  render: DistanceDemo,
 };

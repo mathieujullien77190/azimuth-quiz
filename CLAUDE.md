@@ -57,7 +57,7 @@ src/
   games/
     compass/
       screens/         # OnlineGameScreen, SetupScreen, EndScreen
-      components/      # DistanceSlider, SliderTrack, RoundResult,
+      components/      # RoundResult,
                        # PlaceCard
       helpers/         # places.ts, scoring.ts, distanceScale.ts, room.ts (Firestore, hors
                        # barrel `@/helpers` — voir plus bas)

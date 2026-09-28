@@ -1,6 +1,8 @@
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 import { spacing } from '@/data';
+import { DISTANCE_MARKS_KM } from '@/games/compass/constants';
+import { formatDistance, kmToRatio } from '@/helpers';
 import type { OnlinePlayer } from '@/helpers/roomPlayers';
 import type { Guess, Place, PlayerResult, RoundRecord, RoundScore } from '@/types';
 
@@ -51,3 +53,11 @@ export const earthSizeFor = (windowWidth: number): number => {
   const size = Math.min(MAX_EARTH_SIZE, windowWidth - spacing.lg * 2 - spacing.md * 2);
   return size > 0 ? size : MAX_EARTH_SIZE;
 };
+
+/** The marks under the distance slider (`SliderTrack`): the fixed reference distances that still fit
+ * below the slider's maximum, each at its position on the logarithmic scale. */
+export const distanceSliderMarks = (maxKm: number) =>
+  DISTANCE_MARKS_KM.filter((km) => km < maxKm).map((km) => ({
+    ratio: kmToRatio(km, maxKm),
+    label: formatDistance(km),
+  }));

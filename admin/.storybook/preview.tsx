@@ -1,6 +1,13 @@
 import type { Preview } from '@storybook/react-vite';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { polyfillFlagEmoji } from '@/helpers';
+
+// The app does this once at startup (`src/app/_layout.tsx`): without it Chromium on Windows shows a
+// flag emoji as its two-letter code ("JP") instead of the flag. Storybook doesn't go through the
+// app's root layout, so the flag webfont (`FLAG_FONT_FAMILY`) has to be loaded here too.
+polyfillFlagEmoji();
+
 // `ui/Screen`'s `SafeAreaView` throws ("No safe area value available") without a
 // `SafeAreaProvider` above it — same reason `admin/src/views/ComponentGalleryView` supplied one
 // by hand (see its own doc comment). `useTheme()`/`useTranslation()` need no provider here: their

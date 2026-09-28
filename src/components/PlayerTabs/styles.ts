@@ -63,15 +63,4 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
     labelActive: {
       color: colors.onAccent,
     },
-    check: {
-      ...typography.heading,
-      color: colors.success,
-      fontSize: fontSize.body - 1,
-    },
-    checkCompact: {
-      fontSize: fontSize.body - 1,
-    },
-    checkActive: {
-      color: colors.onAccent,
-    },
   });

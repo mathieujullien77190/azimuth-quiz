@@ -29,7 +29,6 @@ export const TurnByTurn: Story = {
   args: {
     activeIndex: 1,
     activeLabel: (name) => translations.fr.game.playerTurn(name),
-    answered: [true, false, false],
     order: [0, 1, 2],
     players: SAMPLE_PLAYERS,
   },

@@ -5,7 +5,6 @@ import PlayerTabs from '@/components/PlayerTabs';
 <PlayerTabs
   activeIndex={turnIndex}
   activeLabel={t.game.playerTurn}
-  answered={players.map(() => false)}
   order={players.map((_, index) => index)}
   players={players}
 />

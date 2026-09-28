@@ -1,20 +1,20 @@
 import { Text, View, useWindowDimensions } from 'react-native';
-import { formatBearing } from '@/helpers';
+import { formatBearing, formatDistance, kmToRatio, ratioToKm } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 
 import Compass from '@/components/Compass';
-import DistanceSlider from '../../components/DistanceSlider';
 import EarthSection from '@/components/EarthSection';
 import FooterNav from '../../components/FooterNav';
 import GameFooter from '@/components/GameFooter';
 import GameHeader from '@/components/GameHeader';
-import { compassSizeFor, earthSizeFor } from './helpers';
+import { compassSizeFor, distanceSliderMarks, earthSizeFor } from './helpers';
 import PlaceCard from '../../components/PlaceCard';
 import RoundResult from '../../components/RoundResult';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Screen from '@/components/ui/Screen';
+import SliderTrack from '@/components/ui/SliderTrack';
 import type { OnlineGameScreenViewProps } from './types';
 
 import { createStyles } from './OnlineGameScreenView.styles';
@@ -131,7 +131,15 @@ export const OnlineGameScreenView = ({
         <View style={styles.earthCenter}>
           <EarthSection marks={earthMarks} size={earthSizeFor(width)} zoomControls={record !== undefined} />
         </View>
-        {!record && <DistanceSlider maxKm={maxDistanceKm} onChange={onSetDistanceKm} valueKm={distanceKm} />}
+        {!record && (
+          <SliderTrack
+            label={t.sliders.distance}
+            marks={distanceSliderMarks(maxDistanceKm)}
+            onRatioChange={(ratio) => onSetDistanceKm(ratioToKm(ratio, maxDistanceKm))}
+            ratio={kmToRatio(distanceKm, maxDistanceKm)}
+            valueText={formatDistance(distanceKm)}
+          />
+        )}
       </Card>
 
       {/* Always here, at the bottom, whether pending or confirmed — never above the compass/Earth,
