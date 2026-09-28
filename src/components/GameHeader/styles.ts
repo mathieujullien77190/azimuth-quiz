@@ -38,6 +38,20 @@ export const createStyles = ({ colors, isDark, typography }: Theme) =>
       color: colors.accent,
       fontSize: fontSize.body + 2,
     },
+    // "Manche 3 / 10 · 🟡 Moyen", one line aligned left.
+    progress: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.sm,
+    },
+    separator: {
+      ...typography.label,
+      color: colors.textMuted,
+      fontSize: fontSize.caption,
+    },
     // The round's question, centered at the bottom of the header.
     question: {
       ...typography.heading,

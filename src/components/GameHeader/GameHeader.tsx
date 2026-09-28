@@ -5,7 +5,8 @@ import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 
 import PlayerTabs from '@/components/PlayerTabs';
-import RoundProgress from '@/components/RoundProgress';
+import DifficultyBadge from '@/components/DifficultyBadge';
+import RoundCounter from '@/components/RoundCounter';
 import QuitButton from '@/components/ui/QuitButton';
 import type { GameHeaderProps } from './types';
 
@@ -13,7 +14,7 @@ import { createStyles } from './styles';
 
 /**
  * The in-round header shared by every game — dumb. Top row: the quit cross and the room code on the
- * left, this device's name and points on the right. Then "Manche 3 / 10 · difficulty" aligned left, the
+ * left, this device's name and points on the right. Then "Manche 3 / 10 · difficulty" (`RoundCounter`, `DifficultyBadge`) aligned left, the
  * players' tabs when `players` is given, and the round's `question` centered at the bottom.
  */
 export const GameHeader = ({
@@ -42,7 +43,11 @@ export const GameHeader = ({
           {name} · {formatNumber(points)} {t.common.pts}
         </Text>
       </View>
-      <RoundProgress difficulty={difficulty} roundNumber={roundNumber} totalRounds={totalRounds} />
+      <View style={styles.progress}>
+        <RoundCounter roundNumber={roundNumber} totalRounds={totalRounds} />
+        <Text style={styles.separator}>·</Text>
+        <DifficultyBadge difficulty={difficulty} />
+      </View>
       {players !== undefined && (
         <PlayerTabs
           activeIndex={turnIndex}
