@@ -175,6 +175,7 @@ export const en: Translations = {
     wasPlace: 'It was',
     continueLabel: 'Continue',
     notYourTurn: (name) => `It’s ${name}’s turn: you can only watch… or pretend to think 🤔`,
+    someoneTyping: (name, text) => `${name} is typing: ${text}`,
     clues: {
       position: 'Position',
       population: 'Population',

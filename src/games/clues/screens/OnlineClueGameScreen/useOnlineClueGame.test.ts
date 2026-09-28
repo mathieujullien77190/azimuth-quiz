@@ -8,6 +8,7 @@ import {
   pickClueRoomClue,
   reportClueRoomCorrect,
   reportClueRoomWrong,
+  setClueRoomTyping,
 } from '@/games/clues/helpers/room';
 import type { ClueRoomGameState } from '@/games/clues/helpers/room';
 import { useClueRoomStore } from '@/games/clues/store/roomStore';
@@ -27,6 +28,7 @@ jest.mock('@/games/clues/helpers/room', () => ({
   removeRoomPlayer: jest.fn(() => Promise.resolve()),
   reportClueRoomCorrect: jest.fn(() => Promise.resolve()),
   reportClueRoomWrong: jest.fn(() => Promise.resolve()),
+  setClueRoomTyping: jest.fn(() => Promise.resolve()),
   subscribeToRoomGame: jest.fn(),
   subscribeToRoomPlayers: jest.fn(),
   subscribeToRoomSettings: jest.fn(),
@@ -52,6 +54,7 @@ const gameState = (overrides: Partial<ClueRoomGameState> = {}): ClueRoomGameStat
   wrongGuessUid: null,
   wrongGuessSeq: 0,
   totalScores: {},
+  typing: null,
   ...overrides,
 });
 
@@ -143,6 +146,116 @@ describe('useOnlineClueGame — the draft guess', () => {
     await setGame({ turnUid: 'guest' });
     expect(result.current.guessText).toBe('');
     expect(result.current.lastWrong).toBeNull();
+  });
+});
+
+describe('useOnlineClueGame — sharing this device\'s draft guess', () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  it('mirrors the turn-holder\'s text to the room, 500ms after it stops changing', async () => {
+    const { result } = await setup();
+    await act(async () => result.current.setGuessText('Pa'));
+    await act(async () => jest.advanceTimersByTime(499));
+    expect(setClueRoomTyping).not.toHaveBeenCalled();
+    await act(async () => jest.advanceTimersByTime(1));
+    expect(setClueRoomTyping).toHaveBeenCalledWith('tabofuna', 'host', 'Pa');
+  });
+
+  it('debounces every further keystroke, one write per pause', async () => {
+    const { result } = await setup();
+    await act(async () => result.current.setGuessText('P'));
+    await act(async () => jest.advanceTimersByTime(200));
+    await act(async () => result.current.setGuessText('Pa'));
+    await act(async () => jest.advanceTimersByTime(200));
+    await act(async () => result.current.setGuessText('Par'));
+    await act(async () => jest.advanceTimersByTime(500));
+    expect(setClueRoomTyping).toHaveBeenCalledTimes(1);
+    expect(setClueRoomTyping).toHaveBeenCalledWith('tabofuna', 'host', 'Par');
+  });
+
+  it('does not write again when the debounced value has not actually changed', async () => {
+    const { result } = await setup();
+    await act(async () => result.current.setGuessText('Pa'));
+    await act(async () => jest.advanceTimersByTime(500));
+    expect(setClueRoomTyping).toHaveBeenCalledTimes(1);
+    await setGame({ wrongGuessSeq: 1 });
+    await act(async () => jest.advanceTimersByTime(500));
+    expect(setClueRoomTyping).toHaveBeenCalledTimes(1);
+  });
+
+  it('clears the room once the text is emptied back out (e.g. after a submit)', async () => {
+    const { result } = await setup();
+    await act(async () => result.current.setGuessText('Pa'));
+    await act(async () => jest.advanceTimersByTime(500));
+    await act(async () => result.current.setGuessText(''));
+    await act(async () => jest.advanceTimersByTime(500));
+    expect(setClueRoomTyping).toHaveBeenLastCalledWith('tabofuna', 'host', '');
+  });
+
+  it('never writes for a spectator (not the turn-holder)', async () => {
+    const { result } = await setup({ localUid: 'guest' });
+    await act(async () => result.current.setGuessText('Pa'));
+    await act(async () => jest.advanceTimersByTime(500));
+    expect(setClueRoomTyping).not.toHaveBeenCalled();
+  });
+
+  it('never writes once the round is over', async () => {
+    const { result } = await setup({ gameState: gameState({ verdict: 'giveUp' }) });
+    await act(async () => result.current.setGuessText('Pa'));
+    await act(async () => jest.advanceTimersByTime(500));
+    expect(setClueRoomTyping).not.toHaveBeenCalled();
+  });
+
+  it('swallows a failed write', async () => {
+    jest.mocked(setClueRoomTyping).mockRejectedValueOnce(new Error('offline'));
+    const { result } = await setup();
+    await act(async () => result.current.setGuessText('Pa'));
+    await act(async () => jest.advanceTimersByTime(500));
+    expect(setClueRoomTyping).toHaveBeenCalledTimes(1);
+  });
+
+  it('never writes alone in the room (nothing to show anyone)', async () => {
+    const { result } = await setup({ players: { host: { name: 'Zoé', joinedAt: arrivedAt(1) } } });
+    await act(async () => result.current.setGuessText('Pa'));
+    await act(async () => jest.advanceTimersByTime(500));
+    expect(setClueRoomTyping).not.toHaveBeenCalled();
+  });
+});
+
+describe('useOnlineClueGame — watching the turn-holder type', () => {
+  it("shows the turn-holder's live text to a spectator", async () => {
+    const { result } = await setup({
+      localUid: 'guest',
+      gameState: gameState({ typing: { uid: 'host', text: 'Pari' } }),
+    });
+    expect(result.current.typedByActivePlayer).toBe('Pari');
+  });
+
+  it('shows nothing to the turn-holder themself', async () => {
+    const { result } = await setup({ gameState: gameState({ typing: { uid: 'host', text: 'Pari' } }) });
+    expect(result.current.typedByActivePlayer).toBe('');
+  });
+
+  it('ignores a value left over from a previous turn-holder', async () => {
+    const { result } = await setup({
+      localUid: 'guest',
+      gameState: gameState({ turnUid: 'host', typing: { uid: 'guest', text: 'Rome' } }),
+    });
+    expect(result.current.typedByActivePlayer).toBe('');
+  });
+
+  it('shows nothing once the round is over', async () => {
+    const { result } = await setup({
+      localUid: 'guest',
+      gameState: gameState({ verdict: 'correct', typing: { uid: 'host', text: 'Pari' } }),
+    });
+    expect(result.current.typedByActivePlayer).toBe('');
+  });
+
+  it('shows nothing before anything has been typed', async () => {
+    const { result } = await setup({ localUid: 'guest' });
+    expect(result.current.typedByActivePlayer).toBe('');
   });
 });
 

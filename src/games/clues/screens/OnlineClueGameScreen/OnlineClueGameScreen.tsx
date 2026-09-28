@@ -88,6 +88,7 @@ export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps
       onNextRound={game.goToNextRound}
       notice={notYourTurn.visible ? t.cluesGame.notYourTurn(turnPlayerName) : null}
       onDismissNotice={notYourTurn.hide}
+      typedByActivePlayer={game.typedByActivePlayer}
       onPickClue={game.isMyTurn ? game.pickClue : notYourTurn.show}
       onQuit={game.handleQuit}
       onSubmitGuess={game.submitGuess}

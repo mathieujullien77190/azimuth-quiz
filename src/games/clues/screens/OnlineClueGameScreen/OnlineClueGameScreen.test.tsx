@@ -33,6 +33,7 @@ const gameState = (overrides: Partial<ClueRoomGameState> = {}): ClueRoomGameStat
   wrongGuessUid: null,
   wrongGuessSeq: 0,
   totalScores: { zoe: 12, max: 5 },
+  typing: null,
   ...overrides,
 });
 
@@ -49,6 +50,7 @@ const setGame = (overrides: Record<string, unknown> = {}) => {
     bearing: 90,
     distance: 1000,
     isMyTurn: true,
+    typedByActivePlayer: '',
     skeletonGroups: [],
     skeletonLengthKnown: false,
     remaining: 24,
@@ -193,6 +195,17 @@ describe("OnlineClueGameScreen — somebody else's turn", () => {
     expect(getByText(t.cluesGame.pointsAtStake('24'))).toBeTruthy();
     expect(queryByText(t.cluesGame.giveUp)).toBeNull();
     expect(queryByText(t.cluesGame.submitGuess)).toBeNull();
+  });
+
+  it('shows what the turn-holder is typing, live', async () => {
+    setGame({ isMyTurn: false, gameState: gameState({ turnUid: 'max' }), typedByActivePlayer: 'Pari' });
+    const { getByText } = await renderScreen();
+    expect(getByText(t.cluesGame.someoneTyping('Max', 'Pari'))).toBeTruthy();
+  });
+
+  it('shows nothing while nothing has been typed yet', async () => {
+    const { queryByText } = await renderScreen();
+    expect(queryByText(/tape :/)).toBeNull();
   });
 
   it('answers a tap on a clue with a short notice, that closes by itself', async () => {

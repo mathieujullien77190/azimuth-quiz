@@ -27,6 +27,9 @@ export type OnlineClueGameScreenViewProps = {
   players: OnlinePlayer[];
   turnIndex: number;
   isMyTurn: boolean;
+  /** The turn-holder's in-progress answer text, live — empty when there is nothing to show (this
+   * device's own turn, the round is over, or nothing has been typed yet). */
+  typedByActivePlayer: string;
 
   remaining: number;
   /** Undefined outside `verdict !== null` (round in progress). */

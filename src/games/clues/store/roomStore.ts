@@ -23,6 +23,7 @@ const DEFAULT_GAME_STATE: ClueRoomGameState = {
   wrongGuessUid: null,
   wrongGuessSeq: 0,
   totalScores: {},
+  typing: null,
 };
 
 /** Clues' own room store — same lifecycle as Compass' (see `createRoomStore`), only the

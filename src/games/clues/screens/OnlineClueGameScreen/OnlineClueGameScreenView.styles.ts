@@ -13,6 +13,13 @@ export const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       fontSize: fontSize.caption + 1,
       textAlign: 'center',
     },
+    typingPreview: {
+      ...typography.body,
+      color: colors.textMuted,
+      fontSize: fontSize.caption + 1,
+      fontStyle: 'italic',
+      textAlign: 'center',
+    },
     actions: {
       gap: spacing.sm,
     },

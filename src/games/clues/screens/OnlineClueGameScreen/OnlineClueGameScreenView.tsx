@@ -51,6 +51,7 @@ export const OnlineClueGameScreenView = ({
   onPickClue,
   notice,
   onDismissNotice,
+  typedByActivePlayer,
   isHost,
   isLastRound,
   onNextRound,
@@ -59,6 +60,7 @@ export const OnlineClueGameScreenView = ({
   const { colors } = useTheme();
   const t = useTranslation();
   const roundOver = verdict !== undefined;
+  const turnPlayerName = players[turnIndex]?.name ?? '';
 
   return (
     <Screen
@@ -107,7 +109,11 @@ export const OnlineClueGameScreenView = ({
                   <Button label={isLastRound ? t.game.last : t.cluesGame.continueLabel} onPress={onNextRound} />
                 )}
               </View>
-            ) : !isMyTurn ? null : (
+            ) : !isMyTurn ? (
+              typedByActivePlayer !== '' && (
+                <Text style={styles.typingPreview}>{t.cluesGame.someoneTyping(turnPlayerName, typedByActivePlayer)}</Text>
+              )
+            ) : (
               <View style={styles.buzzRow}>
                 {lastWrong !== null && (
                   <Text style={[styles.resultBanner, styles.resultWrong]}>

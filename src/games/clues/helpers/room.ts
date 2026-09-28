@@ -83,6 +83,7 @@ export const startClueRoomGame = (
     wrongGuessUid: null,
     wrongGuessSeq: 0,
     totalScores: {},
+    typing: null,
   });
 
 /** Turn-holder-only (security rules check `request.auth.uid == resource.data.turnUid`): reveals
@@ -92,6 +93,13 @@ export const startClueRoomGame = (
  * (multi-stage clues) and Firestore's `arrayUnion` would silently dedupe that. */
 export const pickClueRoomClue = (code: string, revealedClueIds: ClueId[], nextTurnUid: string): Promise<void> =>
   updateDoc(roomRef(code), { revealedClueIds, turnUid: nextTurnUid });
+
+/** Turn-holder-only: mirrors this device's in-progress answer text, so the other players can watch
+ * it live (see `useOnlineClueGame`, debounced ~500ms and only written when it actually changed —
+ * every write here is re-read by every connected player, same cost concern as the presence
+ * heartbeat). Cleared (`''`) once the guess is empty again or a guess has been submitted. */
+export const setClueRoomTyping = (code: string, uid: string, text: string): Promise<void> =>
+  updateDoc(roomRef(code), { typing: { uid, text } satisfies ClueRoomGameState['typing'] });
 
 /** Turn-holder-only: self-reports having found the place — ends the round. The score itself is
  * never written here (see `applyClueRoomScore`): same trust boundary as Compass, where the
@@ -134,6 +142,7 @@ export const nextClueRoomRound = (
     turnUid: firstTurnUid,
     verdict: null,
     roundWinnerUid: null,
+    typing: null,
   });
 
 export type ClueRoomGameState = {
@@ -151,6 +160,11 @@ export type ClueRoomGameState = {
   wrongGuessUid: string | null;
   wrongGuessSeq: number;
   totalScores: Record<string, number>;
+  /** The turn-holder's in-progress answer text, live (see `setClueRoomTyping`) — `null` outside any
+   * write yet (a fresh room, or once cleared). Only trust it when `uid` still matches the room's own
+   * `turnUid`: it is never reset on a turn/round change by itself, so a stale value from the
+   * previous turn-holder must be told apart from a fresh one. */
+  typing: { uid: string; text: string } | null;
 };
 
 /** Live round state for a room. Skips the update once the room itself is gone, same reasoning as
@@ -171,5 +185,6 @@ export const subscribeToRoomGame = (code: string, onUpdate: (state: ClueRoomGame
       wrongGuessUid: (data?.wrongGuessUid as string | undefined) ?? null,
       wrongGuessSeq: (data?.wrongGuessSeq as number | undefined) ?? 0,
       totalScores: (data?.totalScores as Record<string, number> | undefined) ?? {},
+      typing: (data?.typing as ClueRoomGameState['typing'] | undefined) ?? null,
     });
   });

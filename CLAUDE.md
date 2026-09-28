@@ -169,6 +169,13 @@ commentees en francais :
   l'ordre d'arrivee via `helpers/roomPlayers.ts`, redirection "room supprimee", `handleQuit`) et, pour les
   jeux a tour de role, `helpers/useHostTurnScoring.ts` (l'hote seul ecrit `totalScores` : gain sur
   `verdict: 'correct'`, penalite fixe a chaque `wrongGuessSeq`), `helpers/useHostTurnRecovery.ts` (l'hote passe la main si le joueur actif est parti), `helpers/useGuessDraft.ts` (texte saisi + banniere « rate » du joueur, remis a zero a chaque manche/changement de tour), `nextPlayerUid` (`helpers/roomPlayers.ts`, qui joue apres qui) et `helpers/useTransientFlag.ts` (un drapeau qui retombe seul, pour les notices). Composants partages : `GameHeader`/`GameFooter` (le panneau translucide autour du pied de page, pose par chaque jeu ; `Screen` rend son `footer` tel quel), `NoticeOverlay` (avec `loading` pour l'attente : un tap n'y fait rien, pas de `onDismiss`),
+- **Indices : la saisie en direct** (`ClueRoomGameState.typing`) — les autres joueurs voient, en temps reel, ce que le
+  detenteur du tour est en train de taper. Seul lui ecrit (`setClueRoomTyping`, cote `useOnlineClueGame` : texte
+  debounce a 500 ms via `useDebouncedValue`, une seule ecriture par valeur stabilisee grace a un ref, jamais en solo
+  ni hors de son tour ni manche terminee — meme souci de cout qu'un heartbeat de presence, chaque ecriture est relue
+  par tous), remis a `''` quand le champ se vide ou apres envoi. Cote lecture, un spectateur ne voit le texte que si
+  `typing.uid === turnUid` (evite un texte perime d'un tour precedent) et la manche est en cours ; le detenteur ne se
+  voit pas lui-meme. Pas de champ equivalent pour Silhouette (pas demande).
   `RoomDeletedScreen`, `FinalStandings` (ecran de fin commun aux trois jeux : classement, medailles, egalites ;
   Compass y ajoute en `children` son propre `RoundsRecap`, qui dit qui a ete le meilleur en direction et en distance
   a chaque manche).

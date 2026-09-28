@@ -11,6 +11,7 @@ import {
   pickClueRoomClue,
   reportClueRoomCorrect,
   reportClueRoomWrong,
+  setClueRoomTyping,
   startClueRoomGame,
   subscribeToRoomGame,
 } from './room';
@@ -65,6 +66,7 @@ describe('game writes', () => {
       wrongGuessUid: null,
       wrongGuessSeq: 0,
       totalScores: {},
+      typing: null,
     });
   });
 
@@ -76,6 +78,11 @@ describe('game writes', () => {
   it('pickClueRoomClue writes the appended clues and hands the turn over', async () => {
     await pickClueRoomClue('tabofuna', ['distance', 'distance'], 'max');
     expect(updateDoc).toHaveBeenCalledWith(REF, { revealedClueIds: ['distance', 'distance'], turnUid: 'max' });
+  });
+
+  it('setClueRoomTyping mirrors the turn-holder\'s in-progress text', async () => {
+    await setClueRoomTyping('tabofuna', 'zoe', 'Pari');
+    expect(updateDoc).toHaveBeenCalledWith(REF, { typing: { uid: 'zoe', text: 'Pari' } });
   });
 
   it('reportClueRoomCorrect names the winner', async () => {
@@ -107,6 +114,7 @@ describe('game writes', () => {
       turnUid: 'zoe',
       verdict: null,
       roundWinnerUid: null,
+      typing: null,
     });
   });
 
@@ -139,6 +147,7 @@ describe('subscribeToRoomGame', () => {
       wrongGuessUid: 'max',
       wrongGuessSeq: 2,
       totalScores: { zoe: 5 },
+      typing: { uid: 'zoe', text: 'Pari' },
     };
     emit(true, state);
     const onUpdate = jest.fn();
@@ -162,6 +171,7 @@ describe('subscribeToRoomGame', () => {
       wrongGuessUid: null,
       wrongGuessSeq: 0,
       totalScores: {},
+      typing: null,
     });
   });
 
