@@ -1,7 +1,7 @@
 import { useTranslation } from '@/i18n';
 
 import FinalStandings from '@/components/FinalStandings';
-import LoadingScreen from '@/components/LoadingScreen';
+import NoticeOverlay from '@/components/NoticeOverlay';
 import RoomDeletedScreen from '@/components/RoomDeletedScreen';
 import { OnlineContourGameScreenView } from './OnlineContourGameScreenView';
 import type { OnlineContourGameScreenProps } from './types';
@@ -25,7 +25,8 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
 
   const { localUid, onlinePlayers, isHost, roomSettings, gameState, country } = game;
 
-  if (localUid === null || roomSettings === null || country === undefined) return <LoadingScreen />;
+  if (localUid === null || roomSettings === null || country === undefined)
+    return <NoticeOverlay loading message={t.game.loading} onDismiss={() => {}} />;
 
   if (gameState.screen === 'end') {
     return (

@@ -11,7 +11,7 @@ import { useTheme } from '@/themes';
 import type { EarthMark } from '@/components/EarthSection';
 import type { RoundRecord } from '@/types';
 import EndScreen from '../EndScreen';
-import LoadingScreen from '@/components/LoadingScreen';
+import NoticeOverlay from '@/components/NoticeOverlay';
 import RoomDeletedScreen from '@/components/RoomDeletedScreen';
 import { REVEAL_OPACITY } from './constants';
 import { buildRoundRecord, onCapFromScroll } from './helpers';
@@ -64,7 +64,7 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   const { localUid, players, onlinePlayers, isHost, roomSettings, gameState, place, totals, myIndex } = game;
 
   if (localUid === null || roomSettings === null || place === undefined || gameState.origin === null) {
-    return <LoadingScreen />;
+    return <NoticeOverlay loading message={t.game.loading} onDismiss={() => {}} />;
   }
   const maxDistanceKm = MAX_SURFACE_DISTANCE_KM;
   const myColor = players[localUid]?.color ?? PLAYER_COLORS[0];
@@ -100,7 +100,7 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   if (showResults) {
     const confirmedRecord = gameState.screen === 'reveal' ? game.records[game.records.length - 1] : undefined;
     if (gameState.screen === 'reveal' && confirmedRecord === undefined) {
-      return <LoadingScreen />;
+      return <NoticeOverlay loading message={t.game.loading} onDismiss={() => {}} />;
     }
 
     const answeredPlayers = confirmedRecord

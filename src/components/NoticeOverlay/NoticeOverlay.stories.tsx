@@ -9,6 +9,7 @@ import { NoticeOverlay } from './NoticeOverlay';
 import type { NoticeOverlayProps } from './types';
 import { source } from '@/storybook/source';
 import defaultCode from './Default.source.md?raw';
+import loadingCode from './Loading.source.md?raw';
 
 /** Named (capitalized) so eslint's rules-of-hooks recognizes it as a component and allows the
  * `useState` below — an inline arrow assigned to a story's `render` doesn't qualify. Mocks the
@@ -47,5 +48,13 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   parameters: source(defaultCode),
   args: { message: 'L’hôte a supprimé la partie.', onDismiss: fn() },
+  render: InteractiveDemo,
+};
+
+/** With `loading`: a light grey spinner turns above the message — a wait ("Préparation de la
+ * partie…"), not a dead end. Same splash otherwise. */
+export const Loading: Story = {
+  parameters: source(loadingCode),
+  args: { loading: true, message: 'Préparation de la partie…', onDismiss: fn() },
   render: InteractiveDemo,
 };

@@ -1,7 +1,7 @@
 import { useTranslation } from '@/i18n';
 
 import FinalStandings from '@/components/FinalStandings';
-import LoadingScreen from '@/components/LoadingScreen';
+import NoticeOverlay from '@/components/NoticeOverlay';
 import RoomDeletedScreen from '@/components/RoomDeletedScreen';
 import { OnlineClueGameScreenView } from './OnlineClueGameScreenView';
 import type { OnlineClueGameScreenProps } from './types';
@@ -28,7 +28,7 @@ export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps
   const { localUid, onlinePlayers, isHost, roomSettings, gameState, place } = game;
 
   if (localUid === null || roomSettings === null || place === undefined || gameState.origin === null) {
-    return <LoadingScreen />;
+    return <NoticeOverlay loading message={t.game.loading} onDismiss={() => {}} />;
   }
 
   if (gameState.screen === 'end') {

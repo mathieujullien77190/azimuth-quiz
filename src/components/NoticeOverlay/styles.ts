@@ -8,6 +8,7 @@ export const createStyles = ({ typography }: Theme) =>
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
+      gap: spacing.md,
       paddingHorizontal: spacing.lg,
       backgroundColor: 'rgba(0, 0, 0, 0.8)',
     },

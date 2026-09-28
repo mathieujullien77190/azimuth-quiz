@@ -1,8 +1,8 @@
 import { filterPlaces } from '@/helpers';
-import { useLanguage } from '@/i18n';
+import { useLanguage, useTranslation } from '@/i18n';
 import { useSettings } from '@/settings';
 
-import LoadingScreen from '@/components/LoadingScreen';
+import NoticeOverlay from '@/components/NoticeOverlay';
 import { selectDifficultyFilter, toggleCategoryFilter } from './helpers';
 import { SetupScreenView } from './SetupScreenView';
 import type { SetupScreenProps } from './types';
@@ -13,12 +13,13 @@ import { useOnlineRoom } from './useOnlineRoom';
  * into an already-decided callback, and maps everything onto `SetupScreenView` (pure rendering).
  */
 export const SetupScreen = ({ onBack }: SetupScreenProps) => {
+  const t = useTranslation();
   const { settings, ready, updateSettings } = useSettings();
   const { language } = useLanguage();
   const room = useOnlineRoom(settings, updateSettings);
   const available = filterPlaces(settings.categories, settings.difficulties, language).length;
 
-  if (room.starting) return <LoadingScreen />;
+  if (room.starting) return <NoticeOverlay loading message={t.game.loading} onDismiss={() => {}} />;
 
   const updateOrNotify = (patch: Partial<typeof settings>) =>
     room.readOnly ? room.notifyReadOnly() : updateSettings(patch);
