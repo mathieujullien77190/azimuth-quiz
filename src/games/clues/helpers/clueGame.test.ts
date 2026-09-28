@@ -10,7 +10,7 @@ import {
   randomCluePlace,
   skeletonLetterCount,
   totalRevealCount,
-} from './helpers';
+} from './clueGame';
 
 describe('totalRevealCount', () => {
   const TWO_STAGE: ClueId[] = ['distance', 'elevation', 'population', 'currency', 'localTime', 'letter'];

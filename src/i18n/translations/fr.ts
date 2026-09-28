@@ -178,8 +178,6 @@ export const fr: Translations = {
   cluesGame: {
     pointsAtStake: (points) => `${points} pts en jeu`,
     giveUp: '🤷 Je ne sais pas',
-    resultOk: 'Bonne réponse !',
-    whoAnswered: 'Qui a répondu ?',
     scored: (name, points) => `${name} marque ${points} points !`,
     missed: (name, points) => `${name} se trompe — perd ${points} points.`,
     guessPlaceholder: 'Nom de la ville…',
@@ -229,9 +227,6 @@ export const fr: Translations = {
     found: (name, points) => `${name} marque ${points} points !`,
     pointsAtStake: (points) => `En jeu : ${points} points`,
     guessPlaceholder: 'Nom du pays…',
-    resultOk: 'Bonne réponse !',
-    resultNotOk: 'Mauvaise réponse.',
-    whoAnswered: 'Qui a répondu ?',
     wrongGuess: (name) => `${name} perd 50 points.`,
     continueLabel: 'Continuer',
     finalScoreTitle: 'Classement final',

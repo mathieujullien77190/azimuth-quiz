@@ -113,8 +113,6 @@ export type GameSettings = {
   hideOtherAnswers: boolean;
 };
 
-export type GamePhase = 'loading' | 'guess' | 'reveal' | 'end';
-
 export type Rank = {
   title: string;
   emoji: string;
@@ -295,52 +293,6 @@ export type ContourSettings = {
    * multi-select `difficulties`. */
   difficulty: Difficulty;
 };
-
-export type ContourRoundScore = {
-  /** How many hints had already been revealed (0-3) when the correct guess landed — only
-   * meaningful for whichever player actually found it (`guessPoints > 0`); 0 for every other
-   * player, and for a round nobody found (give-up). */
-  hintsUsed: number;
-  /** Tiered by `hintsUsed` (see `CONTOUR_GUESS_POINTS_BY_HINTS`) rather than a falloff curve:
-   * there's no distance to measure for a country-name guess. 0 for every player except whoever
-   * found it, and for a give-up round. */
-  guessPoints: number;
-  /** CONTOUR_WRONG_GUESS_PENALTY times however many wrong guesses got attributed to this player
-   * this round (see ContourGameScreen's post-"Valider" attribution step) — subtracted into
-   * `total` below. 0 for a player nobody attributed a wrong guess to. */
-  penaltyPoints: number;
-  /** guessPoints - penaltyPoints. */
-  total: number;
-};
-
-export type ContourPlayerResult = {
-  score: ContourRoundScore;
-};
-
-export type ContourRoundRecord = {
-  country: ContourCountry;
-  /** The country's full outline (closed ring), projected once for the round and shown as-is
-   * from the very start of the 'guess' phase — no holes/gaps, no reveal animation needed. */
-  outline: Point2D[];
-  /** Canvas size `outline` was projected at for this round (the 'guess' phase's own full-bleed
-   * box, which the 'reveal' phase's ordinary Card layout never matches) — the 'reveal' board must
-   * be drawn at this exact size, not re-fit to its own (differently shaped) area. */
-  width: number;
-  height: number;
-  /** Index of whichever player correctly guessed the country this round, or -1 if nobody did
-   * (give-up) — informational only, each player's own `results[i].score.guessPoints` already
-   * reflects it (0 for everyone but the guesser, if any). */
-  guesserIndex: number;
-  /** One result per player, in player order. */
-  results: ContourPlayerResult[];
-};
-
-/**
- * A round is a single shared puzzle, not turn-based: any player can reveal the next hint or type
- * a guess, the first correct one scores (or anyone can give up for 0), then straight to the final
- * reveal ('reveal').
- */
-export type ContourPhase = 'guess' | 'reveal' | 'end';
 
 /** The two available themes (see src/themes): 'night' is the default. */
 export type ThemeId = 'night' | 'day';

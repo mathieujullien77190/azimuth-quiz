@@ -173,8 +173,6 @@ export const en: Translations = {
   cluesGame: {
     pointsAtStake: (points) => `${points} pts at stake`,
     giveUp: '🤷 No idea',
-    resultOk: 'Correct!',
-    whoAnswered: 'Who answered?',
     scored: (name, points) => `${name} scores ${points} points!`,
     missed: (name, points) => `${name} got it wrong — loses ${points} points.`,
     guessPlaceholder: 'City name…',
@@ -224,9 +222,6 @@ export const en: Translations = {
     found: (name, points) => `${name} scores ${points} points!`,
     pointsAtStake: (points) => `At stake: ${points} points`,
     guessPlaceholder: 'Country name…',
-    resultOk: 'Correct!',
-    resultNotOk: 'Wrong answer.',
-    whoAnswered: 'Who answered?',
     wrongGuess: (name) => `${name} loses 50 points.`,
     continueLabel: 'Continue',
     finalScoreTitle: 'Final standings',

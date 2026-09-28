@@ -5,7 +5,6 @@ export { nameSkeleton } from '../games/clues/helpers/clueSkeleton';
 export { resolveOrigin } from './location';
 export { filterPlaces, pickPlaces } from '../games/compass/helpers/places';
 export { applyBestBonus, getRank, scoreRound } from '../games/compass/helpers/scoring';
-export { playerDisplayName } from './settings';
 export {
   clearAppData,
   loadAnimationsEnabled,

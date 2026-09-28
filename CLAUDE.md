@@ -3,8 +3,9 @@
 # Azimuth Quiz
 
 Jeu de geographie : un lieu s'affiche, le joueur vise son cap a la boussole et estime
-la distance depuis un point de depart (position GPS ou Paris par defaut). 1 a 6 joueurs
-sur le meme telephone, jusqu'a 20 manches. Deploye en web statique sur GitHub Pages
+la distance depuis un point de depart (position GPS ou Paris par defaut). Jusqu'a 10 joueurs,
+un telephone par joueur, jusqu'a 20 manches — **toute partie est une room en ligne**, meme seul (voir
+"Pas de partie locale" plus bas). Deploye en web statique sur GitHub Pages
 (`https://mathieujullien77190.github.io/azimuth-quiz/`) en plus des builds natifs.
 
 ## Structure
@@ -14,10 +15,9 @@ auto-contenu `index.ts` + `<Name>.tsx` (export nomme) + `helpers.ts` + `constant
 `types.ts` + `styles.ts` (le `createStyles`/`StyleSheet.create` du composant, importe
 depuis `<Name>.tsx` — extrait dans son propre fichier fin 2026-09 pour tous les
 composants du projet ; jamais de logique dedans, uniquement le style). Dans les dossiers
-`screens/<Screen>/` qui contiennent a la fois le container et sa vue (`GameScreen.tsx` +
-`GameScreenView.tsx`, `OnlineGameScreen.tsx` + `OnlineGameScreenView.tsx`), chacun a son
-propre fichier de styles nomme d'apres lui (`GameScreen.styles.ts`/
-`GameScreenView.styles.ts`) plutot qu'un `styles.ts` partage, pour eviter toute ambiguite
+`screens/<Screen>/` qui contiennent a la fois le container et sa vue (`OnlineGameScreen.tsx` +
+`OnlineGameScreenView.tsx`), chacun a son
+propre fichier de styles nomme d'apres lui (`OnlineGameScreenView.styles.ts`) plutot qu'un `styles.ts` partage, pour eviter toute ambiguite
 sur lequel des deux createStyles il contient. Alias `@/` → `src/`.
 
 Depuis la reorg par jeu (fin 2026-09) : plus un seul gros `components/`/`helpers/`
@@ -56,26 +56,25 @@ src/
                        # `games/<jeu>/constants.ts` (voir plus bas)
   games/
     compass/
-      screens/         # GameScreen, OnlineGameScreen, SetupScreen, EndScreen
+      screens/         # OnlineGameScreen, SetupScreen, EndScreen
       components/      # DistanceSlider, SliderTrack, RoundResult,
                        # PlaceCard
       helpers/         # places.ts, scoring.ts, distanceScale.ts, room.ts (Firestore, hors
                        # barrel `@/helpers` — voir plus bas)
-      store/           # gameStore.ts (jeu local), roomStore.ts (partie en ligne, hors barrel
-                       # comme room.ts, meme raison)
+      store/           # roomStore.ts (partie en ligne, hors barrel comme room.ts, meme raison)
       constants.ts     # tuning propre a Compass : score (MAX_ROUND_POINTS, courbe...), sliders
                        # de distance, RANKS, ROOM_PLAYER_COLORS, CATEGORIES, DEFAULT_SETTINGS —
                        # admin importe CATEGORIES directement d'ici (meme alias `@/`)
     clues/
-      screens/         # ClueGameScreen, ClueSetupScreen
+      screens/         # OnlineClueGameScreen, ClueSetupScreen
       components/      # ClueCard
-      helpers/         # clueHistory.ts, clueSkeleton.ts
+      helpers/         # clueHistory.ts, clueSkeleton.ts, clueGame.ts (score, tirage, saisie)
       constants.ts     # tuning propre a Clues : CLUE_ORDER, CLUE_CATEGORIES,
                        # CLUE_ANSWER_METHODS, DEFAULT_CLUE_SETTINGS, CLUE_HISTORY_STORAGE_KEY
     contour/
-      screens/         # ContourGameScreen, ContourSetupScreen
-      components/      # ContourBoard
-      helpers/         # contourScoring.ts
+      screens/         # OnlineContourGameScreen, ContourSetupScreen
+      components/      # ContourBoard, ContourFullBleedScreen, ContourGuessBar
+      helpers/         # contourScoring.ts, contourCountry.ts, roundBoard.ts, useRoundBoard.ts, room.ts
       constants.ts     # tuning propre a Silhouette (anciennement `constants/contour.ts`) :
                        # MAX_CONTOUR_POINTS, CONTOUR_GUESS_POINTS_BY_HINTS,
                        # CONTOUR_WRONG_GUESS_PENALTY, DEFAULT_CONTOUR_SETTINGS
@@ -104,25 +103,27 @@ via le meme alias `@/` (ex. `ContourEditor.tsx` → `@/games/contour/components/
 — penser a verifier `admin` (au moins `npm run build` dans `admin/`) apres tout renommage/
 deplacement cote `src/`.
 
-`GameScreen/useGame.ts` est un hook fin au-dessus de `store/gameStore.ts` (store Zustand :
-etat brut + actions `start`/`submit`/`next`/`setBearing`/`setDistanceKm`, testable sans React —
-voir `gameStore.test.ts`) ; `useGame` ne fait que resoudre les reglages/la langue, declencher
-`start()` une fois prets, et calculer les valeurs derivees (`players`, `answered`, `totals`...).
-`GamePhase = 'loading' | 'guess' | 'reveal' | 'end'` ; tout le reste (composants) est pilote par
-les valeurs de retour de `useGame`, inchangees par ce decoupage.
+### Pas de partie locale
 
-### Smart/dumb (container/presentational) sur les 3 ecrans Compass
+Il n'existe plus de partie sur un seul telephone : jouer seul, c'est heberger une room dont personne
+ne rejoint. Le setup garde le chip "Solo" ; "Lancer la partie" en solo cree une room *cachee*
+(`hostedSilently` dans `useSetupRoom` : hebergee comme une room visible, mais sans code affiche) puis
+lance la partie quand elle est connectee et que cet appareil y est liste — `startOnlineGame(run)` prend
+donc en charge les deux cas, et ce que `run` lit dans la room (le premier joueur...) est lu *dans* `run`,
+jamais avant. Consequence assumee : il faut du reseau, meme seul. Pas de `gameStore`/`useGame`/routes
+`/game`, `/clues-game`, `/contour-game`.
 
-`SetupScreen`, `GameScreen` et `OnlineGameScreen` suivent tous les trois le meme
-decoupage : un hook "smart" colocalise (`useOnlineRoom.ts`, `useGame.ts`,
-`useOnlineGame.ts`) porte l'etat, les effets (Firestore/settings/scroll) et les actions
+### Smart/dumb (container/presentational) sur les ecrans Compass
+
+`SetupScreen` et `OnlineGameScreen` suivent le meme decoupage : un hook "smart" colocalise
+(`useOnlineRoom.ts`, `useOnlineGame.ts`) porte l'etat, les effets (Firestore/settings/scroll) et les actions
 deja resolues (readOnly-gated, kick, submit...) ; le fichier principal du dossier
-(`SetupScreen.tsx`, `GameScreen.tsx`, `OnlineGameScreen.tsx`) reste le container — il
+(`SetupScreen.tsx`, `OnlineGameScreen.tsx`) reste le container — il
 appelle le hook, calcule les tableaux/labels derives qui ont besoin de `useTranslation`/
-`useTheme` (`legendItems`, `earthMarks`, `scoreLabel`...), et garde les early-returns
+`useTheme` (`earthMarks`, `scoreLabel`...), et garde les early-returns
 d'ecran entier (`loading`, `end`, notice "room supprimee") puisque ce ne sont pas des
 "vues" du composant dumb — il mappe le reste vers un composant `*View.tsx` (`SetupScreenView`,
-`GameScreenView`, `OnlineGameScreenView`/`OnlineAnswerView`+`OnlineResultsView`) qui ne
+`OnlineGameScreenView`) qui ne
 fait que du rendu : jamais de `@/settings`/`@/games/compass/helpers/room`/
 `@/games/compass/store/roomStore`, jamais
 d'effet — seulement des primitives UI, constantes pures et callbacks deja decides par le
@@ -130,8 +131,7 @@ smart (ex. `onToggleCategory(id)` decide deja du blocage `readOnly` cote contain
 dumb ne fait qu'appeler la prop). `useTranslation`/`useTheme`/`useThemedStyles`/
 `useWindowDimensions` restent utilisables dans le dumb (lectures pures, pas d'effet de
 bord) — seuls les hooks a etat/effet metier sont interdits. Les tests existants
-(`SetupScreen.test.tsx`, `GameScreen.test.tsx`) n'ont pas change : ils rendent toujours
-le container, l'arbre final est identique, seul son decoupage interne a bouge.
+(`SetupScreen.test.tsx`) rendent le container, pas la vue.
 `OnlineGameScreen` n'a aucun test automatise — seul un retest manuel garantit qu'il n'a
 pas regresse apres ce decoupage.
 
@@ -178,33 +178,20 @@ droite/est seulement — pas de vrai nord/sud dans ce schema). Son zoom est **co
 recalcule a chaque rendu via `fitZoom` sur les `marks` actuels, pas seulement a la
 revelation — plus la distance est courte, plus il zoome (jusqu'a `MAX_ZOOM`).
 
-## Multijoueur : onglets fixes, pas de handoff
+## Onglets joueurs
 
-Pas d'ecran "passe le telephone" : `PlayerTabs` reste epingle en haut de `GameScreen`
-(via le `header` de `Screen`), mais purement informatif — on ne peut plus taper un
-onglet pour changer de joueur (`onSelect` omis, voir `PlayerTabsProps`) ; `submit()`
-avance automatiquement vers le premier joueur non repondu, et c'est le seul moyen de
-changer de joueur. Une fois tous repondus, calcule les scores et passe en phase
-`reveal`. Pour Clues, ce meme header `PlayerTabs` (avec `activeLabel` pour afficher le nom
-complet du joueur actif) est lui aussi purement informationnel (`onSelect` omis, meme
-principe que Compass) — seul le panneau de buzz separe (`buzzOpen`, dans le footer) reste
-un `PlayerTabs` interactif (`onSelect={setBuzzedIndex}`, `allowRevision`), puisque c'est
-la ou on designe reellement qui a buzze. Silhouette local n'utilise pas `PlayerTabs` (pas de tour
-par tour sur un meme telephone) ; en ligne, il l'utilise comme Indices pour montrer qui a la main.
+`PlayerTabs` (header de l'ecran de jeu en ligne d'Indices et de Silhouette) est purement informatif :
+statut seulement (a qui la main, via `activeLabel` qui affiche le nom complet du joueur actif) — on ne
+peut rien y taper. Le joueur qui a la main change quand il revele un indice.
 
 ## Silhouette (jeu "Contour" en interne) : devine un pays
 
-Troisieme mode (nom affiche "Silhouette" ; identifiants de code restes `Contour`/
-`ContourGameScreen`/`ContourView`...) : la silhouette d'un pays s'affiche remplie
-(`colors.surfaceHigh`, pas juste un contour), les joueurs devinent lequel via 4 paliers
-d'indices partages (n'importe qui peut reveler le palier suivant ou valider une reponse
-— pas de tour par tour, `ContourPhase` `'guess'`), puis la manche passe directement en
-revelation (`'reveal'`). Pas de second temps de placement de lieux (retire — le jeu
-s'arrete a la reconnaissance du pays) ; `ContourPhase` n'a donc plus que `'guess'` |
-`'reveal'` | `'end'`, et la notion de "joueur actif"/tour par tour n'existe plus du tout
-dans ce jeu (le palier suivant/la reponse peuvent venir de n'importe qui a tout moment).
+Troisieme mode (nom affiche "Silhouette" ; identifiants de code restes `Contour`/`OnlineContourGameScreen`...) :
+la silhouette d'un pays s'affiche remplie (`colors.surfaceHigh`, pas juste un contour), les joueurs
+devinent lequel via 4 paliers d'indices partages. Pas de second temps de placement de lieux (retire —
+le jeu s'arrete a la reconnaissance du pays).
 
-**En ligne (`contourRooms`), modele Indices** : un plateau partage, un joueur actif a la fois
+**Multijoueur (`contourRooms`), modele Indices** : un plateau partage, un joueur actif a la fois
 (`turnUid`, l'ordre d'arrivee des joueurs). Son tour, il revele le palier suivant (`hintsRevealed` 0-4,
 ce qui passe la main au joueur suivant) ou tente une reponse (bonne : `verdict: 'correct'`, gain
 `CONTOUR_GUESS_POINTS_BY_HINTS[hintsRevealed]` ; mauvaise : `wrongGuessSeq` +1, penalite
@@ -212,7 +199,6 @@ ce qui passe la main au joueur suivant) ou tente une reponse (bonne : `verdict: 
 l'abandon (`verdict: 'giveUp'`, personne ne marque). L'hote tire tous les pays d'avance (`countryCodes`,
 `pickContourRoundCodes` — la room ne porte que les codes, chaque appareil reconstruit le plateau depuis
 ses propres donnees) et seul l'hote ecrit les scores (`useHostTurnScoring`). Le setup local de
-Silhouette n'a plus de choix "nombre de joueurs sur le meme telephone" : un nom solo, comme Indices.
 
 **Positions sur le plateau en fraction, pas en lon/lat.** `ContourNeighbor.x`/`y` et
 `ContourCountry.centerLabel` sont une fraction (0-1) du canvas du plateau — pas des
@@ -226,24 +212,12 @@ ratio, jamais la meme taille absolue), la position relative reste identique part
 voir `BOARD_PADDING_RATIO`/`HINT_STACK_GAP_RATIO` (`games/contour/components/ContourBoard/constants.ts`),
 en fraction de `Math.min(width, height)` plutot qu'en pixels fixes, meme raison.
 
-Paliers d'indices (`ContourGameScreen.tsx`, bouton "Indice", inline dans le footer a
+Paliers d'indices (`buildHintLabels` dans `helpers/roundBoard.ts`, bouton "Indice", inline dans le footer a
 cote de l'input) : 1) drapeau de chaque voisin, 2) drapeau du pays cible
 a son propre point curee (`ContourCountry.centerLabel`), 3) nom de chaque voisin empile
 juste sous son icone (les deux restent affiches ensemble, l'un ne remplace plus l'autre), 4) nom du pays cible empile sous son drapeau (= abandon). Toujours centre (`textAnchor="middle"` fixe dans
 `ContourBoard.tsx`) : l'ancien alignement directionnel `start`/`end` n'avait plus de sens
 des que chaque hint est devenu un point fixe plutot qu'une etiquette pointant vers le bord.
-
-Flux de reponse (footer toujours visible en phase `'guess'`, pas de "buzz" prealable) :
-input + bouton Valider ; valider verifie le texte puis ouvre un overlay plein ecran
-("Bonne/Mauvaise reponse" + grille de boutons joueurs, meme composant/pattern que
-`ClueGameScreen`'s propre overlay d'attribution — fond semi-transparent, ne masque
-pas completement le plateau derriere) pour designer qui a repondu — contrairement a
-Clues, les DEUX issues (bonne et mauvaise) passent par cet overlay puisque la
-penalite doit toujours etre attribuee a quelqu'un. Bonne reponse marque des points
-degressifs selon le palier (`CONTOUR_GUESS_POINTS_BY_HINTS = [500, 375, 250, 125]`,
-`games/contour/constants.ts`), mauvaise reponse deduit `CONTOUR_WRONG_GUESS_PENALTY` (50
-points fixes) au joueur designe et rouvre l'input au meme palier. Un abandon (palier 4
-confirme) ne rapporte ni ne penalise personne.
 
 Filtre par difficulte, meme enum `Difficulty` que Compass/Clues mais choix unique
 (`ContourSettings.difficulty`, pas de multi-select) : determine le pool dans lequel le
@@ -270,13 +244,6 @@ gardent des positions ajustees a la main. Un meme voisin peut avoir une position
 differente selon le pays qui le cite (pas de table globale par code) : chaque
 `ContourCountry.neighbors` est propre a son pays.
 
-La phase `'reveal'` fige la geometrie du round dans son propre `ContourRoundRecord`
-(`width`/`height`/`outline`) et la reaffiche telle quelle plutot que de la recalculer
-contre la mise en page de reveal (differente de celle de `'guess'`, plein ecran sans
-`Screen`) — `ContourBoard` a besoin d'un `width`/`height` explicite pour dimensionner son
-`<Svg>`, donc la taille utilisee au moment du `'guess'` est conservee telle quelle plutot
-que remesuree pour la revelation.
-
 Admin : pas d'onglet a part — un bouton "🗺️ Silhouette" apparait dans la carte pays de
 `admin/src/views/CountriesView` pour tout pays possedant deja des donnees Contour
 (`CONTOURS.find` — desormais ~150 pays, pas seulement les 8 d'origine, sans aucun
@@ -296,21 +263,21 @@ Compass/Clues.
 ## `Screen` : header/footer fixes
 
 `components/ui/Screen` accepte `header` et `footer`, rendus en dehors du `ScrollView`
-(siblings dans la meme `SafeAreaView`) donc toujours visibles. `GameScreen` les utilise
-pour : quitter + score + manche/pastilles + onglets joueurs (header), bouton Valider
-(footer, seulement hors revelation — `RoundResult` a son propre bouton "suivant" inline).
+(siblings dans la meme `SafeAreaView`) donc toujours visibles. `OnlineGameScreen` (Compass) et
+`OnlineClueGameScreen` les utilisent pour : quitter + score + manche/pastilles + onglets joueurs (header),
+bouton Valider (footer, seulement hors revelation — `RoundResult` a son propre bouton "suivant" inline).
 
 **Piege connu** : un `ScrollView` horizontal place dans un `header` s'etire en hauteur
 sur react-native-web s'il n'a pas de `style={{ flexGrow: 0, flexShrink: 0 }}` explicite
 (pas seulement `contentContainerStyle`) — voir `PlayerTabs.tsx`.
 
-**Exception (Contour)** : la phase `'guess'` de `ContourGameScreen` (et tout l'ecran de
-`OnlineContourGameScreen`) n'utilise pas `Screen` du tout — `ContourFullBleedScreen`, un `SafeAreaView` +
+**Exception (Contour)** : tout l'ecran de
+`OnlineContourGameScreen` n'utilise pas `Screen` du tout — `ContourFullBleedScreen`, un `SafeAreaView` +
 `ThemeBackdrop` propres, avec la silhouette qui occupe tout l'ecran mesure (`useRoundBoard`, `onLayout`) et
 les header/footer qui flottent par-dessus en `position: 'absolute'` (fond `${colors.surfaceHigh}F0`)
 plutot que de reserver leur propre espace — pour que le contour du pays touche les bords de l'ecran.
-La barre de reponse (indice + champ + Valider) est `ContourGuessBar`, partagee local/en ligne. La phase `'reveal'` repasse par `Screen`
-classique (elle affiche un tableau de resultats sous le plateau).
+La barre de reponse (indice + champ + Valider) est `ContourGuessBar`. La fin de manche garde ce meme
+ecran : tous les paliers s'affichent et le pied de page montre le resultat.
 
 ## Theme
 
@@ -348,11 +315,7 @@ environnement).
   ete trouvees) : regles `react-hooks/set-state-in-effect` et `react-hooks/refs` dans
   `Compass.tsx`, `useHeading.ts`, `SliderTrack.tsx` (meme idiome : un ref mis a jour a
   chaque rendu pour rester lisible depuis le `PanResponder`, cree une seule fois).
-  `useGame.ts` avait le meme idiome (refs pour transmettre reglages/langue a `start()`
-  sans recreer sa `useCallback`) mais l'a perdu en migrant vers `gameStore.ts` (Zustand) :
-  le hook fin n'a plus besoin de refs, il lit `settings`/`language` directement au moment
-  ou l'effet de lancement se declenche — baseline passee de 24 a 21 erreurs avec ce
-  changement, sans qu'aucune n'ait ete corrigee a la main. `ContourBoard.tsx` avait le
+  `ContourBoard.tsx` avait le
   meme idiome mais a perdu tout son `PanResponder`/sa logique de placement en meme temps
   que la phase de placement de lieux (voir la section Silhouette) — pur composant
   d'affichage desormais, plus concerne.

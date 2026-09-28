@@ -1,14 +1,8 @@
-import { DIFFICULTIES, MAX_PLAYERS, MIN_PLAYERS, NAME_PLACEHOLDERS, ROUND_OPTIONS } from '@/data';
+import { DIFFICULTIES, MAX_PLAYERS, MIN_PLAYERS, ROUND_OPTIONS } from '@/data';
 import { CATEGORIES, DEFAULT_SETTINGS } from '@/games/compass/constants';
 import type { Category, Difficulty, GameSettings } from '@/types';
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
-
-/** A player's display name: the one entered, otherwise a fallback first name chosen by index
- * (stable for the whole game), the same kind of placeholder SetupScreen shows for an empty
- * field — not "Player N" for everyone, which would give every player the same "PL" initials. */
-export const playerDisplayName = (name: string, index: number): string =>
-  name.trim() || NAME_PLACEHOLDERS[index % NAME_PLACEHOLDERS.length];
 
 /** Rebuilds valid settings from stored data (potentially outdated or corrupted). */
 export const sanitizeSettings = (raw: unknown): GameSettings => {

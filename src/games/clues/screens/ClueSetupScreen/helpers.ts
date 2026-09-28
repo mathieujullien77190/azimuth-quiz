@@ -1,4 +1,4 @@
-import { randomCluePlace } from '../ClueGameScreen/helpers';
+import { randomCluePlace } from '@/games/clues/helpers/clueGame';
 import { getCachedClueHistory, recordClueDraw } from '@/games/clues/helpers/clueHistory';
 import type { Language } from '@/i18n';
 import type { ClueCategory, CluePlace, Difficulty } from '@/types';

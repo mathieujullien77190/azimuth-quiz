@@ -9,8 +9,8 @@ import Button from '@/components/ui/Button';
 import NoOneFoundText from '@/components/ui/NoOneFoundText';
 import RoundProgress from '@/components/RoundProgress';
 import Screen from '@/components/ui/Screen';
-import { WRONG_ANSWER_PENALTY } from '@/games/clues/screens/ClueGameScreen/constants';
-import { skeletonLetterCount, overlayTypedLetters } from '@/games/clues/screens/ClueGameScreen/helpers';
+import { WRONG_ANSWER_PENALTY } from '@/games/clues/constants';
+import { skeletonLetterCount, overlayTypedLetters } from '@/games/clues/helpers/clueGame';
 import type { OnlineClueGameScreenViewProps } from './types';
 
 import { createStyles } from './OnlineClueGameScreenView.styles';

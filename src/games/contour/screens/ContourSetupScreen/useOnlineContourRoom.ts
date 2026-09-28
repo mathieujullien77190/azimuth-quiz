@@ -44,14 +44,13 @@ export const useOnlineContourRoom = (
 ) => {
   const room = useSetupRoom(adapter, settings, updateSettings);
 
-  const startOnlineContourGame = async () => {
-    const firstTurnUid = playersByArrival(useContourRoomStore.getState().players)[0]?.[0];
-    if (firstTurnUid === undefined) return;
-
-    await room.startOnlineGame((code) =>
-      startContourRoomGame(code, pickContourRoundCodes(CONTOURS, settings.difficulty, settings.rounds), firstTurnUid),
-    );
-  };
+  const startOnlineContourGame = () =>
+    room.startOnlineGame(async (code) => {
+      // Read here, not before: in solo the room only exists (and lists this device) by the time this runs.
+      const firstTurnUid = playersByArrival(useContourRoomStore.getState().players)[0]?.[0];
+      if (firstTurnUid === undefined) throw new Error('no player in the room');
+      await startContourRoomGame(code, pickContourRoundCodes(CONTOURS, settings.difficulty, settings.rounds), firstTurnUid);
+    });
 
   return { ...room, startOnlineContourGame };
 };

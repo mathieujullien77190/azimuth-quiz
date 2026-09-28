@@ -17,7 +17,7 @@ import { useOnlineClueRoom } from './useOnlineClueRoom';
  * action into an already-decided callback, and maps everything onto `ClueSetupScreenView` (pure
  * rendering) — same split as Compass' own `SetupScreen`/`SetupScreenView`.
  */
-export const ClueSetupScreen = ({ onStart, onBack }: ClueSetupScreenProps) => {
+export const ClueSetupScreen = ({ onBack }: ClueSetupScreenProps) => {
   const { settings, updateSettings } = useClueSettings();
   const { language } = useLanguage();
   const room = useOnlineClueRoom(settings, updateSettings);
@@ -57,7 +57,7 @@ export const ClueSetupScreen = ({ onStart, onBack }: ClueSetupScreenProps) => {
       onDismissOverlay={room.dismissOverlay}
       onSelectDifficulty={(id) => updateOrNotify({ difficulty: id })}
       onSelectRounds={(rounds) => updateOrNotify({ rounds })}
-      onStartPress={room.onlineChoice === 'host' ? room.startOnlineClueGame : onStart}
+      onStartPress={room.startOnlineClueGame}
       onToggleCategory={toggleCategory}
       onToggleStartWithFirstLetter={(value) => updateOrNotify({ startWithFirstLetter: value })}
       overlayMessage={room.overlayMessage}

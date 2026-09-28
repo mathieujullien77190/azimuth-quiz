@@ -1,6 +1,7 @@
 import type { RoundScore } from '@/types';
 
-import { buildRoundRecord } from './helpers';
+import { MAX_COMPASS_SIZE, MAX_EARTH_SIZE } from './constants';
+import { buildRoundRecord, compassSizeFor, earthSizeFor } from './helpers';
 
 const score = (total: number): RoundScore => ({
   trueBearing: 0,
@@ -53,5 +54,33 @@ describe('buildRoundRecord', () => {
     );
     expect(record.results[1].guess).toEqual({ bearing: 0, distanceKm: 0 });
     expect(record.results[1].score.total).toBe(0);
+  });
+});
+
+describe('compassSizeFor', () => {
+  it('fits within the window width', () => {
+    expect(compassSizeFor(400)).toBeLessThan(400);
+  });
+
+  it('caps at MAX_COMPASS_SIZE for a wide window', () => {
+    expect(compassSizeFor(4000)).toBe(MAX_COMPASS_SIZE);
+  });
+
+  it('falls back to MAX_COMPASS_SIZE when the computed size would be <= 0', () => {
+    expect(compassSizeFor(0)).toBe(MAX_COMPASS_SIZE);
+  });
+});
+
+describe('earthSizeFor', () => {
+  it('fits within the window width', () => {
+    expect(earthSizeFor(400)).toBeLessThan(400);
+  });
+
+  it('caps at MAX_EARTH_SIZE for a wide window', () => {
+    expect(earthSizeFor(4000)).toBe(MAX_EARTH_SIZE);
+  });
+
+  it('falls back to MAX_EARTH_SIZE when the computed size would be <= 0', () => {
+    expect(earthSizeFor(0)).toBe(MAX_EARTH_SIZE);
   });
 });

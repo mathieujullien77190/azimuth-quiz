@@ -48,16 +48,15 @@ export const useOnlineClueRoom = (settings: ClueSettings, updateSettings: (patch
   const { language } = useLanguage();
   const room = useSetupRoom(adapter, settings, updateSettings);
 
-  const startOnlineClueGame = async () => {
-    const firstTurnUid = playersByArrival(useClueRoomStore.getState().players)[0]?.[0];
-    if (firstTurnUid === undefined) return;
-
-    await room.startOnlineGame(async (code) => {
+  const startOnlineClueGame = () =>
+    room.startOnlineGame(async (code) => {
+      // Read here, not before: in solo the room only exists (and lists this device) by the time this runs.
+      const firstTurnUid = playersByArrival(useClueRoomStore.getState().players)[0]?.[0];
+      if (firstTurnUid === undefined) throw new Error('no player in the room');
       const origin = await resolveOrigin(t.common.yourPosition);
       const places = pickClueRoundPlaces(settings.rounds, settings.difficulty, settings.categories, language);
       await startClueRoomGame(code, { origin, places }, firstTurnUid, settings.startWithFirstLetter);
     });
-  };
 
   return { ...room, startOnlineClueGame };
 };

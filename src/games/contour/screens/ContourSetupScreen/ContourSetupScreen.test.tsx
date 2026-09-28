@@ -1,6 +1,7 @@
-import { fireEvent, render, within } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor, within } from '@testing-library/react-native';
 
 import { DEFAULT_CONTOUR_SETTINGS } from '@/games/contour/constants';
+import { createRoom, startContourRoomGame } from '@/games/contour/helpers/room';
 import { useContourRoomStore } from '@/games/contour/store/roomStore';
 import { useContourSettings } from '@/settings';
 
@@ -39,9 +40,9 @@ beforeEach(() => {
 const section = (getByText: (text: string) => Parameters<typeof within>[0], title: string) =>
   within(getByText(title).parent!.parent!);
 
-const renderScreen = async (onStart = jest.fn(), onBack = jest.fn()) => {
-  const utils = await render(<ContourSetupScreen onBack={onBack} onStart={onStart} />);
-  return { ...utils, onBack, onStart };
+const renderScreen = async (onBack = jest.fn()) => {
+  const utils = await render(<ContourSetupScreen onBack={onBack} />);
+  return { ...utils, onBack };
 };
 
 describe('ContourSetupScreen', () => {
@@ -72,10 +73,24 @@ describe('ContourSetupScreen', () => {
     expect(rounds.getByText('5').parent?.props.accessibilityState.selected).toBe(false);
   });
 
-  it('calls onStart when "Lancer la partie" is pressed (solo, not hosting online)', async () => {
-    const { getByText, onStart } = await renderScreen();
+  // No local single-device game: playing alone hosts a room nobody joins — created behind the
+  // scenes, never shown (no code, the chips keep saying Solo), and the game only starts in it once
+  // it's connected and lists this device (the first turn goes to whoever's first in that room).
+  it('solo: hosts a hidden room, then starts the game in it once this device is listed', async () => {
+    (createRoom as jest.Mock).mockResolvedValue('tabofuna');
+    const { getByText, queryByText } = await renderScreen();
     await fireEvent.press(getByText('Lancer la partie'));
-    expect(onStart).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(createRoom).toHaveBeenCalledTimes(1));
+    expect(startContourRoomGame).not.toHaveBeenCalled();
+    expect(queryByText(/tabofuna/)).toBeNull();
+
+    await act(async () => {
+      useContourRoomStore.setState({ localUid: 'local-uid', players: { 'local-uid': { name: 'Zoé', joinedAt: null } } });
+    });
+
+    await waitFor(() =>
+      expect(startContourRoomGame).toHaveBeenCalledWith('tabofuna', expect.any(Array), 'local-uid'),
+    );
   });
 
   it('calls onBack when "Retour" is pressed', async () => {

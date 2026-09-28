@@ -64,10 +64,9 @@ const renderSetup = async (overrides: Partial<GameSettings> = {}, ready = true) 
   const resetSettings = jest.fn();
   const settings: GameSettings = { ...DEFAULT_SETTINGS, ...overrides };
   mockedUseSettings.mockReturnValue({ settings, ready, updateSettings, resetSettings });
-  const onStart = jest.fn();
   const onBack = jest.fn();
-  const utils = await render(<SetupScreen onBack={onBack} onStart={onStart} />);
-  return { ...utils, onBack, onStart, settings, updateSettings };
+  const utils = await render(<SetupScreen onBack={onBack} />);
+  return { ...utils, onBack, settings, updateSettings };
 };
 
 describe('SetupScreen — defaults', () => {
@@ -178,7 +177,7 @@ describe('SetupScreen — host/join a game', () => {
       updateSettings: jest.fn(),
       resetSettings: jest.fn(),
     });
-    await rerender(<SetupScreen onBack={onBack} onStart={jest.fn()} />);
+    await rerender(<SetupScreen onBack={onBack} />);
     expect(mockedUpdateRoomSettings).toHaveBeenCalledWith('tabofuna', expect.objectContaining({ rounds: 15 }));
   });
 
@@ -478,10 +477,15 @@ describe('SetupScreen — custom origin inputs', () => {
 });
 
 describe('SetupScreen — start/back', () => {
-  it('calls onStart when pressed and enabled', async () => {
-    const { getByText, onStart } = await renderSetup();
+  // No local single-device game: playing alone hosts a room nobody joins — created behind the
+  // scenes, never shown (no code, the chips keep saying Solo).
+  it('solo: hosts a hidden room when pressed and enabled', async () => {
+    mockedCreateRoom.mockClear();
+    mockedCreateRoom.mockResolvedValue('tabofuna');
+    const { getByText, queryByText } = await renderSetup();
     await fireEvent.press(getByText('Lancer la partie'));
-    expect(onStart).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(mockedCreateRoom).toHaveBeenCalledTimes(1));
+    expect(queryByText(/tabofuna/)).toBeNull();
   });
 
   it('disables the start button when no place is available', async () => {

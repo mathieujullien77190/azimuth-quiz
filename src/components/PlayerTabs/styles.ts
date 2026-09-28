@@ -41,9 +41,6 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       borderColor: colors.accent,
       backgroundColor: colors.accent,
     },
-    locked: {
-      opacity: 0.5,
-    },
     dot: {
       width: 10,
       height: 10,

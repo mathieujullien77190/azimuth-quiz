@@ -12,7 +12,7 @@ import { useOnlineRoom } from './useOnlineRoom';
  * Smart container: owns `useSettings()`/`useOnlineRoom()`, resolves every readOnly-gated action
  * into an already-decided callback, and maps everything onto `SetupScreenView` (pure rendering).
  */
-export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
+export const SetupScreen = ({ onBack }: SetupScreenProps) => {
   const { settings, ready, updateSettings } = useSettings();
   const { language } = useLanguage();
   const room = useOnlineRoom(settings, updateSettings);
@@ -31,7 +31,7 @@ export const SetupScreen = ({ onStart, onBack }: SetupScreenProps) => {
       onDismissOverlay={room.dismissOverlay}
       onSelectDifficulty={(id) => updateOrNotify(selectDifficultyFilter(settings, id))}
       onSelectRounds={(rounds) => updateOrNotify({ rounds })}
-      onStartPress={room.onlineChoice === 'host' ? room.startOnlineGame : onStart}
+      onStartPress={room.startOnlineGame}
       onToggleCategory={(id) => updateOrNotify(toggleCategoryFilter(settings, id))}
       onToggleHideOtherAnswers={(value) => updateOrNotify({ hideOtherAnswers: value })}
       onToggleLiveCompass={(value) => updateOrNotify({ liveCompass: value })}

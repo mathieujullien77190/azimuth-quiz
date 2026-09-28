@@ -2,7 +2,6 @@ import type { SetupPartyProps } from '@/components/setup/useSetupRoom';
 import type { Category, Difficulty, GameSettings } from '@/types';
 
 export type SetupScreenProps = {
-  onStart: () => void;
   onBack: () => void;
 };
 

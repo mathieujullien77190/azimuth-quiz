@@ -17,6 +17,12 @@ export const ZERO_SCORE: RoundScore = {
   total: 0,
 };
 
-/** Needle at north, distance slider at its default step: same starting draft as the local
- * same-device game (`useGame`'s own `DEFAULT_DRAFT`), reset at the top of every round. */
+/** Needle at north, distance slider at its default step: every device's starting draft, reset at
+ * the top of every round. */
 export const DEFAULT_BEARING = 0;
+
+export const MAX_COMPASS_SIZE = 300;
+export const MAX_EARTH_SIZE = 240;
+
+/** On reveal, players' answers are slightly faded to make the true answer stand out. */
+export const REVEAL_OPACITY = 0.8;

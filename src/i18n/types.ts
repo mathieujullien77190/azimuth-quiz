@@ -171,11 +171,6 @@ export type Translations = {
   cluesGame: {
     pointsAtStake: (points: string) => string;
     giveUp: string;
-    /** Shown on the full-screen attribution overlay right after "Valider" (typed mode only),
-     * before picking who answered — only on a correct guess, nothing shown for a wrong one. */
-    resultOk: string;
-    /** Prompt above the player buttons on that same overlay. */
-    whoAnswered: string;
     scored: (name: string, points: string) => string;
     missed: (name: string, points: string) => string;
     guessPlaceholder: string;
@@ -217,12 +212,6 @@ export type Translations = {
     /** Online only: what a correct guess would earn right now, dropping with each hint. */
     pointsAtStake: (points: string) => string;
     guessPlaceholder: string;
-    /** Shown right after "Valider", before attribution — whether the typed text matched. */
-    resultOk: string;
-    resultNotOk: string;
-    /** Prompt above the player tabs used to attribute the just-validated guess to whoever typed
-     * it — scores them if correct, deducts CONTOUR_WRONG_GUESS_PENALTY if not. */
-    whoAnswered: string;
     /** A wrong guess, naming who it got attributed to — doesn't end anything, shown until the
      * next attempt. */
     wrongGuess: (name: string) => string;

@@ -2,7 +2,6 @@ import type { SetupPartyProps } from '@/components/setup/useSetupRoom';
 import type { ContourSettings, Difficulty } from '@/types';
 
 export type ContourSetupScreenProps = {
-  onStart: () => void;
   onBack: () => void;
 };
 

@@ -2,7 +2,6 @@ import type { SetupPartyProps } from '@/components/setup/useSetupRoom';
 import type { Category, ClueSettings, Difficulty } from '@/types';
 
 export type ClueSetupScreenProps = {
-  onStart: () => void;
   onBack: () => void;
 };
 

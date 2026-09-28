@@ -10,12 +10,11 @@ import { useTheme } from '@/themes';
 
 import type { EarthMark } from '@/components/EarthSection';
 import type { RoundRecord } from '@/types';
-import { REVEAL_OPACITY } from '../GameScreen/constants';
 import EndScreen from '../EndScreen';
 import LoadingScreen from '@/components/LoadingScreen';
 import RoomDeletedScreen from '@/components/RoomDeletedScreen';
-import { buildRoundRecord } from './helpers';
-import { onCapFromScroll } from '../GameScreen/helpers';
+import { REVEAL_OPACITY } from './constants';
+import { buildRoundRecord, onCapFromScroll } from './helpers';
 import { OnlineGameScreenView } from './OnlineGameScreenView';
 import type { Needle, OnlineGameScreenProps } from './types';
 import { useOnlineGame } from './useOnlineGame';

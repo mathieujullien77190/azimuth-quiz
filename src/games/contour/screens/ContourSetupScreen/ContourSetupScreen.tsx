@@ -10,7 +10,7 @@ import { useOnlineContourRoom } from './useOnlineContourRoom';
  * readOnly-gated action into an already-decided callback, and maps everything onto
  * `ContourSetupScreenView` (pure rendering) — same split as Compass/Clues.
  */
-export const ContourSetupScreen = ({ onStart, onBack }: ContourSetupScreenProps) => {
+export const ContourSetupScreen = ({ onBack }: ContourSetupScreenProps) => {
   const { settings, updateSettings } = useContourSettings();
   const room = useOnlineContourRoom(settings, updateSettings);
 
@@ -25,7 +25,7 @@ export const ContourSetupScreen = ({ onStart, onBack }: ContourSetupScreenProps)
       onDismissOverlay={room.dismissOverlay}
       onSelectDifficulty={(id) => updateOrNotify({ difficulty: id })}
       onSelectRounds={(rounds) => updateOrNotify({ rounds })}
-      onStartPress={room.onlineChoice === 'host' ? room.startOnlineContourGame : onStart}
+      onStartPress={room.startOnlineContourGame}
       overlayMessage={room.overlayMessage}
       party={room.party}
       readOnly={room.readOnly}

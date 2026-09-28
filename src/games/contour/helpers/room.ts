@@ -34,6 +34,7 @@ export const {
   joinRoomPresence,
   removeRoomPlayer,
   deleteRoom,
+  passRoomTurn,
   updateRoomPlayerColors,
 } = rooms;
 const { roomRef } = rooms;

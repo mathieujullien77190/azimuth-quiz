@@ -141,6 +141,9 @@ export const createRoomApi = <Settings extends object>(collectionName: string) =
    * will never advance again. */
   const deleteRoom = (code: string): Promise<void> => deleteDoc(roomRef(code));
 
+  /** Host-only: hands the turn to `uid` — turn-based games only (see `useHostTurnRecovery`). */
+  const passRoomTurn = (code: string, uid: string): Promise<void> => updateDoc(roomRef(code), { turnUid: uid });
+
   /** Host-only: writes a `color` for one or more players at once (the host recomputing everyone's
    * color from scratch whenever the connected-players list changes). A no-op on an empty map
    * (Firestore rejects a field-less update). */
@@ -180,6 +183,7 @@ export const createRoomApi = <Settings extends object>(collectionName: string) =
     joinRoomPresence,
     removeRoomPlayer,
     deleteRoom,
+    passRoomTurn,
     updateRoomPlayerColors,
     subscribeToRoomPlayers,
   };

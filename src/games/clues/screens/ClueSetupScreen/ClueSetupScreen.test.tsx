@@ -1,6 +1,7 @@
-import { fireEvent, render, within } from '@testing-library/react-native';
+import { fireEvent, render, waitFor, within } from '@testing-library/react-native';
 
 import { DEFAULT_CLUE_SETTINGS } from '@/games/clues/constants';
+import { createRoom } from '@/games/clues/helpers/room';
 import { useClueRoomStore } from '@/games/clues/store/roomStore';
 import { useClueSettings } from '@/settings';
 
@@ -44,9 +45,9 @@ beforeEach(() => {
 const section = (getByText: (text: string) => Parameters<typeof within>[0], title: string) =>
   within(getByText(title).parent!.parent!);
 
-const renderScreen = async (onStart = jest.fn(), onBack = jest.fn()) => {
-  const utils = await render(<ClueSetupScreen onBack={onBack} onStart={onStart} />);
-  return { ...utils, onBack, onStart };
+const renderScreen = async (onBack = jest.fn()) => {
+  const utils = await render(<ClueSetupScreen onBack={onBack} />);
+  return { ...utils, onBack };
 };
 
 describe('ClueSetupScreen', () => {
@@ -107,10 +108,14 @@ describe('ClueSetupScreen', () => {
     expect(rounds.getByText('5').parent?.props.accessibilityState.selected).toBe(false);
   });
 
-  it('calls onStart when "Lancer la partie" is pressed (solo, not hosting online)', async () => {
-    const { getByText, onStart } = await renderScreen();
+  // No local single-device game: playing alone hosts a room nobody joins — created behind the
+  // scenes, never shown (no code, the chips keep saying Solo).
+  it('solo: hosts a hidden room when "Lancer la partie" is pressed', async () => {
+    (createRoom as jest.Mock).mockResolvedValue('tabofuna');
+    const { getByText, queryByText } = await renderScreen();
     await fireEvent.press(getByText('Lancer la partie'));
-    expect(onStart).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(createRoom).toHaveBeenCalledTimes(1));
+    expect(queryByText(/tabofuna/)).toBeNull();
   });
 
   it('calls onBack when "Retour" is pressed', async () => {

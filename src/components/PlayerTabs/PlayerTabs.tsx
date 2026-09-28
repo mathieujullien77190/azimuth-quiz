@@ -1,22 +1,19 @@
 import { memo } from 'react';
-import { Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { initials } from '@/helpers';
 import { useThemedStyles } from '@/themes';
 
 import { CHECK_MARK, COMPACT_BREAKPOINT } from './constants';
-import { isTabLocked } from './helpers';
 import type { PlayerTabsProps } from './types';
 
 import { createStyles } from './styles';
 
-/** Player selector fixed at the top of the game screen: pick who's answering, without leaving the screen. */
+/** Who's playing, fixed at the top of an online game screen — purely informational: status only (whose turn, who's answered), nothing to tap. */
 export const PlayerTabs = memo(function PlayerTabs({
   players,
   order,
   activeIndex,
   answered,
-  allowRevision,
-  onSelect,
   activeLabel,
 }: PlayerTabsProps) {
   const styles = useThemedStyles(createStyles);
@@ -34,7 +31,6 @@ export const PlayerTabs = memo(function PlayerTabs({
         const player = players[index];
         const isActive = index === activeIndex;
         const isAnswered = answered[index] === true;
-        const locked = onSelect !== undefined && isTabLocked(isActive, isAnswered, allowRevision ?? false);
 
         const content = (
           <>
@@ -50,31 +46,10 @@ export const PlayerTabs = memo(function PlayerTabs({
           </>
         );
 
-        // No `onSelect`: purely informational, a plain (non-pressable) tab — see this prop's own
-        // doc comment.
-        if (onSelect === undefined) {
-          return (
-            <View
-              key={player.name + index}
-              style={[styles.tab, compact && styles.tabCompact, isActive && styles.active]}
-            >
-              {content}
-            </View>
-          );
-        }
-
         return (
-          <Pressable
-            key={player.name + index}
-            accessibilityLabel={player.name}
-            accessibilityRole="button"
-            accessibilityState={{ selected: isActive, disabled: locked }}
-            disabled={locked}
-            onPress={() => onSelect(index)}
-            style={[styles.tab, compact && styles.tabCompact, isActive && styles.active, locked && styles.locked]}
-          >
+          <View key={player.name + index} style={[styles.tab, compact && styles.tabCompact, isActive && styles.active]}>
             {content}
-          </Pressable>
+          </View>
         );
       })}
     </ScrollView>

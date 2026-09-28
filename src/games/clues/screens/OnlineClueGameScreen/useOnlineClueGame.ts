@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 
 import { bearingDeg, distanceKm, nameSkeleton } from '@/helpers';
+import { useHostTurnRecovery } from '@/helpers/useHostTurnRecovery';
 import { useHostTurnScoring } from '@/helpers/useHostTurnScoring';
 import { useOnlineRoomSession } from '@/helpers/useOnlineRoomSession';
 import {
@@ -8,13 +9,14 @@ import {
   deleteRoom,
   giveUpClueRoom,
   nextClueRoomRound,
+  passRoomTurn,
   pickClueRoomClue,
   removeRoomPlayer,
   reportClueRoomCorrect,
   reportClueRoomWrong,
 } from '@/games/clues/helpers/room';
-import { WRONG_ANSWER_PENALTY } from '@/games/clues/screens/ClueGameScreen/constants';
-import { normalizePlaceGuess, remainingScore } from '@/games/clues/screens/ClueGameScreen/helpers';
+import { WRONG_ANSWER_PENALTY } from '@/games/clues/constants';
+import { normalizePlaceGuess, remainingScore } from '@/games/clues/helpers/clueGame';
 import { useClueRoomStore } from '@/games/clues/store/roomStore';
 import type { ClueId } from '@/types';
 
@@ -70,6 +72,8 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     [code],
   );
   useHostTurnScoring(isHost, gameState, remaining, WRONG_ANSWER_PENALTY, applyScore);
+  const passTurn = useCallback((uid: string) => passRoomTurn(code, uid), [code]);
+  useHostTurnRecovery(isHost, gameState, onlinePlayers, passTurn);
 
   const pickClue = (clueId: ClueId) => {
     if (!isMyTurn || localUid === null) return;

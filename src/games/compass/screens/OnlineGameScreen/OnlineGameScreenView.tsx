@@ -8,7 +8,7 @@ import DistanceSlider from '../../components/DistanceSlider';
 import EarthSection from '@/components/EarthSection';
 import FooterNav from '../../components/FooterNav';
 import GameHeader from '@/components/GameHeader';
-import { compassSizeFor, earthSizeFor } from '../GameScreen/helpers';
+import { compassSizeFor, earthSizeFor } from './helpers';
 import PlaceCard from '../../components/PlaceCard';
 import RoundResult from '../../components/RoundResult';
 import Button from '@/components/ui/Button';

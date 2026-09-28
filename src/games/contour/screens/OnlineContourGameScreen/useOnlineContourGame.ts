@@ -8,6 +8,7 @@ import {
   deleteRoom,
   giveUpContourRoom,
   nextContourRoomRound,
+  passRoomTurn,
   removeRoomPlayer,
   reportContourRoomCorrect,
   reportContourRoomWrong,
@@ -15,6 +16,7 @@ import {
 } from '@/games/contour/helpers/room';
 import { normalizeContourGuess } from '@/games/contour/helpers/contourCountry';
 import { useContourRoomStore } from '@/games/contour/store/roomStore';
+import { useHostTurnRecovery } from '@/helpers/useHostTurnRecovery';
 import { useHostTurnScoring } from '@/helpers/useHostTurnScoring';
 import { useOnlineRoomSession } from '@/helpers/useOnlineRoomSession';
 import { useLanguage } from '@/i18n';
@@ -31,8 +33,12 @@ const MAX_HINTS = 4;
  */
 export const useOnlineContourGame = (code: string, onQuit: () => void) => {
   const { language } = useLanguage();
-  const { localUid, roomExists, roomSettings, gameState, onlinePlayers, isHost, handleQuit } =
-    useOnlineRoomSession(useContourRoomStore, { deleteRoom, removeRoomPlayer }, code, onQuit);
+  const { localUid, roomExists, roomSettings, gameState, onlinePlayers, isHost, handleQuit } = useOnlineRoomSession(
+    useContourRoomStore,
+    { deleteRoom, removeRoomPlayer },
+    code,
+    onQuit,
+  );
 
   // Countries ship with the app: the room only carries their codes, every device rebuilds the same
   // board from its own copy.
@@ -63,6 +69,8 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
     [code],
   );
   useHostTurnScoring(isHost, gameState, pointsAtStake, CONTOUR_WRONG_GUESS_PENALTY, applyScore);
+  const passTurn = useCallback((uid: string) => passRoomTurn(code, uid), [code]);
+  useHostTurnRecovery(isHost, gameState, onlinePlayers, passTurn);
 
   const nextTurnUid = () => {
     const myIndex = onlinePlayers.findIndex((player) => player.uid === localUid);

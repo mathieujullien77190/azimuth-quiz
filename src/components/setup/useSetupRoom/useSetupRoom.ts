@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { NAME_PLACEHOLDERS, PLAYER_COLORS } from '@/data';
 import { playersByArrival } from '@/helpers/roomPlayers';
@@ -29,11 +29,18 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
   // Host/join is purely local UI state, not a saved preference — a fresh host/join happens
   // every time this screen is opened. Joining shows every setting section read-only (mirroring
   // the host's live settings via `roomSettings` below) rather than hiding them.
+  //
+  // There is no local, single-device game: playing alone is hosting a room nobody else joins. "Solo"
+  // (`onlineChoice === null`) just doesn't show it — `hostedSilently` is the room `startOnlineGame`
+  // creates behind the scenes when "Lancer la partie" is pressed, hosted exactly like a visible one
+  // (`mode`) but never shown to the player (no code, the chips keep saying Solo).
   const [onlineChoice, setOnlineChoice] = useState<'host' | 'join' | null>(null);
+  const [hostedSilently, setHostedSilently] = useState(false);
+  const mode = hostedSilently ? 'host' : onlineChoice;
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState('');
   const [joinStatus, setJoinStatus] = useState<'idle' | 'valid' | 'invalid'>('idle');
-  const readOnly = onlineChoice === 'join';
+  const readOnly = mode === 'join';
 
   // Leaving host mode (Solo or switching to Join) takes the room down with it, same as
   // `handleQuit` mid-game: there's no "pass the host" concept, and otherwise the room stays
@@ -41,11 +48,12 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
   // device's own presence — a leftover doc with no host is what let a joiner "reconnect" to a
   // room its creator had already walked away from).
   const leaveHostedRoom = () => {
-    if (onlineChoice === 'host' && roomCode !== null) adapter.deleteRoom(roomCode).catch(() => {});
+    if (mode === 'host' && roomCode !== null) adapter.deleteRoom(roomCode).catch(() => {});
   };
 
   const resetChoice = useCallback(() => {
     setOnlineChoice(null);
+    setHostedSilently(false);
     setRoomCode(null);
     setJoinCode('');
     setJoinStatus('idle');
@@ -57,6 +65,12 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
   };
 
   const chooseHost = () => {
+    // A room is already up (solo's, after a failed start): show it instead of making a second one.
+    if (hostedSilently) {
+      setOnlineChoice('host');
+      setHostedSilently(false);
+      return;
+    }
     setOnlineChoice('host');
     setRoomCode(null);
     adapter.createRoom(adapter.roomSettingsFrom(settings)).then(setRoomCode);
@@ -65,6 +79,7 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
   const chooseJoin = () => {
     leaveHostedRoom();
     setOnlineChoice('join');
+    setHostedSilently(false);
     setRoomCode(null);
     setJoinCode('');
     setJoinStatus('idle');
@@ -75,9 +90,9 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
   // rather than let an unhandled rejection crash the screen with a raw Firestore error: nothing
   // reads this promise's result, so there's nothing useful to do with the error here anyway.
   useEffect(() => {
-    if (onlineChoice !== 'host' || roomCode === null) return;
+    if (mode !== 'host' || roomCode === null) return;
     adapter.updateRoomSettings(roomCode, adapter.roomSettingsFrom(settings)).catch(() => {});
-  }, [adapter, onlineChoice, roomCode, settings]);
+  }, [adapter, mode, roomCode, settings]);
 
   // Join: once a well-formed code is typed, a one-shot check decides whether it's valid — checked
   // against the room code's own consonant+vowel shape, not just its length, so a typo never fires
@@ -86,7 +101,7 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
   // separate effect below (mirroring the store's `roomSettings`) — not folded in here, so
   // there's only ever one `subscribeToRoomSettings` open per room.
   useEffect(() => {
-    if (onlineChoice !== 'join') return;
+    if (mode !== 'join') return;
     const code = joinCode.trim().toLowerCase();
     if (!adapter.isValidRoomCode(code)) return;
 
@@ -101,14 +116,14 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
     return () => {
       cancelled = true;
     };
-  }, [adapter, onlineChoice, joinCode]);
+  }, [adapter, mode, joinCode]);
 
   // Code this device is currently connected to (as host or as a validated joiner) — null while
   // just browsing the host/join chips with nothing confirmed yet.
   const connectedRoomCode =
-    onlineChoice === 'host'
+    mode === 'host'
       ? roomCode
-      : onlineChoice === 'join' && joinStatus === 'valid'
+      : mode === 'join' && joinStatus === 'valid'
         ? joinCode.trim().toLowerCase()
         : null;
 
@@ -117,11 +132,28 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
   // in between (GPS resolution, then the Firestore write/round-trip) — reset only on failure,
   // since success is followed by leaving this screen entirely. Every device (host included)
   // then reacts to the room's `screen` turning `'game'` (effect below) and navigates itself.
+  //
+  // Solo has no room yet: one is created here, silently, and `run` waits (`pendingRun`, fired by the
+  // effect below) until it's connected and this device is registered in it — `run` may need the
+  // room's own state (who's first in arrival order...), which only exists once that's the case.
   const [starting, setStarting] = useState(false);
+  const pendingRunRef = useRef<((code: string) => Promise<void>) | null>(null);
   const startOnlineGame = async (run: (code: string) => Promise<void>) => {
-    if (connectedRoomCode === null) return;
+    if (connectedRoomCode !== null) {
+      setStarting(true);
+      await run(connectedRoomCode).catch(() => setStarting(false));
+      return;
+    }
+    if (mode === 'join') return;
     setStarting(true);
-    await run(connectedRoomCode).catch(() => setStarting(false));
+    try {
+      const code = await adapter.createRoom(adapter.roomSettingsFrom(settings));
+      pendingRunRef.current = run;
+      setRoomCode(code);
+      setHostedSilently(true);
+    } catch {
+      setStarting(false);
+    }
   };
 
   // Shared with the game's online screen, which only ever reads it — this screen alone owns the
@@ -138,13 +170,22 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
     return () => store.getState().disconnect();
   }, [connectedRoomCode, store]);
 
+  // Solo's deferred "Lancer la partie" (see `startOnlineGame`): fires once the silent room is
+  // connected and this device shows up in it.
+  useEffect(() => {
+    const run = pendingRunRef.current;
+    if (run === null || connectedRoomCode === null || localUid === null || !(localUid in players)) return;
+    pendingRunRef.current = null;
+    run(connectedRoomCode).catch(() => setStarting(false));
+  }, [connectedRoomCode, localUid, players]);
+
   // Mirrors the host's settings onto this device's own, for a joiner (read-only display) — the
   // single `subscribeToRoomSettings` opened by `connect()` above already keeps `roomSettings`
   // current, this just applies it whenever it changes.
   useEffect(() => {
-    if (onlineChoice !== 'join' || roomSettings === null) return;
+    if (mode !== 'join' || roomSettings === null) return;
     updateSettings(roomSettings);
-  }, [onlineChoice, roomSettings, updateSettings]);
+  }, [mode, roomSettings, updateSettings]);
 
   // Registers this device in the room's connected-players list, for both host and joiner — the
   // name field locks once connected, so in practice this only ever fires once per room, but still
@@ -195,7 +236,7 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
     let hasBeenPresent = false;
     return store.subscribe((state) => {
       if (!state.roomExists) {
-        if (onlineChoice === 'join') setDisconnectReason('deleted');
+        if (mode === 'join') setDisconnectReason('deleted');
         return;
       }
       if (state.localUid === null) return;
@@ -209,7 +250,7 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
         else setDisconnectReason('kicked');
       }
     });
-  }, [connectedRoomCode, dismissDisconnectNotice, onlineChoice, store]);
+  }, [connectedRoomCode, dismissDisconnectNotice, mode, store]);
 
   // The host starting the game flips `screen` to 'game' for every connected device — host
   // included, its own subscription above sees the same change — so this single effect moves
@@ -296,7 +337,7 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
     onChooseSolo: chooseSolo,
     onChooseHost: chooseHost,
     onChooseJoin: chooseJoin,
-    roomCode,
+    roomCode: hostedSilently ? null : roomCode,
     joinCode,
     onJoinCodeChange: setJoinCode,
     // Pre-resolved rather than making the dumb view import `isValidRoomCode` itself: that pulls in
@@ -308,7 +349,6 @@ export const useSetupRoom = <S extends { playerNames: string[] }, R extends Part
 
   return {
     party,
-    onlineChoice,
     readOnly,
     starting,
     connectedRoomCode,

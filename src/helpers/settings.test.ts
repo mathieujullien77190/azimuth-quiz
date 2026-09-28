@@ -1,22 +1,6 @@
-import { NAME_PLACEHOLDERS } from '@/data';
 import { DEFAULT_SETTINGS } from '@/games/compass/constants';
 
-import { playerDisplayName, sanitizeSettings } from './settings';
-
-describe('playerDisplayName', () => {
-  it('returns the trimmed name when non-empty', () => {
-    expect(playerDisplayName('  Mathieu  ', 0)).toBe('Mathieu');
-  });
-
-  it('falls back to a placeholder chosen by index when the name is blank', () => {
-    expect(playerDisplayName('', 0)).toBe(NAME_PLACEHOLDERS[0]);
-    expect(playerDisplayName('   ', 1)).toBe(NAME_PLACEHOLDERS[1]);
-  });
-
-  it('wraps around the placeholder list for large indices', () => {
-    expect(playerDisplayName('', NAME_PLACEHOLDERS.length)).toBe(NAME_PLACEHOLDERS[0]);
-  });
-});
+import { sanitizeSettings } from './settings';
 
 describe('sanitizeSettings', () => {
   it('returns DEFAULT_SETTINGS when raw is not an object', () => {
