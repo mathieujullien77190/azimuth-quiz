@@ -13,6 +13,9 @@ export const createStyles = ({ colors, typography }: Theme) =>
       flex: 1,
       gap: 2,
     },
+    // Same size as running text elsewhere (e.g. SettingsScreen's about lines, also fontSize.body):
+    // typography.heading's bold weight made it read smaller than that at a glance, hence the
+    // explicit match here rather than leaving it implicit.
     label: {
       ...typography.heading,
       color: colors.text,
