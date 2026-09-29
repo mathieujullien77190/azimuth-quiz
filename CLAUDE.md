@@ -179,13 +179,15 @@ prefixe naturel (`"san"` -> Santiago, capitale du Chili, pas une des 22 autres v
 les autres retombent sur la premiere combinaison de 3 lettres encore libre par ordre alphabetique
 (opaque mais deterministe et reproductible). Une fois attribuee, une cle est PERMANENTE : jamais
 reassignee a une regeneration future, meme esprit append-only que `TIMEZONE_CODES` dans `codec.ts`.
-`countries.json`, lui, reste tel quel (deja cle par code ISO a 2 lettres — deja court, unique et
-standard, rien a gagner a le retoucher).
 
 **La cle est opaque** : ouvrir `compassPlaces.json` seul ne dit pas quel lieu est `"par"`. Pour que
 l'edition reste lisible malgre tout, chaque message du journal admin (voir `api/places.ts`,
 `api/charades.ts`) affiche TOUJOURS l'identite humaine (nom + code pays) ET la cle de stockage
 cote a cote (`Paris (FR) [par]`) — jamais besoin de deviner une cle a l'oeil.
+
+`countries.json` est scinde en 6 petits fichiers du meme esprit (voir "Donnees Contour" plus bas)
+mais SANS algorithme de cle a inventer : le code ISO a 2 lettres (deja court, unique et standard)
+sert directement de cle partout.
 
 ## Domaine : cap et distance
 
@@ -443,12 +445,21 @@ defaut, voir `codec.ts`) pour tous les autres, y compris tous les pays generes
 automatiquement ; deliberement desequilibre, ne pas tenter de rectifier sans demande
 explicite).
 
-Donnees Contour (points/voisins/centerLabel/difficulty) : plus de fichiers a part dans
-`data/contours/` (qui ne garde plus que `codec.ts` — decode uniquement, plus aucune
-donnee) ; tout vit desormais comme un 7e element
-optionnel `contour` sur la ligne du pays concerne dans `data/places/countries.json`
-(type `ContourDataRow`, voir `src/types/index.ts` et `CountryRow`) — absent pour la
-grande majorite des pays (`null` a sa place quand la ligne porte des voisins bruts, voir plus bas). Les voisins
+**Pays : 6 petits fichiers, cle = code ISO directement** (`src/data/places/`, meme esprit que le
+split des lieux plus haut, mais sans algorithme de cle a inventer — le code ISO a 2 lettres sert
+de cle partout, deja court/unique/standard) : `countries.json` (identite `[fr, en]`, TOUS les
+pays), `countryFlags.json`, `countryCurrencies.json` (`[currency, currencySymbol]`),
+`countryPhoneCodes.json`, `countryContours.json` (`ContourDataRow`, type dans
+`src/types/index.ts`), `countryBorders.json` — les 5 derniers sparse, present seulement quand
+connu/curee. Seul `data/places/countries.ts` fait la jointure (`decodeCountry(code)`,
+`decodeAllCountries()` pour l'admin — les fonctions publiques `countryName`/`countryFlagColors`/
+`countryCurrencyName`/`countryCurrencySymbol`/`countryPhoneCode`/`countryNeighbors` inchangees,
+rien a la marge de codec.ts ne devrait plus importer un de ces fichiers directement). `data/contours/`
+ne garde que `codec.ts` (decode uniquement, plus aucune donnee) : `decodeContours` lit
+`countryContours.json` directement (ce fichier EST deja la liste des pays avec Silhouette, plus
+besoin de filtrer). `scripts/generateContours.mjs` (voir plus bas) est le SEUL script qui ecrit
+`countryContours.json`/`countryBorders.json` — les 4 autres fichiers pays restent edites a la main,
+comme `compassPlaces.json`/`cluesPlaces.json`. Les voisins
 (`{ type: 'country', code, x, y }` — uniquement des pays, plus de voisin mer/ocean : ca
 compliquait tout pour peu d'apport, retire) sont pour la plupart generes automatiquement
 par `scripts/generateContours.mjs` (`npm run generate:contours`, outil dev uniquement,
@@ -464,20 +475,20 @@ compris, qui etaient dessines a la main, plus grossiers et decales de 20-70 km p
 de `world-atlas` 50m, topologie du monde entier simplifiee UNE fois (`topojson-simplify`, poids
 `1e-5`, arrondi 3 decimales) : un arc partage entre deux pays reste un seul arc, donc une frontiere
 commune a **exactement les memes sommets** des deux cotes. Le script regenere `points` a chaque
-lancement et ne conserve d'une ligne existante que ce qui est cure (`neighbors`, `centerLabel`,
+lancement et ne conserve d'une entree existante que ce qui est cure (`neighbors`, `centerLabel`,
 `difficulty`) ; ne jamais retoucher les `points` d'un seul pays (ni par l'admin ni a la main) : les
 sommets partages ne correspondraient plus. Seul l'anneau principal de chaque pays est garde, donc
 une frontiere portee par un autre polygone (Thrace turque, Cabinda, enclaves) n'est pas detectee.
 Relancer le script ajoute aussi DK et RU (jamais generes jusqu'ici, RU = ~700 points), a ne
 committer que si on veut ces pays dans le jeu.
 
-**Voisins bruts de chaque pays** (8e element de `CountryRow`, tous les pays de `countries.json`, pas seulement
-ceux avec une silhouette) : codes ISO tries des pays qui partagent une frontiere terrestre, ex.
-`"MC": [..., "+377", null, ["FR"]]` (le `null` est l'element `contour` absent). Meme source que les voisins
-d'indices (`borders` de `world-countries`, dans `scripts/generateContours.mjs`), gardes seulement si les deux
-pays se citent mutuellement : la liste est symetrique (A voisin de B <=> B voisin de A, verifie par
-`countries.test.ts`) et limitee aux codes presents dans le fichier. Un pays sans voisin (iles) n'a pas de 8e element ;
-lecture via `countryNeighbors(code)` / `decodeCountry(row).neighbors`. Rien a voir avec `contour.neighbors`
+**Voisins bruts de chaque pays** (`countryBorders.json`, tous les pays, pas seulement ceux avec une
+silhouette) : codes ISO tries des pays qui partagent une frontiere terrestre, ex. `"MC": ["FR"]`.
+Meme source que les voisins d'indices (`borders` de `world-countries`, dans
+`scripts/generateContours.mjs`), gardes seulement si les deux pays se citent mutuellement : la
+liste est symetrique (A voisin de B <=> B voisin de A, verifie par `countries.test.ts`) et limitee
+aux codes presents dans `countries.json`. Un pays sans voisin (iles) n'a pas d'entree dans le
+fichier ; lecture via `countryNeighbors(code)` / `decodeCountry(code)?.neighbors`. Rien a voir avec `contour.neighbors`
 (les quelques voisins POSITIONNES sur le plateau pour les indices) ; les frontieres dessinees, elles, sont
 deduites de la geometrie (ci-dessous), donc n'incluent pas les frontieres d'un autre polygone que l'anneau principal.
 Dans l'admin, la carte pays a un bouton "Afficher les voisins" (liste drapeau + nom + code) qui, si l'editeur

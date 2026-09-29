@@ -2,7 +2,12 @@
 // Dev-only, one-off generation tool (`npm run generate:contours`) — NOT part of `npm test`, CI, or
 // the shipped app. Regenerates the Contour/Silhouette outlines (`points`) of EVERY country in
 // `src/data/places/countries.json` from one single source and one single simplification pass,
-// plus the country-type neighbor hints of the codes that don't have any yet.
+// plus the country-type neighbor hints of the codes that don't have any yet. Writes ONLY
+// `src/data/places/countryContours.json` and `src/data/places/countryBorders.json` — the other 4
+// place files (`countries.json`/`countryFlags.json`/`countryCurrencies.json`/
+// `countryPhoneCodes.json`) are hand-edited data this script never touches, only reads (for the
+// full list of country codes/names — see `data/places/countries.ts`'s own doc comment on the
+// 6-file split).
 //
 // One shared definition, so shared borders are identical: the whole world topology is simplified
 // ONCE (`topojson-simplify` keeps the arcs shared between two countries as one arc), so a border
@@ -10,22 +15,22 @@
 // that to draw a shared border a single time (see CLAUDE.md, "Silhouette"). Never simplify or
 // edit the `points` of a single country by hand: the shared vertices would stop matching.
 //
-// What is "curated" (kept as-is when a row already has a 7th element): `neighbors` (hand-placed
-// hint positions, a fraction of the board), `centerLabel` and `difficulty`. `points` is NOT
-// curated any more: the 8 countries that used to be drawn by hand (DE/ES/FR/GR/IE/IT/NO/PT, an
-// older, coarser definition that did not line up with the Natural Earth borders of their
-// neighbors) are regenerated like all the others — only their `points` are replaced, the rest of
-// their `contour` element is preserved. A country whose row has no `contour` yet gets points
-// + auto neighbors. Re-run it after adding a country to `countries.json`, or to pick up a new
+// What is "curated" (kept as-is when a country already has a `countryContours.json` entry):
+// `neighbors` (hand-placed hint positions, a fraction of the board), `centerLabel` and
+// `difficulty`. `points` is NOT curated any more: the 8 countries that used to be drawn by hand
+// (DE/ES/FR/GR/IE/IT/NO/PT, an older, coarser definition that did not line up with the Natural
+// Earth borders of their neighbors) are regenerated like all the others — only their `points` are
+// replaced, the rest of their entry is preserved. A country with no entry yet gets points + auto
+// neighbors. Re-run it after adding a country to `countries.json`, or to pick up a new
 // `world-atlas` release; it is idempotent.
 //
 // It also writes, for EVERY country of `countries.json` (with or without a silhouette), its raw
-// land neighbors: the sorted list of ISO codes sharing a land border, as the row's 8th element
-// (`CountryRow`, index 7 — index 6 is `contour`, `null` when the country has none). Same source
-// as the hint neighbors above (`world-countries`' `borders`), kept only when BOTH sides list each
-// other (the file stays symmetric: A neighbor of B <=> B neighbor of A) and only for codes that
-// exist in `countries.json`. A country with no land neighbor (islands) has no 8th element. This list
-// is unrelated to `contour.neighbors` (the few neighbors POSITIONED on the board for the hints).
+// land neighbors to `countryBorders.json`: the sorted list of ISO codes sharing a land border.
+// Same source as the hint neighbors above (`world-countries`' `borders`), kept only when BOTH
+// sides list each other (the file stays symmetric: A neighbor of B <=> B neighbor of A) and only
+// for codes that exist in `countries.json`. A country with no land neighbor (islands) has no
+// entry in that file. This list is unrelated to `contour.neighbors` (the few neighbors POSITIONED
+// on the board for the hints).
 //
 // Boundary geometry: `world-atlas`'s pre-built 50m-resolution TopoJSON Natural Earth Admin-0
 // boundaries (Natural Earth data is public domain, no attribution required).
@@ -47,6 +52,8 @@ import worldCountries from 'world-countries';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const countriesPath = path.join(rootDir, 'src/data/places/countries.json');
+const contoursPath = path.join(rootDir, 'src/data/places/countryContours.json');
+const bordersPath = path.join(rootDir, 'src/data/places/countryBorders.json');
 
 // --- Config -----------------------------------------------------------------------------------
 
@@ -197,7 +204,15 @@ const median = (numbers) => {
 
 // --- Load + index reference data -------------------------------------------------------------
 
-const countries = JSON.parse(readFileSync(countriesPath, 'utf8'));
+const countries = JSON.parse(readFileSync(countriesPath, 'utf8')); // identity only: { code: [fr, en] }
+const loadJson = (filePath) => {
+  try {
+    return JSON.parse(readFileSync(filePath, 'utf8'));
+  } catch {
+    return {};
+  }
+};
+const contours = loadJson(contoursPath); // { code: contour }, sparse — this script's own output
 
 const cca2ToCcn3 = new Map();
 const cca2ToInfo = new Map();
@@ -222,7 +237,7 @@ for (const feature of collection.features) {
 
 // --- Pass 1: match + simplify an outline for every code -----------------------------------------
 
-/** Rows that already had a `contour` and whose outline could not be rebuilt: left untouched. */
+/** Codes that already had a contour entry and whose outline could not be rebuilt: left untouched. */
 const keptAsIs = [];
 const nonCountry = [];
 const unmatched = [];
@@ -230,8 +245,7 @@ const unmatched = [];
 const generated = [];
 
 for (const code of Object.keys(countries).sort()) {
-  const row = countries[code];
-  const existing = row[6] ?? undefined;
+  const existing = contours[code];
   if (NON_COUNTRY_CODES.has(code)) {
     nonCountry.push(code);
     continue;
@@ -270,7 +284,7 @@ let withNeighbors = 0;
 let withoutNeighbors = 0;
 
 for (const entry of generated) {
-  // Already has a `contour`: its neighbors (hand-placed or generated earlier) are kept as they are.
+  // Already has a contour entry: its neighbors (hand-placed or generated earlier) are kept as they are.
   if (entry.existing) continue;
   const info = cca2ToInfo.get(entry.code);
   const neighborCodes = [...new Set((info?.borders ?? []).map((cca3) => cca3ToCca2.get(cca3)))].filter(
@@ -320,26 +334,24 @@ for (const [code, declared] of declaredBorders) {
   if (mutual.length > 0) landNeighbors.set(code, mutual.sort());
 }
 
-// --- Merge + write back, same one-entry-per-line format as serializeCountries ------------------
+// --- Merge + write back, one entry per line, sorted by code -----------------------------------
 
 for (const entry of generated) {
-  // `points` first, then the curated fields (neighbors/centerLabel/difficulty) of an existing row.
+  // `points` first, then the curated fields (neighbors/centerLabel/difficulty) of an existing entry.
   const contour = { ...entry.existing, points: entry.points };
   if (!entry.existing && entry.neighbors && entry.neighbors.length > 0) contour.neighbors = entry.neighbors;
-  countries[entry.code][6] = contour;
-}
-// Row layout: 6 base fields, contour (null when absent), land neighbors. Trailing empties are cut.
-for (const code of Object.keys(countries)) {
-  const row = countries[code];
-  const parts = [...row.slice(0, 6), row[6] ?? null, landNeighbors.get(code) ?? null];
-  while (parts.length > 6 && parts[parts.length - 1] === null) parts.pop();
-  countries[code] = parts;
+  contours[entry.code] = contour;
 }
 
-const lines = Object.keys(countries)
-  .sort()
-  .map((code) => '  ' + JSON.stringify(code) + ': ' + JSON.stringify(countries[code]));
-writeFileSync(countriesPath, '{\n' + lines.join(',\n') + '\n}\n', 'utf8');
+const writeInOrder = (filePath, obj) => {
+  const lines = Object.keys(obj)
+    .sort()
+    .map((code) => '  ' + JSON.stringify(code) + ': ' + JSON.stringify(obj[code]));
+  writeFileSync(filePath, '{\n' + lines.join(',\n') + '\n}\n', 'utf8');
+};
+
+writeInOrder(contoursPath, contours);
+writeInOrder(bordersPath, Object.fromEntries(landNeighbors));
 
 // --- Summary -------------------------------------------------------------------------------
 

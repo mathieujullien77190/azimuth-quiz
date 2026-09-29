@@ -1,16 +1,12 @@
-import { decodeCountry, type CountryEntry, type CountryRow } from '@/data/places/countries';
-import countriesData from '@/data/places/countries.json';
+import { decodeAllCountries, type CountryEntry } from '@/data/places/countries';
 
 import { logChange } from '../changelog';
 
 export type CountryRecord = CountryEntry & { code: string };
 
-const COUNTRIES = countriesData as unknown as Record<string, CountryRow>;
-
-/** Reads the bundled `countries.json` (no network, no backend — see changelog.ts): kept `async`
+/** Reads the bundled place files (no network, no backend — see changelog.ts): kept `async`
  * so call sites reading it don't need to change just because this no longer fetches anything. */
-export const fetchCountries = async (): Promise<CountryRecord[]> =>
-  Object.entries(COUNTRIES).map(([code, row]) => ({ code, ...decodeCountry(row) }));
+export const fetchCountries = async (): Promise<CountryRecord[]> => decodeAllCountries();
 
 export type CountryPatch = Partial<Pick<CountryEntry, 'fr' | 'en' | 'currency' | 'currencySymbol' | 'phoneCode' | 'flag'>>;
 

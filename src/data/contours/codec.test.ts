@@ -1,21 +1,18 @@
-import type { CountryRow } from '@/data/places/countries';
 import type { Difficulty } from '@/types';
 
 import { CONTOURS, decodeContours } from './codec';
 
-const row = (contour?: CountryRow[6]): CountryRow => ['Name', 'Name', null, null, null, null, contour];
-
 describe('decodeContours', () => {
-  it('merges a row with a contour field into a resolved ContourCountry', () => {
+  it('merges a country row into a resolved ContourCountry', () => {
     const decoded = decodeContours({
-      FR: row({
+      FR: {
         points: [
           [0, 0],
           [1, 1],
           [2, 2],
         ],
         neighbors: [{ type: 'country', code: 'DE', x: 0.1, y: 0.2 }],
-      }),
+      },
     });
     expect(decoded).toHaveLength(1);
     expect(decoded[0].code).toBe('FR');
@@ -27,24 +24,19 @@ describe('decodeContours', () => {
     expect(decoded[0].neighbors).toEqual([{ type: 'country', code: 'DE', x: 0.1, y: 0.2 }]);
   });
 
-  it('skips a row with no contour field entirely (the vast majority of countries)', () => {
-    const decoded = decodeContours({ XX: row(undefined) });
-    expect(decoded).toEqual([]);
+  it('is empty when no country has a row (the vast majority of countries)', () => {
+    expect(decodeContours({})).toEqual([]);
   });
 
-  it('skips a row whose contour is null (padding before the land neighbors)', () => {
-    expect(decodeContours({ XX: row(null) })).toEqual([]);
-  });
-
-  it('falls back to an empty neighbor list, the default center label and intermediate difficulty when the contour omits them', () => {
+  it('falls back to an empty neighbor list, the default center label and intermediate difficulty when the row omits them', () => {
     const decoded = decodeContours({
-      XX: row({
+      XX: {
         points: [
           [0, 0],
           [1, 1],
           [2, 2],
         ],
-      }),
+      },
     });
     expect(decoded[0].neighbors).toEqual([]);
     expect(decoded[0].centerLabel).toEqual({ x: 0.5, y: 0.5 });
@@ -53,7 +45,7 @@ describe('decodeContours', () => {
 
   it('keeps an explicit centerLabel/difficulty instead of the default', () => {
     const decoded = decodeContours({
-      NO: row({
+      NO: {
         points: [
           [0, 0],
           [1, 1],
@@ -61,7 +53,7 @@ describe('decodeContours', () => {
         ],
         centerLabel: { x: 0.3, y: 0.7 },
         difficulty: 'hard',
-      }),
+      },
     });
     expect(decoded[0].centerLabel).toEqual({ x: 0.3, y: 0.7 });
     expect(decoded[0].difficulty).toBe('hard');

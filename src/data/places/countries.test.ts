@@ -1,22 +1,24 @@
 import { PLACES } from '@/data';
 
-import type { CountryRow } from './countries';
 import countriesData from './countries.json';
+import countryBordersData from './countryBorders.json';
 import {
   countryCurrencyName,
   countryFlagColors,
   countryName,
   countryNeighbors,
+  decodeAllCountries,
   decodeCountry,
   FLAG_COLOR_FIELD,
   flagEmoji,
 } from './countries';
 
 describe('the countries data', () => {
-  const rows = countriesData as unknown as Record<string, CountryRow>;
+  const identity = countriesData as unknown as Record<string, readonly [string, string]>;
+  const borders = countryBordersData as unknown as Record<string, readonly string[]>;
 
   it('gives both fr and en names for every entry', () => {
-    for (const [code, row] of Object.entries(rows)) {
+    for (const [code, row] of Object.entries(identity)) {
       expect(row[0].length).toBeGreaterThan(0);
       expect(row[1].length).toBeGreaterThan(0);
       expect(code).toMatch(/^[A-Z]{2}$/);
@@ -24,25 +26,24 @@ describe('the countries data', () => {
   });
 
   it('lists land neighbors as sorted, unique codes of known countries, never the country itself', () => {
-    for (const [code, row] of Object.entries(rows)) {
-      const neighbors = row[7] ?? [];
+    for (const [code, neighbors] of Object.entries(borders)) {
       expect(neighbors).not.toContain(code);
       expect([...neighbors].sort()).toEqual([...neighbors]);
       expect(new Set(neighbors).size).toBe(neighbors.length);
-      for (const neighbor of neighbors) expect(rows).toHaveProperty(neighbor);
-      // An empty list is never stored: no neighbors means no 8th element.
-      if (row[7] !== undefined) expect(row[7].length).toBeGreaterThan(0);
+      for (const neighbor of neighbors) expect(identity).toHaveProperty(neighbor);
+      // An empty list is never stored: no neighbors means no entry at all.
+      expect(neighbors.length).toBeGreaterThan(0);
     }
   });
 
   it('is symmetric: A is a neighbor of B <=> B is a neighbor of A', () => {
-    for (const [code, row] of Object.entries(rows)) {
-      for (const neighbor of row[7] ?? []) expect(rows[neighbor][7]).toContain(code);
+    for (const [code, neighbors] of Object.entries(borders)) {
+      for (const neighbor of neighbors) expect(borders[neighbor]).toContain(code);
     }
   });
 
   it('covers every country code used by PLACES', () => {
-    const missing = [...new Set(PLACES.map((place) => place.code))].filter((code) => !(code in rows));
+    const missing = [...new Set(PLACES.map((place) => place.code))].filter((code) => !(code in identity));
     expect(missing).toEqual([]);
   });
 });
@@ -99,53 +100,53 @@ describe('countryCurrencyName', () => {
 });
 
 describe('decodeCountry', () => {
-  const row: CountryRow = ['France', 'France', [['blue', '#0055A4', 33]], 'Euro', '€', '+33'];
+  it('joins the 6 files into a named entry', () => {
+    expect(decodeCountry('FR')).toEqual(
+      expect.objectContaining({
+        fr: 'France',
+        en: 'France',
+        flag: [
+          ['blue', '#0055A4', 33],
+          ['white', '#FFFFFF', 33],
+          ['red', '#EF4135', 33],
+        ],
+        currency: 'Euro',
+        currencySymbol: '€',
+        phoneCode: '+33',
+        neighbors: expect.arrayContaining(['BE', 'DE', 'ES', 'IT', 'CH']),
+      }),
+    );
+  });
 
-  it('decodeCountry turns a positional row into a named entry', () => {
-    expect(decodeCountry(row)).toEqual({
-      fr: 'France',
-      en: 'France',
-      flag: [['blue', '#0055A4', 33]],
-      currency: 'Euro',
-      currencySymbol: '€',
-      phoneCode: '+33',
+  it('is null for a code with no entry in countries.json at all', () => {
+    expect(decodeCountry('XX')).toBeNull();
+  });
+
+  it('falls back to no flag/currency/phone code/neighbors when a country has none curated yet', () => {
+    // Antarctica ("AQ"): identity only, everything else genuinely absent.
+    expect(decodeCountry('AQ')).toEqual({
+      fr: 'Antarctique',
+      en: 'Antarctica',
+      flag: null,
+      currency: null,
+      currencySymbol: null,
+      phoneCode: null,
+      contour: undefined,
       neighbors: [],
     });
   });
 
-  it('decodes the land neighbors of an 8-element row, and a null contour as no contour', () => {
-    const decoded = decodeCountry(['Monaco', 'Monaco', null, 'Euro', '€', '+377', null, ['FR']]);
-    expect(decoded.neighbors).toEqual(['FR']);
-    expect(decoded.contour).toBeUndefined();
+  it('keeps the Contour data when there is one', () => {
+    expect(decodeCountry('NO')?.contour).toBeDefined();
+    expect(decodeCountry('NO')?.contour?.difficulty).toBe('hard');
   });
+});
 
-  it('keeps the Contour data of a 7-element row', () => {
-    const rowWithContour: CountryRow = [
-      'Norvège',
-      'Norway',
-      [['red', '#EF2B2D', 50]],
-      'Couronne',
-      'kr',
-      '+47',
-      {
-        points: [
-          [0, 0],
-          [1, 1],
-          [2, 2],
-        ],
-        difficulty: 'hard',
-      },
-    ];
-
-    const decoded = decodeCountry(rowWithContour);
-    expect(decoded.contour).toEqual({
-      points: [
-        [0, 0],
-        [1, 1],
-        [2, 2],
-      ],
-      difficulty: 'hard',
-    });
+describe('decodeAllCountries', () => {
+  it('joins every country in countries.json (the admin’s own listing)', () => {
+    const all = decodeAllCountries();
+    expect(all.length).toBe(Object.keys(countriesData).length);
+    expect(all).toContainEqual(expect.objectContaining({ code: 'FR', fr: 'France' }));
   });
 });
 
