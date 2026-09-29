@@ -8,8 +8,9 @@ import type { CluePlace } from '@/types';
 /**
  * Silhouette's `ContourEditor` (deployed under `CountriesView`'s own country card) is this
  * component's model: deployed under a place's own "Clues" block in `PlacesView`, one
- * `initialPlace` in prop (no picker of its own — the card list already provides that), nothing
- * written to disk. `charadeFor(place)` gives the syllable split — the shipped override when there
+ * `initialPlace` in prop (no picker of its own — the card list already provides that), plus
+ * `placeKey` (the place's short storage code, `PlaceRow.key`) so `saveCharadeSyllables` can log
+ * exactly where to write in `charadePlaces.json`. Nothing written to disk. `charadeFor(place)` gives the syllable split — the shipped override when there
  * is one, the live `syllabify` heuristic otherwise — each paired with its riddle from the GLOBAL
  * dictionary (`riddleFor`): editing a syllable's riddle changes it for every other place with that
  * same syllable too, so this works for any of the 922 Clue places without repeating the same
@@ -22,7 +23,7 @@ import type { CluePlace } from '@/types';
  * can't be renamed to blank (removing it is what the "×" is for), so it doesn't. "Vider" clears
  * every syllable in one action (rather than one "×" per row) when a name just isn't usable at all.
  */
-export const CharadeEditor = ({ initialPlace }: { initialPlace: CluePlace }) => {
+export const CharadeEditor = ({ initialPlace, placeKey }: { initialPlace: CluePlace; placeKey: string }) => {
   const [place] = useState(initialPlace);
   const [syllables, setSyllables] = useState(() => charadeFor(place).syllables);
   const [riddles, setRiddles] = useState(() => syllables.map((syllable) => riddleFor(syllable)));
@@ -36,7 +37,7 @@ export const CharadeEditor = ({ initialPlace }: { initialPlace: CluePlace }) => 
   }, [savedIndex]);
 
   const applySyllables = (next: string[], flashIndex: number | null) => {
-    saveCharadeSyllables(place, next).then((saved) => {
+    saveCharadeSyllables(placeKey, place, next).then((saved) => {
       setSyllables(saved);
       setRiddles(saved.map((syllable) => riddleFor(syllable)));
       setSavedIndex(flashIndex);

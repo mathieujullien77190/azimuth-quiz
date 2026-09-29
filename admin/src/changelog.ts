@@ -1,8 +1,9 @@
 import { useSyncExternalStore } from 'react';
 
 /**
- * The admin app has no backend (see README): it reads places.json/countries.json bundled at
- * build time and never writes them. Every edit instead appends a line here describing the
+ * The admin app has no backend (see README): it reads the place files (places.json and its 4
+ * sibling files, see `data/places/codec.ts`) and countries.json bundled at build time, never
+ * writes them. Every edit instead appends a line here describing the
  * change — the person using the app copies this log and pastes it to Claude, who reads it and
  * applies the actual edits to the data files. A tiny external store (not React state) so it
  * survives switching between the Places/Countries tabs.

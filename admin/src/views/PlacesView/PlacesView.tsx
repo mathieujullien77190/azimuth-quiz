@@ -33,10 +33,10 @@ export const PlacesView = () => {
   const [panelOpen, setPanelOpen] = useState(true);
   // Which card's own Charade editor is expanded (see the "🎭 Charade" toggle below) — at most one
   // at a time, same reasoning as CountriesView's own "🗺️ Silhouette" toggle.
-  const [expandedCharadeIndex, setExpandedCharadeIndex] = useState<number | null>(null);
+  const [expandedCharadeKey, setExpandedCharadeKey] = useState<string | null>(null);
   // Which card's own Wordplay editor is expanded — separate from Charade's, so both can be open
   // at once on the same card (they edit different fields, no reason to force a choice).
-  const [expandedWordplayIndex, setExpandedWordplayIndex] = useState<number | null>(null);
+  const [expandedWordplayKey, setExpandedWordplayKey] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [categories, setCategories] = useState(new Set(CATEGORY_ORDER));
   const [difficulties, setDifficulties] = useState(new Set(DIFFICULTY_ORDER));
@@ -78,21 +78,21 @@ export const PlacesView = () => {
     const previousClues = row.clues;
     setRows(
       rows.map((r) =>
-        r.index === row.index
+        r.key === row.key
           ? { ...r, compass: r.compass && { ...r.compass, difficulty }, clues: r.clues && { ...r.clues, difficulty } }
           : r,
       ),
     );
-    setSaveState({ index: row.index, field: 'difficulty', status: 'saving' });
+    setSaveState({ key: row.key, field: 'difficulty', status: 'saving' });
 
     saveDifficulty(row, difficulty)
       .then(({ compass, clues }) => {
-        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, compass, clues } : r)) ?? cur);
-        setSaveState({ index: row.index, field: 'difficulty', status: 'saved' });
+        setRows((cur) => cur?.map((r) => (r.key === row.key ? { ...r, compass, clues } : r)) ?? cur);
+        setSaveState({ key: row.key, field: 'difficulty', status: 'saved' });
       })
       .catch((err: Error) => {
-        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, compass: previousCompass, clues: previousClues } : r)) ?? cur);
-        setSaveState({ index: row.index, field: 'difficulty', status: 'error', message: err.message });
+        setRows((cur) => cur?.map((r) => (r.key === row.key ? { ...r, compass: previousCompass, clues: previousClues } : r)) ?? cur);
+        setSaveState({ key: row.key, field: 'difficulty', status: 'error', message: err.message });
       });
   };
 
@@ -100,17 +100,17 @@ export const PlacesView = () => {
     if (!rows || !row.compass) return;
     const field: Field = 'category' in patch ? 'category' : 'description';
     const previous = row.compass;
-    setRows(rows.map((r) => (r.index === row.index ? { ...r, compass: { ...r.compass!, ...patch } } : r)));
-    setSaveState({ index: row.index, field, status: 'saving' });
+    setRows(rows.map((r) => (r.key === row.key ? { ...r, compass: { ...r.compass!, ...patch } } : r)));
+    setSaveState({ key: row.key, field, status: 'saving' });
 
     saveCompass(row, patch)
       .then((updated) => {
-        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, compass: updated } : r)) ?? cur);
-        setSaveState({ index: row.index, field, status: 'saved' });
+        setRows((cur) => cur?.map((r) => (r.key === row.key ? { ...r, compass: updated } : r)) ?? cur);
+        setSaveState({ key: row.key, field, status: 'saved' });
       })
       .catch((err: Error) => {
-        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, compass: previous } : r)) ?? cur);
-        setSaveState({ index: row.index, field, status: 'error', message: err.message });
+        setRows((cur) => cur?.map((r) => (r.key === row.key ? { ...r, compass: previous } : r)) ?? cur);
+        setSaveState({ key: row.key, field, status: 'error', message: err.message });
       });
   };
 
@@ -119,22 +119,22 @@ export const PlacesView = () => {
     const key = Object.keys(patch)[0];
     const field = CLUE_FIELD_BY_KEY[key];
     const previous = row.clues;
-    setRows(rows.map((r) => (r.index === row.index ? { ...r, clues: { ...r.clues!, ...patch } } : r)));
-    setSaveState({ index: row.index, field, status: 'saving' });
+    setRows(rows.map((r) => (r.key === row.key ? { ...r, clues: { ...r.clues!, ...patch } } : r)));
+    setSaveState({ key: row.key, field, status: 'saving' });
 
     saveClues(row, patch)
       .then((updated) => {
-        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, clues: updated } : r)) ?? cur);
-        setSaveState({ index: row.index, field, status: 'saved' });
+        setRows((cur) => cur?.map((r) => (r.key === row.key ? { ...r, clues: updated } : r)) ?? cur);
+        setSaveState({ key: row.key, field, status: 'saved' });
       })
       .catch((err: Error) => {
-        setRows((cur) => cur?.map((r) => (r.index === row.index ? { ...r, clues: previous } : r)) ?? cur);
-        setSaveState({ index: row.index, field, status: 'error', message: err.message });
+        setRows((cur) => cur?.map((r) => (r.key === row.key ? { ...r, clues: previous } : r)) ?? cur);
+        setSaveState({ key: row.key, field, status: 'error', message: err.message });
       });
   };
 
   const saveFlagFor = (row: PlaceRow, field: Field) => {
-    const s = saveState?.index === row.index && saveState.field === field ? saveState : null;
+    const s = saveState?.key === row.key && saveState.field === field ? saveState : null;
     if (!s) return null;
     if (s.status === 'saving') return <span className="save-flag saving">…</span>;
     if (s.status === 'saved') return <span className="save-flag saved">✓</span>;
@@ -147,7 +147,7 @@ export const PlacesView = () => {
 
   const handleDelete = async (row: PlaceRow) => {
     await deletePlace(row);
-    setRows((cur) => (cur ?? []).filter((r) => r.index !== row.index));
+    setRows((cur) => (cur ?? []).filter((r) => r.key !== row.key));
   };
 
   if (loadError) {
@@ -210,7 +210,7 @@ export const PlacesView = () => {
       <div className="cards-scroll">
         {pageRows.length === 0 && <div className="empty">Aucun lieu ne correspond à ces filtres.</div>}
         {pageRows.map((row) => (
-          <div className="place-card" key={row.index}>
+          <div className="place-card" key={row.key}>
             <div className="place-header">
               <div className="place-identity">
                 <span className="place-name">{row.name}</span>
@@ -293,8 +293,8 @@ export const PlacesView = () => {
                     <button
                       type="button"
                       className="chip"
-                      aria-pressed={expandedCharadeIndex === row.index}
-                      onClick={() => setExpandedCharadeIndex(expandedCharadeIndex === row.index ? null : row.index)}
+                      aria-pressed={expandedCharadeKey === row.key}
+                      onClick={() => setExpandedCharadeKey(expandedCharadeKey === row.key ? null : row.key)}
                     >
                       🎭 Charade
                     </button>
@@ -303,8 +303,8 @@ export const PlacesView = () => {
                     <button
                       type="button"
                       className="chip"
-                      aria-pressed={expandedWordplayIndex === row.index}
-                      onClick={() => setExpandedWordplayIndex(expandedWordplayIndex === row.index ? null : row.index)}
+                      aria-pressed={expandedWordplayKey === row.key}
+                      onClick={() => setExpandedWordplayKey(expandedWordplayKey === row.key ? null : row.key)}
                     >
                       ✍️ Jeu de mots
                     </button>
@@ -377,8 +377,8 @@ export const PlacesView = () => {
                 ) : (
                   <p className="absent">Absent d’Clues</p>
                 )}
-                {row.clues && expandedCharadeIndex === row.index && <CharadeEditor initialPlace={row.clues} />}
-                {row.clues && expandedWordplayIndex === row.index && <WordplayEditor initialPlace={row.clues} />}
+                {row.clues && expandedCharadeKey === row.key && <CharadeEditor initialPlace={row.clues} placeKey={row.key} />}
+                {row.clues && expandedWordplayKey === row.key && <WordplayEditor initialPlace={row.clues} />}
               </div>
             </div>
           </div>

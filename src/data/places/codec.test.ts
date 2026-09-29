@@ -1,4 +1,25 @@
+jest.mock('./places.json', () => ({
+  tv1: ['Testville', 'FR', 1.5, -2.5, 'E'],
+  ov1: ['Otherville', 'DE', 3, 4, 'H'],
+  nc1: ['Nocharadeville', 'BE', 5, 6, 'I'],
+}));
+jest.mock('./compassPlaces.json', () => ({
+  tv1: ['C', null, null, null],
+}));
+jest.mock('./cluesPlaces.json', () => ({
+  ov1: ['n', 1000, '☀️', 10, 'gb', 'BER', '🏰', '🎡', '🍺'],
+  nc1: ['n', 1000, '☀️', 10, 'gb', 'BER', '🏰', '🎡', '🍺'],
+}));
+jest.mock('./charadePlaces.json', () => ({
+  ov1: ['o', 'ther', 'ville'],
+}));
+jest.mock('./personalityPlaces.json', () => ({
+  ov1: ['Quelqu’un', 'footballeur'],
+}));
+
+// eslint-disable-next-line import/first
 import {
+  decodeAllPlaces,
   decodeCompassPlace,
   decodeCompassPlaces,
   decodeCluePlace,
@@ -6,7 +27,6 @@ import {
   type CompassRow,
   type CommonRow,
   type ClueRow,
-  type MergedPlaces,
 } from './codec';
 
 describe('decodeCompassPlace', () => {
@@ -35,31 +55,12 @@ describe('decodeCompassPlace', () => {
   });
 });
 
-describe('decodeCompassPlaces / decodeCluePlaces', () => {
-  const entries: MergedPlaces = [
-    [['Testville', 'FR', 1.5, -2.5, 'E'], ['C', null, null, null], null],
-    [['Otherville', 'DE', 3, 4, 'H'], null, ['n', 1000, '☀️', 10, 'gb', 'BER', '🏰', '🎡', '🍺', ['o', 'ther', 'ville']]],
-  ];
-
-  it('decodeCompassPlaces skips entries with no compass row', () => {
-    const places = decodeCompassPlaces(entries);
-    expect(places).toHaveLength(1);
-    expect(places[0].name).toBe('Testville');
-  });
-
-  it('decodeCluePlaces skips entries with no clues row', () => {
-    const places = decodeCluePlaces(entries);
-    expect(places).toHaveLength(1);
-    expect(places[0].name).toBe('Otherville');
-  });
-});
-
 describe('decodeCluePlace', () => {
   const common: CommonRow = ['Testville', 'FR', 1.5, -2.5, 'E'];
-  const row: ClueRow = ['ne', 12345, '☀️', 42, 'gw', 'TST', '🗼', '🎨', '🌳', ['test', 'ville']];
+  const row: ClueRow = ['ne', 12345, '☀️', 42, 'gw', 'TST', '🗼', '🎨', '🌳'];
 
-  it('maps a common row + clues row to an CluePlace, deriving the country name, timezone, phone code and currency from the country code', () => {
-    expect(decodeCluePlace(common, row)).toEqual({
+  it('maps a common row + clues row + syllables to an CluePlace, deriving the country name, timezone, phone code and currency from the country code', () => {
+    expect(decodeCluePlace(common, row, ['test', 'ville'])).toEqual({
       name: 'Testville',
       code: 'FR',
       country: 'France',
@@ -80,37 +81,66 @@ describe('decodeCluePlace', () => {
 
   it('passes an unmapped timezone through as-is', () => {
     const unmappedRow: ClueRow = [...row.slice(0, 4), 'Europe/Nowhere', ...row.slice(5)] as unknown as ClueRow;
-    const place = decodeCluePlace(common, unmappedRow);
+    const place = decodeCluePlace(common, unmappedRow, []);
     expect(place.timezone).toBe('Europe/Nowhere');
   });
 
   it('falls back to an empty phone code and currency for an unknown country', () => {
     const unknownCommon: CommonRow = ['Testville', 'XX', 1.5, -2.5, 'E'];
-    const place = decodeCluePlace(unknownCommon, row);
+    const place = decodeCluePlace(unknownCommon, row, []);
     expect(place.phoneCode).toBe('');
     expect(place.currency).toBe('');
   });
 
-  it('includes the curated personality when the row carries one', () => {
-    const withPersonality: ClueRow = [
-      'ne',
-      12345,
-      '☀️',
-      42,
-      'gw',
-      'TST',
-      '🗼',
-      '🎨',
-      '🌳',
-      ['test', 'ville'],
-      ['Quelqu’un', 'footballeur'],
-    ];
-    const place = decodeCluePlace(common, withPersonality);
+  it('includes the curated personality when one is passed', () => {
+    const place = decodeCluePlace(common, row, [], ['Quelqu’un', 'footballeur']);
     expect(place.personality).toEqual({ name: 'Quelqu’un', description: 'footballeur' });
   });
 
-  it('omits personality when the row has none', () => {
-    const place = decodeCluePlace(common, row);
+  it('omits personality when none is passed', () => {
+    const place = decodeCluePlace(common, row, []);
     expect(place.personality).toBeUndefined();
+  });
+});
+
+describe('decodeAllPlaces / decodeCompassPlaces / decodeCluePlaces', () => {
+  // Joins the 5 mocked files above by key: "tv1" (Testville) has a common+compass row only, "ov1"
+  // (Otherville) has common+clues+charade+personality but no compass row, "nc1"
+  // (Nocharadeville) has common+clues but no charade/personality entry at all.
+  it('decodeAllPlaces joins every file by key, compass/clues null when the place has no row there', () => {
+    const rows = decodeAllPlaces();
+    expect(rows[0]).toEqual({
+      key: 'tv1',
+      common: ['Testville', 'FR', 1.5, -2.5, 'E'],
+      compass: expect.objectContaining({ name: 'Testville' }),
+      clues: null,
+    });
+    expect(rows[1]).toEqual({
+      key: 'ov1',
+      common: ['Otherville', 'DE', 3, 4, 'H'],
+      compass: null,
+      clues: expect.objectContaining({ name: 'Otherville' }),
+    });
+  });
+
+  it('defaults to no syllables when a clue place has no entry in charadePlaces.json', () => {
+    const rows = decodeAllPlaces();
+    const nocharade = rows.find((row) => row.key === 'nc1');
+    expect(nocharade?.clues?.syllables).toEqual([]);
+  });
+
+  it('decodeCompassPlaces skips keys with no compass row', () => {
+    const places = decodeCompassPlaces();
+    expect(places).toHaveLength(1);
+    expect(places[0].name).toBe('Testville');
+  });
+
+  it('decodeCluePlaces skips keys with no clues row, and joins in charade/personality by the same key', () => {
+    const places = decodeCluePlaces();
+    expect(places).toHaveLength(2);
+    expect(places.find((p) => p.name === 'Otherville')).toMatchObject({
+      syllables: ['o', 'ther', 'ville'],
+      personality: { name: 'Quelqu’un', description: 'footballeur' },
+    });
   });
 });

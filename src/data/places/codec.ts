@@ -1,15 +1,35 @@
 import type { Category, Difficulty, CluePlace, CluePositionInCountry, Place } from '@/types';
 
+import charadePlacesData from './charadePlaces.json';
 import { countryName, countryPhoneCode, countryCurrencySymbol } from './countries';
+import cluesPlacesData from './cluesPlaces.json';
+import compassPlacesData from './compassPlaces.json';
+import personalityPlacesData from './personalityPlaces.json';
+import placesData from './places.json';
 
 /**
- * `places.json` is the shared source of places for BOTH Compass and Clues: an array of places,
- * and each place is itself `[common, compass, clues]`. `common` always exists (name, code,
- * coordinates, and difficulty — shared across both games); `compass` is `null` if this place
- * isn't in the Compass pool, `clues` is `null` if it isn't in the Clues pool (a place can be
- * in only one of the two). `decodeCompassPlaces`/`decodeCluePlaces` are the only
- * place that knows the column order: `src/data/places/index.ts`, `src/data/
- * clues.ts` and `admin/src/api/places.ts` all import from here rather than re-encoding it.
+ * Every place lives across 5 small files, all objects keyed by the SAME short code (3 letters,
+ * first-3-letters of the name by default — collisions resolved by priority: `capital` places
+ * keep the natural prefix first, then `citiesFr`, then `cities`, then everything else; whoever
+ * loses it falls back to the first free 3-letter combo in alphabetical order — assigned once,
+ * permanently, never reassigned on a later regeneration, same append-only spirit as
+ * `TIMEZONE_CODES` below):
+ * - `places.json`: the common identity (name, code, coordinates, difficulty — shared by both
+ *   games), `{ key: CommonRow }`. Every place has one.
+ * - `compassPlaces.json` (`{ key: CompassRow }`) / `cluesPlaces.json` (`{ key: ClueRow }`):
+ *   each game's own data, present only for a key that's actually in that game's pool (a place
+ *   can be in only one of the two).
+ * - `charadePlaces.json` (`{ key: readonly string[] }`): the charade clue's syllable split,
+ *   MANDATORY for every key in `cluesPlaces.json` (see `decodeCluePlace`'s own doc comment) —
+ *   never computed at runtime.
+ * - `personalityPlaces.json` (`{ key: readonly [name, description] }`): OPTIONAL, only the
+ *   places with a curated personality.
+ *
+ * `decodeAllPlaces`/`decodeCompassPlaces`/`decodeCluePlaces` are the only place that joins these
+ * 5 files back together: `src/data/places/index.ts`, `src/data/clues.ts` and
+ * `admin/src/api/places.ts` all import from here rather than re-joining it themselves. A key is
+ * opaque (e.g. `"par"` for Paris) — every place-editing log message names both the key AND the
+ * human identity (name + country code) so a hand edit never requires reverse-engineering one.
  */
 
 const CATEGORY_CODES: Record<Category, string> = {
@@ -310,26 +330,27 @@ export type ClueRow = readonly [
   emoji1: string,
   emoji2: string,
   emoji3: string,
-  /** This place's syllable split for the charade clue (`helpers/charade.ts`), lowercase, MANDATORY
-   * for every Clue place — decomposed once for all 922 places by `scripts/generateCharades.mjs`
-   * (live French-syllabifier heuristic, or a hand-corrected override where it gets a name wrong —
-   * foreign diacritics, mostly), nothing ever computed at runtime. Can be an empty array on
-   * purpose: some names have no usable syllable at all (e.g. "Bălți", whose "ă" the heuristic
-   * doesn't recognize) — `cluesFor` then drops the charade clue entirely rather than showing an
-   * empty card. */
-  syllables: readonly string[],
-  /** A real, Wikipedia-documented person tied to this place — absent for the vast majority
-   * (curated by hand, see `helpers/personality.ts`'s own doc comment), so OPTIONAL unlike
-   * `syllables` above. `[name, description]`, `description` itself `null` when there's nothing
-   * short and safe to add. */
-  personality?: readonly [name: string, description: string | null],
 ];
 
-/** A place: common data (including difficulty) + its per-game parts. `compass`/`clues` are
- * `null` when this place doesn't exist in that game. */
-type PlaceEntry = readonly [common: CommonRow, compass: CompassRow | null, clues: ClueRow | null];
+/** This place's syllable split for the charade clue (`helpers/charade.ts`), lowercase, MANDATORY
+ * for every key present in `cluesPlaces.json` — decomposed once for all 922 places by
+ * `scripts/generateCharades.mjs` (live French-syllabifier heuristic, or a hand-corrected override
+ * where it gets a name wrong — foreign diacritics, mostly), nothing ever computed at runtime. Can
+ * be an empty array on purpose: some names have no usable syllable at all (e.g. "Bălți", whose
+ * "ă" the heuristic doesn't recognize) — `cluesFor` then drops the charade clue entirely rather
+ * than showing an empty card. */
+export type CharadeRow = readonly string[];
 
-export type MergedPlaces = readonly PlaceEntry[];
+/** A real, Wikipedia-documented person tied to this place — present only for the places that
+ * have one (curated by hand, see `helpers/personality.ts`'s own doc comment). `[name,
+ * description]`, `description` itself `null` when there's nothing short and safe to add. */
+export type PersonalityRow = readonly [name: string, description: string | null];
+
+const PLACES = placesData as unknown as Record<string, CommonRow>;
+const COMPASS_PLACES = compassPlacesData as unknown as Record<string, CompassRow>;
+const CLUES_PLACES = cluesPlacesData as unknown as Record<string, ClueRow>;
+const CHARADE_PLACES = charadePlacesData as unknown as Record<string, CharadeRow>;
+const PERSONALITY_PLACES = personalityPlacesData as unknown as Record<string, PersonalityRow>;
 
 export const decodeCompassPlace = (common: CommonRow, row: CompassRow): Place => {
   const [name, code, latitude, longitude, difficultyCode] = common;
@@ -346,29 +367,14 @@ export const decodeCompassPlace = (common: CommonRow, row: CompassRow): Place =>
   };
 };
 
-export const decodeCompassPlaces = (entries: MergedPlaces): Place[] => {
-  const places: Place[] = [];
-  for (const [common, compass] of entries) {
-    if (compass) places.push(decodeCompassPlace(common, compass));
-  }
-  return places;
-};
-
-export const decodeCluePlace = (common: CommonRow, row: ClueRow): CluePlace => {
+export const decodeCluePlace = (
+  common: CommonRow,
+  row: ClueRow,
+  syllables: CharadeRow,
+  personality?: PersonalityRow,
+): CluePlace => {
   const [name, code, latitude, longitude, difficultyCode] = common;
-  const [
-    positionInCountry,
-    population,
-    climateEmoji,
-    elevationMeters,
-    timezoneCode,
-    airportCode,
-    emoji1,
-    emoji2,
-    emoji3,
-    syllables,
-    personality,
-  ] = row;
+  const [positionInCountry, population, climateEmoji, elevationMeters, timezoneCode, airportCode, emoji1, emoji2, emoji3] = row;
   return {
     name,
     code,
@@ -389,10 +395,25 @@ export const decodeCluePlace = (common: CommonRow, row: ClueRow): CluePlace => {
   };
 };
 
-export const decodeCluePlaces = (entries: MergedPlaces): CluePlace[] => {
-  const places: CluePlace[] = [];
-  for (const [common, , clues] of entries) {
-    if (clues) places.push(decodeCluePlace(common, clues));
-  }
-  return places;
-};
+/** One place, joined back from its key across the 5 files — `key` itself is exposed only for the
+ * admin (its own edits log both the key and the human identity, see this module's own doc
+ * comment); nothing in the shipped app needs it. */
+export type PlaceKeyRow = { key: string; common: CommonRow; compass: Place | null; clues: CluePlace | null };
+
+export const decodeAllPlaces = (): PlaceKeyRow[] =>
+  Object.keys(PLACES).map((key) => {
+    const common = PLACES[key];
+    const compassRow = COMPASS_PLACES[key];
+    const clueRow = CLUES_PLACES[key];
+    return {
+      key,
+      common,
+      compass: compassRow ? decodeCompassPlace(common, compassRow) : null,
+      clues: clueRow ? decodeCluePlace(common, clueRow, CHARADE_PLACES[key] ?? [], PERSONALITY_PLACES[key]) : null,
+    };
+  });
+
+export const decodeCompassPlaces = (): Place[] =>
+  decodeAllPlaces().flatMap((row) => (row.compass ? [row.compass] : []));
+
+export const decodeCluePlaces = (): CluePlace[] => decodeAllPlaces().flatMap((row) => (row.clues ? [row.clues] : []));

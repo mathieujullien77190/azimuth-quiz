@@ -49,15 +49,16 @@ src/
                        # "Distance" de Clues), PlayerTabs (Compass + Clues), RoundCounter et DifficultyBadge
                        # (en-tete des 3 jeux)
   data/                # tous les fichiers .json de donnees vivent ici, meme specifiques a un seul
-                       # jeu (charade.json/wordplay.json n'interessent qu'Indices — la personnalite,
-                       # elle, vit directement dans places.json, voir plus bas —
-                       # comme data/contours/ n'interesse que Silhouette) — data/ n'est PAS reserve
+                       # jeu (charade.json/wordplay.json n'interessent qu'Indices, comme
+                       # data/contours/ n'interesse que Silhouette) — data/ n'est PAS reserve
                        # au partage entre jeux, c'est juste ou vont les donnees. Valeurs partagees
                        # par 2+ jeux (score/geo generiques, cles de stockage app-wide, options de
-                       # partie, palette joueurs...) + data/places/ (lieux Compass+Clues) +
-                       # data/contours/ (codec geometrie Silhouette) + data/theme.ts (tokens UI).
-                       # Les constantes de tuning propres a un seul jeu (score, sliders, valeurs
-                       # par defaut...) vivent plutot dans `games/<jeu>/constants.ts` (voir plus bas)
+                       # partie, palette joueurs...) + data/places/ (lieux Compass+Clues, repartis
+                       # sur 5 petits fichiers cles par un code court — voir "Lieux : 5 petits
+                       # fichiers" plus bas) + data/contours/ (codec geometrie Silhouette) +
+                       # data/theme.ts (tokens UI). Les constantes de tuning propres a un seul jeu
+                       # (score, sliders, valeurs par defaut...) vivent plutot dans
+                       # `games/<jeu>/constants.ts` (voir plus bas)
   games/
     compass/
       screens/         # OnlineGameScreen, SetupScreen, EndScreen
@@ -158,6 +159,34 @@ bord) — seuls les hooks a etat/effet metier sont interdits. Les tests existant
 `OnlineGameScreen` a depuis gagne un `OnlineGameScreen.test.tsx` (comme les deux autres jeux) —
 cette phrase datait d'avant.
 
+### Lieux : 5 petits fichiers, une cle courte partagee
+
+`src/data/places/` n'a plus un seul gros `places.json` : chaque lieu est reparti sur jusqu'a 5
+fichiers, tous des OBJETS indexes par la MEME cle courte (3 lettres, ex. `"par"` pour Paris) —
+`places.json` (identite commune : nom/code/coordonnees/difficulte, TOUS les lieux),
+`compassPlaces.json` (categorie/description/wiki, lieux Compass), `cluesPlaces.json` (position/
+population/climat/altitude/fuseau/aeroport/emojis, lieux Indices), `charadePlaces.json` (syllabes,
+obligatoire pour tout lieu Indices), `personalityPlaces.json` (personnalite, optionnel). Seul
+`data/places/codec.ts` sait faire la jointure (`decodeAllPlaces`/`decodeCompassPlaces`/
+`decodeCluePlaces`, tous les autres imports passent par la — plus aucun consommateur n'importe les
+fichiers de donnees lui-meme).
+
+**Cle** : 3 premieres lettres du nom (minuscule, accents retires). 65% des lieux collisionnent sur
+leur prefixe naturel (verifie sur les vraies donnees, ex. 48 lieux commencent par "san") — resolu
+par priorite (capitale d'abord, puis ville `citiesFr`, puis ville normale, puis le reste des
+categories Compass) : dans un groupe qui collisionne, le palier le plus prioritaire garde le
+prefixe naturel (`"san"` -> Santiago, capitale du Chili, pas une des 22 autres villes "San..."),
+les autres retombent sur la premiere combinaison de 3 lettres encore libre par ordre alphabetique
+(opaque mais deterministe et reproductible). Une fois attribuee, une cle est PERMANENTE : jamais
+reassignee a une regeneration future, meme esprit append-only que `TIMEZONE_CODES` dans `codec.ts`.
+`countries.json`, lui, reste tel quel (deja cle par code ISO a 2 lettres — deja court, unique et
+standard, rien a gagner a le retoucher).
+
+**La cle est opaque** : ouvrir `compassPlaces.json` seul ne dit pas quel lieu est `"par"`. Pour que
+l'edition reste lisible malgre tout, chaque message du journal admin (voir `api/places.ts`,
+`api/charades.ts`) affiche TOUJOURS l'identite humaine (nom + code pays) ET la cle de stockage
+cote a cote (`Paris (FR) [par]`) — jamais besoin de deviner une cle a l'oeil.
+
 ## Domaine : cap et distance
 
 On choisit un cap et on estime la distance parcourue a la surface du globe (`Guess` = `bearing` +
@@ -241,20 +270,20 @@ commentees en francais :
 - **Indices : la charade** (`ClueId` `'charade'`, `helpers/charade.ts`) — une devinette par syllabe du
   nom du lieu, style jeu de societe ("mon premier est...", "mon deuxieme est...", puis le nom epele en
   clair au dernier clic, filet de securite). **Le decoupage en syllabes est PRE-CALCULE et OBLIGATOIRE
-  pour les 922 lieux** : 10e element de chaque `ClueRow` dans `places.json` (`data/places/codec.ts`,
-  `CluePlace.syllables`, jamais optionnel contrairement au `contour` de `CountryRow` cote Silhouette) —
-  `charadeFor(place)` n'est plus qu'une LECTURE directe (`place.syllables`), rien n'est jamais calcule a
-  l'execution dans l'appli. Peut etre un tableau vide (certains noms n'ont aucune syllabe utilisable, ex.
-  "Bălți"). Rempli une fois pour toutes par `scripts/generateCharades.mjs` (`npm run generate:charades`,
-  hors tests/CI/app livree) via `helpers/syllabify.ts` (heuristique francaise ecrite a la main : groupes de
-  voyelles = un seul son, cesure V-CV/VC-CV selon 1 ou 2+ consonnes entre deux groupes, "n"/"m" nasalise
-  repli dans la voyelle qui precede sauf s'il est double — imparfaite sur les cas rares, documentee dans le
-  fichier plutot que chassee a la perfection ; chaque mot d'un nom compose/a tiret/a espace est syllabe
-  seul, jamais fusionne avec le suivant), portee a la main dans le script (Node ESM sans etape de build,
-  meme raison que `generateContours.mjs` portant sa propre geometrie) — le script ne fait que COMBLER un
-  lieu qui n'a pas encore de decoupage (ajoute au 10e element de sa ligne et reecrit `places.json`) ; un
-  lieu qui en a deja un (heuristique ou corrige a la main) n'est jamais retouche. Correction a la main
-  directement sur la ligne du lieu dans `places.json` (via l'admin, `CharadeEditor`, voir plus bas).
+  pour les 922 lieux** : `src/data/places/charadePlaces.json` (voir "Lieux : 5 petits fichiers" plus haut,
+  `CluePlace.syllables`, toujours present pour un lieu Indices, contrairement a `personality` qui est
+  optionnel) — `charadeFor(place)` n'est plus qu'une LECTURE directe (`place.syllables`), rien n'est jamais
+  calcule a l'execution dans l'appli. Peut etre un tableau vide (certains noms n'ont aucune syllabe
+  utilisable, ex. "Bălți"). Rempli une fois pour toutes par `scripts/generateCharades.mjs` (`npm run
+  generate:charades`, hors tests/CI/app livree) via `helpers/syllabify.ts` (heuristique francaise ecrite a
+  la main : groupes de voyelles = un seul son, cesure V-CV/VC-CV selon 1 ou 2+ consonnes entre deux groupes,
+  "n"/"m" nasalise repli dans la voyelle qui precede sauf s'il est double — imparfaite sur les cas rares,
+  documentee dans le fichier plutot que chassee a la perfection ; chaque mot d'un nom compose/a tiret/a
+  espace est syllabe seul, jamais fusionne avec le suivant), portee a la main dans le script (Node ESM sans
+  etape de build, meme raison que `generateContours.mjs` portant sa propre geometrie) — le script ne fait
+  que COMBLER une cle presente dans `cluesPlaces.json` (un lieu Indices) mais absente de
+  `charadePlaces.json` ; une cle qui en a deja un (heuristique ou corrige a la main) n'est jamais retouchee.
+  Correction a la main directement dans `charadePlaces.json` (via l'admin, `CharadeEditor`, voir plus bas).
   **La devinette, elle, reste GLOBALE**,
   independamment de ce decoupage : `riddleFor(syllabe)` la cherche par le texte de la syllabe elle-meme
   (`normalizeSyllable` : minuscule, et "a"/"à"/"â" confondus — vrais homophones en francais, contrairement
@@ -275,14 +304,15 @@ commentees en francais :
   "Syllabes" (`SyllablesView`, une ligne par syllabe DISTINCTE toutes places confondues, avec quelques
   lieux d'exemple pour le contexte en curant, et son propre "×" par ligne pour vider une devinette) n'edite
   que la devinette globale. Rien ecrit sur disque (meme pattern journal que le reste de l'admin) : editer
-  le decoupage logue le tableau complet resultant du lieu, a recopier a la main comme 10e element de sa
-  ligne dans `places.json` ; editer la devinette logue sa cle normalisee, a recopier dans
-  `charadeCuration.json` puis `npm run generate:charades` pour regenerer le dictionnaire complet.
+  le decoupage logue le tableau complet resultant du lieu (cle courte + identite humaine, voir "Lieux : 5
+  petits fichiers" plus haut), a recopier a la main dans `charadePlaces.json` ; editer la devinette logue sa
+  cle normalisee, a recopier dans `charadeCuration.json` puis `npm run generate:charades` pour regenerer le
+  dictionnaire complet.
 - **Indices : une personnalite liee au lieu** (`ClueId` `'personality'`, `helpers/personality.ts`) — un seul
   palier (nom + description courte optionnelle, ex. "footballeur"), jamais invente : uniquement des faits
-  Wikipedia (nee/tres fortement identifiee au lieu). Baquee directement dans `places.json` — 11e (et
-  dernier) element OPTIONNEL du `ClueRow` (`[nom, description]`, absent pour la quasi-totalite des lieux,
-  curee et editee a la main directement sur la ligne du lieu concerne, aucun fichier/script a part). Un
+  Wikipedia (nee/tres fortement identifiee au lieu). Dans `src/data/places/personalityPlaces.json`
+  (`[nom, description]`, absent pour la quasi-totalite des lieux, curee et editee a la main directement dans
+  ce fichier, aucun autre fichier/script a part). Un
   lieu sans personnalite curee n'offre jamais cet indice (`cluesFor` le retire, jamais de case vide).
   Premier lot : 41 lieux (23 capitales + 18 villes `citiesFr`), verifie a la main (recherches web
   ponctuelles + faits bien etablis) — le reste des ~880 lieux Indices n'a rien, a completer plus tard.

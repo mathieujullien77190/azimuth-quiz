@@ -1,13 +1,14 @@
-import { decodeCompassPlace, decodeCluePlace, type MergedPlaces } from '@/data/places/codec';
-import placesData from '@/data/places/places.json';
+import { decodeAllPlaces } from '@/data/places/codec';
 import type { Difficulty, CluePlace, Place } from '@/types';
 
 import { logChange } from '../changelog';
 
 /** A place card: the common identity, plus each game's data when this place is in it
- * (either one can be absent — see `codec.ts`). */
+ * (either one can be absent — see `codec.ts`). `key` is the short code the 5 place files are
+ * indexed by (e.g. `"par"` for Paris) — opaque, so every log message below prints it ALONGSIDE
+ * the human identity rather than instead of it. */
 export type PlaceRow = {
-  index: number;
+  key: string;
   name: string;
   code: string;
   coordinates: { latitude: number; longitude: number };
@@ -15,18 +16,16 @@ export type PlaceRow = {
   clues: CluePlace | null;
 };
 
-const ENTRIES = placesData as unknown as MergedPlaces;
-
-/** Reads the bundled `places.json` (no network, no backend — see changelog.ts): kept `async` so
+/** Reads the bundled place files (no network, no backend — see changelog.ts): kept `async` so
  * call sites reading it don't need to change just because this no longer fetches anything. */
 export const fetchPlaces = async (): Promise<PlaceRow[]> =>
-  ENTRIES.map(([common, compassRow, cluesRow], index) => ({
-    index,
+  decodeAllPlaces().map(({ key, common, compass, clues }) => ({
+    key,
     name: common[0],
     code: common[1],
     coordinates: { latitude: common[2], longitude: common[3] },
-    compass: compassRow ? decodeCompassPlace(common, compassRow) : null,
-    clues: cluesRow ? decodeCluePlace(common, cluesRow) : null,
+    compass,
+    clues,
   }));
 
 export type CompassPatch = Partial<Pick<Place, 'category' | 'description'>>;
@@ -37,7 +36,7 @@ export type CluesPatch = Partial<Pick<CluePlace, 'population' | 'climateEmoji' |
 
 const fmt = (value: unknown): string => (Array.isArray(value) ? value.join(' ') : String(value ?? '(vide)'));
 
-const identity = (row: Pick<PlaceRow, 'name' | 'code'>): string => `${row.name} (${row.code})`;
+const identity = (row: Pick<PlaceRow, 'name' | 'code' | 'key'>): string => `${row.name} (${row.code}) [${row.key}]`;
 
 export const saveCompass = async (row: PlaceRow, patch: CompassPatch): Promise<Place> => {
   const current = row.compass!;

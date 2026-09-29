@@ -2,17 +2,17 @@
 // Dev-only generation tool (`npm run generate:charades`) — NOT part of `npm test`, CI, or the
 // shipped app in any other way than the JSON files it (may) write. Two jobs:
 //
-// 1) Every Clue place's syllable split is MANDATORY on its own `ClueRow` (see
+// 1) Every Clue place's syllable split is MANDATORY in `src/data/places/charadePlaces.json` (see
 //    `data/places/codec.ts`'s doc comment) — nothing is ever computed live in the app. This
-//    script's first job is to keep that invariant true: any place in `places.json` still missing
-//    its syllable split (freshly added, or the field never backfilled) gets one appended — the
-//    live French syllabifier heuristic, ported here by hand from
+//    script's first job is to keep that invariant true: any key present in `cluesPlaces.json`
+//    (a Clue place) but still missing from `charadePlaces.json` gets one filled in — the live
+//    French syllabifier heuristic, ported here by hand from
 //    `src/games/clues/helpers/syllabify.ts` (this script runs under plain Node ESM with no build
 //    step — same reasoning as `generateContours.mjs` porting its own board math, keep the two in
-//    sync by hand if that file's rules ever change) — and `places.json` is rewritten. A place
-//    already carrying a split (whether heuristic or hand-corrected) is left untouched: correcting
-//    one is a hand edit directly on that place's row in `places.json`, not something this script
-//    would ever override.
+//    sync by hand if that file's rules ever change) — and `charadePlaces.json` is rewritten. A
+//    key already carrying a split (whether heuristic or hand-corrected) is left untouched:
+//    correcting one is a hand edit directly on that key's line in `charadePlaces.json`, not
+//    something this script would ever override.
 //
 // 2) `src/data/charade.json`, the riddle dictionary: COMPLETE — every syllable that appears on
 //    ANY place's split is a key, its curated riddle (`scripts/charadeCuration.json`, a flat
@@ -30,7 +30,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const cluesPlacesPath = path.join(rootDir, 'src/data/places/cluesPlaces.json');
 const placesPath = path.join(rootDir, 'src/data/places/places.json');
+const charadePlacesPath = path.join(rootDir, 'src/data/places/charadePlaces.json');
 const riddleCurationPath = path.join(rootDir, 'scripts/charadeCuration.json');
 const riddleOutputPath = path.join(rootDir, 'src/data/charade.json');
 
@@ -83,36 +85,33 @@ const syllabify = (name) => {
 // "e" family — "e"/"é"/"è" are genuinely different sounds, left alone on purpose).
 const normalize = (syllable) => syllable.toLowerCase().replace(/[àâ]/g, 'a');
 
-// --- 1) Top up any place still missing its mandatory syllable split ---------------------------
+// --- 1) Top up any Clue place still missing its mandatory syllable split ----------------------
 
-const entries = JSON.parse(readFileSync(placesPath, 'utf8'));
+const cluesPlaces = JSON.parse(readFileSync(cluesPlacesPath, 'utf8'));
+const places = JSON.parse(readFileSync(placesPath, 'utf8'));
+const charadePlaces = JSON.parse(readFileSync(charadePlacesPath, 'utf8'));
 
 let toppedUp = 0;
-const realSyllables = new Set();
-let placeCount = 0;
-let totalSyllables = 0;
+for (const key of Object.keys(cluesPlaces)) {
+  if (key in charadePlaces) continue;
+  const [name] = places[key];
+  charadePlaces[key] = syllabify(name).map((s) => s.toLowerCase());
+  toppedUp += 1;
+}
 
-const nextEntries = entries.map(([common, compass, clues]) => {
-  if (!clues) return [common, compass, clues];
-  placeCount += 1;
-  let nextClues = clues;
-  if (clues.length < 10) {
-    const [name] = common;
-    const syllables = syllabify(name).map((s) => s.toLowerCase());
-    nextClues = [...clues, syllables];
-    toppedUp += 1;
-  }
-  nextClues[9].forEach((s) => {
+if (toppedUp > 0) {
+  const lines = Object.entries(charadePlaces).map(([k, v]) => '  ' + JSON.stringify(k) + ':' + JSON.stringify(v));
+  writeFileSync(charadePlacesPath, '{\n' + lines.join(',\n') + '\n}\n', 'utf8');
+  console.log(`Topped up ${toppedUp} place(s) missing their syllable split.`);
+}
+
+const realSyllables = new Set();
+let totalSyllables = 0;
+for (const syllables of Object.values(charadePlaces)) {
+  syllables.forEach((s) => {
     realSyllables.add(normalize(s));
     totalSyllables += 1;
   });
-  return [common, compass, nextClues];
-});
-
-if (toppedUp > 0) {
-  const lines = nextEntries.map((row) => '  ' + JSON.stringify(row));
-  writeFileSync(placesPath, '[\n' + lines.join(',\n') + '\n]\n', 'utf8');
-  console.log(`Topped up ${toppedUp} place(s) missing their syllable split.`);
 }
 
 // --- 2) Complete riddle dictionary, every real syllable a key ---------------------------------
@@ -152,7 +151,7 @@ writeFileSync(riddleOutputPath, JSON.stringify(riddleOutput) + '\n', 'utf8');
 
 const curatedCount = Object.values(riddleOutput).filter((riddle) => riddle !== null).length;
 console.log('--- generateCharades summary ---');
-console.log(`Clue places: ${placeCount}, ${totalSyllables} syllable occurrences, ${realSyllables.size} distinct.`);
+console.log(`Clue places: ${Object.keys(cluesPlaces).length}, ${totalSyllables} syllable occurrences, ${realSyllables.size} distinct.`);
 console.log(`Syllables curated: ${curatedCount} / ${realSyllables.size} distinct (${((curatedCount / realSyllables.size) * 100).toFixed(1)}%).`);
 if (riddleOrphaned.length > 0) {
   console.log(`Curated riddle keys matching no real syllable — likely a typo, kept anyway: ${riddleOrphaned.join(', ')}`);

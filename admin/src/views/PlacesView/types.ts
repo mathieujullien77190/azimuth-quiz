@@ -10,4 +10,4 @@ export type Field =
   | 'airport'
   | 'emojis';
 
-export type SaveState = { index: number; field: Field; status: 'saving' | 'saved' | 'error'; message?: string };
+export type SaveState = { key: string; field: Field; status: 'saving' | 'saved' | 'error'; message?: string };

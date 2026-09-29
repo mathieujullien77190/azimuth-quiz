@@ -21,10 +21,12 @@ import { fileURLToPath } from 'node:url';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const placesPath = path.join(rootDir, 'src/data/places/places.json');
+const cluesPlacesPath = path.join(rootDir, 'src/data/places/cluesPlaces.json');
 const curationPath = path.join(rootDir, 'scripts/wordplayCuration.json');
 const outputPath = path.join(rootDir, 'src/data/wordplay.json');
 
-const entries = JSON.parse(readFileSync(placesPath, 'utf8'));
+const places = JSON.parse(readFileSync(placesPath, 'utf8'));
+const cluesPlaces = JSON.parse(readFileSync(cluesPlacesPath, 'utf8'));
 
 let curation = {};
 try {
@@ -33,11 +35,12 @@ try {
   console.log(`No ${curationPath} yet — nothing to ship.`);
 }
 
+// `code|name`, NOT the short storage key the 5 place files share — wordplay's curation stays
+// human-typed by hand (see this file's own doc comment), so it keeps the readable key.
 const key = (code, name) => `${code}|${name}`;
 const knownKeys = new Set();
-for (const [common, , clues] of entries) {
-  if (!clues) continue;
-  const [name, code] = common;
+for (const placeKey of Object.keys(cluesPlaces)) {
+  const [name, code] = places[placeKey];
   knownKeys.add(key(code, name));
 }
 
