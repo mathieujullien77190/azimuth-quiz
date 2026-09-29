@@ -24,13 +24,14 @@ const bestCell = (best: RoundBest | null, alone: boolean): RecapCell => {
  * under it — the round-by-round recap of who was best at the heading and at the distance (the points won
  * when playing alone), and the button that leaves the game.
  */
-export const EndScreen = ({ players, records, totals, onMenu }: EndScreenProps) => {
+export const EndScreen = ({ players, records, totals, localName, onMenu }: EndScreenProps) => {
   const t = useTranslation();
   const alone = players.length === 1;
 
   return (
     <FinalStandings
       entries={players.map((player, index) => ({ name: player.name, total: totals[index] ?? 0, color: player.color }))}
+      localName={localName}
       title={t.endScreen.title}
     >
       <RoundsRecap

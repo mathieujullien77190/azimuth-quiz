@@ -139,6 +139,9 @@ export type Translations = {
     recapTitle: string;
     menu: string;
     winner: (name: string) => string;
+    /** Same as `winner`, but for the local device's own player — no need to name them to
+     * themselves (see `FinalStandings`' `localName`). */
+    youWin: string;
     tie: (names: string) => string;
     /** Connector word between two tied names ("et" / "and"). */
     and: string;

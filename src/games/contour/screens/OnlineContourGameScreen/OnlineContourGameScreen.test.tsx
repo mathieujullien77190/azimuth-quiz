@@ -104,6 +104,12 @@ describe('OnlineContourGameScreen — the end', () => {
     await fireEvent.press(getByText(t.endScreen.menu));
     expect((mockGame.handleQuit as jest.Mock).mock.calls).toHaveLength(1);
   });
+
+  it('copes with this device missing from the players list', async () => {
+    setGame({ gameState: gameState({ screen: 'end', totalScores: { zoe: 900 } }), localUid: 'ghost' });
+    const { getByText } = await renderScreen();
+    expect(getByText(t.endScreen.title)).toBeTruthy();
+  });
 });
 
 describe('OnlineContourGameScreen — after the last round', () => {

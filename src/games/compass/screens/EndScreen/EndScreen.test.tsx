@@ -38,7 +38,7 @@ describe('EndScreen — alone', () => {
 
   it('shows the score, and the points won on each criterion per round', async () => {
     const { getByText, getAllByText, queryByText } = await render(
-      <EndScreen onMenu={jest.fn()} players={[alice]} records={records} totals={[900]} />,
+      <EndScreen localName="" onMenu={jest.fn()} players={[alice]} records={records} totals={[900]} />,
     );
     expect(getByText('Classement final')).toBeTruthy();
     expect(getByText(`${formatNumber(900)} pts`)).toBeTruthy();
@@ -52,7 +52,7 @@ describe('EndScreen — alone', () => {
 
   it('defaults the score to 0 when totals is empty', async () => {
     const { getByText } = await render(
-      <EndScreen onMenu={jest.fn()} players={[alice]} records={records} totals={[]} />,
+      <EndScreen localName="" onMenu={jest.fn()} players={[alice]} records={records} totals={[]} />,
     );
     expect(getByText(`${formatNumber(0)} pts`)).toBeTruthy();
   });
@@ -60,7 +60,7 @@ describe('EndScreen — alone', () => {
   it('goes home', async () => {
     const onMenu = jest.fn();
     const { getByText } = await render(
-      <EndScreen onMenu={onMenu} players={[alice]} records={records} totals={[900]} />,
+      <EndScreen localName="" onMenu={onMenu} players={[alice]} records={records} totals={[900]} />,
     );
     await fireEvent.press(getByText('Accueil'));
     expect(onMenu).toHaveBeenCalledTimes(1);
@@ -77,7 +77,7 @@ describe('EndScreen — several players', () => {
 
   it('announces the winner and lists the totals with medals', async () => {
     const { getByText } = await render(
-      <EndScreen onMenu={jest.fn()} players={[alice, bob]} records={records} totals={[600, 800]} />,
+      <EndScreen localName="" onMenu={jest.fn()} players={[alice, bob]} records={records} totals={[600, 800]} />,
     );
     expect(getByText('Bob gagne !')).toBeTruthy();
     expect(getByText(`${formatNumber(800)} pts`)).toBeTruthy();
@@ -85,9 +85,17 @@ describe('EndScreen — several players', () => {
     expect(getByText('🥈')).toBeTruthy();
   });
 
+  it('says "Vous gagnez !" instead of naming the winner, when this device is them', async () => {
+    const { getByText, queryByText } = await render(
+      <EndScreen localName="Bob" onMenu={jest.fn()} players={[alice, bob]} records={records} totals={[600, 800]} />,
+    );
+    expect(getByText('Vous gagnez !')).toBeTruthy();
+    expect(queryByText('Bob gagne !')).toBeNull();
+  });
+
   it('shows, round by round, who was best at the heading and at the distance', async () => {
     const { getAllByText, getByText } = await render(
-      <EndScreen onMenu={jest.fn()} players={[alice, bob]} records={records} totals={[600, 800]} />,
+      <EndScreen localName="" onMenu={jest.fn()} players={[alice, bob]} records={records} totals={[600, 800]} />,
     );
     expect(getByText('Manche par manche')).toBeTruthy();
     expect(getByText('Direction')).toBeTruthy();
@@ -103,7 +111,7 @@ describe('EndScreen — several players', () => {
 
   it('shows a tie as such', async () => {
     const { getByText } = await render(
-      <EndScreen onMenu={jest.fn()} players={[alice, bob]} records={records} totals={[800, 800]} />,
+      <EndScreen localName="" onMenu={jest.fn()} players={[alice, bob]} records={records} totals={[800, 800]} />,
     );
     expect(getByText('Égalité : Alice et Bob')).toBeTruthy();
   });
@@ -114,7 +122,7 @@ describe('EndScreen — several players', () => {
       { place: place('Paris', 'FR'), results: [result(100, 100), result(200, 200), result(900, 900)] },
     ];
     const { getAllByText, queryByText } = await render(
-      <EndScreen onMenu={jest.fn()} players={[alice, bob]} records={withLeaver} totals={[100, 200]} />,
+      <EndScreen localName="" onMenu={jest.fn()} players={[alice, bob]} records={withLeaver} totals={[100, 200]} />,
     );
     expect(getAllByText('Bob')).toHaveLength(3);
     expect(getAllByText('+200').length).toBeGreaterThan(0);

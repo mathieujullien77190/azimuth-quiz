@@ -134,6 +134,12 @@ describe('OnlineGameScreen — the end', () => {
     await fireEvent.press(getByText(t.endScreen.menu));
     expect(onQuit).toHaveBeenCalledTimes(1);
   });
+
+  it('copes with this device missing from the (frozen) players list', async () => {
+    setGame({ gameState: gameState({ screen: 'end' }), records: [record], localUid: 'ghost' });
+    const { getByText } = await renderScreen();
+    expect(getByText(t.endScreen.title)).toBeTruthy();
+  });
 });
 
 describe('OnlineGameScreen — after the last round', () => {

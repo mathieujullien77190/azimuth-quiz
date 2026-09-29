@@ -41,6 +41,7 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
           total: gameState.totalScores[player.uid] ?? 0,
           color: player.color,
         }))}
+        localName={onlinePlayers.find((player) => player.uid === localUid)?.name ?? ''}
         title={t.endScreen.title}
       >
         <Button label={t.endScreen.menu} onPress={game.handleQuit} />

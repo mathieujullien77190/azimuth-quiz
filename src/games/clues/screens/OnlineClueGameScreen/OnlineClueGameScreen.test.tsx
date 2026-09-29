@@ -56,7 +56,7 @@ const setGame = (overrides: Record<string, unknown> = {}) => {
     remaining: 24,
     guessText: '',
     setGuessText: jest.fn(),
-    lastWrong: null,
+    wrongGuesserName: null,
     pickClue: jest.fn(),
     submitGuess: jest.fn(),
     giveUp: jest.fn(),
@@ -109,6 +109,12 @@ describe('OnlineClueGameScreen — the end', () => {
     await fireEvent.press(getByText(t.endScreen.menu));
     expect((mockGame.handleQuit as jest.Mock).mock.calls).toHaveLength(1);
   });
+
+  it('copes with this device missing from the players list', async () => {
+    setGame({ gameState: gameState({ screen: 'end', totalScores: { zoe: 30 } }), localUid: 'ghost' });
+    const { getByText } = await renderScreen();
+    expect(getByText(t.endScreen.title)).toBeTruthy();
+  });
 });
 
 describe('OnlineClueGameScreen — after the last round', () => {
@@ -155,7 +161,7 @@ describe('OnlineClueGameScreen — the turn-holder', () => {
   });
 
   it('shows the previous miss', async () => {
-    setGame({ lastWrong: 'Zoé' });
+    setGame({ wrongGuesserName: 'Zoé' });
     const { getByText } = await renderScreen();
     expect(getByText(t.cluesGame.missed('Zoé', '10'))).toBeTruthy();
   });
@@ -167,12 +173,18 @@ describe('OnlineClueGameScreen — the turn-holder', () => {
   });
 
   describe('with the name skeleton', () => {
-    it('shows the empty slots, and does not cap the text while the length is unknown', async () => {
+    it('shows the clue’s first letter before anything is typed, and does not cap the text while the length is unknown', async () => {
       setGame({ skeletonGroups: [['P', null, null]], skeletonLengthKnown: false });
       const { getByText, getByPlaceholderText } = await renderScreen();
       expect(getByText('P')).toBeTruthy();
       await fireEvent.changeText(getByPlaceholderText(t.cluesGame.guessPlaceholder), 'Parisiens');
       expect(mockGame.setGuessText).toHaveBeenCalledWith('Parisiens');
+    });
+
+    it('boxes the whole typed word, live and uppercased, past the clue’s single lone slot', async () => {
+      setGame({ skeletonGroups: [['D', null, null]], skeletonLengthKnown: false, guessText: 'dijon' });
+      const { getAllByText } = await renderScreen();
+      for (const letter of ['D', 'I', 'J', 'O', 'N']) expect(getAllByText(letter).length).toBeGreaterThan(0);
     });
 
     it('shows a hyphen of the name in place, outside of any letter slot', async () => {
@@ -213,10 +225,10 @@ describe("OnlineClueGameScreen — somebody else's turn", () => {
     expect(queryByText(t.cluesGame.giveUp)).toBeNull();
   });
 
-  it('shows what the turn-holder is typing, live, plainly when no letter clue is out yet', async () => {
-    setGame({ isMyTurn: false, gameState: gameState({ turnUid: 'max' }), typedByActivePlayer: 'Pari' });
+  it('shows what the turn-holder is typing, live, boxed and uppercased, even with no letter clue out yet', async () => {
+    setGame({ isMyTurn: false, gameState: gameState({ turnUid: 'max' }), typedByActivePlayer: 'pari' });
     const { getByText } = await renderScreen();
-    expect(getByText('Pari')).toBeTruthy();
+    for (const letter of ['P', 'A', 'R', 'I']) expect(getByText(letter)).toBeTruthy();
   });
 
   it('overlays it onto the letter clue skeleton once one is out, same as the turn-holder sees for themselves', async () => {

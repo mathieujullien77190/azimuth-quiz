@@ -5,13 +5,10 @@ import { translations } from '@/i18n/translations';
 import { localizedArgs } from '@/storybook/localized';
 import { source } from '@/storybook/source';
 
-import Button from '@/components/ui/Button';
-
 import { FinalStandings } from './FinalStandings';
 import multiplayerCode from './Multiplayer.source.md?raw';
 import fourPlayersCode from './FourPlayers.source.md?raw';
 import soloCode from './Solo.source.md?raw';
-import childrenCode from './WithChildren.source.md?raw';
 import tieCode from './Tie.source.md?raw';
 
 const textArgs = (t: Translations) => ({ title: t.endScreen.title });
@@ -68,17 +65,4 @@ export const Tie: Story = {
 export const Solo: Story = {
   parameters: source(soloCode),
   args: { entries: [{ name: 'Zoé', total: 1250 }] },
-};
-
-/** What a game adds under the scores comes as `children` — typically the button that leaves the game. */
-export const WithChildren: Story = {
-  name: 'With a button',
-  parameters: source(childrenCode),
-  args: {
-    entries: [
-      { name: 'Zoé', total: 1250, color: '#EF4444' },
-      { name: 'Max', total: 2100, color: '#3B82F6' },
-    ],
-    children: <Button label="Accueil" onPress={() => {}} />,
-  },
 };

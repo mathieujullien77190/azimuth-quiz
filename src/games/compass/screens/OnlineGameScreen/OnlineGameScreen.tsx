@@ -1,6 +1,9 @@
+import { useState } from 'react';
+
 import { PLAYER_COLORS } from '@/data';
 import { MAX_SURFACE_DISTANCE_KM } from '@/games/compass/constants';
 import { bearingDeg, distanceKm as computeDistanceKm } from '@/helpers';
+import type { OnlinePlayer } from '@/helpers/roomPlayers';
 import { useTranslation } from '@/i18n';
 import { useTheme } from '@/themes';
 
@@ -33,6 +36,22 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   // never depends on which phase we're in.
   const { scrollRef, onCap, goToCap, goToDistance, handleScroll } = useSectionScroll();
 
+  // The final standings, frozen the first time they're reached: "Accueil" only navigates back
+  // (`router.back()`, see the route) rather than disconnecting, so the room's live subscriptions
+  // stay open and reactive for as long as this screen is still fading out — without this, a
+  // trailing update (another player also leaving...) could visibly reorder/pop a row mid-fade.
+  // Captured while rendering (React's "reset/derive state from a prop" pattern, same one
+  // `useGuessDraft` uses) rather than in an effect, so there's no gap where the live values would
+  // flash before the freeze takes hold.
+  const [frozenEnd, setFrozenEnd] = useState<{
+    players: OnlinePlayer[];
+    records: RoundRecord[];
+    totals: number[];
+  } | null>(null);
+  if (game.gameState.screen === 'end' && frozenEnd === null) {
+    setFrozenEnd({ players: game.onlinePlayers, records: game.records, totals: game.totals });
+  }
+
   // The host just quit: the store is already reset, and this screen is only on its way out. Not the
   // "loading" splash below — that one is for a room that hasn't delivered its state yet.
   if (!game.connected) return null;
@@ -48,8 +67,13 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
 
   // The final standings come first: once the last round is over `roundIndex` points past the rounds, so
   // there is no round left to load — reading that as "not ready yet" showed the loading splash instead.
+  // `frozenEnd` is still null on this very first render reaching 'end' (the `setFrozenEnd` call above
+  // only takes effect from the next render on) — the live values are identical at this instant, so
+  // falling back to them here is not a second source of truth, just this one render's gap.
   if (gameState.screen === 'end') {
-    return <EndScreen onMenu={onQuit} players={onlinePlayers} records={game.records} totals={totals} />;
+    const end = frozenEnd ?? { players: onlinePlayers, records: game.records, totals };
+    const endLocalName = end.players.find((player) => player.uid === localUid)?.name ?? '';
+    return <EndScreen localName={endLocalName} onMenu={onQuit} players={end.players} records={end.records} totals={end.totals} />;
   }
 
   if (localUid === null || roomSettings === null || place === undefined || gameState.origin === null) {

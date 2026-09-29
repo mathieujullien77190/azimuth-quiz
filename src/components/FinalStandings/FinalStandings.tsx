@@ -17,12 +17,13 @@ import { createStyles } from './styles';
  * there's more than one player, the ranked scores (medals for the podium), then whatever the game adds
  * as `children` (Compass' rank card and round-by-round recap, the button that leaves the game...).
  */
-export const FinalStandings = ({ title, entries, children }: FinalStandingsProps) => {
+export const FinalStandings = ({ title, entries, localName, children }: FinalStandingsProps) => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
 
   const ranked = rankEntries(entries);
   const winners = ranked.filter((entry) => entry.rank === 1).map((entry) => entry.name);
+  const iWon = winners.length === 1 && winners[0] === localName;
 
   return (
     <Screen>
@@ -30,7 +31,11 @@ export const FinalStandings = ({ title, entries, children }: FinalStandingsProps
 
       {ranked.length > 1 && (
         <Text style={styles.banner}>
-          {winners.length > 1 ? t.endScreen.tie(winners.join(` ${t.endScreen.and} `)) : t.endScreen.winner(winners[0])}
+          {winners.length > 1
+            ? t.endScreen.tie(winners.join(` ${t.endScreen.and} `))
+            : iWon
+              ? t.endScreen.youWin
+              : t.endScreen.winner(winners[0])}
         </Text>
       )}
 

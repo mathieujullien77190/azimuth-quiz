@@ -49,6 +49,7 @@ export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps
           total: gameState.totalScores[player.uid] ?? 0,
           color: player.color,
         }))}
+        localName={onlinePlayers.find((player) => player.uid === localUid)?.name ?? ''}
         title={t.endScreen.title}
       >
         <Button label={t.endScreen.menu} onPress={game.handleQuit} />
@@ -82,7 +83,7 @@ export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps
       isLastRound={isLastRound}
       iWon={gameState.roundWinnerUid !== null && gameState.roundWinnerUid === localUid}
       isMyTurn={game.isMyTurn}
-      lastWrong={game.lastWrong}
+      wrongGuesserName={game.wrongGuesserName}
       onChangeGuessText={game.setGuessText}
       onGiveUp={game.giveUp}
       onNextRound={game.goToNextRound}
