@@ -1,6 +1,6 @@
 {
   "name": "azimuth-quiz",
-  "version": "2.39.0",
+  "version": "2.40.0",
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/metro-runtime": "~57.0.16",
@@ -49,7 +49,10 @@
     "test:coverage": "jest --coverage",
     "admin": "node scripts/admin.mjs",
     "storybook": "node scripts/storybook.mjs",
-    "generate:contours": "node scripts/generateContours.mjs"
+    "generate:contours": "node scripts/generateContours.mjs",
+    "generate:charades": "node scripts/generateCharades.mjs",
+    "generate:personalities": "node scripts/generatePersonalities.mjs",
+    "generate:wordplay": "node scripts/generateWordplay.mjs"
   },
   "private": true,
   "jest": {
