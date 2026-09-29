@@ -9,12 +9,12 @@ import { allSyllableRows, filterSyllableRows } from './helpers';
 import type { SyllableRow } from './types';
 
 /** One syllable's riddle, editable — click the text, it becomes an input, blur/Enter saves
- * (`EditableValue`, same as everywhere else in the admin). Its own "Action" column always has a
- * "×" (`DeleteX`, same as every deletable row elsewhere in the admin — consistent whether or not
- * this particular syllable has anything curated yet): a no-op when there's nothing to clear, the
- * same result as editing the text to blank otherwise. The syllable itself isn't editable here
- * (it's the dictionary's own key, always the live `syllabify` output — see `helpers/charade.ts`'s
- * own doc comment); the examples are just context, read-only. */
+ * (`EditableValue`, same as everywhere else in the admin), or the "×" clears it in one action
+ * (same result as editing to blank, quicker than select-all) — shown only when there's a riddle
+ * to clear; a syllable with nothing curated yet has nothing to delete, so no "×" (same as every
+ * other deletable row in the admin: it only appears when it would actually do something). The
+ * syllable itself isn't editable here (it's the dictionary's own key, always the live `syllabify`
+ * output — see `helpers/charade.ts`'s own doc comment); the examples are just context, read-only. */
 const Row = ({ row, onSave, saveFlag }: { row: SyllableRow; onSave: (next: string) => void; saveFlag: React.ReactNode }) => (
   <tr>
     <td className="syllable-cell">{row.syllable}</td>
@@ -28,12 +28,7 @@ const Row = ({ row, onSave, saveFlag }: { row: SyllableRow; onSave: (next: strin
       />
     </td>
     <td className="muted">{row.examples.join(', ')}</td>
-    <td>
-      <DeleteX
-        name={`la charade de « ${row.syllable} »`}
-        onDelete={() => (row.riddle !== null ? Promise.resolve(onSave('')) : Promise.resolve())}
-      />
-    </td>
+    <td>{row.riddle !== null && <DeleteX name={`la charade de « ${row.syllable} »`} onDelete={() => Promise.resolve(onSave(''))} />}</td>
   </tr>
 );
 
