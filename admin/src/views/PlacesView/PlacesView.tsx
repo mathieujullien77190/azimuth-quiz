@@ -377,7 +377,7 @@ export const PlacesView = () => {
                 ) : (
                   <p className="absent">Absent d’Clues</p>
                 )}
-                {row.clues && expandedCharadeKey === row.key && <CharadeEditor initialPlace={row.clues} placeKey={row.key} />}
+                {row.clues && expandedCharadeKey === row.key && <CharadeEditor initialPlace={row.clues} />}
                 {row.clues && expandedWordplayKey === row.key && <WordplayEditor initialPlace={row.clues} />}
               </div>
             </div>

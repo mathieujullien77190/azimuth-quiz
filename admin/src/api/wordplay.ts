@@ -6,18 +6,18 @@ import { DIFFICULTY_LABELS } from '../constants';
 
 /** Same no-backend, journal-only pattern as every other admin edit (see `changelog.ts`,
  * `api/charades.ts`) — nothing here is written to `scripts/wordplayCuration.json`, every change
- * just appends a line to copy over by hand. */
-const identity = (place: Pick<CluePlace, 'name' | 'code'>): string => `${place.name} (${place.code})`;
+ * just appends a line to copy over by hand. Logs the human identity AND `place.key` (the actual
+ * curation key, opaque on its own — see `data/places/codec.ts`'s doc comment) side by side. */
+const identity = (place: Pick<CluePlace, 'name' | 'code' | 'key'>): string => `${place.name} (${place.code}) [${place.key}]`;
 
 /** `place`'s wordplay entry to edit — unlike the game's own `wordplayFor` (which is `null` for an
  * uncurated place, so the clue is never offered), the admin always has something to start typing
  * into: an empty sentence until curated by hand, defaulting to 'intermediate' difficulty (same
  * default `scripts/generateWordplay.mjs` falls back to for a missing/invalid value). */
-export const wordplayEntryFor = (place: Pick<CluePlace, 'name' | 'code'>): WordplayEntry =>
-  wordplayFor(place) ?? { sentence: '', difficulty: 'intermediate' };
+export const wordplayEntryFor = (place: Pick<CluePlace, 'key'>): WordplayEntry => wordplayFor(place) ?? { sentence: '', difficulty: 'intermediate' };
 
 export const saveWordplaySentence = async (
-  place: Pick<CluePlace, 'name' | 'code'>,
+  place: Pick<CluePlace, 'name' | 'code' | 'key'>,
   entry: WordplayEntry,
   next: string,
 ): Promise<WordplayEntry> => {
@@ -27,7 +27,7 @@ export const saveWordplaySentence = async (
 };
 
 export const saveWordplayDifficulty = async (
-  place: Pick<CluePlace, 'name' | 'code'>,
+  place: Pick<CluePlace, 'name' | 'code' | 'key'>,
   entry: WordplayEntry,
   next: Difficulty,
 ): Promise<WordplayEntry> => {

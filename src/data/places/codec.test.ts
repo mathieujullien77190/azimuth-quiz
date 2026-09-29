@@ -60,7 +60,8 @@ describe('decodeCluePlace', () => {
   const row: ClueRow = ['ne', 12345, '☀️', 42, 'gw', 'TST', '🗼', '🎨', '🌳'];
 
   it('maps a common row + clues row + syllables to an CluePlace, deriving the country name, timezone, phone code and currency from the country code', () => {
-    expect(decodeCluePlace(common, row, ['test', 'ville'])).toEqual({
+    expect(decodeCluePlace('tst', common, row, ['test', 'ville'])).toEqual({
+      key: 'tst',
       name: 'Testville',
       code: 'FR',
       country: 'France',
@@ -81,24 +82,24 @@ describe('decodeCluePlace', () => {
 
   it('passes an unmapped timezone through as-is', () => {
     const unmappedRow: ClueRow = [...row.slice(0, 4), 'Europe/Nowhere', ...row.slice(5)] as unknown as ClueRow;
-    const place = decodeCluePlace(common, unmappedRow, []);
+    const place = decodeCluePlace('tst', common, unmappedRow, []);
     expect(place.timezone).toBe('Europe/Nowhere');
   });
 
   it('falls back to an empty phone code and currency for an unknown country', () => {
     const unknownCommon: CommonRow = ['Testville', 'XX', 1.5, -2.5, 'E'];
-    const place = decodeCluePlace(unknownCommon, row, []);
+    const place = decodeCluePlace('tst', unknownCommon, row, []);
     expect(place.phoneCode).toBe('');
     expect(place.currency).toBe('');
   });
 
   it('includes the curated personality when one is passed', () => {
-    const place = decodeCluePlace(common, row, [], ['Quelqu’un', 'footballeur']);
+    const place = decodeCluePlace('tst', common, row, [], ['Quelqu’un', 'footballeur']);
     expect(place.personality).toEqual({ name: 'Quelqu’un', description: 'footballeur' });
   });
 
   it('omits personality when none is passed', () => {
-    const place = decodeCluePlace(common, row, []);
+    const place = decodeCluePlace('tst', common, row, []);
     expect(place.personality).toBeUndefined();
   });
 });
@@ -119,7 +120,7 @@ describe('decodeAllPlaces / decodeCompassPlaces / decodeCluePlaces', () => {
       key: 'ov1',
       common: ['Otherville', 'DE', 3, 4, 'H'],
       compass: null,
-      clues: expect.objectContaining({ name: 'Otherville' }),
+      clues: expect.objectContaining({ key: 'ov1', name: 'Otherville' }),
     });
   });
 

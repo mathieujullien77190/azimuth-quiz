@@ -180,6 +180,12 @@ export type ClueFlagColorRow = readonly [colorId: ClueFlagColorId, hex: string, 
  * place data shared by both games — used for shared lookups (country name, flag, currency). */
 export type CluePlace = GeoPlace & {
   code: string;
+  /** The short code (3 letters, e.g. `"par"` for Paris) `places.json` and its sibling files are
+   * keyed by — see `data/places/codec.ts`'s own doc comment. Opaque: never shown to a player,
+   * only used to look a place's own data up in one of those files (`wordplayFor`, the admin's own
+   * edits) without re-deriving a `code|name` cross-reference key each time. Compass's own `Place`
+   * has no equivalent — nothing there needs it (yet). */
+  key: string;
   difficulty: Difficulty;
   positionInCountry: CluePositionInCountry;
   population: number;

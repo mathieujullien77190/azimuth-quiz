@@ -28,17 +28,13 @@ export const saveCharadeRiddle = async (syllable: string, next: string): Promise
 
 /** `place`'s syllable split was hand-corrected (a syllable added, removed, or renamed) — always
  * logs the FULL resulting list (lowercased), not a diff: that's exactly what to write under
- * `key` (the place's own short storage code, e.g. `"par"` for Paris — see `PlaceRow.key`) in
+ * `place.key` (baked onto every decoded place, see `data/places/codec.ts`'s doc comment) in
  * `charadePlaces.json` (an empty list is a valid, intentional result — see this file's own doc
  * comment above — logged the same way). Logs BOTH the storage key and the human identity
  * (`charadeKey`, `code|name`): the key alone is opaque. */
-export const saveCharadeSyllables = async (
-  key: string,
-  place: Pick<CluePlace, 'code' | 'name'>,
-  syllables: string[],
-): Promise<string[]> => {
+export const saveCharadeSyllables = async (place: Pick<CluePlace, 'code' | 'name' | 'key'>, syllables: string[]): Promise<string[]> => {
   const lower = syllables.map((syllable) => syllable.toLowerCase());
   const list = lower.length > 0 ? lower.map((syllable) => `"${syllable}"`).join(', ') : '(aucune)';
-  logChange(`[Charade] syllabes de « ${charadeKey(place)} » [${key}] -> charadePlaces.json[${key}] = [${list}]`);
+  logChange(`[Charade] syllabes de « ${charadeKey(place)} » [${place.key}] -> charadePlaces.json[${place.key}] = [${list}]`);
   return lower;
 };

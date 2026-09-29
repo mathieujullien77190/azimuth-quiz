@@ -368,6 +368,7 @@ export const decodeCompassPlace = (common: CommonRow, row: CompassRow): Place =>
 };
 
 export const decodeCluePlace = (
+  key: string,
   common: CommonRow,
   row: ClueRow,
   syllables: CharadeRow,
@@ -376,6 +377,7 @@ export const decodeCluePlace = (
   const [name, code, latitude, longitude, difficultyCode] = common;
   const [positionInCountry, population, climateEmoji, elevationMeters, timezoneCode, airportCode, emoji1, emoji2, emoji3] = row;
   return {
+    key,
     name,
     code,
     country: countryName(code, 'fr'),
@@ -395,9 +397,10 @@ export const decodeCluePlace = (
   };
 };
 
-/** One place, joined back from its key across the 5 files — `key` itself is exposed only for the
- * admin (its own edits log both the key and the human identity, see this module's own doc
- * comment); nothing in the shipped app needs it. */
+/** One place, joined back from its key across the 5 files — `key` is also baked directly onto
+ * `compass`/`clues` themselves (`GeoPlace.key`), so any per-place lookup keyed the same way
+ * (`wordplayFor`, the admin's own edits — both log the key alongside the human identity, see this
+ * module's own doc comment) can read it straight off the place object it already has. */
 export type PlaceKeyRow = { key: string; common: CommonRow; compass: Place | null; clues: CluePlace | null };
 
 export const decodeAllPlaces = (): PlaceKeyRow[] =>
@@ -409,7 +412,7 @@ export const decodeAllPlaces = (): PlaceKeyRow[] =>
       key,
       common,
       compass: compassRow ? decodeCompassPlace(common, compassRow) : null,
-      clues: clueRow ? decodeCluePlace(common, clueRow, CHARADE_PLACES[key] ?? [], PERSONALITY_PLACES[key]) : null,
+      clues: clueRow ? decodeCluePlace(key, common, clueRow, CHARADE_PLACES[key] ?? [], PERSONALITY_PLACES[key]) : null,
     };
   });
 

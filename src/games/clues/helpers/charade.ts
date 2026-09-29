@@ -10,7 +10,7 @@ export type CharadeEntry = { syllables: string[] };
 
 const CHARADE = charadeData as unknown as Record<string, string | null>;
 
-/** Same `${code}|${name}` key shape as `wordplayKey` — a place has no id of its own, this pair is
+/** Same `${code}|${name}` key shape as `cluePlaceKey` (`clueHistory.ts`) — a place has no id of its own, this pair is
  * what identifies one entry of `places.json`. Only used to identify a place in the admin's own
  * journal now (`api/charades.ts`) — `charadeFor` itself no longer needs a key, the syllables live
  * directly on `place`. */

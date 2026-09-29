@@ -180,8 +180,13 @@ reassignee a une regeneration future, meme esprit append-only que `TIMEZONE_CODE
 
 **La cle est opaque** : ouvrir `compassPlaces.json` seul ne dit pas quel lieu est `"par"`. Pour que
 l'edition reste lisible malgre tout, chaque message du journal admin (voir `api/places.ts`,
-`api/charades.ts`) affiche TOUJOURS l'identite humaine (nom + code pays) ET la cle de stockage
-cote a cote (`Paris (FR) [par]`) — jamais besoin de deviner une cle a l'oeil.
+`api/charades.ts`, `api/wordplay.ts`) affiche TOUJOURS l'identite humaine (nom + code pays) ET la
+cle de stockage cote a cote (`Paris (FR) [par]`) — jamais besoin de deviner une cle a l'oeil.
+
+`decodeCluePlace` bake desormais cette meme cle sur l'objet `CluePlace` qu'il retourne
+(`CluePlace.key`, absent du `Place` de Compass — rien la-bas n'en a besoin) : un consommateur qui a
+deja un `CluePlace` (`wordplayFor`, les editeurs admin) lit `place.key` directement plutot que de la
+recalculer ou de se la faire passer a part.
 
 `countries.json` est scinde en 6 petits fichiers du meme esprit (voir "Donnees Contour" plus bas)
 mais SANS algorithme de cle a inventer : le code ISO a 2 lettres (deja court, unique et standard)
@@ -326,12 +331,15 @@ commentees en francais :
   🟢/🟠/🔴, meme table que `DifficultyBadge`), uniquement une fois la carte revelee (jamais avant, meme
   logique que le reste du contenu du jeu de mots). Contrairement a `charade`, aucune heuristique possible
   ici (trouver un vrai jeu de mots n'est pas automatisable) : `sentence` part vide pour les 922 lieux
-  (`scripts/wordplayCuration.json`, curation 100% manuelle) — `wordplayFor(place)` rend `null` tant que
-  `sentence` est vide, et un lieu sans jeu de mots curee n'offre jamais cet indice (`cluesFor`). **Reste
-  dans son propre fichier de curation/generation** (contrairement a `personality`, pas encore replie dans
-  `places.json`) : `npm run generate:wordplay` (script dev, valide juste que chaque cle correspond encore a
-  un lieu et que `difficulty` est une valeur valide, sinon retombe sur `intermediate`) copie
-  `scripts/wordplayCuration.json` dans `src/data/wordplay.json`. Admin : bouton "✍️ Jeu de mots" a cote de
+  (`scripts/wordplayCuration.json`, curation 100% manuelle, indexee par la MEME cle courte 3 lettres que
+  `charadePlaces.json`/`personalityPlaces.json` — pas par `code|name` comme avant, pour rester coherent avec
+  le reste des fichiers de lieux) — `wordplayFor(place)` prend directement `place.key` (pas de fonction
+  `wordplayKey` a part, retiree), rend `null` tant que `sentence` est vide, et un lieu sans jeu de mots curee
+  n'offre jamais cet indice (`cluesFor`). **Reste dans son propre fichier de curation/generation**
+  (contrairement a `personality`, pas encore replie dans `places.json`) : `npm run generate:wordplay` (script
+  dev, valide chaque cle contre `cluesPlaces.json` et que `difficulty` est une valeur valide, sinon retombe
+  sur `intermediate`) copie `scripts/wordplayCuration.json` dans `src/data/wordplay.json`. Admin : bouton
+  "✍️ Jeu de mots" a cote de
   "🎭 Charade" dans `PlacesView`, `WordplayEditor` (la phrase en `EditableValue`, la difficulte dans le
   meme `<select>` que le reglage de difficulte des lieux — meme modele journal-only que `CharadeEditor`,
   les deux editeurs peuvent etre ouverts en meme temps sur une meme carte, ils editent des champs
