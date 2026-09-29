@@ -316,21 +316,25 @@ commentees en francais :
   lieu sans personnalite curee n'offre jamais cet indice (`cluesFor` le retire, jamais de case vide).
   Premier lot : 41 lieux (23 capitales + 18 villes `citiesFr`), verifie a la main (recherches web
   ponctuelles + faits bien etablis) — le reste des ~880 lieux Indices n'a rien, a completer plus tard.
-- **Indices : un jeu de mots sur le nom du lieu** (`ClueId` `'wordplay'`, `helpers/wordplay.ts`) — 2 paliers :
-  `sentence` (la phrase, telle quelle) puis `explained` (la meme phrase, avec le ou les mots qui font le
-  jeu de mots entoures de `+signes plus+` — `highlightSegments`, fonction pure, decoupe le texte en
-  segments alternant surligne/non a chaque `+` rencontre, jamais affiche lui-meme) : le mot surligne passe
-  en blanc plein (`colors.text`), le reste de la phrase s'assombrit (`colors.textMuted`) — c'est ce
-  contraste-la qui sert d'explication, pas un texte en plus. Contrairement a `charade`, aucune heuristique
-  possible ici (trouver un vrai jeu de mots n'est pas automatisable) : les deux champs partent vides pour
-  les 922 lieux (`scripts/wordplayCuration.json`, curation 100% manuelle) — `wordplayFor(place)` rend `null`
-  tant que `sentence` est vide, et un lieu sans jeu de mots curee n'offre jamais cet indice (`cluesFor`).
-  **Reste dans son propre fichier de curation/generation** (contrairement a `personality`, pas encore
-  replie dans `places.json`) : `npm run generate:wordplay` (script dev, valide juste que chaque cle
-  correspond encore a un lieu, rien a calculer) copie `scripts/wordplayCuration.json` dans
-  `src/data/wordplay.json`. Admin : bouton "✍️ Jeu de mots" a cote de "🎭 Charade" dans
-  `PlacesView`, `WordplayEditor` (2 champs texte, meme modele journal-only que `CharadeEditor` — les deux
-  peuvent etre ouverts en meme temps sur une meme carte, ils editent des champs differents).
+- **Indices : un jeu de mots sur le nom du lieu** (`ClueId` `'wordplay'`, `helpers/wordplay.ts`) — un seul
+  palier : `sentence`, revelee en un clic (l'ancien 2e palier "expliquee", avec le mot qui fait le jeu de
+  mots surligne, a ete retire — pas assez utile pour justifier un 2e clic). `difficulty` (`Difficulty`,
+  meme enum que le reste du jeu, curee a la main, defaut `intermediate` si absente/invalide) est purement
+  informative — n'influence jamais si l'indice est propose, juste un repere pour le joueur — affichee dans
+  l'en-tete de la carte comme un simple point colore (`difficultyEmoji`/`DIFFICULTIES` de `@/data`,
+  🟢/🟠/🔴, meme table que `DifficultyBadge`), uniquement une fois la carte revelee (jamais avant, meme
+  logique que le reste du contenu du jeu de mots). Contrairement a `charade`, aucune heuristique possible
+  ici (trouver un vrai jeu de mots n'est pas automatisable) : `sentence` part vide pour les 922 lieux
+  (`scripts/wordplayCuration.json`, curation 100% manuelle) — `wordplayFor(place)` rend `null` tant que
+  `sentence` est vide, et un lieu sans jeu de mots curee n'offre jamais cet indice (`cluesFor`). **Reste
+  dans son propre fichier de curation/generation** (contrairement a `personality`, pas encore replie dans
+  `places.json`) : `npm run generate:wordplay` (script dev, valide juste que chaque cle correspond encore a
+  un lieu et que `difficulty` est une valeur valide, sinon retombe sur `intermediate`) copie
+  `scripts/wordplayCuration.json` dans `src/data/wordplay.json`. Admin : bouton "✍️ Jeu de mots" a cote de
+  "🎭 Charade" dans `PlacesView`, `WordplayEditor` (la phrase en `EditableValue`, la difficulte dans le
+  meme `<select>` que le reglage de difficulte des lieux — meme modele journal-only que `CharadeEditor`,
+  les deux editeurs peuvent etre ouverts en meme temps sur une meme carte, ils editent des champs
+  differents).
   `RoomDeletedScreen`, `FinalStandings` (ecran de fin commun aux trois jeux : classement, medailles, egalites ;
   Compass y ajoute en `children` son propre `RoundsRecap`, qui dit qui a ete le meilleur en direction et en distance
   a chaque manche). La banniere de victoire dit "Vous gagnez !" plutot que le nom du gagnant quand c'est cet

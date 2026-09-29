@@ -107,22 +107,17 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       minHeight: 42,
       paddingVertical: spacing.xs,
     },
-    // Stage 1 (the plain pun): normal reading color, like any other clue's value.
     wordplaySentence: {
       ...typography.body,
       color: colors.text,
       fontSize: fontSize.caption + 1,
       textAlign: 'center',
     },
-    // Stage 2 (the same pun, explained): the sentence dims to muted by default, and the punning
-    // word(s) (see `highlightSegments`) stay full-bright — the contrast itself is the explanation,
-    // no extra wording needed.
-    wordplayMuted: {
-      color: colors.textMuted,
-    },
-    wordplayHighlight: {
-      color: colors.text,
-      fontWeight: '800',
+    // The pun's own curated difficulty (how tricky it is to get, independent from the place's own
+    // difficulty) — a plain colored dot in the header, next to the label, same spot `stageDots`
+    // would sit in (wordplay has none, single-click now).
+    wordplayDifficulty: {
+      fontSize: fontSize.caption,
     },
     personalityName: {
       ...typography.heading,

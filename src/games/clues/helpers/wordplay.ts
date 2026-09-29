@@ -1,16 +1,18 @@
 import wordplayData from '@/data/wordplay.json';
-import type { CluePlace } from '@/types';
+import type { CluePlace, Difficulty } from '@/types';
 
 /**
- * A play on words on the place's name, in 2 stages — `sentence` alone first, then `explained`
- * (typically the very same sentence, or close to it) with the word(s) that make the pun marked
- * with `+plus+` signs, see `highlightSegments`. Both start empty for every place: unlike
- * `charade`, there is no heuristic to fall back on here (finding a genuine pun is not something a
- * script can do) — curated entirely by hand in `scripts/wordplayCuration.json` and shipped by
+ * A play on words on the place's name, one sentence, revealed in a single click (no second,
+ * "explained" stage — dropped: the highlight was rarely worth a second click on top of the pun
+ * itself). `difficulty` is curated alongside it — how tricky THIS pun is to get, independent from
+ * `place`'s own difficulty — shown as a plain colored dot (see `ClueCard`'s own wordplay case),
+ * never gating whether the clue is offered. Starts empty for every place: unlike `charade`, there
+ * is no heuristic to fall back on here (finding a genuine pun is not something a script can do) —
+ * curated entirely by hand in `scripts/wordplayCuration.json` and shipped by
  * `scripts/generateWordplay.mjs`, same no-invention rule as `personality`. A place with nothing
  * curated (or an empty `sentence`) never offers the clue at all, see `cluesFor`.
  */
-export type WordplayEntry = { sentence: string; explained: string };
+export type WordplayEntry = { sentence: string; difficulty: Difficulty };
 
 const WORDPLAY = wordplayData as unknown as Record<string, WordplayEntry>;
 
@@ -22,28 +24,4 @@ export const wordplayKey = (place: Pick<CluePlace, 'name' | 'code'>): string => 
 export const wordplayFor = (place: Pick<CluePlace, 'name' | 'code'>): WordplayEntry | null => {
   const entry = WORDPLAY[wordplayKey(place)];
   return entry !== undefined && entry.sentence.trim() !== '' ? entry : null;
-};
-
-/** One run of `text` between (or outside) `+plus+` markers: `highlighted` runs are the curated
- * pun itself, made to stand out; everything else is just connecting words. `+` is dropped from
- * the output either way — it is markup, not something to ever display. Each `+` just flips
- * highlighting on/off in order, so an odd (unclosed) one highlights everything after it — visible
- * feedback of the typo rather than a silent parse failure. */
-export type HighlightSegment = { text: string; highlighted: boolean };
-
-export const highlightSegments = (text: string): HighlightSegment[] => {
-  const segments: HighlightSegment[] = [];
-  let rest = text;
-  let highlighted = false;
-  while (rest.length > 0) {
-    const nextMark = rest.indexOf('+');
-    if (nextMark === -1) {
-      segments.push({ text: rest, highlighted });
-      break;
-    }
-    if (nextMark > 0) segments.push({ text: rest.slice(0, nextMark), highlighted });
-    rest = rest.slice(nextMark + 1);
-    highlighted = !highlighted;
-  }
-  return segments.filter((segment) => segment.text !== '');
 };

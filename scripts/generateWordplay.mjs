@@ -10,10 +10,9 @@
 // comment. Unlike `personality` (now baked directly into `places.json`, see `codec.ts`), wordplay
 // still lives in its own curation file / shipped `wordplay.json`.
 //
-// Curation source: by hand only — `sentence` is the pun itself, `explained` is (usually) the same
-// sentence with the punning word(s) wrapped in `+plus+` signs (see `highlightSegments`), e.g.
-// `"sentence": "Ce lac est +Constance+ dans son affection."` Re-run this script after editing the
-// curation file.
+// Curation source: by hand only — `sentence` is the pun itself, `difficulty` ('easy'/'intermediate'
+// /'hard') how tricky it is to get, defaults to 'intermediate' when missing/invalid. Re-run this
+// script after editing the curation file.
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -44,6 +43,8 @@ for (const placeKey of Object.keys(cluesPlaces)) {
   knownKeys.add(key(code, name));
 }
 
+const VALID_DIFFICULTIES = new Set(['easy', 'intermediate', 'hard']);
+
 const output = {};
 const orphaned = [];
 const blank = [];
@@ -57,7 +58,8 @@ for (const [placeKey, entry] of Object.entries(curation)) {
     blank.push(placeKey);
     continue;
   }
-  output[placeKey] = { sentence, explained: (entry.explained ?? '').trim() };
+  const difficulty = VALID_DIFFICULTIES.has(entry.difficulty) ? entry.difficulty : 'intermediate';
+  output[placeKey] = { sentence, difficulty };
 }
 
 const sorted = {};

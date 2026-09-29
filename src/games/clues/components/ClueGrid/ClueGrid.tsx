@@ -43,7 +43,6 @@ export const ClueGrid = ({ place, bearingDeg, distanceKm, revealedClueIds, round
           const isLocalTime = clueId === 'localTime';
           const isLetter = clueId === 'letter';
           const isCharade = clueId === 'charade';
-          const isWordplay = clueId === 'wordplay';
           const stage = clueStage(revealedClueIds, clueId);
           const moreToReveal = !roundOver && clueHasMoreToReveal(revealedClueIds, clueId, place);
           return (
@@ -66,7 +65,6 @@ export const ClueGrid = ({ place, bearingDeg, distanceKm, revealedClueIds, round
               onPress={onPickClue === undefined ? undefined : () => onPickClue(clueId)}
               place={place}
               state={revealed ? 'revealed' : 'locked'}
-              wordplayStage={isWordplay ? (roundOver ? 2 : stage) : undefined}
             />
           );
         })}

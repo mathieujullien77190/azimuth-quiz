@@ -41,7 +41,4 @@ export type ClueCardProps = {
   /** Only for the `charade` clue: how many syllable-groups are revealed (see `charadeSyllableGroups`);
    * one past the last group shows the name spelled out in clear (see `charadeLines`). */
   charadeStage?: number;
-  /** Only for the `wordplay` clue: 1 = the pun alone, 2 = the same pun with the punning word(s)
-   * highlighted (see `highlightSegments`). */
-  wordplayStage?: number;
 };

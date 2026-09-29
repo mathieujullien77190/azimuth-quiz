@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
 
-import { isCapitalPlace } from '@/data';
+import { DIFFICULTIES, difficultyEmoji, isCapitalPlace } from '@/data';
 import { countryCurrencyName, countryFlagColors, flagEmoji, FLAG_COLOR_FIELD } from '@/data/places/countries';
 import { formatDistance, formatNumber, nameSkeleton } from '@/helpers';
 import { charadeFor, charadeLines, charadeMaxStage } from '@/games/clues/helpers/charade';
 import { personalityFor } from '@/games/clues/helpers/personality';
-import { highlightSegments, wordplayFor } from '@/games/clues/helpers/wordplay';
+import { wordplayFor } from '@/games/clues/helpers/wordplay';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Theme } from '@/types';
@@ -40,7 +40,6 @@ const multiStageProgress = (
     localTimeStage?: number;
     letterStage?: number;
     charadeStage?: number;
-    wordplayStage?: number;
   },
 ): { stage: number; max: number } | undefined => {
   switch (clueId) {
@@ -66,8 +65,6 @@ const multiStageProgress = (
       const max = charadeMaxStage(charadeFor(place));
       return { stage: Math.min(stages.charadeStage ?? 1, max), max };
     }
-    case 'wordplay':
-      return { stage: Math.min(stages.wordplayStage ?? 1, 2), max: 2 };
     default:
       return undefined;
   }
@@ -88,7 +85,6 @@ const revealedBody = (
     localTimeStage,
     letterStage,
     charadeStage,
-    wordplayStage,
   }: Pick<
     ClueCardProps,
     | 'clueId'
@@ -104,7 +100,6 @@ const revealedBody = (
     | 'localTimeStage'
     | 'letterStage'
     | 'charadeStage'
-    | 'wordplayStage'
   >,
   styles: ReturnType<typeof createStyles>,
   units: { population: string },
@@ -208,18 +203,7 @@ const revealedBody = (
     }
     case 'wordplay': {
       const entry = wordplayFor(place);
-      if (entry === null) return null;
-      const stage = wordplayStage ?? 1;
-      if (stage < 2) return <Text style={styles.wordplaySentence}>{entry.sentence}</Text>;
-      return (
-        <Text style={styles.wordplaySentence}>
-          {highlightSegments(entry.explained).map((segment, index) => (
-            <Text key={index} style={segment.highlighted ? styles.wordplayHighlight : styles.wordplayMuted}>
-              {segment.text}
-            </Text>
-          ))}
-        </Text>
-      );
+      return entry === null ? null : <Text style={styles.wordplaySentence}>{entry.sentence}</Text>;
     }
     case 'personality': {
       const personality = personalityFor(place);
@@ -314,10 +298,9 @@ export const ClueCard = ({
   localTimeStage,
   letterStage,
   charadeStage,
-  wordplayStage,
 }: ClueCardProps) => {
   const styles = useThemedStyles(createStyles);
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const t = useTranslation();
   const [revealAnim] = useState(() => new Animated.Value(state === 'revealed' ? 1 : 0));
   const pickable = (state === 'locked' || (state === 'revealed' && moreToReveal)) && onPress !== undefined;
@@ -334,9 +317,15 @@ export const ClueCard = ({
           letterStage,
           localTimeStage,
           populationStage,
-          wordplayStage,
         })
       : undefined;
+  // Plain colored dot (🟢/🟠/🔴), how tricky THIS pun is — never gates whether the clue is
+  // offered, purely informational, shown once revealed (see `wordplayFor`'s own doc comment).
+  const wordplayEntry = clueId === 'wordplay' && state === 'revealed' ? wordplayFor(place) : null;
+  const wordplayDifficultyEmoji =
+    wordplayEntry === null
+      ? undefined
+      : difficultyEmoji(DIFFICULTIES.find((entry) => entry.id === wordplayEntry.difficulty)!, isDark);
 
   useEffect(() => {
     if (state === 'revealed') {
@@ -360,6 +349,7 @@ export const ClueCard = ({
     >
       <View style={styles.header}>
         <Text style={styles.label}>{label}</Text>
+        {wordplayDifficultyEmoji !== undefined && <Text style={styles.wordplayDifficulty}>{wordplayDifficultyEmoji}</Text>}
         {progress !== undefined && (
           <View accessibilityLabel={`${progress.stage}/${progress.max}`} style={styles.stageDots}>
             {Array.from({ length: progress.max }, (_, i) => (
@@ -402,7 +392,6 @@ export const ClueCard = ({
                 place,
                 populationStage,
                 charadeStage,
-                wordplayStage,
               },
               styles,
               { population: t.cluesGame.populationUnit },

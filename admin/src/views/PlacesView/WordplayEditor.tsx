@@ -1,18 +1,21 @@
 import { useEffect, useState } from 'react';
 
-import { saveWordplayExplained, saveWordplaySentence, wordplayEntryFor } from '../../api/wordplay';
+import { saveWordplayDifficulty, saveWordplaySentence, wordplayEntryFor } from '../../api/wordplay';
 import { EditableValue } from '../../components/EditableValue';
+import { DIFFICULTY_COLORS, DIFFICULTY_LABELS, DIFFICULTY_ORDER } from '../../constants';
 import type { WordplayEntry } from '@/games/clues/helpers/wordplay';
-import type { CluePlace } from '@/types';
+import type { CluePlace, Difficulty } from '@/types';
 
 /**
- * A pun on the place's name, in 2 stages: `sentence` alone, then `explained` with the punning
- * word(s) wrapped in `+plus+` signs so the game highlights them (see `highlightSegments`). Same
- * model as `CharadeEditor` (deployed under a place's own "Clues" block in `PlacesView`, click the
- * text to edit it, blur/Enter to save — `EditableValue`, same as everywhere else in the admin —
- * nothing written to disk, every change just logged) — both fields start empty for every place,
- * curated by hand from scratch (no heuristic fallback here, unlike charade's syllable split), so
- * both opt into `allowEmpty` (clearing one back to "not curated" is a valid save).
+ * A pun on the place's name, one sentence revealed in a single click (no highlighted "explained"
+ * second stage — dropped). Same model as `CharadeEditor` (deployed under a place's own "Clues"
+ * block in `PlacesView`, click the text to edit it, blur/Enter to save — `EditableValue`, same as
+ * everywhere else in the admin — nothing written to disk, every change just logged): the sentence
+ * starts empty for every place, curated by hand from scratch (no heuristic fallback here, unlike
+ * charade's syllable split), so it opts into `allowEmpty` (clearing it back to "not curated" is a
+ * valid save). `difficulty` (how tricky the pun is, defaults to 'intermediate') is a plain select,
+ * same look as `PlacesView`'s own difficulty picker — shown in-game as a colored dot, see
+ * `ClueCard`'s own wordplay case.
  */
 export const WordplayEditor = ({ initialPlace }: { initialPlace: CluePlace }) => {
   const [place] = useState(initialPlace);
@@ -35,10 +38,10 @@ export const WordplayEditor = ({ initialPlace }: { initialPlace: CluePlace }) =>
     });
   };
 
-  const handleSaveExplained = (next: string) => {
-    saveWordplayExplained(place, entry, next).then((updated) => {
+  const handleSaveDifficulty = (next: Difficulty) => {
+    saveWordplayDifficulty(place, entry, next).then((updated) => {
       setEntry(updated);
-      setSavedField('explained');
+      setSavedField('difficulty');
     });
   };
 
@@ -59,15 +62,23 @@ export const WordplayEditor = ({ initialPlace }: { initialPlace: CluePlace }) =>
             </td>
           </tr>
           <tr>
-            <th>Expliquée</th>
+            <th>Difficulté</th>
             <td>
-              <EditableValue
-                allowEmpty
-                display={entry.explained || 'même phrase, +mot+ pour le mettre en avant'}
-                onSave={handleSaveExplained}
-                saveFlag={flagFor('explained')}
-                value={entry.explained}
-              />
+              <div className="field-cell">
+                <select
+                  className="field-select"
+                  style={{ '--tier-color': DIFFICULTY_COLORS[entry.difficulty] } as React.CSSProperties}
+                  value={entry.difficulty}
+                  onChange={(e) => handleSaveDifficulty(e.target.value as Difficulty)}
+                >
+                  {DIFFICULTY_ORDER.map((d) => (
+                    <option key={d} value={d}>
+                      {DIFFICULTY_LABELS[d]}
+                    </option>
+                  ))}
+                </select>
+                {flagFor('difficulty')}
+              </div>
             </td>
           </tr>
         </tbody>

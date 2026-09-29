@@ -99,15 +99,10 @@ describe('ClueGrid', () => {
     expect(after.queryByText('Personnalité')).toBeTruthy();
   });
 
-  it('passes the wordplay card its stage (in progress, then forced to the max once the round is over)', async () => {
-    jest.mocked(wordplayFor).mockReturnValue({ sentence: 'Ce lac est Constance.', explained: 'Ce lac est +Constance+.' });
-    const inProgress = await renderGrid({ revealedClueIds: ['wordplay'] });
-    expect(inProgress.getByLabelText('1/2')).toBeTruthy();
-    await inProgress.unmount();
-
-    // Other 2-stage clues (distance, letter...) also force to "2/2" once the round is over — just
-    // check at least one card reached it, rather than assume wordplay's is the only one.
-    const over = await renderGrid({ revealedClueIds: ['wordplay'], roundOver: true });
-    expect(over.getAllByLabelText('2/2').length).toBeGreaterThan(0);
+  it('reveals the wordplay card in a single pick, no stage badge (single-click clue)', async () => {
+    jest.mocked(wordplayFor).mockReturnValue({ sentence: 'Ce lac est Constance.', difficulty: 'intermediate' });
+    const { getByText, queryByLabelText } = await renderGrid({ revealedClueIds: ['wordplay'] });
+    expect(getByText('Ce lac est Constance.')).toBeTruthy();
+    expect(queryByLabelText('1/2')).toBeNull();
   });
 });

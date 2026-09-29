@@ -1,7 +1,8 @@
 import { wordplayFor, type WordplayEntry } from '@/games/clues/helpers/wordplay';
-import type { CluePlace } from '@/types';
+import type { CluePlace, Difficulty } from '@/types';
 
 import { logChange } from '../changelog';
+import { DIFFICULTY_LABELS } from '../constants';
 
 /** Same no-backend, journal-only pattern as every other admin edit (see `changelog.ts`,
  * `api/charades.ts`) — nothing here is written to `scripts/wordplayCuration.json`, every change
@@ -10,9 +11,10 @@ const identity = (place: Pick<CluePlace, 'name' | 'code'>): string => `${place.n
 
 /** `place`'s wordplay entry to edit — unlike the game's own `wordplayFor` (which is `null` for an
  * uncurated place, so the clue is never offered), the admin always has something to start typing
- * into: both fields empty until curated by hand. */
+ * into: an empty sentence until curated by hand, defaulting to 'intermediate' difficulty (same
+ * default `scripts/generateWordplay.mjs` falls back to for a missing/invalid value). */
 export const wordplayEntryFor = (place: Pick<CluePlace, 'name' | 'code'>): WordplayEntry =>
-  wordplayFor(place) ?? { sentence: '', explained: '' };
+  wordplayFor(place) ?? { sentence: '', difficulty: 'intermediate' };
 
 export const saveWordplaySentence = async (
   place: Pick<CluePlace, 'name' | 'code'>,
@@ -24,14 +26,11 @@ export const saveWordplaySentence = async (
   return { ...entry, sentence: trimmed };
 };
 
-export const saveWordplayExplained = async (
+export const saveWordplayDifficulty = async (
   place: Pick<CluePlace, 'name' | 'code'>,
   entry: WordplayEntry,
-  next: string,
+  next: Difficulty,
 ): Promise<WordplayEntry> => {
-  const trimmed = next.trim();
-  logChange(
-    `[Jeu de mots] ${identity(place)} — phrase expliquée : « ${entry.explained || '(vide)'} » -> « ${trimmed || '(vide)'} »`,
-  );
-  return { ...entry, explained: trimmed };
+  logChange(`[Jeu de mots] ${identity(place)} — difficulté : ${DIFFICULTY_LABELS[entry.difficulty]} -> ${DIFFICULTY_LABELS[next]}`);
+  return { ...entry, difficulty: next };
 };

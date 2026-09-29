@@ -24,7 +24,6 @@ export const clueHasMoreToReveal = (revealedClueIds: ClueId[], clueId: ClueId, p
     case 'currency':
     case 'localTime':
     case 'letter':
-    case 'wordplay':
       return stage < 2;
     case 'charade':
       return stage < charadeMaxStage(charadeFor(place));

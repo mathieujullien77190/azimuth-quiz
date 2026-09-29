@@ -306,30 +306,22 @@ describe('ClueCard — wordplay', () => {
     expect(toJSON()).toBeTruthy();
   });
 
-  it('stage 1: shows the plain sentence, no highlighting yet', async () => {
-    jest
-      .mocked(wordplayFor)
-      .mockReturnValue({ sentence: 'Ce lac est Constance.', explained: 'Ce lac est +Constance+.' });
-    const { getByText } = await renderCard({ clueId: 'wordplay', place, state: 'revealed', wordplayStage: 1 });
-    expect(getByText('Ce lac est Constance.')).toBeTruthy();
-  });
-
-  it('defaults to stage 1 when wordplayStage is not provided', async () => {
-    jest
-      .mocked(wordplayFor)
-      .mockReturnValue({ sentence: 'Ce lac est Constance.', explained: 'Ce lac est +Constance+.' });
+  it('shows the sentence in one click, no second stage', async () => {
+    jest.mocked(wordplayFor).mockReturnValue({ sentence: 'Ce lac est Constance.', difficulty: 'intermediate' });
     const { getByText } = await renderCard({ clueId: 'wordplay', place, state: 'revealed' });
     expect(getByText('Ce lac est Constance.')).toBeTruthy();
   });
 
-  it('stage 2: shows the explained sentence, the punning word split out from the rest', async () => {
-    jest
-      .mocked(wordplayFor)
-      .mockReturnValue({ sentence: 'Ce lac est Constance.', explained: 'Ce lac est +Constance+.' });
-    const { getByText } = await renderCard({ clueId: 'wordplay', place, state: 'revealed', wordplayStage: 2 });
-    expect(getByText('Ce lac est ')).toBeTruthy();
-    expect(getByText('Constance')).toBeTruthy();
-    expect(getByText('.')).toBeTruthy();
+  it('shows the curated difficulty as a plain colored dot, next to the label', async () => {
+    jest.mocked(wordplayFor).mockReturnValue({ sentence: 'Ce lac est Constance.', difficulty: 'hard' });
+    const { getByText } = await renderCard({ clueId: 'wordplay', place, state: 'revealed' });
+    expect(getByText('🔴')).toBeTruthy();
+  });
+
+  it('shows no difficulty dot while locked (nothing curated is ever leaked before reveal)', async () => {
+    jest.mocked(wordplayFor).mockReturnValue({ sentence: 'Ce lac est Constance.', difficulty: 'hard' });
+    const { queryByText } = await renderCard({ clueId: 'wordplay', onPress: jest.fn(), place, state: 'locked' });
+    expect(queryByText('🔴')).toBeNull();
   });
 });
 

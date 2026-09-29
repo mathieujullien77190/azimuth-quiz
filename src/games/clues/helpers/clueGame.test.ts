@@ -69,7 +69,7 @@ describe('cluesFor', () => {
   });
 
   it('adds wordplay back in once curated, for every category', () => {
-    jest.mocked(wordplayFor).mockReturnValue({ sentence: 'un jeu de mot', explained: 'un +jeu+ de mot' });
+    jest.mocked(wordplayFor).mockReturnValue({ sentence: 'un jeu de mot', difficulty: 'intermediate' });
     expect(cluesFor(PARIS)).toContain('wordplay');
     expect(cluesFor(MARSEILLE)).toContain('wordplay');
   });
@@ -124,10 +124,10 @@ describe('totalRevealCount', () => {
     expect(totalRevealCount(PARIS)).toBe(without + 1);
   });
 
-  it('counts two more (its 2 stages) when wordplay is curated for the place', () => {
+  it('counts one more (single click) when wordplay is curated for the place', () => {
     const without = totalRevealCount(PARIS);
-    jest.mocked(wordplayFor).mockReturnValue({ sentence: 'un jeu de mot', explained: 'un +jeu+ de mot' });
-    expect(totalRevealCount(PARIS)).toBe(without + 2);
+    jest.mocked(wordplayFor).mockReturnValue({ sentence: 'un jeu de mot', difficulty: 'intermediate' });
+    expect(totalRevealCount(PARIS)).toBe(without + 1);
   });
 });
 

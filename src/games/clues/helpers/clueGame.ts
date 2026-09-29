@@ -11,9 +11,8 @@ import type { ClueId, Difficulty, ClueCategory, CluePlace } from '@/types';
 
 /** Clues that reveal in 2 clicks: tier/symbol/day-night on the 1st, exact value on the 2nd
  * (distance/elevation/population/currency/localTime); letter: first letter alone, then every
- * letter with the real per-word length; wordplay: the pun alone, then the same pun with the
- * punning word(s) picked out. */
-const TWO_STAGE_CLUE_IDS = new Set(['distance', 'elevation', 'population', 'currency', 'localTime', 'letter', 'wordplay']);
+ * letter with the real per-word length. `wordplay` is a single click (the pun, once) — not here. */
+const TWO_STAGE_CLUE_IDS = new Set(['distance', 'elevation', 'population', 'currency', 'localTime', 'letter']);
 /** Clues that reveal in 3 clicks. */
 const THREE_STAGE_CLUE_IDS = new Set(['emoji', 'flagColors']);
 
