@@ -88,12 +88,12 @@ export const allJobRows = (): JobRow[] => {
     .sort((a, b) => a.fr.localeCompare(b.fr, 'fr'));
 };
 
-/** Matches a job's French text, English text, or one of its example places. */
+/** Matches a job's French or English text. */
 export const filterJobRows = (rows: JobRow[], query: string): JobRow[] => {
   const q = query.trim().toLowerCase();
   if (q === '') return rows;
   return rows.filter(
-    (row) => row.fr.toLowerCase().includes(q) || row.en.toLowerCase().includes(q) || row.examples.some((name) => name.toLowerCase().includes(q)),
+    (row) => row.fr.toLowerCase().includes(q) || row.en.toLowerCase().includes(q),
   );
 };
 

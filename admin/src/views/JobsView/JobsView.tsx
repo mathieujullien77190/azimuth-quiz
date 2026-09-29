@@ -5,7 +5,7 @@ import { DeleteX } from '../../components/DeleteX';
 import { EditableValue } from '../../components/EditableValue';
 import { Pagination, pageCount, paginate } from '../../components/Pagination';
 
-/** One job, its two translations editable in place, examples read-only for context. Delete only
+/** One job, its two translations editable in place. Delete only
  * shows once nothing uses it any more (see `deleteJob`'s own doc comment) — same "only appears
  * when it would actually do something" convention as `SyllablesView`'s own "×", one step further
  * (here it's "only when it's safe", not just "only when there's something to clear"). */
@@ -30,7 +30,6 @@ const Row = ({
     <td>
       <EditableValue onSave={onSaveEn} saveFlag={saveFlag('en')} value={row.en} />
     </td>
-    <td className="muted">{row.examples.length > 0 ? row.examples.join(', ') : '(aucun lieu)'}</td>
     <td>{row.examples.length === 0 && <DeleteX name={`le métier « ${row.fr} »`} onDelete={onDelete} />}</td>
   </tr>
 );
@@ -59,7 +58,7 @@ const AddRow = ({ onAdd }: { onAdd: (fr: string, en: string) => void }) => {
       <td>
         <input className="kv-input" placeholder="Anglais" value={en} onChange={(e) => setEn(e.target.value)} />
       </td>
-      <td colSpan={2}>
+      <td>
         <button className="reset" type="button" disabled={fr.trim() === '' || en.trim() === ''} onClick={submit}>
           + Ajouter un métier
         </button>
@@ -128,7 +127,7 @@ export const JobsView = () => {
           <span className="field-label">Recherche</span>
           <input
             type="search"
-            placeholder="Métier ou lieu…"
+            placeholder="Métier…"
             value={query}
             onChange={(e) => handleChangeQuery(e.target.value)}
           />
@@ -152,7 +151,6 @@ export const JobsView = () => {
             <th>Code</th>
             <th>Français</th>
             <th>Anglais</th>
-            <th>Lieux</th>
             <th>Action</th>
           </tr>
         </thead>
