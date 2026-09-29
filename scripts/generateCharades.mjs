@@ -147,7 +147,10 @@ const riddleOutput = {};
 for (const syllable of [...realSyllables].sort((a, b) => a.localeCompare(b, 'fr'))) {
   riddleOutput[syllable] = curatedByNormalizedKey[syllable] ?? null;
 }
-writeFileSync(riddleOutputPath, JSON.stringify(riddleOutput) + '\n', 'utf8');
+// One syllable per line (like the other data/places split files) — a single 18KB line was
+// unreadable/undiffable by hand.
+const riddleLines = Object.entries(riddleOutput).map(([k, v]) => '  ' + JSON.stringify(k) + ':' + JSON.stringify(v));
+writeFileSync(riddleOutputPath, '{\n' + riddleLines.join(',\n') + '\n}\n', 'utf8');
 
 // --- Summary ------------------------------------------------------------------------------
 
