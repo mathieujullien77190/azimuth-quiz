@@ -5,14 +5,12 @@
 // 1) Every Clue place's syllable split is MANDATORY in `src/data/places/charadePlaces.json` (see
 //    `data/places/codec.ts`'s doc comment) — nothing is ever computed live in the app. This
 //    script's first job is to keep that invariant true: any key present in `cluesPlaces.json`
-//    (a Clue place) but still missing from `charadePlaces.json` gets one filled in — the live
-//    French syllabifier heuristic, ported here by hand from
-//    `src/games/clues/helpers/syllabify.ts` (this script runs under plain Node ESM with no build
-//    step — same reasoning as `generateContours.mjs` porting its own board math, keep the two in
-//    sync by hand if that file's rules ever change) — and `charadePlaces.json` is rewritten. A
-//    key already carrying a split (whether heuristic or hand-corrected) is left untouched:
-//    correcting one is a hand edit directly on that key's line in `charadePlaces.json`, not
-//    something this script would ever override.
+//    (a Clue place) but still missing from `charadePlaces.json` gets one filled in — the French
+//    syllabifier heuristic below (this is its only copy: no shipped app code needs it, so it
+//    lives only here rather than as a separate `src/` module) — and `charadePlaces.json` is
+//    rewritten. A key already carrying a split (whether heuristic or hand-corrected) is left
+//    untouched: correcting one is a hand edit directly on that key's line in
+//    `charadePlaces.json`, not something this script would ever override.
 //
 // 2) `src/data/charade.json`, the riddle dictionary: COMPLETE — every syllable that appears on
 //    ANY place's split is a key, its curated riddle (`scripts/charadeCuration.json`, a flat
@@ -36,7 +34,11 @@ const charadePlacesPath = path.join(rootDir, 'src/data/places/charadePlaces.json
 const riddleCurationPath = path.join(rootDir, 'scripts/charadeCuration.json');
 const riddleOutputPath = path.join(rootDir, 'src/data/charade.json');
 
-// --- Syllabifier — ported by hand from src/games/clues/helpers/syllabify.ts ------------------
+// --- Syllabifier — rough, heuristic ORTHOGRAPHIC (spelling-based, not phonetic) French
+// syllabification: groups of vowel letters = one sound, cesura V-CV/VC-CV depending on 1 or 2+
+// consonants between two groups, a nasal "n"/"m" folds into the vowel run before it unless
+// doubled. Imperfect on rare cases, documented rather than chased for perfection — a rough split
+// still works fine for the game (see `charadeLines`'s own fallback in `helpers/charade.ts`). -----
 
 const VOWEL_LETTERS = new Set([...'aeiouyâäàéèêëîïôöûüùœ']);
 const isVowel = (char) => VOWEL_LETTERS.has(char.toLowerCase());

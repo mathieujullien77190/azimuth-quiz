@@ -74,9 +74,7 @@ src/
       screens/         # OnlineClueGameScreen, ClueSetupScreen
       components/      # ClueCard, ClueGrid
       helpers/         # clueHistory.ts, clueSkeleton.ts, clueGame.ts (score, tirage, saisie,
-                       # cluesFor/placeCategory), syllabify.ts (heuristique FR — plus utilisee qu'a
-                       # la generation, voir Charade plus bas ; gardee ici testee/lisible, portee a
-                       # la main dans generateCharades.mjs), charade.ts, personality.ts, wordplay.ts
+                       # cluesFor/placeCategory), charade.ts, personality.ts, wordplay.ts
       constants.ts     # tuning propre a Clues : CLUE_ORDER, CLUE_CATEGORIES,
                        # CLUE_ANSWER_METHODS, DEFAULT_CLUE_SETTINGS, CLUE_HISTORY_STORAGE_KEY
     contour/
@@ -277,12 +275,13 @@ commentees en francais :
   optionnel) — `charadeFor(place)` n'est plus qu'une LECTURE directe (`place.syllables`), rien n'est jamais
   calcule a l'execution dans l'appli. Peut etre un tableau vide (certains noms n'ont aucune syllabe
   utilisable, ex. "Bălți"). Rempli une fois pour toutes par `scripts/generateCharades.mjs` (`npm run
-  generate:charades`, hors tests/CI/app livree) via `helpers/syllabify.ts` (heuristique francaise ecrite a
-  la main : groupes de voyelles = un seul son, cesure V-CV/VC-CV selon 1 ou 2+ consonnes entre deux groupes,
-  "n"/"m" nasalise repli dans la voyelle qui precede sauf s'il est double — imparfaite sur les cas rares,
-  documentee dans le fichier plutot que chassee a la perfection ; chaque mot d'un nom compose/a tiret/a
-  espace est syllabe seul, jamais fusionne avec le suivant), portee a la main dans le script (Node ESM sans
-  etape de build, meme raison que `generateContours.mjs` portant sa propre geometrie) — le script ne fait
+  generate:charades`, hors tests/CI/app livree) via une heuristique francaise ecrite a la main directement
+  dans le script (Node ESM sans etape de build ; aucun code de l'appli livree n'en a besoin, donc pas de
+  module `src/` a part pour elle, contrairement a `simplify.ts` cote Silhouette qui sert aussi en direct) :
+  groupes de voyelles = un seul son, cesure V-CV/VC-CV selon 1 ou 2+ consonnes entre deux groupes, "n"/"m"
+  nasalise repli dans la voyelle qui precede sauf s'il est double — imparfaite sur les cas rares, documentee
+  dans le script plutot que chassee a la perfection ; chaque mot d'un nom compose/a tiret/a espace est
+  syllabe seul, jamais fusionne avec le suivant. Le script ne fait
   que COMBLER une cle presente dans `cluesPlaces.json` (un lieu Indices) mais absente de
   `charadePlaces.json` ; une cle qui en a deja un (heuristique ou corrige a la main) n'est jamais retouchee.
   Correction a la main directement dans `charadePlaces.json` (via l'admin, `CharadeEditor`, voir plus bas).
