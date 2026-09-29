@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { deletePlace, fetchPlaces, saveCompass, saveDifficulty, saveClues, type CompassPatch, type CluesPatch, type PlaceRow } from '../../api/places';
 import { CharadeEditor } from './CharadeEditor';
+import { PersonalityEditor } from './PersonalityEditor';
 import { WordplayEditor } from './WordplayEditor';
 import { ChipGroup, toggleInSet } from '../../components/ChipGroup';
 import { DeleteX } from '../../components/DeleteX';
@@ -37,6 +38,8 @@ export const PlacesView = () => {
   // Which card's own Wordplay editor is expanded — separate from Charade's, so both can be open
   // at once on the same card (they edit different fields, no reason to force a choice).
   const [expandedWordplayKey, setExpandedWordplayKey] = useState<string | null>(null);
+  // Which card's own Personality editor is expanded — same independence as Wordplay's.
+  const [expandedPersonalityKey, setExpandedPersonalityKey] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [categories, setCategories] = useState(new Set(CATEGORY_ORDER));
   const [difficulties, setDifficulties] = useState(new Set(DIFFICULTY_ORDER));
@@ -309,6 +312,16 @@ export const PlacesView = () => {
                       ✍️ Jeu de mots
                     </button>
                   )}
+                  {row.clues && (
+                    <button
+                      type="button"
+                      className="chip"
+                      aria-pressed={expandedPersonalityKey === row.key}
+                      onClick={() => setExpandedPersonalityKey(expandedPersonalityKey === row.key ? null : row.key)}
+                    >
+                      🎤 Personnalité
+                    </button>
+                  )}
                 </div>
                 {row.clues ? (
                   <table className="kv-table">
@@ -379,6 +392,7 @@ export const PlacesView = () => {
                 )}
                 {row.clues && expandedCharadeKey === row.key && <CharadeEditor initialPlace={row.clues} />}
                 {row.clues && expandedWordplayKey === row.key && <WordplayEditor initialPlace={row.clues} />}
+                {row.clues && expandedPersonalityKey === row.key && <PersonalityEditor initialPlace={row.clues} />}
               </div>
             </div>
           </div>
