@@ -5,9 +5,8 @@ import type { Difficulty, CluePlace, Place } from '@/types';
 import { data, putPlace, removePlace } from '../data';
 
 /** A place card: the common identity, plus each game's data when this place is in it
- * (either one can be absent). `key` is the short code the `places/{key}` documents are indexed by
- * (e.g. `"par"` for Paris) — opaque, so anything shown to the admin pairs it with the human
- * identity. */
+ * (either one can be absent). `key` is the permanent id the `places/{id}` documents are indexed by
+ * (`fr-paris`), fixed at creation even if the place is renamed. */
 export type PlaceRow = {
   key: string;
   name: string;

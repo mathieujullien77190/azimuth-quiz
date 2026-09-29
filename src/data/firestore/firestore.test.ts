@@ -4,7 +4,7 @@ import personalityJobsData from '../personalityJobs.json';
 import { decodeAllPlaces } from '../places/codec';
 import { decodeAllCountries } from '../places/countries';
 
-import { buildCountryDocs, buildJobDocs, buildPlaceDocs, buildRiddleDocs, flattenPoints, unflattenPoints } from './build';
+import { buildCountryDocs, buildJobDocs, buildPlaceDocs, buildRiddleDocs, flattenPoints, legacyKeyToPlaceId, placeSlugId, unflattenPoints } from './build';
 import { cluesFromDoc, compassFromDoc, contourFromDoc } from './read';
 
 const places = buildPlaceDocs();
@@ -36,14 +36,26 @@ describe('firestore docs', () => {
 
   it('builds one place doc per key and round-trips through the readers', () => {
     const rows = decodeAllPlaces();
-    expect(Object.keys(places)).toEqual(rows.map((row) => row.key));
+    const ids = legacyKeyToPlaceId();
+    expect(Object.keys(places)).toEqual(rows.map((row) => ids[row.key]));
     for (const { key, compass, clues } of rows) {
-      const doc = places[key];
+      const id = ids[key];
+      const doc = places[id];
       expect(doc.compass !== undefined).toBe(compass !== null);
       expect(doc.clues !== undefined).toBe(clues !== null);
       if (compass) expect(compassFromDoc({ ...doc, compass: doc.compass! })).toEqual(compass);
-      if (clues) expect(cluesFromDoc(key, { ...doc, clues: doc.clues! }, { countries, jobs })).toEqual(clues);
+      if (clues) expect(cluesFromDoc(id, { ...doc, clues: doc.clues! }, { countries, jobs })).toEqual({ ...clues, key: id });
     }
+  });
+
+  it('gives every place a readable, unique id', () => {
+    const ids = legacyKeyToPlaceId();
+    const values = Object.values(ids);
+    expect(new Set(values).size).toBe(values.length);
+    expect(ids.par).toBe('fr-paris');
+    expect(values.every((id) => /^[a-z]{2}-[a-z0-9]+(-[a-z0-9]+)*$/.test(id))).toBe(true);
+    expect(values.some((id) => /-2$/.test(id))).toBe(true);
+    expect(placeSlugId('FR', 'Saint-Étienne (Loire)')).toBe('fr-saint-etienne-loire');
   });
 
   it('builds country docs that round-trip to the contours', () => {
