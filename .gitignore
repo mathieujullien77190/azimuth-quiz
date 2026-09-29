@@ -48,3 +48,7 @@ storybook-static
 
 # local secrets
 .env
+
+# Firebase service account keys (seed script) — never commit
+serviceAccount*.json
+*-firebase-adminsdk-*.json

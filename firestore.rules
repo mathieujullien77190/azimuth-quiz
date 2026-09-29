@@ -59,6 +59,44 @@ service cloud.firestore {
             && onlyOwnPlayerEntry()));
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // Données du jeu (lieux, pays, devinettes de charade, métiers) : lisibles par tout le monde (elles
+    // sont de toute façon embarquées dans l'appli), modifiables uniquement par l'administrateur, qui
+    // se connecte à l'outil `admin/` avec son compte Google (adresse vérifiée). Les joueurs, eux,
+    // n'ont qu'une authentification anonyme : ils ne passent jamais ce test.
+    // ---------------------------------------------------------------------------------------------
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'mathieu.jullien77190@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    match /places/{key} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /countries/{code} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /charadeRiddles/{syllable} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /personalityJobs/{code} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Version des données (incrémentée à chaque écriture), pour un futur cache côté jeu.
+    match /meta/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /rooms/{code} {
       // N'importe qui peut lire une room (c'est ainsi qu'on vérifie un code avant de la rejoindre).
       allow read: if true;
