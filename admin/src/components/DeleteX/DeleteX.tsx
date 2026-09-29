@@ -15,10 +15,12 @@ export const DeleteX = ({ name, onDelete }: { name: string; onDelete: () => Prom
         onClick={() => {
           setDeleting(true);
           setError(null);
-          onDelete().catch((err: Error) => {
-            setError(err.message);
-            setDeleting(false);
-          });
+          onDelete()
+            .then(() => setDeleting(false))
+            .catch((err: Error) => {
+              setError(err.message);
+              setDeleting(false);
+            });
         }}
       >
         {deleting ? '…' : '×'}
