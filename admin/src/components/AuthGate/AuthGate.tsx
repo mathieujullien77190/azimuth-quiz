@@ -1,9 +1,8 @@
 import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebase/auth';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 
-import { data, loadData } from '../../data';
+import { loadData } from '../../data';
 import { ADMIN_EMAIL, auth } from '../../firebase';
-import { seedFirestore } from '../../seed';
 
 type Phase = 'auth' | 'loading' | 'ready';
 
@@ -17,7 +16,6 @@ export const AuthGate = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const [phase, setPhase] = useState<Phase>('auth');
   const [error, setError] = useState<string | null>(null);
-  const [progress, setProgress] = useState<string | null>(null);
 
   useEffect(() => onAuthStateChanged(auth, setUser), []);
 
@@ -39,20 +37,6 @@ export const AuthGate = ({ children }: { children: ReactNode }) => {
     else setPhase('auth');
   }, [isAdmin, load]);
 
-  const runSeed = () => {
-    setError(null);
-    setProgress('Import…');
-    seedFirestore((written, total) => setProgress(`Import : ${written} / ${total}`))
-      .then(() => {
-        setProgress(null);
-        load();
-      })
-      .catch((err: Error) => {
-        setProgress(null);
-        setError(err.message);
-      });
-  };
-
   const signIn = () => {
     setError(null);
     signInWithPopup(auth, new GoogleAuthProvider()).catch((err: Error) => setError(err.message));
@@ -60,20 +44,6 @@ export const AuthGate = ({ children }: { children: ReactNode }) => {
 
   if (user === undefined) return <div className="empty">Connexion…</div>;
 
-  // Empty database: offer the one-off import of the bundled JSON instead of an admin with nothing in it.
-  if (isAdmin && phase === 'ready' && Object.keys(data().places).length === 0) {
-    return (
-      <div className="wrap">
-        <div className="empty">
-          <p>Firestore est vide. Importer les données embarquées (lieux, pays, syllabes, métiers) ?</p>
-          {error && <p>{error}</p>}
-          <button className="reset" type="button" disabled={progress !== null} onClick={runSeed}>
-            {progress ?? 'Importer les données'}
-          </button>
-        </div>
-      </div>
-    );
-  }
   if (isAdmin && phase === 'ready') return <>{children}</>;
   if (isAdmin && phase === 'loading') return <div className="empty">Chargement des données…</div>;
 
