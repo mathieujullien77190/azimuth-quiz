@@ -61,3 +61,81 @@ export const savePersonalityJob = async (
   );
   return { ...draft, jobCode: next };
 };
+
+// --- The shared job dictionary itself (`data/personalityJobs.json`) — add/rename/delete an ------
+// entry, rather than edit a single place's tag. Same journal-only pattern as everything above.
+
+export type JobRow = { code: string; fr: string; en: string; examples: string[] };
+
+/** How many example place names to keep per job (just enough context to judge a rename/delete —
+ * not an exhaustive list). Same idea as `SyllablesView`'s own `MAX_EXAMPLES`. */
+const MAX_JOB_EXAMPLES = 4;
+
+/** `fr` -> a lowercase, accent-stripped, letters-only 3-letter code (`"chanteuse"` -> `"cha"`) — a
+ * starting point, not guaranteed free yet (see `freeJobCode`). */
+const codeFromFr = (fr: string): string =>
+  fr
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z]/g, '')
+    .slice(0, 3) || 'job';
+
+/** The first code starting with `base` that isn't already taken — `base` itself if it's free,
+ * else `base` + "2", "3"... (there's no natural 3-letter fallback scheme to reuse here, unlike
+ * place keys: a handful of jobs added by hand never collides often enough to need one). */
+const freeJobCode = (base: string): string => {
+  if (!(base in JOBS)) return base;
+  for (let n = 2; ; n += 1) {
+    const candidate = `${base}${n}`;
+    if (!(candidate in JOBS)) return candidate;
+  }
+};
+
+/** Every curated job, its two translations, and which places currently use it (from
+ * `personalityPlaces.json` directly, not `CluePlace.personality` — same reasoning as
+ * `personalityDraftFor`). Alphabetical by French text. */
+export const allJobRows = (): JobRow[] => {
+  const examplesByCode = new Map<string, string[]>();
+  for (const [name, jobCode] of Object.values(PERSONALITY_PLACES)) {
+    if (jobCode === null) continue;
+    const examples = examplesByCode.get(jobCode) ?? [];
+    if (examples.length < MAX_JOB_EXAMPLES) examples.push(name);
+    examplesByCode.set(jobCode, examples);
+  }
+  return Object.entries(JOBS)
+    .map(([code, [fr, en]]) => ({ code, fr, en, examples: examplesByCode.get(code) ?? [] }))
+    .sort((a, b) => a.fr.localeCompare(b.fr, 'fr'));
+};
+
+/** Matches a job's French text, English text, or one of its example places. */
+export const filterJobRows = (rows: JobRow[], query: string): JobRow[] => {
+  const q = query.trim().toLowerCase();
+  if (q === '') return rows;
+  return rows.filter(
+    (row) => row.fr.toLowerCase().includes(q) || row.en.toLowerCase().includes(q) || row.examples.some((name) => name.toLowerCase().includes(q)),
+  );
+};
+
+export const addJob = async (fr: string, en: string): Promise<JobRow> => {
+  const code = freeJobCode(codeFromFr(fr));
+  logChange(`[Métiers] + personalityJobs.json["${code}"] = ["${fr}", "${en}"]`);
+  return { code, fr, en, examples: [] };
+};
+
+export const saveJobFr = async (job: JobRow, next: string): Promise<JobRow> => {
+  logChange(`[Métiers] personalityJobs.json["${job.code}"][0] : "${job.fr}" -> "${next}"`);
+  return { ...job, fr: next };
+};
+
+export const saveJobEn = async (job: JobRow, next: string): Promise<JobRow> => {
+  logChange(`[Métiers] personalityJobs.json["${job.code}"][1] : "${job.en}" -> "${next}"`);
+  return { ...job, en: next };
+};
+
+/** Only meaningful (and only ever called by the view) when `job.examples` is empty — deleting a
+ * code still referenced by a place would leave its `personalityPlaces.json` row pointing at
+ * nothing, so `JobsView` hides the delete action otherwise rather than let that happen. */
+export const deleteJob = async (job: JobRow): Promise<void> => {
+  logChange(`[Métiers] - personalityJobs.json["${job.code}"] supprimé (« ${job.fr} »)`);
+};

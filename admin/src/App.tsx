@@ -5,10 +5,11 @@ import appConfig from '../../app.json';
 
 import { clearChangelog, useChangelog } from './changelog';
 import { CountriesView } from './views/CountriesView';
+import { JobsView } from './views/JobsView';
 import { PlacesView } from './views/PlacesView';
 import { SyllablesView } from './views/SyllablesView';
 
-type Tab = 'places' | 'countries' | 'syllables';
+type Tab = 'places' | 'countries' | 'syllables' | 'jobs';
 
 const ChangelogPanel = () => {
   const lines = useChangelog();
@@ -76,6 +77,9 @@ export const App = () => {
             <button type="button" className="chip game-chip" aria-pressed={tab === 'syllables'} onClick={() => setTab('syllables')}>
               Syllabes
             </button>
+            <button type="button" className="chip game-chip" aria-pressed={tab === 'jobs'} onClick={() => setTab('jobs')}>
+              Métiers
+            </button>
           </div>
         </div>
       </header>
@@ -85,6 +89,7 @@ export const App = () => {
       {tab === 'places' && <PlacesView />}
       {tab === 'countries' && <CountriesView />}
       {tab === 'syllables' && <SyllablesView />}
+      {tab === 'jobs' && <JobsView />}
     </div>
   );
 };
