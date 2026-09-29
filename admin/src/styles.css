@@ -439,9 +439,14 @@ textarea:focus-visible,
   letter-spacing: 0.3px;
   padding: 4px 8px;
   border-radius: 999px;
-  color: var(--tier-color);
-  background: color-mix(in srgb, var(--tier-color) 18%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--tier-color) 45%, transparent);
+  /* --tier-color is set inline where a select has a per-value color (e.g. WordplayEditor's
+     difficulty) — falls back to the theme accent otherwise (e.g. PersonalityEditor's job
+     picker), same fallback pattern as .chip[aria-pressed='true'] above. Without it the color/
+     background/border vars are empty and the browser's own <select> default (often white text
+     on white) shows through instead. */
+  color: var(--tier-color, var(--accent));
+  background: color-mix(in srgb, var(--tier-color, var(--accent)) 18%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--tier-color, var(--accent)) 45%, transparent);
   cursor: pointer;
   text-overflow: ellipsis;
 }
