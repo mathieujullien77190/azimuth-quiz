@@ -19,7 +19,8 @@ import type { CluePlace } from '@/types';
  *
  * Click-to-edit, save-on-blur/Enter (`EditableValue`, same as everywhere else in the admin) — a
  * riddle can be cleared back to "not curated" on purpose, so it opts into `allowEmpty`; a syllable
- * can't be renamed to blank (removing it is what the "×" is for), so it doesn't.
+ * can't be renamed to blank (removing it is what the "×" is for), so it doesn't. "Vider" clears
+ * every syllable in one action (rather than one "×" per row) when a name just isn't usable at all.
  */
 export const CharadeEditor = ({ initialPlace }: { initialPlace: CluePlace }) => {
   const [place] = useState(initialPlace);
@@ -48,6 +49,8 @@ export const CharadeEditor = ({ initialPlace }: { initialPlace: CluePlace }) => 
   const handleRemove = (index: number) => applySyllables(syllables.filter((_, i) => i !== index), null);
 
   const handleAdd = (next: string) => applySyllables([...syllables, next], syllables.length);
+
+  const handleClear = () => applySyllables([], null);
 
   const handleSaveRiddle = (index: number, syllable: string, next: string) => {
     saveCharadeRiddle(syllable, next).then((updated) => {
@@ -84,12 +87,19 @@ export const CharadeEditor = ({ initialPlace }: { initialPlace: CluePlace }) => 
           ))}
         </tbody>
       </table>
-      <EditableValue
-        display="+ Ajouter une syllabe"
-        onSave={handleAdd}
-        saveFlag={savedFlag(syllables.length)}
-        value=""
-      />
+      <div className="charade-editor-actions">
+        <EditableValue
+          display="+ Ajouter une syllabe"
+          onSave={handleAdd}
+          saveFlag={savedFlag(syllables.length)}
+          value=""
+        />
+        {syllables.length > 0 && (
+          <button className="reset" type="button" onClick={handleClear} title="Aucune syllabe utilisable — pas de charade pour ce lieu">
+            Vider
+          </button>
+        )}
+      </div>
     </div>
   );
 };
