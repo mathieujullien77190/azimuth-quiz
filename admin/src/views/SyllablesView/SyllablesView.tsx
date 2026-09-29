@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 
 import { saveCharadeRiddle } from '../../api/charades';
+import { DeleteX } from '../../components/DeleteX';
 import { EditableValue } from '../../components/EditableValue';
 import { Pagination, pageCount, paginate } from '../../components/Pagination';
 
@@ -8,20 +9,24 @@ import { allSyllableRows, filterSyllableRows } from './helpers';
 import type { SyllableRow } from './types';
 
 /** One syllable's riddle, editable — click the text, it becomes an input, blur/Enter saves
- * (`EditableValue`, same as everywhere else in the admin). The syllable itself isn't editable
+ * (`EditableValue`, same as everywhere else in the admin), or the "×" clears it in one action
+ * (same result as editing to blank, quicker than select-all). The syllable itself isn't editable
  * here (it's the dictionary's own key, always the live `syllabify` output — see
  * `helpers/charade.ts`'s own doc comment); the examples are just context, read-only. */
 const Row = ({ row, onSave, saveFlag }: { row: SyllableRow; onSave: (next: string) => void; saveFlag: React.ReactNode }) => (
   <tr>
     <td className="syllable-cell">{row.syllable}</td>
     <td>
-      <EditableValue
-        allowEmpty
-        display={row.riddle ?? '(pas encore de charade — la syllabe se dit telle quelle)'}
-        onSave={onSave}
-        saveFlag={saveFlag}
-        value={row.riddle ?? ''}
-      />
+      <div className="field-cell">
+        <EditableValue
+          allowEmpty
+          display={row.riddle ?? '(pas encore de charade — la syllabe se dit telle quelle)'}
+          onSave={onSave}
+          saveFlag={saveFlag}
+          value={row.riddle ?? ''}
+        />
+        {row.riddle !== null && <DeleteX name={`la charade de « ${row.syllable} »`} onDelete={() => Promise.resolve(onSave(''))} />}
+      </div>
     </td>
     <td className="muted">{row.examples.join(', ')}</td>
   </tr>
