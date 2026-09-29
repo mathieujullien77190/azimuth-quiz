@@ -4,6 +4,7 @@ import charadePlacesData from './charadePlaces.json';
 import { countryName, countryPhoneCode, countryCurrencySymbol } from './countries';
 import cluesPlacesData from './cluesPlaces.json';
 import compassPlacesData from './compassPlaces.json';
+import personalityJobsData from '../personalityJobs.json';
 import personalityPlacesData from './personalityPlaces.json';
 import placesData from './places.json';
 
@@ -22,8 +23,11 @@ import placesData from './places.json';
  * - `charadePlaces.json` (`{ key: readonly string[] }`): the charade clue's syllable split,
  *   MANDATORY for every key in `cluesPlaces.json` (see `decodeCluePlace`'s own doc comment) —
  *   never computed at runtime.
- * - `personalityPlaces.json` (`{ key: readonly [name, description] }`): OPTIONAL, only the
- *   places with a curated personality.
+ * - `personalityPlaces.json` (`{ key: readonly [name, jobCode] }`): OPTIONAL, only the places
+ *   with a curated personality. `jobCode` looks up `../personalityJobs.json` (`{ code:
+ *   readonly [fr, en] }`, e.g. `"cha": ["chanteuse", "singer"]`) — a shared vocabulary of
+ *   professions rather than repeating the same French word (and its English translation) on
+ *   every place that has one, same idea as `TIMEZONE_CODES` below.
  *
  * `decodeAllPlaces`/`decodeCompassPlaces`/`decodeCluePlaces` are the only place that joins these
  * 5 files back together: `src/data/places/index.ts`, `src/data/clues.ts` and
@@ -344,13 +348,20 @@ export type CharadeRow = readonly string[];
 /** A real, Wikipedia-documented person tied to this place — present only for the places that
  * have one (curated by hand, see `helpers/personality.ts`'s own doc comment). `[name,
  * description]`, `description` itself `null` when there's nothing short and safe to add. */
-export type PersonalityRow = readonly [name: string, description: string | null];
+export type PersonalityRow = readonly [name: string, jobCode: string | null];
+
+/** `jobCode` -> `[fr, en]`, the shared profession vocabulary `PersonalityRow`'s 2nd element looks
+ * up (see this module's own doc comment). Only `fr` is rendered today (`decodeCluePlace`) — `en`
+ * is curated alongside it for when the game's content itself gets translated, same reasoning as
+ * `wordplayCuration.json` keeping both. */
+export type PersonalityJobRow = readonly [fr: string, en: string];
 
 const PLACES = placesData as unknown as Record<string, CommonRow>;
 const COMPASS_PLACES = compassPlacesData as unknown as Record<string, CompassRow>;
 const CLUES_PLACES = cluesPlacesData as unknown as Record<string, ClueRow>;
 const CHARADE_PLACES = charadePlacesData as unknown as Record<string, CharadeRow>;
 const PERSONALITY_PLACES = personalityPlacesData as unknown as Record<string, PersonalityRow>;
+const PERSONALITY_JOBS = personalityJobsData as unknown as Record<string, PersonalityJobRow>;
 
 export const decodeCompassPlace = (common: CommonRow, row: CompassRow): Place => {
   const [name, code, latitude, longitude, difficultyCode] = common;
@@ -393,7 +404,9 @@ export const decodeCluePlace = (
     airportCode,
     emojis: [emoji1, emoji2, emoji3] as const,
     syllables: [...syllables],
-    ...(personality !== undefined && { personality: { name: personality[0], description: personality[1] } }),
+    ...(personality !== undefined && {
+      personality: { name: personality[0], description: personality[1] !== null ? PERSONALITY_JOBS[personality[1]][0] : null },
+    }),
   };
 };
 

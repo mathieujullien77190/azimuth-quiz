@@ -14,7 +14,10 @@ jest.mock('./charadePlaces.json', () => ({
   ov1: ['o', 'ther', 'ville'],
 }));
 jest.mock('./personalityPlaces.json', () => ({
-  ov1: ['Quelqu’un', 'footballeur'],
+  ov1: ['Quelqu’un', 'foo'],
+}));
+jest.mock('../personalityJobs.json', () => ({
+  foo: ['footballeur', 'footballer'],
 }));
 
 // eslint-disable-next-line import/first
@@ -93,9 +96,14 @@ describe('decodeCluePlace', () => {
     expect(place.currency).toBe('');
   });
 
-  it('includes the curated personality when one is passed', () => {
-    const place = decodeCluePlace('tst', common, row, [], ['Quelqu’un', 'footballeur']);
+  it('includes the curated personality when one is passed, resolving the job code to its French text', () => {
+    const place = decodeCluePlace('tst', common, row, [], ['Quelqu’un', 'foo']);
     expect(place.personality).toEqual({ name: 'Quelqu’un', description: 'footballeur' });
+  });
+
+  it('keeps a null job code as a null description', () => {
+    const place = decodeCluePlace('tst', common, row, [], ['Quelqu’un', null]);
+    expect(place.personality).toEqual({ name: 'Quelqu’un', description: null });
   });
 
   it('omits personality when none is passed', () => {
@@ -139,6 +147,7 @@ describe('decodeAllPlaces / decodeCompassPlaces / decodeCluePlaces', () => {
   it('decodeCluePlaces skips keys with no clues row, and joins in charade/personality by the same key', () => {
     const places = decodeCluePlaces();
     expect(places).toHaveLength(2);
+    // "footballeur" is the resolved French text, not the raw "foo" job code from personalityPlaces.json.
     expect(places.find((p) => p.name === 'Otherville')).toMatchObject({
       syllables: ['o', 'ther', 'ville'],
       personality: { name: 'Quelqu’un', description: 'footballeur' },

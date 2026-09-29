@@ -1,0 +1,23 @@
+{
+  "act": ["acteur", "actor"],
+  "atr": ["actrice", "actress"],
+  "chr": ["chanteur", "singer"],
+  "cha": ["chanteuse", "singer"],
+  "ecr": ["écrivain", "writer"],
+  "exp": ["explorateur", "explorer"],
+  "foo": ["footballeur", "footballer"],
+  "her": ["héroïne", "heroine"],
+  "hde": ["homme d’État", "statesman"],
+  "ill": ["illustrateur", "illustrator"],
+  "mag": ["magicien", "magician"],
+  "mus": ["musicien", "musician"],
+  "pei": ["peintre", "painter"],
+  "phy": ["physicien", "physicist"],
+  "phe": ["physicienne", "physicist"],
+  "poe": ["poète", "poet"],
+  "psy": ["psychanalyste", "psychoanalyst"],
+  "rea": ["réalisateur", "director"],
+  "roi": ["roi", "king"],
+  "sav": ["savant", "scientist"],
+  "scu": ["sculpteur", "sculptor"]
+}

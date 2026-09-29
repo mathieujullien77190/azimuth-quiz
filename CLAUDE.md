@@ -317,8 +317,12 @@ commentees en francais :
 - **Indices : une personnalite liee au lieu** (`ClueId` `'personality'`, `helpers/personality.ts`) — un seul
   palier (nom + description courte optionnelle, ex. "footballeur"), jamais invente : uniquement des faits
   Wikipedia (nee/tres fortement identifiee au lieu). Dans `src/data/places/personalityPlaces.json`
-  (`[nom, description]`, absent pour la quasi-totalite des lieux, curee et editee a la main directement dans
-  ce fichier, aucun autre fichier/script a part). Un
+  (`[nom, jobCode]`, absent pour la quasi-totalite des lieux, curee et editee a la main directement dans ce
+  fichier). `jobCode` pointe dans `src/data/personalityJobs.json` (`{ code: [fr, en] }`, ex.
+  `"cha": ["chanteuse", "singer"]`) — un vocabulaire de metiers partage plutot que repeter le meme mot
+  francais (et sa traduction anglaise) sur chaque lieu qui l'a ; `decodeCluePlace` (`data/places/codec.ts`)
+  resout le code vers le texte francais, seul consomme aujourd'hui (`en` curee en prevision d'une
+  traduction future du contenu du jeu, jamais lue pour l'instant). Un
   lieu sans personnalite curee n'offre jamais cet indice (`cluesFor` le retire, jamais de case vide).
   Premier lot : 41 lieux (23 capitales + 18 villes `citiesFr`), verifie a la main (recherches web
   ponctuelles + faits bien etablis) — le reste des ~880 lieux Indices n'a rien, a completer plus tard.
