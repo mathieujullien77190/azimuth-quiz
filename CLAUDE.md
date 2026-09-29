@@ -157,28 +157,6 @@ bord) — seuls les hooks a etat/effet metier sont interdits. Les tests existant
 `OnlineGameScreen` a depuis gagne un `OnlineGameScreen.test.tsx` (comme les deux autres jeux) —
 cette phrase datait d'avant.
 
-### Lieux : source lisible vs donnees livrees
-
-`src/data/places/places.json` (922 lieux Compass+Clues, 1417 lignes en comptant les lieux Compass-only)
-est un tableau de tuples POSITIONNELS compacts (`[common, compass, clues]`, voir `codec.ts`) — illisible
-a l'oeil (`["center",872000,"🌧️",-2,"fx","AMS","🚲","🌷","🧀",["ame","stèr","dame"]]`) mais petit a livrer.
-Ce n'est PAS le fichier a editer a la main : `scripts/placesSource.json` (memes 1417 entrees, un objet
-`{ name, code, latitude, longitude, difficulty, compass: {...}|null, clues: {...}|null }` par lieu, champs
-nommes en clair, ex. `category: "capital"` plutot que `"P"`, `timezone: "Europe/Amsterdam"` plutot que
-`"fx"`) est la source lisible ; `npm run generate:places` (`scripts/generatePlaces.mjs`, meme famille dev-
-only que les autres `generate:*`) la compile vers `places.json`. Categories/difficultes/fuseaux horaires
-partagent leurs tables de codes (`data/places/codes.json`, JSON pour etre lisible aussi bien par
-`codec.ts` que par le script Node) entre les deux sens : `codec.ts` decode places.json avec, le script
-encode placesSource.json avec. Les codes de fuseau horaire sont APPEND-ONLY (reutiliser le code d'un
-fuseau existant corromprait silencieusement tous les lieux qui l'utilisent deja) : un fuseau absent de la
-table recoit le prochain code libre, ajoute a la fin, et `codes.json` est reecrit en consequence — jamais
-reordonne, jamais reassigne. `places.json` reste importe directement par l'app/l'admin (aucun changement
-cote runtime) ; editer `placesSource.json` puis relancer `npm run generate:places` est le chemin normal
-pour un lieu entier, mais rien n'empeche d'editer `places.json` directement pour une retouche ponctuelle
-(les deux fichiers doivent juste rester en phase — la generation les remet en phase). Round-trip verifie
-a la migration : `generatePlaces.mjs` sur le `placesSource.json` issu du `places.json` d'alors reproduit
-ce `places.json` **a l'octet pres**.
-
 ## Domaine : cap et distance
 
 On choisit un cap et on estime la distance parcourue a la surface du globe (`Guess` = `bearing` +
@@ -267,12 +245,11 @@ commentees en francais :
   consonnes entre deux groupes, "n"/"m" nasalise repli dans la voyelle qui precede sauf s'il est double —
   imparfaite sur les cas rares, documentee dans le fichier plutot que chassee a la perfection ; chaque mot
   d'un nom compose/a tiret/a espace est syllabe seul, jamais fusionne avec le suivant) : `charadeFor(place)`
-  l'utilise par defaut, mais un lieu peut avoir un **override PAR LIEU** de son propre decoupage
-  (`clues.syllables` dans `scripts/placesSource.json` — voir "Source lisible vs donnees livrees"
-  plus bas — compile en 10e/dernier element optionnel du `ClueRow` de `places.json`,
-  `CluePlace.syllables`, absent pour la quasi-totalite des lieux, meme convention que le `contour`
-  optionnel de `CountryRow` cote Silhouette) quand l'heuristique se trompe (diacritiques etrangers
-  surtout, ex. le "ă" de "Bălți" qu'elle ne reconnait pas). Un override peut
+  l'utilise par defaut, mais un lieu peut avoir un **override PAR LIEU** de son propre decoupage, baque
+  directement dans `places.json` — 10e (et dernier) element optionnel de son `ClueRow`
+  (`data/places/codec.ts`, `CluePlace.syllables`), absent pour la quasi-totalite des lieux, meme
+  convention que le `contour` optionnel de `CountryRow` (voir Silhouette plus bas) — quand l'heuristique se
+  trompe (diacritiques etrangers surtout, ex. le "ă" de "Bălți" qu'elle ne reconnait pas). Un override peut
   aussi etre un tableau vide : certains noms n'ont simplement aucune syllabe utilisable, et c'est un
   resultat valide, pas une erreur (voir plus haut, `cluesFor`). **La devinette, elle, reste GLOBALE**,
   independamment de cet override : `riddleFor(syllabe)` la cherche par le texte de la syllabe elle-meme (`normalizeSyllable` :
@@ -297,10 +274,9 @@ commentees en francais :
   `EditableValue` — et l'onglet a part "Syllabes" (`SyllablesView`, une ligne par syllabe DISTINCTE toutes
   places confondues, avec quelques lieux d'exemple pour le contexte en curant) n'edite que la devinette
   globale. Rien ecrit sur disque (meme pattern journal que le reste de l'admin) : editer le decoupage
-  logue le tableau complet resultant du lieu, a recopier a la main dans le `clues.syllables` de ce lieu
-  dans `scripts/placesSource.json` ; editer la devinette logue sa cle normalisee, a recopier dans
-  `charadeCuration.json`. Premier lot curee : 179 syllabes distinctes sur ~1013 (chiffre avant l'ajout
-  d'Amsterdam).
+  logue le tableau complet resultant du lieu, a recopier a la main comme 10e element de son `ClueRow` dans
+  `places.json` ; editer la devinette logue sa cle normalisee, a recopier dans `charadeCuration.json`.
+  Premier lot curee : 183 syllabes distinctes sur ~1016 (dont les overrides Amsterdam et Paris).
 - **Indices : une personnalite liee au lieu** (`ClueId` `'personality'`, `helpers/personality.ts`) — un seul
   palier (nom + description courte optionnelle, ex. "footballeur"), jamais invente : uniquement des faits
   Wikipedia (nee/tres fortement identifiee au lieu), curee a la main dans `scripts/personalityCuration.json`

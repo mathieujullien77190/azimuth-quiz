@@ -11,11 +11,10 @@ import { logChange } from '../changelog';
  * "pà"/"pâ" (`normalizeSyllable`, true homophones in French — see that function's own comment),
  * to copy into `scripts/charadeCuration.json`. `saveCharadeSyllables` edits the syllable SPLIT
  * itself, per place — the live `syllabify` heuristic gets it wrong often enough (foreign
- * diacritics, mostly) to need hand correction, baked directly into `scripts/placesSource.json`
- * (this place's own `clues.syllables` field — compiled into `places.json` by
- * `npm run generate:places`, see that script's doc comment); some names end up with no usable
- * syllable at all (e.g. "Bălți"), which is a valid result: `cluesFor` simply drops the charade
- * clue for that place rather than showing an empty card. */
+ * diacritics, mostly) to need hand correction, baked directly into `places.json` as that place's
+ * own `ClueRow`'s optional last element (see `data/places/codec.ts`'s doc comment); some names end
+ * up with no usable syllable at all (e.g. "Bălți"), which is a valid result: `cluesFor` simply
+ * drops the charade clue for that place rather than showing an empty card. */
 export { charadeFor, normalizeSyllable, riddleFor };
 
 /** `syllable`'s riddle text was edited (or cleared, with an empty string). Logs the *normalized*
@@ -28,12 +27,12 @@ export const saveCharadeRiddle = async (syllable: string, next: string): Promise
 };
 
 /** `place`'s syllable split was hand-corrected (a syllable added, removed, or renamed) — always
- * logs the FULL resulting list (lowercased), not a diff: that's exactly what to write as this
- * place's `clues.syllables` field in `scripts/placesSource.json` (an empty list is a valid,
+ * logs the FULL resulting list (lowercased), not a diff: that's exactly what to write as the
+ * 10th element of this place's own `ClueRow` in `places.json` (an empty list is a valid,
  * intentional result — see this file's own doc comment above — logged the same way). */
 export const saveCharadeSyllables = async (place: Pick<CluePlace, 'code' | 'name'>, syllables: string[]): Promise<string[]> => {
   const lower = syllables.map((syllable) => syllable.toLowerCase());
   const list = lower.length > 0 ? lower.map((syllable) => `"${syllable}"`).join(', ') : '(aucune)';
-  logChange(`[Charade] syllabes de « ${place.name} » (${place.code}) -> placesSource.json, clues.syllables = [${list}]`);
+  logChange(`[Charade] syllabes de « ${place.name} » (${place.code}) -> ClueRow[9] = [${list}]`);
   return lower;
 };
