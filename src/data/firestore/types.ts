@@ -33,8 +33,7 @@ export type CluesDoc = {
   syllables: string[];
 };
 
-/** `places/{id}` — `id` is a permanent readable slug (`fr-paris`, see `placeSlugId`), unrelated to the
- * 3-letter keys of the JSON files. Identity and
+/** `places/{key}` — `key` is the permanent 3-letter code (see `data/places/codec.ts`). Identity and
  * difficulty are shared by both games; `compass`/`clues` are present only for a place in that pool. */
 export type PlaceDoc = {
   name: string;

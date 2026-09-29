@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react';
 
 import { data, loadData } from '../../data';
 import { ADMIN_EMAIL, auth } from '../../firebase';
-import { migratePlaceIds, pendingPlaceMoves } from '../../migratePlaceIds';
 import { seedFirestore } from '../../seed';
 
 type Phase = 'auth' | 'loading' | 'ready';
@@ -54,20 +53,6 @@ export const AuthGate = ({ children }: { children: ReactNode }) => {
       });
   };
 
-  const runMigration = () => {
-    setError(null);
-    setProgress('Migration…');
-    migratePlaceIds((moved, total) => setProgress(`Migration : ${moved} / ${total}`))
-      .then(() => {
-        setProgress(null);
-        load();
-      })
-      .catch((err: Error) => {
-        setProgress(null);
-        setError(err.message);
-      });
-  };
-
   const signIn = () => {
     setError(null);
     signInWithPopup(auth, new GoogleAuthProvider()).catch((err: Error) => setError(err.message));
@@ -84,20 +69,6 @@ export const AuthGate = ({ children }: { children: ReactNode }) => {
           {error && <p>{error}</p>}
           <button className="reset" type="button" disabled={progress !== null} onClick={runSeed}>
             {progress ?? 'Importer les données'}
-          </button>
-        </div>
-      </div>
-    );
-  }
-  // Places imported under their 3-letter key: move them once to their readable id (`fr-paris`).
-  if (isAdmin && phase === 'ready' && pendingPlaceMoves().length > 0) {
-    return (
-      <div className="wrap">
-        <div className="empty">
-          <p>Migration des identifiants de lieux : {pendingPlaceMoves().length} lieux passent de « par » à « fr-paris ».</p>
-          {error && <p>{error}</p>}
-          <button className="reset" type="button" disabled={progress !== null} onClick={runMigration}>
-            {progress ?? 'Migrer les identifiants'}
           </button>
         </div>
       </div>

@@ -18,39 +18,10 @@ export const unflattenPoints = (flat: readonly number[]): [number, number][] =>
 const PERSONALITY = personalityPlacesData as unknown as Record<string, readonly [string, string | null]>;
 const WORDPLAY = wordplayData as unknown as Record<string, { sentence: string; difficulty: Difficulty }>;
 
-/** Readable, permanent id of a place document: `{country}-{name}`, lowercase, accents stripped
- * (`fr-paris`, `gb-londres`). Never recomputed once the document exists — renaming a place keeps its id. */
-export const placeSlugId = (code: string, name: string): string =>
-  `${code.toLowerCase()}-${name
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')}`;
-
-/** One id per place, in `decodeAllPlaces` order: a slug already taken gets `-2`, `-3`... */
-const allocatePlaceIds = (rows: { code: string; name: string }[]): string[] => {
-  const taken = new Set<string>();
-  return rows.map(({ code, name }) => {
-    const base = placeSlugId(code, name);
-    let id = base;
-    for (let n = 2; taken.has(id); n += 1) id = `${base}-${n}`;
-    taken.add(id);
-    return id;
-  });
-};
-
-const PLACE_ROWS = decodeAllPlaces();
-const PLACE_IDS = allocatePlaceIds(PLACE_ROWS.map(({ common }) => ({ name: common[0], code: common[1] })));
-
-/** The 3-letter key the JSON files (and the first Firestore import) used -> the readable document id. */
-export const legacyKeyToPlaceId = (): Record<string, string> =>
-  Object.fromEntries(PLACE_ROWS.map(({ key }, index) => [key, PLACE_IDS[index]]));
-
-/** Every `places/{id}` document, joined from the 5 place files + wordplay. */
+/** Every `places/{key}` document, joined from the 5 place files + wordplay. */
 export const buildPlaceDocs = (): Record<string, PlaceDoc> =>
   Object.fromEntries(
-    PLACE_ROWS.map(({ key, common, compass, clues }, index) => {
+    decodeAllPlaces().map(({ key, common, compass, clues }) => {
       const [name, code, latitude, longitude] = common;
       const shared = [compass, clues].find(Boolean)!;
       const personality = PERSONALITY[key];
@@ -84,7 +55,7 @@ export const buildPlaceDocs = (): Record<string, PlaceDoc> =>
         ...(personality && { personality: { name: personality[0], jobCode: personality[1] } }),
         ...(wordplay && { wordplay: { sentence: wordplay.sentence, difficulty: wordplay.difficulty } }),
       };
-      return [PLACE_IDS[index], doc];
+      return [key, doc];
     }),
   );
 
