@@ -1,7 +1,6 @@
 import type { CountryEntry } from '@/data/places/countries';
 import type { CountryDoc } from '@/data/firestore/types';
 
-import { logChange } from '../changelog';
 import { data, putCountry } from '../data';
 
 export type CountryRecord = CountryEntry & { code: string };
@@ -23,8 +22,6 @@ export const fetchCountries = async (): Promise<CountryRecord[]> =>
 
 export type CountryPatch = Partial<Pick<CountryEntry, 'fr' | 'en' | 'currency' | 'currencySymbol' | 'phoneCode' | 'flag'>>;
 
-const fmt = (value: unknown): string => (value === null || value === undefined ? '(vide)' : Array.isArray(value) ? JSON.stringify(value) : String(value));
-
 export const saveCountry = async (row: CountryRecord, patch: CountryPatch): Promise<CountryRecord> => {
   const { flag, fr, en, currency, currencySymbol, phoneCode } = patch;
   const doc = { ...data().countries[row.code] };
@@ -44,8 +41,5 @@ export const saveCountry = async (row: CountryRecord, patch: CountryPatch): Prom
     else delete doc.flag;
   }
   await putCountry(row.code, doc);
-  for (const key of Object.keys(patch) as (keyof CountryPatch)[]) {
-    logChange(`[Pays] ${row.fr} (${row.code}) — ${key} : ${fmt(row[key])} -> ${fmt(patch[key])}`);
-  }
   return { ...row, ...patch };
 };

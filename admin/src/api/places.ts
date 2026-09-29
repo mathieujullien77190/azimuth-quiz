@@ -2,13 +2,12 @@ import { cluesFromDoc, compassFromDoc } from '@/data/firestore/read';
 import type { PlaceDoc } from '@/data/firestore/types';
 import type { Difficulty, CluePlace, Place } from '@/types';
 
-import { logChange } from '../changelog';
 import { data, putPlace, removePlace } from '../data';
 
 /** A place card: the common identity, plus each game's data when this place is in it
  * (either one can be absent). `key` is the short code the `places/{key}` documents are indexed by
- * (e.g. `"par"` for Paris) — opaque, so every log message below prints it ALONGSIDE the human
- * identity rather than instead of it. */
+ * (e.g. `"par"` for Paris) — opaque, so anything shown to the admin pairs it with the human
+ * identity. */
 export type PlaceRow = {
   key: string;
   name: string;
@@ -54,46 +53,31 @@ export type CompassPatch = Partial<Pick<Place, 'category' | 'description'>>;
 // category/difficulty/description — editing them here would be too easy to get subtly wrong.
 export type CluesPatch = Partial<Pick<CluePlace, 'population' | 'climateEmoji' | 'emojis'>>;
 
-const fmt = (value: unknown): string => (Array.isArray(value) ? value.join(' ') : String(value ?? '(vide)'));
-
-const identity = (row: Pick<PlaceRow, 'name' | 'code' | 'key'>): string => `${row.name} (${row.code}) [${row.key}]`;
-
 export const saveCompass = async (row: PlaceRow, patch: CompassPatch): Promise<Place> => {
-  const current = row.compass!;
   const doc = data().places[row.key];
   const compass = { ...doc.compass!, ...patch };
   if (!compass.description) delete compass.description;
   const next = { ...doc, compass };
   await putPlace(row.key, next);
-  for (const key of Object.keys(patch) as (keyof CompassPatch)[]) {
-    logChange(`[Compass] ${identity(row)} — ${key} : ${fmt(current[key])} -> ${fmt(patch[key])}`);
-  }
   return compassOf(next)!;
 };
 
 export const saveClues = async (row: PlaceRow, patch: CluesPatch): Promise<CluePlace> => {
-  const current = row.clues!;
   const doc = data().places[row.key];
   const { emojis, ...rest } = patch;
   const next = { ...doc, clues: { ...doc.clues!, ...rest, ...(emojis && { emojis: [...emojis] }) } };
   await putPlace(row.key, next);
-  for (const key of Object.keys(patch) as (keyof CluesPatch)[]) {
-    logChange(`[Clues] ${identity(row)} — ${key} : ${fmt(current[key])} -> ${fmt(patch[key])}`);
-  }
   return cluesOf(row.key, next)!;
 };
 
-/** Difficulty is shared between the two games, so it's logged once at the place level rather than
+/** Difficulty is shared between the two games, so it's stored once at the place level rather than
  * once per game. */
 export const saveDifficulty = async (row: PlaceRow, difficulty: Difficulty): Promise<{ compass: Place | null; clues: CluePlace | null }> => {
-  const current = (row.compass ?? row.clues)!.difficulty;
   const next = { ...data().places[row.key], difficulty };
   await putPlace(row.key, next);
-  logChange(`[Difficulté] ${identity(row)} — ${current} -> ${difficulty}`);
   return { compass: compassOf(next), clues: cluesOf(row.key, next) };
 };
 
 export const deletePlace = async (row: PlaceRow): Promise<void> => {
   await removePlace(row.key);
-  logChange(`[Suppression] ${identity(row)}`);
 };

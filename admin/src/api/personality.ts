@@ -1,12 +1,6 @@
 import type { CluePlace } from '@/types';
 
-import { logChange } from '../changelog';
 import { data, putJob, putPlace, removeJob } from '../data';
-
-/** Every edit is written to Firestore (`places/{key}.personality`, `personalityJobs/{code}`) and
- * logged as an audit line. Logs the human identity AND `place.key` side by side (the key alone is
- * opaque). */
-const identity = (place: Pick<CluePlace, 'name' | 'code' | 'key'>): string => `${place.name} (${place.code}) [${place.key}]`;
 
 /** All curatable job codes, French label first — the select's options, alphabetical by French text
  * so a curator can scan/find one by eye. */
@@ -25,8 +19,6 @@ export const personalityDraftFor = (place: Pick<CluePlace, 'key'>): PersonalityD
   return personality ? { name: personality.name, jobCode: personality.jobCode } : { name: '', jobCode: null };
 };
 
-const jobLabel = (jobCode: string | null): string => (jobCode !== null ? data().jobs[jobCode].fr : '(aucun)');
-
 /** The name field was edited — clearing it back to empty removes the place's curated entry
  * entirely: the game only offers the `personality` clue when the place HAS an entry at all, so a
  * blank name would leak through as an empty card rather than just not being offered. */
@@ -36,11 +28,9 @@ export const savePersonalityName = async (place: Pick<CluePlace, 'name' | 'code'
   delete rest.personality;
   if (trimmed === '') {
     await putPlace(place.key, rest);
-    logChange(`[Personnalité] ${identity(place)} — supprimé`);
     return { name: '', jobCode: null };
   }
   await putPlace(place.key, { ...rest, personality: { name: trimmed, jobCode: draft.jobCode } });
-  logChange(`[Personnalité] ${identity(place)} — nom : « ${draft.name || '(vide)'} » -> « ${trimmed} »`);
   return { ...draft, name: trimmed };
 };
 
@@ -50,7 +40,6 @@ export const savePersonalityJob = async (
   next: string | null,
 ): Promise<PersonalityDraft> => {
   await putPlace(place.key, { ...data().places[place.key], personality: { name: draft.name, jobCode: next } });
-  logChange(`[Personnalité] ${identity(place)} — métier : ${jobLabel(draft.jobCode)} -> ${jobLabel(next)}`);
   return { ...draft, jobCode: next };
 };
 
@@ -111,19 +100,16 @@ export const filterJobRows = (rows: JobRow[], query: string): JobRow[] => {
 export const addJob = async (fr: string, en: string): Promise<JobRow> => {
   const code = freeJobCode(codeFromFr(fr));
   await putJob(code, { fr, en });
-  logChange(`[Métiers] + « ${fr} » / « ${en} » [${code}]`);
   return { code, fr, en, examples: [] };
 };
 
 export const saveJobFr = async (job: JobRow, next: string): Promise<JobRow> => {
   await putJob(job.code, { fr: next, en: job.en });
-  logChange(`[Métiers] [${job.code}] fr : "${job.fr}" -> "${next}"`);
   return { ...job, fr: next };
 };
 
 export const saveJobEn = async (job: JobRow, next: string): Promise<JobRow> => {
   await putJob(job.code, { fr: job.fr, en: next });
-  logChange(`[Métiers] [${job.code}] en : "${job.en}" -> "${next}"`);
   return { ...job, en: next };
 };
 
@@ -132,5 +118,4 @@ export const saveJobEn = async (job: JobRow, next: string): Promise<JobRow> => {
  * hides the delete action otherwise rather than let that happen. */
 export const deleteJob = async (job: JobRow): Promise<void> => {
   await removeJob(job.code);
-  logChange(`[Métiers] - [${job.code}] supprimé (« ${job.fr} »)`);
 };
