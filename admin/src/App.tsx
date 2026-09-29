@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import appConfig from '../../app.json';
 
 import { AuthGate } from './components/AuthGate';
+import { lastSyncedAt, syncData } from './data';
 import { CountriesView } from './views/CountriesView';
 import { JobsView } from './views/JobsView';
 import { PlacesView } from './views/PlacesView';
@@ -13,6 +14,8 @@ type Tab = 'places' | 'countries' | 'syllables' | 'jobs';
 
 const AdminApp = () => {
   const [tab, setTab] = useState<Tab>('places');
+  const [syncing, setSyncing] = useState(false);
+  const syncedLabel = lastSyncedAt() > 0 ? ` (${new Date(lastSyncedAt()).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })})` : '';
   // Same Chromium-on-Windows flag-emoji fallback as the game itself (see helpers/web.ts) —
   // needed here too since the flag badge below uses the same font/emoji.
   useEffect(() => {
@@ -40,6 +43,20 @@ const AdminApp = () => {
               Métiers
             </button>
           </div>
+          <button
+            className="reset"
+            type="button"
+            disabled={syncing}
+            title="Relit tout Firestore (~2 700 lectures) et remplace la copie locale"
+            onClick={() => {
+              setSyncing(true);
+              syncData()
+                .then(() => window.location.reload())
+                .catch(() => setSyncing(false));
+            }}
+          >
+            {syncing ? 'Synchronisation…' : `🔄 Synchroniser${syncedLabel}`}
+          </button>
         </div>
       </header>
 
