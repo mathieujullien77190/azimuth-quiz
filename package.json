@@ -49,6 +49,7 @@
     "test:coverage": "jest --coverage",
     "admin": "node scripts/admin.mjs",
     "storybook": "node scripts/storybook.mjs",
+    "generate:places": "node scripts/generatePlaces.mjs",
     "generate:contours": "node scripts/generateContours.mjs",
     "generate:charades": "node scripts/generateCharades.mjs",
     "generate:personalities": "node scripts/generatePersonalities.mjs",
