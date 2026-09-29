@@ -22,7 +22,7 @@ export const HelicopterButton = ({ onPress, accessibilityLabel }: HelicopterButt
     return () => clearInterval(id);
   }, []);
 
-  const { bobY, rotorAngleDeg, blinkOpacity } = helicopterIdleFrame(elapsedMs);
+  const { bobY, rotorAngleDeg, blinkOpacity, spinDeg } = helicopterIdleFrame(elapsedMs);
 
   const bodyRx = SIZE * 0.25;
   const bodyRy = SIZE * 0.175;
@@ -38,7 +38,9 @@ export const HelicopterButton = ({ onPress, accessibilityLabel }: HelicopterButt
   return (
     <Pressable accessibilityLabel={accessibilityLabel} accessibilityRole="button" hitSlop={12} onPress={onPress}>
       <Svg height={SIZE * 1.5} width={SIZE}>
-        <G transform={`translate(${SIZE / 2} ${SIZE * 0.75 + bobY})`}>
+        {/* rotate last: around this group's own (already translated) local origin, so the whole
+            helicopter spins in place rather than orbiting the canvas. */}
+        <G transform={`translate(${SIZE / 2} ${SIZE * 0.75 + bobY}) rotate(${spinDeg})`}>
           {/* Skids. */}
           <Line stroke={colors.textMuted} strokeWidth={1.5} x1={-bodyRx * 0.75} x2={bodyRx * 0.6} y1={skidY} y2={skidY} />
           <Line stroke={colors.textMuted} strokeWidth={1.2} x1={-bodyRx * 0.55} x2={-bodyRx * 0.55} y1={bodyRy} y2={skidY} />

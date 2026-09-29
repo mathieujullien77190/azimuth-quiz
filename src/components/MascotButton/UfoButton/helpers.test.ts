@@ -1,11 +1,21 @@
-import { BLINK_PERIOD_MS, BOB_AMPLITUDE, BOB_PERIOD_MS } from './constants';
+import { BLINK_PERIOD_MS, BOB_AMPLITUDE, BOB_PERIOD_MS, SPIN_DURATION_MS, SPIN_PERIOD_MS } from './constants';
 import { ufoIdleFrame } from './helpers';
 
 describe('ufoIdleFrame', () => {
-  it('is at rest (bobY 0) at elapsed 0, with both blink phases mid-alternation', () => {
+  it('is at rest (bobY 0) at elapsed 0, with both blink phases mid-alternation, no spin', () => {
     const frame = ufoIdleFrame(0);
     expect(frame.bobY).toBeCloseTo(0);
     expect(frame.blinkOpacityA).toBeCloseTo(0.4 + 0.6 * 0.5);
+    expect(frame.spinDeg).toBe(0);
+  });
+
+  it('does a full turn on itself over the first SPIN_DURATION_MS of every SPIN_PERIOD_MS', () => {
+    expect(ufoIdleFrame(SPIN_DURATION_MS / 2).spinDeg).toBeCloseTo(180, 5);
+    // Idle (no rotation) for the rest of the period.
+    expect(ufoIdleFrame(SPIN_DURATION_MS).spinDeg).toBe(0);
+    expect(ufoIdleFrame(SPIN_PERIOD_MS - 1).spinDeg).toBe(0);
+    // The next period starts the same way.
+    expect(ufoIdleFrame(SPIN_PERIOD_MS + SPIN_DURATION_MS / 2).spinDeg).toBeCloseTo(180, 5);
   });
 
   it('reaches peak bob amplitude a quarter period in', () => {

@@ -22,14 +22,16 @@ export const UfoButton = ({ onPress, accessibilityLabel }: UfoButtonProps) => {
     return () => clearInterval(id);
   }, []);
 
-  const { bobY, blinkOpacityA, blinkOpacityB } = ufoIdleFrame(elapsedMs);
+  const { bobY, blinkOpacityA, blinkOpacityB, spinDeg } = ufoIdleFrame(elapsedMs);
   const rimRx = SIZE / 2;
   const rimRy = SIZE / 7;
 
   return (
     <Pressable accessibilityLabel={accessibilityLabel} accessibilityRole="button" hitSlop={12} onPress={onPress}>
       <Svg height={SIZE + rimRy * 3} width={SIZE}>
-        <G transform={`translate(${SIZE / 2} ${SIZE / 2 + bobY})`}>
+        {/* rotate last: around this group's own (already translated) local origin, so the whole
+            saucer spins in place rather than orbiting the canvas. */}
+        <G transform={`translate(${SIZE / 2} ${SIZE / 2 + bobY}) rotate(${spinDeg})`}>
           <Ellipse cx={0} cy={rimRy} fill={colors.textMuted} opacity={0.35} rx={rimRx * 1.15} ry={rimRy * 1.6} />
           <Circle cx={0} cy={-rimRy * 0.6} fill={DOME_COLOR} opacity={0.75} r={rimRx * 0.42} />
           <Circle cx={-rimRx * 0.11} cy={-rimRy * 1.3} fill={DOME_HIGHLIGHT_COLOR} opacity={0.5} r={rimRx * 0.11} />

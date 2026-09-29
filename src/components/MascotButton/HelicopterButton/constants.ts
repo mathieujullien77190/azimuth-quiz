@@ -10,6 +10,10 @@ export const BOB_PERIOD_MS = 2200;
 export const BLINK_PERIOD_MS = 500;
 // Main rotor: one full turn every ROTOR_PERIOD_MS (fast — it's meant to read as a blur).
 export const ROTOR_PERIOD_MS = 260;
+// The whole helicopter does a full turn on itself once every SPIN_PERIOD_MS, taking
+// SPIN_DURATION_MS to complete, then idle (no rotation) for the rest of the period.
+export const SPIN_PERIOD_MS = 10000;
+export const SPIN_DURATION_MS = 900;
 
 // Cockpit bubble: translucent blue with a highlight, rather than a theme color.
 export const COCKPIT_COLOR = '#8FD8FF';
