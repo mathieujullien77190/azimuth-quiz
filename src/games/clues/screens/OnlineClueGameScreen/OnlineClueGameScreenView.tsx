@@ -11,7 +11,7 @@ import GameFooter from '@/components/GameFooter';
 import GameHeader from '@/components/GameHeader';
 import Screen from '@/components/ui/Screen';
 import { WRONG_ANSWER_PENALTY } from '@/games/clues/constants';
-import { skeletonLetterCount, overlayTypedLetters } from '@/games/clues/helpers/clueGame';
+import { skeletonLetterCount, overlayTypedLetters, typedSkeleton } from '@/games/clues/helpers/clueGame';
 import { HYPHEN_SLOT } from '@/games/clues/helpers/clueSkeleton';
 import type { OnlineClueGameScreenViewProps } from './types';
 
@@ -43,7 +43,7 @@ export const OnlineClueGameScreenView = ({
   verdict,
   winnerName,
   iWon,
-  lastWrong,
+  wrongGuesserName,
   guessText,
   onChangeGuessText,
   onSubmitGuess,
@@ -60,10 +60,19 @@ export const OnlineClueGameScreenView = ({
   const { colors } = useTheme();
   const t = useTranslation();
   const roundOver = verdict !== undefined;
-  // What the letter clue's skeleton (boxes, or the plain line below when the shape isn't known
-  // yet) overlays: the turn-holder's own draft while typing it, the mirrored `typing` text for
-  // everyone else — same value, same live update, whoever is looking at it.
+  // What the letter clue's skeleton overlays: the turn-holder's own draft while typing it, the
+  // mirrored `typing` text for everyone else — same value, same live update, whoever's looking.
   const previewText = isMyTurn ? guessText : typedByActivePlayer;
+  // Below tier 2 (`skeletonLengthKnown`), the real shape isn't known — boxing `skeletonGroups`
+  // itself would freeze the display on its one official slot (the clue's first letter) no matter
+  // how much more gets typed. `typedSkeleton` reads the very same boxed shape off what's actually
+  // been typed instead, which doesn't leak anything beyond what's already been typed; the clue's
+  // own first letter is only shown before that, as a starting hint.
+  const displayGroups = skeletonLengthKnown
+    ? overlayTypedLetters(skeletonGroups, previewText)
+    : previewText !== ''
+      ? typedSkeleton(previewText)
+      : skeletonGroups;
 
   return (
     <Screen
@@ -73,9 +82,9 @@ export const OnlineClueGameScreenView = ({
             {!roundOver && (
               <Text style={styles.pointsAtStake}>{t.cluesGame.pointsAtStake(formatNumber(remaining))}</Text>
             )}
-            {!roundOver && skeletonGroups.length > 0 && (
+            {!roundOver && displayGroups.length > 0 && (
               <View style={styles.skeletonRow}>
-                {overlayTypedLetters(skeletonGroups, previewText).map((group, groupIndex) => (
+                {displayGroups.map((group, groupIndex) => (
                   <View key={groupIndex} style={styles.skeletonWord}>
                     {group.map((letter, letterIndex) => (
                       <View key={letterIndex} style={letter === HYPHEN_SLOT ? styles.skeletonHyphen : styles.skeletonSlot}>
@@ -86,10 +95,12 @@ export const OnlineClueGameScreenView = ({
                 ))}
               </View>
             )}
-            {/* No letter clue picked at all yet: no shape to box the typed word into, but it's
-                still worth showing, live, to everyone — self included. */}
-            {!roundOver && skeletonGroups.length === 0 && previewText !== '' && (
-              <Text style={styles.typingPreview}>{previewText}</Text>
+            {/* Whoever just missed, live and shown to everyone in the room (not just them) — see
+                `wrongGuesserName`'s own comment in the hook for why it clears itself. */}
+            {!roundOver && wrongGuesserName !== null && (
+              <Text style={[styles.resultBanner, styles.resultWrong]}>
+                {t.cluesGame.missed(wrongGuesserName, formatNumber(WRONG_ANSWER_PENALTY))}
+              </Text>
             )}
             {roundOver ? (
               <View style={styles.actions}>
@@ -117,11 +128,6 @@ export const OnlineClueGameScreenView = ({
               </View>
             ) : isMyTurn ? (
               <View style={styles.buzzRow}>
-                {lastWrong !== null && (
-                  <Text style={[styles.resultBanner, styles.resultWrong]}>
-                    {t.cluesGame.missed(lastWrong, formatNumber(WRONG_ANSWER_PENALTY))}
-                  </Text>
-                )}
                 <TextInput
                   autoCapitalize="words"
                   onChangeText={(next) => {

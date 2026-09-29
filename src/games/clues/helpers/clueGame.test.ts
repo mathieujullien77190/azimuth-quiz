@@ -1,28 +1,130 @@
 import { CLUE_PLACES, isCapitalPlace, isFrenchCityPlace } from '@/data';
 import { CLUE_ORDER } from '@/games/clues/constants';
+import { charadeFor, charadeMaxStage } from '@/games/clues/helpers/charade';
+import { personalityFor } from '@/games/clues/helpers/personality';
+import { wordplayFor } from '@/games/clues/helpers/wordplay';
 import { nameSkeleton } from '@/helpers';
-import type { Difficulty, ClueId } from '@/types';
+import type { CluePlace, Difficulty, ClueId } from '@/types';
 
 import {
+  cluesFor,
   maxScoreForRound,
   normalizePlaceGuess,
   overlayTypedLetters,
+  placeCategory,
   randomCluePlace,
   remainingScore,
   skeletonLetterCount,
   totalRevealCount,
+  typedSkeleton,
 } from './clueGame';
 
+jest.mock('@/games/clues/helpers/personality', () => ({ personalityFor: jest.fn(() => null) }));
+jest.mock('@/games/clues/helpers/wordplay', () => ({ wordplayFor: jest.fn(() => null) }));
+jest.mock('@/games/clues/helpers/charade', () => ({
+  ...jest.requireActual('@/games/clues/helpers/charade'),
+  charadeFor: jest.fn(jest.requireActual('@/games/clues/helpers/charade').charadeFor),
+}));
+
+const PARIS = CLUE_PLACES.find((place) => place.name === 'Paris')!; // capital
+const MARSEILLE = CLUE_PLACES.find((place) => place.name === 'Marseille')!; // citiesFr
+const NEW_YORK = CLUE_PLACES.find((place) => place.name === 'New York')!; // plain "cities"
+const CITIES_FR_EXCLUDED: ClueId[] = ['localTime', 'isCapital', 'flagColors', 'currency', 'phoneCode'];
+
+beforeEach(() => {
+  jest.mocked(personalityFor).mockReturnValue(null);
+  jest.mocked(wordplayFor).mockReturnValue(null);
+  jest.mocked(charadeFor).mockImplementation(jest.requireActual('@/games/clues/helpers/charade').charadeFor);
+});
+
+describe('placeCategory', () => {
+  it('is capital for a capital, citiesFr for a French city, cities for anything else', () => {
+    expect(placeCategory(PARIS)).toBe('capital');
+    expect(placeCategory(MARSEILLE)).toBe('citiesFr');
+    expect(placeCategory(NEW_YORK)).toBe('cities');
+  });
+});
+
+describe('cluesFor', () => {
+  it('offers the full CLUE_ORDER for a capital or a plain city, minus personality/wordplay when neither is curated', () => {
+    const expected = CLUE_ORDER.filter((id) => id !== 'personality' && id !== 'wordplay');
+    expect(cluesFor(PARIS)).toEqual(expected);
+    expect(cluesFor(NEW_YORK)).toEqual(expected);
+  });
+
+  it('drops the clues that never vary for a French city (citiesFr only)', () => {
+    for (const id of CITIES_FR_EXCLUDED) {
+      expect(cluesFor(MARSEILLE)).not.toContain(id);
+      expect(cluesFor(PARIS)).toContain(id);
+      expect(cluesFor(NEW_YORK)).toContain(id);
+    }
+  });
+
+  it('adds personality back in once curated, for every category', () => {
+    jest.mocked(personalityFor).mockReturnValue({ name: 'Quelqu’un', description: null });
+    expect(cluesFor(PARIS)).toContain('personality');
+    expect(cluesFor(MARSEILLE)).toContain('personality');
+  });
+
+  it('adds wordplay back in once curated, for every category', () => {
+    jest.mocked(wordplayFor).mockReturnValue({ sentence: 'un jeu de mot', explained: 'un +jeu+ de mot' });
+    expect(cluesFor(PARIS)).toContain('wordplay');
+    expect(cluesFor(MARSEILLE)).toContain('wordplay');
+  });
+
+  it('never drops charade: it always has at least the heuristic syllable split', () => {
+    expect(cluesFor(PARIS)).toContain('charade');
+    expect(cluesFor(MARSEILLE)).toContain('charade');
+  });
+
+  it('drops charade when a hand-curated override empties it out (a name with no usable syllable)', () => {
+    jest.mocked(charadeFor).mockReturnValue({ syllables: [] });
+    expect(cluesFor(PARIS)).not.toContain('charade');
+  });
+});
+
 describe('totalRevealCount', () => {
-  const TWO_STAGE: ClueId[] = ['distance', 'elevation', 'population', 'currency', 'localTime', 'letter'];
+  const TWO_STAGE: ClueId[] = ['distance', 'elevation', 'population', 'currency', 'localTime', 'letter', 'wordplay'];
   const THREE_STAGE: ClueId[] = ['emoji', 'flagColors'];
 
-  it('matches revealing every clue, including every multi-stage one', () => {
-    const allIds: ClueId[] = CLUE_ORDER.flatMap((clueId) => {
-      const revealCount = THREE_STAGE.includes(clueId) ? 3 : TWO_STAGE.includes(clueId) ? 2 : 1;
-      return Array<ClueId>(revealCount).fill(clueId);
-    });
-    expect(totalRevealCount()).toBe(allIds.length);
+  /** Rebuilds the expected total the same way `totalRevealCount` should, but independently (from
+   * `cluesFor`/the real per-clue stage rules), so this actually exercises the production
+   * function's own wiring rather than just mirroring its implementation line for line. */
+  const expectedTotal = (place: CluePlace): number =>
+    cluesFor(place).reduce((total, clueId) => {
+      if (clueId === 'charade') return total + charadeMaxStage(charadeFor(place));
+      return total + (THREE_STAGE.includes(clueId) ? 3 : TWO_STAGE.includes(clueId) ? 2 : 1);
+    }, 0);
+
+  it('matches revealing every clue offered for the place, including every multi-stage one', () => {
+    expect(totalRevealCount(PARIS)).toBe(expectedTotal(PARIS));
+    expect(totalRevealCount(MARSEILLE)).toBe(expectedTotal(MARSEILLE));
+  });
+
+  it('is lower for a citiesFr place, by exactly the dropped clues’ own cost (their charade cost aside)', () => {
+    // Isolates the citiesFr drop from the two places' own (different) charade cost: adds it back
+    // on both sides before comparing.
+    const withoutCharade = (place: CluePlace) => totalRevealCount(place) - charadeMaxStage(charadeFor(place));
+    // localTime (2 stages) + isCapital (1) + flagColors (3) + currency (2 stages) + phoneCode (1) = 9.
+    expect(withoutCharade(PARIS) - withoutCharade(MARSEILLE)).toBe(9);
+  });
+
+  it('grows with the place’s own charade cost (more syllables, more possible clicks)', () => {
+    const short: CluePlace = { ...NEW_YORK, name: 'Pau', code: 'FR' };
+    const long: CluePlace = { ...NEW_YORK, name: 'Antananarivo', code: 'MG' };
+    expect(totalRevealCount(long)).toBeGreaterThan(totalRevealCount(short));
+  });
+
+  it('counts one more when personality is curated for the place', () => {
+    const without = totalRevealCount(PARIS);
+    jest.mocked(personalityFor).mockReturnValue({ name: 'Quelqu’un', description: null });
+    expect(totalRevealCount(PARIS)).toBe(without + 1);
+  });
+
+  it('counts two more (its 2 stages) when wordplay is curated for the place', () => {
+    const without = totalRevealCount(PARIS);
+    jest.mocked(wordplayFor).mockReturnValue({ sentence: 'un jeu de mot', explained: 'un +jeu+ de mot' });
+    expect(totalRevealCount(PARIS)).toBe(without + 2);
   });
 });
 
@@ -36,24 +138,28 @@ describe('maxScoreForRound', () => {
 });
 
 describe('remainingScore', () => {
-  const maxScore = maxScoreForRound(totalRevealCount());
+  const maxScore = maxScoreForRound(totalRevealCount(PARIS));
 
   it('starts at the round maximum when nothing is revealed', () => {
-    expect(remainingScore([])).toBe(maxScore);
+    expect(remainingScore([], PARIS)).toBe(maxScore);
   });
 
   it('loses one point per revealed clue', () => {
-    expect(remainingScore(['distance', 'elevation', 'distance'])).toBe(maxScore - 3);
+    expect(remainingScore(['distance', 'elevation', 'distance'], PARIS)).toBe(maxScore - 3);
   });
 
   it('drops straight to 1 once the vowels are revealed', () => {
-    expect(remainingScore(['vowels'])).toBe(1);
-    expect(remainingScore(['distance', 'vowels'])).toBe(1);
+    expect(remainingScore(['vowels'], PARIS)).toBe(1);
+    expect(remainingScore(['distance', 'vowels'], PARIS)).toBe(1);
   });
 
   it('keeps the lower plain countdown when it is already under 1', () => {
     const everything = Array<ClueId>(maxScore).fill('distance');
-    expect(remainingScore([...everything, 'vowels'])).toBe(0);
+    expect(remainingScore([...everything, 'vowels'], PARIS)).toBe(0);
+  });
+
+  it('gives a citiesFr place a lower starting score than an equivalent capital/city', () => {
+    expect(remainingScore([], MARSEILLE)).toBeLessThan(remainingScore([], PARIS));
   });
 });
 
@@ -175,5 +281,23 @@ describe('overlayTypedLetters', () => {
   it('an empty guess leaves the skeleton untouched', () => {
     const groups = nameSkeleton('Paris', { groupByWord: true, lengthKnown: true });
     expect(overlayTypedLetters(groups, '')).toEqual(groups);
+  });
+});
+
+describe('typedSkeleton', () => {
+  it('is empty for an empty (or blank) text', () => {
+    expect(typedSkeleton('')).toEqual([]);
+    expect(typedSkeleton('   ')).toEqual([]);
+  });
+
+  it('boxes every typed character, uppercased, one group per space-separated word', () => {
+    expect(typedSkeleton('rio de')).toEqual([
+      ['R', 'I', 'O'],
+      ['D', 'E'],
+    ]);
+  });
+
+  it('keeps a hyphen in place, not a letter box', () => {
+    expect(typedSkeleton('abu-dhabi')).toEqual([['A', 'B', 'U', '-', 'D', 'H', 'A', 'B', 'I']]);
   });
 });

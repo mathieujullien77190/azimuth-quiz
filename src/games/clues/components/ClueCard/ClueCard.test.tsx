@@ -1,9 +1,22 @@
 import { fireEvent, render } from '@testing-library/react-native';
 
 import { CLUE_PLACES } from '@/data';
+import { personalityFor } from '@/games/clues/helpers/personality';
+import { wordplayFor } from '@/games/clues/helpers/wordplay';
 import type { ClueId, CluePlace } from '@/types';
 
 import ClueCard from '.';
+
+jest.mock('@/games/clues/helpers/personality', () => ({ personalityFor: jest.fn(() => null) }));
+jest.mock('@/games/clues/helpers/wordplay', () => ({
+  ...jest.requireActual('@/games/clues/helpers/wordplay'),
+  wordplayFor: jest.fn(() => null),
+}));
+// Empty: `riddleFor` is now a global, syllable-keyed lookup (not place-keyed), so a made-up place
+// code/name no longer isolates a test from whatever gets curated in scripts/charadeCuration.json
+// over time — this does instead. Same reasoning for the per-place syllable-split overrides.
+jest.mock('@/data/charade.json', () => ({}));
+jest.mock('@/data/charadeSyllables.json', () => ({}));
 
 const place: CluePlace = CLUE_PLACES.find((p) => p.country === 'France')!;
 
@@ -198,6 +211,125 @@ describe('ClueCard — emoji progressive reveal', () => {
 
     const done = await renderCard({ clueId: 'emoji', emojiStage: 3, moreToReveal: false, onPress, state: 'revealed' });
     expect(done.queryByRole('button')).toBeNull();
+  });
+});
+
+describe('ClueCard — charade progressive reveal', () => {
+  // Every syllable falls back to its own plain, lowercased text (see the empty mocks above).
+  const charadePlace = { ...place, name: 'Bordeaux' };
+
+  it('defaults to stage 1: only the first syllable’s line', async () => {
+    const { getByText, queryByText } = await renderCard({ clueId: 'charade', place: charadePlace, state: 'revealed' });
+    expect(getByText(/mon premier est/)).toBeTruthy();
+    expect(getByText(/se dit « bor »/)).toBeTruthy();
+    expect(queryByText(/se dit « deaux »/)).toBeNull();
+  });
+
+  it('stage 2 adds the second syllable’s line, on top of the first', async () => {
+    const { getByText } = await renderCard({
+      charadeStage: 2,
+      clueId: 'charade',
+      place: charadePlace,
+      state: 'revealed',
+    });
+    expect(getByText(/se dit « bor »/)).toBeTruthy();
+    expect(getByText(/mon deuxième est/)).toBeTruthy();
+    expect(getByText(/se dit « deaux »/)).toBeTruthy();
+  });
+
+  it('the final stage spells the name out in clear, on top of every syllable line', async () => {
+    const { getByText } = await renderCard({
+      charadeStage: 3,
+      clueId: 'charade',
+      place: charadePlace,
+      state: 'revealed',
+    });
+    expect(getByText('Bor-Deaux')).toBeTruthy();
+    expect(getByText(/se dit « bor »/)).toBeTruthy();
+  });
+
+  it('stays wide even while locked, same as bearing/distance', async () => {
+    const { getByRole } = await renderCard({ clueId: 'charade', onPress: jest.fn(), place: charadePlace, state: 'locked' });
+    const style = getByRole('button').props.style as unknown[];
+    expect(style).toContainEqual(expect.objectContaining({ flexBasis: '100%' }));
+  });
+
+  it('is pickable again while moreToReveal is true, not once fully revealed', async () => {
+    const onPress = jest.fn();
+    const more = await renderCard({
+      charadeStage: 1,
+      clueId: 'charade',
+      moreToReveal: true,
+      onPress,
+      place: charadePlace,
+      state: 'revealed',
+    });
+    await fireEvent.press(more.getByRole('button'));
+    expect(onPress).toHaveBeenCalledTimes(1);
+
+    const done = await renderCard({
+      charadeStage: 3,
+      clueId: 'charade',
+      moreToReveal: false,
+      onPress,
+      place: charadePlace,
+      state: 'revealed',
+    });
+    expect(done.queryByRole('button')).toBeNull();
+  });
+});
+
+describe('ClueCard — personality', () => {
+  it('renders nothing when no personality is curated for the place (defensive: the card is never offered then)', async () => {
+    const { toJSON } = await renderCard({ clueId: 'personality', state: 'revealed' });
+    expect(toJSON()).toBeTruthy();
+  });
+
+  it('renders the curated name and description', async () => {
+    jest.mocked(personalityFor).mockReturnValueOnce({ name: 'Marie Curie', description: 'physicienne' });
+    const { getByText } = await renderCard({ clueId: 'personality', state: 'revealed' });
+    expect(getByText('Marie Curie')).toBeTruthy();
+    expect(getByText('physicienne')).toBeTruthy();
+  });
+
+  it('renders the name alone when there is no description', async () => {
+    jest.mocked(personalityFor).mockReturnValueOnce({ name: 'Marie Curie', description: null });
+    const { getByText, queryByText } = await renderCard({ clueId: 'personality', state: 'revealed' });
+    expect(getByText('Marie Curie')).toBeTruthy();
+    expect(queryByText('physicienne')).toBeNull();
+  });
+});
+
+describe('ClueCard — wordplay', () => {
+  it('renders nothing when no wordplay is curated for the place (defensive: the card is never offered then)', async () => {
+    const { toJSON } = await renderCard({ clueId: 'wordplay', state: 'revealed' });
+    expect(toJSON()).toBeTruthy();
+  });
+
+  it('stage 1: shows the plain sentence, no highlighting yet', async () => {
+    jest
+      .mocked(wordplayFor)
+      .mockReturnValue({ sentence: 'Ce lac est Constance.', explained: 'Ce lac est +Constance+.' });
+    const { getByText } = await renderCard({ clueId: 'wordplay', place, state: 'revealed', wordplayStage: 1 });
+    expect(getByText('Ce lac est Constance.')).toBeTruthy();
+  });
+
+  it('defaults to stage 1 when wordplayStage is not provided', async () => {
+    jest
+      .mocked(wordplayFor)
+      .mockReturnValue({ sentence: 'Ce lac est Constance.', explained: 'Ce lac est +Constance+.' });
+    const { getByText } = await renderCard({ clueId: 'wordplay', place, state: 'revealed' });
+    expect(getByText('Ce lac est Constance.')).toBeTruthy();
+  });
+
+  it('stage 2: shows the explained sentence, the punning word split out from the rest', async () => {
+    jest
+      .mocked(wordplayFor)
+      .mockReturnValue({ sentence: 'Ce lac est Constance.', explained: 'Ce lac est +Constance+.' });
+    const { getByText } = await renderCard({ clueId: 'wordplay', place, state: 'revealed', wordplayStage: 2 });
+    expect(getByText('Ce lac est ')).toBeTruthy();
+    expect(getByText('Constance')).toBeTruthy();
+    expect(getByText('.')).toBeTruthy();
   });
 });
 

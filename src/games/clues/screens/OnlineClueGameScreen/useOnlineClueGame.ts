@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { bearingDeg, distanceKm, nameSkeleton } from '@/helpers';
 import { useDebouncedValue } from '@/helpers/useDebouncedValue';
@@ -39,8 +39,29 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
   const place = gameState.places[gameState.roundIndex];
   const isMyTurn = localUid !== null && localUid === gameState.turnUid;
 
-  // This device's own in-progress guess text, and the "you got it wrong" banner.
-  const { guessText, setGuessText, lastWrong, setLastWrong } = useGuessDraft(gameState.roundIndex, gameState.turnUid);
+  // This device's own in-progress guess text.
+  const { guessText, setGuessText } = useGuessDraft(gameState.roundIndex, gameState.turnUid);
+
+  // Who just missed, for everyone to see (not just the guesser — `wrongGuessUid`/`wrongGuessSeq`
+  // are room-wide). `wrongGuessSeq` only ever increases, never reset between rounds (the host's own
+  // scoring effect relies on that to never re-apply a penalty, see `useHostTurnScoring`), so a
+  // baseline captured once per round (the "reset state when a prop changes" pattern, see
+  // `useGuessDraft`'s own comment) tells a miss that actually happened this round apart from one
+  // carried over from an earlier one. Still `turnUid`-gated too (same idiom as `typedByActivePlayer`
+  // below): a miss stops being "current" the moment its own player's turn ends (they pick another
+  // clue), same as it used to disappear from the guesser's own screen before this was shared.
+  const [wrongSeqRoundIndex, setWrongSeqRoundIndex] = useState(gameState.roundIndex);
+  const [wrongSeqAtRoundStart, setWrongSeqAtRoundStart] = useState(gameState.wrongGuessSeq);
+  if (wrongSeqRoundIndex !== gameState.roundIndex) {
+    setWrongSeqRoundIndex(gameState.roundIndex);
+    setWrongSeqAtRoundStart(gameState.wrongGuessSeq);
+  }
+  const wrongGuesserName =
+    gameState.wrongGuessUid !== null &&
+    gameState.wrongGuessUid === gameState.turnUid &&
+    gameState.wrongGuessSeq > wrongSeqAtRoundStart
+      ? (onlinePlayers.find((player) => player.uid === gameState.wrongGuessUid)?.name ?? null)
+      : null;
 
   // Mirrors this device's own guess text to the room, ~500ms after it stops changing, so the other
   // players can watch the turn-holder type it live (`typing` in `ClueRoomGameState`). Solo (nobody
@@ -83,7 +104,9 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
         })
       : [];
 
-  const remaining = remainingScore(gameState.revealedClueIds);
+  // `place` is briefly undefined while the room's data is still loading (the screen shows the
+  // loading splash then, see OnlineClueGameScreen.tsx) — 0 is never actually shown to a player.
+  const remaining = place !== undefined ? remainingScore(gameState.revealedClueIds, place) : 0;
 
   // Host-only: the turn-holder only ever self-reports a find/miss, this is the only thing that
   // writes `totalScores` (see `room.ts`'s own comment on `applyClueRoomScore`).
@@ -110,7 +133,6 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
       return;
     }
     reportClueRoomWrong(code, localUid, gameState.wrongGuessSeq + 1).catch(() => {});
-    setLastWrong(onlinePlayers.find((p) => p.uid === localUid)?.name ?? '');
     setGuessText('');
   };
 
@@ -154,7 +176,7 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     remaining,
     guessText,
     setGuessText,
-    lastWrong,
+    wrongGuesserName,
     pickClue,
     submitGuess,
     giveUp,

@@ -38,6 +38,10 @@ export const SAMPLE_CLUE_PLACE_SPACE: CluePlace = findCluePlace('New York', 'US'
  * outside any letter slot — see `HYPHEN_SLOT`). */
 export const SAMPLE_CLUE_PLACE_HYPHEN: CluePlace = findCluePlace('Saint-Malo', 'FR');
 
+/** A French city (`citiesFr`), for `cluesFor`'s reduced clue set: same time zone/flag/currency/
+ * phone code as every other French place, so those clues are dropped for it (see `ClueGrid`). */
+export const SAMPLE_CLUE_PLACE_FR: CluePlace = findCluePlace('Marseille', 'FR');
+
 export const SAMPLE_PLAYERS: Player[] = [
   { name: 'Zoé', color: PLAYER_COLORS[0] },
   { name: 'Max', color: PLAYER_COLORS[1] },

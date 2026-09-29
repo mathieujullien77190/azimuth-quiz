@@ -4,7 +4,8 @@ import { useThemedStyles } from '@/themes';
 
 import ClueCard from '../ClueCard';
 import Card from '@/components/ui/Card';
-import { CLUE_ORDER } from '@/games/clues/constants';
+import { charadeFor, charadeMaxStage } from '@/games/clues/helpers/charade';
+import { cluesFor } from '@/games/clues/helpers/clueGame';
 import { clueHasMoreToReveal, clueStage, vowelsUnlocked } from './helpers';
 import type { ClueGridProps } from './types';
 
@@ -19,15 +20,19 @@ const MAX_FLAG_STAGE = 3;
 export const ClueGrid = ({ place, bearingDeg, distanceKm, revealedClueIds, roundOver, onPickClue }: ClueGridProps) => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
+  // What this particular place actually offers: `CLUE_ORDER` minus whatever doesn't apply to it
+  // (a `citiesFr` place drops a handful of clues that never vary for a French city, and any place
+  // drops `personality` when none was curated for it — see `cluesFor`).
+  const availableClueIds = cluesFor(place);
   // Unlike every other card, `vowels` only ever renders once genuinely unlocked (all other clues
   // picked at least once) — never just because the round is over (a round that ended early via
   // "give up" never shows it, even in reveal).
-  const showVowels = vowelsUnlocked(revealedClueIds);
+  const showVowels = vowelsUnlocked(revealedClueIds, availableClueIds);
 
   return (
     <Card>
       <View style={styles.clueGrid}>
-        {CLUE_ORDER.map((clueId) => {
+        {availableClueIds.map((clueId) => {
           const revealed = roundOver || revealedClueIds.includes(clueId);
           const isEmoji = clueId === 'emoji';
           const isFlag = clueId === 'flagColors';
@@ -37,11 +42,14 @@ export const ClueGrid = ({ place, bearingDeg, distanceKm, revealedClueIds, round
           const isCurrency = clueId === 'currency';
           const isLocalTime = clueId === 'localTime';
           const isLetter = clueId === 'letter';
+          const isCharade = clueId === 'charade';
+          const isWordplay = clueId === 'wordplay';
           const stage = clueStage(revealedClueIds, clueId);
-          const moreToReveal = !roundOver && clueHasMoreToReveal(revealedClueIds, clueId);
+          const moreToReveal = !roundOver && clueHasMoreToReveal(revealedClueIds, clueId, place);
           return (
             <ClueCard
               bearingDeg={bearingDeg}
+              charadeStage={isCharade ? (roundOver ? charadeMaxStage(charadeFor(place)) : stage) : undefined}
               clueId={clueId}
               currencyStage={isCurrency ? (roundOver ? 2 : stage) : undefined}
               distanceKm={distanceKm}
@@ -58,6 +66,7 @@ export const ClueGrid = ({ place, bearingDeg, distanceKm, revealedClueIds, round
               onPress={onPickClue === undefined ? undefined : () => onPickClue(clueId)}
               place={place}
               state={revealed ? 'revealed' : 'locked'}
+              wordplayStage={isWordplay ? (roundOver ? 2 : stage) : undefined}
             />
           );
         })}

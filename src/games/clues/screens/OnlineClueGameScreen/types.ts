@@ -38,7 +38,7 @@ export type OnlineClueGameScreenViewProps = {
   /** This device is the one who found the place (the banner then says "you"). */
   iWon: boolean;
 
-  lastWrong: string | null;
+  wrongGuesserName: string | null;
   guessText: string;
   onChangeGuessText: (text: string) => void;
   onSubmitGuess: () => void;

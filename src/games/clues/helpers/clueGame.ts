@@ -1,28 +1,71 @@
 import { CLUE_PLACES, isCapitalPlace, isFrenchCityPlace } from '@/data';
 import { CLUE_ORDER } from '@/games/clues/constants';
+import { charadeFor, charadeMaxStage } from '@/games/clues/helpers/charade';
 import { pickLeastDrawn, type ClueDrawHistory } from '@/games/clues/helpers/clueHistory';
 import { HYPHEN_SLOT, type NameSkeletonSlot } from '@/games/clues/helpers/clueSkeleton';
+import { personalityFor } from '@/games/clues/helpers/personality';
+import { wordplayFor } from '@/games/clues/helpers/wordplay';
 import { effectiveDifficulty } from '@/games/compass/helpers/places';
 import type { Language } from '@/i18n';
 import type { ClueId, Difficulty, ClueCategory, CluePlace } from '@/types';
 
 /** Clues that reveal in 2 clicks: tier/symbol/day-night on the 1st, exact value on the 2nd
  * (distance/elevation/population/currency/localTime); letter: first letter alone, then every
- * letter with the real per-word length. */
-const TWO_STAGE_CLUE_IDS = new Set(['distance', 'elevation', 'population', 'currency', 'localTime', 'letter']);
+ * letter with the real per-word length; wordplay: the pun alone, then the same pun with the
+ * punning word(s) picked out. */
+const TWO_STAGE_CLUE_IDS = new Set(['distance', 'elevation', 'population', 'currency', 'localTime', 'letter', 'wordplay']);
 /** Clues that reveal in 3 clicks. */
 const THREE_STAGE_CLUE_IDS = new Set(['emoji', 'flagColors']);
 
-/** Total number of possible clues in a round if all were taken, counted multiple times
- * for the ones that reveal in stages (emoji: 3 clicks; flag: always 3 — 1 color, then every color
- * regardless of how many the flag actually has, then the actual flag;
- * distance/elevation/population/currency/localTime/letter: 2) — used as the base for
- * `maxScoreForRound`. */
-export const totalRevealCount = (): number =>
-  CLUE_ORDER.reduce((total, clueId) => {
-    const count = THREE_STAGE_CLUE_IDS.has(clueId) ? 3 : TWO_STAGE_CLUE_IDS.has(clueId) ? 2 : 1;
-    return total + count;
-  }, 0);
+/** A French city (`citiesFr`) never varies on these: same time zone, almost never the capital,
+ * same flag/currency/phone code as every other French place — unlike `capital` (world capitals,
+ * these genuinely vary) or `cities` (foreign cities, ditto), where the very same clue ids do
+ * distinguish one place from another. Dropped from `cluesFor` for that category only. */
+const CITIES_FR_EXCLUDED_CLUE_IDS = new Set<ClueId>(['localTime', 'isCapital', 'flagColors', 'currency', 'phoneCode']);
+
+/** Which of the 3 Clues categories `place` falls into — capital first, then French city, then
+ * plain city (see `isCapitalPlace`/`isFrenchCityPlace`, cross-referenced from Compass). Exported
+ * for `cluesFor`'s own category check, alongside its original use for the draw pool below. */
+export const placeCategory = (place: Pick<CluePlace, 'name' | 'code'>): ClueCategory =>
+  isCapitalPlace(place) ? 'capital' : isFrenchCityPlace(place) ? 'citiesFr' : 'cities';
+
+/**
+ * The clue ids actually offered for `place`, in `CLUE_ORDER`'s order: a `citiesFr` place drops
+ * the ones that never vary for a French city (`CITIES_FR_EXCLUDED_CLUE_IDS`), and any place
+ * without a curated `personality`/`wordplay` (see `personalityFor`/`wordplayFor`) drops that one
+ * too — never an empty, unclickable card for a fact/pun that simply isn't there. `charade`
+ * normally always has at least a heuristic syllable split to fall back on (see `charadeFor`), but
+ * a hand-curated override CAN empty it out on purpose (a name whose every syllable turned out
+ * unusable, e.g. foreign diacritics `syllabify` reads wrong) — dropped then too, same reasoning:
+ * some places simply won't have a charade, rather than an empty card.
+ */
+export const cluesFor = (place: CluePlace): ClueId[] => {
+  const categoryIds =
+    placeCategory(place) === 'citiesFr' ? CLUE_ORDER.filter((id) => !CITIES_FR_EXCLUDED_CLUE_IDS.has(id)) : CLUE_ORDER;
+  return categoryIds.filter((id) => {
+    if (id === 'personality') return personalityFor(place) !== null;
+    if (id === 'wordplay') return wordplayFor(place) !== null;
+    if (id === 'charade') return charadeFor(place).syllables.length > 0;
+    return true;
+  });
+};
+
+/** How many clicks one `clueId` takes to reveal everything, for `place` specifically: fixed for
+ * every clue except `charade`, whose stage count depends on how many syllables `place`'s name
+ * has (capped, see `charadeMaxStage`). */
+const clueStageCount = (clueId: ClueId, place: CluePlace): number => {
+  if (clueId === 'charade') return charadeMaxStage(charadeFor(place));
+  if (THREE_STAGE_CLUE_IDS.has(clueId)) return 3;
+  if (TWO_STAGE_CLUE_IDS.has(clueId)) return 2;
+  return 1;
+};
+
+/** Total number of possible clues in a round for `place` if all were taken, counted multiple
+ * times for the ones that reveal in stages (see `clueStageCount`) — used as the base for
+ * `maxScoreForRound`. Place-dependent on two counts: which clue ids `cluesFor(place)` even offers
+ * (a `citiesFr` place has fewer), and `charade`'s own variable stage count. */
+export const totalRevealCount = (place: CluePlace): number =>
+  cluesFor(place).reduce((total, clueId) => total + clueStageCount(clueId, place), 0);
 
 /** Round's starting score: `totalReveals` rounded up to the nearest ten (e.g. 26 possible
  * clues -> 30), a round number rather than depending on the exact current clues. Goes down
@@ -30,13 +73,13 @@ export const totalRevealCount = (): number =>
  * used) leaves a higher — and thus more won — remaining score. */
 export const maxScoreForRound = (totalReveals: number): number => Math.ceil(totalReveals / 10) * 10;
 
-/** The round's current countdown score, from `revealedClueIds` alone — shared by the local game
- * and the online host's own scoring effect (`useOnlineClueGame`), so both compute the exact same
- * number from the exact same input. `vowels` isn't a normal clue (see its own doc comment in
- * `types/index.ts`): it's excluded from the linear countdown and instead drops the round straight
- * to 1, if it was still above that. */
-export const remainingScore = (revealedClueIds: ClueId[]): number => {
-  const maxScore = maxScoreForRound(totalRevealCount());
+/** The round's current countdown score, from `revealedClueIds` and `place` alone — shared by the
+ * local game and the online host's own scoring effect (`useOnlineClueGame`), so both compute the
+ * exact same number from the exact same input. `vowels` isn't a normal clue (see its own doc
+ * comment in `types/index.ts`): it's excluded from the linear countdown and instead drops the
+ * round straight to 1, if it was still above that. */
+export const remainingScore = (revealedClueIds: ClueId[], place: CluePlace): number => {
+  const maxScore = maxScoreForRound(totalRevealCount(place));
   const vowelsRevealed = revealedClueIds.includes('vowels');
   const countdownRemaining = maxScore - revealedClueIds.filter((id) => id !== 'vowels').length;
   return vowelsRevealed ? Math.min(countdownRemaining, 1) : countdownRemaining;
@@ -46,12 +89,8 @@ export const remainingScore = (revealedClueIds: ClueId[]): number => {
  * (falls back to the whole pool if the filter is empty), prefers whichever have been drawn the
  * fewest times per `history` — never-drawn places first, then, once everything in the pool has
  * come up at least once, cycles through the least-drawn ones instead of repeating at random. See
- * `pickLeastDrawn`/`recordClueDraw` in helpers/clueHistory.ts. Each place falls into
- * exactly one of the 3 Clues categories — capital first, then French city, then plain city
- * (see `isCapitalPlace`/`isFrenchCityPlace`, cross-referenced from Compass). */
-const clueCategoryOf = (place: Pick<CluePlace, 'name' | 'code'>): ClueCategory =>
-  isCapitalPlace(place) ? 'capital' : isFrenchCityPlace(place) ? 'citiesFr' : 'cities';
-
+ * `pickLeastDrawn`/`recordClueDraw` in helpers/clueHistory.ts. Each place falls into exactly one
+ * of the 3 Clues categories, see `placeCategory`. */
 export const randomCluePlace = (
   difficulty: Difficulty,
   categories: ClueCategory[],
@@ -59,7 +98,7 @@ export const randomCluePlace = (
   history: ClueDrawHistory = {},
 ): CluePlace => {
   const pool = CLUE_PLACES.filter(
-    (place) => categories.includes(clueCategoryOf(place)) && effectiveDifficulty(place, language) === difficulty,
+    (place) => categories.includes(placeCategory(place)) && effectiveDifficulty(place, language) === difficulty,
   );
   const source = pool.length > 0 ? pool : CLUE_PLACES;
   return pickLeastDrawn(source, history);
@@ -99,3 +138,16 @@ export const overlayTypedLetters = (groups: NameSkeletonSlot[][], typed: string)
     }),
   );
 };
+
+/** Turns raw typed text into the very same box-group shape a real name skeleton has (one group
+ * per space-separated word, a hyphen as its own `HYPHEN_SLOT`) — used before the real shape is
+ * known at all (the "letter" clue's 1st click or none yet), so what's being typed still reads as
+ * boxed letters rather than a plain line, the same way it will once the shape is known. Never has
+ * a blank slot: every character actually typed gets one, nothing more. */
+export const typedSkeleton = (text: string): NameSkeletonSlot[][] =>
+  text.trim() === ''
+    ? []
+    : text
+        .trim()
+        .split(/\s+/)
+        .map((word) => [...word].map((char): NameSkeletonSlot => (char === '-' ? HYPHEN_SLOT : char.toUpperCase())));

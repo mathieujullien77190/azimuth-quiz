@@ -1,0 +1,1 @@
+export { SyllablesView } from './SyllablesView';

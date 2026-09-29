@@ -13,16 +13,6 @@ export const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
       fontSize: fontSize.caption + 1,
       textAlign: 'center',
     },
-    // The word being typed before its shape is known (no letter clue picked yet, see
-    // `previewText`): same accent color as the skeleton's own boxed letters below, just not boxed
-    // since there's no known length to box it into.
-    typingPreview: {
-      ...typography.body,
-      color: colors.accent,
-      fontSize: fontSize.caption + 1,
-      fontStyle: 'italic',
-      textAlign: 'center',
-    },
     actions: {
       gap: spacing.sm,
     },

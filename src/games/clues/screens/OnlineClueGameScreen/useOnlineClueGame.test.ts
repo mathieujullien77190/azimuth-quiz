@@ -145,7 +145,6 @@ describe('useOnlineClueGame — the draft guess', () => {
     await act(async () => result.current.setGuessText('Par'));
     await setGame({ turnUid: 'guest' });
     expect(result.current.guessText).toBe('');
-    expect(result.current.lastWrong).toBeNull();
   });
 });
 
@@ -309,20 +308,12 @@ describe('useOnlineClueGame — guessing', () => {
     expect(reportClueRoomCorrect).toHaveBeenCalledTimes(1);
   });
 
-  it('reports a wrong answer, empties the field and remembers who missed', async () => {
+  it('reports a wrong answer and empties the field', async () => {
     const { result } = await setup({ gameState: gameState({ wrongGuessSeq: 2 }) });
     await act(async () => result.current.setGuessText('Rome'));
     await act(async () => result.current.submitGuess());
     expect(reportClueRoomWrong).toHaveBeenCalledWith('tabofuna', 'host', 3);
     expect(result.current.guessText).toBe('');
-    expect(result.current.lastWrong).toBe('Zoé');
-  });
-
-  it('names nobody when this device is not in the players list', async () => {
-    const { result } = await setup({ players: { guest: { name: 'Max', joinedAt: arrivedAt(2) } } });
-    await act(async () => result.current.setGuessText('Rome'));
-    await act(async () => result.current.submitGuess());
-    expect(result.current.lastWrong).toBe('');
   });
 
   it('swallows a failed report of a wrong answer', async () => {
@@ -341,6 +332,44 @@ describe('useOnlineClueGame — guessing', () => {
     await act(async () => noPlace.result.current.submitGuess());
     expect(reportClueRoomCorrect).not.toHaveBeenCalled();
     expect(reportClueRoomWrong).not.toHaveBeenCalled();
+  });
+});
+
+describe('useOnlineClueGame — who missed, shown to everyone', () => {
+  it('shows nobody until the room reflects a miss', async () => {
+    const { result } = await setup();
+    expect(result.current.wrongGuesserName).toBeNull();
+  });
+
+  it('names whoever missed, once the room reflects it', async () => {
+    const { result } = await setup();
+    await setGame({ wrongGuessUid: 'host', wrongGuessSeq: 1 });
+    expect(result.current.wrongGuesserName).toBe('Zoé');
+  });
+
+  it('clears itself once that player’s turn ends (they pick a clue, passing the turn on)', async () => {
+    const { result } = await setup();
+    await setGame({ wrongGuessUid: 'host', wrongGuessSeq: 1 });
+    expect(result.current.wrongGuesserName).toBe('Zoé');
+    await setGame({ turnUid: 'guest', wrongGuessUid: 'host', wrongGuessSeq: 1 });
+    expect(result.current.wrongGuesserName).toBeNull();
+  });
+
+  it('does not carry a miss over into a new round, even if the same player is first again', async () => {
+    // wrongGuessSeq is never reset between rounds (the host's own scoring relies on that, see
+    // useHostTurnScoring) — the baseline captured at this round's start is what tells the two apart.
+    const { result } = await setup({ gameState: gameState({ wrongGuessUid: 'host', wrongGuessSeq: 3 }) });
+    expect(result.current.wrongGuesserName).toBeNull();
+    await setGame({ roundIndex: 1, wrongGuessUid: 'host', wrongGuessSeq: 3 });
+    expect(result.current.wrongGuesserName).toBeNull();
+    await setGame({ roundIndex: 1, wrongGuessUid: 'host', wrongGuessSeq: 4 });
+    expect(result.current.wrongGuesserName).toBe('Zoé');
+  });
+
+  it('shows nobody if the wrong guesser is not (or no longer) in the players list', async () => {
+    const { result } = await setup({ players: { guest: { name: 'Max', joinedAt: arrivedAt(2) } } });
+    await setGame({ wrongGuessUid: 'host', wrongGuessSeq: 1 });
+    expect(result.current.wrongGuesserName).toBeNull();
   });
 
   it('gives up for the host, whoever holds the turn (cutting the round short is a host call)', async () => {

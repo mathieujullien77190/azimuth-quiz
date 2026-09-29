@@ -71,6 +71,65 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
     bodyFlag: {
       height: 78,
     },
+    // The charade's card is `wide` (see WIDE_CLUE_IDS): its body grows with however many riddle
+    // lines are revealed, rather than the fixed 42px every other card body has.
+    bodyCharade: {
+      height: undefined,
+      minHeight: 42,
+      paddingVertical: spacing.xs,
+    },
+    charadeLines: {
+      gap: spacing.xs,
+      width: '100%',
+    },
+    charadeLine: {
+      ...typography.body,
+      color: colors.text,
+      fontSize: fontSize.caption + 1,
+      textAlign: 'center',
+    },
+    charadeLabel: {
+      ...typography.label,
+      color: colors.accent,
+    },
+    charadeClear: {
+      ...typography.heading,
+      color: colors.accent,
+      fontSize: fontSize.body,
+      letterSpacing: 1,
+      textAlign: 'center',
+      marginTop: 2,
+    },
+    // Same variable-height reasoning as `bodyCharade`: a pun sentence doesn't fit the fixed 42px
+    // every other card body has.
+    bodyWordplay: {
+      height: undefined,
+      minHeight: 42,
+      paddingVertical: spacing.xs,
+    },
+    // Stage 1 (the plain pun): normal reading color, like any other clue's value.
+    wordplaySentence: {
+      ...typography.body,
+      color: colors.text,
+      fontSize: fontSize.caption + 1,
+      textAlign: 'center',
+    },
+    // Stage 2 (the same pun, explained): the sentence dims to muted by default, and the punning
+    // word(s) (see `highlightSegments`) stay full-bright — the contrast itself is the explanation,
+    // no extra wording needed.
+    wordplayMuted: {
+      color: colors.textMuted,
+    },
+    wordplayHighlight: {
+      color: colors.text,
+      fontWeight: '800',
+    },
+    personalityName: {
+      ...typography.heading,
+      color: colors.accent,
+      fontSize: fontSize.body,
+      textAlign: 'center',
+    },
     lockIcon: {
       fontSize: 22,
     },

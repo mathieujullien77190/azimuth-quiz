@@ -8,12 +8,16 @@ export const EditableValue = ({
   onSave,
   type = 'text',
   display,
+  allowEmpty = false,
 }: {
   value: string;
   saveFlag: React.ReactNode;
   onSave: (next: string) => void;
   type?: 'text' | 'number';
   display?: string;
+  /** An empty draft normally cancels instead of saving (most fields are never blank) — set this
+   * for a field where blank is itself a valid value to save (clearing it on purpose). */
+  allowEmpty?: boolean;
 }) => {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -31,7 +35,8 @@ export const EditableValue = ({
   }
 
   const commit = () => {
-    if (draft.trim() && draft.trim() !== value) onSave(draft.trim());
+    const trimmed = draft.trim();
+    if (trimmed !== value && (trimmed !== '' || allowEmpty)) onSave(trimmed);
     setEditing(false);
   };
 

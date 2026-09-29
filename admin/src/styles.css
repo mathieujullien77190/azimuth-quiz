@@ -325,6 +325,12 @@ textarea:focus-visible,
   font-style: italic;
 }
 
+.charade-editor {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+
 .kv-table {
   width: 100%;
   table-layout: fixed;
@@ -355,6 +361,28 @@ textarea:focus-visible,
 
 .coord {
   font-variant-numeric: tabular-nums;
+}
+
+.syllables-table td {
+  padding: 6px 8px 6px 0;
+  color: var(--text);
+  vertical-align: top;
+}
+
+.syllables-table thead th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 4px 8px 8px 0;
+}
+
+.syllables-table tr + tr td {
+  border-top: 1px solid rgba(37, 51, 79, 0.6);
+}
+
+.syllables-table .syllable-cell {
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .kv-edit-btn {

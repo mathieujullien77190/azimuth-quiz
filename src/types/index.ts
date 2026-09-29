@@ -159,6 +159,9 @@ export type ClueId =
   | 'currency'
   | 'airportCode'
   | 'isCapital'
+  | 'charade'
+  | 'personality'
+  | 'wordplay'
   | 'vowels';
 
 /** Approximate position of the city within its country, on a 3x3 grid. */

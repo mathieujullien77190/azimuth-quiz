@@ -17,6 +17,8 @@ import distanceRevealedCode from './DistanceRevealed.source.md?raw';
 import flagColorsRevealedCode from './FlagColorsRevealed.source.md?raw';
 import letterRevealedSpaceCode from './LetterRevealedSpace.source.md?raw';
 import letterRevealedHyphenCode from './LetterRevealedHyphen.source.md?raw';
+import charadeRevealedCode from './CharadeRevealed.source.md?raw';
+import personalityRevealedCode from './PersonalityRevealed.source.md?raw';
 
 const meta = {
   title: 'Clues/ClueCard',
@@ -83,4 +85,18 @@ export const LetterRevealedSpace: Story = {
 export const LetterRevealedHyphen: Story = {
   parameters: source(letterRevealedHyphenCode),
   args: { clueId: 'letter', label: 'Lettres', letterStage: 2, place: SAMPLE_CLUE_PLACE_HYPHEN, state: 'revealed' },
+};
+
+/** Charade, 2 syllable-riddles out of "Tokyo"'s 2 ("mon premier"/"mon deuxième") — one more click
+ * (past `charadeMaxStage`) would spell the name out in clear as a filet de sécurité. */
+export const CharadeRevealed: Story = {
+  parameters: source(charadeRevealedCode),
+  args: { charadeStage: 2, clueId: 'charade', label: 'Charade', place: SAMPLE_CLUE_PLACE, state: 'revealed' },
+};
+
+/** A real person tied to the place (here Tokyo), curated in `scripts/personalityCuration.json` —
+ * a place with none curated never offers this card at all (see `cluesFor`). */
+export const PersonalityRevealed: Story = {
+  parameters: source(personalityRevealedCode),
+  args: { clueId: 'personality', label: 'Personnalité', place: SAMPLE_CLUE_PLACE, state: 'revealed' },
 };

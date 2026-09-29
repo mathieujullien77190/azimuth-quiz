@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { deletePlace, fetchPlaces, saveCompass, saveDifficulty, saveClues, type CompassPatch, type CluesPatch, type PlaceRow } from '../../api/places';
+import { CharadeEditor } from './CharadeEditor';
+import { WordplayEditor } from './WordplayEditor';
 import { ChipGroup, toggleInSet } from '../../components/ChipGroup';
 import { DeleteX } from '../../components/DeleteX';
 import { DescriptionCell } from '../../components/DescriptionCell';
@@ -29,6 +31,12 @@ export const PlacesView = () => {
   const [saveState, setSaveState] = useState<SaveState | null>(null);
 
   const [panelOpen, setPanelOpen] = useState(true);
+  // Which card's own Charade editor is expanded (see the "🎭 Charade" toggle below) — at most one
+  // at a time, same reasoning as CountriesView's own "🗺️ Silhouette" toggle.
+  const [expandedCharadeIndex, setExpandedCharadeIndex] = useState<number | null>(null);
+  // Which card's own Wordplay editor is expanded — separate from Charade's, so both can be open
+  // at once on the same card (they edit different fields, no reason to force a choice).
+  const [expandedWordplayIndex, setExpandedWordplayIndex] = useState<number | null>(null);
   const [query, setQuery] = useState('');
   const [categories, setCategories] = useState(new Set(CATEGORY_ORDER));
   const [difficulties, setDifficulties] = useState(new Set(DIFFICULTY_ORDER));
@@ -279,7 +287,29 @@ export const PlacesView = () => {
               </div>
 
               <div className="game-block">
-                <h3 className="game-title">Clues</h3>
+                <div className="row panel-header">
+                  <h3 className="game-title">Clues</h3>
+                  {row.clues && (
+                    <button
+                      type="button"
+                      className="chip"
+                      aria-pressed={expandedCharadeIndex === row.index}
+                      onClick={() => setExpandedCharadeIndex(expandedCharadeIndex === row.index ? null : row.index)}
+                    >
+                      🎭 Charade
+                    </button>
+                  )}
+                  {row.clues && (
+                    <button
+                      type="button"
+                      className="chip"
+                      aria-pressed={expandedWordplayIndex === row.index}
+                      onClick={() => setExpandedWordplayIndex(expandedWordplayIndex === row.index ? null : row.index)}
+                    >
+                      ✍️ Jeu de mots
+                    </button>
+                  )}
+                </div>
                 {row.clues ? (
                   <table className="kv-table">
                     <tbody>
@@ -347,6 +377,8 @@ export const PlacesView = () => {
                 ) : (
                   <p className="absent">Absent d’Clues</p>
                 )}
+                {row.clues && expandedCharadeIndex === row.index && <CharadeEditor initialPlace={row.clues} />}
+                {row.clues && expandedWordplayIndex === row.index && <WordplayEditor initialPlace={row.clues} />}
               </div>
             </div>
           </div>
