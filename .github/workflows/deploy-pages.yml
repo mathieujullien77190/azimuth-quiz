@@ -53,9 +53,17 @@ jobs:
         run: npm ci
         working-directory: admin
 
-      - name: Build admin app (static, base path /azimuth-quiz/admin, no backend — see admin/src/changelog.ts)
+      - name: Build admin app (static, base path /azimuth-quiz/admin — reads/writes Firestore after a Google sign-in)
         run: npm run build
         working-directory: admin
+        env:
+          # Same client-side Firebase config as the game (see admin/src/firebase.ts).
+          EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.EXPO_PUBLIC_FIREBASE_API_KEY }}
+          EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          EXPO_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.EXPO_PUBLIC_FIREBASE_PROJECT_ID }}
+          EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          EXPO_PUBLIC_FIREBASE_APP_ID: ${{ secrets.EXPO_PUBLIC_FIREBASE_APP_ID }}
 
       - name: Merge admin build into the main site's dist/admin/
         run: |

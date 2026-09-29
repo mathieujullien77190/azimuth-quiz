@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { countryName, flagEmoji } from '@/data/places/countries';
-import { CONTOURS } from '@/data/contours';
+import { allContours } from '../../api/contour';
 import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 
 import { fetchCountries, saveCountry, type CountryPatch, type CountryRecord } from '../../api/countries';
@@ -134,7 +134,7 @@ export const CountriesView = () => {
       <div className="cards-scroll">
         {pageRows.length === 0 && <div className="empty">Aucun pays ne correspond à cette recherche.</div>}
         {pageRows.map((row) => {
-          const contourCountry = CONTOURS.find((c) => c.code === row.code);
+          const contourCountry = allContours().find((c) => c.code === row.code);
           const contourExpanded = expandedContourCode === row.code;
           const showNeighbors = neighborsOpen.has(row.code);
           return (

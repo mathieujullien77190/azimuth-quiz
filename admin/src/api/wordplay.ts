@@ -1,20 +1,19 @@
-import { wordplayFor, type WordplayEntry } from '@/games/clues/helpers/wordplay';
+import type { WordplayEntry } from '@/games/clues/helpers/wordplay';
 import type { CluePlace, Difficulty } from '@/types';
 
 import { logChange } from '../changelog';
 import { DIFFICULTY_LABELS } from '../constants';
+import { data, putPlace } from '../data';
 
-/** Same no-backend, journal-only pattern as every other admin edit (see `changelog.ts`,
- * `api/charades.ts`) — nothing here is written to `scripts/wordplayCuration.json`, every change
- * just appends a line to copy over by hand. Logs the human identity AND `place.key` (the actual
- * curation key, opaque on its own — see `data/places/codec.ts`'s doc comment) side by side. */
+/** Logs the human identity AND `place.key` (the document id, opaque on its own) side by side. */
 const identity = (place: Pick<CluePlace, 'name' | 'code' | 'key'>): string => `${place.name} (${place.code}) [${place.key}]`;
 
-/** `place`'s wordplay entry to edit — unlike the game's own `wordplayFor` (which is `null` for an
- * uncurated place, so the clue is never offered), the admin always has something to start typing
- * into: an empty sentence until curated by hand, defaulting to 'intermediate' difficulty (same
- * default `scripts/generateWordplay.mjs` falls back to for a missing/invalid value). */
-export const wordplayEntryFor = (place: Pick<CluePlace, 'key'>): WordplayEntry => wordplayFor(place) ?? { sentence: '', difficulty: 'intermediate' };
+/** `place`'s wordplay entry to edit — the admin always has something to start typing into: an
+ * empty sentence until curated by hand, defaulting to 'intermediate' difficulty. */
+export const wordplayEntryFor = (place: Pick<CluePlace, 'key'>): WordplayEntry =>
+  data().places[place.key].wordplay ?? { sentence: '', difficulty: 'intermediate' };
+
+const writeEntry = (place: Pick<CluePlace, 'key'>, entry: WordplayEntry) => putPlace(place.key, { ...data().places[place.key], wordplay: entry });
 
 export const saveWordplaySentence = async (
   place: Pick<CluePlace, 'name' | 'code' | 'key'>,
@@ -22,8 +21,10 @@ export const saveWordplaySentence = async (
   next: string,
 ): Promise<WordplayEntry> => {
   const trimmed = next.trim();
+  const updated = { ...entry, sentence: trimmed };
+  await writeEntry(place, updated);
   logChange(`[Jeu de mots] ${identity(place)} — phrase : « ${entry.sentence || '(vide)'} » -> « ${trimmed || '(vide)'} »`);
-  return { ...entry, sentence: trimmed };
+  return updated;
 };
 
 export const saveWordplayDifficulty = async (
@@ -31,6 +32,8 @@ export const saveWordplayDifficulty = async (
   entry: WordplayEntry,
   next: Difficulty,
 ): Promise<WordplayEntry> => {
+  const updated = { ...entry, difficulty: next };
+  await writeEntry(place, updated);
   logChange(`[Jeu de mots] ${identity(place)} — difficulté : ${DIFFICULTY_LABELS[entry.difficulty]} -> ${DIFFICULTY_LABELS[next]}`);
-  return { ...entry, difficulty: next };
+  return updated;
 };

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { JOB_OPTIONS, personalityDraftFor, savePersonalityJob, savePersonalityName, type PersonalityDraft } from '../../api/personality';
+import { jobOptions, personalityDraftFor, savePersonalityJob, savePersonalityName, type PersonalityDraft } from '../../api/personality';
 import { EditableValue } from '../../components/EditableValue';
 import type { CluePlace } from '@/types';
 
@@ -11,7 +11,7 @@ import type { CluePlace } from '@/types';
  * logged): the name starts empty for every place, curated by hand from scratch, so it opts into
  * `allowEmpty` — clearing it back to blank removes the curated entry entirely (see
  * `savePersonalityName`'s own doc comment), same convention as `WordplayEditor`'s sentence.
- * `jobCode` is a plain select over `data/personalityJobs.json`'s shared vocabulary (`JOB_OPTIONS`,
+ * `jobCode` is a plain select over `data/personalityJobs.json`'s shared vocabulary (`jobOptions`,
  * French label shown, code saved) rather than free text, so every place tagged "footballeur"
  * shares the exact same entry (and its English translation) instead of retyping it — an "(aucun)"
  * option clears it back to `null` (a name with no short safe job tag is a valid, curated state).
@@ -66,7 +66,7 @@ export const PersonalityEditor = ({ initialPlace }: { initialPlace: CluePlace })
               <div className="field-cell">
                 <select className="field-select" value={draft.jobCode ?? ''} onChange={(e) => handleSaveJob(e.target.value)}>
                   <option value="">(aucun)</option>
-                  {JOB_OPTIONS.map(({ code, fr }) => (
+                  {jobOptions().map(({ code, fr }) => (
                     <option key={code} value={code}>
                       {fr}
                     </option>

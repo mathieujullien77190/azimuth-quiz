@@ -16,11 +16,10 @@ import { BOARD_PADDING_RATIO } from '@/games/contour/components/ContourBoard/con
 import { computeBorders } from '@/games/contour/helpers/borders';
 // Pure as well: the progressive, seeded simplification the game uses (level 0 = coarsest, 3 = full ring).
 import { FULL_PRECISION, newSimplifySeed, simplificationLevels } from '@/games/contour/helpers/simplify';
-import { CONTOURS } from '@/data/contours';
 import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 import type { ContourCountry, ContourNeighbor, Point2D } from '@/types';
 
-import { deleteNeighbor, saveCenterLabelPosition, saveNeighborPosition } from '../../api/contour';
+import { allContours, deleteNeighbor, saveCenterLabelPosition, saveNeighborPosition } from '../../api/contour';
 import { DeleteX } from '../../components/DeleteX';
 
 import { neighborIcon, neighborName } from './helpers';
@@ -31,7 +30,7 @@ const BOARD_MAX_HEIGHT = 480;
 /**
  * The Contour map editor for a single country — everything ContourView.tsx used to be, minus its
  * own country picker: mounted inline inside CountriesView's own card for whichever country already
- * has Contour data (see CountriesView.tsx's "🗺️ Silhouette" toggle, `CONTOURS.find` — a country
+ * has Contour data (see CountriesView.tsx's "🗺️ Silhouette" toggle, `allContours().find` — a country
  * gets one as soon as its `countries.json` row grows a `contour` field, hand-curated or generated
  * by `scripts/generateContours.mjs`), so pays and Contour data live on the same screen instead of a
  * separate tab. `initialCountry` seeds local state; nothing here writes back up to the parent (same
@@ -97,7 +96,7 @@ export const ContourEditor = ({
   // line, not one per country.
   const decor = useMemo(() => {
     if (!drawNeighbors) return null;
-    const borders = computeBorders(country, CONTOURS);
+    const borders = computeBorders(country, allContours());
     const runsPath = (runs: readonly (readonly (readonly [number, number])[])[]) =>
       runs.map((run) => polylinePath(projectPoints(run, project))).join(' ');
     return {

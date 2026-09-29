@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 import appConfig from '../../app.json';
 
+import { AuthGate } from './components/AuthGate';
 import { clearChangelog, useChangelog } from './changelog';
 import { CountriesView } from './views/CountriesView';
 import { JobsView } from './views/JobsView';
@@ -46,13 +47,13 @@ const ChangelogPanel = () => {
         className="changelog-textarea"
         readOnly
         value={text}
-        placeholder="Rien pour l'instant : modifie un lieu ou un pays, la ligne apparaît ici. Colle ce texte à Claude pour qu'il applique les changements — l'admin ne modifie jamais les fichiers directement (voir le README)."
+        placeholder="Rien pour l'instant : chaque modification est enregistrée dans Firestore et une ligne s'ajoute ici (simple trace de session)."
       />
     </div>
   );
 };
 
-export const App = () => {
+const AdminApp = () => {
   const [tab, setTab] = useState<Tab>('places');
   // Same Chromium-on-Windows flag-emoji fallback as the game itself (see helpers/web.ts) —
   // needed here too since the flag badge below uses the same font/emoji.
@@ -93,3 +94,9 @@ export const App = () => {
     </div>
   );
 };
+
+export const App = () => (
+  <AuthGate>
+    <AdminApp />
+  </AuthGate>
+);

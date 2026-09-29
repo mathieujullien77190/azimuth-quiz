@@ -104,12 +104,14 @@ GitHub Pages, à côté du jeu :
 
 🔗 **[Éditeur de lieux](https://mathieujullien77190.github.io/azimuth-quiz/admin/)**
 
-Elle n'a **aucun backend** : les données sont lues depuis le JSON figé au moment du
-build (donc en lecture, pas forcément à jour avec les tout derniers changements), et
-aucune modification n'est jamais écrite sur disque directement — pas d'API, pas
-d'auth à gérer. Chaque édition ajoute une ligne dans un journal texte affiché en haut
-de l'app ; on copie ce journal et on le colle à Claude, qui applique les changements
-décrits aux fichiers du dépôt. Ça marche pareil en local :
+Les données vivent dans **Firestore** (collections `places`, `countries`, `charadeRiddles`,
+`personalityJobs`, `meta`). L'admin se connecte avec un compte Google (seul l'administrateur
+déclaré dans `firestore.rules` peut écrire) et **enregistre directement** chaque modification dans
+Firestore ; le journal en haut de l'app n'est plus qu'une trace des éditions faites. Le jeu, lui,
+lit encore les JSON embarqués (migration à venir). Import initial des JSON :
+`npm run seed:firestore -- --dry-run` puis `npm run seed:firestore` (clé de compte de service dans
+`scripts/serviceAccount.json`, jamais commitée). Règles : `npx firebase-tools deploy --only firestore:rules`.
+En local :
 
 ```bash
 npm run admin   # installe ses dépendances au premier lancement, puis lance le serveur dev

@@ -13,6 +13,9 @@ export default defineConfig(({ command }) => ({
   // site (see .github/workflows/deploy-pages.yml, which builds this into dist/admin/). The dev
   // server (`npm run admin`) stays at the root so `npm run admin` keeps working exactly as before.
   base: command === 'build' ? '/azimuth-quiz/admin/' : '/',
+  // Reuses the game's root `.env` (Firebase config, `EXPO_PUBLIC_*`) instead of duplicating it.
+  envDir: path.resolve(rootDir, '..'),
+  envPrefix: ['VITE_', 'EXPO_PUBLIC_'],
   plugins: [react()],
   resolve: sharedResolve,
   define: sharedDefine(command),

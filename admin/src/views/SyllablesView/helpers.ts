@@ -1,4 +1,4 @@
-import { CLUE_PLACES } from '@/data';
+import { cluePlaces } from '../../api/places';
 
 import { charadeFor, normalizeSyllable, riddleFor } from '../../api/charades';
 import type { SyllableRow } from './types';
@@ -11,12 +11,12 @@ const MAX_EXAMPLES = 4;
  * *occurrences* — most syllables repeat across several places), each with its riddle (global, see
  * `riddleFor`) and a few example places. Grouped by `normalizeSyllable` (case, à/â onto a) — same
  * key as the riddle dictionary itself, so "pa"/"pà"/"pâ" show up as one row, not three near-
- * duplicates. Built once (nothing here changes at runtime, `CLUE_PLACES` is bundled data); edited
+ * duplicates. Built once (the cache only changes through the views' own edits); edited
  * in place by the view via its own local state, same no-backend/journal-only pattern as
  * `CharadeEditor`. */
 export const allSyllableRows = (): SyllableRow[] => {
   const examplesBySyllable = new Map<string, string[]>();
-  for (const place of CLUE_PLACES) {
+  for (const place of cluePlaces()) {
     for (const syllable of charadeFor(place).syllables) {
       const key = normalizeSyllable(syllable);
       const examples = examplesBySyllable.get(key) ?? [];
