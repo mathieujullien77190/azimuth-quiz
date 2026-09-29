@@ -310,6 +310,13 @@ export type ClueRow = readonly [
   emoji1: string,
   emoji2: string,
   emoji3: string,
+  /** Hand-corrected syllable split for the charade clue (`helpers/charade.ts`) — absent for
+   * (almost) every place, which then uses the live `syllabify` heuristic instead; present only
+   * where that heuristic gets it wrong (foreign diacritics, mostly). Always lowercase. Can be an
+   * empty array on purpose: some names have no usable syllable at all (e.g. "Bălți", whose "ă"
+   * the heuristic doesn't recognize) — `cluesFor` then drops the charade clue entirely rather
+   * than showing an empty card. */
+  syllables?: readonly string[],
 ];
 
 /** A place: common data (including difficulty) + its per-game parts. `compass`/`clues` are
@@ -353,6 +360,7 @@ export const decodeCluePlace = (common: CommonRow, row: ClueRow): CluePlace => {
     emoji1,
     emoji2,
     emoji3,
+    syllables,
   ] = row;
   return {
     name,
@@ -369,6 +377,7 @@ export const decodeCluePlace = (common: CommonRow, row: ClueRow): CluePlace => {
     currency: countryCurrencySymbol(code) ?? '',
     airportCode,
     emojis: [emoji1, emoji2, emoji3] as const,
+    ...(syllables !== undefined && { syllables: [...syllables] }),
   };
 };
 

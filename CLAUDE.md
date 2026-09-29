@@ -245,39 +245,38 @@ commentees en francais :
   consonnes entre deux groupes, "n"/"m" nasalise repli dans la voyelle qui precede sauf s'il est double —
   imparfaite sur les cas rares, documentee dans le fichier plutot que chassee a la perfection ; chaque mot
   d'un nom compose/a tiret/a espace est syllabe seul, jamais fusionne avec le suivant) : `charadeFor(place)`
-  l'utilise par defaut, mais un lieu peut avoir un **override PAR LIEU** de son propre decoupage
-  (`scripts/charadeSyllablesCuration.json` -> `src/data/charadeSyllables.json`, cle `charadeKey(place)`
-  = `${code}|${name}`, valeurs en minuscule) quand l'heuristique se trompe (diacritiques etrangers
-  surtout, ex. le "ă" de "Bălți" qu'elle ne reconnait pas) — ajouter/supprimer/renommer une syllabe
-  depuis l'admin (`CharadeEditor`) log toujours le tableau COMPLET resultant, jamais un diff. Un
-  override peut aussi vider la liste completement : certains noms n'ont simplement aucune syllabe
-  utilisable, et c'est un resultat valide, pas une erreur (voir plus haut, `cluesFor`). **La devinette,
-  elle, reste GLOBALE**, independamment de cet override : `riddleFor(syllabe)` la cherche par le texte de la syllabe elle-meme (`normalizeSyllable` :
+  l'utilise par defaut, mais un lieu peut avoir un **override PAR LIEU** de son propre decoupage, baque
+  directement dans `places.json` — 10e (et dernier) element optionnel de son `ClueRow`
+  (`data/places/codec.ts`, `CluePlace.syllables`), absent pour la quasi-totalite des lieux, meme
+  convention que le `contour` optionnel de `CountryRow` (voir Silhouette plus bas) — quand l'heuristique se
+  trompe (diacritiques etrangers surtout, ex. le "ă" de "Bălți" qu'elle ne reconnait pas). Un override peut
+  aussi etre un tableau vide : certains noms n'ont simplement aucune syllabe utilisable, et c'est un
+  resultat valide, pas une erreur (voir plus haut, `cluesFor`). **La devinette, elle, reste GLOBALE**,
+  independamment de cet override : `riddleFor(syllabe)` la cherche par le texte de la syllabe elle-meme (`normalizeSyllable` :
   minuscule, et "a"/"à"/"â" confondus — vrais homophones en francais, contrairement a la famille du "e"
   ("e"/"é"/"è" sont des sons reellement differents, jamais fondus), export utilise aussi par l'admin pour
   regrouper les lignes de l'onglet Syllabes), pas par lieu — curer "pa" une fois vaut pour Paris, Palerme,
   et tout autre lieu qui a un "pa" (ou meme un "pâ"), plutot que de re-curer la meme syllabe a chaque lieu
-  qui la contient (922 lieux, ~2537 occurrences de syllabes, mais seulement ~1013 syllabes distinctes a
+  qui la contient (922 lieux, ~2537 occurrences de syllabes, mais seulement ~1016 syllabes distinctes a
   curer). Jamais requise : `charadeLines` retombe sur la syllabe lue telle quelle ("se dit « xx »") tant
   que rien n'est curee pour elle. Paliers plafonnes a
   `CHARADE_SYLLABLE_STAGE_CAP` (4) + 1 palier final : au-dela de 4 syllabes, les syllabes en trop sont
   regroupees dans le dernier palier plutot que d'exploser le cout de l'indice face aux autres indices a 1-3
-  paliers (voir `charadeSyllableGroups`). Donnees : script dev `scripts/generateCharades.mjs`
-  (`npm run generate:charades`, hors tests/CI/app livree — porte a la main la meme heuristique que
-  `syllabify.ts`, meme raison que `generateContours.mjs`) lit DEUX curations et ecrit DEUX fichiers
-  livres : `scripts/charadeCuration.json` (`{ "syllabe": "devinette" }` a plat, cle en minuscule) ->
-  `src/data/charade.json`, et `scripts/charadeSyllablesCuration.json` (`{ "code|nom": ["syllabe", ...] }`,
-  overrides par lieu ci-dessus) -> `src/data/charadeSyllables.json` ; signale aussi les cles orphelines
-  (qui ne correspondent plus a rien de reel) des deux cotes. Admin : `PlacesView`'s `CharadeEditor`
-  (par lieu) edite les deux a la fois — chaque syllabe se renomme sur place (`EditableValue`) ou se
-  supprime (`DeleteX`), un champ "+ Ajouter une syllabe" en ajoute une ; sa devinette s'edite juste a
-  cote, toujours par le meme `EditableValue` — et l'onglet a part "Syllabes" (`SyllablesView`, une ligne
-  par syllabe DISTINCTE toutes places confondues, avec quelques lieux d'exemple pour le contexte en curant)
-  n'edite que la devinette globale. Les deux ecrivent la meme cle globale pour la devinette, edition
-  depuis l'un visible immediatement dans l'autre au rechargement (rien ecrit sur disque, meme pattern
-  journal que le reste de l'admin — un ajout/suppression/renommage de syllabe logue le tableau complet
-  du lieu, a recopier tel quel dans `charadeSyllablesCuration.json`). Premier lot curee : 179 syllabes
-  distinctes sur ~1013.
+  paliers (voir `charadeSyllableGroups`). Donnees de la devinette (pas du decoupage, qui vit dans
+  `places.json` ci-dessus) : script dev `scripts/generateCharades.mjs` (`npm run generate:charades`, hors
+  tests/CI/app livree — porte a la main la meme heuristique que `syllabify.ts`, meme raison que
+  `generateContours.mjs`) valide et copie `scripts/charadeCuration.json` (`{ "syllabe": "devinette" }` a
+  plat, cle en minuscule) dans `src/data/charade.json` (donnees livrees, meme forme) ; lit aussi
+  `places.json` pour connaitre le vrai decoupage de chaque lieu (override ou heuristique) et signaler les
+  cles de devinette orphelines. Admin : `PlacesView`'s `CharadeEditor` (par lieu) edite les deux a la fois
+  — chaque syllabe se renomme sur place (`EditableValue`) ou se supprime (`DeleteX`), un champ
+  "+ Ajouter une syllabe" en ajoute une ; sa devinette s'edite juste a cote, toujours par le meme
+  `EditableValue` — et l'onglet a part "Syllabes" (`SyllablesView`, une ligne par syllabe DISTINCTE toutes
+  places confondues, avec quelques lieux d'exemple pour le contexte en curant) n'edite que la devinette
+  globale. Rien ecrit sur disque (meme pattern journal que le reste de l'admin) : editer le decoupage
+  logue le tableau complet resultant du lieu, a recopier a la main comme 10e element de son `ClueRow` dans
+  `places.json` ; editer la devinette logue sa cle normalisee, a recopier dans `charadeCuration.json`.
+  Premier lot curee : 179 syllabes distinctes sur ~1013 (chiffre avant l'ajout d'Amsterdam).
 - **Indices : une personnalite liee au lieu** (`ClueId` `'personality'`, `helpers/personality.ts`) — un seul
   palier (nom + description courte optionnelle, ex. "footballeur"), jamais invente : uniquement des faits
   Wikipedia (nee/tres fortement identifiee au lieu), curee a la main dans `scripts/personalityCuration.json`

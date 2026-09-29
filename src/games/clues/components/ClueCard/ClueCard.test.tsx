@@ -13,10 +13,9 @@ jest.mock('@/games/clues/helpers/wordplay', () => ({
   wordplayFor: jest.fn(() => null),
 }));
 // Empty: `riddleFor` is now a global, syllable-keyed lookup (not place-keyed), so a made-up place
-// code/name no longer isolates a test from whatever gets curated in scripts/charadeCuration.json
-// over time — this does instead. Same reasoning for the per-place syllable-split overrides.
+// name no longer isolates a test from whatever gets curated in scripts/charadeCuration.json over
+// time — this does instead.
 jest.mock('@/data/charade.json', () => ({}));
-jest.mock('@/data/charadeSyllables.json', () => ({}));
 
 const place: CluePlace = CLUE_PLACES.find((p) => p.country === 'France')!;
 

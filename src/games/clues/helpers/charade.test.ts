@@ -3,10 +3,6 @@ jest.mock('@/data/charade.json', () => ({
   bor: 'le rebord d’une table',
   be: 'le verbe être, à l’infinitif tronqué',
 }));
-jest.mock('@/data/charadeSyllables.json', () => ({
-  'FR|Bălți': ['ba', 'l'],
-  'MD|Bălți': [],
-}));
 
 // eslint-disable-next-line import/first
 import {
@@ -22,24 +18,20 @@ import {
 
 describe('charadeFor', () => {
   it('falls back to the live heuristic split, lowercased, for a place with no override', () => {
-    const entry = charadeFor({ code: 'ZZ', name: 'Bordeaux' });
+    const entry = charadeFor({ name: 'Bordeaux' });
     expect(entry.syllables).toEqual(['bor', 'deaux']);
   });
 
   it('is deterministic (same input, same output)', () => {
-    expect(charadeFor({ code: 'ZZ', name: 'Nantes' })).toEqual(charadeFor({ code: 'ZZ', name: 'Nantes' }));
+    expect(charadeFor({ name: 'Nantes' })).toEqual(charadeFor({ name: 'Nantes' }));
   });
 
   it('uses the hand-curated override when there is one, lowercased regardless of how it was typed', () => {
-    expect(charadeFor({ code: 'FR', name: 'Bălți' })).toEqual({ syllables: ['ba', 'l'] });
+    expect(charadeFor({ name: 'Bălți', syllables: ['BA', 'L'] })).toEqual({ syllables: ['ba', 'l'] });
   });
 
   it('can be curated down to no syllables at all — some names just don’t make a usable charade', () => {
-    expect(charadeFor({ code: 'MD', name: 'Bălți' })).toEqual({ syllables: [] });
-  });
-
-  it('is keyed by code and name together — the same name in a different country is unaffected', () => {
-    expect(charadeFor({ code: 'ZZ', name: 'Bălți' }).syllables).not.toEqual([]);
+    expect(charadeFor({ name: 'Bălți', syllables: [] })).toEqual({ syllables: [] });
   });
 });
 

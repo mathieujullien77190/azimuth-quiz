@@ -1,5 +1,4 @@
 import charadeData from '@/data/charade.json';
-import charadeSyllablesData from '@/data/charadeSyllables.json';
 import type { CluePlace } from '@/types';
 
 import { syllabify } from './syllabify';
@@ -12,12 +11,6 @@ import { syllabify } from './syllabify';
 export type CharadeEntry = { syllables: string[] };
 
 const CHARADE = charadeData as unknown as Record<string, string>;
-const CHARADE_SYLLABLES = charadeSyllablesData as unknown as Record<string, string[]>;
-
-/** Same `${code}|${name}` key shape as `data/clues.ts`'s own cross-reference keys — a place has
- * no id of its own, this pair is what identifies one entry of `places.json`. Exported for the
- * admin's own per-place syllable editor (`CharadeEditor`). */
-export const charadeKey = (place: Pick<CluePlace, 'name' | 'code'>): string => `${place.code}|${place.name}`;
 
 /** Case-insensitive ("Pa" and "pa" share the same curated riddle), and folds "à"/"â" onto "a":
  * true homophones in French (unlike the "e" family — "e"/"é"/"è" are genuinely different sounds,
@@ -35,16 +28,15 @@ export const normalizeSyllable = (syllable: string): string => syllable.toLowerC
 export const riddleFor = (syllable: string): string | null => CHARADE[normalizeSyllable(syllable)] ?? null;
 
 /**
- * `place`'s syllable split, always lowercase (curated overrides are stored that way; the
- * heuristic fallback is lowercased here too, so the two never disagree on casing): the shipped
- * override when a human has added/removed/renamed one (`scripts/charadeSyllablesCuration.json`,
- * via the admin's own Charade panel — see `admin/src/api/charades.ts`, same no-backend/journal
- * pattern as everywhere else), otherwise the live `syllabify` heuristic. Every Clue place always
- * has *some* split — an override is never required, only ever a hand correction.
+ * `place`'s syllable split, always lowercase (a curated override is stored that way; the
+ * heuristic fallback is lowercased here too, so the two never disagree on casing): `place.syllables`
+ * when a human has hand-corrected it — baked directly into `places.json` as `ClueRow`'s own
+ * optional last element, see `data/places/codec.ts`'s own doc comment — otherwise the live
+ * `syllabify` heuristic. Every Clue place always has *some* split; an override is never required,
+ * only ever a hand correction (and can legitimately be an empty array, see `ClueRow`).
  */
-export const charadeFor = (place: Pick<CluePlace, 'name' | 'code'>): CharadeEntry => {
-  const overridden = CHARADE_SYLLABLES[charadeKey(place)];
-  const syllables = overridden ?? syllabify(place.name);
+export const charadeFor = (place: Pick<CluePlace, 'name' | 'syllables'>): CharadeEntry => {
+  const syllables = place.syllables ?? syllabify(place.name);
   return { syllables: syllables.map((syllable) => syllable.toLowerCase()) };
 };
 

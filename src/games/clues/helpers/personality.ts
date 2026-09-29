@@ -11,7 +11,7 @@ export type PersonalityEntry = { name: string; description: string | null };
 
 const PERSONALITIES = personalitiesData as unknown as Record<string, PersonalityEntry>;
 
-/** Same `${code}|${name}` key as `charadeKey`/`data/clues.ts`'s own cross-reference keys. */
+/** Same `${code}|${name}` key as `wordplayKey`/`data/clues.ts`'s own cross-reference keys. */
 export const personalityKey = (place: Pick<CluePlace, 'name' | 'code'>): string => `${place.code}|${place.name}`;
 
 /** `place`'s curated personality, or `null` when none was found (or looked up yet) — a place with

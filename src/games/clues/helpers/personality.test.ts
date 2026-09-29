@@ -1,7 +1,7 @@
 import { personalityFor, personalityKey } from './personality';
 
 describe('personalityKey', () => {
-  it('is the code and name, pipe-separated, same shape as charadeKey/data/clues.ts own keys', () => {
+  it('is the code and name, pipe-separated, same shape as wordplayKey/data/clues.ts own keys', () => {
     expect(personalityKey({ code: 'FR', name: 'Paris' })).toBe('FR|Paris');
   });
 });

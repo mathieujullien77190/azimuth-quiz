@@ -198,6 +198,10 @@ export type CluePlace = GeoPlace & {
   /** 3 candidate emoji evoking the city (landmark/culture/nature...): the clue draws one at
    * random on each reveal, not always the same one. */
   emojis: readonly [string, string, string];
+  /** Hand-corrected syllable split for the charade clue — see `ClueRow`'s own doc comment
+   * (`data/places/codec.ts`). Absent for (almost) every place: `charadeFor` then falls back to
+   * the live `syllabify` heuristic. */
+  syllables?: string[];
 };
 
 export type ClueSettings = {
