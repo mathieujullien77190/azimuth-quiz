@@ -14,7 +14,7 @@ export type WordplayEntry = { sentence: string; explained: string };
 
 const WORDPLAY = wordplayData as unknown as Record<string, WordplayEntry>;
 
-/** Same `${code}|${name}` key as `personalityKey`. */
+/** Same `${code}|${name}` key shape as `charadeKey`. */
 export const wordplayKey = (place: Pick<CluePlace, 'name' | 'code'>): string => `${place.code}|${place.name}`;
 
 /** `place`'s curated wordplay, or `null` when there is none (not curated yet, or curated with an

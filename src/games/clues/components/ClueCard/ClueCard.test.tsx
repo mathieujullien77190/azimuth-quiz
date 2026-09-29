@@ -214,10 +214,9 @@ describe('ClueCard — emoji progressive reveal', () => {
 });
 
 describe('ClueCard — charade progressive reveal', () => {
-  // Every syllable falls back to its own plain, lowercased text (see the empty mocks above).
-  // `syllables: undefined` clears whatever override the real `place` fixture might carry (Paris
-  // has one) — this test wants the live heuristic split for "Bordeaux", not a leftover override.
-  const charadePlace = { ...place, name: 'Bordeaux', syllables: undefined };
+  // No riddle curated for either syllable (see the empty mock above), so both fall back to
+  // reading themselves out loud.
+  const charadePlace = { ...place, name: 'Bordeaux', syllables: ['bor', 'deaux'] };
 
   it('defaults to stage 1: only the first syllable’s line', async () => {
     const { getByText, queryByText } = await renderCard({ clueId: 'charade', place: charadePlace, state: 'revealed' });

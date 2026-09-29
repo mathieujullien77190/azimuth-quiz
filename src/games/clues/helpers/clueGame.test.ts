@@ -1,6 +1,6 @@
 import { CLUE_PLACES, isCapitalPlace, isFrenchCityPlace } from '@/data';
 import { CLUE_ORDER } from '@/games/clues/constants';
-import { charadeFor, charadeMaxStage } from '@/games/clues/helpers/charade';
+import { charadeFor, charadeMaxStage, charadeReady } from '@/games/clues/helpers/charade';
 import { personalityFor } from '@/games/clues/helpers/personality';
 import { wordplayFor } from '@/games/clues/helpers/wordplay';
 import { nameSkeleton } from '@/helpers';
@@ -23,7 +23,7 @@ jest.mock('@/games/clues/helpers/personality', () => ({ personalityFor: jest.fn(
 jest.mock('@/games/clues/helpers/wordplay', () => ({ wordplayFor: jest.fn(() => null) }));
 jest.mock('@/games/clues/helpers/charade', () => ({
   ...jest.requireActual('@/games/clues/helpers/charade'),
-  charadeFor: jest.fn(jest.requireActual('@/games/clues/helpers/charade').charadeFor),
+  charadeReady: jest.fn(),
 }));
 
 const PARIS = CLUE_PLACES.find((place) => place.name === 'Paris')!; // capital
@@ -34,7 +34,9 @@ const CITIES_FR_EXCLUDED: ClueId[] = ['localTime', 'isCapital', 'flagColors', 'c
 beforeEach(() => {
   jest.mocked(personalityFor).mockReturnValue(null);
   jest.mocked(wordplayFor).mockReturnValue(null);
-  jest.mocked(charadeFor).mockImplementation(jest.requireActual('@/games/clues/helpers/charade').charadeFor);
+  // Ready by default: most tests in this file care about something other than charade curation
+  // status, and real curation coverage (~18%) would otherwise make this flaky/unrepresentative.
+  jest.mocked(charadeReady).mockReturnValue(true);
 });
 
 describe('placeCategory', () => {
@@ -72,13 +74,14 @@ describe('cluesFor', () => {
     expect(cluesFor(MARSEILLE)).toContain('wordplay');
   });
 
-  it('never drops charade: it always has at least the heuristic syllable split', () => {
+  it('offers charade once every syllable has a curated riddle', () => {
+    jest.mocked(charadeReady).mockReturnValue(true);
     expect(cluesFor(PARIS)).toContain('charade');
     expect(cluesFor(MARSEILLE)).toContain('charade');
   });
 
-  it('drops charade when a hand-curated override empties it out (a name with no usable syllable)', () => {
-    jest.mocked(charadeFor).mockReturnValue({ syllables: [] });
+  it('drops charade until every syllable has a curated riddle (never a partially-curated card)', () => {
+    jest.mocked(charadeReady).mockReturnValue(false);
     expect(cluesFor(PARIS)).not.toContain('charade');
   });
 });
@@ -110,8 +113,8 @@ describe('totalRevealCount', () => {
   });
 
   it('grows with the place’s own charade cost (more syllables, more possible clicks)', () => {
-    const short: CluePlace = { ...NEW_YORK, name: 'Pau', code: 'FR' };
-    const long: CluePlace = { ...NEW_YORK, name: 'Antananarivo', code: 'MG' };
+    const short: CluePlace = { ...NEW_YORK, syllables: ['pau'] };
+    const long: CluePlace = { ...NEW_YORK, syllables: ['an', 'ta', 'na', 'na', 'ri', 'vo'] };
     expect(totalRevealCount(long)).toBeGreaterThan(totalRevealCount(short));
   });
 

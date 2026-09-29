@@ -1,8 +1,6 @@
 import charadeData from '@/data/charade.json';
 import type { CluePlace } from '@/types';
 
-import { syllabify } from './syllabify';
-
 /** One place's syllables, always lowercase — see `charadeFor`'s own doc comment for where they
  * come from. Each syllable's riddle (the classic "mon premier est..." wording — see
  * `charadeLines`) is looked up separately, by the syllable's own text (`riddleFor`): the same
@@ -10,7 +8,13 @@ import { syllabify } from './syllabify';
  * once per place that happens to have it. */
 export type CharadeEntry = { syllables: string[] };
 
-const CHARADE = charadeData as unknown as Record<string, string>;
+const CHARADE = charadeData as unknown as Record<string, string | null>;
+
+/** Same `${code}|${name}` key shape as `wordplayKey` — a place has no id of its own, this pair is
+ * what identifies one entry of `places.json`. Only used to identify a place in the admin's own
+ * journal now (`api/charades.ts`) — `charadeFor` itself no longer needs a key, the syllables live
+ * directly on `place`. */
+export const charadeKey = (place: Pick<CluePlace, 'name' | 'code'>): string => `${place.code}|${place.name}`;
 
 /** Case-insensitive ("Pa" and "pa" share the same curated riddle), and folds "à"/"â" onto "a":
  * true homophones in French (unlike the "e" family — "e"/"é"/"è" are genuinely different sounds,
@@ -19,26 +23,27 @@ const CHARADE = charadeData as unknown as Record<string, string>;
  * "pa"/"pà"/"pâ" into one row rather than showing near-duplicates. */
 export const normalizeSyllable = (syllable: string): string => syllable.toLowerCase().replace(/[àâ]/g, 'a');
 
-/** The curated riddle for this exact syllable text, or `null` when none is curated yet — shipped
- * by `scripts/generateCharades.mjs`, curated by hand in `scripts/charadeCuration.json` (and, for
- * now, in the admin's own Charade panel — see `admin/src/api/charades.ts` — which only ever logs
- * a line to copy over by hand, same no-backend pattern as every other admin edit). Never
- * required: a syllable with nothing curated still reads fine in the card (see `charadeLines`'s
- * own doc comment), curation only ever makes an existing hint better. */
+/** The curated riddle for this exact syllable text, or `null` when none is curated yet.
+ * `src/data/charade.json` is a COMPLETE dictionary — every syllable that appears in ANY place's
+ * `syllables` (see `charadeFor`) is a key, `null` when nothing is curated for it yet — shipped by
+ * `scripts/generateCharades.mjs`, curated by hand in `scripts/charadeCuration.json` (and, for now,
+ * in the admin's own Charade panel — see `admin/src/api/charades.ts` — which only ever logs a line
+ * to copy over by hand, same no-backend pattern as every other admin edit). */
 export const riddleFor = (syllable: string): string | null => CHARADE[normalizeSyllable(syllable)] ?? null;
 
-/**
- * `place`'s syllable split, always lowercase (a curated override is stored that way; the
- * heuristic fallback is lowercased here too, so the two never disagree on casing): `place.syllables`
- * when a human has hand-corrected it — baked directly into `places.json` as `ClueRow`'s own
- * optional last element, see `data/places/codec.ts`'s own doc comment — otherwise the live
- * `syllabify` heuristic. Every Clue place always has *some* split; an override is never required,
- * only ever a hand correction (and can legitimately be an empty array, see `ClueRow`).
- */
-export const charadeFor = (place: Pick<CluePlace, 'name' | 'syllables'>): CharadeEntry => {
-  const syllables = place.syllables ?? syllabify(place.name);
-  return { syllables: syllables.map((syllable) => syllable.toLowerCase()) };
-};
+/** `place`'s syllable split, always lowercase — baked directly into `places.json` for every
+ * single Clue place (`ClueRow`'s own mandatory field, see `data/places/codec.ts`'s doc comment).
+ * Nothing is computed here at runtime, ever. */
+export const charadeFor = (place: Pick<CluePlace, 'syllables'>): CharadeEntry => ({ syllables: place.syllables });
+
+/** The charade clue is only ever offered when EVERY one of `place`'s syllables has a curated
+ * riddle (`riddleFor`) — same never-invent rule as `personality`/`wordplay` (`cluesFor`): a
+ * partially-curated charade (some syllables read as a real riddle, others fall back to "se dit «
+ * xx »") reads as unfinished, not as a fun puzzle. A place with no syllables at all (a hand
+ * override emptied it out, e.g. "Bălți") is never "ready" either — vacuously-true `every` on an
+ * empty array would otherwise offer an empty card. */
+export const charadeReady = (place: Pick<CluePlace, 'syllables'>): boolean =>
+  place.syllables.length > 0 && place.syllables.every((syllable) => riddleFor(syllable) !== null);
 
 /** A very long name would otherwise cost far more picks than every other multi-stage clue (2-3):
  * past this many syllables, the remaining ones are all folded into one last, bundled stage (see

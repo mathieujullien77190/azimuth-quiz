@@ -1,17 +1,12 @@
-import { personalityFor, personalityKey } from './personality';
-
-describe('personalityKey', () => {
-  it('is the code and name, pipe-separated, same shape as wordplayKey/data/clues.ts own keys', () => {
-    expect(personalityKey({ code: 'FR', name: 'Paris' })).toBe('FR|Paris');
-  });
-});
+import { personalityFor } from './personality';
 
 describe('personalityFor', () => {
   it('is null for a place with no curated entry, rather than a made-up one', () => {
-    expect(personalityFor({ code: 'ZZ', name: 'Nowhereville' })).toBeNull();
+    expect(personalityFor({})).toBeNull();
   });
 
-  it('returns the shipped, curated entry when there is one', () => {
-    expect(personalityFor({ code: 'FR', name: 'Paris' })).toEqual({ name: 'Édith Piaf', description: 'chanteuse' });
+  it('reads the curated entry straight off the place when there is one', () => {
+    const entry = { name: 'Édith Piaf', description: 'chanteuse' };
+    expect(personalityFor({ personality: entry })).toEqual(entry);
   });
 });

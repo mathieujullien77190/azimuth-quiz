@@ -38,7 +38,7 @@ describe('decodeCompassPlace', () => {
 describe('decodeCompassPlaces / decodeCluePlaces', () => {
   const entries: MergedPlaces = [
     [['Testville', 'FR', 1.5, -2.5, 'E'], ['C', null, null, null], null],
-    [['Otherville', 'DE', 3, 4, 'H'], null, ['n', 1000, '☀️', 10, 'gb', 'BER', '🏰', '🎡', '🍺']],
+    [['Otherville', 'DE', 3, 4, 'H'], null, ['n', 1000, '☀️', 10, 'gb', 'BER', '🏰', '🎡', '🍺', ['o', 'ther', 'ville']]],
   ];
 
   it('decodeCompassPlaces skips entries with no compass row', () => {
@@ -56,7 +56,7 @@ describe('decodeCompassPlaces / decodeCluePlaces', () => {
 
 describe('decodeCluePlace', () => {
   const common: CommonRow = ['Testville', 'FR', 1.5, -2.5, 'E'];
-  const row: ClueRow = ['ne', 12345, '☀️', 42, 'gw', 'TST', '🗼', '🎨', '🌳'];
+  const row: ClueRow = ['ne', 12345, '☀️', 42, 'gw', 'TST', '🗼', '🎨', '🌳', ['test', 'ville']];
 
   it('maps a common row + clues row to an CluePlace, deriving the country name, timezone, phone code and currency from the country code', () => {
     expect(decodeCluePlace(common, row)).toEqual({
@@ -74,6 +74,7 @@ describe('decodeCluePlace', () => {
       currency: '€',
       airportCode: 'TST',
       emojis: ['🗼', '🎨', '🌳'],
+      syllables: ['test', 'ville'],
     });
   });
 
@@ -88,5 +89,28 @@ describe('decodeCluePlace', () => {
     const place = decodeCluePlace(unknownCommon, row);
     expect(place.phoneCode).toBe('');
     expect(place.currency).toBe('');
+  });
+
+  it('includes the curated personality when the row carries one', () => {
+    const withPersonality: ClueRow = [
+      'ne',
+      12345,
+      '☀️',
+      42,
+      'gw',
+      'TST',
+      '🗼',
+      '🎨',
+      '🌳',
+      ['test', 'ville'],
+      ['Quelqu’un', 'footballeur'],
+    ];
+    const place = decodeCluePlace(common, withPersonality);
+    expect(place.personality).toEqual({ name: 'Quelqu’un', description: 'footballeur' });
+  });
+
+  it('omits personality when the row has none', () => {
+    const place = decodeCluePlace(common, row);
+    expect(place.personality).toBeUndefined();
   });
 });

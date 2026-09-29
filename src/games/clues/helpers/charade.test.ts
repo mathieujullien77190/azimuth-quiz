@@ -2,6 +2,7 @@ jest.mock('@/data/charade.json', () => ({
   pa: 'un petit mot d’affection',
   bor: 'le rebord d’une table',
   be: 'le verbe être, à l’infinitif tronqué',
+  deaux: null,
 }));
 
 // eslint-disable-next-line import/first
@@ -9,35 +10,52 @@ import {
   CHARADE_MAX_STAGES,
   CHARADE_SYLLABLE_STAGE_CAP,
   charadeFor,
+  charadeKey,
   charadeLines,
   charadeMaxStage,
+  charadeReady,
   charadeSyllableGroups,
   riddleFor,
   type CharadeEntry,
 } from './charade';
 
+describe('charadeKey', () => {
+  it('is the code and name, pipe-separated — identifies a place for the admin journal', () => {
+    expect(charadeKey({ code: 'FR', name: 'Paris' })).toBe('FR|Paris');
+  });
+});
+
 describe('charadeFor', () => {
-  it('falls back to the live heuristic split, lowercased, for a place with no override', () => {
-    const entry = charadeFor({ name: 'Bordeaux' });
-    expect(entry.syllables).toEqual(['bor', 'deaux']);
+  it('reads the syllables straight off the place — no computation, no lookup', () => {
+    expect(charadeFor({ syllables: ['bor', 'deaux'] })).toEqual({ syllables: ['bor', 'deaux'] });
   });
 
-  it('is deterministic (same input, same output)', () => {
-    expect(charadeFor({ name: 'Nantes' })).toEqual(charadeFor({ name: 'Nantes' }));
+  it('is empty for a place with no usable syllable', () => {
+    expect(charadeFor({ syllables: [] })).toEqual({ syllables: [] });
+  });
+});
+
+describe('charadeReady', () => {
+  it('is true once every syllable has a curated riddle', () => {
+    expect(charadeReady({ syllables: ['pa', 'bor'] })).toBe(true);
   });
 
-  it('uses the hand-curated override when there is one, lowercased regardless of how it was typed', () => {
-    expect(charadeFor({ name: 'Bălți', syllables: ['BA', 'L'] })).toEqual({ syllables: ['ba', 'l'] });
+  it('is false as soon as one syllable has nothing curated', () => {
+    expect(charadeReady({ syllables: ['pa', 'deaux'] })).toBe(false);
   });
 
-  it('can be curated down to no syllables at all — some names just don’t make a usable charade', () => {
-    expect(charadeFor({ name: 'Bălți', syllables: [] })).toEqual({ syllables: [] });
+  it('is false for a place with no syllable at all — vacuously-true `every` would otherwise offer an empty card', () => {
+    expect(charadeReady({ syllables: [] })).toBe(false);
   });
 });
 
 describe('riddleFor', () => {
-  it('is null for a syllable with nothing curated', () => {
+  it('is null for a syllable missing from the dictionary entirely', () => {
     expect(riddleFor('xyz')).toBeNull();
+  });
+
+  it('is null for a syllable present in the (complete) dictionary but not curated yet', () => {
+    expect(riddleFor('deaux')).toBeNull();
   });
 
   it('returns the curated riddle, case-insensitively ("Pa" and "pa" share it)', () => {

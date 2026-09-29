@@ -51,7 +51,6 @@
     "storybook": "node scripts/storybook.mjs",
     "generate:contours": "node scripts/generateContours.mjs",
     "generate:charades": "node scripts/generateCharades.mjs",
-    "generate:personalities": "node scripts/generatePersonalities.mjs",
     "generate:wordplay": "node scripts/generateWordplay.mjs"
   },
   "private": true,

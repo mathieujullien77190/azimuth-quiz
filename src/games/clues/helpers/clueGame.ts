@@ -1,6 +1,6 @@
 import { CLUE_PLACES, isCapitalPlace, isFrenchCityPlace } from '@/data';
 import { CLUE_ORDER } from '@/games/clues/constants';
-import { charadeFor, charadeMaxStage } from '@/games/clues/helpers/charade';
+import { charadeFor, charadeMaxStage, charadeReady } from '@/games/clues/helpers/charade';
 import { pickLeastDrawn, type ClueDrawHistory } from '@/games/clues/helpers/clueHistory';
 import { HYPHEN_SLOT, type NameSkeletonSlot } from '@/games/clues/helpers/clueSkeleton';
 import { personalityFor } from '@/games/clues/helpers/personality';
@@ -33,11 +33,10 @@ export const placeCategory = (place: Pick<CluePlace, 'name' | 'code'>): ClueCate
  * The clue ids actually offered for `place`, in `CLUE_ORDER`'s order: a `citiesFr` place drops
  * the ones that never vary for a French city (`CITIES_FR_EXCLUDED_CLUE_IDS`), and any place
  * without a curated `personality`/`wordplay` (see `personalityFor`/`wordplayFor`) drops that one
- * too — never an empty, unclickable card for a fact/pun that simply isn't there. `charade`
- * normally always has at least a heuristic syllable split to fall back on (see `charadeFor`), but
- * a hand-curated override CAN empty it out on purpose (a name whose every syllable turned out
- * unusable, e.g. foreign diacritics `syllabify` reads wrong) — dropped then too, same reasoning:
- * some places simply won't have a charade, rather than an empty card.
+ * too — never an empty, unclickable card for a fact/pun that simply isn't there. `charade` is the
+ * same: it's only offered once EVERY one of `place`'s syllables has a curated riddle
+ * (`charadeReady`) — a partially-curated charade (some syllables read as a real riddle, others
+ * fall back to reading the syllable itself) is a worse experience than not offering it at all.
  */
 export const cluesFor = (place: CluePlace): ClueId[] => {
   const categoryIds =
@@ -45,7 +44,7 @@ export const cluesFor = (place: CluePlace): ClueId[] => {
   return categoryIds.filter((id) => {
     if (id === 'personality') return personalityFor(place) !== null;
     if (id === 'wordplay') return wordplayFor(place) !== null;
-    if (id === 'charade') return charadeFor(place).syllables.length > 0;
+    if (id === 'charade') return charadeReady(place);
     return true;
   });
 };

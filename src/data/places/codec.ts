@@ -310,13 +310,19 @@ export type ClueRow = readonly [
   emoji1: string,
   emoji2: string,
   emoji3: string,
-  /** Hand-corrected syllable split for the charade clue (`helpers/charade.ts`) — absent for
-   * (almost) every place, which then uses the live `syllabify` heuristic instead; present only
-   * where that heuristic gets it wrong (foreign diacritics, mostly). Always lowercase. Can be an
-   * empty array on purpose: some names have no usable syllable at all (e.g. "Bălți", whose "ă"
-   * the heuristic doesn't recognize) — `cluesFor` then drops the charade clue entirely rather
-   * than showing an empty card. */
-  syllables?: readonly string[],
+  /** This place's syllable split for the charade clue (`helpers/charade.ts`), lowercase, MANDATORY
+   * for every Clue place — decomposed once for all 922 places by `scripts/generateCharades.mjs`
+   * (live French-syllabifier heuristic, or a hand-corrected override where it gets a name wrong —
+   * foreign diacritics, mostly), nothing ever computed at runtime. Can be an empty array on
+   * purpose: some names have no usable syllable at all (e.g. "Bălți", whose "ă" the heuristic
+   * doesn't recognize) — `cluesFor` then drops the charade clue entirely rather than showing an
+   * empty card. */
+  syllables: readonly string[],
+  /** A real, Wikipedia-documented person tied to this place — absent for the vast majority
+   * (curated by hand, see `helpers/personality.ts`'s own doc comment), so OPTIONAL unlike
+   * `syllables` above. `[name, description]`, `description` itself `null` when there's nothing
+   * short and safe to add. */
+  personality?: readonly [name: string, description: string | null],
 ];
 
 /** A place: common data (including difficulty) + its per-game parts. `compass`/`clues` are
@@ -361,6 +367,7 @@ export const decodeCluePlace = (common: CommonRow, row: ClueRow): CluePlace => {
     emoji2,
     emoji3,
     syllables,
+    personality,
   ] = row;
   return {
     name,
@@ -377,7 +384,8 @@ export const decodeCluePlace = (common: CommonRow, row: ClueRow): CluePlace => {
     currency: countryCurrencySymbol(code) ?? '',
     airportCode,
     emojis: [emoji1, emoji2, emoji3] as const,
-    ...(syllables !== undefined && { syllables: [...syllables] }),
+    syllables: [...syllables],
+    ...(personality !== undefined && { personality: { name: personality[0], description: personality[1] } }),
   };
 };
 

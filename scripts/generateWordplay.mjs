@@ -3,11 +3,12 @@
 // shipped app in any other way than the JSON file it writes. Rebuilds
 // `src/data/wordplay.json`, the Clues game's own "wordplay" clue data.
 //
-// Same reasoning as `generatePersonalities.mjs`: a genuine pun on a place's name is not something
-// a script can invent, so this one only validates and copies `scripts/wordplayCuration.json` into
-// the shipped shape — keyed by `${code}|${name}` — and reports coverage. A place with nothing (or
-// an empty `sentence`) in the curation file gets no entry: never a made-up or blank clue, see
-// `helpers/wordplay.ts`'s own doc comment.
+// A genuine pun on a place's name is not something a script can invent, so this one only
+// validates and copies `scripts/wordplayCuration.json` into the shipped shape — keyed by
+// `${code}|${name}` — and reports coverage. A place with nothing (or an empty `sentence`) in the
+// curation file gets no entry: never a made-up or blank clue, see `helpers/wordplay.ts`'s own doc
+// comment. Unlike `personality` (now baked directly into `places.json`, see `codec.ts`), wordplay
+// still lives in its own curation file / shipped `wordplay.json`.
 //
 // Curation source: by hand only — `sentence` is the pun itself, `explained` is (usually) the same
 // sentence with the punning word(s) wrapped in `+plus+` signs (see `highlightSegments`), e.g.

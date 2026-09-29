@@ -7,7 +7,7 @@ jest.mock('@/data/wordplay.json', () => ({
 import { highlightSegments, wordplayFor, wordplayKey } from './wordplay';
 
 describe('wordplayKey', () => {
-  it('is the code and name, pipe-separated, same shape as personalityKey', () => {
+  it('is the code and name, pipe-separated, same shape as charadeKey', () => {
     expect(wordplayKey({ code: 'FR', name: 'Paris' })).toBe('FR|Paris');
   });
 });

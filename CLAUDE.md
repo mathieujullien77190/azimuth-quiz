@@ -49,7 +49,8 @@ src/
                        # "Distance" de Clues), PlayerTabs (Compass + Clues), RoundCounter et DifficultyBadge
                        # (en-tete des 3 jeux)
   data/                # tous les fichiers .json de donnees vivent ici, meme specifiques a un seul
-                       # jeu (charade.json/personalities.json/wordplay.json n'interessent qu'Indices,
+                       # jeu (charade.json/wordplay.json n'interessent qu'Indices — la personnalite,
+                       # elle, vit directement dans places.json, voir plus bas —
                        # comme data/contours/ n'interesse que Silhouette) — data/ n'est PAS reserve
                        # au partage entre jeux, c'est juste ou vont les donnees. Valeurs partagees
                        # par 2+ jeux (score/geo generiques, cles de stockage app-wide, options de
@@ -72,9 +73,9 @@ src/
       screens/         # OnlineClueGameScreen, ClueSetupScreen
       components/      # ClueCard, ClueGrid
       helpers/         # clueHistory.ts, clueSkeleton.ts, clueGame.ts (score, tirage, saisie,
-                       # cluesFor/placeCategory), syllabify.ts (heuristique FR), charade.ts,
-                       # personality.ts, wordplay.ts (donnees livrees dans data/ a la racine —
-                       # voir plus haut — pas ici)
+                       # cluesFor/placeCategory), syllabify.ts (heuristique FR — plus utilisee qu'a
+                       # la generation, voir Charade plus bas ; gardee ici testee/lisible, portee a
+                       # la main dans generateCharades.mjs), charade.ts, personality.ts, wordplay.ts
       constants.ts     # tuning propre a Clues : CLUE_ORDER, CLUE_CATEGORIES,
                        # CLUE_ANSWER_METHODS, DEFAULT_CLUE_SETTINGS, CLUE_HISTORY_STORAGE_KEY
     contour/
@@ -227,9 +228,8 @@ commentees en francais :
   francaise (`localTime`, `isCapital`, `flagColors`, `currency`, `phoneCode` — meme fuseau, presque
   jamais la capitale, meme drapeau/devise/indicatif que la France entiere ; `capital` et `cities`
   gardent les 14). Un lieu sans `personality`/`wordplay` curee (voir plus bas) perd l'indice
-  correspondant ; `charade` a presque toujours au moins la syllabation heuristique (voir plus bas), mais
-  un override manuel peut la vider completement (`charadeFor(place).syllables` vide) — `cluesFor` le
-  retire alors aussi, meme raison, plutot qu'une carte vide. `ClueGrid`
+  correspondant ; `charade` n'est offerte que si TOUTES les syllabes du lieu ont une devinette curee
+  (`charadeReady`, voir plus bas) — jamais une carte partiellement curee. `ClueGrid`
   boucle sur `cluesFor(place)`, pas sur `CLUE_ORDER` — `vowelsUnlocked` attend que tous les indices
   reellement offerts (pas la liste complete) soient piques. **Score ajuste en consequence** :
   `totalRevealCount(place)`/`remainingScore(revealedClueIds, place)` prennent desormais le lieu (au
@@ -240,52 +240,52 @@ commentees en francais :
   le splash de chargement a ce moment-la).
 - **Indices : la charade** (`ClueId` `'charade'`, `helpers/charade.ts`) — une devinette par syllabe du
   nom du lieu, style jeu de societe ("mon premier est...", "mon deuxieme est...", puis le nom epele en
-  clair au dernier clic, filet de securite). Les syllabes viennent de `helpers/syllabify.ts` (heuristique
-  francaise ecrite a la main : groupes de voyelles = un seul son, cesure V-CV/VC-CV selon 1 ou 2+
-  consonnes entre deux groupes, "n"/"m" nasalise repli dans la voyelle qui precede sauf s'il est double —
-  imparfaite sur les cas rares, documentee dans le fichier plutot que chassee a la perfection ; chaque mot
-  d'un nom compose/a tiret/a espace est syllabe seul, jamais fusionne avec le suivant) : `charadeFor(place)`
-  l'utilise par defaut, mais un lieu peut avoir un **override PAR LIEU** de son propre decoupage, baque
-  directement dans `places.json` — 10e (et dernier) element optionnel de son `ClueRow`
-  (`data/places/codec.ts`, `CluePlace.syllables`), absent pour la quasi-totalite des lieux, meme
-  convention que le `contour` optionnel de `CountryRow` (voir Silhouette plus bas) — quand l'heuristique se
-  trompe (diacritiques etrangers surtout, ex. le "ă" de "Bălți" qu'elle ne reconnait pas). Un override peut
-  aussi etre un tableau vide : certains noms n'ont simplement aucune syllabe utilisable, et c'est un
-  resultat valide, pas une erreur (voir plus haut, `cluesFor`). **La devinette, elle, reste GLOBALE**,
-  independamment de cet override : `riddleFor(syllabe)` la cherche par le texte de la syllabe elle-meme (`normalizeSyllable` :
-  minuscule, et "a"/"à"/"â" confondus — vrais homophones en francais, contrairement a la famille du "e"
-  ("e"/"é"/"è" sont des sons reellement differents, jamais fondus), export utilise aussi par l'admin pour
-  regrouper les lignes de l'onglet Syllabes), pas par lieu — curer "pa" une fois vaut pour Paris, Palerme,
-  et tout autre lieu qui a un "pa" (ou meme un "pâ"), plutot que de re-curer la meme syllabe a chaque lieu
-  qui la contient (922 lieux, ~2537 occurrences de syllabes, mais seulement ~1016 syllabes distinctes a
-  curer). Jamais requise : `charadeLines` retombe sur la syllabe lue telle quelle ("se dit « xx »") tant
-  que rien n'est curee pour elle. Paliers plafonnes a
+  clair au dernier clic, filet de securite). **Le decoupage en syllabes est PRE-CALCULE et OBLIGATOIRE
+  pour les 922 lieux** : 10e element de chaque `ClueRow` dans `places.json` (`data/places/codec.ts`,
+  `CluePlace.syllables`, jamais optionnel contrairement au `contour` de `CountryRow` cote Silhouette) —
+  `charadeFor(place)` n'est plus qu'une LECTURE directe (`place.syllables`), rien n'est jamais calcule a
+  l'execution dans l'appli. Peut etre un tableau vide (certains noms n'ont aucune syllabe utilisable, ex.
+  "Bălți"). Rempli une fois pour toutes par `scripts/generateCharades.mjs` (`npm run generate:charades`,
+  hors tests/CI/app livree) via `helpers/syllabify.ts` (heuristique francaise ecrite a la main : groupes de
+  voyelles = un seul son, cesure V-CV/VC-CV selon 1 ou 2+ consonnes entre deux groupes, "n"/"m" nasalise
+  repli dans la voyelle qui precede sauf s'il est double — imparfaite sur les cas rares, documentee dans le
+  fichier plutot que chassee a la perfection ; chaque mot d'un nom compose/a tiret/a espace est syllabe
+  seul, jamais fusionne avec le suivant), portee a la main dans le script (Node ESM sans etape de build,
+  meme raison que `generateContours.mjs` portant sa propre geometrie) — le script ne fait que COMBLER un
+  lieu qui n'a pas encore de decoupage (ajoute au 10e element de sa ligne et reecrit `places.json`) ; un
+  lieu qui en a deja un (heuristique ou corrige a la main) n'est jamais retouche. Correction a la main
+  directement sur la ligne du lieu dans `places.json` (via l'admin, `CharadeEditor`, voir plus bas).
+  **La devinette, elle, reste GLOBALE**,
+  independamment de ce decoupage : `riddleFor(syllabe)` la cherche par le texte de la syllabe elle-meme
+  (`normalizeSyllable` : minuscule, et "a"/"à"/"â" confondus — vrais homophones en francais, contrairement
+  a la famille du "e" ("e"/"é"/"è" sont des sons reellement differents, jamais fondus)), pas par lieu —
+  curer "pa" une fois vaut pour Paris, Palerme, et tout autre lieu qui a un "pa" (ou meme un "pâ").
+  `src/data/charade.json` est un dictionnaire COMPLET : CHAQUE syllabe reelle (calculee depuis
+  `places.json`) y est une cle, valeur = devinette curee ou `null` — sert aussi de check-list de ce qui
+  reste a curer (922 lieux, ~2535 occurrences de syllabes, ~1014 syllabes distinctes, 183 curees).
+  **La charade n'est offerte que si TOUTES les syllabes du lieu ont une devinette non-nulle**
+  (`charadeReady(place)`, verifie par `cluesFor`) — jamais de carte a moitie curee (certaines syllabes avec
+  une vraie devinette, d'autres qui retombent juste sur "se dit « xx »"). Paliers plafonnes a
   `CHARADE_SYLLABLE_STAGE_CAP` (4) + 1 palier final : au-dela de 4 syllabes, les syllabes en trop sont
   regroupees dans le dernier palier plutot que d'exploser le cout de l'indice face aux autres indices a 1-3
-  paliers (voir `charadeSyllableGroups`). Donnees de la devinette (pas du decoupage, qui vit dans
-  `places.json` ci-dessus) : script dev `scripts/generateCharades.mjs` (`npm run generate:charades`, hors
-  tests/CI/app livree — porte a la main la meme heuristique que `syllabify.ts`, meme raison que
-  `generateContours.mjs`) valide et copie `scripts/charadeCuration.json` (`{ "syllabe": "devinette" }` a
-  plat, cle en minuscule) dans `src/data/charade.json` (donnees livrees, meme forme) ; lit aussi
-  `places.json` pour connaitre le vrai decoupage de chaque lieu (override ou heuristique) et signaler les
-  cles de devinette orphelines. Admin : `PlacesView`'s `CharadeEditor` (par lieu) edite les deux a la fois
-  — chaque syllabe se renomme sur place (`EditableValue`) ou se supprime (`DeleteX`), un champ
-  "+ Ajouter une syllabe" en ajoute une ; sa devinette s'edite juste a cote, toujours par le meme
-  `EditableValue` — et l'onglet a part "Syllabes" (`SyllablesView`, une ligne par syllabe DISTINCTE toutes
-  places confondues, avec quelques lieux d'exemple pour le contexte en curant) n'edite que la devinette
-  globale. Rien ecrit sur disque (meme pattern journal que le reste de l'admin) : editer le decoupage
-  logue le tableau complet resultant du lieu, a recopier a la main comme 10e element de son `ClueRow` dans
-  `places.json` ; editer la devinette logue sa cle normalisee, a recopier dans `charadeCuration.json`.
-  Premier lot curee : 183 syllabes distinctes sur ~1016 (dont les overrides Amsterdam et Paris).
+  paliers (voir `charadeSyllableGroups`). Admin : `PlacesView`'s `CharadeEditor` (par lieu) edite le
+  decoupage ET la devinette — chaque syllabe se renomme sur place (`EditableValue`) ou se supprime
+  (`DeleteX`), un champ "+ Ajouter une syllabe" en ajoute une, un bouton "Vider" les retire toutes en un
+  clic ; sa devinette s'edite juste a cote, toujours par le meme `EditableValue` — et l'onglet a part
+  "Syllabes" (`SyllablesView`, une ligne par syllabe DISTINCTE toutes places confondues, avec quelques
+  lieux d'exemple pour le contexte en curant, et son propre "×" par ligne pour vider une devinette) n'edite
+  que la devinette globale. Rien ecrit sur disque (meme pattern journal que le reste de l'admin) : editer
+  le decoupage logue le tableau complet resultant du lieu, a recopier a la main comme 10e element de sa
+  ligne dans `places.json` ; editer la devinette logue sa cle normalisee, a recopier dans
+  `charadeCuration.json` puis `npm run generate:charades` pour regenerer le dictionnaire complet.
 - **Indices : une personnalite liee au lieu** (`ClueId` `'personality'`, `helpers/personality.ts`) — un seul
   palier (nom + description courte optionnelle, ex. "footballeur"), jamais invente : uniquement des faits
-  Wikipedia (nee/tres fortement identifiee au lieu), curee a la main dans `scripts/personalityCuration.json`
-  puis copiee telle quelle dans `src/data/personalities.json` par
-  `scripts/generatePersonalities.mjs` (`npm run generate:personalities` — rien a calculer ici, juste valider
-  que chaque cle correspond encore a un lieu de `places.json` et rapporter la couverture). Un lieu sans
-  personnalite curee n'offre jamais cet indice (`cluesFor` le retire, jamais de case vide). Premier lot :
-  41 lieux (23 capitales + 18 villes `citiesFr`), verifie a la main (recherches web ponctuelles + faits bien
-  etablis) — le reste des ~880 lieux Indices n'a rien, a completer plus tard.
+  Wikipedia (nee/tres fortement identifiee au lieu). Baquee directement dans `places.json` — 11e (et
+  dernier) element OPTIONNEL du `ClueRow` (`[nom, description]`, absent pour la quasi-totalite des lieux,
+  curee et editee a la main directement sur la ligne du lieu concerne, aucun fichier/script a part). Un
+  lieu sans personnalite curee n'offre jamais cet indice (`cluesFor` le retire, jamais de case vide).
+  Premier lot : 41 lieux (23 capitales + 18 villes `citiesFr`), verifie a la main (recherches web
+  ponctuelles + faits bien etablis) — le reste des ~880 lieux Indices n'a rien, a completer plus tard.
 - **Indices : un jeu de mots sur le nom du lieu** (`ClueId` `'wordplay'`, `helpers/wordplay.ts`) — 2 paliers :
   `sentence` (la phrase, telle quelle) puis `explained` (la meme phrase, avec le ou les mots qui font le
   jeu de mots entoures de `+signes plus+` — `highlightSegments`, fonction pure, decoupe le texte en
@@ -295,8 +295,9 @@ commentees en francais :
   possible ici (trouver un vrai jeu de mots n'est pas automatisable) : les deux champs partent vides pour
   les 922 lieux (`scripts/wordplayCuration.json`, curation 100% manuelle) — `wordplayFor(place)` rend `null`
   tant que `sentence` est vide, et un lieu sans jeu de mots curee n'offre jamais cet indice (`cluesFor`).
-  `npm run generate:wordplay` (script dev, meme famille que `generatePersonalities.mjs` : valide juste que
-  chaque cle correspond encore a un lieu, rien a calculer) copie la curation dans
+  **Reste dans son propre fichier de curation/generation** (contrairement a `personality`, pas encore
+  replie dans `places.json`) : `npm run generate:wordplay` (script dev, valide juste que chaque cle
+  correspond encore a un lieu, rien a calculer) copie `scripts/wordplayCuration.json` dans
   `src/data/wordplay.json`. Admin : bouton "✍️ Jeu de mots" a cote de "🎭 Charade" dans
   `PlacesView`, `WordplayEditor` (2 champs texte, meme modele journal-only que `CharadeEditor` — les deux
   peuvent etre ouverts en meme temps sur une meme carte, ils editent des champs differents).

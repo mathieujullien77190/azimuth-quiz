@@ -198,10 +198,16 @@ export type CluePlace = GeoPlace & {
   /** 3 candidate emoji evoking the city (landmark/culture/nature...): the clue draws one at
    * random on each reveal, not always the same one. */
   emojis: readonly [string, string, string];
-  /** Hand-corrected syllable split for the charade clue — see `ClueRow`'s own doc comment
-   * (`data/places/codec.ts`). Absent for (almost) every place: `charadeFor` then falls back to
-   * the live `syllabify` heuristic. */
-  syllables?: string[];
+  /** This place's syllable split for the charade clue, baked in for every single Clue place —
+   * see `ClueRow`'s own doc comment (`data/places/codec.ts`). Never computed at runtime: a place
+   * missing from `places.json` (impossible in practice, `generate:charades` fills any gap) would
+   * simply read as `[]`, dropping the clue (see `helpers/charade.ts`). */
+  syllables: string[];
+  /** A real, Wikipedia-documented person tied to this place (born there, or overwhelmingly
+   * identified with it) — absent for the vast majority of places (curated by hand, never
+   * invented, see `ClueRow`'s own doc comment). `description` is a short one/two-word tag (a
+   * profession, e.g. "footballeur"), itself absent when there's nothing short and safe to add. */
+  personality?: { name: string; description: string | null };
 };
 
 export type ClueSettings = {

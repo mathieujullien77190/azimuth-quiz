@@ -1,24 +1,29 @@
 #!/usr/bin/env node
 // Dev-only generation tool (`npm run generate:charades`) — NOT part of `npm test`, CI, or the
-// shipped app in any other way than the JSON file it writes. Rebuilds `src/data/charade.json`:
-// the riddle dictionary, GLOBAL, keyed by the syllable's own text (lowercased) rather than by
-// place — curating "pa" once gives every place with a "pa" syllable the same riddle, instead of
-// re-curating the same syllable separately for each place that happens to have it (Paris,
-// Palerme...). Curated by hand in `scripts/charadeCuration.json` (a flat `{ "syllable": "riddle" }`
-// object, lowercase keys) — there is no sensible algorithm for "a French homophone of this
-// sound", it takes a human (or an LLM) with actual language judgment.
+// shipped app in any other way than the JSON files it (may) write. Two jobs:
 //
-// The syllable SPLIT itself is NOT curated here: every place computes it live by default (the
-// heuristic French syllabifier ported here by hand from `src/games/clues/helpers/syllabify.ts`,
-// since this script runs under plain Node ESM with no build step — same reasoning as
-// `generateContours.mjs` porting its own board math, keep the two in sync by hand if that file's
-// rules ever change), unless `places.json` itself carries a hand-corrected override directly on
-// that place's `ClueRow` (its own optional last element — see `data/places/codec.ts`'s doc
-// comment). This script only READS that override (to know each place's real syllables, for
-// reporting orphaned/curated riddle coverage below) — it never writes to `places.json`.
+// 1) Every Clue place's syllable split is MANDATORY on its own `ClueRow` (see
+//    `data/places/codec.ts`'s doc comment) — nothing is ever computed live in the app. This
+//    script's first job is to keep that invariant true: any place in `places.json` still missing
+//    its syllable split (freshly added, or the field never backfilled) gets one appended — the
+//    live French syllabifier heuristic, ported here by hand from
+//    `src/games/clues/helpers/syllabify.ts` (this script runs under plain Node ESM with no build
+//    step — same reasoning as `generateContours.mjs` porting its own board math, keep the two in
+//    sync by hand if that file's rules ever change) — and `places.json` is rewritten. A place
+//    already carrying a split (whether heuristic or hand-corrected) is left untouched: correcting
+//    one is a hand edit directly on that place's row in `places.json`, not something this script
+//    would ever override.
 //
-// Idempotent and safe to re-run after adding a place or editing the riddle curation file: it
-// always rebuilds the one output from these inputs, never edits the curation file itself.
+// 2) `src/data/charade.json`, the riddle dictionary: COMPLETE — every syllable that appears on
+//    ANY place's split is a key, its curated riddle (`scripts/charadeCuration.json`, a flat
+//    `{ "syllable": "riddle" }` object, lowercase keys — there is no sensible algorithm for "a
+//    French homophone of this sound", it takes a human/LLM with actual language judgment) or
+//    `null` when nothing is curated for it yet. The charade clue is only offered for a place once
+//    EVERY one of its syllables has a non-null riddle here (`charadeReady`, in
+//    `helpers/charade.ts`) — this file is also the checklist of what's left to curate.
+//
+// Idempotent: re-running with nothing missing/changed rewrites both outputs to the exact same
+// content.
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -78,9 +83,39 @@ const syllabify = (name) => {
 // "e" family — "e"/"é"/"è" are genuinely different sounds, left alone on purpose).
 const normalize = (syllable) => syllable.toLowerCase().replace(/[àâ]/g, 'a');
 
-// --- Load inputs ------------------------------------------------------------------------------
+// --- 1) Top up any place still missing its mandatory syllable split ---------------------------
 
 const entries = JSON.parse(readFileSync(placesPath, 'utf8'));
+
+let toppedUp = 0;
+const realSyllables = new Set();
+let placeCount = 0;
+let totalSyllables = 0;
+
+const nextEntries = entries.map(([common, compass, clues]) => {
+  if (!clues) return [common, compass, clues];
+  placeCount += 1;
+  let nextClues = clues;
+  if (clues.length < 10) {
+    const [name] = common;
+    const syllables = syllabify(name).map((s) => s.toLowerCase());
+    nextClues = [...clues, syllables];
+    toppedUp += 1;
+  }
+  nextClues[9].forEach((s) => {
+    realSyllables.add(normalize(s));
+    totalSyllables += 1;
+  });
+  return [common, compass, nextClues];
+});
+
+if (toppedUp > 0) {
+  const lines = nextEntries.map((row) => '  ' + JSON.stringify(row));
+  writeFileSync(placesPath, '[\n' + lines.join(',\n') + '\n]\n', 'utf8');
+  console.log(`Topped up ${toppedUp} place(s) missing their syllable split.`);
+}
+
+// --- 2) Complete riddle dictionary, every real syllable a key ---------------------------------
 
 const riddleCuration = (() => {
   try {
@@ -91,30 +126,7 @@ const riddleCuration = (() => {
   }
 })();
 
-// --- Places' own syllables (override when the place's own ClueRow carries one, heuristic
-// otherwise), and every real syllable across all of them, normalized — used to report riddle
-// curation keys that don't (or no longer) match anything real, likely a typo. ------------------
-
-const realSyllables = new Set();
-let placeCount = 0;
-let totalSyllables = 0;
-let placesWithOverride = 0;
-for (const [common, , clues] of entries) {
-  if (!clues) continue; // Compass-only place: not a Clue place.
-  const [name] = common;
-  placeCount += 1;
-  const override = clues[9];
-  if (override !== undefined) placesWithOverride += 1;
-  const syllables = (override ?? syllabify(name)).map((s) => s.toLowerCase());
-  syllables.forEach((s) => {
-    realSyllables.add(normalize(s));
-    totalSyllables += 1;
-  });
-}
-
-// --- Riddle dictionary, validated against the real (possibly overridden) syllables above ------
-
-const riddleOutput = {};
+const curatedByNormalizedKey = {};
 const riddleOrphaned = [];
 const conflicts = [];
 for (const [syllable, riddle] of Object.entries(riddleCuration)) {
@@ -124,22 +136,24 @@ for (const [syllable, riddle] of Object.entries(riddleCuration)) {
   }
   if (typeof riddle !== 'string' || riddle.trim() === '') continue;
   if (!realSyllables.has(normalized)) riddleOrphaned.push(syllable);
-  if (riddleOutput[normalized] !== undefined && riddleOutput[normalized] !== riddle.trim()) {
-    conflicts.push([normalized, riddleOutput[normalized], riddle.trim()]);
+  if (curatedByNormalizedKey[normalized] !== undefined && curatedByNormalizedKey[normalized] !== riddle.trim()) {
+    conflicts.push([normalized, curatedByNormalizedKey[normalized], riddle.trim()]);
   }
-  riddleOutput[normalized] = riddle.trim();
+  curatedByNormalizedKey[normalized] = riddle.trim();
 }
 
-const sortedRiddles = {};
-for (const syllable of Object.keys(riddleOutput).sort((a, b) => a.localeCompare(b, 'fr'))) sortedRiddles[syllable] = riddleOutput[syllable];
-writeFileSync(riddleOutputPath, JSON.stringify(sortedRiddles) + '\n', 'utf8');
+const riddleOutput = {};
+for (const syllable of [...realSyllables].sort((a, b) => a.localeCompare(b, 'fr'))) {
+  riddleOutput[syllable] = curatedByNormalizedKey[syllable] ?? null;
+}
+writeFileSync(riddleOutputPath, JSON.stringify(riddleOutput) + '\n', 'utf8');
 
 // --- Summary ------------------------------------------------------------------------------
 
+const curatedCount = Object.values(riddleOutput).filter((riddle) => riddle !== null).length;
 console.log('--- generateCharades summary ---');
 console.log(`Clue places: ${placeCount}, ${totalSyllables} syllable occurrences, ${realSyllables.size} distinct.`);
-console.log(`Places with a hand-corrected syllable split: ${placesWithOverride}.`);
-console.log(`Syllables curated: ${Object.keys(sortedRiddles).length} / ${realSyllables.size} distinct (${((Object.keys(sortedRiddles).length / realSyllables.size) * 100).toFixed(1)}%).`);
+console.log(`Syllables curated: ${curatedCount} / ${realSyllables.size} distinct (${((curatedCount / realSyllables.size) * 100).toFixed(1)}%).`);
 if (riddleOrphaned.length > 0) {
   console.log(`Curated riddle keys matching no real syllable — likely a typo, kept anyway: ${riddleOrphaned.join(', ')}`);
 }
