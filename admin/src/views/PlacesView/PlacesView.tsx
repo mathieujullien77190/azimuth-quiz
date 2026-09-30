@@ -32,14 +32,6 @@ export const PlacesView = () => {
   const [saveState, setSaveState] = useState<SaveState | null>(null);
 
   const [panelOpen, setPanelOpen] = useState(true);
-  // Which card's own Charade editor is expanded (see the "🎭 Charade" toggle below) — at most one
-  // at a time, same reasoning as CountriesView's own "🗺️ Silhouette" toggle.
-  const [expandedCharadeKey, setExpandedCharadeKey] = useState<string | null>(null);
-  // Which card's own Wordplay editor is expanded — separate from Charade's, so both can be open
-  // at once on the same card (they edit different fields, no reason to force a choice).
-  const [expandedWordplayKey, setExpandedWordplayKey] = useState<string | null>(null);
-  // Which card's own Personality editor is expanded — same independence as Wordplay's.
-  const [expandedPersonalityKey, setExpandedPersonalityKey] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [categories, setCategories] = useState(new Set(CATEGORY_ORDER));
   const [difficulties, setDifficulties] = useState(new Set(DIFFICULTY_ORDER));
@@ -292,36 +284,6 @@ export const PlacesView = () => {
               <div className="game-block">
                 <div className="row panel-header">
                   <h3 className="game-title">Clues</h3>
-                  {row.clues && (
-                    <button
-                      type="button"
-                      className="chip"
-                      aria-pressed={expandedCharadeKey === row.key}
-                      onClick={() => setExpandedCharadeKey(expandedCharadeKey === row.key ? null : row.key)}
-                    >
-                      🎭 Charade
-                    </button>
-                  )}
-                  {row.clues && (
-                    <button
-                      type="button"
-                      className="chip"
-                      aria-pressed={expandedWordplayKey === row.key}
-                      onClick={() => setExpandedWordplayKey(expandedWordplayKey === row.key ? null : row.key)}
-                    >
-                      ✍️ Jeu de mots
-                    </button>
-                  )}
-                  {row.clues && (
-                    <button
-                      type="button"
-                      className="chip"
-                      aria-pressed={expandedPersonalityKey === row.key}
-                      onClick={() => setExpandedPersonalityKey(expandedPersonalityKey === row.key ? null : row.key)}
-                    >
-                      🎤 Personnalité
-                    </button>
-                  )}
                 </div>
                 {row.clues ? (
                   <table className="kv-table">
@@ -390,9 +352,9 @@ export const PlacesView = () => {
                 ) : (
                   <p className="absent">Absent d’Clues</p>
                 )}
-                {row.clues && expandedCharadeKey === row.key && <CharadeEditor initialPlace={row.clues} />}
-                {row.clues && expandedWordplayKey === row.key && <WordplayEditor initialPlace={row.clues} />}
-                {row.clues && expandedPersonalityKey === row.key && <PersonalityEditor initialPlace={row.clues} />}
+                {row.clues && <CharadeEditor initialPlace={row.clues} />}
+                {row.clues && <WordplayEditor initialPlace={row.clues} />}
+                {row.clues && <PersonalityEditor initialPlace={row.clues} />}
               </div>
             </div>
           </div>
