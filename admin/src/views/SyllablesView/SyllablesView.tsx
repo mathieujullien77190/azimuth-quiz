@@ -15,7 +15,15 @@ import type { SyllableRow } from './types';
  * other deletable row in the admin: it only appears when it would actually do something). The
  * syllable itself isn't editable here (it's the dictionary's own key, always the live `syllabify`
  * output — see `helpers/charade.ts`'s own doc comment); the examples are just context, read-only. */
-const Row = ({ row, onSave, saveFlag }: { row: SyllableRow; onSave: (next: string) => void; saveFlag: React.ReactNode }) => (
+const Row = ({
+  row,
+  onSave,
+  saveFlag,
+}: {
+  row: SyllableRow;
+  onSave: (next: string) => void;
+  saveFlag: React.ReactNode;
+}) => (
   <tr>
     <td className="syllable-cell">{row.syllable}</td>
     <td>
@@ -28,14 +36,18 @@ const Row = ({ row, onSave, saveFlag }: { row: SyllableRow; onSave: (next: strin
       />
     </td>
     <td className="muted">{row.examples.join(', ')}</td>
-    <td>{row.riddle !== null && <DeleteX name={`la charade de « ${row.syllable} »`} onDelete={() => Promise.resolve(onSave(''))} />}</td>
+    <td>
+      {row.riddle !== null && (
+        <DeleteX name={`la charade de « ${row.syllable} »`} onDelete={() => Promise.resolve(onSave(''))} />
+      )}
+    </td>
   </tr>
 );
 
 /**
  * Every distinct syllable across every Clues place, flat and searchable, its riddle GLOBAL (see
  * `riddleFor`): `PlacesView`'s own `CharadeEditor` only ever shows one place's syllables at a
- * time; this is the same edit (and the same journal-only, no-backend save, see `api/charades.ts`)
+ * time; this is the same edit (and the same Firestore save, see `api/charades.ts`)
  * but for sweeping through the whole curation dictionary at once, e.g. to find which syllables
  * still have nothing.
  */
@@ -83,7 +95,8 @@ export const SyllablesView = () => {
       </div>
 
       <p className="count-line">
-        <b>{visibleRows.length}</b> syllabe{visibleRows.length === 1 ? '' : 's'} affichée{visibleRows.length === 1 ? '' : 's'} sur {rows.length}
+        <b>{visibleRows.length}</b> syllabe{visibleRows.length === 1 ? '' : 's'} affichée
+        {visibleRows.length === 1 ? '' : 's'} sur {rows.length}
       </p>
 
       <Pagination page={page} totalPages={totalPages} onChange={setPage} />

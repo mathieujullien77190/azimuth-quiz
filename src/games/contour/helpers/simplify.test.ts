@@ -1,4 +1,4 @@
-import { CONTOURS } from '@/data';
+import { FIXTURE_CONTOURS as CONTOURS } from '@/helpers/storyFixtures';
 
 import {
   FULL_PRECISION,
@@ -111,7 +111,7 @@ describe('simplificationLevels', () => {
   });
 
   it('nests the levels: each one contains every vertex of the previous one, in the same order', () => {
-    for (const code of ['FR', 'DE', 'NO', 'JP', 'BE']) {
+    for (const code of ['FR', 'ES', 'BE']) {
       const levels = simplificationLevels(ring(code), 9);
       for (let level = 1; level < levels.length; level += 1) {
         const indexes = levels[level - 1].map((point) => levels[level].indexOf(point));

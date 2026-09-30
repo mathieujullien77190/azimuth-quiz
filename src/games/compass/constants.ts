@@ -28,9 +28,6 @@ export const MAX_SURFACE_DISTANCE_KM = 20000;
 export const DISTANCE_MARKS_KM = [100, 1000, 10000] as const;
 export const DEFAULT_DISTANCE_KM = 1000;
 
-// Places closer than this to the starting point: excluded (too easy, unstable heading).
-export const MIN_PLACE_DISTANCE_KM = 150;
-
 // --- Storage ---
 export const BEST_SCORE_STORAGE_KEY = 'azimuthquiz:best-score';
 export const SETTINGS_STORAGE_KEY = 'azimuthquiz:settings';

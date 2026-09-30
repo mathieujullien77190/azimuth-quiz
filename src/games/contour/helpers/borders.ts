@@ -73,7 +73,7 @@ export const splitRing = (ring: readonly LonLat[], sharedEdges: ReadonlySet<stri
  * Finds the countries that touch `country` and splits its outline into coast and shared borders.
  *
  * "Touch" means sharing at least one identical edge (same two vertices): the whole world comes
- * from a single simplified topology (`scripts/generateContours.mjs`), so a border common to two
+ * from a single simplified topology, so a border common to two
  * countries is made of the very same points in both rings — no geometry to intersect, an exact
  * lookup is enough. Countries whose bounding box cannot meet the target's are skipped upfront.
  */

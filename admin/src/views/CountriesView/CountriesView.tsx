@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { countryName, flagEmoji } from '@/data/places/countries';
+import { flagEmoji } from '@/helpers/flagEmoji';
 import { allContours } from '../../api/contour';
 import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 
 import { fetchCountries, saveCountry, type CountryPatch, type CountryRecord } from '../../api/countries';
+import { countryName } from '../../data';
 import { EditableValue } from '../../components/EditableValue';
 import { Pagination, pageCount, paginate } from '../../components/Pagination';
 import { ContourEditor } from '../ContourView';
@@ -138,106 +139,125 @@ export const CountriesView = () => {
           const contourExpanded = expandedContourCode === row.code;
           const showNeighbors = neighborsOpen.has(row.code);
           return (
-          <div className="place-card" key={row.code}>
-            <div className="place-header">
-              <div className="place-identity">
-                <span className="place-name">{row.fr}</span>
-                <span className="place-meta">{row.code}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
-                <button type="button" className="chip" aria-pressed={showNeighbors} onClick={() => toggleNeighbors(row.code)}>
-                  {showNeighbors ? 'Masquer les voisins' : 'Afficher les voisins'}
-                </button>
-                {contourCountry && (
+            <div className="place-card" key={row.code}>
+              <div className="place-header">
+                <div className="place-identity">
+                  <span className="place-name">{row.fr}</span>
+                  <span className="place-meta">{row.code}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
                   <button
                     type="button"
                     className="chip"
-                    aria-pressed={contourExpanded}
-                    onClick={() => setExpandedContourCode(contourExpanded ? null : row.code)}
+                    aria-pressed={showNeighbors}
+                    onClick={() => toggleNeighbors(row.code)}
                   >
-                    🗺️ Silhouette
+                    {showNeighbors ? 'Masquer les voisins' : 'Afficher les voisins'}
                   </button>
-                )}
-                <span style={{ fontFamily: FLAG_FONT_FAMILY, fontSize: 28 }}>{flagEmoji(row.code)}</span>
+                  {contourCountry && (
+                    <button
+                      type="button"
+                      className="chip"
+                      aria-pressed={contourExpanded}
+                      onClick={() => setExpandedContourCode(contourExpanded ? null : row.code)}
+                    >
+                      🗺️ Silhouette
+                    </button>
+                  )}
+                  <span style={{ fontFamily: FLAG_FONT_FAMILY, fontSize: 28 }}>{flagEmoji(row.code)}</span>
+                </div>
               </div>
+
+              <table className="kv-table">
+                <tbody>
+                  <tr>
+                    <th>Nom (FR)</th>
+                    <td>
+                      <EditableValue
+                        value={row.fr}
+                        saveFlag={saveFlagFor(row, 'fr')}
+                        onSave={(next) => handleChange(row, 'fr', { fr: next })}
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Nom (EN)</th>
+                    <td>
+                      <EditableValue
+                        value={row.en}
+                        saveFlag={saveFlagFor(row, 'en')}
+                        onSave={(next) => handleChange(row, 'en', { en: next })}
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Devise</th>
+                    <td>
+                      <EditableValue
+                        value={row.currency ?? ''}
+                        saveFlag={saveFlagFor(row, 'currency')}
+                        onSave={(next) => handleChange(row, 'currency', { currency: next })}
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Symbole</th>
+                    <td>
+                      <EditableValue
+                        value={row.currencySymbol ?? ''}
+                        saveFlag={saveFlagFor(row, 'currencySymbol')}
+                        onSave={(next) => handleChange(row, 'currencySymbol', { currencySymbol: next })}
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Indicatif</th>
+                    <td>
+                      <EditableValue
+                        value={row.phoneCode ?? ''}
+                        saveFlag={saveFlagFor(row, 'phoneCode')}
+                        onSave={(next) => handleChange(row, 'phoneCode', { phoneCode: next })}
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Drapeau</th>
+                    <td>
+                      <FlagEditor
+                        value={row.flag ?? []}
+                        saveFlag={saveFlagFor(row, 'flag')}
+                        onSave={(next) => handleChange(row, 'flag', { flag: next })}
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {showNeighbors && (
+                <div className="neighbors-list">
+                  {row.neighbors.length === 0 ? (
+                    <span className="place-meta">Aucun voisin terrestre.</span>
+                  ) : (
+                    row.neighbors.map((code) => (
+                      <span className="neighbor-tag" key={code}>
+                        <span style={{ fontFamily: FLAG_FONT_FAMILY, fontSize: 18 }}>{flagEmoji(code)}</span>
+                        {countryName(code)}
+                        <span className="place-meta">{code}</span>
+                      </span>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {contourExpanded && contourCountry && (
+                <ContourEditor initialCountry={contourCountry} showNeighbors={showNeighbors} />
+              )}
             </div>
-
-            <table className="kv-table">
-              <tbody>
-                <tr>
-                  <th>Nom (FR)</th>
-                  <td>
-                    <EditableValue value={row.fr} saveFlag={saveFlagFor(row, 'fr')} onSave={(next) => handleChange(row, 'fr', { fr: next })} />
-                  </td>
-                </tr>
-                <tr>
-                  <th>Nom (EN)</th>
-                  <td>
-                    <EditableValue value={row.en} saveFlag={saveFlagFor(row, 'en')} onSave={(next) => handleChange(row, 'en', { en: next })} />
-                  </td>
-                </tr>
-                <tr>
-                  <th>Devise</th>
-                  <td>
-                    <EditableValue
-                      value={row.currency ?? ''}
-                      saveFlag={saveFlagFor(row, 'currency')}
-                      onSave={(next) => handleChange(row, 'currency', { currency: next })}
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <th>Symbole</th>
-                  <td>
-                    <EditableValue
-                      value={row.currencySymbol ?? ''}
-                      saveFlag={saveFlagFor(row, 'currencySymbol')}
-                      onSave={(next) => handleChange(row, 'currencySymbol', { currencySymbol: next })}
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <th>Indicatif</th>
-                  <td>
-                    <EditableValue
-                      value={row.phoneCode ?? ''}
-                      saveFlag={saveFlagFor(row, 'phoneCode')}
-                      onSave={(next) => handleChange(row, 'phoneCode', { phoneCode: next })}
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <th>Drapeau</th>
-                  <td>
-                    <FlagEditor value={row.flag ?? []} saveFlag={saveFlagFor(row, 'flag')} onSave={(next) => handleChange(row, 'flag', { flag: next })} />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            {showNeighbors && (
-              <div className="neighbors-list">
-                {row.neighbors.length === 0 ? (
-                  <span className="place-meta">Aucun voisin terrestre.</span>
-                ) : (
-                  row.neighbors.map((code) => (
-                    <span className="neighbor-tag" key={code}>
-                      <span style={{ fontFamily: FLAG_FONT_FAMILY, fontSize: 18 }}>{flagEmoji(code)}</span>
-                      {countryName(code, 'fr')}
-                      <span className="place-meta">{code}</span>
-                    </span>
-                  ))
-                )}
-              </div>
-            )}
-
-            {contourExpanded && contourCountry && <ContourEditor initialCountry={contourCountry} showNeighbors={showNeighbors} />}
-          </div>
           );
         })}
       </div>
 
-      <footer>{countries.length} pays — les modifications sont enregistrées dans le journal (en haut), pas dans countries.json.</footer>
+      <footer>{countries.length} pays — les modifications sont enregistrées directement dans Firestore.</footer>
     </>
   );
 };

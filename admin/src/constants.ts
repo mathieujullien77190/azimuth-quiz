@@ -1,4 +1,4 @@
-import { countryName } from '@/data/places/countries';
+import { countryName } from './data';
 import { CATEGORIES } from '@/games/compass/constants';
 import type { Category, Difficulty, CluePositionInCountry } from '@/types';
 
@@ -14,7 +14,9 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   kids: 'Enfants',
 };
 
-export const CATEGORY_EMOJIS: Record<Category, string> = Object.fromEntries(CATEGORIES.map((c) => [c.id, c.emoji])) as Record<Category, string>;
+export const CATEGORY_EMOJIS: Record<Category, string> = Object.fromEntries(
+  CATEGORIES.map((c) => [c.id, c.emoji]),
+) as Record<Category, string>;
 
 // citiesFr uses a distinctly different hue from cities (warm orange vs. cool blue) so a French
 // city can never be mistaken for a "regular" one at a glance.
@@ -54,4 +56,4 @@ export const POSITION_LABELS: Record<CluePositionInCountry, string> = {
   sw: 'Sud-Ouest',
 };
 
-export const countryFor = (code: string): string => countryName(code, 'fr');
+export const countryFor = (code: string): string => countryName(code);

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { flagEmoji, countryName } from '@/data/places/countries';
+import { flagEmoji } from '@/helpers/flagEmoji';
 import {
   SAMPLE_CONTOUR_BOARD,
   SAMPLE_CONTOUR_BOARD_SIZE,
@@ -33,7 +33,7 @@ const SILHOUETTE_PLAN = buildHintPlan(['silhouette'], SAMPLE_CONTOUR_COUNTRY);
 // City and capital hints only: positions first, then names.
 const PLACES_PLAN = buildHintPlan(['cities', 'capital'], SAMPLE_CONTOUR_COUNTRY);
 
-/** France's real outline (same source and simplification as every other country) with its curated
+/** A rough sample outline of France with its curated
  * neighbors/centerLabel (see CLAUDE.md's Silhouette section), at every hint tier revealed at once: neighbor flags, the
  * target's own flag, and every neighbor name stacked under its icon. */
 export const AllHintsRevealed: Story = {
@@ -48,7 +48,7 @@ export const AllHintsRevealed: Story = {
       })),
       ...SAMPLE_CONTOUR_NEIGHBORS.map(({ neighbor, position }) => ({
         position,
-        text: countryName(neighbor.code, 'fr'),
+        text: neighbor.fr,
       })),
       { position: SAMPLE_CONTOUR_CENTER_POSITION, text: flagEmoji(SAMPLE_CONTOUR_COUNTRY.code), icon: true },
     ],

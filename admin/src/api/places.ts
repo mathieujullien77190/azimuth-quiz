@@ -23,7 +23,7 @@ type CompassDocOf = PlaceDoc & { compass: NonNullable<PlaceDoc['compass']> };
 const compassOf = (doc: PlaceDoc): Place | null => (doc.compass ? compassFromDoc(doc as CompassDocOf) : null);
 
 const cluesOf = (key: string, doc: PlaceDoc): CluePlace | null =>
-  doc.clues ? cluesFromDoc(key, doc as CluesDocOf, { countries: data().countries, jobs: data().jobs }) : null;
+  doc.clues ? cluesFromDoc(key, doc as CluesDocOf) : null;
 
 const rowOf = (key: string, doc: PlaceDoc): PlaceRow => ({
   key,
@@ -72,7 +72,10 @@ export const saveClues = async (row: PlaceRow, patch: CluesPatch): Promise<ClueP
 
 /** Difficulty is shared between the two games, so it's stored once at the place level rather than
  * once per game. */
-export const saveDifficulty = async (row: PlaceRow, difficulty: Difficulty): Promise<{ compass: Place | null; clues: CluePlace | null }> => {
+export const saveDifficulty = async (
+  row: PlaceRow,
+  difficulty: Difficulty,
+): Promise<{ compass: Place | null; clues: CluePlace | null }> => {
   const next = { ...data().places[row.key], difficulty };
   await applyPlaceChange(row.key, next);
   return { compass: compassOf(next), clues: cluesOf(row.key, next) };

@@ -1,4 +1,4 @@
-import { countrySnapshot, placesNeedingCountry, planCountryChange } from './denormalize';
+import { countrySnapshot, planCountryChange } from './denormalize';
 import type { ContourCountryDoc, CountryDoc, PlaceDoc } from './types';
 
 const france: CountryDoc = {
@@ -41,19 +41,6 @@ describe('countrySnapshot', () => {
       phoneCode: '+33',
     });
     expect(countrySnapshot({ fr: 'Ile', en: 'Isle' })).toEqual({ fr: 'Ile', en: 'Isle' });
-  });
-});
-
-describe('placesNeedingCountry', () => {
-  it('lists the places with no copy or an outdated one, and skips a country without document', () => {
-    const places = {
-      none: place('FR'),
-      stale: place('FR', { fr: 'Franc', en: 'France' }),
-      fresh: place('FR', countrySnapshot(france)),
-      orphan: place('ZZ'),
-    };
-
-    expect(placesNeedingCountry(places, { FR: france })).toEqual(['none', 'stale']);
   });
 });
 

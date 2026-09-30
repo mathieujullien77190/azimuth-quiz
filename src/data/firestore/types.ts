@@ -9,8 +9,7 @@ import type {
 } from '@/types';
 
 /**
- * Firestore shape of the game data (phase 1: written by `scripts/seedFirestore.ts`, read and edited
- * by the admin only — the game itself still reads the bundled JSON). One document per entity, never
+ * Firestore shape of the game data (the only copy: the games read it, the admin edits it). One document per entity, never
  * a big blob (1 MB cap per doc). Firestore refuses nested arrays and `undefined`, hence: contour
  * `points` are flat (`[lon, lat, lon, lat, ...]`), flag colors are objects, and an absent optional
  * field is simply omitted.
@@ -42,7 +41,7 @@ export type CluesDoc = {
   syllables: string[];
   /** The riddle of each syllable, same order as `syllables` (`null` when it has none): copied here from
    * `charadeRiddles/{syllable}` so a round reads no dictionary. The admin rewrites it when a riddle or the
-   * syllables change. Absent until the admin's migration ran. */
+   * syllables change. */
   riddles?: (string | null)[];
   /** The place's Clues category, derived from its Compass category (`capital` / `citiesFr`, otherwise
    * `cities`, see `cluesCategory`) but stored because the game queries on it. */
@@ -64,7 +63,7 @@ export type CountrySnapshot = {
   phoneCode?: string;
 };
 
-/** `places/{key}` — `key` is the permanent 3-letter code (see `data/places/codec.ts`). Identity and
+/** `places/{key}` — `key` is the place's permanent 3-letter code (`"par"` for Paris). Identity and
  * difficulty are shared by both games; `compass`/`clues` are present only for a place in that pool. */
 export type PlaceDoc = {
   name: string;
@@ -76,7 +75,7 @@ export type PlaceDoc = {
    * place with `compass`: the game draws random positions and asks for `n in [...]`, Firestore having no
    * "N random documents" query. Kept dense by the seed, the admin's numbering screen and `planRegroup`. */
   n?: number;
-  /** Snapshot of the place's country (see `CountrySnapshot`), absent until the admin's migration ran. */
+  /** Snapshot of the place's country (see `CountrySnapshot`), kept up to date by the admin. */
   country?: CountrySnapshot;
   compass?: CompassDoc;
   clues?: CluesDoc;
@@ -84,8 +83,8 @@ export type PlaceDoc = {
   personality?: {
     name: string;
     jobCode: string | null;
-    /** The job's labels copied from `personalityJobs/{jobCode}` (the game shows `job.fr`). Absent until the
-     * admin's migration ran, and when there is no job. */
+    /** The job's labels copied from `personalityJobs/{jobCode}` (the game shows `job.fr`). Absent when
+     * there is no job. */
     job?: { fr: string; en: string };
   };
   wordplay?: { sentence: string; difficulty: Difficulty };
@@ -158,7 +157,14 @@ export type ContourCountryDoc = {
   difficulty: Difficulty;
   centerLabel: ContourCenterLabel;
   neighbors: ContourNeighborDoc[];
-  /** ISO codes of the countries sharing a land border (the board draws them as a backdrop). */
+  /** Own outline as an encoded polyline (`polyline.ts`) — the same ring as `points`, 3-4 times lighter. Added by
+   * the polyline migration; a document without it is read from `points`. */
+  ring?: string;
+  /** The outline of every country in `borderCodes` (encoded polyline, copied as is so the shared edges stay
+   * exact): a round reads ONE document instead of the country plus its neighbours. */
+  neighborRings?: Record<string, string>;
+  /** ISO codes of the countries sharing a land border (the board draws them as a backdrop). TEMPORARY as a
+   * source of neighbour documents: the two-step read that uses it goes away once `neighborRings` is everywhere. */
   borderCodes: string[];
   capital?: ContourPlaceDoc;
   cities?: ContourPlaceDoc[];

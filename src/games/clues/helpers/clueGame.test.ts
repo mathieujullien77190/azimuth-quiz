@@ -1,4 +1,4 @@
-import { CLUE_PLACES } from '@/data';
+import { FIXTURE_CLUE_PLACES as CLUE_PLACES } from '@/helpers/storyFixtures';
 import { CLUE_ORDER } from '@/games/clues/constants';
 import { charadeFor, charadeMaxStage, charadeReady } from '@/games/clues/helpers/charade';
 import { personalityFor } from '@/games/clues/helpers/personality';

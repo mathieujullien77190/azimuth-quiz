@@ -8,11 +8,8 @@ import type { CluePlace } from '@/types';
 /**
  * Silhouette's `ContourEditor` (deployed under `CountriesView`'s own country card) is this
  * component's model: deployed under a place's own "Clues" block in `PlacesView`, one
- * `initialPlace` in prop (no picker of its own — the card list already provides that) — `place.key`
- * (baked onto every decoded place, see `data/places/codec.ts`'s doc comment) is all
- * `saveCharadeSyllables` needs to log exactly where to write in `charadePlaces.json`, no separate
- * prop required. Nothing written to disk. `charadeFor(place)` gives the syllable split — the shipped override when there
- * is one, the live `syllabify` heuristic otherwise — each paired with its riddle from the GLOBAL
+ * `initialPlace` in prop (no picker of its own — the card list already provides that). Every save goes
+ * straight to Firestore (`api/charades.ts`). `charadeFor(place)` gives the place's syllable split, each one paired with its riddle from the GLOBAL
  * dictionary (`riddleFor`): editing a syllable's riddle changes it for every other place with that
  * same syllable too, so this works for any of the 922 Clue places without repeating the same
  * curation over and over. The syllable split itself, on the other hand, is a PER-PLACE edit
@@ -46,9 +43,16 @@ export const CharadeEditor = ({ initialPlace }: { initialPlace: CluePlace }) => 
   };
 
   const handleRename = (index: number, next: string) =>
-    applySyllables(syllables.map((syllable, i) => (i === index ? next : syllable)), index);
+    applySyllables(
+      syllables.map((syllable, i) => (i === index ? next : syllable)),
+      index,
+    );
 
-  const handleRemove = (index: number) => applySyllables(syllables.filter((_, i) => i !== index), null);
+  const handleRemove = (index: number) =>
+    applySyllables(
+      syllables.filter((_, i) => i !== index),
+      null,
+    );
 
   const handleAdd = (next: string) => applySyllables([...syllables, next], syllables.length);
 
@@ -71,7 +75,11 @@ export const CharadeEditor = ({ initialPlace }: { initialPlace: CluePlace }) => 
           {syllables.map((syllable, index) => (
             <tr key={index}>
               <th>
-                <EditableValue onSave={(next) => handleRename(index, next)} saveFlag={savedFlag(index)} value={syllable} />
+                <EditableValue
+                  onSave={(next) => handleRename(index, next)}
+                  saveFlag={savedFlag(index)}
+                  value={syllable}
+                />
               </th>
               <td>
                 <EditableValue
@@ -97,7 +105,12 @@ export const CharadeEditor = ({ initialPlace }: { initialPlace: CluePlace }) => 
           value=""
         />
         {syllables.length > 0 && (
-          <button className="reset" type="button" onClick={handleClear} title="Aucune syllabe utilisable — pas de charade pour ce lieu">
+          <button
+            className="reset"
+            type="button"
+            onClick={handleClear}
+            title="Aucune syllabe utilisable — pas de charade pour ce lieu"
+          >
             Vider
           </button>
         )}

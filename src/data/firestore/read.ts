@@ -1,8 +1,12 @@
 import type { CluePlace, ContourCountry, ContourPlace, ContourRoundCountry, Place } from '@/types';
 
-import { unflattenPoints } from './build';
 import { cluesCategory } from './numbering';
-import type { CompassDoc, ContourCountryDoc, ContourPlaceDoc, CountryDoc, JobDoc, PlaceDoc } from './types';
+import { decodeRing } from './polyline';
+import type { CompassDoc, ContourCountryDoc, ContourPlaceDoc, PlaceDoc } from './types';
+
+/** `[lon, lat, lon, lat, ...]` back to `[[lon, lat], ...]` (Firestore has no nested arrays). */
+export const unflattenPoints = (flat: readonly number[]): [number, number][] =>
+  Array.from({ length: flat.length / 2 }, (_, index) => [flat[2 * index], flat[2 * index + 1]]);
 
 /** `Place` (Compass) from its document. */
 export const compassFromDoc = (doc: PlaceDoc & { compass: CompassDoc }): Place => ({
@@ -11,30 +15,19 @@ export const compassFromDoc = (doc: PlaceDoc & { compass: CompassDoc }): Place =
   category: doc.compass.category,
   difficulty: doc.difficulty,
   coordinates: { latitude: doc.latitude, longitude: doc.longitude },
+  ...(doc.country && { country: { fr: doc.country.fr, en: doc.country.en } }),
   ...(doc.compass.description !== undefined && { description: doc.compass.description }),
   ...(doc.compass.wikiFr !== undefined && { wikiFr: doc.compass.wikiFr }),
   ...(doc.compass.wikiEn !== undefined && { wikiEn: doc.compass.wikiEn }),
 });
 
-/** What `cluesFromDoc` falls back on for a place the admin has not migrated yet (no `country` copy, no job
- * label): the countries list and the jobs vocabulary. The game never needs it. */
-export type CluesLookups = {
-  countries: Record<string, CountryDoc>;
-  jobs: Record<string, JobDoc>;
-};
-
 /** `CluePlace` from its document — everything a round shows comes from the document itself: the country (name,
  * flag colors, currency, phone code) is the copy the place carries (`doc.country`), the riddles sit next to the
- * syllables, the personality carries its job label. The lookups only serve a place the admin has not migrated
- * yet. */
-export const cluesFromDoc = (
-  key: string,
-  doc: PlaceDoc & { clues: NonNullable<PlaceDoc['clues']> },
-  { countries, jobs }: CluesLookups = { countries: {}, jobs: {} },
-): CluePlace => {
-  const country = doc.country ?? countries[doc.code];
+ * syllables, the personality carries its job label. */
+export const cluesFromDoc = (key: string, doc: PlaceDoc & { clues: NonNullable<PlaceDoc['clues']> }): CluePlace => {
+  const { country } = doc;
   const { personality, wordplay } = doc;
-  const jobLabel = personality?.job?.fr ?? (personality?.jobCode ? jobs[personality.jobCode]?.fr : undefined);
+  const jobLabel = personality?.job?.fr;
   return {
     key,
     name: doc.name,
@@ -64,7 +57,8 @@ export const cluesFromDoc = (
 /** `ContourCountry` (what the board draws) from a `contours/{code}` document. */
 export const contourFromDoc = (code: string, doc: ContourCountryDoc): ContourCountry => ({
   code,
-  points: unflattenPoints(doc.points),
+  // The encoded ring when the document has one, else the flat points (not migrated yet).
+  points: doc.ring === undefined ? unflattenPoints(doc.points) : decodeRing(doc.ring),
   neighbors: doc.neighbors,
   centerLabel: doc.centerLabel,
   difficulty: doc.difficulty,

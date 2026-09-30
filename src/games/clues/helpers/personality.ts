@@ -2,10 +2,8 @@ import type { CluePlace } from '@/types';
 
 /** A real, Wikipedia-documented person tied to a place (born there, or overwhelmingly identified
  * with it) — `description` is a short one/two-word tag (a profession, e.g. "footballeur"), absent
- * when there's nothing short and safe to add. Curated by hand in `data/places/personalityPlaces.json`
- * (`[name, jobCode]` — `jobCode` looks up the shared `data/personalityJobs.json` vocabulary, already
- * resolved to its French text by the time it reaches here, see `data/places/codec.ts`'s doc
- * comment): unlike the charade clue, there's no heuristic to fall back on here, a place either has
+ * when there's nothing short and safe to add. Curated by hand in the admin
+ * (`places/{id}.personality`, its job label copied from the shared vocabulary): unlike the charade clue, there's no heuristic to fall back on here, a place either has
  * a curated entry or it doesn't, nothing is ever invented. */
 export type PersonalityEntry = { name: string; description: string | null };
 

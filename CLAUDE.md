@@ -48,24 +48,21 @@ src/
                        # des primitives UI generiques) : Compass, EarthSection (Compass + clue
                        # "Distance" de Clues), PlayerTabs (Compass + Clues), RoundCounter et DifficultyBadge
                        # (en-tete des 3 jeux)
-  data/                # tous les fichiers .json de donnees vivent ici, meme specifiques a un seul
-                       # jeu (charade.json/wordplay.json n'interessent qu'Indices, comme
-                       # data/contours/ n'interesse que Silhouette) — data/ n'est PAS reserve
-                       # au partage entre jeux, c'est juste ou vont les donnees. Valeurs partagees
-                       # par 2+ jeux (score/geo generiques, cles de stockage app-wide, options de
-                       # partie, palette joueurs...) + data/places/ (lieux Compass+Clues, repartis
-                       # sur 5 petits fichiers cles par un code court — voir "Lieux : 5 petits
-                       # fichiers" plus bas) + data/contours/ (codec geometrie Silhouette) +
-                       # data/theme.ts (tokens UI). Les constantes de tuning propres a un seul jeu
-                       # (score, sliders, valeurs par defaut...) vivent plutot dans
-                       # `games/<jeu>/constants.ts` (voir plus bas)
+  data/                # plus aucun fichier de donnees dans l'appli : lieux, pays, contours, devinettes... vivent
+                       # dans Firestore (voir "Modele Firestore" plus bas). Ici : les valeurs partagees par 2+ jeux
+                       # (score/geo generiques, cles de stockage app-wide, options de partie, palette joueurs...),
+                       # data/theme.ts (tokens UI) et data/firestore/ (forme des documents Firestore : types.ts,
+                       # lecteurs read.ts document -> types du jeu, numbering.ts, denormalize*.ts... partages
+                       # entre le jeu et l'admin). Les constantes de tuning propres a un seul jeu (score,
+                       # sliders, valeurs par defaut...) vivent plutot dans `games/<jeu>/constants.ts`
   games/
     compass/
       screens/         # OnlineGameScreen, SetupScreen, EndScreen
       components/      # RoundResult,
                        # PlaceCard
-      helpers/         # places.ts, scoring.ts, distanceScale.ts, room.ts (Firestore, hors
-                       # barrel `@/helpers` — voir plus bas)
+      helpers/         # places.ts (effectiveDifficulty), scoring.ts, distanceScale.ts, firestorePlaces.ts,
+                       # compassCounts.ts, compassCursors.ts, room.ts (Firestore, hors barrel `@/helpers` — voir
+                       # plus bas)
       store/           # roomStore.ts (partie en ligne, hors barrel comme room.ts, meme raison)
       constants.ts     # tuning propre a Compass : score (courbe, points max...), sliders
                        # de distance, ROOM_PLAYER_COLORS, CATEGORIES, DEFAULT_SETTINGS —
@@ -81,15 +78,15 @@ src/
     contour/
       screens/         # OnlineContourGameScreen, ContourSetupScreen
       components/      # ContourBoard, ContourFullBleedScreen, ContourGuessBar
-      helpers/         # contourCountry.ts, hintPlan.ts, contourPlaces.ts, simplify.ts, borders.ts,
-                       # roundBoard.ts, useRoundBoard.ts, room.ts
+      helpers/         # contourCountry.ts, hintPlan.ts, simplify.ts, borders.ts, roundBoard.ts,
+                       # useRoundData.ts, firestoreContours.ts, room.ts
       constants.ts     # tuning propre a Silhouette (anciennement `constants/contour.ts`) :
                        # MAX_CONTOUR_POINTS, CONTOUR_HINT_CATEGORIES, MAX_CITY_HINTS,
                        # CONTOUR_WRONG_GUESS_PENALTY, DEFAULT_CONTOUR_SETTINGS
   helpers/             # commun aux 3 jeux : geo.ts, format.ts, storage.ts, location.ts, random.ts,
                        # web.ts, firebase.ts, settings.ts (sanitize GameSettings) — le barrel
                        # `index.ts` re-exporte aussi les fonctions des `helpers/` par-jeu
-                       # ci-dessus (places/scoring/distanceScale/clueSkeleton), donc un simple `import { pickPlaces } from '@/helpers'`
+                       # ci-dessus (scoring/distanceScale/clueSkeleton), donc un simple `import { scoreRound } from '@/helpers'`
                        # marche toujours sans savoir ou vit le fichier reel — room.ts/roomStore.ts
                        # (Compass) restent les seuls hors barrel (`firebase/firestore` plante
                        # Jest a l'import), importes directement via leur chemin `@/games/compass/...`
@@ -192,29 +189,37 @@ document de la room). Index compose de `firestore.indexes.json` (`npx firebase-t
 firestore:indexes`).
 
 **La numerotation reste dense et MELANGEE** (helpers purs de `data/firestore/numbering.ts` :
-`computeNumbering`, `shuffleRank`, `isNumberingConsistent`, `planRegroup`, `slotAt`). Les `n` d'un groupe sont
+`computeNumbering`, `shuffleRank`, `planRegroup`, `slotAt`). Les `n` d'un groupe sont
 attribues dans l'ordre d'un hash stable de la cle (`shuffleRank`), pas dans l'ordre d'import : des `n`
 consecutifs (ce que prend un curseur) ne sont ni du meme coin ni du meme type. L'import
 (`buildPlaceDocs`/`buildCompassCounts`, qui pose `shuffled: true` dans `meta/compassCounts`) la pose ;
 l'admin la maintient : supprimer un lieu, changer sa categorie ou sa difficulte passe par `applyPlaceChange`
 (`admin/src/data.ts`), qui ecrit dans UN seul batch le lieu, le dernier lieu de l'ancien groupe (il prend le
 `n` libere), les tailles (en gardant le marqueur `shuffled`) et `dataVersion`. Un lieu sans `compass` n'est
-jamais numerote. Tant que la numerotation manque, est incoherente **ou n'est pas encore melangee** (pas de
-`shuffled` : donnees numerotees dans l'ordre d'import), `AuthGate` affiche le bouton unique "Numeroter les
-lieux Compass" / "Melanger la numerotation Compass" (`numberCompassPlaces`, qui renumerote TOUS les groupes en
-ordre melange, `computeNumbering(..., { force: true })`, et pose `shuffled: true`). Pas de fonction "ajouter un
+jamais numerote. Les ecrans de migration a usage unique (numerotation, copie du pays, devinettes et metiers, contours) ont
+ete lances puis supprimes : les donnees de production sont au bon format. Pas de fonction "ajouter un
 lieu" dans l'admin pour l'instant : la creer devra passer par `applyPlaceChange` (ajout en fin de groupe).
-`pickPlaces`/`filterPlaces` et les JSON restent dans le repo, plus utilises par ce chemin (menage plus tard).
+Les JSON embarques, `pickPlaces`/`filterPlaces` et les scripts de generation ont ete supprimes : Firestore est
+la seule source des donnees.
 
-### Modele Firestore denormalise (etape 1 de "Indices + Silhouette sur Firestore" ; Boussole, Indices et Silhouette le lisent maintenant)
+### Modele Firestore denormalise (les 3 jeux le lisent ; plus aucun fichier de donnees dans l'appli)
 
 On duplique pour ne rien lire en plus au runtime ; l'admin propage les modifications (`admin/src/data.ts`).
-Types dans `src/data/firestore/types.ts`, helpers purs testes dans `denormalize.ts`, `numbering.ts`,
-`contourDocs.ts`.
+Types dans `src/data/firestore/types.ts`, lecteurs document -> types du jeu dans `read.ts`, helpers purs
+testes dans `denormalize.ts`, `denormalizeClues.ts`, `numbering.ts`.
+
+**Collections** : `places/{cle}` (cle = code court de 3 lettres, permanent, ex. `par` ; identite + `compass` +
+`clues` + `country` + `personality` + `wordplay`), `countries/{ISO}` (nom fr/en, drapeau, devise, indicatif,
+pays frontaliers ; la source que l'admin edite), `contours/{ISO}`, `charadeRiddles/{syllabe normalisee}`
+(devinette globale ou `null`), `personalityJobs/{code}` (`{ fr, en }`), `meta/*` (`compassCounts`, `cluesCounts`,
+`contourCounts`, `dataVersion`). Firestore refuse les tableaux imbriques et `undefined` : contours a plat
+(`[lon, lat, lon, lat...]`), couleurs de drapeau en objets, champ optionnel absent = omis. Le jeu ne lit que
+`places`, `contours` et `meta` ; `countries`, `charadeRiddles` et `personalityJobs` sont la source des copies
+(l'admin les recopie dans les lieux/contours qui les utilisent).
 
 - **`places/{cle}.country`** (`CountrySnapshot`) : copie du pays (`fr`, `en`, `flag`, `currency`, `currencySymbol`,
   `phoneCode`) dans CHAQUE lieu de ce pays (Compass et Clues) : pas de `countryName()` ni de lecture de pays au
-  runtime. `cluesFromDoc` lit `doc.country` (repli sur la liste des pays pour un lieu pas encore migre).
+  runtime (`Place.country` cote Compass, `CluePlace.country/flagColors/...` cote Indices).
   `applyCountryChange` (admin) ecrit le pays ET tous ses lieux ET les contours qui le citent (`planCountryChange`)
   par tranches de 400 operations (chaque tranche atomique) ; `saveCountry` passe par la.
 - **Numerotation Indices**, meme mecanique que Compass avec `CLUES_NUMBERING` : `places/{cle}.clues.category`
@@ -222,15 +227,15 @@ Types dans `src/data/firestore/types.ts`, helpers purs testes dans `denormalize.
   requete dessus) et `clues.n` (1..taille dans `clues.category` x `difficulty`, ordre melange), tailles dans
   `meta/cluesCounts` (`shuffled: true`). `applyPlaceChange` garde les DEUX numerotations denses dans le meme batch
   (un changement de categorie Compass peut regrouper la categorie Indices).
-- **`contours/{code}`** (`ContourCountryDoc`, sorti de `countries/{code}.contour`) : `points` (a plat), `difficulty`,
-  `centerLabel`, `neighbors` (avec `fr`/`en` copies), `borderCodes`, `fr`/`en`, `capital` et `cities` precalcules
+- **`contours/{code}`** (`ContourCountryDoc`, sorti de `countries/{code}.contour`) : `ring` (contour en polyline
+  encodee, `data/firestore/polyline.ts`, 3 decimales, ~3 Ko au lieu de ~12) et `neighborRings` (le contour de chaque
+  pays frontalier, copie tel quel pour que les aretes communes gardent les memes sommets : une manche = UNE lecture),
+  `difficulty`, `centerLabel`, `neighbors` (avec `fr`/`en` copies),
+  **TEMPORAIRES** `points` (a plat) et `borderCodes` (ancienne lecture en deux temps) a supprimer avec le repli de
+  `loadRoundData` une fois la migration confirmee partout (ecran unique de l'admin "Encoder les contours et
+  embarquer les voisins", `contourRingFields`/`contoursNeedingRings`, a supprimer ensuite), `fr`/`en`, `capital` et `cities` precalcules
   comme le faisait `contourPlacesFor` a chaque manche, `n` (1..taille dans la difficulte, ordre melange) ; tailles
   dans `meta/contourCounts`. Les edits de voisins / ancre du label ecrivent `contours/{code}`.
-- **Ecrans de migration de l'admin** (`AuthGate`, `STEPS`, chacun detecte depuis les donnees, idempotent) : Compass
-  (numeroter/melanger), "Copier les infos pays dans les lieux", "Numeroter/Melanger les lieux Indices", "Migrer les
-  contours" (construit `contours` depuis les silhouettes embarquees dans les pays, ecrit `meta/contourCounts`, PUIS
-  retire `contour` des pays : une execution interrompue se relance). Les builders JSON (`build.ts`) produisent les
-  memes formes pour un re-import (`seed:firestore`). Le runtime des trois jeux n'est pas touche a cette etape.
 - `firestore.rules` : bloc `contours` (lecture publique, ecriture admin). `firestore.indexes.json` : index
   (`clues.category`, `difficulty`, `clues.n`) et (`difficulty`, `n`) sur `contours` — a deployer.
 
@@ -269,49 +274,20 @@ document `places/{id}` porte des COPIES de tout ce dont l'indice a besoin, maint
 `data/firestore/riddles.ts`.
 
 **Admin (propagation)** : `data/firestore/denormalizeClues.ts` (pur : `withRiddles`, `withJobLabel`,
-`planRiddleChange`, `planJobChange`, `placesNeedingClueCopies`) ; `admin/src/data.ts` l'ecrit :
+`planRiddleChange`, `planJobChange`) ; `admin/src/data.ts` l'ecrit :
 `applyRiddleChange` (modifier une devinette de syllabe reecrit `clues.riddles` de tous les lieux qui ont cette
 syllabe, accents replies), `applyJobChange` (renommer un metier recopie le libelle dans les personnalites
 etiquetees), `saveCharadeSyllables` / `savePersonalityName` / `savePersonalityJob` recalculent la copie du
-lieu edite. Ecran a usage unique de `AuthGate` : "Copier devinettes et métiers dans les lieux"
-(`copyClueDataIntoPlaces`, detecte depuis les donnees, relancable). Les comparaisons de copies utilisent
+lieu edite. Les comparaisons de copies utilisent
 `sameJson` (`data/firestore/same.ts`, insensible a l'ordre des cles : Firestore rend les maps triees).
 Toute modification doit passer par l'admin (une edition directe dans la console ne se propage pas).
 
-### Lieux : 5 petits fichiers, une cle courte partagee
+### Lieux : une cle courte et permanente
 
-`src/data/places/` n'a plus un seul gros `places.json` : chaque lieu est reparti sur jusqu'a 5
-fichiers, tous des OBJETS indexes par la MEME cle courte (3 lettres, ex. `"par"` pour Paris) —
-`places.json` (identite commune : nom/code/coordonnees/difficulte, TOUS les lieux),
-`compassPlaces.json` (categorie/description/wiki, lieux Compass), `cluesPlaces.json` (position/
-population/climat/altitude/fuseau/aeroport/emojis, lieux Indices), `charadePlaces.json` (syllabes,
-obligatoire pour tout lieu Indices), `personalityPlaces.json` (personnalite, optionnel). Seul
-`data/places/codec.ts` sait faire la jointure (`decodeAllPlaces`/`decodeCompassPlaces`/
-`decodeCluePlaces`, tous les autres imports passent par la — plus aucun consommateur n'importe les
-fichiers de donnees lui-meme).
-
-**Cle** : 3 premieres lettres du nom (minuscule, accents retires). 65% des lieux collisionnent sur
-leur prefixe naturel (verifie sur les vraies donnees, ex. 48 lieux commencent par "san") — resolu
-par priorite (capitale d'abord, puis ville `citiesFr`, puis ville normale, puis le reste des
-categories Compass) : dans un groupe qui collisionne, le palier le plus prioritaire garde le
-prefixe naturel (`"san"` -> Santiago, capitale du Chili, pas une des 22 autres villes "San..."),
-les autres retombent sur la premiere combinaison de 3 lettres encore libre par ordre alphabetique
-(opaque mais deterministe et reproductible). Une fois attribuee, une cle est PERMANENTE : jamais
-reassignee a une regeneration future, meme esprit append-only que `TIMEZONE_CODES` dans `codec.ts`.
-
-**La cle est opaque** : ouvrir `compassPlaces.json` seul ne dit pas quel lieu est `"par"`. Pour que
-l'edition reste lisible malgre tout, chaque message du journal admin (voir `api/places.ts`,
-`api/charades.ts`, `api/wordplay.ts`) affiche TOUJOURS l'identite humaine (nom + code pays) ET la
-cle de stockage cote a cote (`Paris (FR) [par]`) — jamais besoin de deviner une cle a l'oeil.
-
-`decodeCluePlace` bake desormais cette meme cle sur l'objet `CluePlace` qu'il retourne
-(`CluePlace.key`, absent du `Place` de Compass — rien la-bas n'en a besoin) : un consommateur qui a
-deja un `CluePlace` (les editeurs admin) lit `place.key` directement plutot que de la
-recalculer ou de se la faire passer a part.
-
-`countries.json` est scinde en 6 petits fichiers du meme esprit (voir "Donnees Contour" plus bas)
-mais SANS algorithme de cle a inventer : le code ISO a 2 lettres (deja court, unique et standard)
-sert directement de cle partout.
+Un lieu est le document `places/{cle}`, ou la cle est un code de 3 lettres (ex. `par` pour Paris), attribue
+une fois pour toutes a l'import initial (3 premieres lettres du nom, capitale prioritaire en cas de collision)
+et JAMAIS reassigne. Elle est opaque : elle ne sert qu'a identifier le document (`CluePlace.key`, les edits de
+l'admin) ; ce que voit un joueur (nom, pays) vient du document. Les pays ont pour cle leur code ISO a 2 lettres.
 
 ## Domaine : cap et distance
 
@@ -395,80 +371,40 @@ commentees en francais :
   le splash de chargement a ce moment-la).
 - **Indices : la charade** (`ClueId` `'charade'`, `helpers/charade.ts`) — une devinette par syllabe du
   nom du lieu, style jeu de societe ("mon premier est...", "mon deuxieme est...", puis le nom epele en
-  clair au dernier clic, filet de securite). **Le decoupage en syllabes est PRE-CALCULE et OBLIGATOIRE
-  pour les 922 lieux** : `src/data/places/charadePlaces.json` (voir "Lieux : 5 petits fichiers" plus haut,
-  `CluePlace.syllables`, toujours present pour un lieu Indices, contrairement a `personality` qui est
-  optionnel) — `charadeFor(place)` n'est plus qu'une LECTURE directe (`place.syllables`), rien n'est jamais
-  calcule a l'execution dans l'appli. Peut etre un tableau vide (certains noms n'ont aucune syllabe
-  utilisable, ex. "Bălți"). Rempli une fois pour toutes par `scripts/generateCharades.mjs` (`npm run
-  generate:charades`, hors tests/CI/app livree) via une heuristique francaise ecrite a la main directement
-  dans le script (Node ESM sans etape de build ; aucun code de l'appli livree n'en a besoin, donc pas de
-  module `src/` a part pour elle, contrairement a `simplify.ts` cote Silhouette qui sert aussi en direct) :
-  groupes de voyelles = un seul son, cesure V-CV/VC-CV selon 1 ou 2+ consonnes entre deux groupes, "n"/"m"
-  nasalise repli dans la voyelle qui precede sauf s'il est double — imparfaite sur les cas rares, documentee
-  dans le script plutot que chassee a la perfection ; chaque mot d'un nom compose/a tiret/a espace est
-  syllabe seul, jamais fusionne avec le suivant. Le script ne fait
-  que COMBLER une cle presente dans `cluesPlaces.json` (un lieu Indices) mais absente de
-  `charadePlaces.json` ; une cle qui en a deja un (heuristique ou corrige a la main) n'est jamais retouchee.
-  Correction a la main directement dans `charadePlaces.json` (via l'admin, `CharadeEditor`, voir plus bas).
-  **La devinette, elle, reste GLOBALE**,
-  independamment de ce decoupage : `riddleFor(syllabe)` la cherche par le texte de la syllabe elle-meme
-  (`normalizeSyllable` : minuscule, et "a"/"à"/"â" confondus — vrais homophones en francais, contrairement
-  a la famille du "e" ("e"/"é"/"è" sont des sons reellement differents, jamais fondus)), pas par lieu —
-  curer "pa" une fois vaut pour Paris, Palerme, et tout autre lieu qui a un "pa" (ou meme un "pâ").
-  `src/data/charade.json` est un dictionnaire COMPLET : CHAQUE syllabe reelle (calculee depuis
-  `places.json`) y est une cle, valeur = devinette curee ou `null` — sert aussi de check-list de ce qui
-  reste a curer (922 lieux, ~2535 occurrences de syllabes, ~1014 syllabes distinctes, 183 curees).
-  **La charade n'est offerte que si TOUTES les syllabes du lieu ont une devinette non-nulle**
-  (`charadeReady(place)`, verifie par `cluesFor`) — jamais de carte a moitie curee (certaines syllabes avec
-  une vraie devinette, d'autres qui retombent juste sur "se dit « xx »"). Paliers plafonnes a
-  `CHARADE_SYLLABLE_STAGE_CAP` (4) + 1 palier final : au-dela de 4 syllabes, les syllabes en trop sont
-  regroupees dans le dernier palier plutot que d'exploser le cout de l'indice face aux autres indices a 1-3
-  paliers (voir `charadeSyllableGroups`). Admin : `PlacesView`'s `CharadeEditor` (par lieu) edite le
-  decoupage ET la devinette — chaque syllabe se renomme sur place (`EditableValue`) ou se supprime
-  (`DeleteX`), un champ "+ Ajouter une syllabe" en ajoute une, un bouton "Vider" les retire toutes en un
-  clic ; sa devinette s'edite juste a cote, toujours par le meme `EditableValue` — et l'onglet a part
-  "Syllabes" (`SyllablesView`, une ligne par syllabe DISTINCTE toutes places confondues, avec quelques
-  lieux d'exemple pour le contexte en curant, et son propre "×" par ligne pour vider une devinette) n'edite
-  que la devinette globale. Rien ecrit sur disque (meme pattern journal que le reste de l'admin) : editer
-  le decoupage logue le tableau complet resultant du lieu (cle courte + identite humaine, voir "Lieux : 5
-  petits fichiers" plus haut), a recopier a la main dans `charadePlaces.json` ; editer la devinette logue sa
-  cle normalisee, a recopier dans `charadeCuration.json` puis `npm run generate:charades` pour regenerer le
-  dictionnaire complet.
+  clair au dernier clic, filet de securite). Le decoupage en syllabes est stocke dans le lieu
+  (`places/{cle}.clues.syllables`, `CluePlace.syllables`, un tableau eventuellement vide : certains noms n'ont
+  aucune syllabe utilisable, ex. "Bălți", et l'indice est alors retire) ; les devinettes le sont aussi, une par
+  syllabe, dans `clues.riddles` (`CluePlace.riddles`, `null` quand il n'y en a pas). Rien n'est calcule ni lu
+  ailleurs pendant une manche. **La devinette reste GLOBALE** : le dictionnaire est la collection
+  `charadeRiddles/{syllabe normalisee}` (`normalizeSyllable` : minuscule, et "a"/"à"/"â" confondus — vrais
+  homophones en francais, contrairement a la famille du "e"), valeur = devinette ou `null` ; curer "pa" une fois
+  vaut pour Paris, Palerme et tout lieu qui a un "pa". **La charade n'est offerte que si TOUTES les syllabes du
+  lieu ont une devinette non-nulle** (`charadeReady(place)`, verifie par `cluesFor`) — jamais de carte a moitie
+  curee. Paliers plafonnes a `CHARADE_SYLLABLE_STAGE_CAP` (4) + 1 palier final : au-dela de 4 syllabes, les
+  syllabes en trop sont regroupees dans le dernier palier (voir `charadeSyllableGroups`). Admin :
+  `PlacesView`'s `CharadeEditor` (par lieu) edite le decoupage ET la devinette (chaque syllabe se renomme sur
+  place ou se supprime, "+ Ajouter une syllabe", "Vider") et l'onglet "Syllabes" (`SyllablesView`, une ligne
+  par syllabe DISTINCTE) n'edite que la devinette globale. Tout part directement dans Firestore : editer une
+  devinette reecrit `charadeRiddles/{syllabe}` ET le `clues.riddles` de chaque lieu qui contient cette syllabe
+  (`applyRiddleChange`) ; editer le decoupage recalcule les devinettes du lieu (et cree l'entree du dictionnaire
+  pour une syllabe nouvelle).
 - **Indices : une personnalite liee au lieu** (`ClueId` `'personality'`, `helpers/personality.ts`) — un seul
   palier (nom + description courte optionnelle, ex. "footballeur"), jamais invente : uniquement des faits
-  Wikipedia (nee/tres fortement identifiee au lieu). Dans `src/data/places/personalityPlaces.json`
-  (`[nom, jobCode]`, absent pour la quasi-totalite des lieux, curee et editee a la main directement dans ce
-  fichier). `jobCode` pointe dans `src/data/personalityJobs.json` (`{ code: [fr, en] }`, ex.
-  `"cha": ["chanteuse", "singer"]`) — un vocabulaire de metiers partage plutot que repeter le meme mot
-  francais (et sa traduction anglaise) sur chaque lieu qui l'a ; `decodeCluePlace` (`data/places/codec.ts`)
-  resout le code vers le texte francais, seul consomme aujourd'hui (`en` curee en prevision d'une
-  traduction future du contenu du jeu, jamais lue pour l'instant). Un
-  lieu sans personnalite curee n'offre jamais cet indice (`cluesFor` le retire, jamais de case vide).
-  Premier lot : 41 lieux (23 capitales + 18 villes `citiesFr`), verifie a la main (recherches web
-  ponctuelles + faits bien etablis) — le reste des ~880 lieux Indices n'a rien, a completer plus tard.
+  Wikipedia (nee/tres fortement identifiee au lieu). Dans `places/{cle}.personality` (`{ name, jobCode, job }`,
+  absent pour la quasi-totalite des lieux, cure et edite dans l'admin). `jobCode` pointe dans la collection
+  `personalityJobs/{code}` (`{ fr, en }`, ex. `"cha"` -> "chanteuse"/"singer"), un vocabulaire de metiers
+  partage ; le libelle est recopie dans le lieu (`personality.job`) pour que la manche ne lise rien d'autre
+  (`applyJobChange` garde les copies a jour quand on renomme ou supprime un metier). Seul `fr` est affiche
+  aujourd'hui (`en` cure en prevision d'une traduction du contenu). Un lieu sans personnalite n'offre jamais cet
+  indice (`cluesFor` le retire, jamais de case vide). 41 lieux en ont une (23 capitales + 18 villes `citiesFr`).
 - **Indices : un jeu de mots sur le nom du lieu** (`ClueId` `'wordplay'`, `helpers/wordplay.ts`) — un seul
-  palier : `sentence`, revelee en un clic (l'ancien 2e palier "expliquee", avec le mot qui fait le jeu de
-  mots surligne, a ete retire — pas assez utile pour justifier un 2e clic). `difficulty` (`Difficulty`,
-  meme enum que le reste du jeu, curee a la main, defaut `intermediate` si absente/invalide) est purement
-  informative — n'influence jamais si l'indice est propose, juste un repere pour le joueur — affichee dans
-  l'en-tete de la carte comme un simple point colore (`difficultyEmoji`/`DIFFICULTIES` de `@/data`,
-  🟢/🟠/🔴, meme table que `DifficultyBadge`), uniquement une fois la carte revelee (jamais avant, meme
-  logique que le reste du contenu du jeu de mots). Contrairement a `charade`, aucune heuristique possible
-  ici (trouver un vrai jeu de mots n'est pas automatisable) : `sentence` part vide pour les 922 lieux
-  (`scripts/wordplayCuration.json`, curation 100% manuelle, indexee par la MEME cle courte 3 lettres que
-  `charadePlaces.json`/`personalityPlaces.json` — pas par `code|name` comme avant, pour rester coherent avec
-  le reste des fichiers de lieux) — `wordplayFor(place)` prend directement `place.key` (pas de fonction
-  `wordplayKey` a part, retiree), rend `null` tant que `sentence` est vide, et un lieu sans jeu de mots curee
-  n'offre jamais cet indice (`cluesFor`). **Reste dans son propre fichier de curation/generation**
-  (contrairement a `personality`, pas encore replie dans `places.json`) : `npm run generate:wordplay` (script
-  dev, valide chaque cle contre `cluesPlaces.json` et que `difficulty` est une valeur valide, sinon retombe
-  sur `intermediate`) copie `scripts/wordplayCuration.json` dans `src/data/wordplay.json`. Admin : bouton
-  "✍️ Jeu de mots" a cote de
-  "🎭 Charade" dans `PlacesView`, `WordplayEditor` (la phrase en `EditableValue`, la difficulte dans le
-  meme `<select>` que le reglage de difficulte des lieux — meme modele journal-only que `CharadeEditor`,
-  les deux editeurs peuvent etre ouverts en meme temps sur une meme carte, ils editent des champs
-  differents).
+  palier : `sentence`, revelee en un clic. `difficulty` (`Difficulty`, curee a la main, defaut `intermediate`)
+  est purement informative — n'influence jamais si l'indice est propose — affichee dans l'en-tete de la carte
+  comme un simple point colore (`difficultyEmoji`/`DIFFICULTIES` de `@/data`), uniquement une fois la carte
+  revelee. Aucune heuristique possible (trouver un vrai jeu de mots n'est pas automatisable) : stocke dans
+  `places/{cle}.wordplay` (`{ sentence, difficulty }`), curation 100% manuelle dans l'admin
+  (`WordplayEditor`, la phrase en `EditableValue`, la difficulte dans un `<select>`). `wordplayFor(place)` rend
+  `null` tant que `sentence` est vide, et un lieu sans jeu de mots n'offre jamais cet indice (`cluesFor`).
   `RoomDeletedScreen`, `FinalStandings` (ecran de fin commun aux trois jeux : classement, medailles, egalites ;
   Compass y ajoute en `children` son propre `RoundsRecap`, qui dit qui a ete le meilleur en direction et en distance
   a chaque manche). La banniere de victoire dit "Vous gagnez !" plutot que le nom du gagnant quand c'est cet
@@ -538,8 +474,9 @@ part d'un pays au hasard. Une requete par tranche de 30 numeros (`difficulty == 
 pays) ; un numero sans document (l'admin l'a retire) en redemande d'autres. Si Firestore echoue ou s'il y a moins
 de `rounds` pays, `fetchContourRoundCodes` rejette : `useSetupRoom` affiche `startFailedNotice`, la room reste dans
 son salon, "Lancer la partie" relance. *Manche* (tous les appareils, hote compris) : `useRoundData` lit le document du
-pays de la manche (`contours/{code}`) puis ceux des pays frontaliers (`borderCodes`, en UNE requete
-`documentId() in [...]` par tranche de 30) — `loadRoundData`, gardes en memoire pour la session — et charge deja la
+pays de la manche (`contours/{code}`), qui porte le contour de ses voisins (`neighborRings`) : UNE lecture par
+manche (`loadRoundData`, gardee en memoire pour la session ; TEMPORAIRE : un document sans `neighborRings` se lit
+encore en deux temps, avec les documents de `borderCodes` par tranche de 30) — et charge deja la
 manche SUIVANTE pendant qu'on joue (changement de manche sans attente). Le plateau se construit a partir de ces
 documents seuls (`ContourRoundCountry`, `roundCountryFromDoc` : noms fr/en du pays et des voisins, capitale et villes
 precalculees) : plus de `CONTOURS`, de `countryName` ni de `contourPlacesFor(PLACES)` a l'execution ;
@@ -547,8 +484,6 @@ precalculees) : plus de `CONTOURS`, de `countryName` ni de `contourPlacesFor(PLA
 `roundGeometry(country, seed, neighborCountries)`). La reponse se verifie sur les noms du document
 (`roundCountryName`). Pendant la lecture de la 1re manche : le splash de chargement ; si elle echoue, une notice
 `contourGame.loadFailed` (un tap relit). `flagEmoji` est maintenant dans `helpers/flagEmoji.ts` (pur, sans JSON).
-`contourPlacesFor`/`contourPlaces.ts` ne servent plus qu'aux fixtures de stories et au test de parite de la migration
-(menage de l'etape 4). Le setup local de
 
 **Positions sur le plateau en fraction, pas en lon/lat.** `ContourNeighbor.x`/`y` et
 `ContourCountry.centerLabel` sont une fraction (0-1) du canvas du plateau — pas des
@@ -578,10 +513,9 @@ reglages de la room + le pays, rien de plus n'est stocke par manche. Le niveau d
 n'apparaissent qu'a `neighborShapes` (jamais sans, meme categorie `neighbors` desactivee). Les etiquettes sont
 `buildHintLabels(board, plan, hints, language)` ; la forme `boardShapeFor(board, plan, hints)`. Bareme
 `contourGuessPoints(hints, N)` : 500 x (1 - 0.85 * hints / (N - 1)) arrondi pour hints < N, 0 a N (un plan reduit
-au seul `reveal` donne 500 puis 0). Villes et capitale (`helpers/contourPlaces.ts`, `contourPlacesFor`) viennent de
-`PLACES` (categories `capital`, `cities`, `citiesFr`, code pays), limitees a l'emprise (bbox) de l'anneau principal
-(exclut l'outre-mer), au plus `MAX_CITY_HINTS` (5) villes hors capitale, choix deterministe (les plus faciles
-d'abord, ordre des donnees) ; les lieux n'ont qu'un nom (pas de traduction). Elles sont projetees avec le MEME
+au seul `reveal` donne 500 puis 0). Villes et capitale sont precalculees dans le document du pays (`capital`, `cities` de `contours/{code}`) : categories
+`capital`, `cities`, `citiesFr` du pays, limitees a l'emprise (bbox) de l'anneau principal (exclut l'outre-mer), au plus
+`MAX_CITY_HINTS` (5) villes hors capitale, les plus faciles d'abord ; elles n'ont qu'un nom (pas de traduction). Elles sont projetees avec le MEME
 projecteur que le contour (`RoundBoard.cityMarks`/`capitalMark`) : un point `●` par ville, une etoile pour la
 capitale, puis le nom empile dessous comme les voisins (pas d'anti-collision). Pas de fleuves (pas de donnees).
 Toujours centre (`textAnchor="middle"` fixe dans
@@ -589,65 +523,31 @@ Toujours centre (`textAnchor="middle"` fixe dans
 des que chaque hint est devenu un point fixe plutot qu'une etiquette pointant vers le bord.
 
 Filtre par difficulte, meme enum `Difficulty` que Compass/Clues, choix unique dans les trois jeux
-(`GameSettings.difficulty`, `ClueSettings.difficulty`, `ContourSettings.difficulty` — plus aucun
-multi-select ; d'anciens reglages Compass sauvegardes avec une liste `difficulties` gardent sa premiere
-entree valide, voir `sanitizeSettings`) : determine le pool dans lequel le
-pays du tour est tire (`ContourCountry.difficulty`, curee a la main via le champ
-optionnel `contour.difficulty` sur la ligne du pays dans `data/places/countries.json`
-— France et Espagne en `easy`, seule la Norvege en `hard`, absent (= `intermediate` par
-defaut, voir `codec.ts`) pour tous les autres, y compris tous les pays generes
-automatiquement ; deliberement desequilibre, ne pas tenter de rectifier sans demande
-explicite).
+(`GameSettings.difficulty`, `ClueSettings.difficulty`, `ContourSettings.difficulty`) : determine le groupe dans lequel
+les pays sont tires (`difficulty` du document `contours/{code}`, curee a la main dans l'admin — France et Espagne
+en `easy`, seule la Norvege en `hard`, `intermediate` pour tous les autres ; deliberement desequilibre, ne pas
+tenter de rectifier sans demande explicite). Un groupe plus petit que le nombre de manches (2 pays en `easy`) est
+reparcouru, sans jamais le meme pays deux fois de suite quand il y a le choix.
 
-**Pays : 6 petits fichiers, cle = code ISO directement** (`src/data/places/`, meme esprit que le
-split des lieux plus haut, mais sans algorithme de cle a inventer — le code ISO a 2 lettres sert
-de cle partout, deja court/unique/standard) : `countries.json` (identite `[fr, en]`, TOUS les
-pays), `countryFlags.json`, `countryCurrencies.json` (`[currency, currencySymbol]`),
-`countryPhoneCodes.json`, `countryContours.json` (`ContourDataRow`, type dans
-`src/types/index.ts`), `countryBorders.json` — les 5 derniers sparse, present seulement quand
-connu/curee. Seul `data/places/countries.ts` fait la jointure (`decodeCountry(code)`,
-`decodeAllCountries()` pour l'admin — les fonctions publiques `countryName`/`countryFlagColors`/
-`countryCurrencyName`/`countryCurrencySymbol`/`countryPhoneCode`/`countryNeighbors` inchangees,
-rien a la marge de codec.ts ne devrait plus importer un de ces fichiers directement). `data/contours/`
-ne garde que `codec.ts` (decode uniquement, plus aucune donnee) : `decodeContours` lit
-`countryContours.json` directement (ce fichier EST deja la liste des pays avec Silhouette, plus
-besoin de filtrer). `scripts/generateContours.mjs` (voir plus bas) est le SEUL script qui ecrit
-`countryContours.json`/`countryBorders.json` — les 4 autres fichiers pays restent edites a la main,
-comme `compassPlaces.json`/`cluesPlaces.json`. Les voisins
-(`{ type: 'country', code, x, y }` — uniquement des pays, plus de voisin mer/ocean : ca
-compliquait tout pour peu d'apport, retire) sont pour la plupart generes automatiquement
-par `scripts/generateContours.mjs` (`npm run generate:contours`, outil dev uniquement,
-hors `npm test`/CI/l'app livree — adjacence reelle + centroide via `world-countries`,
-position projetee sur le plateau du pays puis ramenee au bord via un clamp directionnel,
-voir le script pour le detail) ; seuls les 8 pays d'origine (DE/ES/FR/GR/IE/IT/NO/PT)
-gardent des positions de voisins ajustees a la main. Un meme voisin peut avoir une position
-differente selon le pays qui le cite (pas de table globale par code) : chaque
-`ContourCountry.neighbors` est propre a son pays.
+**Pays et contours dans Firestore, cle = code ISO.** `countries/{ISO}` (nom fr/en, drapeau, devise, indicatif,
+`borders` = pays frontaliers) est la source que l'admin edite ; `contours/{ISO}` (voir "Modele Firestore
+denormalise") est ce que lit le jeu, avec les noms deja copies. Les voisins positionnes sur le plateau
+(`{ type: 'country', code, x, y, fr, en }` — uniquement des pays, plus de voisin mer/ocean) sont propres a chaque pays :
+un meme voisin peut avoir une position differente selon le pays qui le cite. Les `points` de TOUS les pays viennent
+d'une seule topologie du monde entier simplifiee une fois (world-atlas 50m) : un arc partage entre deux pays reste
+un seul arc, donc une frontiere commune a **exactement les memes sommets** des deux cotes. **Ne jamais retoucher les
+`points` d'un seul pays** (ni par l'admin ni a la main) : les sommets partages ne correspondraient plus. Seul
+l'anneau principal de chaque pays est garde, donc une frontiere portee par un autre polygone (Thrace turque, Cabinda,
+enclaves) n'est pas detectee. Les scripts qui generaient ces donnees (`generate:contours`...) ont ete supprimes avec
+les JSON : les contours ne se regenerent plus, ils s'editent (positions des voisins, ancre du label) dans l'admin.
 
-**Une seule definition pour tous les contours.** Les `points` de TOUS les pays (les 8 d'origine
-compris, qui etaient dessines a la main, plus grossiers et decales de 20-70 km par endroits) viennent
-de `world-atlas` 50m, topologie du monde entier simplifiee UNE fois (`topojson-simplify`, poids
-`1e-5`, arrondi 3 decimales) : un arc partage entre deux pays reste un seul arc, donc une frontiere
-commune a **exactement les memes sommets** des deux cotes. Le script regenere `points` a chaque
-lancement et ne conserve d'une entree existante que ce qui est cure (`neighbors`, `centerLabel`,
-`difficulty`) ; ne jamais retoucher les `points` d'un seul pays (ni par l'admin ni a la main) : les
-sommets partages ne correspondraient plus. Seul l'anneau principal de chaque pays est garde, donc
-une frontiere portee par un autre polygone (Thrace turque, Cabinda, enclaves) n'est pas detectee.
-Relancer le script ajoute aussi DK et RU (jamais generes jusqu'ici, RU = ~700 points), a ne
-committer que si on veut ces pays dans le jeu.
-
-**Voisins bruts de chaque pays** (`countryBorders.json`, tous les pays, pas seulement ceux avec une
-silhouette) : codes ISO tries des pays qui partagent une frontiere terrestre, ex. `"MC": ["FR"]`.
-Meme source que les voisins d'indices (`borders` de `world-countries`, dans
-`scripts/generateContours.mjs`), gardes seulement si les deux pays se citent mutuellement : la
-liste est symetrique (A voisin de B <=> B voisin de A, verifie par `countries.test.ts`) et limitee
-aux codes presents dans `countries.json`. Un pays sans voisin (iles) n'a pas d'entree dans le
-fichier ; lecture via `countryNeighbors(code)` / `decodeCountry(code)?.neighbors`. Rien a voir avec `contour.neighbors`
-(les quelques voisins POSITIONNES sur le plateau pour les indices) ; les frontieres dessinees, elles, sont
-deduites de la geometrie (ci-dessous), donc n'incluent pas les frontieres d'un autre polygone que l'anneau principal.
-Dans l'admin, la carte pays a un bouton "Afficher les voisins" (liste drapeau + nom + code) qui, si l'editeur
-Silhouette du pays est deplie, dessine aussi les voisins en decor avec la frontiere en un seul trait
-(`computeBorders`, comme le jeu).
+**Voisins bruts de chaque pays** (`countries/{ISO}.borders` et `contours/{ISO}.borderCodes`) : codes ISO tries des pays
+qui partagent une frontiere terrestre, ex. `"MC": ["FR"]`, symetriques (A voisin de B <=> B voisin de A). Un pays sans
+voisin (iles) n'a pas de champ. Rien a voir avec `neighbors` (les quelques voisins POSITIONNES sur le plateau pour les
+indices) ; les frontieres dessinees, elles, sont deduites de la geometrie (ci-dessous), donc n'incluent pas les
+frontieres d'un autre polygone que l'anneau principal. Dans l'admin, la carte pays a un bouton "Afficher les voisins"
+(liste drapeau + nom + code) qui, si l'editeur Silhouette du pays est deplie, dessine aussi les voisins en decor avec
+la frontiere en un seul trait (`computeBorders`, comme le jeu).
 
 **Silhouette progressive (categorie `silhouette`, niveaux 0 a 3).** Avant tout indice le pays est dessine avec quelques
 sommets ; chaque appui sur "Indice" precise le trait (niveaux 0-3, un par etape `silhouetteN` du plan), le niveau 3 etant l'anneau complet. `helpers/simplify.ts` (pur, aussi utilise par l'admin) :
@@ -656,7 +556,7 @@ Visvalingam-Whyatt sur l'anneau, aire de chaque sommet multipliee par un facteur
 suppression donne des niveaux EMBOITES (jamais de saut de forme), le premier sommet et le sens sont
 conserves, taille des niveaux `k * n^p` (LEVEL_SCALES, sous-lineaire : Autriche 29 sommets = 6 / 10 / 16, Australie 245 = 10 / 20 / 39) puis tout (au moins 3 sommets de plus par niveau tant qu'il en
 reste, anneau entier si < 10 sommets). Calcule A LA VOLEE, une fois par (pays, graine) (`roundGeometry`,
-memoise dans `useRoundBoard`, O(n^2) sur n <= ~700), rien dans `countries.json`. **Graine partagee** :
+memoise dans `useRoundBoard`, O(n^2) sur n <= ~700), rien dans Firestore. **Graine partagee** :
 l'hote tire `simplifySeed` (`newSimplifySeed`) a `startContourRoomGame` (champ de la room, 0 par defaut
 pour une ancienne room) ; la graine d'une manche est `roundSimplifySeed(simplifySeed, roundIndex, code)`
 (FNV-1a), donc tous les appareils dessinent exactement la meme silhouette. Le cadrage du plateau (ratio,
@@ -675,23 +575,17 @@ geometrique) et coupe l'anneau du pays cible en tronçons `coastlines` (aucune a
 par-dessus — cote en `VISIBLE_STROKE_WIDTH`, frontiere plus fine en `BORDER_STROKE_WIDTH`. Comme
 seul le pays cible trace un trait, une frontiere n'est jamais doublee. Les voisins ne sont qu'un
 decor : les indices (drapeaux/noms) restent ceux de `ContourCountry.neighbors`/`buildHintLabels`.
-Aucune donnee ajoutee dans `countries.json` : les voisins se deduisent des `points` des autres pays.
+Aucune donnee de frontiere n'est stockee : les voisins se deduisent des `points` des autres pays.
 
 Admin : pas d'onglet a part — un bouton "🗺️ Silhouette" apparait dans la carte pays de
-`admin/src/views/CountriesView` pour tout pays possedant deja des donnees Contour
-(`CONTOURS.find` — desormais ~150 pays, pas seulement les 8 d'origine, sans aucun
-changement d'UI necessaire puisque ce lookup a toujours ete dynamique), et deplie
-`admin/src/views/ContourView/ContourEditor.tsx` juste en dessous, dans cette meme carte
-(recherche/pagination/tri deja fournis par CountriesView, partages entre pays classiques
-et Silhouette). `ContourEditor` prend un seul `initialCountry` en prop (pas de selecteur
-de pays a lui, CountriesView fait deja ce role) : chaque voisin (et le point drapeau/nom
-du pays cible, un seul point desormais) se glisse a la souris et se pose exactement ou on
-le lache — rien n'est ecrit sur disque, chaque deplacement/suppression ajoute une ligne au
-journal (`saveNeighborPosition`, `saveCenterLabelPosition`, `deleteNeighbor`,
-`admin/src/api/contour.ts`). Plus de liste "Lieux possibles"/exclusion cote Silhouette
-(retiree avec la phase de placement de lieux qu'elle servait a curer) : un lieu ne se
-supprime plus que via `deletePlace` (`admin/src/api/places.ts`), partage avec
-Compass/Clues.
+`admin/src/views/CountriesView` pour tout pays possedant un document `contours/{ISO}` (`allContours().find`), et deplie
+`admin/src/views/ContourView/ContourEditor.tsx` juste en dessous, dans cette meme carte (recherche/pagination/tri deja
+fournis par CountriesView, partages entre pays classiques et Silhouette). `ContourEditor` prend un seul
+`initialCountry` en prop (pas de selecteur de pays a lui, CountriesView fait deja ce role) : chaque voisin (et le
+point drapeau/nom du pays cible, un seul point) se glisse a la souris et se pose exactement ou on le lache — chaque
+deplacement/suppression est ecrit directement dans `contours/{ISO}` (`saveNeighborPosition`,
+`saveCenterLabelPosition`, `deleteNeighbor`, `admin/src/api/contour.ts`). Un lieu ne se supprime que via
+`deletePlace` (`admin/src/api/places.ts`), partage avec Compass/Clues.
 
 ## `Screen` : header/footer fixes
 

@@ -8,6 +8,7 @@ import PlaceCard from '.';
 const place: Place = {
   name: 'Paris',
   code: 'FR',
+  country: { fr: 'France', en: 'France' },
   coordinates: { latitude: 48.8566, longitude: 2.3522 },
   category: 'cities',
   difficulty: 'easy',
@@ -25,6 +26,11 @@ describe('PlaceCard', () => {
   it('renders the country name when showCountry is true', async () => {
     const { getByText } = await render(<PlaceCard place={place} showCountry={true} />);
     expect(getByText(/France/)).toBeTruthy();
+  });
+
+  it('falls back to the country code when the place carries no country name', async () => {
+    const { getByText } = await render(<PlaceCard place={{ ...place, country: undefined }} showCountry={true} />);
+    expect(getByText(/FR/)).toBeTruthy();
   });
 
   it('does not render a description or wiki link before revelation (description undefined)', async () => {

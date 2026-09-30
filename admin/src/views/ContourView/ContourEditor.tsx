@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 
-import { countryName, flagEmoji } from '@/data/places/countries';
+import { flagEmoji } from '@/helpers/flagEmoji';
 // Pure geometry only, imported directly from the file rather than `@/games/contour/components/ContourBoard`
 // (that folder's own `index.ts` re-exports the React Native `ContourBoard` component, which
 // drags in `react-native`/`react-native-svg` — this module has none of that, safe to bundle here.
@@ -20,6 +20,7 @@ import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 import type { ContourCountry, ContourNeighbor, Point2D } from '@/types';
 
 import { allContours, deleteNeighbor, saveCenterLabelPosition, saveNeighborPosition } from '../../api/contour';
+import { countryName } from '../../data';
 import { DeleteX } from '../../components/DeleteX';
 
 import { neighborIcon, neighborName } from './helpers';
@@ -30,11 +31,10 @@ const BOARD_MAX_HEIGHT = 480;
 /**
  * The Contour map editor for a single country — everything ContourView.tsx used to be, minus its
  * own country picker: mounted inline inside CountriesView's own card for whichever country already
- * has Contour data (see CountriesView.tsx's "🗺️ Silhouette" toggle, `allContours().find` — a country
- * gets one as soon as its `countries.json` row grows a `contour` field, hand-curated or generated
- * by `scripts/generateContours.mjs`), so pays and Contour data live on the same screen instead of a
- * separate tab. `initialCountry` seeds local state; nothing here writes back up to the parent (same
- * no-backend, journal-only pattern as the rest of the admin).
+ * has Contour data (see CountriesView.tsx's "🗺️ Silhouette" toggle, `allContours().find` — a country with a
+ * `contours/{code}` document), so pays and Contour data live on the same screen instead of a separate tab.
+ * `initialCountry` seeds local state; every move is written to Firestore (`api/contour.ts`), nothing writes back
+ * up to the parent.
  */
 export const ContourEditor = ({
   initialCountry,
@@ -296,48 +296,50 @@ export const ContourEditor = ({
               <path className="contour-outline" d={outlinePath} />
             )}
           </svg>
-          {!previewing && country.neighbors.map((neighbor, index) => {
-            const pos = positionFor(index, neighbor);
-            return (
-              <div
-                key={index}
-                className={`contour-neighbor${dragPos?.index === index ? ' dragging' : ''}`}
-                style={{ left: pos.x, top: pos.y }}
-                onMouseDown={beginDrag(index, neighbor)}
-              >
-                {/* Icon at `pos`, name stacked just below — same layout as the real game's tier
+          {!previewing &&
+            country.neighbors.map((neighbor, index) => {
+              const pos = positionFor(index, neighbor);
+              return (
+                <div
+                  key={index}
+                  className={`contour-neighbor${dragPos?.index === index ? ' dragging' : ''}`}
+                  style={{ left: pos.x, top: pos.y }}
+                  onMouseDown={beginDrag(index, neighbor)}
+                >
+                  {/* Icon at `pos`, name stacked just below — same layout as the real game's tier
                     1 (icon)/tier 2 (icon+name), shown here always at once since this is a static
                     preview rather than a tiered reveal. */}
-                <span className="contour-neighbor-icon" style={{ fontFamily: FLAG_FONT_FAMILY }}>
-                  {neighborIcon(neighbor)}
-                </span>
-                <span className="contour-neighbor-name">{neighborName(neighbor)}</span>
-                {/* Stops the mousedown from bubbling to the anchor's own `onMouseDown` above (which
+                  <span className="contour-neighbor-icon" style={{ fontFamily: FLAG_FONT_FAMILY }}>
+                    {neighborIcon(neighbor)}
+                  </span>
+                  <span className="contour-neighbor-name">{neighborName(neighbor)}</span>
+                  {/* Stops the mousedown from bubbling to the anchor's own `onMouseDown` above (which
                     would otherwise start a drag instead of letting this click through). */}
-                <span className="contour-neighbor-delete" onMouseDown={(event) => event.stopPropagation()}>
-                  <DeleteX name={neighborName(neighbor)} onDelete={() => handleDelete(neighbor)} />
-                </span>
-              </div>
-            );
-          })}
+                  <span className="contour-neighbor-delete" onMouseDown={(event) => event.stopPropagation()}>
+                    <DeleteX name={neighborName(neighbor)} onDelete={() => handleDelete(neighbor)} />
+                  </span>
+                </div>
+              );
+            })}
           {/* Tier 3/4's own on-board anchor (see `ContourCountry.centerLabel`) — one single
               draggable point, never deletable (every country always has one); flag icon at the
               point, its name stacked below, same as a neighbor above. */}
-          {!previewing && (() => {
-            const pos = centerLabelPosition();
-            return (
-              <div
-                className={`contour-neighbor contour-center-label${centerDragPos ? ' dragging' : ''}`}
-                style={{ left: pos.x, top: pos.y }}
-                onMouseDown={beginCenterDrag()}
-              >
-                <span className="contour-neighbor-icon" style={{ fontFamily: FLAG_FONT_FAMILY }}>
-                  {flagEmoji(country.code)}
-                </span>
-                <span className="contour-neighbor-name">{countryName(country.code, 'fr')}</span>
-              </div>
-            );
-          })()}
+          {!previewing &&
+            (() => {
+              const pos = centerLabelPosition();
+              return (
+                <div
+                  className={`contour-neighbor contour-center-label${centerDragPos ? ' dragging' : ''}`}
+                  style={{ left: pos.x, top: pos.y }}
+                  onMouseDown={beginCenterDrag()}
+                >
+                  <span className="contour-neighbor-icon" style={{ fontFamily: FLAG_FONT_FAMILY }}>
+                    {flagEmoji(country.code)}
+                  </span>
+                  <span className="contour-neighbor-name">{countryName(country.code)}</span>
+                </div>
+              );
+            })()}
         </div>
       </div>
     </div>

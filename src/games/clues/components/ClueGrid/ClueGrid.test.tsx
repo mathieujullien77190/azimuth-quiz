@@ -1,6 +1,6 @@
 import { fireEvent, render } from '@testing-library/react-native';
 
-import { CLUE_PLACES } from '@/data';
+import { FIXTURE_CLUE_PLACES as CLUE_PLACES } from '@/helpers/storyFixtures';
 import { cluesFor } from '@/games/clues/helpers/clueGame';
 import { personalityFor } from '@/games/clues/helpers/personality';
 import { wordplayFor } from '@/games/clues/helpers/wordplay';

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
 
 import { DIFFICULTIES, difficultyEmoji } from '@/data';
-import { flagEmoji } from '@/data/places/countries';
+import { flagEmoji } from '@/helpers/flagEmoji';
 import { formatDistance, formatNumber, nameSkeleton } from '@/helpers';
 import { charadeFor, charadeLines, charadeMaxStage } from '@/games/clues/helpers/charade';
 import { personalityFor } from '@/games/clues/helpers/personality';

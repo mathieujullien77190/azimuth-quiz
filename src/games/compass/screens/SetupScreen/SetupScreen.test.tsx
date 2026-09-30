@@ -1,6 +1,7 @@
 import { act, fireEvent, render, waitFor, within } from '@testing-library/react-native';
 
 import { DEFAULT_SETTINGS } from '@/games/compass/constants';
+import { loadCompassCounts } from '@/games/compass/helpers/compassCounts';
 import {
   createRoom,
   joinRoomPresence,
@@ -26,6 +27,8 @@ jest.mock('@/settings', () => {
 // not real Firestore calls.
 // Same reason: `firestorePlaces.ts` imports `firebase/firestore` too.
 jest.mock('@/games/compass/helpers/firestorePlaces', () => ({ fetchRandomPlaces: jest.fn() }));
+// The group sizes come from Firestore too.
+jest.mock('@/games/compass/helpers/compassCounts', () => ({ loadCompassCounts: jest.fn() }));
 jest.mock('@/games/compass/helpers/room', () => ({
   ROOM_MAX_PLAYERS: 10,
   createRoom: jest.fn(),
@@ -63,6 +66,10 @@ const mockedUpdateRoomSettings = updateRoomSettings as jest.Mock;
 const initialRoomState = useRoomStore.getState();
 beforeEach(() => {
   useRoomStore.setState(initialRoomState, true);
+  jest.mocked(loadCompassCounts).mockResolvedValue({
+    cities: { intermediate: 30, hard: 5 },
+    capital: { intermediate: 12 },
+  });
 });
 
 const renderSetup = async (overrides: Partial<GameSettings> = {}, ready = true) => {
@@ -483,6 +490,18 @@ describe('SetupScreen — start/back', () => {
     await fireEvent.press(getByText('Lancer la partie'));
     await waitFor(() => expect(mockedCreateRoom).toHaveBeenCalledTimes(1));
     expect(queryByText(/tabofuna/)).toBeNull();
+  });
+
+  it('says how many places the selected categories offer at this difficulty, from the group sizes', async () => {
+    const { findByText } = await renderSetup({ categories: ['cities', 'capital'], difficulty: 'intermediate' });
+    expect(await findByText('42 lieux possibles')).toBeTruthy();
+  });
+
+  it('shows no count, and does not block the start, while the group sizes cannot be read', async () => {
+    jest.mocked(loadCompassCounts).mockRejectedValue(new Error('offline'));
+    const { getByRole, queryByText } = await renderSetup();
+    expect(queryByText(/lieux possibles/)).toBeNull();
+    expect(getByRole('button', { name: 'Lancer la partie' }).props.accessibilityState.disabled).not.toBe(true);
   });
 
   it('disables the start button when no place is available', async () => {

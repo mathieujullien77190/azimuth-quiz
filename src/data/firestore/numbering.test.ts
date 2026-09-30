@@ -1,14 +1,6 @@
 import type { Category, Difficulty } from '@/types';
 
-import {
-  CLUES_NUMBERING,
-  cluesCategory,
-  computeNumbering,
-  isNumberingConsistent,
-  planRegroup,
-  shuffleRank,
-  slotAt,
-} from './numbering';
+import { CLUES_NUMBERING, cluesCategory, computeNumbering, planRegroup, shuffleRank, slotAt } from './numbering';
 import type { PlaceDoc } from './types';
 
 const place = (category: Category | null, difficulty: Difficulty = 'easy', n?: number): PlaceDoc => ({
@@ -58,54 +50,6 @@ describe('computeNumbering', () => {
     expect(again).toEqual(first);
     expect(Object.values(first).sort((a, b) => a - b)).toEqual(Array.from({ length: 40 }, (_, index) => index + 1));
     expect(entries.map(([key]) => first[key])).not.toEqual(Array.from({ length: 40 }, (_, index) => index + 1));
-  });
-
-  it('keeps a group that already is exactly 1..size, renumbers one with holes or duplicates', () => {
-    const { numbers } = computeNumbering([
-      ['a', place('cities', 'easy', 2)],
-      ['b', place('cities', 'easy', 1)],
-      ['c', place('capital', 'easy', 1)],
-      ['d', place('capital', 'easy', 1)],
-      ['e', place('nature', 'easy', 5)],
-    ]);
-
-    expect([numbers.a, numbers.b]).toEqual([2, 1]);
-    expect([numbers.c, numbers.d].sort()).toEqual([1, 2]);
-    expect(numbers.e).toBe(1);
-  });
-
-  it('renumbers even a dense group when forced (the one-off shuffle of an existing numbering)', () => {
-    const dense: [string, PlaceDoc][] = Array.from({ length: 30 }, (_, index) => [
-      `p${index}`,
-      place('cities', 'easy', index + 1),
-    ]);
-
-    const kept = computeNumbering(dense).numbers;
-    const forced = computeNumbering(dense, { force: true }).numbers;
-
-    expect(kept.p7).toBe(8);
-    expect(Object.values(forced).sort((a, b) => a - b)).toEqual(Array.from({ length: 30 }, (_, index) => index + 1));
-    expect(forced).not.toEqual(kept);
-  });
-});
-
-describe('isNumberingConsistent', () => {
-  const places = { a: place('cities', 'easy', 1), b: place('cities', 'easy', 2), c: place(null) };
-
-  it('accepts a dense numbering with matching counts', () => {
-    expect(isNumberingConsistent(places, { cities: { easy: 2 } })).toBe(true);
-  });
-
-  it('rejects missing counts, wrong counts and unnumbered places', () => {
-    expect(isNumberingConsistent(places, undefined)).toBe(false);
-    expect(isNumberingConsistent(places, { cities: { easy: 3 } })).toBe(false);
-    expect(isNumberingConsistent({ ...places, b: place('cities', 'easy') }, { cities: { easy: 2 } })).toBe(false);
-  });
-
-  it('does not depend on the order the counts are written in', () => {
-    const two = { a: place('cities', 'easy', 1), b: place('capital', 'hard', 1), c: place('capital', 'easy', 1) };
-
-    expect(isNumberingConsistent(two, { capital: { hard: 1, easy: 1 }, cities: { easy: 1 } })).toBe(true);
   });
 });
 
@@ -238,13 +182,6 @@ describe('Clues numbering', () => {
     expect(Object.keys(numbers).sort()).toEqual(['a', 'b', 'c']);
     expect([numbers.b, numbers.c].sort()).toEqual([1, 2]);
     expect(counts).toEqual({ capital: { easy: 1 }, cities: { easy: 2 } });
-  });
-
-  it('checks the consistency of the Clues numbers, not the Compass ones', () => {
-    const places = { a: clue('cities', 'easy', 1), b: { ...clue('cities', 'easy', 2), n: 99 } };
-
-    expect(isNumberingConsistent(places, { cities: { easy: 2 } }, CLUES_NUMBERING)).toBe(true);
-    expect(isNumberingConsistent(places, { cities: { easy: 2 } })).toBe(false);
   });
 
   it('keeps the Clues numbers dense when a place changes group', () => {

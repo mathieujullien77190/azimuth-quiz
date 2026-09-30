@@ -27,16 +27,6 @@ export const withJobLabel = (place: PlaceDoc, jobs: Record<string, JobDoc>): Pla
   return { ...place, personality: { ...rest, ...(job && { job: { fr: job.fr, en: job.en } }) } };
 };
 
-/** Keys of the places whose copies (riddles, job label) are missing or out of date. */
-export const placesNeedingClueCopies = (
-  places: Record<string, PlaceDoc>,
-  riddles: Riddles,
-  jobs: Record<string, JobDoc>,
-): string[] =>
-  Object.entries(places)
-    .filter(([, place]) => !sameJson(place, withJobLabel(withRiddles(place, riddles), jobs)))
-    .map(([key]) => key);
-
 /** The places to rewrite when the riddle of `syllable` becomes `riddle` (`null`: cleared): every place with
  * that syllable (whatever its accents, see `normalizeSyllable`), its `clues.riddles` recomputed. */
 export const planRiddleChange = (

@@ -1,5 +1,7 @@
-import { filterPlaces } from '@/helpers';
-import { useLanguage } from '@/i18n';
+import { useEffect, useMemo, useState } from 'react';
+
+import type { CompassCounts } from '@/data/firestore/types';
+import { loadCompassCounts } from '@/games/compass/helpers/compassCounts';
 import { useSettings } from '@/settings';
 
 import { selectDifficultyFilter, toggleCategoryFilter } from './helpers';
@@ -13,9 +15,22 @@ import { useOnlineRoom } from './useOnlineRoom';
  */
 export const SetupScreen = ({ onBack }: SetupScreenProps) => {
   const { settings, ready, updateSettings } = useSettings();
-  const { language } = useLanguage();
   const room = useOnlineRoom(settings, updateSettings);
-  const available = filterPlaces(settings.categories, settings.difficulty, language).length;
+  // The group sizes (`meta/compassCounts`, loaded at launch): how many places the selected categories offer at
+  // this difficulty. `null` until they are there — the start button is not held back for that.
+  const [counts, setCounts] = useState<CompassCounts | null>(null);
+  useEffect(() => {
+    loadCompassCounts()
+      .then(setCounts)
+      .catch(() => {});
+  }, []);
+  const available = useMemo(
+    () =>
+      counts === null
+        ? null
+        : settings.categories.reduce((sum, category) => sum + (counts[category]?.[settings.difficulty] ?? 0), 0),
+    [counts, settings.categories, settings.difficulty],
+  );
 
   const updateOrNotify = (patch: Partial<typeof settings>) =>
     room.readOnly ? room.notifyReadOnly() : updateSettings(patch);

@@ -1,10 +1,9 @@
 import { fireEvent, render } from '@testing-library/react-native';
 
-import { CONTOURS } from '@/data';
 import { buildHintPlan } from '@/games/contour/helpers/hintPlan';
 import type { ContourRoomGameState } from '@/games/contour/helpers/room';
 import { translations } from '@/i18n/translations';
-import { SAMPLE_CONTOUR_COUNTRY } from '@/helpers/storyFixtures';
+import { FIXTURE_CONTOURS as CONTOURS, SAMPLE_CONTOUR_COUNTRY } from '@/helpers/storyFixtures';
 
 import { OnlineContourGameScreen } from './OnlineContourGameScreen';
 

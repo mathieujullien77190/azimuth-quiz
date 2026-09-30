@@ -1,1 +1,0 @@
-export { CONTOURS } from './codec';

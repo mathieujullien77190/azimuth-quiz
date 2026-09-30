@@ -7,8 +7,7 @@ import type { CluePlace, Difficulty } from '@/types';
  * `place`'s own difficulty — shown as a plain colored dot (see `ClueCard`'s own wordplay case),
  * never gating whether the clue is offered. Starts empty for every place: unlike `charade`, there
  * is no heuristic to fall back on here (finding a genuine pun is not something a script can do) —
- * curated entirely by hand in `scripts/wordplayCuration.json` and shipped by
- * `scripts/generateWordplay.mjs`, same no-invention rule as `personality`. A place with nothing
+ * curated entirely by hand in the admin, same no-invention rule as `personality`. A place with nothing
  * curated (or an empty `sentence`) never offers the clue at all, see `cluesFor`.
  *
  * Stored on the place itself (`places/{id}.wordplay` in Firestore, edited in the admin) and copied into the

@@ -12,8 +12,7 @@ const MAX_EXAMPLES = 4;
  * `riddleFor`) and a few example places. Grouped by `normalizeSyllable` (case, à/â onto a) — same
  * key as the riddle dictionary itself, so "pa"/"pà"/"pâ" show up as one row, not three near-
  * duplicates. Built once (the cache only changes through the views' own edits); edited
- * in place by the view via its own local state, same no-backend/journal-only pattern as
- * `CharadeEditor`. */
+ * in place by the view via its own local state, saved to Firestore like `CharadeEditor`. */
 export const allSyllableRows = (): SyllableRow[] => {
   const examplesBySyllable = new Map<string, string[]>();
   for (const place of cluePlaces()) {

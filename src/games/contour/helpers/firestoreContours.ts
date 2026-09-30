@@ -1,5 +1,6 @@
 import { collection, documentId, getDocs, query, where } from 'firebase/firestore';
 
+import { decodeRing } from '@/data/firestore/polyline';
 import { contourFromDoc, roundCountryFromDoc } from '@/data/firestore/read';
 import { COLLECTIONS, type ContourCountryDoc } from '@/data/firestore/types';
 import type { ContourCountry, ContourRoundCountry, ContourSettings } from '@/types';
@@ -107,9 +108,14 @@ export type RoundData = { country: ContourRoundCountry; neighborCountries: Conto
 const rounds = new Map<string, Promise<RoundData>>();
 
 /**
- * Everything one round needs, from Firestore: the country's document, then those of the countries it borders
- * (`borderCodes`). Shared and kept for the session, so the next round can be loaded while the current one is
- * played (`useRoundData`) and a round change shows no wait. A failed load is forgotten: the next call tries again.
+ * Everything one round needs, from Firestore: the country's document, which carries the outline of every country
+ * it borders (`neighborRings`, encoded polylines) — ONE read per round. Shared and kept for the session, so the
+ * next round can be loaded while the current one is played (`useRoundData`) and a round change shows no wait. A
+ * failed load is forgotten: the next call tries again.
+ *
+ * TEMPORARY fallback: a document without `neighborRings` (the polyline migration has not reached it) is read the
+ * old way — then the documents of its `borderCodes`. Delete that branch, `borderCodes` and the flat `points` once
+ * the migration is confirmed everywhere.
  */
 export const loadRoundData = (code: string): Promise<RoundData> => {
   let round = rounds.get(code);
@@ -118,6 +124,19 @@ export const loadRoundData = (code: string): Promise<RoundData> => {
       await readDocuments([code]);
       const document = documents.get(code);
       if (!document) throw new Error(`No silhouette for ${code}`);
+      if (document.neighborRings !== undefined) {
+        return {
+          country: roundCountryFromDoc(code, document),
+          neighborCountries: Object.entries(document.neighborRings).map(([neighbor, ring]) => ({
+            code: neighbor,
+            points: decodeRing(ring),
+            neighbors: [],
+            centerLabel: { x: 0.5, y: 0.5 },
+            difficulty: document.difficulty,
+          })),
+        };
+      }
+      // TEMPORARY (see above): the neighbours as documents of their own.
       await readDocuments(document.borderCodes);
       return {
         country: roundCountryFromDoc(code, document),

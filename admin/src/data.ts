@@ -1,7 +1,6 @@
 import {
   collection,
   deleteDoc,
-  deleteField,
   doc,
   getDoc,
   getDocs,
@@ -11,37 +10,21 @@ import {
   type WriteBatch,
 } from 'firebase/firestore';
 
-import { buildContourDocs, computeContourNumbering, isContourNumberingConsistent } from '@/data/firestore/contourDocs';
-import { countrySnapshot, placesNeedingCountry, planCountryChange } from '@/data/firestore/denormalize';
-import {
-  placesNeedingClueCopies,
-  planJobChange,
-  planRiddleChange,
-  withJobLabel,
-  withRiddles,
-} from '@/data/firestore/denormalizeClues';
-import {
-  CLUES_NUMBERING,
-  cluesCategory,
-  COMPASS_NUMBERING,
-  computeNumbering,
-  isNumberingConsistent,
-  planRegroup,
-} from '@/data/firestore/numbering';
+import { contourRingFields, contoursNeedingRings } from '@/data/firestore/contourRings';
+import { planCountryChange } from '@/data/firestore/denormalize';
+import { planJobChange, planRiddleChange } from '@/data/firestore/denormalizeClues';
+import { CLUES_NUMBERING, cluesCategory, COMPASS_NUMBERING, planRegroup } from '@/data/firestore/numbering';
 import { contourFromDoc } from '@/data/firestore/read';
 import { normalizeSyllable } from '@/data/firestore/riddles';
 import {
   CLUES_COUNTS_DOC,
   COLLECTIONS,
   COMPASS_COUNTS_DOC,
-  CONTOUR_COUNTS_DOC,
   DATA_VERSION_DOC,
   type CluesCountsDoc,
   type CompassCounts,
   type CompassCountsDoc,
   type ContourCountryDoc,
-  type ContourCounts,
-  type ContourCountsDoc,
   type CountryDoc,
   type JobDoc,
   type PlaceDoc,
@@ -61,21 +44,18 @@ import { readSnapshot, writeSnapshot } from './snapshotStore';
 type Cache = {
   places: Record<string, PlaceDoc>;
   countries: Record<string, CountryDoc>;
-  /** `contours/{code}`: one document per silhouette (moved out of `countries/{code}.contour`). */
+  /** `contours/{code}`: one document per silhouette. */
   contours: Record<string, ContourCountryDoc>;
   /** `charadeRiddles`, flattened to `syllable -> riddle`. */
   riddles: Record<string, string | null>;
   jobs: Record<string, JobDoc>;
   /** `meta/compassCounts`: size of every Compass group, see `numbering.ts`. */
   compassCounts: CompassCounts;
-  /** `meta/compassCounts.shuffled`: the numbering follows the shuffled order (see `shuffleRank`). */
+  /** `meta/compassCounts.shuffled`: kept as it is when the numbering is maintained (see `applyPlaceChange`). */
   compassShuffled: boolean;
   /** `meta/cluesCounts`, same for the Clues groups (`clues.category` x difficulty). */
   cluesCounts: CompassCounts;
   cluesShuffled: boolean;
-  /** `meta/contourCounts`: size of every silhouette difficulty group. */
-  contourCounts: ContourCounts;
-  contourShuffled: boolean;
 };
 
 let cache: Cache | null = null;
@@ -93,7 +73,7 @@ const readMeta = async <T>({ collection: name, id }: { collection: string; id: s
   (await getDoc(doc(db, name, id))).data() as T | undefined;
 
 const fetchAll = async (): Promise<Cache> => {
-  const [places, countries, contours, riddles, jobs, compass, clues, contour] = await Promise.all([
+  const [places, countries, contours, riddles, jobs, compass, clues] = await Promise.all([
     readCollection<PlaceDoc>(COLLECTIONS.places),
     readCollection<CountryDoc>(COLLECTIONS.countries),
     readCollection<ContourCountryDoc>(COLLECTIONS.contours),
@@ -101,7 +81,6 @@ const fetchAll = async (): Promise<Cache> => {
     readCollection<JobDoc>(COLLECTIONS.personalityJobs),
     readMeta<CompassCountsDoc>(COMPASS_COUNTS_DOC),
     readMeta<CluesCountsDoc>(CLUES_COUNTS_DOC),
-    readMeta<ContourCountsDoc>(CONTOUR_COUNTS_DOC),
   ]);
   return {
     places,
@@ -113,8 +92,6 @@ const fetchAll = async (): Promise<Cache> => {
     compassShuffled: compass?.shuffled === true,
     cluesCounts: clues?.counts ?? {},
     cluesShuffled: clues?.shuffled === true,
-    contourCounts: contour?.counts ?? {},
-    contourShuffled: contour?.shuffled === true,
   };
 };
 
@@ -142,18 +119,7 @@ export const syncData = async (): Promise<void> => {
 export const loadData = async (): Promise<void> => {
   const snapshot = await readSnapshot<Snapshot>();
   if (snapshot) {
-    // A local copy saved before a collection or a `meta` document existed lacks it: the matching
-    // migration screen shows up (or a "Synchroniser" fetches it).
-    cache = {
-      ...snapshot.cache,
-      contours: snapshot.cache.contours ?? {},
-      compassCounts: snapshot.cache.compassCounts ?? {},
-      compassShuffled: snapshot.cache.compassShuffled ?? false,
-      cluesCounts: snapshot.cache.cluesCounts ?? {},
-      cluesShuffled: snapshot.cache.cluesShuffled ?? false,
-      contourCounts: snapshot.cache.contourCounts ?? {},
-      contourShuffled: snapshot.cache.contourShuffled ?? false,
-    };
+    cache = snapshot.cache;
     syncedAt = snapshot.syncedAt;
     contoursMemo = null;
     return;
@@ -163,6 +129,9 @@ export const loadData = async (): Promise<void> => {
 
 /** When the local copy was last read from Firestore (ms). */
 export const lastSyncedAt = (): number => syncedAt;
+
+/** A country's French name from the loaded data (its code when unknown). */
+export const countryName = (code: string): string => data().countries[code]?.fr ?? code;
 
 /** The loaded data — `AuthGate` renders nothing that reads it before `loadData` resolved. */
 export const data = (): Cache => {
@@ -225,11 +194,8 @@ const BATCH_SIZE = 400;
 const versionBump = { version: increment(1), updatedAt: Date.now() };
 
 /** Runs `operations` in batches of at most `BATCH_SIZE` (Firestore's cap is 500 per batch), each batch
- * atomic; the data version is bumped in the last one. `onProgress(done, total)` after each batch. */
-const commitInBatches = async (
-  operations: ((batch: WriteBatch) => void)[],
-  onProgress?: (done: number, total: number) => void,
-): Promise<void> => {
+ * atomic; the data version is bumped in the last one. */
+const commitInBatches = async (operations: ((batch: WriteBatch) => void)[]): Promise<void> => {
   for (let start = 0; start < operations.length || start === 0; start += BATCH_SIZE) {
     const batch = writeBatch(db);
     const chunk = operations.slice(start, start + BATCH_SIZE);
@@ -238,66 +204,35 @@ const commitInBatches = async (
       batch.set(doc(db, DATA_VERSION_DOC.collection, DATA_VERSION_DOC.id), versionBump, { merge: true });
     }
     await batch.commit();
-    onProgress?.(Math.min(start + BATCH_SIZE, operations.length), operations.length);
   }
 };
 
-// --- Compass numbering ---------------------------------------------------------------------------------
+// --- One-off: encoded outlines, neighbours embedded ----------------------------------------------------------
 
-/** True while the Compass numbering (`PlaceDoc.n` + `meta/compassCounts`) is missing or inconsistent. */
-export const compassNumberingBroken = (): boolean => !isNumberingConsistent(data().places, data().compassCounts);
+/** True while some silhouette lacks (up to date) its encoded `ring` and the `neighborRings` copied from its neighbours. */
+export const contourRingsPending = (): boolean => contoursNeedingRings(data().contours).length > 0;
 
-/** True while the Compass numbering is missing, inconsistent or not shuffled yet: the game's cursor draw
- * depends on it (consecutive `n` must look random), `AuthGate` asks for the one-off numbering first. */
-export const compassNumberingPending = (): boolean => compassNumberingBroken() || !data().compassShuffled;
-
-/** One-off: numbers every Compass place inside its group in the shuffled order (`force`: even a group that was
- * already dense, numbered in the import order) and writes the places' `n` (merge, nothing else touched) plus
- * `meta/compassCounts`, marked `shuffled`. */
-export const numberCompassPlaces = async (onProgress: (done: number, total: number) => void): Promise<void> => {
-  const { numbers, counts } = computeNumbering(Object.entries(data().places), { force: true });
-  const changed = Object.entries(numbers).filter(([key, n]) => data().places[key].n !== n);
+/**
+ * Adds `ring` and `neighborRings` to the silhouettes that lack them (merge: nothing else is touched), so a game
+ * round reads ONE document. Computed from the loaded documents, written in batches; safe to run again.
+ */
+export const encodeContourRings = async (onProgress: (done: number, total: number) => void): Promise<void> => {
+  const docs = data().contours;
+  const codes = contoursNeedingRings(docs);
+  const fields = Object.fromEntries(codes.map((code) => [code, contourRingFields(docs[code], docs)]));
+  onProgress(0, codes.length);
   await commitInBatches(
-    [
-      ...changed.map(
-        ([key, n]) =>
-          (batch: WriteBatch) =>
-            batch.set(doc(db, COLLECTIONS.places, key), { n }, { merge: true }),
-      ),
-      (batch) =>
-        batch.set(doc(db, COMPASS_COUNTS_DOC.collection, COMPASS_COUNTS_DOC.id), {
-          counts,
-          shuffled: true,
-        } satisfies CompassCountsDoc),
-    ],
-    onProgress,
-  );
-  for (const [key, n] of changed) data().places[key].n = n;
-  data().compassCounts = counts;
-  data().compassShuffled = true;
-  persist();
-};
-
-// --- Country copied into the places ----------------------------------------------------------------------
-
-/** Places whose copy of their country (`PlaceDoc.country`) is missing or out of date. */
-export const placesMissingCountry = (): string[] => placesNeedingCountry(data().places, data().countries);
-
-/** One-off: copies each country into its places (`update` replaces the whole `country` map). */
-export const copyCountryIntoPlaces = async (onProgress: (done: number, total: number) => void): Promise<void> => {
-  const keys = placesMissingCountry();
-  await commitInBatches(
-    keys.map(
-      (key) => (batch: WriteBatch) =>
-        batch.update(doc(db, COLLECTIONS.places, key), {
-          country: countrySnapshot(data().countries[data().places[key].code]),
-        }),
+    codes.map(
+      (code) => (batch: WriteBatch) => batch.set(doc(db, COLLECTIONS.contours, code), fields[code], { merge: true }),
     ),
-    onProgress,
   );
-  for (const key of keys) data().places[key].country = countrySnapshot(data().countries[data().places[key].code]);
+  for (const code of codes) Object.assign(docs[code], fields[code]);
+  contoursMemo = null;
   persist();
+  onProgress(codes.length, codes.length);
 };
+
+// --- Copies kept in sync with their source --------------------------------------------------------------------
 
 /**
  * Writes `next` as `countries/{code}` and rewrites, in the same run of batches, every copy of it: the
@@ -322,26 +257,6 @@ export const applyCountryChange = async (code: string, next: CountryDoc): Promis
   Object.assign(data().places, plan.places);
   Object.assign(data().contours, plan.contours);
   contoursMemo = null;
-  persist();
-};
-
-// --- Riddles and job labels copied into the places ---------------------------------------------------------
-
-/** Places whose copies of the riddles (`clues.riddles`) or of their personality's job label are missing or out of date. */
-export const placesMissingClueCopies = (): string[] =>
-  placesNeedingClueCopies(data().places, data().riddles, data().jobs);
-
-/** One-off: copies the riddle of each syllable and the job label into the places that lack them. */
-export const copyClueDataIntoPlaces = async (onProgress: (done: number, total: number) => void): Promise<void> => {
-  const keys = placesMissingClueCopies();
-  const next = Object.fromEntries(
-    keys.map((key) => [key, withJobLabel(withRiddles(data().places[key], data().riddles), data().jobs)]),
-  );
-  await commitInBatches(
-    keys.map((key) => (batch: WriteBatch) => batch.set(doc(db, COLLECTIONS.places, key), next[key])),
-    onProgress,
-  );
-  Object.assign(data().places, next);
   persist();
 };
 
@@ -378,99 +293,6 @@ export const applyJobChange = async (code: string, job: JobDoc): Promise<void> =
   ]);
   data().jobs[code] = job;
   Object.assign(data().places, plan);
-  persist();
-};
-
-// --- Clues numbering ---------------------------------------------------------------------------------------
-
-/** True while a Clues place lacks its `clues.category`/`clues.n`, or `meta/cluesCounts` is out of sync. */
-export const cluesNumberingBroken = (): boolean =>
-  !isNumberingConsistent(data().places, data().cluesCounts, CLUES_NUMBERING) ||
-  Object.values(data().places).some((place) => place.clues && place.clues.category !== cluesCategory(place));
-
-/** Broken, or numbered in the import order: the game's cursor draw needs the shuffled one. */
-export const cluesNumberingPending = (): boolean => cluesNumberingBroken() || !data().cluesShuffled;
-
-/** One-off: gives every Clues place its category and its shuffled position, writes `meta/cluesCounts`. */
-export const numberCluesPlaces = async (onProgress: (done: number, total: number) => void): Promise<void> => {
-  const { numbers, counts } = computeNumbering(Object.entries(data().places), {
-    force: true,
-    numbering: CLUES_NUMBERING,
-  });
-  const entries = Object.entries(numbers);
-  await commitInBatches(
-    [
-      ...entries.map(
-        ([key, n]) =>
-          (batch: WriteBatch) =>
-            batch.update(doc(db, COLLECTIONS.places, key), {
-              'clues.category': cluesCategory(data().places[key]),
-              'clues.n': n,
-            }),
-      ),
-      (batch) =>
-        batch.set(doc(db, CLUES_COUNTS_DOC.collection, CLUES_COUNTS_DOC.id), {
-          counts,
-          shuffled: true,
-        } satisfies CluesCountsDoc),
-    ],
-    onProgress,
-  );
-  for (const [key, n] of entries) {
-    const place = data().places[key];
-    place.clues = { ...place.clues!, category: cluesCategory(place), n };
-  }
-  data().cluesCounts = counts;
-  data().cluesShuffled = true;
-  persist();
-};
-
-// --- Contours (silhouettes) ---------------------------------------------------------------------------------
-
-/** True while some country still embeds its silhouette, or `contours` / `meta/contourCounts` are out of sync. */
-export const contourMigrationPending = (): boolean =>
-  Object.values(data().countries).some((country) => country.contour) ||
-  !isContourNumberingConsistent(data().contours, data().contourCounts) ||
-  !data().contourShuffled;
-
-/**
- * One-off: builds `contours/{code}` from the silhouettes embedded in the countries (names copied in, capital
- * and cities precomputed from the places, shuffled numbering per difficulty), writes them with
- * `meta/contourCounts`, and only then removes the embedded `contour` from the countries — so an interrupted
- * run can simply be started again.
- */
-export const migrateContours = async (onProgress: (done: number, total: number) => void): Promise<void> => {
-  const embedded = Object.entries(data().countries).filter(([, country]) => country.contour);
-  const built = buildContourDocs(data().countries, Object.values(data().places)).docs;
-  const merged: Record<string, ContourCountryDoc> = { ...data().contours, ...built };
-  const { numbers, counts } = computeContourNumbering(Object.entries(merged), { force: true });
-  for (const [code, n] of Object.entries(numbers)) merged[code] = { ...merged[code], n };
-
-  await commitInBatches(
-    [
-      ...Object.entries(merged).map(
-        ([code, contour]) =>
-          (batch: WriteBatch) =>
-            batch.set(doc(db, COLLECTIONS.contours, code), contour),
-      ),
-      (batch) =>
-        batch.set(doc(db, CONTOUR_COUNTS_DOC.collection, CONTOUR_COUNTS_DOC.id), {
-          counts,
-          shuffled: true,
-        } satisfies ContourCountsDoc),
-      ...embedded.map(
-        ([code]) =>
-          (batch: WriteBatch) =>
-            batch.update(doc(db, COLLECTIONS.countries, code), { contour: deleteField() }),
-      ),
-    ],
-    onProgress,
-  );
-  data().contours = merged;
-  for (const [code] of embedded) delete data().countries[code].contour;
-  data().contourCounts = counts;
-  data().contourShuffled = true;
-  contoursMemo = null;
   persist();
 };
 

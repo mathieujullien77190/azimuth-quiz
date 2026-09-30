@@ -1,9 +1,6 @@
 import type { Difficulty, Origin } from '@/types';
 
 export * from './theme';
-export { CLUE_PLACES } from './clues';
-export { PLACES } from './places';
-export { CONTOURS } from './contours';
 
 // --- Geography (shared: both Compass and Clues resolve an origin and do great-circle math) ---
 export const EARTH_RADIUS_KM = 6371;

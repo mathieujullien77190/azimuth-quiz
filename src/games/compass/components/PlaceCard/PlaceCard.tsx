@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import { Linking, Pressable, Text } from 'react-native';
-import { countryName } from '@/data/places/countries';
 import { useLanguage, useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 
@@ -29,7 +28,7 @@ export const PlaceCard = memo(function PlaceCard({ place, showCountry, descripti
       </Text>
       <Text style={styles.country}>
         {categoryEmoji(place.category)}
-        {showCountry ? ` ${countryName(place.code, language)}` : ''}
+        {showCountry ? ` ${place.country?.[language] ?? place.code}` : ''}
       </Text>
       {showDescription && <Text style={styles.description}>{description}</Text>}
       {url !== undefined && (

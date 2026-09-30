@@ -1,9 +1,20 @@
-import type { CountryEntry } from '@/data/places/countries';
 import type { CountryDoc } from '@/data/firestore/types';
+import type { ClueFlagColorRow } from '@/types';
 
 import { applyCountryChange, data } from '../data';
 
-export type CountryRecord = CountryEntry & { code: string };
+/** A country as the admin lists and edits it. */
+export type CountryRecord = {
+  code: string;
+  fr: string;
+  en: string;
+  flag: ClueFlagColorRow[] | null;
+  currency: string | null;
+  currencySymbol: string | null;
+  phoneCode: string | null;
+  /** ISO codes of the countries sharing a land border. */
+  neighbors: readonly string[];
+};
 
 const recordOf = (code: string, doc: CountryDoc): CountryRecord => ({
   code,
@@ -21,7 +32,7 @@ export const fetchCountries = async (): Promise<CountryRecord[]> =>
   Object.entries(data().countries).map(([code, doc]) => recordOf(code, doc));
 
 export type CountryPatch = Partial<
-  Pick<CountryEntry, 'fr' | 'en' | 'currency' | 'currencySymbol' | 'phoneCode' | 'flag'>
+  Pick<CountryRecord, 'fr' | 'en' | 'currency' | 'currencySymbol' | 'phoneCode' | 'flag'>
 >;
 
 export const saveCountry = async (row: CountryRecord, patch: CountryPatch): Promise<CountryRecord> => {

@@ -1,10 +1,4 @@
-import {
-  placesNeedingClueCopies,
-  planJobChange,
-  planRiddleChange,
-  withJobLabel,
-  withRiddles,
-} from './denormalizeClues';
+import { planJobChange, planRiddleChange, withJobLabel, withRiddles } from './denormalizeClues';
 import { normalizeSyllable, riddlesOf } from './riddles';
 import { sameJson } from './same';
 import type { JobDoc, PlaceDoc } from './types';
@@ -78,25 +72,6 @@ describe('withRiddles / withJobLabel', () => {
     expect(withJobLabel(unknown, jobs).personality).toEqual({ name: 'Jules', jobCode: 'zzz' });
     const bare = place();
     expect(withJobLabel(bare, jobs)).toBe(bare);
-  });
-});
-
-describe('placesNeedingClueCopies', () => {
-  it('lists the places whose riddles or job label are missing or out of date, and only those', () => {
-    const upToDate = withJobLabel(withRiddles(withClues(['ro', 'me']), riddles), jobs);
-    const places = {
-      done: upToDate,
-      // Firestore hands maps back with their keys sorted: still the same copy.
-      sortedKeys: JSON.parse(JSON.stringify(upToDate)),
-      noRiddles: withClues(['ro', 'me']),
-      staleRiddles: withClues(['ro', 'me'], ['old', null]),
-      noJob: withRiddles(
-        withClues(['ro', 'me'], undefined, { personality: { name: 'Jules', jobCode: 'emp' } }),
-        riddles,
-      ),
-      bare: place(),
-    };
-    expect(placesNeedingClueCopies(places, riddles, jobs)).toEqual(['noRiddles', 'staleRiddles', 'noJob']);
   });
 });
 

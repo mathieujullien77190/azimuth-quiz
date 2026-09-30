@@ -1,5 +1,6 @@
 import { getDocs } from 'firebase/firestore';
 
+import { encodeRing } from '@/data/firestore/polyline';
 import type { ContourCountryDoc } from '@/data/firestore/types';
 
 import { loadContourCounts } from './contourCounts';
@@ -187,6 +188,48 @@ describe('loadRoundData', () => {
     // A neighbor without a silhouette is just not drawn.
     expect(round.neighborCountries.map((country) => country.code)).toEqual(['ES']);
     expect(getDocs).toHaveBeenCalledTimes(2);
+  });
+
+  it('reads ONE document when it carries the outline of its neighbours', async () => {
+    const migrated = doc({
+      borderCodes: ['ES'],
+      ring: encodeRing([
+        [0, 0],
+        [1, 0],
+        [1, 1],
+        [0, 0],
+      ]),
+      neighborRings: {
+        ES: encodeRing([
+          [1, 0],
+          [2, 0],
+          [2, 1],
+          [1, 0],
+        ]),
+      },
+    });
+    installDb({}, { FR: migrated });
+
+    const round = await loadRoundData('FR');
+
+    expect(getDocs).toHaveBeenCalledTimes(1);
+    expect(round.country.points).toEqual([
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 0],
+    ]);
+    expect(round.neighborCountries.map(({ code, points }) => [code, points])).toEqual([
+      [
+        'ES',
+        [
+          [1, 0],
+          [2, 0],
+          [2, 1],
+          [1, 0],
+        ],
+      ],
+    ]);
   });
 
   it('keeps what it read: the same round again, or another one around the same countries, reads nothing more', async () => {

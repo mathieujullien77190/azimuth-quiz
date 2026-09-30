@@ -18,16 +18,6 @@ export const countrySnapshot = (country: CountryDoc): CountrySnapshot => ({
   ...(country.phoneCode !== undefined && { phoneCode: country.phoneCode }),
 });
 
-/** Keys of the places whose `country` is missing or out of date with their country's document (a place
- * whose country has no document cannot get a copy, it is left alone). */
-export const placesNeedingCountry = (
-  places: Record<string, PlaceDoc>,
-  countries: Record<string, CountryDoc>,
-): string[] =>
-  Object.entries(places)
-    .filter(([, place]) => countries[place.code] && !sameJson(place.country, countrySnapshot(countries[place.code])))
-    .map(([key]) => key);
-
 export type CountryChange = {
   /** Places of the country, rewritten with the new copy — only those that differ. */
   places: Record<string, PlaceDoc>;

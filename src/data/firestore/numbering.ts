@@ -63,12 +63,11 @@ export const shuffleRank = (key: string): number => {
   return (hash >>> 0) / 2 ** 32;
 };
 
-/** Numbers every place of `entries` that `numbering` puts in a group: a group that already is exactly
- * 1..size keeps its numbers, any other group (or every group when `force` is set) is renumbered 1..size in
- * the shuffled order of `shuffleRank`. */
+/** Numbers every place of `entries` that `numbering` puts in a group, 1..size, in the shuffled order of
+ * `shuffleRank`. */
 export const computeNumbering = (
   entries: [string, PlaceDoc][],
-  { force = false, numbering = COMPASS_NUMBERING }: { force?: boolean; numbering?: Numbering } = {},
+  { numbering = COMPASS_NUMBERING }: { numbering?: Numbering } = {},
 ): { numbers: Record<string, number>; counts: CompassCounts } => {
   const groups = new Map<string, { group: Group; keys: [string, PlaceDoc][] }>();
   for (const entry of entries) {
@@ -81,36 +80,11 @@ export const computeNumbering = (
   const numbers: Record<string, number> = {};
   let counts: CompassCounts = {};
   for (const { group, keys } of groups.values()) {
-    const existing = keys.map(([, place]) => numbering.numberOf(place) ?? 0).sort((a, b) => a - b);
-    const keep = !force && existing.every((n, index) => n === index + 1);
-    const shuffled = [...keys].sort(([a], [b]) => shuffleRank(a) - shuffleRank(b));
-    if (keep) keys.forEach(([key, place]) => (numbers[key] = numbering.numberOf(place)!));
-    else shuffled.forEach(([key], index) => (numbers[key] = index + 1));
+    [...keys].sort(([a], [b]) => shuffleRank(a) - shuffleRank(b)).forEach(([key], index) => (numbers[key] = index + 1));
     counts = withSize(counts, group, keys.length);
   }
   return { numbers, counts };
 };
-
-/** True when every place of the numbering has a number and `counts` is exactly the numbering of `places`. */
-export const isNumberingConsistent = (
-  places: Record<string, PlaceDoc>,
-  counts: CompassCounts | undefined,
-  numbering: Numbering = COMPASS_NUMBERING,
-): boolean => {
-  const { numbers, counts: expected } = computeNumbering(Object.entries(places), { numbering });
-  const numbered = Object.entries(places).every(
-    ([key, place]) => !numbering.groupOf(place) || numbering.numberOf(place) === numbers[key],
-  );
-  return numbered && JSON.stringify(sortedCounts(expected)) === JSON.stringify(sortedCounts(counts ?? {}));
-};
-
-const sortedCounts = (counts: CompassCounts): [string, [string, number][]][] =>
-  Object.entries(counts)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([category, byDifficulty]) => [
-      category,
-      Object.entries(byDifficulty!).sort(([a], [b]) => a.localeCompare(b)) as [string, number][],
-    ]);
 
 export type Regroup = {
   /** The changed place's own number (`null` when it has no group any more / never had one). */

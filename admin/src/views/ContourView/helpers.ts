@@ -1,4 +1,6 @@
-import { countryName, flagEmoji } from '@/data/places/countries';
+import { flagEmoji } from '@/helpers/flagEmoji';
+
+import { countryName } from '../../data';
 import type { ContourNeighbor } from '@/types';
 
 /**
@@ -10,4 +12,4 @@ import type { ContourNeighbor } from '@/types';
  */
 export const neighborIcon = (neighbor: ContourNeighbor): string => flagEmoji(neighbor.code);
 
-export const neighborName = (neighbor: ContourNeighbor): string => countryName(neighbor.code, 'fr');
+export const neighborName = (neighbor: ContourNeighbor): string => countryName(neighbor.code);

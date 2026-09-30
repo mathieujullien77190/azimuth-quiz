@@ -26,9 +26,11 @@ export type GeoPlace = {
 };
 
 export type Place = Omit<GeoPlace, 'country'> & {
-  /** ISO 3166-1 alpha-2 country code: source of the flag AND the displayed name (see
-   * `data/places/countries.ts`) — no country name stored per place. */
+  /** ISO 3166-1 alpha-2 country code (source of the flag). */
   code: string;
+  /** The country's names, copied into the place document (no lookup at runtime): shown under the place's name
+   * when the game option is on. */
+  country?: { fr: string; en: string };
   category: Category;
   difficulty: Difficulty;
   /** Short trivia about the place: shown collapsed, only on reveal. Absent for
@@ -137,7 +139,7 @@ export type ThemeTypography = {
   body: TextStyle;
 };
 
-// --- Clues: game independent from Azimuth Quiz, with its own places (see data/clues.ts) ---
+// --- Clues: game independent from Azimuth Quiz, with its own places (Firestore, see data/firestore/) ---
 
 /** A clue's identifier: they all have the same "cost" (1 point off the score countdown,
  * see ClueGameScreen), no imposed order, each player freely picks on their turn. `vowels`
@@ -167,7 +169,7 @@ export type ClueId =
 /** Approximate position of the city within its country, on a 3x3 grid. */
 export type CluePositionInCountry = 'center' | 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
 
-/** Generic colors used by the supported flags (see data/clues.ts). */
+/** Generic colors used by the supported flags. */
 export type ClueFlagColorId = 'red' | 'blue' | 'white' | 'green' | 'yellow' | 'black';
 
 /** A flag color and its share of the area (%), as stored in a place: same fields as `ClueFlagColorRow`. */
@@ -175,19 +177,16 @@ export type ClueFlagColor = { id: ClueFlagColorId; hex: string; percent: number 
 
 /** A flag color and its share of the total area (%), unique colors merged and
  * sorted in their order of appearance on the flag (the clue only reveals the first one).
- * Positional tuple (see FLAG_COLOR_FIELD in data/places/countries.ts for which is which). */
+ * Positional tuple `[colorId, hex, percent]` (the admin's flag editor); a place stores objects, see `ClueFlagColor`. */
 export type ClueFlagColorRow = readonly [colorId: ClueFlagColorId, hex: string, percent: number];
 
 /** A place in the Clues game: extends `GeoPlace`, but its place pool stays independent from
- * Compass's (see data/clues.ts vs data/places/). `code` (country ISO) comes from the
- * place data shared by both games — used for shared lookups (country name, flag, currency). */
+ * Compass's (each game draws its places from Firestore, see `data/firestore/`). `code` is the country ISO code;
+ * the country's names, flag and currency are copied into the place. */
 export type CluePlace = GeoPlace & {
   code: string;
-  /** The short code (3 letters, e.g. `"par"` for Paris) `places.json` and its sibling files are
-   * keyed by — see `data/places/codec.ts`'s own doc comment. Opaque: never shown to a player,
-   * only used to look a place's own data up in one of those files (`wordplayFor`, the admin's own
-   * edits) without re-deriving a `code|name` cross-reference key each time. Compass's own `Place`
-   * has no equivalent — nothing there needs it (yet). */
+  /** The place's id in Firestore (`places/{key}`, a permanent 3-letter code such as `"par"` for Paris). Never shown to
+   * a player: it identifies the document (the admin's edits). Compass's own `Place` has no equivalent. */
   key: string;
   difficulty: Difficulty;
   positionInCountry: CluePositionInCountry;
@@ -207,10 +206,8 @@ export type CluePlace = GeoPlace & {
   /** 3 candidate emoji evoking the city (landmark/culture/nature...): the clue draws one at
    * random on each reveal, not always the same one. */
   emojis: readonly [string, string, string];
-  /** This place's syllable split for the charade clue, baked in for every single Clue place —
-   * see `ClueRow`'s own doc comment (`data/places/codec.ts`). Never computed at runtime: a place
-   * missing from `places.json` (impossible in practice, `generate:charades` fills any gap) would
-   * simply read as `[]`, dropping the clue (see `helpers/charade.ts`). */
+  /** This place's syllable split for the charade clue, stored in the place document (possibly empty: some names have
+   * no usable syllable, the clue is then dropped, see `helpers/charade.ts`). */
   syllables: string[];
   /** A real, Wikipedia-documented person tied to this place (born there, or overwhelmingly
    * identified with it) — absent for the vast majority of places (curated by hand, never
@@ -263,8 +260,8 @@ export type Point2D = {
  * `ContourGameScreen`'s `projectRound`, which just scales `x*width`/`y*height`). Authored per
  * country (not a global by-code lookup): the same neighbor can need a different display spot
  * depending on which country it's being hinted from. Name/flag come from
- * `data/places/countries.ts`, looked up by `code` — no sea/ocean neighbors any more (dropped:
- * they complicated every consumer for little payoff), so `type: 'country'` is the only variant. */
+ * the neighbor's document names — no sea/ocean neighbors any more (dropped: they complicated every consumer for little
+ * payoff), so `type: 'country'` is the only variant. */
 export type ContourNeighbor = { type: 'country'; code: string; x: number; y: number };
 
 /** A neighbor with its names (`fr`/`en`) copied in from the round's document: no country lookup at runtime. */
@@ -276,48 +273,26 @@ export type ContourPlace = { name: string; longitude: number; latitude: number }
 
 /** Anchor for tier 3/4's own on-board label (the target country's own flag, then its name stacked
  * just below it) — a fraction (0-1) of the board canvas, same model and same reasoning as
- * `ContourNeighbor`'s `x`/`y`: curated per country (part of its `contour.centerLabel` field in
- * `data/places/countries.json`, see `ContourDataRow`), a plain bounding-box center can read
+ * `ContourNeighbor`'s `x`/`y`: curated per country (the `centerLabel` field of its `contours/{code}` document), a plain
+ * bounding-box center can read
  * badly for an oddly-shaped country, so it's an editable point (draggable in the admin's Contour
  * view) rather than always derived. */
 export type ContourCenterLabel = { x: number; y: number };
 
-/** A country's outline for the Contour game: geometry plus its neighbor list — name/flag come from
- * `data/places/countries.ts` (shared with Compass/Clues), looked up by `code` rather than
- * duplicated here. `points` is a closed ring (`[longitude, latitude]` pairs, first === last),
- * mainland only (islands/overseas territories dropped), simplified to ~40-80 points (a handful of
- * large/complex countries run higher, see `scripts/generateContours.mjs`). */
+/** A country's outline for the Contour game: geometry plus its neighbor list (from its `contours/{code}` document).
+ * `points` is a closed ring (`[longitude, latitude]` pairs, first === last), mainland only (islands/overseas
+ * territories dropped), simplified to ~40-80 points (a handful of large/complex countries run higher). */
 export type ContourCountry = {
   code: string;
   points: readonly (readonly [number, number])[];
-  /** See `ContourNeighbor` — merged in from `countries.json`'s `contour.neighbors` at decode time
-   * (`data/contours/codec.ts`), not authored inline with `points`. Hand-curated for the 8
-   * original countries, mostly auto-generated (real-world adjacency, projected/clamped position —
-   * country-type only, never sea/ocean) for every other one — see `ContourDataRow`. */
+  /** See `ContourNeighbor` — the few neighbors positioned on the board for the hints. */
   neighbors: ContourNeighbor[];
-  /** See `ContourCenterLabel` — merged in from `countries.json`'s `contour.centerLabel` at decode
-   * time, same pattern as `neighbors`. */
+  /** See `ContourCenterLabel`. */
   centerLabel: ContourCenterLabel;
   /** Curated (not derived — outline recognizability is a judgment call, not measurable), same
    * `Difficulty` scale as Compass/Clues: how hard the country's silhouette is to place/guess.
-   * Merged in from `countries.json`'s `contour.difficulty` at decode time (see `codec.ts`), same
-   * pattern as `neighbors` — defaults to `'intermediate'` for every auto-generated country. */
+   * `'intermediate'` unless curated. */
   difficulty: Difficulty;
-};
-
-/**
- * Raw, on-disk shape of a country's Contour data: the optional 7th element of `CountryRow`
- * (`data/places/countries.ts`) — present only for a country that actually has a silhouette,
- * so the vast majority of rows without one stay a plain 6-element array (no `null` padding).
- * `neighbors`/`centerLabel`/`difficulty` are each optional and fall back to their own default at
- * decode time (see `data/contours/codec.ts`), same defaults `ContourCountry` always resolves
- * to — only `points` is mandatory, there's no sensible default outline.
- */
-export type ContourDataRow = {
-  points: readonly (readonly [number, number])[];
-  neighbors?: ContourNeighbor[];
-  centerLabel?: ContourCenterLabel;
-  difficulty?: Difficulty;
 };
 
 /** What a Silhouette round needs about its country, straight from its `contours/{code}` document

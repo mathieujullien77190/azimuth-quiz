@@ -12,7 +12,8 @@ export type SetupScreenProps = {
 export type SetupScreenViewProps = {
   settings: GameSettings;
   ready: boolean;
-  available: number;
+  /** How many places the selected categories offer; `null` while the group sizes are still loading. */
+  available: number | null;
 
   /** Solo / host / join block, shared with every other game's setup (`useSetupRoom`). */
   party: SetupPartyProps;

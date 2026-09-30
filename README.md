@@ -97,24 +97,17 @@ l'utiliser** (onglet « Show code ») plutôt que le JSX reconstruit depuis les 
 
 ## Données des lieux
 
-Les lieux de Boussole et Indices partagent un même pool (`places.json` +
-`countries.json`, tuples positionnels pour rester compacts). Pour les parcourir/éditer
-sans toucher le JSON à la main, une petite app d'admin (React + Vite) est déployée sur
-GitHub Pages, à côté du jeu :
+Toutes les données du jeu (lieux, pays, silhouettes, devinettes, métiers) vivent dans **Firestore** (collections
+`places`, `countries`, `contours`, `charadeRiddles`, `personalityJobs`, `meta`) : plus aucun fichier de données dans
+l'appli. Pour les parcourir/éditer, une petite app d'admin (React + Vite) est déployée sur GitHub Pages, à côté du jeu :
 
 🔗 **[Éditeur de lieux](https://mathieujullien77190.github.io/azimuth-quiz/admin/)**
 
-Les données vivent dans **Firestore** (collections `places`, `countries`, `contours`, `charadeRiddles`,
-`personalityJobs`, `meta`). L'admin se connecte avec un compte Google (seul l'administrateur
-déclaré dans `firestore.rules` peut écrire) et **enregistre directement** chaque modification dans
-Firestore. Boussole et Indices tirent leurs lieux dans Firestore, Silhouette ses pays et leurs silhouettes
-(éléments numérotés par groupe, curseur par appareil, voir CLAUDE.md ; index `firestore.indexes.json` à déployer
-avec `npx firebase-tools deploy --only firestore:indexes`) ; aucun repli sur les JSON embarqués, qui ne sont plus
-lus par ces trois jeux (ménage à faire). Le modèle de données (pays copié dans chaque lieu, numérotations,
-collection `contours`) est posé par des écrans de migration à usage unique de l’admin (voir CLAUDE.md,
-« Modèle Firestore dénormalisé »). Import initial des JSON :
-`npm run seed:firestore -- --dry-run` puis `npm run seed:firestore` (clé de compte de service dans
-`scripts/serviceAccount.json`, jamais commitée). Règles : `npx firebase-tools deploy --only firestore:rules`.
+L'admin se connecte avec un compte Google (seul l'administrateur déclaré dans `firestore.rules` peut écrire),
+garde une copie locale des données (bouton « Synchroniser » pour la relire) et **enregistre directement** chaque
+modification dans Firestore. Boussole et Indices tirent leurs lieux dans Firestore, Silhouette ses pays et leurs
+silhouettes (éléments numérotés par groupe, curseur par appareil, voir CLAUDE.md, « Modèle Firestore dénormalisé »).
+Règles et index : `npx firebase-tools deploy --only firestore:rules,firestore:indexes`.
 En local :
 
 ```bash

@@ -1,6 +1,6 @@
 import { act, fireEvent, render } from '@testing-library/react-native';
 
-import { CLUE_PLACES } from '@/data';
+import { FIXTURE_CLUE_PLACES as CLUE_PLACES } from '@/helpers/storyFixtures';
 import { CLUE_ORDER } from '@/games/clues/constants';
 import type { ClueRoomGameState } from '@/games/clues/helpers/room';
 import { translations } from '@/i18n/translations';
