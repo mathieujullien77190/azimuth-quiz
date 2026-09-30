@@ -6,7 +6,7 @@ export const createStyles = ({ colors, typography }: Theme) =>
   StyleSheet.create({
     title: {
       ...typography.display,
-      color: colors.accent,
+      color: colors.title,
       fontSize: fontSize.title,
       paddingTop: spacing.sm,
     },

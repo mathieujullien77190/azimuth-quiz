@@ -17,6 +17,7 @@ export const night: Theme = {
     textMuted: '#93A0BC',
     accent: '#F5B841',
     accentDark: '#C98A12',
+    title: '#F5B841',
     onAccent: '#1A1203',
     truth: '#FACC15',
     danger: '#FF6B6B',

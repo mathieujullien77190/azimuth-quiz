@@ -2,29 +2,29 @@ import type { Theme } from '@/types';
 
 import { FONT_FAMILY } from './fonts';
 
-/** Sky blue + orange: a daytime palette. A true orange accent rather than Night's amber —
- * amber/yellow washes out against the light blue background. */
+/** Warm sand + dusty steel blue: a soft daytime palette. The sky blue, orange and wine tried before were all too
+ * strong or too flashy; a muted blue accent stays readable as text on sand, and distinct from `danger` and `success`. */
 export const day: Theme = {
   id: 'day',
   name: 'Jour',
-  tagline: 'Ciel bleu et nuages',
+  tagline: 'Sable et bleu ardoise',
   isDark: false,
   colors: {
-    background: '#CFEBFA',
+    background: '#F3EEE3',
     surface: '#FFFFFF',
-    surfaceHigh: '#E7F5FC',
-    // Darker/more saturated than the original pale blue (#B9DDEE): that one barely stood out
-    // against surfaceHigh or the compass face (both light blues too) — card outlines and the
-    // compass's minor degree ticks (see CompassDial) were nearly invisible.
-    border: '#7FA3BD',
-    text: '#132033',
-    textMuted: '#4C6178',
-    accent: '#F97316',
-    accentDark: '#C2410C',
+    surfaceHigh: '#FAF7F0',
+    // Clearly darker than surfaceHigh and the compass face (both near-white sands): card outlines and the
+    // compass's minor degree ticks (see CompassDial) would be nearly invisible with a paler border.
+    border: '#C2B8A3',
+    text: '#22262B',
+    textMuted: '#5F6670',
+    accent: '#5B88B4',
+    accentDark: '#3E6A96',
+    title: '#22262B',
     onAccent: '#FFFFFF',
     // The true-answer arrow/point uses the accent color by day (was Night's purple, which read
-    // as an unrelated third color against the blue/orange Day palette).
-    truth: '#F97316',
+    // as an unrelated third color against the sand/blue Day palette).
+    truth: '#5B88B4',
     danger: '#DC2626',
     success: '#16A34A',
   },
@@ -37,5 +37,5 @@ export const day: Theme = {
   },
   card: { borderWidth: 1, shadowColor: '#0F172A', shadowOpacity: 0.08 },
   buttonDepth: 4,
-  compass: { faceInner: '#E7F5FC', faceOuter: '#FFFFFF' },
+  compass: { faceInner: '#FAF7F0', faceOuter: '#FFFFFF' },
 };

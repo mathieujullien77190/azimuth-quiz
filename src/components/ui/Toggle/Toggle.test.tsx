@@ -1,8 +1,9 @@
 import { fireEvent, render } from '@testing-library/react-native';
 
 import { ThemeSettingsContext } from '@/themes';
+import { day } from '@/themes/day';
 
-import { DAY_THUMB_ON_COLOR } from './constants';
+import { DAY_TRACK_ON_COLOR, NIGHT_THUMB_ON_COLOR } from './constants';
 import Toggle from '.';
 
 describe('Toggle', () => {
@@ -35,7 +36,7 @@ describe('Toggle', () => {
     expect(getByLabelText('Live compass').props.value).toBe(true);
   });
 
-  it('uses a dedicated thumb color when enabled by day', async () => {
+  it('uses an orange track and the accent thumb when enabled by day', async () => {
     const { toJSON } = await render(
       <ThemeSettingsContext.Provider
         value={{ themeId: 'day', ready: true, setThemeId: jest.fn(), resetThemeId: jest.fn() }}
@@ -43,6 +44,18 @@ describe('Toggle', () => {
         <Toggle label="Live compass" onValueChange={jest.fn()} value={true} />
       </ThemeSettingsContext.Provider>,
     );
-    expect(JSON.stringify(toJSON())).toContain(DAY_THUMB_ON_COLOR);
+    expect(JSON.stringify(toJSON())).toContain(DAY_TRACK_ON_COLOR);
+    expect(JSON.stringify(toJSON())).toContain(day.colors.accent);
+  });
+
+  it('uses a deep blue thumb when enabled by night', async () => {
+    const { toJSON } = await render(
+      <ThemeSettingsContext.Provider
+        value={{ themeId: 'night', ready: true, setThemeId: jest.fn(), resetThemeId: jest.fn() }}
+      >
+        <Toggle label="Live compass" onValueChange={jest.fn()} value={true} />
+      </ThemeSettingsContext.Provider>,
+    );
+    expect(JSON.stringify(toJSON())).toContain(NIGHT_THUMB_ON_COLOR);
   });
 });

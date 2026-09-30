@@ -26,7 +26,7 @@ export const createStyles = ({ colors, typography }: Theme) =>
     },
     crossAccent: {
       ...typography.heading,
-      color: colors.accent,
+      color: colors.title,
       fontSize: fontSize.title,
     },
   });

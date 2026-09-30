@@ -19,7 +19,7 @@ export const createStyles = ({ colors, typography }: Theme) =>
     },
     title: {
       ...typography.display,
-      color: colors.accent,
+      color: colors.title,
       fontSize: fontSize.display,
       letterSpacing: 6,
       textAlign: 'center',

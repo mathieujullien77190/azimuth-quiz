@@ -54,6 +54,14 @@ export const COLOR_TOKENS: ColorToken[] = [
     description: { fr: 'Épaisseur du bouton principal', en: 'Depth of the primary button' },
   },
   {
+    name: 'colors.title',
+    get: (theme) => theme.colors.title,
+    description: {
+      fr: 'Titres d’écran et croix de sortie (accent la nuit, texte le jour)',
+      en: 'Screen titles and the quit cross (accent by night, text by day)',
+    },
+  },
+  {
     name: 'colors.onAccent',
     get: (theme) => theme.colors.onAccent,
     description: { fr: 'Texte posé sur l’accent', en: 'Text laid over the accent' },

@@ -122,6 +122,8 @@ export type ThemeColors = {
   textMuted: string;
   accent: string;
   accentDark: string;
+  /** Screen titles and the quit cross: the accent by night, the text color by day (the accent is too soft for a title on light). */
+  title: string;
   onAccent: string;
   /** Color of the "truth" (true needle, true value). */
   truth: string;

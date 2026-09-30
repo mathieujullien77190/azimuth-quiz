@@ -23,7 +23,7 @@ export const createStyles = ({ colors, typography }: Theme) =>
     title: {
       ...typography.display,
       flexShrink: 1,
-      color: colors.accent,
+      color: colors.title,
       fontSize: fontSize.title,
     },
   });
