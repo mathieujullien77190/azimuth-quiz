@@ -870,6 +870,13 @@ footer {
   margin-top: 6px;
 }
 
+/* Wide screens: the difficulty picker keeps its natural size instead of stretching (`.field-select` grows). */
+@media (min-width: 641px) {
+  .wordplay-actions .field-select {
+    flex: 0 0 auto;
+  }
+}
+
 .wordplay-input {
   width: 100%;
   min-width: min(420px, 100%);
