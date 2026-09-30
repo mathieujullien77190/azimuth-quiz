@@ -850,3 +850,21 @@ footer {
   }
 }
 
+
+.wordplay-table {
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+.wordplay-name {
+  width: 220px;
+  vertical-align: top;
+  padding-top: 8px;
+}
+
+.wordplay-input {
+  width: 100%;
+  min-width: min(420px, 100%);
+  resize: vertical;
+  line-height: 1.4;
+}

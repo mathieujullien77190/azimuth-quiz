@@ -9,13 +9,17 @@ import { CountriesView } from './views/CountriesView';
 import { JobsView } from './views/JobsView';
 import { PlacesView } from './views/PlacesView';
 import { SyllablesView } from './views/SyllablesView';
+import { WordplayView } from './views/WordplayView';
 
-type Tab = 'places' | 'countries' | 'syllables' | 'jobs';
+type Tab = 'places' | 'countries' | 'syllables' | 'jobs' | 'wordplay';
 
 const AdminApp = () => {
   const [tab, setTab] = useState<Tab>('places');
   const [syncing, setSyncing] = useState(false);
-  const syncedLabel = lastSyncedAt() > 0 ? ` (${new Date(lastSyncedAt()).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })})` : '';
+  const syncedLabel =
+    lastSyncedAt() > 0
+      ? ` (${new Date(lastSyncedAt()).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })})`
+      : '';
   // Same Chromium-on-Windows flag-emoji fallback as the game itself (see helpers/web.ts) —
   // needed here too since the flag badge below uses the same font/emoji.
   useEffect(() => {
@@ -30,16 +34,36 @@ const AdminApp = () => {
             Admin <span className="dim">— Azimuth Quiz v{appConfig.expo.version}</span>
           </h1>
           <div className="tabs">
-            <button type="button" className="chip game-chip" aria-pressed={tab === 'places'} onClick={() => setTab('places')}>
+            <button
+              type="button"
+              className="chip game-chip"
+              aria-pressed={tab === 'places'}
+              onClick={() => setTab('places')}
+            >
               Lieux
             </button>
-            <button type="button" className="chip game-chip" aria-pressed={tab === 'countries'} onClick={() => setTab('countries')}>
+            <button
+              type="button"
+              className="chip game-chip"
+              aria-pressed={tab === 'countries'}
+              onClick={() => setTab('countries')}
+            >
               Pays
             </button>
-            <button type="button" className="chip game-chip" aria-pressed={tab === 'syllables'} onClick={() => setTab('syllables')}>
+            <button
+              type="button"
+              className="chip game-chip"
+              aria-pressed={tab === 'syllables'}
+              onClick={() => setTab('syllables')}
+            >
               Syllabes
             </button>
-            <button type="button" className="chip game-chip" aria-pressed={tab === 'jobs'} onClick={() => setTab('jobs')}>
+            <button
+              type="button"
+              className="chip game-chip"
+              aria-pressed={tab === 'jobs'}
+              onClick={() => setTab('jobs')}
+            >
               Métiers
             </button>
           </div>
@@ -64,6 +88,7 @@ const AdminApp = () => {
       {tab === 'countries' && <CountriesView />}
       {tab === 'syllables' && <SyllablesView />}
       {tab === 'jobs' && <JobsView />}
+      {tab === 'wordplay' && <WordplayView />}
     </div>
   );
 };
