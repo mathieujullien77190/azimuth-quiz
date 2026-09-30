@@ -1,4 +1,4 @@
-import { shuffle } from '@/helpers/random';
+import { shuffle } from './random';
 
 /**
  * Splits `total` items over buckets as evenly as possible, no bucket getting more than its capacity:

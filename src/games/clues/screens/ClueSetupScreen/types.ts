@@ -7,7 +7,8 @@ export type ClueSetupScreenProps = {
 
 export type ClueSetupScreenViewProps = {
   settings: ClueSettings;
-  available: number;
+  /** How many places the selection offers, `null` while the group sizes are not loaded yet. */
+  available: number | null;
 
   /** Solo / host / join block, shared with every other game's setup (`useSetupRoom`). */
   party: SetupPartyProps;

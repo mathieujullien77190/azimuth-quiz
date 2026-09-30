@@ -12,11 +12,6 @@ jest.mock('@/games/clues/helpers/wordplay', () => ({
   ...jest.requireActual('@/games/clues/helpers/wordplay'),
   wordplayFor: jest.fn(() => null),
 }));
-// Empty: `riddleFor` is now a global, syllable-keyed lookup (not place-keyed), so a made-up place
-// name no longer isolates a test from whatever gets curated in scripts/charadeCuration.json over
-// time — this does instead.
-jest.mock('@/data/charade.json', () => ({}));
-
 const place: CluePlace = CLUE_PLACES.find((p) => p.country === 'France')!;
 
 const renderCard = async (props: Partial<React.ComponentProps<typeof ClueCard>> & { clueId: ClueId }) =>
@@ -161,7 +156,7 @@ describe('ClueCard — revealed content per clue', () => {
   });
 
   it('currency: stage 2 falls back to the symbol when the country has no currency name', async () => {
-    const unknownCountryPlace = { ...place, code: 'XX' };
+    const unknownCountryPlace = { ...place, currencyName: '' };
     const { getByText } = await renderCard({
       clueId: 'currency',
       currencyStage: 2,
@@ -214,9 +209,8 @@ describe('ClueCard — emoji progressive reveal', () => {
 });
 
 describe('ClueCard — charade progressive reveal', () => {
-  // No riddle curated for either syllable (see the empty mock above), so both fall back to
-  // reading themselves out loud.
-  const charadePlace = { ...place, name: 'Bordeaux', syllables: ['bor', 'deaux'] };
+  // No riddle curated for either syllable, so both fall back to reading themselves out loud.
+  const charadePlace = { ...place, name: 'Bordeaux', syllables: ['bor', 'deaux'], riddles: [null, null] };
 
   it('defaults to stage 1: only the first syllable’s line', async () => {
     const { getByText, queryByText } = await renderCard({ clueId: 'charade', place: charadePlace, state: 'revealed' });
@@ -249,7 +243,12 @@ describe('ClueCard — charade progressive reveal', () => {
   });
 
   it('stays wide even while locked, same as bearing/distance', async () => {
-    const { getByRole } = await renderCard({ clueId: 'charade', onPress: jest.fn(), place: charadePlace, state: 'locked' });
+    const { getByRole } = await renderCard({
+      clueId: 'charade',
+      onPress: jest.fn(),
+      place: charadePlace,
+      state: 'locked',
+    });
     const style = getByRole('button').props.style as unknown[];
     expect(style).toContainEqual(expect.objectContaining({ flexBasis: '100%' }));
   });
@@ -351,7 +350,7 @@ describe('ClueCard — flag progressive reveal', () => {
   });
 
   it('renders an empty list for a country with no flag color data', async () => {
-    const unknownCountryPlace = { ...place, code: 'XX' };
+    const unknownCountryPlace = { ...place, flagColors: [] };
     const { toJSON, queryAllByText } = await renderCard({
       clueId: 'flagColors',
       place: unknownCountryPlace,

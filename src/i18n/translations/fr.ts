@@ -226,6 +226,7 @@ export const fr: Translations = {
     },
   },
   contourGame: {
+    loadFailed: 'Impossible de charger le pays. Vérifie ta connexion puis touche l’écran pour réessayer.',
     guessPrompt: 'Quel est ce pays ?',
     hintButton: '💡 Indice',
     waitingForTurn: (name) => `Au tour de ${name}…`,

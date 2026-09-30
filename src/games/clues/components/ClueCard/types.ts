@@ -18,7 +18,7 @@ export type ClueCardProps = {
   /** Only for the `emoji` clue: how many of the 3 emoji are already revealed (0-3). */
   emojiStage?: number;
   /** Only for the `flagColors` clue: how many of the flag's colors are already revealed
-   * (1 to `countryFlagColors(place.code).length`, see data/places/countries.ts). */
+   * (1 to `place.flagColors.length`). */
   flagStage?: number;
   /** Only for the `distance` clue: 1 = heading+distance shown on the globe but the km value
    * hidden ("?" in the middle, re-clickable), 2 = km revealed (same idea as emoji/flagStage). */
@@ -30,7 +30,7 @@ export type ClueCardProps = {
    * exact population revealed. */
   populationStage?: number;
   /** Only for the `currency` clue: 1 = symbol (`place.currency`), 2 = full currency
-   * name (see `countryCurrencyName` in data/places/countries.ts). */
+   * name (`place.currencyName`). */
   currencyStage?: number;
   /** Only for the `localTime` clue: 1 = day/night emoji (see `dayNightEmoji`), 2 = exact
    * local time revealed. */

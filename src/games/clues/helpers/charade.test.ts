@@ -1,83 +1,56 @@
-jest.mock('@/data/charade.json', () => ({
-  pa: 'un petit mot d’affection',
-  bor: 'le rebord d’une table',
-  be: 'le verbe être, à l’infinitif tronqué',
-  deaux: null,
-}));
-
-// eslint-disable-next-line import/first
 import {
   CHARADE_MAX_STAGES,
   CHARADE_SYLLABLE_STAGE_CAP,
   charadeFor,
-  charadeKey,
   charadeLines,
   charadeMaxStage,
   charadeReady,
   charadeSyllableGroups,
-  riddleFor,
+  normalizeSyllable,
   type CharadeEntry,
 } from './charade';
 
-describe('charadeKey', () => {
-  it('is the code and name, pipe-separated — identifies a place for the admin journal', () => {
-    expect(charadeKey({ code: 'FR', name: 'Paris' })).toBe('FR|Paris');
-  });
-});
-
 describe('charadeFor', () => {
-  it('reads the syllables straight off the place — no computation, no lookup', () => {
-    expect(charadeFor({ syllables: ['bor', 'deaux'] })).toEqual({ syllables: ['bor', 'deaux'] });
+  it('reads the syllables and their riddles straight off the place — no computation, no lookup', () => {
+    expect(charadeFor({ syllables: ['bor', 'deaux'], riddles: ['a', null] })).toEqual({
+      syllables: ['bor', 'deaux'],
+      riddles: ['a', null],
+    });
   });
 
   it('is empty for a place with no usable syllable', () => {
-    expect(charadeFor({ syllables: [] })).toEqual({ syllables: [] });
+    expect(charadeFor({ syllables: [], riddles: [] })).toEqual({ syllables: [], riddles: [] });
   });
 });
 
 describe('charadeReady', () => {
-  it('is true once every syllable has a curated riddle', () => {
-    expect(charadeReady({ syllables: ['pa', 'bor'] })).toBe(true);
+  it('is true once every syllable has a riddle', () => {
+    expect(charadeReady({ syllables: ['pa', 'bor'], riddles: ['x', 'y'] })).toBe(true);
   });
 
   it('is false as soon as one syllable has nothing curated', () => {
-    expect(charadeReady({ syllables: ['pa', 'deaux'] })).toBe(false);
+    expect(charadeReady({ syllables: ['pa', 'deaux'], riddles: ['x', null] })).toBe(false);
   });
 
   it('is false for a place with no syllable at all — vacuously-true `every` would otherwise offer an empty card', () => {
-    expect(charadeReady({ syllables: [] })).toBe(false);
+    expect(charadeReady({ syllables: [], riddles: [] })).toBe(false);
   });
 });
 
-describe('riddleFor', () => {
-  it('is null for a syllable missing from the dictionary entirely', () => {
-    expect(riddleFor('xyz')).toBeNull();
+describe('normalizeSyllable', () => {
+  it('is case-insensitive ("Pa" and "pa" share the same riddle)', () => {
+    expect(normalizeSyllable('Pa')).toBe('pa');
+    expect(normalizeSyllable('PA')).toBe('pa');
   });
 
-  it('is null for a syllable present in the (complete) dictionary but not curated yet', () => {
-    expect(riddleFor('deaux')).toBeNull();
-  });
-
-  it('returns the curated riddle, case-insensitively ("Pa" and "pa" share it)', () => {
-    expect(riddleFor('pa')).toBe('un petit mot d’affection');
-    expect(riddleFor('Pa')).toBe('un petit mot d’affection');
-    expect(riddleFor('PA')).toBe('un petit mot d’affection');
-  });
-
-  it('applies to every place with that syllable, not just the one it was first curated for', () => {
-    // "Bor" is Bordeaux's first syllable, but the same riddle also covers any other "bor".
-    expect(riddleFor('Bor')).toBe('le rebord d’une table');
-  });
-
-  it('folds "à"/"â" onto "a" — true homophones in French, so "pa" also covers "pà"/"pâ"', () => {
-    expect(riddleFor('pà')).toBe('un petit mot d’affection');
-    expect(riddleFor('pâ')).toBe('un petit mot d’affection');
+  it('folds "à"/"â" onto "a" — true homophones in French', () => {
+    expect(normalizeSyllable('pà')).toBe('pa');
+    expect(normalizeSyllable('pâ')).toBe('pa');
   });
 
   it('never folds the "e" family onto "be" — "e"/"é"/"è" are genuinely different sounds', () => {
-    expect(riddleFor('be')).toBe('le verbe être, à l’infinitif tronqué');
-    expect(riddleFor('bé')).toBeNull();
-    expect(riddleFor('bè')).toBeNull();
+    expect(normalizeSyllable('bé')).toBe('bé');
+    expect(normalizeSyllable('bè')).toBe('bè');
   });
 });
 
@@ -100,17 +73,17 @@ describe('charadeSyllableGroups', () => {
 
 describe('charadeMaxStage', () => {
   it('is the syllable count plus the final clear stage, below the cap', () => {
-    expect(charadeMaxStage({ syllables: ['Pa', 'ris'] })).toBe(3);
+    expect(charadeMaxStage({ syllables: ['Pa', 'ris'], riddles: [null, null] })).toBe(3);
   });
 
   it('never exceeds CHARADE_MAX_STAGES, however many syllables the name actually has', () => {
-    const entry: CharadeEntry = { syllables: Array(9).fill('la') };
+    const entry: CharadeEntry = { syllables: Array(9).fill('la'), riddles: Array(9).fill(null) };
     expect(charadeMaxStage(entry)).toBe(CHARADE_MAX_STAGES);
   });
 });
 
 describe('charadeLines', () => {
-  const entry: CharadeEntry = { syllables: ['Bor', 'deaux'] };
+  const entry: CharadeEntry = { syllables: ['Bor', 'deaux'], riddles: ['le rebord d’une table', null] };
 
   it('reveals nothing at stage 0', () => {
     expect(charadeLines(entry, 0)).toEqual({ lines: [] });
@@ -138,7 +111,7 @@ describe('charadeLines', () => {
   });
 
   it('bundles the overflow syllables of a long name into one "mes dernières syllabes" line', () => {
-    const long: CharadeEntry = { syllables: ['An', 'ta', 'na', 'na', 'ri', 'vo'] };
+    const long: CharadeEntry = { syllables: ['An', 'ta', 'na', 'na', 'ri', 'vo'], riddles: Array(6).fill(null) };
     const { lines } = charadeLines(long, 4);
     expect(lines).toHaveLength(4);
     expect(lines[3]).toEqual({ label: 'mes dernières syllabes', text: 'na, ri, vo' });

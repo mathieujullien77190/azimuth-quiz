@@ -1,6 +1,6 @@
 import type { HintStep } from '@/games/contour/helpers/hintPlan';
 import type { OnlinePlayer } from '@/helpers/roomPlayers';
-import type { ContourCountry, Difficulty } from '@/types';
+import type { ContourCountry, ContourRoundCountry, Difficulty } from '@/types';
 
 export type OnlineContourGameScreenProps = {
   code: string;
@@ -19,7 +19,9 @@ export type OnlineContourGameScreenViewProps = {
   totalRounds: number;
   difficulty: Difficulty;
 
-  country: ContourCountry;
+  country: ContourRoundCountry;
+  /** The countries around it (the backdrop and the border split, read with the round). */
+  neighborCountries: readonly ContourCountry[];
   /** The round's hint steps (`buildHintPlan`, the last one reveals the country) and how many of them
    * are on the board. */
   plan: HintStep[];

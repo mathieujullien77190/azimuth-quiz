@@ -206,6 +206,8 @@ export type Translations = {
     hintCategories: Record<ContourHintCategory, string>;
   };
   contourGame: {
+    /** Online only: the round's country could not be read; a tap tries again. */
+    loadFailed: string;
     /** Shown in the country-identity slot during the 'guess' phase, in place of the (not yet
      * known) country name/flag. */
     guessPrompt: string;

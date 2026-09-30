@@ -17,7 +17,17 @@ const COARSE = [
 ];
 
 const board: RoundBoard = {
-  country: { code: 'FR', points: [], neighbors: [], centerLabel: { x: 0.5, y: 0.5 }, difficulty: 'easy' },
+  country: {
+    code: 'FR',
+    fr: 'France',
+    en: 'France',
+    points: [],
+    neighbors: [],
+    centerLabel: { x: 0.5, y: 0.5 },
+    difficulty: 'easy',
+    capital: null,
+    cities: [],
+  },
   width: 100,
   height: 50,
   outline: [

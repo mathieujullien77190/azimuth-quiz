@@ -14,6 +14,9 @@ export const CONTOUR_HINT_CATEGORIES: { id: ContourHintCategory; emoji: string }
   { id: 'capital', emoji: '⭐' },
 ];
 
+/** Where this device is in each Silhouette difficulty group, to take the next countries (see `helpers/contourCursors.ts`). */
+export const CONTOUR_CURSORS_STORAGE_KEY = 'azimuthquiz:contour-cursors';
+
 /** At most this many cities of a country are offered as hints (capital excluded). */
 export const MAX_CITY_HINTS = 5;
 

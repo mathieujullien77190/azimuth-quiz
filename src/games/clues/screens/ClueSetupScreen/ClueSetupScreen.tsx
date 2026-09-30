@@ -1,9 +1,7 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import { CLUE_PLACES, isCapitalPlace, isFrenchCityPlace } from '@/data';
-import { loadClueHistory } from '@/games/clues/helpers/clueHistory';
-import { effectiveDifficulty } from '@/games/compass/helpers/places';
-import { useLanguage } from '@/i18n';
+import type { CompassCounts } from '@/data/firestore/types';
+import { loadCluesCounts } from '@/games/clues/helpers/clueCounts';
 import { useClueSettings } from '@/settings';
 import type { Category } from '@/types';
 
@@ -18,23 +16,23 @@ import { useOnlineClueRoom } from './useOnlineClueRoom';
  */
 export const ClueSetupScreen = ({ onBack }: ClueSetupScreenProps) => {
   const { settings, updateSettings } = useClueSettings();
-  const { language } = useLanguage();
   const room = useOnlineClueRoom(settings, updateSettings);
 
+  // The group sizes (`meta/cluesCounts`, loaded at launch): how many places the selected categories offer at
+  // this difficulty. `null` until they are there — the start button is not held back for that.
+  const [counts, setCounts] = useState<CompassCounts | null>(null);
+  useEffect(() => {
+    loadCluesCounts()
+      .then(setCounts)
+      .catch(() => {});
+  }, []);
   const available = useMemo(
     () =>
-      CLUE_PLACES.filter((place) => {
-        const category = isCapitalPlace(place) ? 'capital' : isFrenchCityPlace(place) ? 'citiesFr' : 'cities';
-        return settings.categories.includes(category) && effectiveDifficulty(place, language) === settings.difficulty;
-      }).length,
-    [settings.categories, settings.difficulty, language],
+      counts === null
+        ? null
+        : settings.categories.reduce((sum, category) => sum + (counts[category]?.[settings.difficulty] ?? 0), 0),
+    [counts, settings.categories, settings.difficulty],
   );
-
-  // Fire-and-forget: by the time the player presses "Start", the read is essentially always
-  // done, so the very first round already benefits from the draw history.
-  useEffect(() => {
-    loadClueHistory();
-  }, []);
 
   const updateOrNotify = (patch: Partial<typeof settings>) =>
     room.readOnly ? room.notifyReadOnly() : updateSettings(patch);

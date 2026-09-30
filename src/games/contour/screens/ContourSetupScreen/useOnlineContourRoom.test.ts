@@ -1,6 +1,7 @@
 import { renderHook } from '@testing-library/react-native';
 
 import { DEFAULT_CONTOUR_SETTINGS } from '@/games/contour/constants';
+import { fetchContourRoundCodes } from '@/games/contour/helpers/firestoreContours';
 import { startContourRoomGame } from '@/games/contour/helpers/room';
 import { useContourRoomStore } from '@/games/contour/store/roomStore';
 
@@ -13,11 +14,15 @@ jest.mock('@/games/contour/helpers/room', () => ({
   ROOM_MAX_PLAYERS: 10,
   startContourRoomGame: jest.fn(() => Promise.resolve()),
 }));
+jest.mock('@/games/contour/helpers/firestoreContours', () => ({ fetchContourRoundCodes: jest.fn() }));
 jest.mock('@/games/contour/store/roomStore', () => ({ useContourRoomStore: { getState: jest.fn() } }));
 
 const arrivedAt = (millis: number) => ({ toMillis: () => millis });
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  jest.mocked(fetchContourRoundCodes).mockResolvedValue(['FR', 'ES', 'IT']);
+});
 
 describe('useOnlineContourRoom', () => {
   it('starts the room game with one country code per round and the first player to arrive', async () => {
@@ -36,10 +41,22 @@ describe('useOnlineContourRoom', () => {
     const [code, countryCodes, firstTurnUid, simplifySeed] = jest.mocked(startContourRoomGame).mock
       .calls[0] as unknown as [string, string[], string, number];
     expect(code).toBe('tabofuna');
-    expect(countryCodes).toHaveLength(3);
+    expect(fetchContourRoundCodes).toHaveBeenCalledWith(settings);
+    expect(countryCodes).toEqual(['FR', 'ES', 'IT']);
     expect(firstTurnUid).toBe('early');
     // The host draws the room-wide seed of the silhouettes' simplification.
     expect(Number.isInteger(simplifySeed)).toBe(true);
+  });
+
+  it('starts nothing when the countries cannot be drawn (the shared start flow reports the failure)', async () => {
+    jest.mocked(useContourRoomStore.getState).mockReturnValue({
+      players: { early: { name: 'Early', joinedAt: arrivedAt(10) } },
+    } as never);
+    jest.mocked(fetchContourRoundCodes).mockRejectedValue(new Error('offline'));
+    const { result } = await renderHook(() => useOnlineContourRoom(DEFAULT_CONTOUR_SETTINGS, jest.fn()));
+
+    await expect(result.current.startOnlineContourGame()).rejects.toThrow('offline');
+    expect(startContourRoomGame).not.toHaveBeenCalled();
   });
 
   it('refuses to start when nobody is in the room', async () => {

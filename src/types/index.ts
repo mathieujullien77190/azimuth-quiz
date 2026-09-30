@@ -170,6 +170,9 @@ export type CluePositionInCountry = 'center' | 'n' | 's' | 'e' | 'w' | 'ne' | 'n
 /** Generic colors used by the supported flags (see data/clues.ts). */
 export type ClueFlagColorId = 'red' | 'blue' | 'white' | 'green' | 'yellow' | 'black';
 
+/** A flag color and its share of the area (%), as stored in a place: same fields as `ClueFlagColorRow`. */
+export type ClueFlagColor = { id: ClueFlagColorId; hex: string; percent: number };
+
 /** A flag color and its share of the total area (%), unique colors merged and
  * sorted in their order of appearance on the flag (the clue only reveals the first one).
  * Positional tuple (see FLAG_COLOR_FIELD in data/places/countries.ts for which is which). */
@@ -214,6 +217,18 @@ export type CluePlace = GeoPlace & {
    * invented, see `ClueRow`'s own doc comment). `description` is a short one/two-word tag (a
    * profession, e.g. "footballeur"), itself absent when there's nothing short and safe to add. */
   personality?: { name: string; description: string | null };
+  /** Which of the 3 Clues categories the place falls into (capital, French city, other city). */
+  category: ClueCategory;
+  /** The riddle of each syllable (same order as `syllables`), `null` for one that has none yet: the charade
+   * clue is only offered when every syllable has one (see `charadeReady`). Copied into the place. */
+  riddles: (string | null)[];
+  /** The country's flag colors in order of appearance (objects, not tuples: a place is written to a room
+   * document and Firestore refuses nested arrays). Copied from the country into the place. */
+  flagColors: ClueFlagColor[];
+  /** The country's currency generic name ("Euro", "Dollar"), copied from the country. */
+  currencyName: string;
+  /** A play on words on the name, one sentence (see `wordplayFor`). Absent when not curated. */
+  wordplay?: { sentence: string; difficulty: Difficulty };
 };
 
 export type ClueSettings = {
@@ -251,6 +266,13 @@ export type Point2D = {
  * `data/places/countries.ts`, looked up by `code` — no sea/ocean neighbors any more (dropped:
  * they complicated every consumer for little payoff), so `type: 'country'` is the only variant. */
 export type ContourNeighbor = { type: 'country'; code: string; x: number; y: number };
+
+/** A neighbor with its names (`fr`/`en`) copied in from the round's document: no country lookup at runtime. */
+export type ContourNamedNeighbor = ContourNeighbor & { fr: string; en: string };
+
+/** A place offered as a hint (a city or the capital): where it is and what it is called (a place has a single
+ * name, whatever the player's language). */
+export type ContourPlace = { name: string; longitude: number; latitude: number };
 
 /** Anchor for tier 3/4's own on-board label (the target country's own flag, then its name stacked
  * just below it) — a fraction (0-1) of the board canvas, same model and same reasoning as
@@ -296,6 +318,17 @@ export type ContourDataRow = {
   neighbors?: ContourNeighbor[];
   centerLabel?: ContourCenterLabel;
   difficulty?: Difficulty;
+};
+
+/** What a Silhouette round needs about its country, straight from its `contours/{code}` document
+ * (`roundCountryFromDoc`): the outline and neighbors of a `ContourCountry`, plus its own names, the capital
+ * and the cities offered as hints (`capital` is `null` for a country without one). */
+export type ContourRoundCountry = Omit<ContourCountry, 'neighbors'> & {
+  fr: string;
+  en: string;
+  neighbors: ContourNamedNeighbor[];
+  capital: ContourPlace | null;
+  cities: ContourPlace[];
 };
 
 /** The kinds of hints a Silhouette game can use, picked in the setup (at least one): the outline

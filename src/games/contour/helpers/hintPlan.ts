@@ -1,7 +1,6 @@
-import type { ContourCountry, ContourHintCategory } from '@/types';
+import type { ContourHintCategory, ContourRoundCountry } from '@/types';
 
 import { CONTOUR_HINT_CATEGORIES, CONTOUR_HINT_POINTS_DROP, MAX_CONTOUR_POINTS } from '../constants';
-import { contourPlacesFor, type ContourPlaces } from './contourPlaces';
 import { FULL_PRECISION } from './simplify';
 
 /** One hint the "Indice" button can reveal. The 3 `silhouette` steps make the outline more precise
@@ -41,21 +40,17 @@ export const normalizeHintCategories = (raw: unknown): ContourHintCategory[] => 
 /**
  * The ordered steps of a round's hints: the steps of each chosen category, in the fixed order
  * silhouette, neighbors, cities, capital — then `reveal`. A step the country cannot offer is left
- * out: no neighbors, no cities or no capital in the data (see `contourPlacesFor`) and the plan just
+ * out: no neighbors, no cities or no capital in its document and the plan just
  * has fewer steps. `hintsRevealed` counts how many of these steps are out (0 to `plan.length`, the
  * last being `reveal`). Pure: every device rebuilds the very same plan from the room's categories and
  * the round's country, nothing more is stored per round.
  */
-export const buildHintPlan = (
-  categories: readonly ContourHintCategory[],
-  country: ContourCountry,
-  places: ContourPlaces = contourPlacesFor(country),
-): HintStep[] => {
+export const buildHintPlan = (categories: readonly ContourHintCategory[], country: ContourRoundCountry): HintStep[] => {
   const available: Record<ContourHintCategory, boolean> = {
     silhouette: true,
     neighbors: country.neighbors.length > 0,
-    cities: places.cities.length > 0,
-    capital: places.capital !== null,
+    cities: country.cities.length > 0,
+    capital: country.capital !== null,
   };
   const steps = ALL_CATEGORIES.filter((id) => categories.includes(id) && available[id]).flatMap(
     (id) => STEPS_BY_CATEGORY[id],

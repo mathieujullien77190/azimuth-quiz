@@ -1,5 +1,5 @@
 import { useSetupRoom, type SetupRoomAdapter } from '@/components/setup/useSetupRoom';
-import { CONTOURS, ROOM_PLAYER_COLORS } from '@/data';
+import { ROOM_PLAYER_COLORS } from '@/data';
 import {
   ROOM_MAX_PLAYERS,
   type ContourRoomSettings,
@@ -15,7 +15,7 @@ import {
   updateRoomPlayerColors,
   updateRoomSettings,
 } from '@/games/contour/helpers/room';
-import { pickContourRoundCodes } from '@/games/contour/helpers/contourCountry';
+import { fetchContourRoundCodes } from '@/games/contour/helpers/firestoreContours';
 import { newSimplifySeed } from '@/games/contour/helpers/simplify';
 import { useContourRoomStore } from '@/games/contour/store/roomStore';
 import { playersByArrival } from '@/helpers/roomPlayers';
@@ -53,12 +53,9 @@ export const useOnlineContourRoom = (
       // Read here, not before: in solo the room only exists (and lists this device) by the time this runs.
       const firstTurnUid = playersByArrival(useContourRoomStore.getState().players)[0]?.[0];
       if (firstTurnUid === undefined) throw new Error('no player in the room');
-      await startContourRoomGame(
-        code,
-        pickContourRoundCodes(CONTOURS, settings.difficulty, settings.rounds),
-        firstTurnUid,
-        newSimplifySeed(),
-      );
+      // Drawn from Firestore, no fallback: a failure rejects, and the shared start flow shows a notice.
+      const countryCodes = await fetchContourRoundCodes(settings);
+      await startContourRoomGame(code, countryCodes, firstTurnUid, newSimplifySeed());
     });
 
   return { ...room, startOnlineContourGame };

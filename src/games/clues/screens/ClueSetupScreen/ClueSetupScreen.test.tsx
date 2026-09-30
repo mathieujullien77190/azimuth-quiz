@@ -1,6 +1,7 @@
 import { act, fireEvent, render, waitFor, within } from '@testing-library/react-native';
 
 import { DEFAULT_CLUE_SETTINGS } from '@/games/clues/constants';
+import { loadCluesCounts } from '@/games/clues/helpers/clueCounts';
 import { createRoom } from '@/games/clues/helpers/room';
 import { useClueRoomStore } from '@/games/clues/store/roomStore';
 import { useClueSettings } from '@/settings';
@@ -28,10 +29,19 @@ jest.mock('@/games/clues/helpers/room', () => ({
   updateRoomSettings: jest.fn(() => Promise.resolve()),
 }));
 
+// The group sizes and the place draw come from Firestore (ESM-only, crashes Jest): mocked, like the room.
+jest.mock('@/games/clues/helpers/clueCounts', () => ({ loadCluesCounts: jest.fn() }));
+jest.mock('@/games/clues/helpers/firestoreCluePlaces', () => ({ fetchClueRoundPlaces: jest.fn() }));
+
 // `useClueSettings` is a module-level Zustand store (no more Provider to remount fresh per
 // test) — reset explicitly so a chip pressed in one test doesn't leak into the next.
 beforeEach(() => {
   useClueSettings.setState({ settings: DEFAULT_CLUE_SETTINGS });
+  jest.mocked(loadCluesCounts).mockResolvedValue({
+    cities: { easy: 30, hard: 5 },
+    capital: { easy: 12 },
+    citiesFr: { easy: 8 },
+  });
 });
 
 // `useClueRoomStore` is also a module-level singleton — reset the same way as Compass' own
@@ -61,6 +71,34 @@ describe('ClueSetupScreen', () => {
 
     const rounds = section(getByText, 'Nombre de manches');
     expect(rounds.getByText('5').parent?.props.accessibilityState.selected).toBe(true);
+  });
+
+  it('says how many places the selected categories offer at this difficulty, from the group sizes', async () => {
+    const { findByText, getByText } = await renderScreen();
+
+    expect(await findByText('50 lieux possibles')).toBeTruthy();
+
+    await fireEvent.press(getByText('Capitales'));
+    expect(await findByText('38 lieux possibles')).toBeTruthy();
+
+    await fireEvent.press(getByText('Difficile'));
+    expect(await findByText('5 lieux possibles')).toBeTruthy();
+  });
+
+  it('holds the start button back when the selection offers no place at all', async () => {
+    jest.mocked(loadCluesCounts).mockResolvedValue({});
+    const { findByText, getByText } = await renderScreen();
+
+    expect(await findByText('0 lieux possibles')).toBeTruthy();
+    expect(getByText('Lancer la partie').parent?.props.accessibilityState.disabled).toBe(true);
+  });
+
+  it('shows no count, and does not block the start, while the group sizes cannot be read', async () => {
+    jest.mocked(loadCluesCounts).mockRejectedValue(new Error('offline'));
+    const { getByText, queryByText } = await renderScreen();
+
+    expect(queryByText(/lieux possibles/)).toBeNull();
+    expect(getByText('Lancer la partie').parent?.props.accessibilityState.disabled).not.toBe(true);
   });
 
   it('every category chip is selected by default, and can be toggled off and back on', async () => {

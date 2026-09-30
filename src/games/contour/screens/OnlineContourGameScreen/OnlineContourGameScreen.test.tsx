@@ -4,6 +4,7 @@ import { CONTOURS } from '@/data';
 import { buildHintPlan } from '@/games/contour/helpers/hintPlan';
 import type { ContourRoomGameState } from '@/games/contour/helpers/room';
 import { translations } from '@/i18n/translations';
+import { SAMPLE_CONTOUR_COUNTRY } from '@/helpers/storyFixtures';
 
 import { OnlineContourGameScreen } from './OnlineContourGameScreen';
 
@@ -15,7 +16,8 @@ jest.mock('expo-router', () => ({ useRouter: () => ({ dismissTo: mockDismissTo }
 let mockGame: Record<string, unknown> = {};
 jest.mock('./useOnlineContourGame', () => ({ useOnlineContourGame: () => mockGame }));
 
-const FRANCE = CONTOURS.find((country) => country.code === 'FR')!;
+// France with its names, capital and cities, as a round's document gives them.
+const FRANCE = SAMPLE_CONTOUR_COUNTRY;
 
 // Every kind of hint: 11 steps for France (3 silhouette, 3 neighbors, 2 cities, 2 capital, the reveal).
 const FULL_PLAN = buildHintPlan(['silhouette', 'neighbors', 'cities', 'capital'], FRANCE);
@@ -48,6 +50,9 @@ const setGame = (overrides: Record<string, unknown> = {}) => {
     roomSettings: { difficulty: 'easy' },
     gameState: gameState(),
     country: FRANCE,
+    neighborCountries: CONTOURS,
+    roundFailed: false,
+    retryRound: jest.fn(),
     plan: FULL_PLAN,
     simplifySeed: 11,
     isMyTurn: true,
@@ -83,6 +88,20 @@ describe('OnlineContourGameScreen — before the round', () => {
     const { getByText } = await renderScreen();
     await fireEvent.press(getByText(t.setup.online.connectionLostNotice));
     expect(mockDismissTo).toHaveBeenCalledWith('/');
+  });
+
+  it('says the country could not be read when the round failed to load, and tries again on a tap', async () => {
+    setGame({ country: undefined, roundFailed: true });
+    const { getByText, queryByText } = await renderScreen();
+    expect(queryByText(t.game.loading)).toBeNull();
+    await fireEvent.press(getByText(t.contourGame.loadFailed));
+    expect((mockGame.retryRound as jest.Mock).mock.calls).toHaveLength(1);
+  });
+
+  it('keeps the round on screen if a reload failed while the country is known', async () => {
+    setGame({ roundFailed: true });
+    const { queryByText } = await renderScreen();
+    expect(queryByText(t.contourGame.loadFailed)).toBeNull();
   });
 
   it.each([

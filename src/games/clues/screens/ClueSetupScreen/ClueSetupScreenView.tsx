@@ -51,7 +51,7 @@ export const ClueSetupScreenView = ({
       <CategorySection
         categories={CLUE_CATEGORIES}
         disabled={readOnly}
-        hint={t.setup.categoriesAvailability(available)}
+        hint={available === null ? '' : t.setup.categoriesAvailability(available)}
         onToggle={onToggleCategory}
         selected={settings.categories}
         title={t.setup.categoriesTitle}

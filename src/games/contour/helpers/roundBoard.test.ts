@@ -1,6 +1,6 @@
 import { CONTOURS } from '@/data';
 import { flagEmoji } from '@/data/places/countries';
-import type { ContourCountry } from '@/types';
+import type { ContourCountry, ContourRoundCountry } from '@/types';
 
 import { computeBorders } from './borders';
 import { buildHintPlan } from './hintPlan';
@@ -8,8 +8,12 @@ import { boardShapeFor, buildHintLabels, projectRound, roundGeometry } from './r
 import { simplificationLevels } from './simplify';
 
 // A 2:1 rectangle at the equator, so `boardDimensionsFor` keeps a predictable aspect ratio.
-const country: ContourCountry = {
+const country: ContourRoundCountry = {
   code: 'FR',
+  fr: 'France',
+  en: 'France',
+  capital: null,
+  cities: [],
   points: [
     [0, 0],
     [2, 0],
@@ -17,8 +21,8 @@ const country: ContourCountry = {
     [0, 1],
   ],
   neighbors: [
-    { type: 'country', code: 'ES', x: 0.25, y: 0.75 },
-    { type: 'country', code: 'DE', x: 0.5, y: 0.25 },
+    { type: 'country', code: 'ES', x: 0.25, y: 0.75, fr: 'Espagne', en: 'Spain' },
+    { type: 'country', code: 'DE', x: 0.5, y: 0.25, fr: 'Allemagne', en: 'Germany' },
   ],
   centerLabel: { x: 0.5, y: 0.5 },
   difficulty: 'easy',
@@ -60,7 +64,7 @@ describe('projectRound', () => {
 
 describe('projectRound borders', () => {
   // Same 2x1 rectangle (closed), and a neighbor glued to its right side (x = 2).
-  const closed: ContourCountry = { ...country, points: [...country.points, country.points[0]] };
+  const closed: ContourRoundCountry = { ...country, points: [...country.points, country.points[0]] };
   const neighbor: ContourCountry = {
     ...country,
     code: 'ES',
@@ -78,7 +82,6 @@ describe('projectRound borders', () => {
     const board = projectRound(closed, 400, 400, {
       borders: computeBorders(closed, [closed, neighbor]),
       rings: simplificationLevels(closed.points, 1),
-      places: { capital: null, cities: [] },
     });
     expect(board.neighborOutlines).toHaveLength(1);
     expect(board.neighborOutlines[0]).toHaveLength(neighbor.points.length);
@@ -90,14 +93,13 @@ describe('projectRound borders', () => {
     expect(board.coastlines).toHaveLength(1);
   });
 
-  it('derives the borders from the whole dataset by default (nothing touches a lonely rectangle)', () => {
+  it('draws no neighbor without neighbor countries', () => {
     const board = projectRound(closed, 400, 400);
     expect(board.neighborOutlines).toEqual([]);
     expect(board.borders).toEqual([]);
     expect(board.coastlines).toHaveLength(1);
   });
 });
-
 
 const ALL = ['silhouette', 'neighbors', 'cities', 'capital'] as const;
 const places = {
@@ -107,13 +109,15 @@ const places = {
     { name: 'Ville B', longitude: 1.5, latitude: 0.75 },
   ],
 };
+// The same country with a capital and two cities in its document.
+const placed: ContourRoundCountry = { ...country, ...places };
 // Steps of the full plan of `country`, by index: 1-3 silhouette, 4 shapes, 5 flags, 6 names, 7-8 cities,
 // 9-10 capital, 11 reveal.
-const fullPlan = buildHintPlan(ALL, country, places);
+const fullPlan = buildHintPlan(ALL, placed);
 
 describe('projectRound places', () => {
   it('projects the capital and the cities with the outline projector, inside the canvas', () => {
-    const board = projectRound(country, 400, 400, { ...roundGeometry(country, 0), places });
+    const board = projectRound(placed, 400, 400);
     expect(board.cityMarks.map((mark) => mark.name)).toEqual(['Ville A', 'Ville B']);
     expect(board.capitalMark?.name).toBe('Capitale');
     // The capital sits at the middle of the 2x1 rectangle, so at the middle of the canvas.
@@ -126,17 +130,14 @@ describe('projectRound places', () => {
   });
 
   it('has no mark for a country without a capital or cities', () => {
-    const board = projectRound(country, 400, 400, {
-      ...roundGeometry(country, 0),
-      places: { capital: null, cities: [] },
-    });
+    const board = projectRound(country, 400, 400);
     expect(board.cityMarks).toEqual([]);
     expect(board.capitalMark).toBeNull();
   });
 });
 
 describe('buildHintLabels', () => {
-  const board = projectRound(country, 400, 400, { ...roundGeometry(country, 0), places });
+  const board = projectRound(placed, 400, 400);
   const gap = Math.min(board.width, board.height) * 0.045;
   const labels = (hints: number, plan = fullPlan, language: 'fr' | 'en' = 'fr') =>
     buildHintLabels(board, plan, hints, language);
@@ -195,11 +196,8 @@ describe('buildHintLabels', () => {
   });
 
   it('draws no city or capital label when the board has none', () => {
-    const bare = projectRound(country, 400, 400, {
-      ...roundGeometry(country, 0),
-      places: { capital: null, cities: [] },
-    });
-    const plan = buildHintPlan(ALL, country, { capital: null, cities: [] });
+    const bare = projectRound(country, 400, 400);
+    const plan = buildHintPlan(ALL, country);
     expect(buildHintLabels(bare, plan, plan.length, 'fr').map((label) => label.text)).toEqual([
       flagEmoji('ES'),
       'Espagne',
@@ -211,7 +209,7 @@ describe('buildHintLabels', () => {
   });
 
   it('only shows what a reduced plan contains', () => {
-    const plan = buildHintPlan(['capital'], country, places);
+    const plan = buildHintPlan(['capital'], placed);
     expect(buildHintLabels(board, plan, 1, 'fr').map((label) => label.text)).toEqual(['⭐']);
     expect(buildHintLabels(board, plan, 3, 'fr').map((label) => label.text)).toEqual([
       '⭐',
@@ -223,8 +221,17 @@ describe('buildHintLabels', () => {
 });
 
 describe('the precision levels of a round', () => {
-  const france = CONTOURS.find((candidate) => candidate.code === 'FR')!;
-  const board = projectRound(france, 400, 400, roundGeometry(france, 7));
+  const contour = CONTOURS.find((candidate) => candidate.code === 'FR')!;
+  const france: ContourRoundCountry = {
+    ...contour,
+    fr: 'France',
+    en: 'France',
+    neighbors: contour.neighbors.map((neighbor) => ({ ...neighbor, fr: neighbor.code, en: neighbor.code })),
+    capital: { name: 'Paris', longitude: 2.35, latitude: 48.85 },
+    cities: [],
+  };
+  const geometry = (seed: number) => roundGeometry(france, seed, CONTOURS);
+  const board = projectRound(france, 400, 400, geometry(7));
   const plan = buildHintPlan(ALL, france);
 
   it('projects the four levels in the frame of the full ring, the last one being the outline', () => {
@@ -238,8 +245,8 @@ describe('the precision levels of a round', () => {
   });
 
   it('is the same for the same seed and different for another one', () => {
-    const same = projectRound(france, 400, 400, roundGeometry(france, 7));
-    const other = projectRound(france, 400, 400, roundGeometry(france, 8));
+    const same = projectRound(france, 400, 400, geometry(7));
+    const other = projectRound(france, 400, 400, geometry(8));
     expect(same.precisionOutlines[0]).toEqual(board.precisionOutlines[0]);
     expect(other.precisionOutlines[0]).not.toEqual(board.precisionOutlines[0]);
   });

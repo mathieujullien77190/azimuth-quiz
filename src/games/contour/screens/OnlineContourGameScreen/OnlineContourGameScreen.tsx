@@ -49,6 +49,10 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
     );
   }
 
+  // The round's country could not be read: a tap tries again (nothing else can show without it).
+  if (game.roundFailed && country === undefined)
+    return <NoticeOverlay message={t.contourGame.loadFailed} onDismiss={game.retryRound} />;
+
   if (localUid === null || roomSettings === null || country === undefined)
     return <NoticeOverlay loading message={t.game.loading} />;
 
@@ -62,6 +66,7 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
   return (
     <OnlineContourGameScreenView
       country={country}
+      neighborCountries={game.neighborCountries}
       difficulty={roomSettings.difficulty}
       guessText={game.guessText}
       name={myName}

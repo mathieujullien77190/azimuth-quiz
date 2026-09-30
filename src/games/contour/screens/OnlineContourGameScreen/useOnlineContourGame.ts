@@ -1,7 +1,5 @@
 import { useCallback, useMemo } from 'react';
 
-import { CONTOURS } from '@/data';
-import { countryName } from '@/data/places/countries';
 import { CONTOUR_WRONG_GUESS_PENALTY } from '@/games/contour/constants';
 import {
   applyContourRoomScore,
@@ -15,9 +13,11 @@ import {
   reportContourRoomWrong,
   revealContourRoomHint,
 } from '@/games/contour/helpers/room';
-import { normalizeContourGuess } from '@/games/contour/helpers/contourCountry';
+import { normalizeContourGuess, roundCountryName } from '@/games/contour/helpers/contourCountry';
 import { buildHintPlan, contourGuessPoints, normalizeHintCategories } from '@/games/contour/helpers/hintPlan';
 import { roundSimplifySeed } from '@/games/contour/helpers/simplify';
+import { useRoundData } from '@/games/contour/helpers/useRoundData';
+import type { ContourCountry } from '@/types';
 import { useContourRoomStore } from '@/games/contour/store/roomStore';
 import { nextPlayerUid } from '@/helpers/roomPlayers';
 import { useGuessDraft } from '@/helpers/useGuessDraft';
@@ -25,6 +25,9 @@ import { useHostTurnRecovery } from '@/helpers/useHostTurnRecovery';
 import { useHostTurnScoring } from '@/helpers/useHostTurnScoring';
 import { useOnlineRoomSession } from '@/helpers/useOnlineRoomSession';
 import { useLanguage } from '@/i18n';
+
+/** A stable empty list while the round loads (a new one at every render would redo the board's geometry). */
+const NO_NEIGHBOR_COUNTRIES: ContourCountry[] = [];
 
 /**
  * All the online-Silhouette business logic behind `OnlineContourGameScreen` — the room session
@@ -38,9 +41,15 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
   const { localUid, connectionLost, connected, roomSettings, gameState, onlinePlayers, isHost, handleQuit } =
     useOnlineRoomSession(useContourRoomStore, { deleteRoom, removeRoomPlayer, pruneRoomPlayerData }, code, onQuit);
 
-  // Countries ship with the app: the room only carries their codes, every device rebuilds the same
-  // board from its own copy.
-  const country = CONTOURS.find((candidate) => candidate.code === gameState.countryCodes[gameState.roundIndex]);
+  // The room only carries the countries' codes: every device reads the round's country (and the ones around
+  // it) from Firestore, the next round's already while this one is played.
+  const {
+    data: roundData,
+    failed: roundFailed,
+    retry: retryRound,
+  } = useRoundData(gameState.countryCodes, gameState.roundIndex);
+  const country = roundData?.country;
+  const neighborCountries = roundData?.neighborCountries ?? NO_NEIGHBOR_COUNTRIES;
   // Same three values on every device, so the same coarse silhouette: see `roundSimplifySeed`.
   const simplifySeed = roundSimplifySeed(
     gameState.simplifySeed,
@@ -81,7 +90,7 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
 
   const submitGuess = () => {
     if (!isMyTurn || localUid === null || country === undefined) return;
-    const correct = normalizeContourGuess(guessText) === normalizeContourGuess(countryName(country.code, language));
+    const correct = normalizeContourGuess(guessText) === normalizeContourGuess(roundCountryName(country, language));
     if (correct) {
       reportContourRoomCorrect(code, localUid).catch(() => {});
       return;
@@ -113,6 +122,9 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
     onlinePlayers,
     isHost,
     country,
+    neighborCountries,
+    roundFailed,
+    retryRound,
     plan,
     simplifySeed,
     isMyTurn,

@@ -4,7 +4,9 @@ import { useEffect } from 'react';
 
 import LanguageProvider from '@/components/LanguageProvider';
 import ThemeProvider from '@/components/ThemeProvider';
+import { preloadCluesCounts } from '@/games/clues/helpers/clueCounts';
 import { preloadCompassCounts } from '@/games/compass/helpers/compassCounts';
+import { preloadContourCounts } from '@/games/contour/helpers/contourCounts';
 import { disableTextSelection, polyfillFlagEmoji } from '@/helpers';
 import { hydratePlayerName, hydrateSettings } from '@/settings';
 import { useTheme } from '@/themes';
@@ -33,6 +35,8 @@ const RootLayout = () => {
   useEffect(hydratePlayerName, []);
   // Compass group sizes (`meta/compassCounts`): read now so a game finds them already loaded.
   useEffect(preloadCompassCounts, []);
+  useEffect(preloadCluesCounts, []);
+  useEffect(preloadContourCounts, []);
 
   return (
     <ThemeProvider>

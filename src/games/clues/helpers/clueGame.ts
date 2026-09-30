@@ -1,13 +1,9 @@
-import { CLUE_PLACES, isCapitalPlace, isFrenchCityPlace } from '@/data';
 import { CLUE_ORDER } from '@/games/clues/constants';
 import { charadeFor, charadeMaxStage, charadeReady } from '@/games/clues/helpers/charade';
-import { pickLeastDrawn, type ClueDrawHistory } from '@/games/clues/helpers/clueHistory';
 import { HYPHEN_SLOT, type NameSkeletonSlot } from '@/games/clues/helpers/clueSkeleton';
 import { personalityFor } from '@/games/clues/helpers/personality';
 import { wordplayFor } from '@/games/clues/helpers/wordplay';
-import { effectiveDifficulty } from '@/games/compass/helpers/places';
-import type { Language } from '@/i18n';
-import type { ClueId, Difficulty, ClueCategory, CluePlace } from '@/types';
+import type { ClueCategory, ClueId, CluePlace } from '@/types';
 
 /** Clues that reveal in 2 clicks: tier/symbol/day-night on the 1st, exact value on the 2nd
  * (distance/elevation/population/currency/localTime); letter: first letter alone, then every
@@ -22,11 +18,9 @@ const THREE_STAGE_CLUE_IDS = new Set(['emoji', 'flagColors']);
  * distinguish one place from another. Dropped from `cluesFor` for that category only. */
 const CITIES_FR_EXCLUDED_CLUE_IDS = new Set<ClueId>(['localTime', 'isCapital', 'flagColors', 'currency', 'phoneCode']);
 
-/** Which of the 3 Clues categories `place` falls into — capital first, then French city, then
- * plain city (see `isCapitalPlace`/`isFrenchCityPlace`, cross-referenced from Compass). Exported
- * for `cluesFor`'s own category check, alongside its original use for the draw pool below. */
-export const placeCategory = (place: Pick<CluePlace, 'name' | 'code'>): ClueCategory =>
-  isCapitalPlace(place) ? 'capital' : isFrenchCityPlace(place) ? 'citiesFr' : 'cities';
+/** Which of the 3 Clues categories `place` falls into — capital first, then French city, then plain city
+ * (stored on the place, see `CluePlace.category`). Exported for `cluesFor`'s own category check. */
+export const placeCategory = (place: Pick<CluePlace, 'category'>): ClueCategory => place.category;
 
 /**
  * The clue ids actually offered for `place`, in `CLUE_ORDER`'s order: a `citiesFr` place drops
@@ -81,25 +75,6 @@ export const remainingScore = (revealedClueIds: ClueId[], place: CluePlace): num
   const vowelsRevealed = revealedClueIds.includes('vowels');
   const countdownRemaining = maxScore - revealedClueIds.filter((id) => id !== 'vowels').length;
   return vowelsRevealed ? Math.min(countdownRemaining, 1) : countdownRemaining;
-};
-
-/** Round's place: among places matching both the chosen difficulty and the chosen categories
- * (falls back to the whole pool if the filter is empty), prefers whichever have been drawn the
- * fewest times per `history` — never-drawn places first, then, once everything in the pool has
- * come up at least once, cycles through the least-drawn ones instead of repeating at random. See
- * `pickLeastDrawn`/`recordClueDraw` in helpers/clueHistory.ts. Each place falls into exactly one
- * of the 3 Clues categories, see `placeCategory`. */
-export const randomCluePlace = (
-  difficulty: Difficulty,
-  categories: ClueCategory[],
-  language: Language,
-  history: ClueDrawHistory = {},
-): CluePlace => {
-  const pool = CLUE_PLACES.filter(
-    (place) => categories.includes(placeCategory(place)) && effectiveDifficulty(place, language) === difficulty,
-  );
-  const source = pool.length > 0 ? pool : CLUE_PLACES;
-  return pickLeastDrawn(source, history);
 };
 
 /** Normalizes a place name for comparison ("I type the city" mode): lowercased, accents,

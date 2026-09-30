@@ -1,10 +1,10 @@
-import { CLUE_PLACES, isCapitalPlace, isFrenchCityPlace } from '@/data';
+import { CLUE_PLACES } from '@/data';
 import { CLUE_ORDER } from '@/games/clues/constants';
 import { charadeFor, charadeMaxStage, charadeReady } from '@/games/clues/helpers/charade';
 import { personalityFor } from '@/games/clues/helpers/personality';
 import { wordplayFor } from '@/games/clues/helpers/wordplay';
 import { nameSkeleton } from '@/helpers';
-import type { CluePlace, Difficulty, ClueId } from '@/types';
+import type { CluePlace, ClueId } from '@/types';
 
 import {
   cluesFor,
@@ -12,7 +12,6 @@ import {
   normalizePlaceGuess,
   overlayTypedLetters,
   placeCategory,
-  randomCluePlace,
   remainingScore,
   skeletonLetterCount,
   totalRevealCount,
@@ -163,56 +162,6 @@ describe('remainingScore', () => {
 
   it('gives a citiesFr place a lower starting score than an equivalent capital/city', () => {
     expect(remainingScore([], MARSEILLE)).toBeLessThan(remainingScore([], PARIS));
-  });
-});
-
-describe('randomCluePlace', () => {
-  const difficulties: Difficulty[] = ['easy', 'intermediate', 'hard'];
-
-  it.each(difficulties)('only returns places matching difficulty %s', (difficulty) => {
-    for (let i = 0; i < 20; i += 1) {
-      expect(randomCluePlace(difficulty, ['cities', 'capital'], 'fr').difficulty).toBe(difficulty);
-    }
-  });
-
-  it('falls back to the full pool when the filtered pool is empty', () => {
-    const place = randomCluePlace('does-not-exist' as Difficulty, ['cities', 'capital'], 'fr');
-    expect(CLUE_PLACES).toContainEqual(place);
-  });
-
-  it('only draws capitals when "cities" is not selected', () => {
-    for (let i = 0; i < 20; i += 1) {
-      const place = randomCluePlace('easy', ['capital'], 'fr');
-      expect(isCapitalPlace(place)).toBe(true);
-    }
-  });
-
-  it('only draws non-capital cities when "capital" is not selected', () => {
-    for (let i = 0; i < 20; i += 1) {
-      const place = randomCluePlace('easy', ['cities'], 'fr');
-      expect(isCapitalPlace(place)).toBe(false);
-    }
-  });
-
-  it('only draws French cities when "citiesFr" is the only category selected', () => {
-    for (let i = 0; i < 20; i += 1) {
-      const place = randomCluePlace('easy', ['citiesFr'], 'fr');
-      expect(isFrenchCityPlace(place)).toBe(true);
-    }
-  });
-
-  it('never draws a French city when "citiesFr" is not selected', () => {
-    for (let i = 0; i < 20; i += 1) {
-      const place = randomCluePlace('easy', ['cities', 'capital'], 'fr');
-      expect(isFrenchCityPlace(place)).toBe(false);
-    }
-  });
-
-  it('in English, never draws an "easy" French place (a French easy place is bumped to intermediate)', () => {
-    for (let i = 0; i < 20; i += 1) {
-      const place = randomCluePlace('easy', ['cities', 'capital'], 'en');
-      if (place.code === 'FR') expect(place.difficulty).not.toBe('easy');
-    }
   });
 });
 

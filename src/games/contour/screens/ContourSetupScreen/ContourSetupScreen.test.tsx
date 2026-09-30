@@ -28,6 +28,11 @@ jest.mock('@/games/contour/helpers/room', () => ({
   updateRoomSettings: jest.fn(() => Promise.resolve()),
 }));
 
+// Same for the draw of the countries (Firestore): one code per round.
+jest.mock('@/games/contour/helpers/firestoreContours', () => ({
+  fetchContourRoundCodes: jest.fn(() => Promise.resolve(['FR', 'ES', 'IT', 'DE', 'PT'])),
+}));
+
 // Both stores are module-level singletons — reset explicitly so a chip pressed (or a room joined) in
 // one test doesn't leak into the next.
 const initialRoomState = useContourRoomStore.getState();

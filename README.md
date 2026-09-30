@@ -104,12 +104,15 @@ GitHub Pages, à côté du jeu :
 
 🔗 **[Éditeur de lieux](https://mathieujullien77190.github.io/azimuth-quiz/admin/)**
 
-Les données vivent dans **Firestore** (collections `places`, `countries`, `charadeRiddles`,
+Les données vivent dans **Firestore** (collections `places`, `countries`, `contours`, `charadeRiddles`,
 `personalityJobs`, `meta`). L'admin se connecte avec un compte Google (seul l'administrateur
 déclaré dans `firestore.rules` peut écrire) et **enregistre directement** chaque modification dans
-Firestore. Boussole tire ses lieux dans Firestore (lieux numerotes par groupe, voir CLAUDE.md, index
-`firestore.indexes.json` à déployer avec `npx firebase-tools deploy --only firestore:indexes`) ; Indices et
-Silhouette lisent encore les JSON embarqués (migration à venir). Import initial des JSON :
+Firestore. Boussole et Indices tirent leurs lieux dans Firestore, Silhouette ses pays et leurs silhouettes
+(éléments numérotés par groupe, curseur par appareil, voir CLAUDE.md ; index `firestore.indexes.json` à déployer
+avec `npx firebase-tools deploy --only firestore:indexes`) ; aucun repli sur les JSON embarqués, qui ne sont plus
+lus par ces trois jeux (ménage à faire). Le modèle de données (pays copié dans chaque lieu, numérotations,
+collection `contours`) est posé par des écrans de migration à usage unique de l’admin (voir CLAUDE.md,
+« Modèle Firestore dénormalisé »). Import initial des JSON :
 `npm run seed:firestore -- --dry-run` puis `npm run seed:firestore` (clé de compte de service dans
 `scripts/serviceAccount.json`, jamais commitée). Règles : `npx firebase-tools deploy --only firestore:rules`.
 En local :

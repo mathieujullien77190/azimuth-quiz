@@ -1,6 +1,7 @@
 import { renderHook } from '@testing-library/react-native';
 
 import { DEFAULT_CLUE_SETTINGS } from '@/games/clues/constants';
+import { fetchClueRoundPlaces } from '@/games/clues/helpers/firestoreCluePlaces';
 import { startClueRoomGame } from '@/games/clues/helpers/room';
 import { useClueRoomStore } from '@/games/clues/store/roomStore';
 import { resolveOrigin } from '@/helpers';
@@ -18,6 +19,7 @@ jest.mock('@/games/clues/helpers/room', () => ({
   ROOM_MAX_PLAYERS: 10,
   startClueRoomGame: jest.fn(() => Promise.resolve()),
 }));
+jest.mock('@/games/clues/helpers/firestoreCluePlaces', () => ({ fetchClueRoundPlaces: jest.fn() }));
 jest.mock('@/games/clues/store/roomStore', () => ({ useClueRoomStore: { getState: jest.fn() } }));
 
 const ORIGIN = { name: 'Paris', coordinates: { latitude: 48.85, longitude: 2.35 }, isDevicePosition: false };
@@ -26,6 +28,7 @@ const arrivedAt = (millis: number) => ({ toMillis: () => millis });
 beforeEach(() => {
   jest.clearAllMocks();
   jest.mocked(resolveOrigin).mockResolvedValue(ORIGIN);
+  jest.mocked(fetchClueRoundPlaces).mockResolvedValue([{ name: 'A' }, { name: 'B' }, { name: 'C' }] as never);
 });
 
 describe('useOnlineClueRoom', () => {
@@ -47,8 +50,21 @@ describe('useOnlineClueRoom', () => {
     expect(code).toBe('tabofuna');
     expect(payload.origin).toBe(ORIGIN);
     expect(payload.places).toHaveLength(3);
+    expect(fetchClueRoundPlaces).toHaveBeenCalledWith(settings, 'fr');
     expect(firstTurnUid).toBe('early');
     expect(startWithFirstLetter).toBe(false);
+  });
+
+  it('starts nothing when the places cannot be drawn (the shared start flow reports the failure)', async () => {
+    jest
+      .mocked(useClueRoomStore.getState)
+      .mockReturnValue({ players: { solo: { name: 'Solo', joinedAt: arrivedAt(1) } } } as never);
+    jest.mocked(fetchClueRoundPlaces).mockRejectedValue(new Error('offline'));
+    const { result } = await renderHook(() => useOnlineClueRoom(DEFAULT_CLUE_SETTINGS, jest.fn()));
+
+    await expect(result.current.startOnlineClueGame()).rejects.toThrow('offline');
+
+    expect(startClueRoomGame).not.toHaveBeenCalled();
   });
 
   it('refuses to start when nobody is in the room', async () => {

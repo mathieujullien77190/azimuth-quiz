@@ -2,9 +2,12 @@ import { useMemo, useState } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 
 import { spacing } from '@/data';
-import type { ContourCountry } from '@/types';
+import type { ContourCountry, ContourRoundCountry } from '@/types';
 
 import { projectRound, roundGeometry } from './roundBoard';
+
+/** A stable empty list: the default of `neighborCountries` must not be a new array at every render. */
+const NO_NEIGHBORS: readonly ContourCountry[] = [];
 
 /** Fallback box for the very first render, before the board area's own `onLayout` has measured
  * anything real yet — just needs to be a sane placeholder for one frame, not a sizing heuristic:
@@ -26,7 +29,12 @@ const BOARD_AREA_MARGIN = spacing.sm;
  * underneath them — pass `fullBleed: false` (overlays don't apply) to skip that subtraction.
  * Shared by the local game and the online one.
  */
-export const useRoundBoard = (country: ContourCountry, fullBleed: boolean, simplifySeed = 0) => {
+export const useRoundBoard = (
+  country: ContourRoundCountry,
+  fullBleed: boolean,
+  simplifySeed = 0,
+  neighborCountries: readonly ContourCountry[] = NO_NEIGHBORS,
+) => {
   // The board area's live measured size — `null` for the one frame before its first `onLayout`
   // fires, so `board` falls back to a sane placeholder box.
   const [boardAreaSize, setBoardAreaSize] = useState<{ width: number; height: number } | null>(null);
@@ -44,7 +52,10 @@ export const useRoundBoard = (country: ContourCountry, fullBleed: boolean, simpl
 
   // Neighbors, coast/border split and the simplified rings only depend on the country and the
   // round's seed: computed once per round, not on every re-fit of the box.
-  const geometry = useMemo(() => roundGeometry(country, simplifySeed), [country, simplifySeed]);
+  const geometry = useMemo(
+    () => roundGeometry(country, simplifySeed, neighborCountries),
+    [country, simplifySeed, neighborCountries],
+  );
 
   // Re-fit (not re-roll) `country` to the live measured box: recomputes whenever the country
   // changes or the box itself does. Shaved by `BOARD_AREA_MARGIN` on every side first.

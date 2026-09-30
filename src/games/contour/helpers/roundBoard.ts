@@ -1,7 +1,7 @@
-import { CONTOURS } from '@/data';
-import { countryName, flagEmoji } from '@/data/places/countries';
 import type { Language } from '@/i18n';
-import type { ContourCountry, ContourNeighbor, Point2D } from '@/types';
+import type { ContourCountry, ContourNamedNeighbor, ContourRoundCountry, Point2D } from '@/types';
+
+import { flagEmoji } from '@/helpers/flagEmoji';
 
 import {
   BOARD_PADDING_RATIO,
@@ -12,8 +12,7 @@ import {
   type ContourBoardHintLabel,
 } from '../components/ContourBoard';
 import { computeBorders, type CountryBorders } from './borders';
-import { neighborIcon, neighborName } from './contourCountry';
-import { contourPlacesFor, type ContourPlaces } from './contourPlaces';
+import { neighborIcon, neighborName, roundCountryName } from './contourCountry';
 import { revealedSteps, silhouetteLevel, type HintStep } from './hintPlan';
 import { FULL_PRECISION, simplificationLevels } from './simplify';
 
@@ -29,7 +28,7 @@ export type BoardMark = { name: string; position: Point2D };
  * re-rolled) whenever the box changes, so the same round reflows to fill whatever space is
  * actually available (device rotation, ...) instead of picking a new country. */
 export type RoundBoard = {
-  country: ContourCountry;
+  country: ContourRoundCountry;
   /** Canvas size, shaped to the country's own aspect ratio (see `boardDimensionsFor`) rather
    * than a fixed square — as large as it can be within `maxWidth`/`maxHeight` without distorting it. */
   width: number;
@@ -48,7 +47,7 @@ export type RoundBoard = {
   coastlines: Point2D[][];
   /** Stretches of the outline shared with a neighbor: stroked once, thinner. */
   borders: Point2D[][];
-  /** The country's cities offered as hints (capital excluded, see `contourPlacesFor`), projected with
+  /** The country's cities offered as hints (capital excluded, from the country's document), projected with
    * the very same projector as the outline. */
   cityMarks: BoardMark[];
   /** Same for the capital, `null` for a country without one in the data. */
@@ -61,7 +60,7 @@ export type RoundBoard = {
   centerPosition: Point2D;
   /** Every curated neighbor (see `ContourCountry.neighbors`), paired with its on-board pixel
    * position (`neighbor.x`/`y` scaled to this round's canvas). */
-  neighborHints: { neighbor: ContourNeighbor; position: Point2D }[];
+  neighborHints: { neighbor: ContourNamedNeighbor; position: Point2D }[];
 };
 
 /** What only depends on the country (and the round's seed), not on the box: callers that re-fit the
@@ -71,24 +70,26 @@ export type RoundGeometry = {
   borders: CountryBorders;
   /** The nested simplified rings, level 0 to 3 (`simplificationLevels`). */
   rings: (readonly (readonly [number, number])[])[];
-  /** The capital and cities offered as hints (`contourPlacesFor`). */
-  places: ContourPlaces;
 };
 
-/** `RoundGeometry` of a country for a round's seed; the borders come from the whole game dataset. */
-export const roundGeometry = (country: ContourCountry, simplifySeed: number): RoundGeometry => ({
-  borders: computeBorders(country, CONTOURS),
+/** `RoundGeometry` of a country for a round's seed; the borders come from the rings of the countries around it
+ * (`RoundData.neighborCountries`, read with the round). */
+export const roundGeometry = (
+  country: ContourCountry,
+  simplifySeed: number,
+  neighborCountries: readonly ContourCountry[] = [],
+): RoundGeometry => ({
+  borders: computeBorders(country, neighborCountries),
   rings: simplificationLevels(country.points, simplifySeed),
-  places: contourPlacesFor(country),
 });
 
 export const projectRound = (
-  country: ContourCountry,
+  country: ContourRoundCountry,
   maxWidth: number,
   maxHeight: number,
   geometry: RoundGeometry = roundGeometry(country, 0),
 ): RoundBoard => {
-  const { borders, rings, places } = geometry;
+  const { borders, rings } = geometry;
   const { width, height } = boardDimensionsFor(country.points, maxWidth, maxHeight);
   // Ratio of Math.min(width, height), not a fixed pixel count — see BOARD_PADDING_RATIO's own doc
   // comment for why: keeps the admin's differently-sized preview canvas laid out proportionally
@@ -104,9 +105,9 @@ export const projectRound = (
     neighborOutlines: borders.neighborRings.map((ring) => projectPoints(ring, project)),
     coastlines: borders.coastRuns.map((run) => projectPoints(run, project)),
     borders: borders.borderRuns.map((run) => projectPoints(run, project)),
-    cityMarks: places.cities.map((city) => ({ name: city.name, position: project([city.longitude, city.latitude]) })),
-    capitalMark: places.capital
-      ? { name: places.capital.name, position: project([places.capital.longitude, places.capital.latitude]) }
+    cityMarks: country.cities.map((city) => ({ name: city.name, position: project([city.longitude, city.latitude]) })),
+    capitalMark: country.capital
+      ? { name: country.capital.name, position: project([country.capital.longitude, country.capital.latitude]) }
       : null,
     centerPosition: { x: country.centerLabel.x * width, y: country.centerLabel.y * height },
     // `neighbor.x`/`y` are already a fraction of this exact board canvas (see `ContourNeighbor`'s
@@ -160,14 +161,18 @@ export const buildHintLabels = (
   ]);
   const capitalLabels: ContourBoardHintLabel[] = board.capitalMark
     ? [
-        ...(out.has('capitalPosition') ? [{ position: board.capitalMark.position, icon: true, text: CAPITAL_MARKER }] : []),
-        ...(out.has('capitalName') ? [{ position: below(board.capitalMark.position), text: board.capitalMark.name }] : []),
+        ...(out.has('capitalPosition')
+          ? [{ position: board.capitalMark.position, icon: true, text: CAPITAL_MARKER }]
+          : []),
+        ...(out.has('capitalName')
+          ? [{ position: below(board.capitalMark.position), text: board.capitalMark.name }]
+          : []),
       ]
     : [];
   const revealLabels: ContourBoardHintLabel[] = out.has('reveal')
     ? [
         { position: board.centerPosition, icon: true, text: flagEmoji(board.country.code) },
-        { position: below(board.centerPosition), text: countryName(board.country.code, language) },
+        { position: below(board.centerPosition), text: roundCountryName(board.country, language) },
       ]
     : [];
   return [...neighborLabels, ...cityLabels, ...capitalLabels, ...revealLabels];

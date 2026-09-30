@@ -1,6 +1,7 @@
-import { act, renderHook } from '@testing-library/react-native';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { MAX_CONTOUR_POINTS } from '@/games/contour/constants';
+import { loadRoundData } from '@/games/contour/helpers/firestoreContours';
 import { contourGuessPoints } from '@/games/contour/helpers/hintPlan';
 import {
   applyContourRoomScore,
@@ -34,6 +35,32 @@ jest.mock('@/games/contour/helpers/room', () => ({
   subscribeToRoomSettings: jest.fn(),
 }));
 
+jest.mock('@/games/contour/helpers/firestoreContours', () => ({ loadRoundData: jest.fn() }));
+
+const NAMES: Record<string, [string, string]> = { FR: ['France', 'France'], ES: ['Espagne', 'Spain'] };
+
+/** What a round's documents give: the country with its names, one neighbor, a capital and a city (so a
+ * plan with every category has 11 steps), and the rings around it. */
+const roundData = (code: string) => ({
+  country: {
+    code,
+    fr: NAMES[code][0],
+    en: NAMES[code][1],
+    points: [
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 0],
+    ] as [number, number][],
+    neighbors: [{ type: 'country' as const, code: 'BB', x: 0.1, y: 0.1, fr: 'Bb', en: 'Bb' }],
+    centerLabel: { x: 0.5, y: 0.5 },
+    difficulty: 'easy' as const,
+    capital: { name: 'Capitale', longitude: 0.5, latitude: 0.5 },
+    cities: [{ name: 'Ville', longitude: 0.4, latitude: 0.4 }],
+  },
+  neighborCountries: [],
+});
+
 const INITIAL_STATE = useContourRoomStore.getState();
 
 const arrivedAt = (millis: number) => ({ toMillis: () => millis }) as never;
@@ -56,7 +83,7 @@ const gameState = (overrides: Partial<ContourRoomGameState> = {}): ContourRoomGa
 });
 
 /** Two players, `host` (this device unless said otherwise) then `guest`; it is the host's turn. */
-const setup = async (state: Partial<StoreState> = {}) => {
+const setup = async (state: Partial<StoreState> = {}, waitForCountry = true) => {
   useContourRoomStore.setState({
     code: 'tabofuna',
     localUid: 'host',
@@ -69,11 +96,17 @@ const setup = async (state: Partial<StoreState> = {}) => {
     gameState: gameState(),
     ...state,
   });
-  return renderHook(() => useOnlineContourGame('tabofuna', jest.fn()));
+  const hook = await renderHook(() => useOnlineContourGame('tabofuna', jest.fn()));
+  // The round's documents come from Firestore: wait for them when the room has a round to play.
+  const { countryCodes, roundIndex } = (state.gameState ?? gameState()) as ContourRoomGameState;
+  if (waitForCountry && countryCodes[roundIndex] !== undefined)
+    await waitFor(() => expect(hook.result.current.country).toBeDefined());
+  return hook;
 };
 
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.mocked(loadRoundData).mockImplementation(async (code) => roundData(code));
   useContourRoomStore.setState(INITIAL_STATE, true);
 });
 
@@ -82,6 +115,24 @@ describe('useOnlineContourGame — the round', () => {
     const { result } = await setup();
     expect(result.current.country?.code).toBe('FR');
     expect(result.current.isMyTurn).toBe(true);
+  });
+
+  it('reads the next round in the background while this one is played', async () => {
+    await setup();
+    expect(loadRoundData).toHaveBeenCalledWith('FR');
+    expect(loadRoundData).toHaveBeenCalledWith('ES');
+  });
+
+  it('reports a round that could not be read, and reads it again on demand', async () => {
+    jest.mocked(loadRoundData).mockRejectedValue(new Error('offline'));
+    const { result } = await setup({}, false);
+    await waitFor(() => expect(result.current.roundFailed).toBe(true));
+    expect(result.current.country).toBeUndefined();
+
+    jest.mocked(loadRoundData).mockImplementation(async (code) => roundData(code));
+    await act(async () => result.current.retryRound());
+    await waitFor(() => expect(result.current.country?.code).toBe('FR'));
+    expect(result.current.roundFailed).toBe(false);
   });
 
   it('has no country for an unknown code', async () => {
@@ -293,9 +344,18 @@ describe('useOnlineContourGame — next round', () => {
 
 describe('useOnlineContourGame — host duties', () => {
   it('writes the total once the turn-holder found the country', async () => {
-    await setup({
-      gameState: gameState({ verdict: 'correct', roundWinnerUid: 'guest', hintsRevealed: 1, totalScores: { host: 5 } }),
-    });
+    // The round's country is loaded (so is its plan) well before somebody finds it.
+    await setup({ gameState: gameState({ hintsRevealed: 1, totalScores: { host: 5 } }) });
+    await act(async () =>
+      useContourRoomStore.setState({
+        gameState: gameState({
+          verdict: 'correct',
+          roundWinnerUid: 'guest',
+          hintsRevealed: 1,
+          totalScores: { host: 5 },
+        }),
+      }),
+    );
     expect(applyContourRoomScore).toHaveBeenCalledWith('tabofuna', {
       host: 5,
       guest: contourGuessPoints(1, 11),

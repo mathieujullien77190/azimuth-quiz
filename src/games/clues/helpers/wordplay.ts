@@ -1,4 +1,3 @@
-import wordplayData from '@/data/wordplay.json';
 import type { CluePlace, Difficulty } from '@/types';
 
 /**
@@ -12,20 +11,12 @@ import type { CluePlace, Difficulty } from '@/types';
  * `scripts/generateWordplay.mjs`, same no-invention rule as `personality`. A place with nothing
  * curated (or an empty `sentence`) never offers the clue at all, see `cluesFor`.
  *
- * Keyed the same way as `places.json`'s own sibling files (`place.key`, see
- * `data/places/codec.ts`'s doc comment) — not a separate `code|name` cross-reference like
- * `charadeKey`/`personalityKey`: wordplay's curation already sits in its own small file, so it
- * gets no readability benefit from a human-typed key the way `charadeCuration.json`/
- * `wordplayCuration.json`'s SOURCE files used to need — the short key doubles as the shipped
- * lookup key AND the one curated by hand.
+ * Stored on the place itself (`places/{id}.wordplay` in Firestore, edited in the admin) and copied into the
+ * `CluePlace` the host draws, so a round reads nothing else.
  */
 export type WordplayEntry = { sentence: string; difficulty: Difficulty };
 
-const WORDPLAY = wordplayData as unknown as Record<string, WordplayEntry>;
-
 /** `place`'s curated wordplay, or `null` when there is none (not curated yet, or curated with an
  * empty `sentence`) — never an empty, unclickable card. */
-export const wordplayFor = (place: Pick<CluePlace, 'key'>): WordplayEntry | null => {
-  const entry = WORDPLAY[place.key];
-  return entry !== undefined && entry.sentence.trim() !== '' ? entry : null;
-};
+export const wordplayFor = (place: Pick<CluePlace, 'wordplay'>): WordplayEntry | null =>
+  place.wordplay !== undefined && place.wordplay.sentence.trim() !== '' ? place.wordplay : null;

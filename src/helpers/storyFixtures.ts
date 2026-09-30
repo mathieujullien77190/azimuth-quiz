@@ -6,9 +6,11 @@ import {
 } from '@/games/contour/components/ContourBoard';
 import { CLUE_PLACES, CONTOURS, DEFAULT_ORIGIN, PLACES, PLAYER_COLORS } from '@/data';
 import { DEFAULT_DISTANCE_KM, MAX_SURFACE_DISTANCE_KM } from '@/games/compass/constants';
-import type { CluePlace, ContourCountry, Guess, Place, Player, PlayerResult, Point2D, RoundRecord } from '@/types';
+import type { CluePlace, ContourRoundCountry, Guess, Place, Player, PlayerResult, Point2D, RoundRecord } from '@/types';
 
-import { projectRound } from '@/games/contour/helpers/roundBoard';
+import { contourPlacesFor } from '@/games/contour/helpers/contourPlaces';
+import { projectRound, roundGeometry } from '@/games/contour/helpers/roundBoard';
+import { countryName } from '@/data/places/countries';
 
 import { bearingDeg, distanceKm, normalizeBearing } from './geo';
 import { applyBestBonus, scoreRound } from '@/games/compass/helpers/scoring';
@@ -50,7 +52,20 @@ export const SAMPLE_PLAYERS: Player[] = [
 
 /** France: hand-curated (not auto-generated), `easy` difficulty, real neighbor/centerLabel
  * positions — see CLAUDE.md's Silhouette section. */
-export const SAMPLE_CONTOUR_COUNTRY: ContourCountry = CONTOURS.find((country) => country.code === 'FR')!;
+const FRANCE = CONTOURS.find((country) => country.code === 'FR')!;
+const FRANCE_PLACES = contourPlacesFor(FRANCE);
+export const SAMPLE_CONTOUR_COUNTRY: ContourRoundCountry = {
+  ...FRANCE,
+  fr: countryName('FR', 'fr'),
+  en: countryName('FR', 'en'),
+  neighbors: FRANCE.neighbors.map((neighbor) => ({
+    ...neighbor,
+    fr: countryName(neighbor.code, 'fr'),
+    en: countryName(neighbor.code, 'en'),
+  })),
+  capital: FRANCE_PLACES.capital,
+  cities: FRANCE_PLACES.cities,
+};
 
 const ORIGIN = DEFAULT_ORIGIN.coordinates;
 const TRUE_BEARING = bearingDeg(ORIGIN, SAMPLE_PLACE_REVEALED.coordinates);
@@ -114,6 +129,7 @@ export const SAMPLE_CONTOUR_BOARD = projectRound(
   SAMPLE_CONTOUR_COUNTRY,
   CONTOUR_BOARD_MAX_WIDTH,
   CONTOUR_BOARD_MAX_HEIGHT,
+  roundGeometry(SAMPLE_CONTOUR_COUNTRY, 0, CONTOURS),
 );
 
 /** Every curated neighbor for France, already projected to board pixels (tier-1/tier-3 hints). */

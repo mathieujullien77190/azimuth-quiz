@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
 
-import { DIFFICULTIES, difficultyEmoji, isCapitalPlace } from '@/data';
-import { countryCurrencyName, countryFlagColors, flagEmoji, FLAG_COLOR_FIELD } from '@/data/places/countries';
+import { DIFFICULTIES, difficultyEmoji } from '@/data';
+import { flagEmoji } from '@/data/places/countries';
 import { formatDistance, formatNumber, nameSkeleton } from '@/helpers';
 import { charadeFor, charadeLines, charadeMaxStage } from '@/games/clues/helpers/charade';
 import { personalityFor } from '@/games/clues/helpers/personality';
@@ -108,7 +108,9 @@ const revealedBody = (
 ) => {
   switch (clueId) {
     case 'isCapital':
-      return <Text style={styles.statValue}>{isCapitalPlace(place) ? isCapitalLabels.yes : isCapitalLabels.no}</Text>;
+      return (
+        <Text style={styles.statValue}>{place.category === 'capital' ? isCapitalLabels.yes : isCapitalLabels.no}</Text>
+      );
     case 'position': {
       const dot = POSITION_COORDS[place.positionInCountry];
       return (
@@ -217,7 +219,7 @@ const revealedBody = (
     case 'vowels':
       return <Text style={styles.statValue}>{vowelsOf(place.name)}</Text>;
     case 'flagColors': {
-      const allColors = countryFlagColors(place.code) ?? [];
+      const allColors = place.flagColors;
       const stage = flagStage ?? 1;
       // 1st click: one color. 2nd click: every color, however many the flag actually has. 3rd
       // click: swaps the swatches for the actual flag (see CluesGameScreen).
@@ -225,9 +227,7 @@ const revealedBody = (
       const visibleColors = stage >= 2 ? allColors : allColors.slice(0, 1);
       return (
         <View style={styles.flagColorList}>
-          {visibleColors.map((row, i) => {
-            const hex = row[FLAG_COLOR_FIELD.HEX];
-            const percent = row[FLAG_COLOR_FIELD.PERCENT];
+          {visibleColors.map(({ hex, percent }, i) => {
             return (
               <View key={i} style={styles.flagColorRow}>
                 <View style={[styles.flagSwatch, { backgroundColor: hex }]} />
@@ -270,8 +270,7 @@ const revealedBody = (
     case 'currency': {
       const stage = currencyStage ?? 1;
       if (stage < 2) return <Text style={styles.statValue}>{place.currency}</Text>;
-      const name = countryCurrencyName(place.code);
-      return <Text style={styles.statValue}>{name ?? place.currency}</Text>;
+      return <Text style={styles.statValue}>{place.currencyName || place.currency}</Text>;
     }
     case 'airportCode':
       return <Text style={styles.statValue}>{place.airportCode}</Text>;
@@ -325,7 +324,10 @@ export const ClueCard = ({
   const wordplayDifficultyEmoji =
     wordplayEntry === null
       ? undefined
-      : difficultyEmoji(DIFFICULTIES.find((entry) => entry.id === wordplayEntry.difficulty)!, isDark);
+      : difficultyEmoji(
+          DIFFICULTIES.find((entry) => entry.id === wordplayEntry.difficulty)!,
+          isDark,
+        );
 
   useEffect(() => {
     if (state === 'revealed') {
@@ -349,7 +351,9 @@ export const ClueCard = ({
     >
       <View style={styles.header}>
         <Text style={styles.label}>{label}</Text>
-        {wordplayDifficultyEmoji !== undefined && <Text style={styles.wordplayDifficulty}>{wordplayDifficultyEmoji}</Text>}
+        {wordplayDifficultyEmoji !== undefined && (
+          <Text style={styles.wordplayDifficulty}>{wordplayDifficultyEmoji}</Text>
+        )}
         {progress !== undefined && (
           <View accessibilityLabel={`${progress.stage}/${progress.max}`} style={styles.stageDots}>
             {Array.from({ length: progress.max }, (_, i) => (

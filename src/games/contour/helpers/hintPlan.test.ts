@@ -1,25 +1,21 @@
-import { CONTOURS } from '@/data';
 import { MAX_CONTOUR_POINTS } from '@/games/contour/constants';
-import type { ContourCountry, ContourHintCategory } from '@/types';
+import type { ContourHintCategory, ContourRoundCountry } from '@/types';
 
-import {
-  buildHintPlan,
-  contourGuessPoints,
-  normalizeHintCategories,
-  revealedSteps,
-  silhouetteLevel,
-} from './hintPlan';
+import { buildHintPlan, contourGuessPoints, normalizeHintCategories, revealedSteps, silhouetteLevel } from './hintPlan';
 
-const country: ContourCountry = {
-  code: 'AA',
-  points: [],
-  neighbors: [{ type: 'country', code: 'BB', x: 0.1, y: 0.1 }],
-  centerLabel: { x: 0.5, y: 0.5 },
-  difficulty: 'easy',
-};
 const places = {
   capital: { name: 'Capitale', longitude: 1, latitude: 1 },
   cities: [{ name: 'Ville', longitude: 2, latitude: 2 }],
+};
+const country: ContourRoundCountry = {
+  code: 'AA',
+  fr: 'Aa',
+  en: 'Aa',
+  points: [],
+  neighbors: [{ type: 'country', code: 'BB', x: 0.1, y: 0.1, fr: 'Bb', en: 'Bb' }],
+  centerLabel: { x: 0.5, y: 0.5 },
+  difficulty: 'easy',
+  ...places,
 };
 const ALL: ContourHintCategory[] = ['silhouette', 'neighbors', 'cities', 'capital'];
 
@@ -37,7 +33,7 @@ describe('normalizeHintCategories', () => {
 
 describe('buildHintPlan', () => {
   it('chains the steps of every category in the fixed order, the country reveal last', () => {
-    expect(buildHintPlan(ALL, country, places)).toEqual([
+    expect(buildHintPlan(ALL, country)).toEqual([
       'silhouette1',
       'silhouette2',
       'silhouette3',
@@ -53,7 +49,7 @@ describe('buildHintPlan', () => {
   });
 
   it('orders by the fixed order, not by the order the categories are given in', () => {
-    expect(buildHintPlan(['capital', 'silhouette'], country, places)).toEqual([
+    expect(buildHintPlan(['capital', 'silhouette'], country)).toEqual([
       'silhouette1',
       'silhouette2',
       'silhouette3',
@@ -64,33 +60,25 @@ describe('buildHintPlan', () => {
   });
 
   it('has only the reveal step for a category with nothing to offer', () => {
-    expect(buildHintPlan(['neighbors'], { ...country, neighbors: [] }, places)).toEqual(['reveal']);
+    expect(buildHintPlan(['neighbors'], { ...country, neighbors: [] })).toEqual(['reveal']);
   });
 
   it('leaves out the city steps of a country without cities, and the capital steps of one without capital', () => {
-    expect(buildHintPlan(['cities', 'capital'], country, { capital: null, cities: places.cities })).toEqual([
+    expect(buildHintPlan(['cities', 'capital'], { ...country, capital: null })).toEqual([
       'cityPositions',
       'cityNames',
       'reveal',
     ]);
-    expect(buildHintPlan(['cities', 'capital'], country, { capital: places.capital, cities: [] })).toEqual([
+    expect(buildHintPlan(['cities', 'capital'], { ...country, cities: [] })).toEqual([
       'capitalPosition',
       'capitalName',
       'reveal',
     ]);
   });
-
-  it('reads the real data when no places are given', () => {
-    const france = CONTOURS.find((candidate) => candidate.code === 'FR')!;
-    const plan = buildHintPlan(ALL, france);
-    expect(plan).toContain('capitalName');
-    expect(plan).toContain('cityNames');
-    expect(plan[plan.length - 1]).toBe('reveal');
-  });
 });
 
 describe('revealedSteps and silhouetteLevel', () => {
-  const plan = buildHintPlan(ALL, country, places);
+  const plan = buildHintPlan(ALL, country);
 
   it('reveals the first steps of the plan', () => {
     expect([...revealedSteps(plan, 0)]).toEqual([]);
@@ -102,7 +90,7 @@ describe('revealedSteps and silhouetteLevel', () => {
   });
 
   it('is the full ring from the start when the silhouette hints are off', () => {
-    const noSilhouette = buildHintPlan(['capital'], country, places);
+    const noSilhouette = buildHintPlan(['capital'], country);
     expect(silhouetteLevel(noSilhouette, 0)).toBe(3);
   });
 });

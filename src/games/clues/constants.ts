@@ -1,8 +1,7 @@
 import type { ClueCategory, ClueId, ClueSettings } from '@/types';
 
-/** How many times each Clues place has been drawn, across every game — lets rounds avoid
- * repeats (see helpers/clueHistory.ts). */
-export const CLUE_HISTORY_STORAGE_KEY = 'azimuthquiz:clue-history';
+/** Where this device is in each Clues group, to take the next places (see `helpers/clueCursors.ts`). */
+export const CLUE_CURSORS_STORAGE_KEY = 'azimuthquiz:clue-cursors';
 
 // Display order in the grid: from easiest (highest cost, at the top) to hardest (cost
 // 1, purple, at the bottom). Every round now shows all clues (no more subset):

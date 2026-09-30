@@ -2,12 +2,16 @@ import { act, renderHook } from '@testing-library/react-native';
 import type { LayoutChangeEvent } from 'react-native';
 
 import { spacing } from '@/data';
-import type { ContourCountry } from '@/types';
+import type { ContourCountry, ContourRoundCountry } from '@/types';
 
 import { useRoundBoard } from './useRoundBoard';
 
-const country: ContourCountry = {
+const country: ContourRoundCountry = {
   code: 'FR',
+  fr: 'France',
+  en: 'France',
+  capital: null,
+  cities: [],
   points: [
     [0, 0],
     [1, 0],
@@ -22,7 +26,28 @@ const country: ContourCountry = {
 const layout = (width: number, height: number) =>
   ({ nativeEvent: { layout: { x: 0, y: 0, width, height } } }) as LayoutChangeEvent;
 
+const neighbor: ContourCountry = {
+  code: 'ES',
+  points: [
+    [1, 0],
+    [2, 0],
+    [2, 1],
+    [1, 1],
+    [1, 0],
+  ],
+  neighbors: [],
+  centerLabel: { x: 0.5, y: 0.5 },
+  difficulty: 'easy',
+};
+
 describe('useRoundBoard', () => {
+  it('draws the countries around it as the backdrop (they come with the round)', async () => {
+    const closed = { ...country, points: [...country.points, country.points[0]] };
+    const { result } = await renderHook(() => useRoundBoard(closed, false, 0, [neighbor]));
+    expect(result.current.board.neighborOutlines).toHaveLength(1);
+    expect(result.current.board.borders.length).toBeGreaterThan(0);
+  });
+
   it('starts from a placeholder box before anything is measured', async () => {
     const { result } = await renderHook(() => useRoundBoard(country, true));
     expect(result.current.board.width).toBeGreaterThan(0);

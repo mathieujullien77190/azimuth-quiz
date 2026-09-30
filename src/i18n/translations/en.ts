@@ -221,6 +221,7 @@ export const en: Translations = {
     },
   },
   contourGame: {
+    loadFailed: 'Couldn’t load the country. Check your connection, then tap the screen to try again.',
     guessPrompt: 'Which country is this?',
     hintButton: '💡 Hint',
     waitingForTurn: (name) => `${name}'s turn…`,

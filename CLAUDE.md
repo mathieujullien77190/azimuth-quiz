@@ -73,10 +73,11 @@ src/
     clues/
       screens/         # OnlineClueGameScreen, ClueSetupScreen
       components/      # ClueCard, ClueGrid
-      helpers/         # clueHistory.ts, clueSkeleton.ts, clueGame.ts (score, tirage, saisie,
-                       # cluesFor/placeCategory), charade.ts, personality.ts, wordplay.ts
+      helpers/         # clueCursors.ts, clueCounts.ts, firestoreCluePlaces.ts (tirage Firestore, voir plus bas),
+                       # clueSkeleton.ts, clueGame.ts (score, saisie, cluesFor/placeCategory), charade.ts,
+                       # personality.ts, wordplay.ts
       constants.ts     # tuning propre a Clues : CLUE_ORDER, CLUE_CATEGORIES,
-                       # CLUE_ANSWER_METHODS, DEFAULT_CLUE_SETTINGS, CLUE_HISTORY_STORAGE_KEY
+                       # CLUE_ANSWER_METHODS, DEFAULT_CLUE_SETTINGS, CLUE_CURSORS_STORAGE_KEY
     contour/
       screens/         # OnlineContourGameScreen, ContourSetupScreen
       components/      # ContourBoard, ContourFullBleedScreen, ContourGuessBar
@@ -88,7 +89,7 @@ src/
   helpers/             # commun aux 3 jeux : geo.ts, format.ts, storage.ts, location.ts, random.ts,
                        # web.ts, firebase.ts, settings.ts (sanitize GameSettings) — le barrel
                        # `index.ts` re-exporte aussi les fonctions des `helpers/` par-jeu
-                       # ci-dessus (places/scoring/distanceScale/clueHistory/clueSkeleton), donc un simple `import { pickPlaces } from '@/helpers'`
+                       # ci-dessus (places/scoring/distanceScale/clueSkeleton), donc un simple `import { pickPlaces } from '@/helpers'`
                        # marche toujours sans savoir ou vit le fichier reel — room.ts/roomStore.ts
                        # (Compass) restent les seuls hors barrel (`firebase/firestore` plante
                        # Jest a l'import), importes directement via leur chemin `@/games/compass/...`
@@ -205,6 +206,78 @@ ordre melange, `computeNumbering(..., { force: true })`, et pose `shuffled: true
 lieu" dans l'admin pour l'instant : la creer devra passer par `applyPlaceChange` (ajout en fin de groupe).
 `pickPlaces`/`filterPlaces` et les JSON restent dans le repo, plus utilises par ce chemin (menage plus tard).
 
+### Modele Firestore denormalise (etape 1 de "Indices + Silhouette sur Firestore" ; Boussole, Indices et Silhouette le lisent maintenant)
+
+On duplique pour ne rien lire en plus au runtime ; l'admin propage les modifications (`admin/src/data.ts`).
+Types dans `src/data/firestore/types.ts`, helpers purs testes dans `denormalize.ts`, `numbering.ts`,
+`contourDocs.ts`.
+
+- **`places/{cle}.country`** (`CountrySnapshot`) : copie du pays (`fr`, `en`, `flag`, `currency`, `currencySymbol`,
+  `phoneCode`) dans CHAQUE lieu de ce pays (Compass et Clues) : pas de `countryName()` ni de lecture de pays au
+  runtime. `cluesFromDoc` lit `doc.country` (repli sur la liste des pays pour un lieu pas encore migre).
+  `applyCountryChange` (admin) ecrit le pays ET tous ses lieux ET les contours qui le citent (`planCountryChange`)
+  par tranches de 400 operations (chaque tranche atomique) ; `saveCountry` passe par la.
+- **Numerotation Indices**, meme mecanique que Compass avec `CLUES_NUMBERING` : `places/{cle}.clues.category`
+  (`capital` / `citiesFr` / `cities`, derivee de la categorie Compass par `cluesCategory`, stockee parce qu'on
+  requete dessus) et `clues.n` (1..taille dans `clues.category` x `difficulty`, ordre melange), tailles dans
+  `meta/cluesCounts` (`shuffled: true`). `applyPlaceChange` garde les DEUX numerotations denses dans le meme batch
+  (un changement de categorie Compass peut regrouper la categorie Indices).
+- **`contours/{code}`** (`ContourCountryDoc`, sorti de `countries/{code}.contour`) : `points` (a plat), `difficulty`,
+  `centerLabel`, `neighbors` (avec `fr`/`en` copies), `borderCodes`, `fr`/`en`, `capital` et `cities` precalcules
+  comme le faisait `contourPlacesFor` a chaque manche, `n` (1..taille dans la difficulte, ordre melange) ; tailles
+  dans `meta/contourCounts`. Les edits de voisins / ancre du label ecrivent `contours/{code}`.
+- **Ecrans de migration de l'admin** (`AuthGate`, `STEPS`, chacun detecte depuis les donnees, idempotent) : Compass
+  (numeroter/melanger), "Copier les infos pays dans les lieux", "Numeroter/Melanger les lieux Indices", "Migrer les
+  contours" (construit `contours` depuis les silhouettes embarquees dans les pays, ecrit `meta/contourCounts`, PUIS
+  retire `contour` des pays : une execution interrompue se relance). Les builders JSON (`build.ts`) produisent les
+  memes formes pour un re-import (`seed:firestore`). Le runtime des trois jeux n'est pas touche a cette etape.
+- `firestore.rules` : bloc `contours` (lecture publique, ecriture admin). `firestore.indexes.json` : index
+  (`clues.category`, `difficulty`, `clues.n`) et (`difficulty`, `n`) sur `contours` — a deployer.
+
+### Indices : les lieux sont tires dans Firestore, et tout ce qu'une manche lit est dans le lieu
+
+Meme mecanique que Boussole (voir plus haut), sans repli sur les JSON. L'hote tire les lieux avec
+`fetchClueRoundPlaces` (`games/clues/helpers/firestoreCluePlaces.ts`, hors barrel) : groupes = `clues.category`
+(`capital` / `citiesFr` / `cities`, derivee de la categorie Compass) x `difficulty`, position `clues.n`, tailles
+dans `meta/cluesCounts` (`helpers/clueCounts.ts`, lu au lancement avec `preloadCluesCounts` dans
+`app/_layout.tsx`), curseurs par groupe sur l'appareil (`helpers/clueCursors.ts`, cle
+`CLUE_CURSORS_STORAGE_KEY`). Le moteur est commun aux deux jeux : `helpers/groupedDraw.ts` (`drawFromGroups` :
+curseurs avec bouclage, `splitEvenly` entre categories, UNE requete `or` par tranche de 30 positions, passes
+supplementaires si des lieux manquent ou sont refiltres) + `helpers/groupCursors.ts` / `helpers/groupCounts.ts`
+(fabriques du stockage des curseurs et du chargement des tailles). Chaque jeu ne fournit que ses champs, sa
+numerotation (`COMPASS_NUMBERING` / `CLUES_NUMBERING`), la conversion document -> lieu et son filtre (le
+relevement d'un cran des lieux FR en anglais, `effectiveDifficulty`). L'ancien historique de tirage
+(`clueHistory`, compteur par lieu) est supprime : les curseurs le remplacent. Echec (Firestore, ou moins de
+`rounds` lieux) : `fetchClueRoundPlaces` rejette, meme notice `startFailedNotice` que Boussole, la room n'est pas
+touchee. Le compte "N lieux possibles" du setup vient de `meta/cluesCounts` (`null` tant qu'il n'est pas charge :
+pas d'indication, le bouton n'est pas bloque).
+
+**Une manche ne lit que le lieu tire** (l'hote l'ecrit tel quel dans la room, les joueurs le lisent la) : le
+document `places/{id}` porte des COPIES de tout ce dont l'indice a besoin, maintenues par l'admin comme
+`country` :
+- `country` (`CountrySnapshot`) -> `CluePlace.country/phoneCode/currency/currencyName/flagColors` (drapeau en
+  objets `{id, hex, percent}` et non en tuples : un lieu part dans le document de la room, Firestore refuse les
+  tableaux imbriques) ;
+- `clues.riddles` : la devinette de chaque syllabe, dans l'ordre de `clues.syllables` (`null` = aucune) ->
+  `CluePlace.riddles`, lu par `charadeFor`/`charadeReady`/`charadeLines` (plus de dictionnaire global a
+  l'execution) ;
+- `personality.job` : le libelle du metier (`{fr, en}`) -> `CluePlace.personality.description` ;
+- `wordplay` -> `CluePlace.wordplay` (`wordplayFor(place)` lit le lieu, plus une table par cle) ;
+- `clues.category` -> `CluePlace.category` (`placeCategory(place)`, `isCapital` = `category === 'capital'`).
+`cluesFromDoc(id, doc)` (`data/firestore/read.ts`) construit le `CluePlace` depuis le seul document (les
+"lookups" pays/metiers ne servent qu'a un lieu que l'admin n'a pas encore migre). `normalizeSyllable` vit dans
+`data/firestore/riddles.ts`.
+
+**Admin (propagation)** : `data/firestore/denormalizeClues.ts` (pur : `withRiddles`, `withJobLabel`,
+`planRiddleChange`, `planJobChange`, `placesNeedingClueCopies`) ; `admin/src/data.ts` l'ecrit :
+`applyRiddleChange` (modifier une devinette de syllabe reecrit `clues.riddles` de tous les lieux qui ont cette
+syllabe, accents replies), `applyJobChange` (renommer un metier recopie le libelle dans les personnalites
+etiquetees), `saveCharadeSyllables` / `savePersonalityName` / `savePersonalityJob` recalculent la copie du
+lieu edite. Ecran a usage unique de `AuthGate` : "Copier devinettes et métiers dans les lieux"
+(`copyClueDataIntoPlaces`, detecte depuis les donnees, relancable). Les comparaisons de copies utilisent
+`sameJson` (`data/firestore/same.ts`, insensible a l'ordre des cles : Firestore rend les maps triees).
+Toute modification doit passer par l'admin (une edition directe dans la console ne se propage pas).
+
 ### Lieux : 5 petits fichiers, une cle courte partagee
 
 `src/data/places/` n'a plus un seul gros `places.json` : chaque lieu est reparti sur jusqu'a 5
@@ -233,7 +306,7 @@ cle de stockage cote a cote (`Paris (FR) [par]`) — jamais besoin de deviner un
 
 `decodeCluePlace` bake desormais cette meme cle sur l'objet `CluePlace` qu'il retourne
 (`CluePlace.key`, absent du `Place` de Compass — rien la-bas n'en a besoin) : un consommateur qui a
-deja un `CluePlace` (`wordplayFor`, les editeurs admin) lit `place.key` directement plutot que de la
+deja un `CluePlace` (les editeurs admin) lit `place.key` directement plutot que de la
 recalculer ou de se la faire passer a part.
 
 `countries.json` est scinde en 6 petits fichiers du meme esprit (voir "Donnees Contour" plus bas)
@@ -452,8 +525,30 @@ ce qui passe la main au joueur suivant) ou tente une reponse (bonne : `verdict: 
 `contourGuessPoints(hintsRevealed, plan.length)` ; mauvaise : `wrongGuessSeq` +1, penalite
 `CONTOUR_WRONG_GUESS_PENALTY`, il garde la main) ; une fois le pays revele (derniere etape du plan) il confirme
 l'abandon (`verdict: 'giveUp'`, personne ne marque). L'hote tire tous les pays d'avance (`countryCodes`,
-`pickContourRoundCodes` — la room ne porte que les codes, chaque appareil reconstruit le plateau depuis
-ses propres donnees) et seul l'hote ecrit les scores (`useHostTurnScoring`). Le setup local de
+`fetchContourRoundCodes` — la room ne porte que les codes, voir "Silhouette : tout vient de Firestore" plus bas)
+et seul l'hote ecrit les scores (`useHostTurnScoring`).
+
+**Silhouette : tout vient de Firestore (pas de repli sur les JSON).** *Tirage* (`games/contour/helpers/firestoreContours.ts`,
+hors barrel comme `room.ts`) : meme methode que Boussole/Indices, avec UN seul groupe par difficulte. Les silhouettes
+sont numerotees `n` = 1..taille dans leur difficulte (ordre melange une fois, voir "Modele Firestore denormalise"),
+les tailles sont dans `meta/contourCounts` (lu une fois par lancement, `preloadContourCounts` dans `_layout.tsx`),
+et l'appareil a UN curseur par difficulte (`contourCursors.ts`, AsyncStorage) : une partie prend les pays suivants
+et avance le curseur, en bouclant, donc un groupe est parcouru en entier avant qu'un pays revienne ; le 1er tirage
+part d'un pays au hasard. Une requete par tranche de 30 numeros (`difficulty == d`, `n in [...]`, 1 lecture par
+pays) ; un numero sans document (l'admin l'a retire) en redemande d'autres. Si Firestore echoue ou s'il y a moins
+de `rounds` pays, `fetchContourRoundCodes` rejette : `useSetupRoom` affiche `startFailedNotice`, la room reste dans
+son salon, "Lancer la partie" relance. *Manche* (tous les appareils, hote compris) : `useRoundData` lit le document du
+pays de la manche (`contours/{code}`) puis ceux des pays frontaliers (`borderCodes`, en UNE requete
+`documentId() in [...]` par tranche de 30) — `loadRoundData`, gardes en memoire pour la session — et charge deja la
+manche SUIVANTE pendant qu'on joue (changement de manche sans attente). Le plateau se construit a partir de ces
+documents seuls (`ContourRoundCountry`, `roundCountryFromDoc` : noms fr/en du pays et des voisins, capitale et villes
+precalculees) : plus de `CONTOURS`, de `countryName` ni de `contourPlacesFor(PLACES)` a l'execution ;
+`computeBorders` recoit les anneaux des voisins lus avec la manche (`RoundData.neighborCountries`,
+`roundGeometry(country, seed, neighborCountries)`). La reponse se verifie sur les noms du document
+(`roundCountryName`). Pendant la lecture de la 1re manche : le splash de chargement ; si elle echoue, une notice
+`contourGame.loadFailed` (un tap relit). `flagEmoji` est maintenant dans `helpers/flagEmoji.ts` (pur, sans JSON).
+`contourPlacesFor`/`contourPlaces.ts` ne servent plus qu'aux fixtures de stories et au test de parite de la migration
+(menage de l'etape 4). Le setup local de
 
 **Positions sur le plateau en fraction, pas en lon/lat.** `ContourNeighbor.x`/`y` et
 `ContourCountry.centerLabel` sont une fraction (0-1) du canvas du plateau — pas des

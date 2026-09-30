@@ -30,6 +30,7 @@ export const OnlineContourGameScreenView = ({
   totalRounds,
   difficulty,
   country,
+  neighborCountries,
   plan,
   hintsRevealed,
   simplifySeed,
@@ -59,6 +60,7 @@ export const OnlineContourGameScreenView = ({
     country,
     true,
     simplifySeed,
+    neighborCountries,
   );
   // A finished round shows everything, the country included.
   const shownHints = roundOver ? plan.length : hintsRevealed;
