@@ -46,24 +46,24 @@ const WordplayLine = ({ row, onSaved }: { row: Row; onSaved: (key: string, sente
         <textarea
           className="kv-input wordplay-input"
           placeholder="Jeu de mots sur le nom…"
-          rows={2}
+          rows={4}
           value={draft}
           onChange={(event) => {
             setDraft(event.target.value);
             setState('idle');
           }}
         />
-      </td>
-      <td>
-        <button className="reset" disabled={!dirty || state === 'saving'} type="button" onClick={save}>
-          {state === 'saving' ? '…' : row.sentence === '' ? 'Ajouter' : 'Modifier'}
-        </button>
-        {state === 'saved' && <span className="save-flag saved">✓</span>}
-        {state === 'error' && (
-          <span className="save-flag error" title="L’enregistrement a échoué">
-            ⚠
-          </span>
-        )}
+        <div className="wordplay-actions">
+          {state === 'saved' && <span className="save-flag saved">✓</span>}
+          {state === 'error' && (
+            <span className="save-flag error" title="L’enregistrement a échoué">
+              ⚠
+            </span>
+          )}
+          <button className="reset" disabled={!dirty || state === 'saving'} type="button" onClick={save}>
+            {state === 'saving' ? '…' : row.sentence === '' ? 'Ajouter' : 'Modifier'}
+          </button>
+        </div>
       </td>
     </tr>
   );

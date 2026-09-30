@@ -862,9 +862,43 @@ footer {
   padding-top: 8px;
 }
 
+.wordplay-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
 .wordplay-input {
   width: 100%;
   min-width: min(420px, 100%);
   resize: vertical;
   line-height: 1.4;
+}
+
+/* Narrow screens: a wordplay line stacks (name, then the text area over the full width, then the button). */
+@media (max-width: 640px) {
+  .wordplay-table,
+  .wordplay-table tbody,
+  .wordplay-table tr,
+  .wordplay-table td {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .wordplay-table tr {
+    padding: 8px 0;
+  }
+
+  .wordplay-name {
+    width: 100%;
+    padding-top: 0;
+  }
+
+  .wordplay-input {
+    width: 100%;
+    min-width: 0;
+  }
 }
