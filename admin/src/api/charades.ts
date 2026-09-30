@@ -3,7 +3,7 @@ import type { CluePlace } from '@/types';
 
 import { withRiddles } from '@/data/firestore/denormalizeClues';
 
-import { applyRiddleChange, data, putPlace, putRiddle } from '../data';
+import { applyRiddleChange, applySyllableRemoval, data, putPlace, putRiddle } from '../data';
 
 /** Two independent edits, both written to Firestore: `saveCharadeRiddle` edits the riddle, a GLOBAL
  * edit by the syllable's own text (not by place) — saving "pa"'s riddle from Paris's card changes it
@@ -24,6 +24,9 @@ export const saveCharadeRiddle = async (syllable: string, next: string): Promise
   await applyRiddleChange(syllable, trimmed === '' ? null : trimmed);
   return trimmed === '' ? null : trimmed;
 };
+
+/** `syllable` is removed from the dictionary AND from the split of every place that has it. */
+export const deleteCharadeSyllable = (syllable: string): Promise<void> => applySyllableRemoval(syllable);
 
 /** `place`'s syllable split was hand-corrected (a syllable added, removed, or renamed) — the FULL resulting
  * list (lowercased) is stored. A syllable new to the riddle dictionary gets an empty entry, so the

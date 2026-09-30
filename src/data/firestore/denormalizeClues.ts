@@ -45,6 +45,26 @@ export const planRiddleChange = (
   );
 };
 
+/** The places to rewrite when `syllable` is deleted from the dictionary: every place with that syllable (whatever
+ * its accents, see `normalizeSyllable`) loses it from `clues.syllables`, its `clues.riddles` recomputed for the
+ * remaining split (a place left with no syllable simply loses its charade, see `cluesFor`). */
+export const planSyllableRemoval = (
+  syllable: string,
+  places: Record<string, PlaceDoc>,
+  riddles: Riddles,
+): Record<string, PlaceDoc> => {
+  const id = normalizeSyllable(syllable);
+  const { [id]: _removed, ...rest } = riddles;
+  return Object.fromEntries(
+    Object.entries(places)
+      .filter(([, place]) => place.clues?.syllables.some((each) => normalizeSyllable(each) === id))
+      .map(([key, place]) => {
+        const syllables = place.clues!.syllables.filter((each) => normalizeSyllable(each) !== id);
+        return [key, withRiddles({ ...place, clues: { ...place.clues!, syllables } }, rest)] as const;
+      }),
+  );
+};
+
 /** The places to rewrite when job `code` becomes `job`: every personality tagged with it, its label copied. */
 export const planJobChange = (code: string, job: JobDoc, places: Record<string, PlaceDoc>): Record<string, PlaceDoc> =>
   Object.fromEntries(

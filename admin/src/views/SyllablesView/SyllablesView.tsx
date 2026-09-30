@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 
-import { saveCharadeRiddle } from '../../api/charades';
+import { deleteCharadeSyllable, saveCharadeRiddle } from '../../api/charades';
 import { DeleteX } from '../../components/DeleteX';
 import { EditableValue } from '../../components/EditableValue';
 import { Pagination, pageCount, paginate } from '../../components/Pagination';
@@ -9,19 +9,19 @@ import { allSyllableRows, filterSyllableRows, VISIBLE_EXAMPLES } from './helpers
 import type { SyllableRow } from './types';
 
 /** One syllable's riddle, editable — click the text, it becomes an input, blur/Enter saves
- * (`EditableValue`, same as everywhere else in the admin), or the "×" clears it in one action
- * (same result as editing to blank, quicker than select-all) — shown only when there's a riddle
- * to clear; a syllable with nothing curated yet has nothing to delete, so no "×" (same as every
- * other deletable row in the admin: it only appears when it would actually do something). The
+ * (`EditableValue`, same as everywhere else in the admin). The "×" deletes the syllable itself: its
+ * dictionary entry and its place in the split of every place that has it (`deleteCharadeSyllable`). The
  * syllable itself isn't editable here (it's the dictionary's own key, always the live `syllabify`
  * output — see `helpers/charade.ts`'s own doc comment); the examples are just context, read-only. */
 const Row = ({
   row,
   onSave,
+  onDelete,
   saveFlag,
 }: {
   row: SyllableRow;
   onSave: (next: string) => void;
+  onDelete: () => Promise<void>;
   saveFlag: React.ReactNode;
 }) => {
   const [expanded, setExpanded] = useState(false);
@@ -52,9 +52,10 @@ const Row = ({
         )}
       </td>
       <td>
-        {row.riddle !== null && (
-          <DeleteX name={`la charade de « ${row.syllable} »`} onDelete={() => Promise.resolve(onSave(''))} />
-        )}
+        <DeleteX
+          name={`la syllabe « ${row.syllable} » (et dans ${row.examples.length} lieu${row.examples.length === 1 ? '' : 'x'})`}
+          onDelete={onDelete}
+        />
       </td>
     </tr>
   );
@@ -89,6 +90,11 @@ export const SyllablesView = () => {
       setSavedSyllable(row.syllable);
       setTimeout(() => setSavedSyllable(null), 1500);
     });
+  };
+
+  const handleDelete = async (row: SyllableRow) => {
+    await deleteCharadeSyllable(row.syllable);
+    setRows((current) => current.filter((r) => r.syllable !== row.syllable));
   };
 
   return (
@@ -133,6 +139,7 @@ export const SyllablesView = () => {
             {pageRows.map((row) => (
               <Row
                 key={row.syllable}
+                onDelete={() => handleDelete(row)}
                 onSave={(next) => handleSave(row, next)}
                 row={row}
                 saveFlag={savedSyllable === row.syllable ? <span className="save-flag saved">✓</span> : null}

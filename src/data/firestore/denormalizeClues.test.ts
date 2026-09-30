@@ -1,4 +1,4 @@
-import { planJobChange, planRiddleChange, withJobLabel, withRiddles } from './denormalizeClues';
+import { planJobChange, planRiddleChange, planSyllableRemoval, withJobLabel, withRiddles } from './denormalizeClues';
 import { normalizeSyllable, riddlesOf } from './riddles';
 import { sameJson } from './same';
 import type { JobDoc, PlaceDoc } from './types';
@@ -96,6 +96,28 @@ describe('planRiddleChange', () => {
   it('clears a riddle with null', () => {
     expect(planRiddleChange('me', null, places, riddles)).toEqual({});
     expect(planRiddleChange('ro', null, places, riddles).rome.clues?.riddles).toEqual([null, null]);
+  });
+});
+
+describe('planSyllableRemoval', () => {
+  const dictionary = { ro: 'un rôle', me: null, ma: 'une mère', lo: null };
+  const places = {
+    rome: withRiddles(withClues(['ro', 'me']), dictionary),
+    accent: withRiddles(withClues(['ro', 'mâ']), dictionary),
+    alone: withRiddles(withClues(['ma']), dictionary),
+    other: withRiddles(withClues(['lo', 'me']), dictionary),
+    bare: place(),
+  };
+
+  it('drops the syllable (accents folded) from every place holding it, riddles recomputed, and only those', () => {
+    const plan = planSyllableRemoval('ma', places, dictionary);
+    expect(Object.keys(plan)).toEqual(['accent', 'alone']);
+    expect(plan.accent.clues?.syllables).toEqual(['ro']);
+    expect(plan.accent.clues?.riddles).toEqual(['un rôle']);
+  });
+
+  it('leaves a place with no syllable at all when its only one is removed', () => {
+    expect(planSyllableRemoval('ma', places, dictionary).alone.clues?.syllables).toEqual([]);
   });
 });
 

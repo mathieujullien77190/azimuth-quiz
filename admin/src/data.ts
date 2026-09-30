@@ -11,7 +11,7 @@ import {
 } from 'firebase/firestore';
 
 import { planCountryChange } from '@/data/firestore/denormalize';
-import { planJobChange, planRiddleChange } from '@/data/firestore/denormalizeClues';
+import { planJobChange, planRiddleChange, planSyllableRemoval } from '@/data/firestore/denormalizeClues';
 import { CLUES_NUMBERING, cluesCategory, COMPASS_NUMBERING, planRegroup } from '@/data/firestore/numbering';
 import { contourFromDoc, hasSilhouette } from '@/data/firestore/read';
 import { normalizeSyllable } from '@/data/firestore/riddles';
@@ -251,6 +251,26 @@ export const applyRiddleChange = async (syllable: string, riddle: string | null)
     ),
   ]);
   data().riddles[id] = riddle;
+  Object.assign(data().places, plan);
+  persist();
+};
+
+/**
+ * Deletes `charadeRiddles/{normalized syllable}` and rewrites, in the same run of batches, every place holding that
+ * syllable without it (see `planSyllableRemoval`).
+ */
+export const applySyllableRemoval = async (syllable: string): Promise<void> => {
+  const id = normalizeSyllable(syllable);
+  const plan = planSyllableRemoval(syllable, data().places, data().riddles);
+  await commitInBatches([
+    (batch) => batch.delete(doc(db, COLLECTIONS.charadeRiddles, id)),
+    ...Object.entries(plan).map(
+      ([key, place]) =>
+        (batch: WriteBatch) =>
+          batch.set(doc(db, COLLECTIONS.places, key), place),
+    ),
+  ]);
+  delete data().riddles[id];
   Object.assign(data().places, plan);
   persist();
 };
