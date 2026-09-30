@@ -196,8 +196,8 @@ consecutifs (ce que prend un curseur) ne sont ni du meme coin ni du meme type. L
 l'admin la maintient : supprimer un lieu, changer sa categorie ou sa difficulte passe par `applyPlaceChange`
 (`admin/src/data.ts`), qui ecrit dans UN seul batch le lieu, le dernier lieu de l'ancien groupe (il prend le
 `n` libere), les tailles (en gardant le marqueur `shuffled`) et `dataVersion`. Un lieu sans `compass` n'est
-jamais numerote. Les ecrans de migration a usage unique (numerotation, copie du pays, devinettes et metiers, contours) ont
-ete lances puis supprimes : les donnees de production sont au bon format. Pas de fonction "ajouter un
+jamais numerote. Les donnees de production sont au bon format :
+il n'y a plus d'ecran ni de code de migration. Pas de fonction "ajouter un
 lieu" dans l'admin pour l'instant : la creer devra passer par `applyPlaceChange` (ajout en fin de groupe).
 Les JSON embarques, `pickPlaces`/`filterPlaces` et les scripts de generation ont ete supprimes : Firestore est
 la seule source des donnees.
@@ -215,8 +215,7 @@ pays frontaliers ; la source que l'admin edite ET, pour un pays avec silhouette,
 `contourCounts`, `dataVersion`). Firestore refuse les tableaux imbriques et `undefined` : contours a plat
 (`[lon, lat, lon, lat...]`), couleurs de drapeau en objets, champ optionnel absent = omis. Le jeu ne lit que
 `places`, `countries` (Silhouette seulement) et `meta` ; `charadeRiddles` et `personalityJobs` sont la source des
-copies (l'admin les recopie dans les lieux qui les utilisent). La collection `contours/{ISO}` (ancien emplacement
-des silhouettes) est **TEMPORAIRE** : elle n'est plus lue que par la fusion de l'admin, a supprimer ensuite.
+copies (l'admin les recopie dans les lieux qui les utilisent).
 
 - **`places/{cle}.country`** (`CountrySnapshot`) : copie du pays (`fr`, `en`, `flag`, `currency`, `currencySymbol`,
   `phoneCode`) dans CHAQUE lieu de ce pays (Compass et Clues) : pas de `countryName()` ni de lecture de pays au
@@ -238,13 +237,9 @@ des silhouettes) est **TEMPORAIRE** : elle n'est plus lue que par la fusion de l
   independants (un decor n'est pas forcement un indice et inversement). Une manche = UNE lecture. Les edits de
   voisins / ancre du label ecrivent `countries/{code}` ; "supprimer un voisin" ne retire que son role d'indice
   (`x`/`y`), pas son decor. `applyCountryChange` reecrit aussi `fr`/`en` des entrees qui citent un pays renomme.
-  **TEMPORAIRES** : la collection `contours/{ISO}` (`ContourCountryDoc`), son index et le chargement admin qui la
-  lit, l'ecran unique "Fusionner les contours dans les pays" (`contoursToMerge`/`countryContourFields` de
-  `data/firestore/countryContours.ts`, `mergeContoursIntoCountries` de `admin/src/data.ts`), a supprimer une fois la
-  fusion faite partout.
-- `firestore.rules` : `countries` (lecture publique, ecriture admin) porte tout ; `contours` reste (temporaire).
+- `firestore.rules` : `countries` (lecture publique, ecriture admin) porte tout.
   `firestore.indexes.json` : index (`clues.category`, `difficulty`, `clues.n`) sur `places` et (`difficulty`, `n`)
-  sur `countries` (Silhouette) — a deployer ; celui de `contours` est temporaire.
+  sur `countries` (Silhouette) — a deployer.
 
 ### Indices : les lieux sont tires dans Firestore, et tout ce qu'une manche lit est dans le lieu
 

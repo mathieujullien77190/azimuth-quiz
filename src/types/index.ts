@@ -273,13 +273,13 @@ export type ContourPlace = { name: string; longitude: number; latitude: number }
 
 /** Anchor for tier 3/4's own on-board label (the target country's own flag, then its name stacked
  * just below it) — a fraction (0-1) of the board canvas, same model and same reasoning as
- * `ContourNeighbor`'s `x`/`y`: curated per country (the `centerLabel` field of its `contours/{code}` document), a plain
+ * `ContourNeighbor`'s `x`/`y`: curated per country (the `centerLabel` field of its `countries/{code}` document), a plain
  * bounding-box center can read
  * badly for an oddly-shaped country, so it's an editable point (draggable in the admin's Contour
  * view) rather than always derived. */
 export type ContourCenterLabel = { x: number; y: number };
 
-/** A country's outline for the Contour game: geometry plus its neighbor list (from its `contours/{code}` document).
+/** A country's outline for the Contour game: geometry plus its neighbor list (from its `countries/{code}` document).
  * `points` is a closed ring (`[longitude, latitude]` pairs, first === last), mainland only (islands/overseas
  * territories dropped), simplified to ~40-80 points (a handful of large/complex countries run higher). */
 export type ContourCountry = {
@@ -295,7 +295,7 @@ export type ContourCountry = {
   difficulty: Difficulty;
 };
 
-/** What a Silhouette round needs about its country, straight from its `contours/{code}` document
+/** What a Silhouette round needs about its country, straight from its `countries/{code}` document
  * (`roundCountryFromDoc`): the outline and neighbors of a `ContourCountry`, plus its own names, the capital
  * and the cities offered as hints (`capital` is `null` for a country without one). */
 export type ContourRoundCountry = Omit<ContourCountry, 'neighbors'> & {

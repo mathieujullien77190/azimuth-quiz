@@ -6,7 +6,6 @@ import {
   contourFromDoc,
   hasSilhouette,
   roundCountryFromDoc,
-  unflattenPoints,
   type SilhouetteCountryDoc,
 } from './read';
 import type { PlaceDoc } from './types';
@@ -44,16 +43,6 @@ const paris: PlaceDoc = {
   personality: { name: 'Victor Hugo', jobCode: 'ecr', job: { fr: 'écrivain', en: 'writer' } },
   wordplay: { sentence: 'Un jeu de mots.', difficulty: 'intermediate' },
 };
-
-describe('unflattenPoints', () => {
-  it('turns a flat list back into [lon, lat] pairs', () => {
-    expect(unflattenPoints([1, 2, 3, 4, 1, 2])).toEqual([
-      [1, 2],
-      [3, 4],
-      [1, 2],
-    ]);
-  });
-});
 
 describe('compassFromDoc', () => {
   it('builds the place with the copy of its country, the description and the wiki links', () => {

@@ -31,8 +31,8 @@ const BOARD_MAX_HEIGHT = 480;
 /**
  * The Contour map editor for a single country — everything ContourView.tsx used to be, minus its
  * own country picker: mounted inline inside CountriesView's own card for whichever country already
- * has Contour data (see CountriesView.tsx's "🗺️ Silhouette" toggle, `allContours().find` — a country with a
- * `contours/{code}` document), so pays and Contour data live on the same screen instead of a separate tab.
+ * has Contour data (see CountriesView.tsx's "🗺️ Silhouette" toggle, `allContours().find` — a country whose document
+ * carries a silhouette), so pays and Contour data live on the same screen instead of a separate tab.
  * `initialCountry` seeds local state; every move is written to Firestore (`api/contour.ts`), nothing writes back
  * up to the parent.
  */

@@ -13,10 +13,6 @@ import { cluesCategory } from './numbering';
 import { decodeRing } from './polyline';
 import type { CompassDoc, CountryDoc, CountryNeighborDoc, ContourPlaceDoc, PlaceDoc } from './types';
 
-/** `[lon, lat, lon, lat, ...]` back to `[[lon, lat], ...]` (Firestore has no nested arrays). */
-export const unflattenPoints = (flat: readonly number[]): [number, number][] =>
-  Array.from({ length: flat.length / 2 }, (_, index) => [flat[2 * index], flat[2 * index + 1]]);
-
 /** `Place` (Compass) from its document. */
 export const compassFromDoc = (doc: PlaceDoc & { compass: CompassDoc }): Place => ({
   name: doc.name,

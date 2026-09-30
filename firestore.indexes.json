@@ -37,20 +37,6 @@
       ]
     },
     {
-      "collectionGroup": "contours",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "difficulty",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "n",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
       "collectionGroup": "countries",
       "queryScope": "COLLECTION",
       "fields": [

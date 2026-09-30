@@ -10,7 +10,6 @@ import {
   type WriteBatch,
 } from 'firebase/firestore';
 
-import { countryContourFields, contoursToMerge } from '@/data/firestore/countryContours';
 import { planCountryChange } from '@/data/firestore/denormalize';
 import { planJobChange, planRiddleChange } from '@/data/firestore/denormalizeClues';
 import { CLUES_NUMBERING, cluesCategory, COMPASS_NUMBERING, planRegroup } from '@/data/firestore/numbering';
@@ -24,7 +23,6 @@ import {
   type CluesCountsDoc,
   type CompassCounts,
   type CompassCountsDoc,
-  type ContourCountryDoc,
   type CountryDoc,
   type JobDoc,
   type PlaceDoc,
@@ -44,9 +42,6 @@ import { readSnapshot, writeSnapshot } from './snapshotStore';
 type Cache = {
   places: Record<string, PlaceDoc>;
   countries: Record<string, CountryDoc>;
-  /** `contours/{code}`: the previous home of the silhouettes. TEMPORARY: only read as the source of the merge into
-   * the country documents (`mergeContoursIntoCountries`), then dropped with the collection. */
-  contours: Record<string, ContourCountryDoc>;
   /** `charadeRiddles`, flattened to `syllable -> riddle`. */
   riddles: Record<string, string | null>;
   jobs: Record<string, JobDoc>;
@@ -74,10 +69,9 @@ const readMeta = async <T>({ collection: name, id }: { collection: string; id: s
   (await getDoc(doc(db, name, id))).data() as T | undefined;
 
 const fetchAll = async (): Promise<Cache> => {
-  const [places, countries, contours, riddles, jobs, compass, clues] = await Promise.all([
+  const [places, countries, riddles, jobs, compass, clues] = await Promise.all([
     readCollection<PlaceDoc>(COLLECTIONS.places),
     readCollection<CountryDoc>(COLLECTIONS.countries),
-    readCollection<ContourCountryDoc>(COLLECTIONS.contours),
     readCollection<{ riddle: string | null }>(COLLECTIONS.charadeRiddles),
     readCollection<JobDoc>(COLLECTIONS.personalityJobs),
     readMeta<CompassCountsDoc>(COMPASS_COUNTS_DOC),
@@ -86,7 +80,6 @@ const fetchAll = async (): Promise<Cache> => {
   return {
     places,
     countries,
-    contours,
     riddles: Object.fromEntries(Object.entries(riddles).map(([syllable, { riddle }]) => [syllable, riddle])),
     jobs,
     compassCounts: compass?.counts ?? {},
@@ -120,7 +113,10 @@ export const syncData = async (): Promise<void> => {
 export const loadData = async (): Promise<void> => {
   const snapshot = await readSnapshot<Snapshot>();
   if (snapshot) {
-    cache = snapshot.cache;
+    // A copy saved before the silhouettes moved into the countries still carries the old `contours` key: dropped.
+    const current: Cache & { contours?: unknown } = { ...snapshot.cache };
+    delete current.contours;
+    cache = current;
     syncedAt = snapshot.syncedAt;
     contoursMemo = null;
     return;
@@ -208,33 +204,6 @@ const commitInBatches = async (operations: ((batch: WriteBatch) => void)[]): Pro
     }
     await batch.commit();
   }
-};
-
-// --- One-off: the silhouettes move from `contours/` into the country documents ---------------------------------
-
-/** True while some silhouette of the old `contours/` collection is not in its country document yet. TEMPORARY. */
-export const contourMergePending = (): boolean => contoursToMerge(data().contours, data().countries).length > 0;
-
-/**
- * Copies each silhouette of `contours/{code}` into `countries/{code}` (merge: nothing else in the country is
- * touched): outline, difficulty, label anchor, position, capital, cities and ONE list of neighbours (hints with
- * their position, backdrop with their outline). Computed from the loaded documents, written in batches; safe to
- * run again. TEMPORARY, with the collection it reads.
- */
-export const mergeContoursIntoCountries = async (onProgress: (done: number, total: number) => void): Promise<void> => {
-  const { contours: old, countries } = data();
-  const codes = contoursToMerge(old, countries);
-  const fields = Object.fromEntries(codes.map((code) => [code, countryContourFields(old[code], old, countries)]));
-  onProgress(0, codes.length);
-  await commitInBatches(
-    codes.map(
-      (code) => (batch: WriteBatch) => batch.set(doc(db, COLLECTIONS.countries, code), fields[code], { merge: true }),
-    ),
-  );
-  for (const code of codes) Object.assign(countries[code], fields[code]);
-  contoursMemo = null;
-  persist();
-  onProgress(codes.length, codes.length);
 };
 
 // --- Copies kept in sync with their source --------------------------------------------------------------------

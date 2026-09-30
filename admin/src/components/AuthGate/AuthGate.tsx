@@ -1,7 +1,7 @@
 import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebase/auth';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 
-import { contourMergePending, loadData, mergeContoursIntoCountries } from '../../data';
+import { loadData } from '../../data';
 import { ADMIN_EMAIL, auth } from '../../firebase';
 
 type Phase = 'auth' | 'loading' | 'ready';
@@ -16,9 +16,6 @@ export const AuthGate = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const [phase, setPhase] = useState<Phase>('auth');
   const [error, setError] = useState<string | null>(null);
-  const [progress, setProgress] = useState<string | null>(null);
-  // The run keeps its screen up until it finishes, even once the data no longer says "pending".
-  const [running, setRunning] = useState(false);
 
   useEffect(() => onAuthStateChanged(auth, setUser), []);
 
@@ -47,33 +44,6 @@ export const AuthGate = ({ children }: { children: ReactNode }) => {
 
   if (user === undefined) return <div className="empty">Connexion…</div>;
 
-  // One-off: the silhouettes move from the `contours` collection into their country's document, neighbours
-  // merged in one list (see `mergeContoursIntoCountries`). Delete this screen once it has run everywhere.
-  if (isAdmin && phase === 'ready' && (running || contourMergePending())) {
-    const run = () => {
-      setError(null);
-      setRunning(true);
-      setProgress('Écriture…');
-      mergeContoursIntoCountries((done, total) => setProgress(`Écriture : ${done} / ${total}`))
-        .then(() => setRunning(false))
-        .catch((err: Error) => setError(err.message))
-        .finally(() => setProgress(null));
-    };
-    return (
-      <div className="wrap">
-        <div className="empty">
-          <p>
-            Les silhouettes sont encore dans la collection « contours » : elles passent dans le document de leur pays
-            (avec leurs voisins, en une seule liste), qu’un tour de jeu lira alors seul.
-          </p>
-          {error && <p>{error}</p>}
-          <button className="reset" type="button" disabled={progress !== null} onClick={run}>
-            {progress ?? 'Fusionner les contours dans les pays'}
-          </button>
-        </div>
-      </div>
-    );
-  }
   if (isAdmin && phase === 'ready') return <>{children}</>;
   if (isAdmin && phase === 'loading') return <div className="empty">Chargement des données…</div>;
 

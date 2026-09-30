@@ -4,7 +4,6 @@ import type {
   ClueFlagColorId,
   CluePositionInCountry,
   ContourCenterLabel,
-  ContourNeighbor,
   Difficulty,
 } from '@/types';
 
@@ -18,7 +17,6 @@ import type {
 export const COLLECTIONS = {
   places: 'places',
   countries: 'countries',
-  contours: 'contours',
   charadeRiddles: 'charadeRiddles',
   personalityJobs: 'personalityJobs',
   meta: 'meta',
@@ -150,36 +148,6 @@ export const CLUES_COUNTS_DOC = { collection: COLLECTIONS.meta, id: 'cluesCounts
 
 /** A place offered as a hint on the Silhouette board: where it is and what it is called. */
 export type ContourPlaceDoc = { name: string; lon: number; lat: number };
-
-/** A neighbor of a silhouette, with its names copied in (`fr`/`en`) so the hint never looks a country up. */
-export type ContourNeighborDoc = ContourNeighbor & { fr: string; en: string };
-
-/**
- * `contours/{ISO code}`: the previous home of a silhouette (one document per country). TEMPORARY: the silhouettes
- * now live in `countries/{code}` (see `CountryDoc`); this collection only stays as the source of the one-off
- * merge (`countryContourFields`) and goes away with it. `n` is the position 1..size inside the difficulty group.
- */
-export type ContourCountryDoc = {
-  fr: string;
-  en: string;
-  /** Flat closed ring: `[lon, lat, lon, lat, ...]`. */
-  points: number[];
-  difficulty: Difficulty;
-  centerLabel: ContourCenterLabel;
-  neighbors: ContourNeighborDoc[];
-  /** Own outline as an encoded polyline (`polyline.ts`) — the same ring as `points`, 3-4 times lighter. Added by
-   * the polyline migration; a document without it is read from `points`. */
-  ring?: string;
-  /** The outline of every country in `borderCodes` (encoded polyline, copied as is so the shared edges stay
-   * exact): a round reads ONE document instead of the country plus its neighbours. */
-  neighborRings?: Record<string, string>;
-  /** ISO codes of the countries sharing a land border (the board draws them as a backdrop). TEMPORARY as a
-   * source of neighbour documents: the two-step read that uses it goes away once `neighborRings` is everywhere. */
-  borderCodes: string[];
-  capital?: ContourPlaceDoc;
-  cities?: ContourPlaceDoc[];
-  n?: number;
-};
 
 /** Size of every silhouette difficulty group. */
 export type ContourCounts = Partial<Record<Difficulty, number>>;
