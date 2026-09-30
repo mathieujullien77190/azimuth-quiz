@@ -15,8 +15,23 @@ import { fileURLToPath } from 'node:url';
 import { cert, initializeApp, applicationDefault } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
-import { buildCompassCounts, buildCountryDocs, buildJobDocs, buildPlaceDocs, buildRiddleDocs } from '../src/data/firestore/build';
-import { COLLECTIONS, COMPASS_COUNTS_DOC, DATA_VERSION_DOC } from '../src/data/firestore/types';
+import {
+  buildCluesCounts,
+  buildCompassCounts,
+  buildContourCounts,
+  buildContourDocsFromJson,
+  buildCountryDocs,
+  buildJobDocs,
+  buildPlaceDocs,
+  buildRiddleDocs,
+} from '../src/data/firestore/build';
+import {
+  CLUES_COUNTS_DOC,
+  COLLECTIONS,
+  COMPASS_COUNTS_DOC,
+  CONTOUR_COUNTS_DOC,
+  DATA_VERSION_DOC,
+} from '../src/data/firestore/types';
 
 const BATCH_SIZE = 400;
 
@@ -27,6 +42,7 @@ const force = args.has('--force');
 const collections: Record<string, Record<string, object>> = {
   [COLLECTIONS.places]: buildPlaceDocs(),
   [COLLECTIONS.countries]: buildCountryDocs(),
+  [COLLECTIONS.contours]: buildContourDocsFromJson(),
   [COLLECTIONS.charadeRiddles]: buildRiddleDocs(),
   [COLLECTIONS.personalityJobs]: buildJobDocs(),
 };
@@ -46,7 +62,9 @@ if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
 } else if (existsSync(keyFile)) {
   initializeApp({ credential: cert(JSON.parse(readFileSync(keyFile, 'utf8'))) });
 } else {
-  console.error('Clé de compte de service introuvable : GOOGLE_APPLICATION_CREDENTIALS ou scripts/serviceAccount.json.');
+  console.error(
+    'Clé de compte de service introuvable : GOOGLE_APPLICATION_CREDENTIALS ou scripts/serviceAccount.json.',
+  );
   process.exit(1);
 }
 const db = getFirestore();
@@ -56,7 +74,9 @@ const run = async () => {
     for (const name of Object.keys(collections)) {
       const existing = await db.collection(name).limit(1).get();
       if (!existing.empty) {
-        console.error(`La collection « ${name} » n'est pas vide : utilise --force pour écraser (efface les modifications faites dans l'admin).`);
+        console.error(
+          `La collection « ${name} » n'est pas vide : utilise --force pour écraser (efface les modifications faites dans l'admin).`,
+        );
         process.exit(1);
       }
     }
@@ -74,6 +94,10 @@ const run = async () => {
 
   await db.collection(COMPASS_COUNTS_DOC.collection).doc(COMPASS_COUNTS_DOC.id).set(buildCompassCounts());
   console.log('meta/compassCounts écrit.');
+  await db.collection(CLUES_COUNTS_DOC.collection).doc(CLUES_COUNTS_DOC.id).set(buildCluesCounts());
+  console.log('meta/cluesCounts écrit.');
+  await db.collection(CONTOUR_COUNTS_DOC.collection).doc(CONTOUR_COUNTS_DOC.id).set(buildContourCounts());
+  console.log('meta/contourCounts écrit.');
   await db.collection(DATA_VERSION_DOC.collection).doc(DATA_VERSION_DOC.id).set({ version: 1, updatedAt: Date.now() });
   console.log('meta/dataVersion écrit.');
 };

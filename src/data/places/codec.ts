@@ -1,7 +1,16 @@
-import type { Category, Difficulty, CluePlace, CluePositionInCountry, Place } from '@/types';
+import { riddlesOf } from '../firestore/riddles';
+import type { Category, ClueCategory, Difficulty, CluePlace, CluePositionInCountry, Place } from '@/types';
 
 import charadePlacesData from './charadePlaces.json';
-import { countryName, countryPhoneCode, countryCurrencySymbol } from './countries';
+import charadeData from '../charade.json';
+import wordplayData from '../wordplay.json';
+import {
+  countryName,
+  countryPhoneCode,
+  countryCurrencySymbol,
+  countryCurrencyName,
+  countryFlagColors,
+} from './countries';
 import cluesPlacesData from './cluesPlaces.json';
 import compassPlacesData from './compassPlaces.json';
 import personalityJobsData from '../personalityJobs.json';
@@ -361,6 +370,8 @@ const COMPASS_PLACES = compassPlacesData as unknown as Record<string, CompassRow
 const CLUES_PLACES = cluesPlacesData as unknown as Record<string, ClueRow>;
 const CHARADE_PLACES = charadePlacesData as unknown as Record<string, CharadeRow>;
 const PERSONALITY_PLACES = personalityPlacesData as unknown as Record<string, PersonalityRow>;
+const RIDDLES = charadeData as unknown as Record<string, string | null>;
+const WORDPLAY = wordplayData as unknown as Record<string, { sentence: string; difficulty: Difficulty }>;
 const PERSONALITY_JOBS = personalityJobsData as unknown as Record<string, PersonalityJobRow>;
 
 export const decodeCompassPlace = (common: CommonRow, row: CompassRow): Place => {
@@ -384,9 +395,20 @@ export const decodeCluePlace = (
   row: ClueRow,
   syllables: CharadeRow,
   personality?: PersonalityRow,
+  category: ClueCategory = 'cities',
 ): CluePlace => {
   const [name, code, latitude, longitude, difficultyCode] = common;
-  const [positionInCountry, population, climateEmoji, elevationMeters, timezoneCode, airportCode, emoji1, emoji2, emoji3] = row;
+  const [
+    positionInCountry,
+    population,
+    climateEmoji,
+    elevationMeters,
+    timezoneCode,
+    airportCode,
+    emoji1,
+    emoji2,
+    emoji3,
+  ] = row;
   return {
     key,
     name,
@@ -404,8 +426,16 @@ export const decodeCluePlace = (
     airportCode,
     emojis: [emoji1, emoji2, emoji3] as const,
     syllables: [...syllables],
+    category,
+    riddles: riddlesOf(syllables, RIDDLES),
+    flagColors: (countryFlagColors(code) ?? []).map(([id, hex, percent]) => ({ id, hex, percent })),
+    currencyName: countryCurrencyName(code) ?? '',
+    ...(WORDPLAY[key] !== undefined && { wordplay: WORDPLAY[key] }),
     ...(personality !== undefined && {
-      personality: { name: personality[0], description: personality[1] !== null ? PERSONALITY_JOBS[personality[1]][0] : null },
+      personality: {
+        name: personality[0],
+        description: personality[1] !== null ? PERSONALITY_JOBS[personality[1]][0] : null,
+      },
     }),
   };
 };
@@ -416,6 +446,14 @@ export const decodeCluePlace = (
  * module's own doc comment) can read it straight off the place object it already has. */
 export type PlaceKeyRow = { key: string; common: CommonRow; compass: Place | null; clues: CluePlace | null };
 
+/** A place's Clues category from its Compass row: a capital, a French city, or any other city. */
+const clueCategoryOf = (compassRow: CompassRow | undefined): ClueCategory =>
+  compassRow?.[0] === CATEGORY_CODES.capital
+    ? 'capital'
+    : compassRow?.[0] === CATEGORY_CODES.citiesFr
+      ? 'citiesFr'
+      : 'cities';
+
 export const decodeAllPlaces = (): PlaceKeyRow[] =>
   Object.keys(PLACES).map((key) => {
     const common = PLACES[key];
@@ -425,7 +463,16 @@ export const decodeAllPlaces = (): PlaceKeyRow[] =>
       key,
       common,
       compass: compassRow ? decodeCompassPlace(common, compassRow) : null,
-      clues: clueRow ? decodeCluePlace(key, common, clueRow, CHARADE_PLACES[key] ?? [], PERSONALITY_PLACES[key]) : null,
+      clues: clueRow
+        ? decodeCluePlace(
+            key,
+            common,
+            clueRow,
+            CHARADE_PLACES[key] ?? [],
+            PERSONALITY_PLACES[key],
+            clueCategoryOf(compassRow),
+          )
+        : null,
     };
   });
 

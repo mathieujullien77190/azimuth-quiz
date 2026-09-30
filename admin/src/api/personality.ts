@@ -1,6 +1,8 @@
 import type { CluePlace } from '@/types';
 
-import { data, putJob, putPlace, removeJob } from '../data';
+import { withJobLabel } from '@/data/firestore/denormalizeClues';
+
+import { applyJobChange, data, putJob, putPlace, removeJob } from '../data';
 
 /** All curatable job codes, French label first — the select's options, alphabetical by French text
  * so a curator can scan/find one by eye. */
@@ -22,7 +24,11 @@ export const personalityDraftFor = (place: Pick<CluePlace, 'key'>): PersonalityD
 /** The name field was edited — clearing it back to empty removes the place's curated entry
  * entirely: the game only offers the `personality` clue when the place HAS an entry at all, so a
  * blank name would leak through as an empty card rather than just not being offered. */
-export const savePersonalityName = async (place: Pick<CluePlace, 'name' | 'code' | 'key'>, draft: PersonalityDraft, next: string): Promise<PersonalityDraft> => {
+export const savePersonalityName = async (
+  place: Pick<CluePlace, 'name' | 'code' | 'key'>,
+  draft: PersonalityDraft,
+  next: string,
+): Promise<PersonalityDraft> => {
   const trimmed = next.trim();
   const rest = { ...data().places[place.key] };
   delete rest.personality;
@@ -30,7 +36,10 @@ export const savePersonalityName = async (place: Pick<CluePlace, 'name' | 'code'
     await putPlace(place.key, rest);
     return { name: '', jobCode: null };
   }
-  await putPlace(place.key, { ...rest, personality: { name: trimmed, jobCode: draft.jobCode } });
+  await putPlace(
+    place.key,
+    withJobLabel({ ...rest, personality: { name: trimmed, jobCode: draft.jobCode } }, data().jobs),
+  );
   return { ...draft, name: trimmed };
 };
 
@@ -39,7 +48,10 @@ export const savePersonalityJob = async (
   draft: PersonalityDraft,
   next: string | null,
 ): Promise<PersonalityDraft> => {
-  await putPlace(place.key, { ...data().places[place.key], personality: { name: draft.name, jobCode: next } });
+  await putPlace(
+    place.key,
+    withJobLabel({ ...data().places[place.key], personality: { name: draft.name, jobCode: next } }, data().jobs),
+  );
   return { ...draft, jobCode: next };
 };
 
@@ -92,9 +104,7 @@ export const allJobRows = (): JobRow[] => {
 export const filterJobRows = (rows: JobRow[], query: string): JobRow[] => {
   const q = query.trim().toLowerCase();
   if (q === '') return rows;
-  return rows.filter(
-    (row) => row.fr.toLowerCase().includes(q) || row.en.toLowerCase().includes(q),
-  );
+  return rows.filter((row) => row.fr.toLowerCase().includes(q) || row.en.toLowerCase().includes(q));
 };
 
 export const addJob = async (fr: string, en: string): Promise<JobRow> => {
@@ -104,12 +114,12 @@ export const addJob = async (fr: string, en: string): Promise<JobRow> => {
 };
 
 export const saveJobFr = async (job: JobRow, next: string): Promise<JobRow> => {
-  await putJob(job.code, { fr: next, en: job.en });
+  await applyJobChange(job.code, { fr: next, en: job.en });
   return { ...job, fr: next };
 };
 
 export const saveJobEn = async (job: JobRow, next: string): Promise<JobRow> => {
-  await putJob(job.code, { fr: job.fr, en: next });
+  await applyJobChange(job.code, { fr: job.fr, en: next });
   return { ...job, en: next };
 };
 

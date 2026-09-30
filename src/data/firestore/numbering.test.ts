@@ -1,6 +1,14 @@
 import type { Category, Difficulty } from '@/types';
 
-import { computeNumbering, isNumberingConsistent, planRegroup, shuffleRank, slotAt } from './numbering';
+import {
+  CLUES_NUMBERING,
+  cluesCategory,
+  computeNumbering,
+  isNumberingConsistent,
+  planRegroup,
+  shuffleRank,
+  slotAt,
+} from './numbering';
 import type { PlaceDoc } from './types';
 
 const place = (category: Category | null, difficulty: Difficulty = 'easy', n?: number): PlaceDoc => ({
@@ -187,5 +195,68 @@ describe('slotAt', () => {
 
   it('throws for a position outside the pool', () => {
     expect(() => slotAt(pool, 5)).toThrow('outside the pool');
+  });
+});
+
+describe('cluesCategory', () => {
+  it('derives the Clues category from the Compass one: capital, citiesFr, otherwise cities', () => {
+    expect(cluesCategory(place('capital'))).toBe('capital');
+    expect(cluesCategory(place('citiesFr'))).toBe('citiesFr');
+    expect(cluesCategory(place('cities'))).toBe('cities');
+    expect(cluesCategory(place('landmarks'))).toBe('cities');
+    expect(cluesCategory(place(null))).toBe('cities');
+  });
+});
+
+describe('Clues numbering', () => {
+  const clue = (category: Category | null, difficulty: Difficulty = 'easy', n?: number): PlaceDoc => ({
+    ...place(category, difficulty),
+    clues: {
+      positionInCountry: 'n',
+      population: 1,
+      climateEmoji: '',
+      elevationMeters: 1,
+      timezone: 'Europe/Paris',
+      airportCode: 'AAA',
+      emojis: ['a', 'b', 'c'],
+      syllables: [],
+      ...(n !== undefined && { n }),
+    },
+  });
+
+  it('numbers the Clues places by derived category x difficulty, leaving the others out', () => {
+    const { numbers, counts } = computeNumbering(
+      [
+        ['a', clue('capital')],
+        ['b', clue('landmarks')],
+        ['c', clue(null)],
+        ['d', place('cities')],
+      ],
+      { numbering: CLUES_NUMBERING },
+    );
+
+    expect(Object.keys(numbers).sort()).toEqual(['a', 'b', 'c']);
+    expect([numbers.b, numbers.c].sort()).toEqual([1, 2]);
+    expect(counts).toEqual({ capital: { easy: 1 }, cities: { easy: 2 } });
+  });
+
+  it('checks the consistency of the Clues numbers, not the Compass ones', () => {
+    const places = { a: clue('cities', 'easy', 1), b: { ...clue('cities', 'easy', 2), n: 99 } };
+
+    expect(isNumberingConsistent(places, { cities: { easy: 2 } }, CLUES_NUMBERING)).toBe(true);
+    expect(isNumberingConsistent(places, { cities: { easy: 2 } })).toBe(false);
+  });
+
+  it('keeps the Clues numbers dense when a place changes group', () => {
+    const places = { a: clue('cities', 'easy', 1), b: clue('cities', 'easy', 2), c: clue('cities', 'easy', 3) };
+    const plan = planRegroup(
+      places,
+      { cities: { easy: 3 } },
+      'a',
+      { ...places.a, difficulty: 'hard' },
+      CLUES_NUMBERING,
+    );
+
+    expect(plan).toEqual({ n: 1, moved: { c: 1 }, counts: { cities: { easy: 2, hard: 1 } } });
   });
 });

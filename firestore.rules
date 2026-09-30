@@ -60,7 +60,7 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------------------------------------------------
-    // Données du jeu (lieux, pays, devinettes de charade, métiers) : lisibles par tout le monde (elles
+    // Données du jeu (lieux, pays, contours, devinettes de charade, métiers) : lisibles par tout le monde (elles
     // sont de toute façon embarquées dans l'appli), modifiables uniquement par l'administrateur, qui
     // se connecte à l'outil `admin/` avec son compte Google (adresse vérifiée). Les joueurs, eux,
     // n'ont qu'une authentification anonyme : ils ne passent jamais ce test.
@@ -77,6 +77,13 @@ service cloud.firestore {
     }
 
     match /countries/{code} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Silhouettes : un document par pays (contour, voisins, capitale et villes), lu par manche au lieu de
+    // charger toute la liste des pays.
+    match /contours/{code} {
       allow read: if true;
       allow write: if isAdmin();
     }

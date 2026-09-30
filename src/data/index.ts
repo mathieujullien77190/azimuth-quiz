@@ -1,7 +1,7 @@
 import type { Difficulty, Origin } from '@/types';
 
 export * from './theme';
-export { CLUE_PLACES, isCapitalPlace, isFrenchCityPlace } from './clues';
+export { CLUE_PLACES } from './clues';
 export { PLACES } from './places';
 export { CONTOURS } from './contours';
 

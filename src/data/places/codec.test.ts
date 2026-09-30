@@ -80,6 +80,10 @@ describe('decodeCluePlace', () => {
       airportCode: 'TST',
       emojis: ['🗼', '🎨', '🌳'],
       syllables: ['test', 'ville'],
+      category: 'cities',
+      riddles: [null, null],
+      flagColors: expect.arrayContaining([{ id: 'blue', hex: '#0055A4', percent: 33 }]),
+      currencyName: 'Euro',
     });
   });
 

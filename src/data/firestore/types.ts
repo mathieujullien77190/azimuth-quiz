@@ -1,5 +1,6 @@
 import type {
   Category,
+  ClueCategory,
   ClueFlagColorId,
   CluePositionInCountry,
   ContourCenterLabel,
@@ -18,6 +19,7 @@ import type {
 export const COLLECTIONS = {
   places: 'places',
   countries: 'countries',
+  contours: 'contours',
   charadeRiddles: 'charadeRiddles',
   personalityJobs: 'personalityJobs',
   meta: 'meta',
@@ -38,6 +40,28 @@ export type CluesDoc = {
   airportCode: string;
   emojis: string[];
   syllables: string[];
+  /** The riddle of each syllable, same order as `syllables` (`null` when it has none): copied here from
+   * `charadeRiddles/{syllable}` so a round reads no dictionary. The admin rewrites it when a riddle or the
+   * syllables change. Absent until the admin's migration ran. */
+  riddles?: (string | null)[];
+  /** The place's Clues category, derived from its Compass category (`capital` / `citiesFr`, otherwise
+   * `cities`, see `cluesCategory`) but stored because the game queries on it. */
+  category?: ClueCategory;
+  /** Position 1..size inside the place's Clues group (`clues.category` x `difficulty`), kept dense like
+   * `PlaceDoc.n` is for Compass — see `numbering.ts`. */
+  n?: number;
+};
+
+/** What a place carries of its country, copied from `countries/{code}` into EVERY place of that country:
+ * the game then needs no country lookup (no extra read) to show the country name, flag, currency or phone
+ * code. The admin rewrites all the places of a country in the same batch when the country is edited. */
+export type CountrySnapshot = {
+  fr: string;
+  en: string;
+  flag?: FlagColorDoc[];
+  currency?: string;
+  currencySymbol?: string;
+  phoneCode?: string;
 };
 
 /** `places/{key}` — `key` is the permanent 3-letter code (see `data/places/codec.ts`). Identity and
@@ -52,10 +76,18 @@ export type PlaceDoc = {
    * place with `compass`: the game draws random positions and asks for `n in [...]`, Firestore having no
    * "N random documents" query. Kept dense by the seed, the admin's numbering screen and `planRegroup`. */
   n?: number;
+  /** Snapshot of the place's country (see `CountrySnapshot`), absent until the admin's migration ran. */
+  country?: CountrySnapshot;
   compass?: CompassDoc;
   clues?: CluesDoc;
   /** Curated by hand, `jobCode` looks up `personalityJobs/{code}`. */
-  personality?: { name: string; jobCode: string | null };
+  personality?: {
+    name: string;
+    jobCode: string | null;
+    /** The job's labels copied from `personalityJobs/{jobCode}` (the game shows `job.fr`). Absent until the
+     * admin's migration ran, and when there is no job. */
+    job?: { fr: string; en: string };
+  };
   wordplay?: { sentence: string; difficulty: Difficulty };
 };
 
@@ -99,3 +131,44 @@ export type CompassCounts = Partial<Record<Category, Partial<Record<Difficulty, 
 export type CompassCountsDoc = { counts: CompassCounts; shuffled?: true };
 
 export const COMPASS_COUNTS_DOC = { collection: COLLECTIONS.meta, id: 'compassCounts' } as const;
+
+/** `meta/cluesCounts`: same as `CompassCountsDoc` for the Clues groups (`clues.category` x `difficulty`),
+ * read once by the host at launch. `shuffled`: the `clues.n` follow the shuffled order of `shuffleRank`. */
+export type CluesCountsDoc = { counts: CompassCounts; shuffled?: true };
+
+export const CLUES_COUNTS_DOC = { collection: COLLECTIONS.meta, id: 'cluesCounts' } as const;
+
+/** A place offered as a hint on the Silhouette board: where it is and what it is called. */
+export type ContourPlaceDoc = { name: string; lon: number; lat: number };
+
+/** A neighbor of a silhouette, with its names copied in (`fr`/`en`) so the hint never looks a country up. */
+export type ContourNeighborDoc = ContourNeighbor & { fr: string; en: string };
+
+/**
+ * `contours/{ISO code}`: everything one Silhouette round needs about its country in a single document
+ * (moved out of `countries/{code}.contour`, which the countries list read in full). Names are copied in,
+ * and so are the capital and the cities offered as hints (chosen once by `buildContourDocs`, as the game
+ * used to choose them at every round). `n` is the position 1..size inside the country's difficulty group.
+ */
+export type ContourCountryDoc = {
+  fr: string;
+  en: string;
+  /** Flat closed ring: `[lon, lat, lon, lat, ...]`. */
+  points: number[];
+  difficulty: Difficulty;
+  centerLabel: ContourCenterLabel;
+  neighbors: ContourNeighborDoc[];
+  /** ISO codes of the countries sharing a land border (the board draws them as a backdrop). */
+  borderCodes: string[];
+  capital?: ContourPlaceDoc;
+  cities?: ContourPlaceDoc[];
+  n?: number;
+};
+
+/** Size of every silhouette difficulty group. */
+export type ContourCounts = Partial<Record<Difficulty, number>>;
+
+/** `meta/contourCounts`. */
+export type ContourCountsDoc = { counts: ContourCounts; shuffled?: true };
+
+export const CONTOUR_COUNTS_DOC = { collection: COLLECTIONS.meta, id: 'contourCounts' } as const;

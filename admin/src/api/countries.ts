@@ -1,7 +1,7 @@
 import type { CountryEntry } from '@/data/places/countries';
 import type { CountryDoc } from '@/data/firestore/types';
 
-import { data, putCountry } from '../data';
+import { applyCountryChange, data } from '../data';
 
 export type CountryRecord = CountryEntry & { code: string };
 
@@ -20,7 +20,9 @@ const recordOf = (code: string, doc: CountryDoc): CountryRecord => ({
 export const fetchCountries = async (): Promise<CountryRecord[]> =>
   Object.entries(data().countries).map(([code, doc]) => recordOf(code, doc));
 
-export type CountryPatch = Partial<Pick<CountryEntry, 'fr' | 'en' | 'currency' | 'currencySymbol' | 'phoneCode' | 'flag'>>;
+export type CountryPatch = Partial<
+  Pick<CountryEntry, 'fr' | 'en' | 'currency' | 'currencySymbol' | 'phoneCode' | 'flag'>
+>;
 
 export const saveCountry = async (row: CountryRecord, patch: CountryPatch): Promise<CountryRecord> => {
   const { flag, fr, en, currency, currencySymbol, phoneCode } = patch;
@@ -40,6 +42,7 @@ export const saveCountry = async (row: CountryRecord, patch: CountryPatch): Prom
     if (flag && flag.length > 0) doc.flag = flag.map(([id, hex, percent]) => ({ id, hex, percent }));
     else delete doc.flag;
   }
-  await putCountry(row.code, doc);
+  // The country and every copy of it (its places, the contours citing it) are written together.
+  await applyCountryChange(row.code, doc);
   return { ...row, ...patch };
 };

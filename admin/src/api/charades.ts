@@ -1,7 +1,9 @@
 import { charadeFor, normalizeSyllable } from '@/games/clues/helpers/charade';
 import type { CluePlace } from '@/types';
 
-import { data, putPlace, putRiddle } from '../data';
+import { withRiddles } from '@/data/firestore/denormalizeClues';
+
+import { applyRiddleChange, data, putPlace, putRiddle } from '../data';
 
 /** Two independent edits, both written to Firestore: `saveCharadeRiddle` edits the riddle, a GLOBAL
  * edit by the syllable's own text (not by place) — saving "pa"'s riddle from Paris's card changes it
@@ -19,17 +21,21 @@ export const riddleFor = (syllable: string): string | null => data().riddles[nor
  * key ("pà" is saved as "pa") — that's the document id. */
 export const saveCharadeRiddle = async (syllable: string, next: string): Promise<string | null> => {
   const trimmed = next.trim();
-  await putRiddle(normalizeSyllable(syllable), trimmed === '' ? null : trimmed);
+  await applyRiddleChange(syllable, trimmed === '' ? null : trimmed);
   return trimmed === '' ? null : trimmed;
 };
 
 /** `place`'s syllable split was hand-corrected (a syllable added, removed, or renamed) — the FULL resulting
  * list (lowercased) is stored. A syllable new to the riddle dictionary gets an empty entry, so the
  * dictionary stays the complete check-list of what remains to curate. */
-export const saveCharadeSyllables = async (place: Pick<CluePlace, 'code' | 'name' | 'key'>, syllables: string[]): Promise<string[]> => {
+export const saveCharadeSyllables = async (
+  place: Pick<CluePlace, 'code' | 'name' | 'key'>,
+  syllables: string[],
+): Promise<string[]> => {
   const lower = syllables.map((syllable) => syllable.toLowerCase());
   const doc = data().places[place.key];
-  await putPlace(place.key, { ...doc, clues: { ...doc.clues!, syllables: lower } });
+  // The place carries the riddle of each of its syllables: recomputed for the new split.
+  await putPlace(place.key, withRiddles({ ...doc, clues: { ...doc.clues!, syllables: lower } }, data().riddles));
   for (const syllable of new Set(lower.map(normalizeSyllable))) {
     if (!(syllable in data().riddles)) await putRiddle(syllable, null);
   }
