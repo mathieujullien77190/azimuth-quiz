@@ -393,6 +393,28 @@ textarea:focus-visible,
   box-sizing: border-box;
 }
 
+.kv-textarea {
+  resize: none;
+  overflow: hidden;
+  width: 100%;
+  min-width: min(360px, 100%);
+  line-height: 1.4;
+  font-family: var(--font);
+}
+
+.kv-edit-btn-wrap {
+  display: block;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+
+.field-cell-top {
+  align-items: flex-start;
+}
+
 .field-cell {
   display: flex;
   align-items: center;

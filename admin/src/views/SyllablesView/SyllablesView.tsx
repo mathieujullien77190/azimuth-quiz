@@ -29,6 +29,7 @@ const Row = ({
     <td>
       <EditableValue
         allowEmpty
+        multiline
         display={row.riddle ?? '(pas encore de charade — la syllabe se dit telle quelle)'}
         onSave={onSave}
         saveFlag={saveFlag}

@@ -84,6 +84,7 @@ export const CharadeEditor = ({ initialPlace }: { initialPlace: CluePlace }) => 
               <td>
                 <EditableValue
                   allowEmpty
+                  multiline
                   display={riddles[index] ?? '(pas encore de charade — la syllabe se dit telle quelle)'}
                   onSave={(next) => handleSaveRiddle(index, syllable, next)}
                   saveFlag={savedFlag(index)}
