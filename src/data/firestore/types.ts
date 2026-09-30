@@ -156,3 +156,11 @@ export type ContourCounts = Partial<Record<Difficulty, number>>;
 export type ContourCountsDoc = { counts: ContourCounts; shuffled?: true };
 
 export const CONTOUR_COUNTS_DOC = { collection: COLLECTIONS.meta, id: 'contourCounts' } as const;
+
+/** `journal/{auto id}`: one entry per admin write, next to the `at` server timestamp (see `journal.ts`). */
+export const JOURNAL_COLLECTION = 'journal';
+
+/** One document touched by an admin write: its collection, its id, and whether it was written or deleted. */
+export type JournalChange = { c: keyof typeof COLLECTIONS; id: string; op: 'set' | 'delete' };
+
+export type JournalDoc = { changes: JournalChange[] };

@@ -97,6 +97,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Journal des écritures de l'admin (une entrée par écriture : documents touchés + heure du serveur) : sert à
+    // la synchronisation ciblée de l'admin, jamais lu ni écrit par le jeu.
+    match /journal/{id} {
+      allow read, write: if isAdmin();
+    }
+
     match /rooms/{code} {
       // N'importe qui peut lire une room (c'est ainsi qu'on vérifie un code avant de la rejoindre).
       allow read: if true;

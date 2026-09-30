@@ -1,15 +1,20 @@
 import {
   collection,
-  deleteDoc,
   doc,
   getDoc,
   getDocs,
   increment,
-  setDoc,
+  limit,
+  orderBy,
+  query,
+  serverTimestamp,
+  Timestamp,
+  where,
   writeBatch,
   type WriteBatch,
 } from 'firebase/firestore';
 
+import { collapseJournal } from '@/data/firestore/journal';
 import { planCountryChange } from '@/data/firestore/denormalize';
 import { planJobChange, planRiddleChange, planSyllableRemoval } from '@/data/firestore/denormalizeClues';
 import { CLUES_NUMBERING, cluesCategory, COMPASS_NUMBERING, planRegroup } from '@/data/firestore/numbering';
@@ -20,11 +25,14 @@ import {
   COLLECTIONS,
   COMPASS_COUNTS_DOC,
   DATA_VERSION_DOC,
+  JOURNAL_COLLECTION,
   type CluesCountsDoc,
   type CompassCounts,
   type CompassCountsDoc,
   type CountryDoc,
   type JobDoc,
+  type JournalChange,
+  type JournalDoc,
   type PlaceDoc,
 } from '@/data/firestore/types';
 import type { ContourCountry } from '@/types';
@@ -89,24 +97,88 @@ const fetchAll = async (): Promise<Cache> => {
   };
 };
 
-type Snapshot = { cache: Cache; syncedAt: number };
+/** `journalAt`: ms of the newest journal entry the copy already includes (`null`: unknown, only a full sync fits). */
+type Snapshot = { cache: Cache; syncedAt: number; journalAt?: number | null };
 
 let syncedAt = 0;
+let journalAt: number | null = null;
 let persistTimer: ReturnType<typeof setTimeout> | undefined;
 
 const persist = () => {
   clearTimeout(persistTimer);
   persistTimer = setTimeout(() => {
-    if (cache) void writeSnapshot({ cache, syncedAt } satisfies Snapshot);
+    if (cache) void writeSnapshot({ cache, syncedAt, journalAt } satisfies Snapshot);
   }, 300);
 };
 
-/** Reads Firestore in full (~2.8k reads) and replaces the local copy. */
+/** Newest journal entry's time (ms), 0 when the journal is empty. */
+const newestJournalAt = async (): Promise<number> => {
+  const { docs } = await getDocs(query(collection(db, JOURNAL_COLLECTION), orderBy('at', 'desc'), limit(1)));
+  return docs.length === 0 ? 0 : (docs[0].data().at as Timestamp).toMillis();
+};
+
+/** Reads Firestore in full (~2.8k reads) and replaces the local copy. The journal's newest entry is read BEFORE
+ * the data: a write landing meanwhile is then in the copy AND seen again by the next incremental sync (harmless),
+ * never missed. */
 export const syncData = async (): Promise<void> => {
+  const newest = await newestJournalAt();
   cache = await fetchAll();
   syncedAt = Date.now();
+  journalAt = newest;
   contoursMemo = null;
-  await writeSnapshot({ cache, syncedAt } satisfies Snapshot);
+  await writeSnapshot({ cache, syncedAt, journalAt } satisfies Snapshot);
+};
+
+/** More changed documents than this and a full read is about as cheap: `syncChanges` falls back to it. */
+const MAX_INCREMENTAL = 1000;
+
+/** Re-reads only what the journal says changed since the last sync (1 read per journal entry + 1 per changed
+ * document). No known position in the journal (copy older than the journal): a full sync. Returns how many
+ * documents were re-read (or, after a full sync, -1). */
+export const syncChanges = async (): Promise<number> => {
+  if (!cache || journalAt === null) {
+    await syncData();
+    return -1;
+  }
+  const { docs } = await getDocs(
+    query(collection(db, JOURNAL_COLLECTION), where('at', '>', Timestamp.fromMillis(journalAt)), orderBy('at')),
+  );
+  if (docs.length === 0) return 0;
+  const changes = collapseJournal(docs.map((entry) => (entry.data() as JournalDoc).changes));
+  if (changes.length > MAX_INCREMENTAL) {
+    await syncData();
+    return -1;
+  }
+  const current = cache;
+  await Promise.all(
+    changes.map(async ({ c, id, op }) => {
+      const snapshot = op === 'delete' ? null : await getDoc(doc(db, COLLECTIONS[c], id));
+      const value = snapshot?.exists() ? snapshot.data() : undefined;
+      if (c === 'places') assign(current.places, id, value as PlaceDoc | undefined);
+      else if (c === 'countries') assign(current.countries, id, value as CountryDoc | undefined);
+      else if (c === 'personalityJobs') assign(current.jobs, id, value as JobDoc | undefined);
+      else if (c === 'charadeRiddles') {
+        assign(current.riddles, id, value === undefined ? undefined : (value as { riddle: string | null }).riddle);
+      } else if (id === COMPASS_COUNTS_DOC.id) {
+        current.compassCounts = (value as CompassCountsDoc | undefined)?.counts ?? {};
+        current.compassShuffled = (value as CompassCountsDoc | undefined)?.shuffled === true;
+      } else if (id === CLUES_COUNTS_DOC.id) {
+        current.cluesCounts = (value as CluesCountsDoc | undefined)?.counts ?? {};
+        current.cluesShuffled = (value as CluesCountsDoc | undefined)?.shuffled === true;
+      }
+    }),
+  );
+  syncedAt = Date.now();
+  journalAt = (docs[docs.length - 1].data().at as Timestamp).toMillis();
+  contoursMemo = null;
+  await writeSnapshot({ cache: current, syncedAt, journalAt } satisfies Snapshot);
+  return changes.length;
+};
+
+/** Sets `record[id]` to `value`, or removes it when there is no document. */
+const assign = <T>(record: Record<string, T>, id: string, value: T | undefined): void => {
+  if (value === undefined) delete record[id];
+  else record[id] = value;
 };
 
 /** Local copy if there is one (no Firestore read), else a first full sync. */
@@ -118,6 +190,7 @@ export const loadData = async (): Promise<void> => {
     delete current.contours;
     cache = current;
     syncedAt = snapshot.syncedAt;
+    journalAt = snapshot.journalAt ?? null;
     contoursMemo = null;
     return;
   }
@@ -144,48 +217,46 @@ export const contours = (): ContourCountry[] => {
   return contoursMemo;
 };
 
-const bumpVersion = () =>
-  setDoc(
-    doc(db, DATA_VERSION_DOC.collection, DATA_VERSION_DOC.id),
-    { version: increment(1), updatedAt: Date.now() },
-    { merge: true },
+/** Writes one document (`null`: deletes it) through the same path as every other write: data version and journal included. */
+const putDoc = (collectionName: keyof typeof COLLECTIONS, id: string, value: object | null): Promise<void> =>
+  commitInBatches(
+    [
+      (batch) =>
+        value ? batch.set(doc(db, collectionName, id), value) : batch.delete(doc(db, collectionName, id)),
+    ],
+    [{ c: collectionName, id, op: value ? 'set' : 'delete' }],
   );
 
 export const putPlace = async (key: string, value: PlaceDoc): Promise<void> => {
-  await setDoc(doc(db, COLLECTIONS.places, key), value);
+  await putDoc('places', key, value);
   data().places[key] = value;
   persist();
-  await bumpVersion();
 };
 
 /** Rewrites `countries/{code}` (a neighbor moved, the label anchor moved...). */
 export const putCountry = async (code: string, value: CountryDoc): Promise<void> => {
-  await setDoc(doc(db, COLLECTIONS.countries, code), value);
+  await putDoc('countries', code, value);
   data().countries[code] = value;
   contoursMemo = null;
   persist();
-  await bumpVersion();
 };
 
 export const putRiddle = async (syllable: string, riddle: string | null): Promise<void> => {
-  await setDoc(doc(db, COLLECTIONS.charadeRiddles, syllable), { riddle });
+  await putDoc('charadeRiddles', syllable, { riddle });
   data().riddles[syllable] = riddle;
   persist();
-  await bumpVersion();
 };
 
 export const putJob = async (code: string, value: JobDoc): Promise<void> => {
-  await setDoc(doc(db, COLLECTIONS.personalityJobs, code), value);
+  await putDoc('personalityJobs', code, value);
   data().jobs[code] = value;
   persist();
-  await bumpVersion();
 };
 
 export const removeJob = async (code: string): Promise<void> => {
-  await deleteDoc(doc(db, COLLECTIONS.personalityJobs, code));
+  await putDoc('personalityJobs', code, null);
   delete data().jobs[code];
   persist();
-  await bumpVersion();
 };
 
 const BATCH_SIZE = 400;
@@ -193,14 +264,18 @@ const BATCH_SIZE = 400;
 const versionBump = { version: increment(1), updatedAt: Date.now() };
 
 /** Runs `operations` in batches of at most `BATCH_SIZE` (Firestore's cap is 500 per batch), each batch
- * atomic; the data version is bumped in the last one. */
-const commitInBatches = async (operations: ((batch: WriteBatch) => void)[]): Promise<void> => {
+ * atomic; the data version is bumped and the journal entry listing `changes` written in the last one, so an
+ * entry is only ever visible once all the data it names is. */
+const commitInBatches = async (operations: ((batch: WriteBatch) => void)[], changes: JournalChange[]): Promise<void> => {
   for (let start = 0; start < operations.length || start === 0; start += BATCH_SIZE) {
     const batch = writeBatch(db);
     const chunk = operations.slice(start, start + BATCH_SIZE);
     for (const operation of chunk) operation(batch);
     if (start + BATCH_SIZE >= operations.length) {
       batch.set(doc(db, DATA_VERSION_DOC.collection, DATA_VERSION_DOC.id), versionBump, { merge: true });
+      batch.set(doc(collection(db, JOURNAL_COLLECTION)), { at: serverTimestamp(), changes } satisfies JournalDoc & {
+        at: unknown;
+      });
     }
     await batch.commit();
   }
@@ -227,6 +302,10 @@ export const applyCountryChange = async (code: string, next: CountryDoc): Promis
         (batch: WriteBatch) =>
           batch.set(doc(db, COLLECTIONS.countries, otherCode), other),
     ),
+  ], [
+    { c: 'countries', id: code, op: 'set' },
+    ...Object.keys(plan.places).map((id) => ({ c: 'places' as const, id, op: 'set' as const })),
+    ...Object.keys(plan.countries).map((id) => ({ c: 'countries' as const, id, op: 'set' as const })),
   ]);
   data().countries[code] = next;
   Object.assign(data().places, plan.places);
@@ -249,7 +328,7 @@ export const applyRiddleChange = async (syllable: string, riddle: string | null)
         (batch: WriteBatch) =>
           batch.set(doc(db, COLLECTIONS.places, key), place),
     ),
-  ]);
+  ], [{ c: 'charadeRiddles', id, op: 'set' }, ...Object.keys(plan).map((key) => ({ c: 'places' as const, id: key, op: 'set' as const }))]);
   data().riddles[id] = riddle;
   Object.assign(data().places, plan);
   persist();
@@ -269,7 +348,7 @@ export const applySyllableRemoval = async (syllable: string): Promise<void> => {
         (batch: WriteBatch) =>
           batch.set(doc(db, COLLECTIONS.places, key), place),
     ),
-  ]);
+  ], [{ c: 'charadeRiddles', id, op: 'delete' }, ...Object.keys(plan).map((key) => ({ c: 'places' as const, id: key, op: 'set' as const }))]);
   delete data().riddles[id];
   Object.assign(data().places, plan);
   persist();
@@ -285,7 +364,7 @@ export const applyJobChange = async (code: string, job: JobDoc): Promise<void> =
         (batch: WriteBatch) =>
           batch.set(doc(db, COLLECTIONS.places, key), place),
     ),
-  ]);
+  ], [{ c: 'personalityJobs', id: code, op: 'set' }, ...Object.keys(plan).map((key) => ({ c: 'places' as const, id: key, op: 'set' as const }))]);
   data().jobs[code] = job;
   Object.assign(data().places, plan);
   persist();
@@ -331,6 +410,13 @@ export const applyPlaceChange = async (key: string, next: PlaceDoc | null): Prom
     ...(data().cluesShuffled && { shuffled: true as const }),
   } satisfies CluesCountsDoc);
   batch.set(doc(db, DATA_VERSION_DOC.collection, DATA_VERSION_DOC.id), versionBump, { merge: true });
+  const changes: JournalChange[] = [
+    { c: 'places', id: key, op: written ? 'set' : 'delete' },
+    ...[...Object.keys(compass.moved), ...Object.keys(clues.moved)].map((id) => ({ c: 'places' as const, id, op: 'set' as const })),
+    { c: 'meta', id: COMPASS_COUNTS_DOC.id, op: 'set' },
+    { c: 'meta', id: CLUES_COUNTS_DOC.id, op: 'set' },
+  ];
+  batch.set(doc(collection(db, JOURNAL_COLLECTION)), { at: serverTimestamp(), changes });
   await batch.commit();
   if (written) places[key] = written;
   else delete places[key];

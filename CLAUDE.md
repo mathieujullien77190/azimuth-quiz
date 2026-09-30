@@ -284,6 +284,16 @@ lieu edite. Les comparaisons de copies utilisent
 `sameJson` (`data/firestore/same.ts`, insensible a l'ordre des cles : Firestore rend les maps triees).
 Toute modification doit passer par l'admin (une edition directe dans la console ne se propage pas).
 
+**Journal et synchronisation ciblee** : chaque ecriture de l'admin ajoute une entree `journal/{id}` (`{ at: serverTimestamp,
+changes: [{ c, id, op: 'set' | 'delete' }] }`, `c` = collection dont `meta`) dans le DERNIER batch de l'ecriture
+(`commitInBatches`, et le batch de `applyPlaceChange`) : une entree n'est visible qu'une fois toutes ses donnees
+ecrites. "Synchroniser" (`syncChanges`, `admin/src/data.ts`) ne lit que les entrees plus recentes que `journalAt`
+(stocke dans le snapshot IndexedDB), `collapseJournal` (`data/firestore/journal.ts`, pur) garde la derniere operation
+par document, puis chaque document est relu ; "Tout relire" (`syncData`) garde la lecture complete et relit le curseur du journal
+AVANT les donnees. Un snapshot sans `journalAt` (anterieur au journal), ou plus de 1000 documents changes, retombe sur la
+lecture complete. Une edition directe dans la console n'ecrit pas de journal : elle n'apparait qu'avec "Tout relire".
+`firestore.rules` : `journal` lisible et ecrivable par les admins seulement (regles a deployer).
+
 ### Lieux : une cle courte et permanente
 
 Un lieu est le document `places/{cle}`, ou la cle est un code de 3 lettres (ex. `par` pour Paris), attribue

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import appConfig from '../../app.json';
 
 import { AuthGate } from './components/AuthGate';
-import { lastSyncedAt, syncData } from './data';
+import { lastSyncedAt, syncChanges, syncData } from './data';
 import { CountriesView } from './views/CountriesView';
 import { JobsView } from './views/JobsView';
 import { PlacesView } from './views/PlacesView';
@@ -79,6 +79,20 @@ const AdminApp = () => {
             className="reset"
             type="button"
             disabled={syncing}
+            title="Relit seulement ce que le journal dit avoir changé depuis la dernière synchronisation"
+            onClick={() => {
+              setSyncing(true);
+              syncChanges()
+                .then((count) => (count === 0 ? setSyncing(false) : window.location.reload()))
+                .catch(() => setSyncing(false));
+            }}
+          >
+            {syncing ? 'Synchronisation…' : `🔄 Synchroniser${syncedLabel}`}
+          </button>
+          <button
+            className="reset"
+            type="button"
+            disabled={syncing}
             title="Relit tout Firestore (~2 700 lectures) et remplace la copie locale"
             onClick={() => {
               setSyncing(true);
@@ -87,7 +101,7 @@ const AdminApp = () => {
                 .catch(() => setSyncing(false));
             }}
           >
-            {syncing ? 'Synchronisation…' : `🔄 Synchroniser${syncedLabel}`}
+            Tout relire
           </button>
         </div>
       </header>
