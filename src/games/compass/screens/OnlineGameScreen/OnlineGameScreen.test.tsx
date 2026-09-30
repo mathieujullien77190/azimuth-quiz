@@ -128,11 +128,12 @@ describe('OnlineGameScreen — before the round', () => {
 
 describe('OnlineGameScreen — the end', () => {
   it('shows the final standings, and leaves through the home button', async () => {
-    const onQuit = jest.fn();
-    setGame({ gameState: gameState({ screen: 'end' }), records: [record] });
-    const { getByText } = await renderScreen(onQuit);
+    const handleQuit = jest.fn();
+    setGame({ gameState: gameState({ screen: 'end' }), records: [record], handleQuit });
+    const { getByText } = await renderScreen();
     await fireEvent.press(getByText(t.endScreen.menu));
-    expect(onQuit).toHaveBeenCalledTimes(1);
+    // The session's own quit (home, and the host takes the room down), not a bare `router.back()`.
+    expect(handleQuit).toHaveBeenCalledTimes(1);
   });
 
   it('copes with this device missing from the (frozen) players list', async () => {

@@ -320,8 +320,17 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
   // The host starting the game flips `screen` to 'game' for every connected device — host
   // included, its own subscription above sees the same change — so this single effect moves
   // everyone across, rather than the host navigating itself separately.
+  // Once per game: `roomScreen` keeps changing while it is played ('game', 'reveal', 'game'... 'end'), and a
+  // `push` per change stacked a NEW game screen on top each time — the one on top at the end had seen none of
+  // the rounds (empty recap), and "Accueil" only popped it to the previous one instead of going home.
+  const gameOpenedRef = useRef(false);
   useEffect(() => {
-    if (roomScreen === 'options' || connectedRoomCode === null) return;
+    if (roomScreen === 'options' || connectedRoomCode === null) {
+      gameOpenedRef.current = false;
+      return;
+    }
+    if (gameOpenedRef.current) return;
+    gameOpenedRef.current = true;
     router.push({ pathname: adapter.gamePath, params: { code: connectedRoomCode } });
   }, [adapter.gamePath, roomScreen, connectedRoomCode, router]);
 

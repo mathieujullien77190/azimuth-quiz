@@ -601,6 +601,16 @@ describe('useSetupRoom — starting the game', () => {
     expect(mockPush).toHaveBeenCalledWith({ pathname: '/online-game', params: { code: 'tabofuna' } });
   });
 
+  it('opens the game screen once, however many times the room changes screen afterwards', async () => {
+    const ctx = await setup();
+    await hostRoom(ctx);
+    await ctx.emitGame({ screen: 'game' });
+    await ctx.emitGame({ screen: 'reveal' });
+    await ctx.emitGame({ screen: 'end' });
+
+    expect(mockPush).toHaveBeenCalledTimes(1);
+  });
+
   it('does not navigate while the room is still in its lobby', async () => {
     const ctx = await setup();
     await hostRoom(ctx);
