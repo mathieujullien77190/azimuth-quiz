@@ -157,6 +157,36 @@ bord) — seuls les hooks a etat/effet metier sont interdits. Les tests existant
 `OnlineGameScreen` a depuis gagne un `OnlineGameScreen.test.tsx` (comme les deux autres jeux) —
 cette phrase datait d'avant.
 
+### Boussole : les lieux sont tires dans Firestore (pas de repli sur les JSON)
+
+Au lancement, l'hote tire les lieux de la partie avec `fetchRandomPlaces`
+(`games/compass/helpers/firestorePlaces.ts`, hors barrel comme `room.ts`), depuis la collection `places`
+(documents de `data/firestore/`, edites par l'admin). Firestore n'a pas de requete "N documents au hasard" :
+les lieux Compass sont donc **numerotes `n` = 1..taille dans leur groupe (`compass.category` x `difficulty`)**
+et les tailles vivent dans `meta/compassCounts` (`{ counts: { categorie: { difficulte: taille } } }`). L'hote
+lit ce document (1 lecture), forme le pool des groupes choisis (en anglais les lieux FR sont remontes d'un
+cran par `effectiveDifficulty`, donc le palier du dessous en fait partie et est refiltre ensuite), tire des
+positions distinctes au hasard sur tout le pool (`slotAt` -> groupe + `n`, 3 x manches sur la 1re passe puis
+le double...), et lit ces lieux par groupe avec `compass.category == c`, `difficulty == d`, `n in [...]`
+(30 valeurs max par requete) : 1 lecture par lieu, hasard uniforme. Meme regles que l'ancien `pickPlaces` :
+pas trop pres de l'origine (`MIN_PLACE_DISTANCE_KM`, on complete avec les plus eloignes des trop proches s'il
+n'y en a pas assez de loin, sans lire tout le pool). **Aucun repli sur les JSON** : si Firestore echoue ou si
+moins de `rounds` lieux existent, `fetchRandomPlaces` rejette, `useSetupRoom` remet `starting` a faux, rien
+n'est ecrit dans la room (elle reste dans son salon) et une notice `startFailedNotice` s'affiche (tap ou
+4 s) ; le bouton "Lancer la partie" relance. Seul l'hote interroge (les lieux partent ensuite dans le
+document de la room). Index compose de `firestore.indexes.json` (`npx firebase-tools deploy --only
+firestore:indexes`).
+
+**La numerotation reste dense** (helpers purs de `data/firestore/numbering.ts` : `computeNumbering`,
+`isNumberingConsistent`, `planRegroup`, `slotAt`). L'import (`buildPlaceDocs`/`buildCompassCounts`) la pose ;
+l'admin la maintient : supprimer un lieu, changer sa categorie ou sa difficulte passe par `applyPlaceChange`
+(`admin/src/data.ts`), qui ecrit dans UN seul batch le lieu, le dernier lieu de l'ancien groupe (il prend le
+`n` libere), les tailles et `dataVersion`. Un lieu sans `compass` n'est jamais numerote. Tant que la
+numerotation manque ou est incoherente, `AuthGate` affiche le bouton unique "Numeroter les lieux Compass"
+(`numberCompassPlaces`). Pas de fonction "ajouter un lieu" dans l'admin pour l'instant : la creer devra
+passer par `applyPlaceChange` (ajout en fin de groupe).
+`pickPlaces`/`filterPlaces` et les JSON restent dans le repo, plus utilises par ce chemin (menage plus tard).
+
 ### Lieux : 5 petits fichiers, une cle courte partagee
 
 `src/data/places/` n'a plus un seul gros `places.json` : chaque lieu est reparti sur jusqu'a 5

@@ -107,8 +107,9 @@ GitHub Pages, à côté du jeu :
 Les données vivent dans **Firestore** (collections `places`, `countries`, `charadeRiddles`,
 `personalityJobs`, `meta`). L'admin se connecte avec un compte Google (seul l'administrateur
 déclaré dans `firestore.rules` peut écrire) et **enregistre directement** chaque modification dans
-Firestore. Le jeu, lui,
-lit encore les JSON embarqués (migration à venir). Import initial des JSON :
+Firestore. Boussole tire ses lieux dans Firestore (lieux numerotes par groupe, voir CLAUDE.md, index
+`firestore.indexes.json` à déployer avec `npx firebase-tools deploy --only firestore:indexes`) ; Indices et
+Silhouette lisent encore les JSON embarqués (migration à venir). Import initial des JSON :
 `npm run seed:firestore -- --dry-run` puis `npm run seed:firestore` (clé de compte de service dans
 `scripts/serviceAccount.json`, jamais commitée). Règles : `npx firebase-tools deploy --only firestore:rules`.
 En local :

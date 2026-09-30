@@ -7,7 +7,8 @@ import { decodeAllPlaces } from '../places/codec';
 import { decodeAllCountries } from '../places/countries';
 import personalityPlacesData from '../places/personalityPlaces.json';
 
-import type { CountryDoc, JobDoc, PlaceDoc, RiddleDoc } from './types';
+import { computeNumbering } from './numbering';
+import type { CompassCountsDoc, CountryDoc, JobDoc, PlaceDoc, RiddleDoc } from './types';
 
 /** Flat `[lon, lat, lon, lat, ...]` (Firestore has no nested arrays). */
 export const flattenPoints = (points: readonly (readonly [number, number])[]): number[] => points.flatMap(([lon, lat]) => [lon, lat]);
@@ -18,8 +19,8 @@ export const unflattenPoints = (flat: readonly number[]): [number, number][] =>
 const PERSONALITY = personalityPlacesData as unknown as Record<string, readonly [string, string | null]>;
 const WORDPLAY = wordplayData as unknown as Record<string, { sentence: string; difficulty: Difficulty }>;
 
-/** Every `places/{key}` document, joined from the 5 place files + wordplay. */
-export const buildPlaceDocs = (): Record<string, PlaceDoc> =>
+/** Every place joined from the 5 place files + wordplay, not yet numbered. */
+const buildUnnumberedPlaceDocs = (): Record<string, PlaceDoc> =>
   Object.fromEntries(
     decodeAllPlaces().map(({ key, common, compass, clues }) => {
       const [name, code, latitude, longitude] = common;
@@ -58,6 +59,20 @@ export const buildPlaceDocs = (): Record<string, PlaceDoc> =>
       return [key, doc];
     }),
   );
+
+const buildNumbered = () => {
+  const places = buildUnnumberedPlaceDocs();
+  const { numbers, counts } = computeNumbering(Object.entries(places));
+  for (const [key, n] of Object.entries(numbers)) places[key].n = n;
+  return { places, counts };
+};
+
+/** Every `places/{key}` document: joined from the 5 place files + wordplay, Compass places numbered
+ * `n` = 1..size inside their group (category x difficulty), in file order. */
+export const buildPlaceDocs = (): Record<string, PlaceDoc> => buildNumbered().places;
+
+/** `meta/compassCounts`: the size of every Compass group, matching `buildPlaceDocs`' numbering. */
+export const buildCompassCounts = (): CompassCountsDoc => ({ counts: buildNumbered().counts });
 
 /** Every `countries/{code}` document, joined from the 6 country files. */
 export const buildCountryDocs = (): Record<string, CountryDoc> =>

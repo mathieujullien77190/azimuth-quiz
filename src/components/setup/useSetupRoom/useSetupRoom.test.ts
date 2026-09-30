@@ -571,6 +571,26 @@ describe('useSetupRoom — starting the game', () => {
     expect(ctx.result.current.starting).toBe(false);
   });
 
+  it('a failed start shows a notice (tap or 4s to dismiss) and the button retries on the same room', async () => {
+    const ctx = await setup();
+    await hostRoom(ctx);
+    await act(async () => ctx.result.current.startOnlineGame(() => Promise.reject(new Error('no places'))));
+    expect(ctx.result.current.starting).toBe(false);
+    expect(ctx.result.current.overlayMessage).not.toBeNull();
+    await act(async () => ctx.result.current.dismissOverlay());
+    expect(ctx.result.current.overlayMessage).toBeNull();
+
+    await act(async () => ctx.result.current.startOnlineGame(() => Promise.reject(new Error('no places'))));
+    expect(ctx.result.current.overlayMessage).not.toBeNull();
+    await act(async () => jest.advanceTimersByTime(4000));
+    expect(ctx.result.current.overlayMessage).toBeNull();
+
+    const run = jest.fn(() => Promise.resolve());
+    await act(async () => ctx.result.current.startOnlineGame(run));
+    expect(run).toHaveBeenCalledWith('tabofuna');
+    expect(ctx.result.current.overlayLoading).toBe(true);
+  });
+
   it('lifts the loading state once the game screen takes over, and every device navigates to it', async () => {
     const ctx = await setup();
     await hostRoom(ctx);
@@ -612,6 +632,7 @@ describe('useSetupRoom — starting the game', () => {
     await flush();
     await ctx.emitPlayers({ zoe: player('Zoe') }, 'zoe');
     expect(ctx.result.current.starting).toBe(false);
+    expect(ctx.result.current.overlayMessage).not.toBeNull();
   });
 
   it('solo: lifts the loading state when the room cannot be created', async () => {
@@ -619,6 +640,7 @@ describe('useSetupRoom — starting the game', () => {
     await act(async () => ctx.result.current.startOnlineGame(jest.fn()));
     expect(ctx.result.current.starting).toBe(false);
     expect(ctx.result.current.connectedRoomCode).toBeNull();
+    expect(ctx.result.current.overlayMessage).not.toBeNull();
   });
 
   it('a joiner never starts a game', async () => {

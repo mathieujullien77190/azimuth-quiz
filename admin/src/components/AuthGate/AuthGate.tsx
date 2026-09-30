@@ -1,7 +1,7 @@
 import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebase/auth';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 
-import { loadData } from '../../data';
+import { compassNumberingPending, loadData, numberCompassPlaces } from '../../data';
 import { ADMIN_EMAIL, auth } from '../../firebase';
 
 type Phase = 'auth' | 'loading' | 'ready';
@@ -16,6 +16,7 @@ export const AuthGate = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const [phase, setPhase] = useState<Phase>('auth');
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<string | null>(null);
 
   useEffect(() => onAuthStateChanged(auth, setUser), []);
 
@@ -37,6 +38,17 @@ export const AuthGate = ({ children }: { children: ReactNode }) => {
     else setPhase('auth');
   }, [isAdmin, load]);
 
+  const runNumbering = () => {
+    setError(null);
+    setProgress('Écriture…');
+    numberCompassPlaces((done, total) => setProgress(`Écriture : ${done} / ${total}`))
+      .then(() => setProgress(null))
+      .catch((err: Error) => {
+        setProgress(null);
+        setError(err.message);
+      });
+  };
+
   const signIn = () => {
     setError(null);
     signInWithPopup(auth, new GoogleAuthProvider()).catch((err: Error) => setError(err.message));
@@ -44,6 +56,21 @@ export const AuthGate = ({ children }: { children: ReactNode }) => {
 
   if (user === undefined) return <div className="empty">Connexion…</div>;
 
+  // Compass places not numbered yet (or counts out of sync): the game's random draw needs `n` on every
+  // Compass place and `meta/compassCounts`, see `data/firestore/numbering.ts`.
+  if (isAdmin && phase === 'ready' && (progress !== null || compassNumberingPending())) {
+    return (
+      <div className="wrap">
+        <div className="empty">
+          <p>Les lieux Compass ne sont pas (bien) numérotés : le tirage au sort des lieux du jeu en a besoin.</p>
+          {error && <p>{error}</p>}
+          <button className="reset" type="button" disabled={progress !== null} onClick={runNumbering}>
+            {progress ?? 'Numéroter les lieux Compass'}
+          </button>
+        </div>
+      </div>
+    );
+  }
   if (isAdmin && phase === 'ready') return <>{children}</>;
   if (isAdmin && phase === 'loading') return <div className="empty">Chargement des données…</div>;
 

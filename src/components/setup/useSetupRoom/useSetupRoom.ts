@@ -166,10 +166,17 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
   // room's own state (who's first in arrival order...), which only exists once that's the case.
   const [starting, setStarting] = useState(false);
   const pendingRunRef = useRef<((code: string) => Promise<void>) | null>(null);
+  // A start that failed (`run` rejected: places not found, no network...) writes nothing to the room —
+  // it stays in its lobby — so the button just retries; `startFailed` only drives the notice.
+  const [startFailed, setStartFailed] = useState(false);
   const startOnlineGame = async (run: (code: string) => Promise<void>) => {
+    setStartFailed(false);
     if (connectedRoomCode !== null) {
       setStarting(true);
-      await run(connectedRoomCode).catch(() => setStarting(false));
+      await run(connectedRoomCode).catch(() => {
+        setStarting(false);
+        setStartFailed(true);
+      });
       return;
     }
     if (mode === 'join') return;
@@ -181,8 +188,14 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
       setHostedSilently(true);
     } catch {
       setStarting(false);
+      setStartFailed(true);
     }
   };
+  useEffect(() => {
+    if (!startFailed) return;
+    const timeout = setTimeout(() => setStartFailed(false), 4000);
+    return () => clearTimeout(timeout);
+  }, [startFailed]);
 
   // Shared with the game's online screen, which only ever reads it — this screen alone owns the
   // connect/disconnect lifecycle, since it's always the one that establishes a room before anyone
@@ -215,7 +228,10 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     const run = pendingRunRef.current;
     if (run === null || connectedRoomCode === null || localUid === null || !(localUid in players)) return;
     pendingRunRef.current = null;
-    run(connectedRoomCode).catch(() => setStarting(false));
+    run(connectedRoomCode).catch(() => {
+      setStarting(false);
+      setStartFailed(true);
+    });
   }, [connectedRoomCode, localUid, players]);
 
   // Mirrors the host's settings onto this device's own, for a joiner (read-only display) — the
@@ -363,15 +379,18 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
         ? t.setup.online.roomDeletedNotice
         : overlayLoading
           ? t.game.loading
-          : readOnlyNotice
-            ? t.setup.readOnlyNotice
-            : null;
+          : startFailed
+            ? t.setup.online.startFailedNotice
+            : readOnlyNotice
+              ? t.setup.readOnlyNotice
+              : null;
   // Tapping the notice dismisses whichever one is showing early, instead of only ever waiting
   // out its own 2s auto-dismiss timeout above. The loading splash isn't dismissable: it goes away
   // by itself once the game screen takes over.
   const dismissOverlay = () => {
     if (overlayLoading) return;
     if (disconnectReason !== null || connectionLost) dismissDisconnectNotice();
+    else if (startFailed) setStartFailed(false);
     else setReadOnlyNotice(false);
   };
 

@@ -1,8 +1,9 @@
 import { renderHook } from '@testing-library/react-native';
 
 import { DEFAULT_SETTINGS } from '@/games/compass/constants';
+import { fetchRandomPlaces } from '@/games/compass/helpers/firestorePlaces';
 import { startRoomGame } from '@/games/compass/helpers/room';
-import { pickPlaces, resolveOrigin } from '@/helpers';
+import { resolveOrigin } from '@/helpers';
 
 import { useOnlineRoom } from './useOnlineRoom';
 
@@ -12,8 +13,8 @@ jest.mock('@/components/setup/useSetupRoom', () => ({
 jest.mock('@/helpers', () => ({
   ...jest.requireActual('@/helpers'),
   resolveOrigin: jest.fn(),
-  pickPlaces: jest.fn(),
 }));
+jest.mock('@/games/compass/helpers/firestorePlaces', () => ({ fetchRandomPlaces: jest.fn() }));
 jest.mock('@/games/compass/helpers/room', () => ({
   ROOM_MAX_PLAYERS: 10,
   startRoomGame: jest.fn(() => Promise.resolve()),
@@ -26,7 +27,7 @@ const PLACES = [{ name: 'Rome' }];
 beforeEach(() => {
   jest.clearAllMocks();
   jest.mocked(resolveOrigin).mockResolvedValue(DEVICE_ORIGIN);
-  jest.mocked(pickPlaces).mockReturnValue(PLACES as never);
+  jest.mocked(fetchRandomPlaces).mockResolvedValue(PLACES as never);
 });
 
 describe('useOnlineRoom', () => {
@@ -37,7 +38,7 @@ describe('useOnlineRoom', () => {
     await result.current.startOnlineGame();
 
     expect(resolveOrigin).toHaveBeenCalledTimes(1);
-    expect(pickPlaces).toHaveBeenCalledWith(DEVICE_ORIGIN.coordinates, settings, 'fr');
+    expect(fetchRandomPlaces).toHaveBeenCalledWith(DEVICE_ORIGIN.coordinates, settings, 'fr');
     expect(startRoomGame).toHaveBeenCalledWith('tabofuna', { origin: DEVICE_ORIGIN, places: PLACES });
   });
 
@@ -51,6 +52,15 @@ describe('useOnlineRoom', () => {
     const origin = jest.mocked(startRoomGame).mock.calls[0][1].origin;
     expect(origin.coordinates).toEqual({ latitude: 10, longitude: 20 });
     expect(origin.isDevicePosition).toBe(false);
-    expect(pickPlaces).toHaveBeenCalledWith({ latitude: 10, longitude: 20 }, settings, 'fr');
+    expect(fetchRandomPlaces).toHaveBeenCalledWith({ latitude: 10, longitude: 20 }, settings, 'fr');
+  });
+
+  it('starts nothing when the places cannot be drawn (the shared start flow reports the failure)', async () => {
+    jest.mocked(fetchRandomPlaces).mockRejectedValue(new Error('offline'));
+    const { result } = await renderHook(() => useOnlineRoom({ ...DEFAULT_SETTINGS, useGps: true }, jest.fn()));
+
+    await expect(result.current.startOnlineGame()).rejects.toThrow('offline');
+
+    expect(startRoomGame).not.toHaveBeenCalled();
   });
 });

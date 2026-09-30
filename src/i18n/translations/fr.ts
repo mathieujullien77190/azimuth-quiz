@@ -77,6 +77,7 @@ export const fr: Translations = {
       kickedNotice: 'Vous avez été expulsé de la partie.',
       roomDeletedNotice: 'L’hôte a supprimé la partie.',
       connectionLostNotice: 'Connexion perdue : la partie est terminée pour toi.',
+      startFailedNotice: 'Impossible de lancer la partie (lieux introuvables). Vérifie ta connexion et réessaie.',
     },
     readOnlyNotice: 'Seul l’hôte peut modifier les options.',
     optionsTitle: 'Options',

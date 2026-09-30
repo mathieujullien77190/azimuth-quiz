@@ -15,8 +15,8 @@ import { fileURLToPath } from 'node:url';
 import { cert, initializeApp, applicationDefault } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
-import { buildCountryDocs, buildJobDocs, buildPlaceDocs, buildRiddleDocs } from '../src/data/firestore/build';
-import { COLLECTIONS, DATA_VERSION_DOC } from '../src/data/firestore/types';
+import { buildCompassCounts, buildCountryDocs, buildJobDocs, buildPlaceDocs, buildRiddleDocs } from '../src/data/firestore/build';
+import { COLLECTIONS, COMPASS_COUNTS_DOC, DATA_VERSION_DOC } from '../src/data/firestore/types';
 
 const BATCH_SIZE = 400;
 
@@ -72,6 +72,8 @@ const run = async () => {
     console.log(`${name}: ${entries.length} documents écrits`);
   }
 
+  await db.collection(COMPASS_COUNTS_DOC.collection).doc(COMPASS_COUNTS_DOC.id).set(buildCompassCounts());
+  console.log('meta/compassCounts écrit.');
   await db.collection(DATA_VERSION_DOC.collection).doc(DATA_VERSION_DOC.id).set({ version: 1, updatedAt: Date.now() });
   console.log('meta/dataVersion écrit.');
 };

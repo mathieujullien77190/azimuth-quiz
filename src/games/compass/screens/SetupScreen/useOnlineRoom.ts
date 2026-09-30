@@ -1,6 +1,7 @@
 import { useSetupRoom, type SetupRoomAdapter } from '@/components/setup/useSetupRoom';
 import { ROOM_PLAYER_COLORS } from '@/data';
-import { pickPlaces, resolveOrigin } from '@/helpers';
+import { resolveOrigin } from '@/helpers';
+import { fetchRandomPlaces } from '@/games/compass/helpers/firestorePlaces';
 import {
   ROOM_MAX_PLAYERS,
   type RoomSettings,
@@ -40,7 +41,8 @@ const adapter: SetupRoomAdapter<GameSettings, RoomSettings> = {
 /** Compass' side of the online setup: the room lifecycle is `useSetupRoom`'s (shared with Clues),
  * only what "Lancer la partie" writes is specific — the host's own GPS/custom position, never a
  * joiner's, is the shared reference every guess gets scored against (see `startRoomGame`), and the
- * whole game's places are picked upfront exactly like the local game does (`useGame.start()`). */
+ * whole game's places are drawn upfront by the host from Firestore (`fetchRandomPlaces`, no fallback:
+ * a failure rejects and `useSetupRoom` shows the "couldn't start" notice). */
 export const useOnlineRoom = (settings: GameSettings, updateSettings: (patch: Partial<GameSettings>) => void) => {
   const t = useTranslation();
   const { language } = useLanguage();
@@ -55,7 +57,8 @@ export const useOnlineRoom = (settings: GameSettings, updateSettings: (patch: Pa
             coordinates: { latitude: settings.customLatitude, longitude: settings.customLongitude },
             isDevicePosition: false,
           };
-      const places = pickPlaces(origin.coordinates, settings, language);
+      // Drawn from Firestore, no fallback: a failure rejects, and the shared start flow shows a notice.
+      const places = await fetchRandomPlaces(origin.coordinates, settings, language);
       await startRoomGame(code, { origin, places });
     });
 

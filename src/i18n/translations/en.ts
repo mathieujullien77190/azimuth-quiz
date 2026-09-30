@@ -76,6 +76,7 @@ export const en: Translations = {
       kickedNotice: 'You’ve been removed from the game.',
       roomDeletedNotice: 'The host deleted the game.',
       connectionLostNotice: 'Connection lost: the game is over for you.',
+      startFailedNotice: 'Couldn’t start the game (places not found). Check your connection and try again.',
     },
     readOnlyNotice: 'Only the host can change the options.',
     optionsTitle: 'Options',

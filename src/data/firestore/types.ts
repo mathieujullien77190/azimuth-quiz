@@ -41,6 +41,10 @@ export type PlaceDoc = {
   latitude: number;
   longitude: number;
   difficulty: Difficulty;
+  /** Position 1..size inside the place's Compass group (`compass.category` x `difficulty`), only on a
+   * place with `compass`: the game draws random positions and asks for `n in [...]`, Firestore having no
+   * "N random documents" query. Kept dense by the seed, the admin's numbering screen and `planRegroup`. */
+  n?: number;
   compass?: CompassDoc;
   clues?: CluesDoc;
   /** Curated by hand, `jobCode` looks up `personalityJobs/{code}`. */
@@ -78,3 +82,11 @@ export type RiddleDoc = { riddle: string | null };
 export type JobDoc = { fr: string; en: string };
 
 export type DataVersionDoc = { version: number; updatedAt: number };
+
+/** Size of every Compass group, `counts[category][difficulty]` — a group with no place is absent. */
+export type CompassCounts = Partial<Record<Category, Partial<Record<Difficulty, number>>>>;
+
+/** `meta/compassCounts`: read once by the host at launch to draw random positions (see `numbering.ts`). */
+export type CompassCountsDoc = { counts: CompassCounts };
+
+export const COMPASS_COUNTS_DOC = { collection: COLLECTIONS.meta, id: 'compassCounts' } as const;

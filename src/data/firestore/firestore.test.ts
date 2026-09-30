@@ -4,7 +4,7 @@ import personalityJobsData from '../personalityJobs.json';
 import { decodeAllPlaces } from '../places/codec';
 import { decodeAllCountries } from '../places/countries';
 
-import { buildCountryDocs, buildJobDocs, buildPlaceDocs, buildRiddleDocs, flattenPoints, unflattenPoints } from './build';
+import { buildCompassCounts, buildCountryDocs, buildJobDocs, buildPlaceDocs, buildRiddleDocs, flattenPoints, unflattenPoints } from './build';
 import { cluesFromDoc, compassFromDoc, contourFromDoc } from './read';
 
 const places = buildPlaceDocs();
@@ -86,6 +86,27 @@ describe('firestore docs', () => {
       personality: { name: 'P', description: null },
     });
     expect(compassFromDoc({ ...base, compass: { category: 'cities' } })).not.toHaveProperty('description');
+  });
+
+  it('numbers the Compass places 1..size inside their category x difficulty group', () => {
+    const groups = new Map<string, number[]>();
+    for (const doc of Object.values(places)) {
+      if (!doc.compass) {
+        expect(doc.n).toBeUndefined();
+        continue;
+      }
+      const id = doc.compass.category + '|' + doc.difficulty;
+      groups.set(id, [...(groups.get(id) ?? []), doc.n!]);
+    }
+    const { counts } = buildCompassCounts();
+    for (const [id, numbers] of groups) {
+      const [category, difficulty] = id.split('|');
+      expect(numbers.slice().sort((a, b) => a - b)).toEqual(numbers.map((_, index) => index + 1));
+      expect((counts as Record<string, Record<string, number>>)[category][difficulty]).toBe(numbers.length);
+    }
+    expect(Object.values(counts).flatMap((byDifficulty) => Object.values(byDifficulty!)).reduce((sum, size) => sum + size, 0)).toBe(
+      Object.values(places).filter((doc) => doc.compass).length,
+    );
   });
 
   it('mirrors the riddle and job dictionaries', () => {

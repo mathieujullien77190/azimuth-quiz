@@ -2,7 +2,7 @@ import { cluesFromDoc, compassFromDoc } from '@/data/firestore/read';
 import type { PlaceDoc } from '@/data/firestore/types';
 import type { Difficulty, CluePlace, Place } from '@/types';
 
-import { data, putPlace, removePlace } from '../data';
+import { applyPlaceChange, data, putPlace } from '../data';
 
 /** A place card: the common identity, plus each game's data when this place is in it
  * (either one can be absent). `key` is the short code the `places/{key}` documents are indexed by
@@ -58,7 +58,7 @@ export const saveCompass = async (row: PlaceRow, patch: CompassPatch): Promise<P
   const compass = { ...doc.compass!, ...patch };
   if (!compass.description) delete compass.description;
   const next = { ...doc, compass };
-  await putPlace(row.key, next);
+  await applyPlaceChange(row.key, next);
   return compassOf(next)!;
 };
 
@@ -74,10 +74,10 @@ export const saveClues = async (row: PlaceRow, patch: CluesPatch): Promise<ClueP
  * once per game. */
 export const saveDifficulty = async (row: PlaceRow, difficulty: Difficulty): Promise<{ compass: Place | null; clues: CluePlace | null }> => {
   const next = { ...data().places[row.key], difficulty };
-  await putPlace(row.key, next);
+  await applyPlaceChange(row.key, next);
   return { compass: compassOf(next), clues: cluesOf(row.key, next) };
 };
 
 export const deletePlace = async (row: PlaceRow): Promise<void> => {
-  await removePlace(row.key);
+  await applyPlaceChange(row.key, null);
 };

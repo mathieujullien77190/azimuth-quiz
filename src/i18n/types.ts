@@ -83,6 +83,9 @@ export type Translations = {
       roomDeletedNotice: string;
       /** Whoever loses the connection during a game leaves it (see `useRoomPresence`). */
       connectionLostNotice: string;
+      /** Shown to the host when "Lancer la partie" failed (e.g. the places could not be fetched):
+       * nothing was started, pressing the button again retries. */
+      startFailedNotice: string;
     };
     /** Shown briefly (see SetupScreen's `notifyReadOnly`) when a joiner taps a read-only option. */
     readOnlyNotice: string;

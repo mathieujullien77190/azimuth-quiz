@@ -1,0 +1,14 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "places",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "compass.category", "order": "ASCENDING" },
+        { "fieldPath": "difficulty", "order": "ASCENDING" },
+        { "fieldPath": "n", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

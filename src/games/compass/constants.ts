@@ -34,6 +34,8 @@ export const MIN_PLACE_DISTANCE_KM = 150;
 // --- Storage ---
 export const BEST_SCORE_STORAGE_KEY = 'azimuthquiz:best-score';
 export const SETTINGS_STORAGE_KEY = 'azimuthquiz:settings';
+/** Numbers already drawn per group, to prefer new places (see `helpers/placeHistory.ts`). */
+export const COMPASS_HISTORY_STORAGE_KEY = 'azimuthquiz:compass-history';
 
 // Label/description: see translations.setup.categories (same id).
 export const CATEGORIES: { id: Category; emoji: string }[] = [

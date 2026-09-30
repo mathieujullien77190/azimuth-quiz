@@ -24,6 +24,8 @@ jest.mock('@/settings', () => {
 // `helpers/room.ts` pulls in `firebase/firestore`, which is ESM-only and crashes Jest the moment
 // anything requires it transitively — mocked out here since these tests exercise the setup UI,
 // not real Firestore calls.
+// Same reason: `firestorePlaces.ts` imports `firebase/firestore` too.
+jest.mock('@/games/compass/helpers/firestorePlaces', () => ({ fetchRandomPlaces: jest.fn() }));
 jest.mock('@/games/compass/helpers/room', () => ({
   ROOM_MAX_PLAYERS: 10,
   createRoom: jest.fn(),
