@@ -1,10 +1,10 @@
 import { polyfillCountryFlagEmojis } from 'country-flag-emoji-polyfill';
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState, useSyncExternalStore } from 'react';
 
 import appConfig from '../../app.json';
 
 import { AuthGate } from './components/AuthGate';
-import { lastSyncedAt, syncChanges, syncData } from './data';
+import { dataRevision, startJournalSync, subscribeRevision } from './data';
 import { CountriesView } from './views/CountriesView';
 import { JobsView } from './views/JobsView';
 import { PlacesView } from './views/PlacesView';
@@ -15,11 +15,9 @@ type Tab = 'places' | 'countries' | 'syllables' | 'jobs' | 'wordplay';
 
 const AdminApp = () => {
   const [tab, setTab] = useState<Tab>('places');
-  const [syncing, setSyncing] = useState(false);
-  const syncedLabel =
-    lastSyncedAt() > 0
-      ? ` (${new Date(lastSyncedAt()).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })})`
-      : '';
+  // Somebody else's change landed in the local copy: the views remount to show it.
+  const revision = useSyncExternalStore(subscribeRevision, dataRevision);
+  useEffect(() => startJournalSync(), []);
   // Same Chromium-on-Windows flag-emoji fallback as the game itself (see helpers/web.ts) —
   // needed here too since the flag badge below uses the same font/emoji.
   useEffect(() => {
@@ -75,42 +73,16 @@ const AdminApp = () => {
               Jeux de mots
             </button>
           </div>
-          <button
-            className="reset"
-            type="button"
-            disabled={syncing}
-            title="Relit seulement ce que le journal dit avoir changé depuis la dernière synchronisation"
-            onClick={() => {
-              setSyncing(true);
-              syncChanges()
-                .then((count) => (count === 0 ? setSyncing(false) : window.location.reload()))
-                .catch(() => setSyncing(false));
-            }}
-          >
-            {syncing ? 'Synchronisation…' : `🔄 Synchroniser${syncedLabel}`}
-          </button>
-          <button
-            className="reset"
-            type="button"
-            disabled={syncing}
-            title="Relit tout Firestore (~2 700 lectures) et remplace la copie locale"
-            onClick={() => {
-              setSyncing(true);
-              syncData()
-                .then(() => window.location.reload())
-                .catch(() => setSyncing(false));
-            }}
-          >
-            Tout relire
-          </button>
         </div>
       </header>
 
-      {tab === 'places' && <PlacesView />}
-      {tab === 'countries' && <CountriesView />}
-      {tab === 'syllables' && <SyllablesView />}
-      {tab === 'jobs' && <JobsView />}
-      {tab === 'wordplay' && <WordplayView />}
+      <Fragment key={revision}>
+        {tab === 'places' && <PlacesView />}
+        {tab === 'countries' && <CountriesView />}
+        {tab === 'syllables' && <SyllablesView />}
+        {tab === 'jobs' && <JobsView />}
+        {tab === 'wordplay' && <WordplayView />}
+      </Fragment>
     </div>
   );
 };

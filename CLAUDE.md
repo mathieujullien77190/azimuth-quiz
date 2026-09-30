@@ -284,15 +284,18 @@ lieu edite. Les comparaisons de copies utilisent
 `sameJson` (`data/firestore/same.ts`, insensible a l'ordre des cles : Firestore rend les maps triees).
 Toute modification doit passer par l'admin (une edition directe dans la console ne se propage pas).
 
-**Journal et synchronisation ciblee** : chaque ecriture de l'admin ajoute une entree `journal/{id}` (`{ at: serverTimestamp,
+**Journal et synchronisation automatique** : chaque ecriture de l'admin ajoute une entree `journal/{id}` (`{ at: serverTimestamp,
 changes: [{ c, id, op: 'set' | 'delete' }] }`, `c` = collection dont `meta`) dans le DERNIER batch de l'ecriture
 (`commitInBatches`, et le batch de `applyPlaceChange`) : une entree n'est visible qu'une fois toutes ses donnees
-ecrites. "Synchroniser" (`syncChanges`, `admin/src/data.ts`) ne lit que les entrees plus recentes que `journalAt`
-(stocke dans le snapshot IndexedDB), `collapseJournal` (`data/firestore/journal.ts`, pur) garde la derniere operation
-par document, puis chaque document est relu ; "Tout relire" (`syncData`) garde la lecture complete et relit le curseur du journal
-AVANT les donnees. Un snapshot sans `journalAt` (anterieur au journal), ou plus de 1000 documents changes, retombe sur la
-lecture complete. Une edition directe dans la console n'ecrit pas de journal : elle n'apparait qu'avec "Tout relire".
-`firestore.rules` : `journal` lisible et ecrivable par les admins seulement (regles a deployer).
+ecrites. Plus de bouton de synchro : a l'ouverture, `loadData` lit le snapshot IndexedDB (un snapshot sans `journalAt`,
+anterieur au journal, declenche UNE lecture complete, `syncData`), puis `startJournalSync` (`admin/src/data.ts`, lance
+par `App`) ecoute les entrees plus recentes que `journalAt` (`onSnapshot`) : une entree recue, `collapseJournal`
+(`data/firestore/journal.ts`, pur) garde la derniere operation par document, seuls ceux-la sont relus, le curseur avance
+et est sauve dans le snapshot. Les entrees ecrites par cet admin sont ignorees (`ownEntryIds`, deja dans sa copie) ; un
+changement venu d'ailleurs incremente `dataRevision` (`useSyncExternalStore`) et `App` remonte les vues (un brouillon en
+cours est perdu). Plus de 1000 documents changes : lecture complete. Une edition directe dans la console n'ecrit pas de
+journal : elle n'arrive pas (vider les donnees du site dans le navigateur force une relecture complete). Le journal n'est
+jamais purge. `firestore.rules` : `journal` lisible et ecrivable par les admins seulement.
 
 ### Lieux : une cle courte et permanente
 
