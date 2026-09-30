@@ -61,13 +61,13 @@ service cloud.firestore {
 
     // ---------------------------------------------------------------------------------------------
     // Données du jeu (lieux, pays avec leur silhouette, devinettes de charade, métiers) : lisibles par tout le monde (elles
-    // sont de toute façon embarquées dans l'appli), modifiables uniquement par l'administrateur, qui
-    // se connecte à l'outil `admin/` avec son compte Google (adresse vérifiée). Les joueurs, eux,
+    // sont de toute façon embarquées dans l'appli), modifiables uniquement par les administrateurs (la liste ci-dessous), qui
+    // se connectent à l'outil `admin/` avec leur compte Google (adresse vérifiée). Les joueurs, eux,
     // n'ont qu'une authentification anonyme : ils ne passent jamais ce test.
     // ---------------------------------------------------------------------------------------------
     function isAdmin() {
       return request.auth != null
-        && request.auth.token.email == 'mathieu.jullien77190@gmail.com'
+        && request.auth.token.email in ['mathieu.jullien77190@gmail.com', 'douchin.floran@gmail.com']
         && request.auth.token.email_verified == true;
     }
 

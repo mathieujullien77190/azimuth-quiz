@@ -2,12 +2,12 @@ import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, type 
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 
 import { loadData } from '../../data';
-import { ADMIN_EMAIL, auth } from '../../firebase';
+import { ADMIN_EMAILS, auth } from '../../firebase';
 
 type Phase = 'auth' | 'loading' | 'ready';
 
 /**
- * Google sign-in, restricted to `ADMIN_EMAIL`, then loads every collection into memory (`loadData`)
+ * Google sign-in, restricted to `ADMIN_EMAILS`, then loads every collection into memory (`loadData`)
  * before rendering `children` — so the views can read the data synchronously. The real gate is
  * `firestore.rules` (`isAdmin()`): a visitor with another account would see nothing writable anyway.
  * An anonymous session (the game shares this origin on GitHub Pages) counts as signed out.
@@ -19,7 +19,7 @@ export const AuthGate = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => onAuthStateChanged(auth, setUser), []);
 
-  const isAdmin = user?.email === ADMIN_EMAIL;
+  const isAdmin = user?.email != null && ADMIN_EMAILS.includes(user.email);
 
   const load = useCallback(() => {
     setPhase('loading');

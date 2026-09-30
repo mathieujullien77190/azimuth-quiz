@@ -16,6 +16,6 @@ const app = initializeApp({
 export const auth = getAuth(app);
 export const db = initializeFirestore(app, { ignoreUndefinedProperties: true });
 
-/** The only account allowed to write the game data — mirrored by `isAdmin()` in `firestore.rules`,
- * which is what actually enforces it; this constant only drives the screens. */
-export const ADMIN_EMAIL = 'mathieu.jullien77190@gmail.com';
+/** The accounts allowed to write the game data — mirrored by `isAdmin()` in `firestore.rules`, which is
+ * what actually enforces it; this list only drives the screens. */
+export const ADMIN_EMAILS = ['mathieu.jullien77190@gmail.com', 'douchin.floran@gmail.com'];
