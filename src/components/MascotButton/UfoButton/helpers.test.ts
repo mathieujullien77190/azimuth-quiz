@@ -1,4 +1,6 @@
-import { BLINK_PERIOD_MS, BOB_AMPLITUDE, BOB_PERIOD_MS, GEAR_PERIOD_MS } from './constants';
+import { gearAngleDeg } from '../GearIcon';
+
+import { BLINK_PERIOD_MS, BOB_AMPLITUDE, BOB_PERIOD_MS } from './constants';
 import { ufoIdleFrame } from './helpers';
 
 describe('ufoIdleFrame', () => {
@@ -9,10 +11,8 @@ describe('ufoIdleFrame', () => {
     expect(frame.gearDeg).toBe(0);
   });
 
-  it('turns the gear continuously, a full turn every GEAR_PERIOD_MS', () => {
-    expect(ufoIdleFrame(GEAR_PERIOD_MS / 2).gearDeg).toBeCloseTo(180, 5);
-    expect(ufoIdleFrame(GEAR_PERIOD_MS).gearDeg).toBe(0);
-    expect(ufoIdleFrame(GEAR_PERIOD_MS * 3 + GEAR_PERIOD_MS / 4).gearDeg).toBeCloseTo(90, 5);
+  it('hands out the gear angle of the shared GearIcon', () => {
+    expect(ufoIdleFrame(1234).gearDeg).toBe(gearAngleDeg(1234));
   });
 
   it('reaches peak bob amplitude a quarter period in', () => {

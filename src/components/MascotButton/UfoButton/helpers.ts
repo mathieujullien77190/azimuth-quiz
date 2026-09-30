@@ -1,11 +1,10 @@
-import { BLINK_PERIOD_MS, BOB_AMPLITUDE, BOB_PERIOD_MS, GEAR_PERIOD_MS } from './constants';
+import { gearAngleDeg } from '../GearIcon';
+
+import { BLINK_PERIOD_MS, BOB_AMPLITUDE, BOB_PERIOD_MS } from './constants';
 import type { UfoIdleFrame } from './types';
 
 const blink = (elapsedMs: number, phaseOffsetMs: number): number =>
   0.4 + 0.6 * ((Math.sin(((elapsedMs + phaseOffsetMs) / BLINK_PERIOD_MS) * 2 * Math.PI) + 1) / 2);
-
-/** The gear goes round continuously: 0 to 360 over every `GEAR_PERIOD_MS`. */
-const gear = (elapsedMs: number): number => ((elapsedMs % GEAR_PERIOD_MS) / GEAR_PERIOD_MS) * 360;
 
 /** Vertical bobbing + light blinking (2 alternating phases) + the gear turning, at instant
  * `elapsedMs` since mount. */
@@ -13,5 +12,5 @@ export const ufoIdleFrame = (elapsedMs: number): UfoIdleFrame => ({
   bobY: Math.sin((elapsedMs / BOB_PERIOD_MS) * 2 * Math.PI) * BOB_AMPLITUDE,
   blinkOpacityA: blink(elapsedMs, 0),
   blinkOpacityB: blink(elapsedMs, BLINK_PERIOD_MS / 2),
-  gearDeg: gear(elapsedMs),
+  gearDeg: gearAngleDeg(elapsedMs),
 });

@@ -4,8 +4,8 @@ export type HelicopterIdleFrame = {
   rotorAngleDeg: number;
   /** Tail anti-collision light. */
   blinkOpacity: number;
-  /** A full turn on itself, once every SPIN_PERIOD_MS — 0 outside of it. */
-  spinDeg: number;
+  /** Rotation of the gear hanging on the rope, in degrees: goes round continuously. */
+  gearDeg: number;
 };
 
 export type HelicopterButtonProps = {

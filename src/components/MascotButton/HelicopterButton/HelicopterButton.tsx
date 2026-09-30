@@ -4,7 +4,16 @@ import Svg, { Circle, Ellipse, G, Line, Rect } from 'react-native-svg';
 
 import { useTheme } from '@/themes';
 
-import { COCKPIT_COLOR, COCKPIT_HIGHLIGHT_COLOR, SIZE, TICK_MS } from './constants';
+import { GearIcon } from '../GearIcon';
+
+import {
+  COCKPIT_COLOR,
+  COCKPIT_HIGHLIGHT_COLOR,
+  GEAR_RADIUS_RATIO,
+  ROPE_LENGTH_RATIO,
+  SIZE,
+  TICK_MS,
+} from './constants';
 import { helicopterIdleFrame } from './helpers';
 import type { HelicopterButtonProps } from './types';
 
@@ -22,7 +31,7 @@ export const HelicopterButton = ({ onPress, accessibilityLabel }: HelicopterButt
     return () => clearInterval(id);
   }, []);
 
-  const { bobY, rotorAngleDeg, blinkOpacity, spinDeg } = helicopterIdleFrame(elapsedMs);
+  const { bobY, rotorAngleDeg, blinkOpacity, gearDeg } = helicopterIdleFrame(elapsedMs);
 
   const bodyRx = SIZE * 0.25;
   const bodyRy = SIZE * 0.175;
@@ -34,27 +43,68 @@ export const HelicopterButton = ({ onPress, accessibilityLabel }: HelicopterButt
   const tailWidth = SIZE * 0.06;
   const tailRotorR = SIZE * 0.055;
   const skidY = bodyRy + SIZE * 0.08;
+  const gearR = SIZE * GEAR_RADIUS_RATIO;
+  // The rope hangs from the fuselage's belly, through the skids, down to the gear's center.
+  const gearY = skidY + SIZE * ROPE_LENGTH_RATIO;
 
   return (
     <Pressable accessibilityLabel={accessibilityLabel} accessibilityRole="button" hitSlop={12} onPress={onPress}>
-      <Svg height={SIZE * 1.5} width={SIZE}>
-        {/* rotate last: around this group's own (already translated) local origin, so the whole
-            helicopter spins in place rather than orbiting the canvas. */}
-        <G transform={`translate(${SIZE / 2} ${SIZE * 0.75 + bobY}) rotate(${spinDeg})`}>
+      <Svg height={SIZE * 1.85} width={SIZE}>
+        <G transform={`translate(${SIZE / 2} ${SIZE * 0.75 + bobY})`}>
           {/* Skids. */}
-          <Line stroke={colors.textMuted} strokeWidth={1.5} x1={-bodyRx * 0.75} x2={bodyRx * 0.6} y1={skidY} y2={skidY} />
-          <Line stroke={colors.textMuted} strokeWidth={1.2} x1={-bodyRx * 0.55} x2={-bodyRx * 0.55} y1={bodyRy} y2={skidY} />
-          <Line stroke={colors.textMuted} strokeWidth={1.2} x1={bodyRx * 0.35} x2={bodyRx * 0.35} y1={bodyRy} y2={skidY} />
+          <Line
+            stroke={colors.textMuted}
+            strokeWidth={1.5}
+            x1={-bodyRx * 0.75}
+            x2={bodyRx * 0.6}
+            y1={skidY}
+            y2={skidY}
+          />
+          <Line
+            stroke={colors.textMuted}
+            strokeWidth={1.2}
+            x1={-bodyRx * 0.55}
+            x2={-bodyRx * 0.55}
+            y1={bodyRy}
+            y2={skidY}
+          />
+          <Line
+            stroke={colors.textMuted}
+            strokeWidth={1.2}
+            x1={bodyRx * 0.35}
+            x2={bodyRx * 0.35}
+            y1={bodyRy}
+            y2={skidY}
+          />
+
+          {/* Rope + the gear hanging on it. */}
+          <Line stroke={colors.textMuted} strokeWidth={1.2} x1={0} x2={0} y1={bodyRy} y2={gearY} />
+          <G transform={`translate(0 ${gearY})`}>
+            <GearIcon angleDeg={gearDeg} color={colors.accent} radius={gearR} />
+          </G>
 
           {/* Tail boom + rotor + anti-collision light. */}
-          <Rect fill={colors.text} height={tailWidth} rx={tailWidth / 2} width={tailLength} x={tailStartX} y={-tailWidth / 2} />
+          <Rect
+            fill={colors.text}
+            height={tailWidth}
+            rx={tailWidth / 2}
+            width={tailLength}
+            x={tailStartX}
+            y={-tailWidth / 2}
+          />
           <Circle cx={tailStartX + tailLength} cy={0} fill="none" r={tailRotorR} stroke={colors.text} strokeWidth={1} />
           <Circle cx={tailStartX + tailLength} cy={0} fill={colors.danger} opacity={blinkOpacity} r={1.4} />
 
           {/* Fuselage + cockpit bubble. */}
           <Ellipse cx={0} cy={0} fill={colors.text} rx={bodyRx} ry={bodyRy} />
           <Circle cx={-bodyRx * 0.55} cy={-bodyRy * 0.1} fill={COCKPIT_COLOR} opacity={0.8} r={bodyRy * 0.85} />
-          <Circle cx={-bodyRx * 0.7} cy={-bodyRy * 0.4} fill={COCKPIT_HIGHLIGHT_COLOR} opacity={0.5} r={bodyRy * 0.22} />
+          <Circle
+            cx={-bodyRx * 0.7}
+            cy={-bodyRy * 0.4}
+            fill={COCKPIT_HIGHLIGHT_COLOR}
+            opacity={0.5}
+            r={bodyRy * 0.22}
+          />
 
           {/* Mast + spinning main rotor. */}
           <Line stroke={colors.text} strokeWidth={1.5} x1={0} x2={0} y1={-bodyRy} y2={rotorTopY} />
