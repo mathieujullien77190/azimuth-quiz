@@ -5,7 +5,7 @@ import { DeleteX } from '../../components/DeleteX';
 import { EditableValue } from '../../components/EditableValue';
 import { Pagination, pageCount, paginate } from '../../components/Pagination';
 
-import { allSyllableRows, filterSyllableRows } from './helpers';
+import { allSyllableRows, filterSyllableRows, VISIBLE_EXAMPLES } from './helpers';
 import type { SyllableRow } from './types';
 
 /** One syllable's riddle, editable — click the text, it becomes an input, blur/Enter saves
@@ -23,27 +23,42 @@ const Row = ({
   row: SyllableRow;
   onSave: (next: string) => void;
   saveFlag: React.ReactNode;
-}) => (
-  <tr>
-    <td className="syllable-cell">{row.syllable}</td>
-    <td>
-      <EditableValue
-        allowEmpty
-        multiline
-        display={row.riddle ?? '(pas encore de charade — la syllabe se dit telle quelle)'}
-        onSave={onSave}
-        saveFlag={saveFlag}
-        value={row.riddle ?? ''}
-      />
-    </td>
-    <td className="muted">{row.examples.join(', ')}</td>
-    <td>
-      {row.riddle !== null && (
-        <DeleteX name={`la charade de « ${row.syllable} »`} onDelete={() => Promise.resolve(onSave(''))} />
-      )}
-    </td>
-  </tr>
-);
+}) => {
+  const [expanded, setExpanded] = useState(false);
+  const hidden = row.examples.length - VISIBLE_EXAMPLES;
+  const shown = expanded ? row.examples : row.examples.slice(0, VISIBLE_EXAMPLES);
+  return (
+    <tr>
+      <td className="syllable-cell">{row.syllable}</td>
+      <td>
+        <EditableValue
+          allowEmpty
+          multiline
+          display={row.riddle ?? '(pas encore de charade — la syllabe se dit telle quelle)'}
+          onSave={onSave}
+          saveFlag={saveFlag}
+          value={row.riddle ?? ''}
+        />
+      </td>
+      <td className="muted">
+        {shown.join(', ')}
+        {hidden > 0 && (
+          <>
+            {' '}
+            <button className="reset" type="button" onClick={() => setExpanded((current) => !current)}>
+              {expanded ? 'Réduire' : `+${hidden} autres`}
+            </button>
+          </>
+        )}
+      </td>
+      <td>
+        {row.riddle !== null && (
+          <DeleteX name={`la charade de « ${row.syllable} »`} onDelete={() => Promise.resolve(onSave(''))} />
+        )}
+      </td>
+    </tr>
+  );
+};
 
 /**
  * Every distinct syllable across every Clues place, flat and searchable, its riddle GLOBAL (see
