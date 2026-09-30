@@ -14,7 +14,14 @@ import type { Theme } from '@/types';
 import Compass from '@/components/Compass';
 import EarthSection from '@/components/EarthSection';
 import { COMPASS_CLUE_SIZE, EARTH_CLUE_SIZE, POSITION_COORDS } from './constants';
-import { dayNightEmoji, elevationTierEmoji, localTimeFor, populationTier, vowelsOf } from './helpers';
+import {
+  charadeBodyHeight,
+  dayNightEmoji,
+  elevationTierEmoji,
+  localTimeFor,
+  populationTier,
+  vowelsOf,
+} from './helpers';
 import type { ClueCardProps } from './types';
 import { createStyles } from './styles';
 
@@ -190,7 +197,7 @@ const revealedBody = (
     }
     case 'charade': {
       const entry = charadeFor(place);
-      const { lines, clear } = charadeLines(entry, charadeStage ?? 1);
+      const { lines } = charadeLines(entry, charadeStage ?? 1);
       return (
         <View style={styles.charadeLines}>
           {lines.map((line, index) => (
@@ -199,7 +206,6 @@ const revealedBody = (
               {line.text}
             </Text>
           ))}
-          {clear !== undefined && <Text style={styles.charadeClear}>{clear}</Text>}
         </View>
       );
     }
@@ -369,6 +375,8 @@ export const ClueCard = ({
           wide && clueId === 'distance' && styles.bodyEarth,
           clueId === 'flagColors' && state === 'revealed' && styles.bodyFlag,
           clueId === 'charade' && styles.bodyCharade,
+          clueId === 'charade' &&
+            state === 'revealed' && { minHeight: charadeBodyHeight(charadeMaxStage(charadeFor(place))) },
           clueId === 'wordplay' && styles.bodyWordplay,
         ]}
       >

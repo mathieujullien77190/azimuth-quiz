@@ -10,10 +10,8 @@ export const CLUE_ORDER: ClueId[] = [
   'population',
   'localTime',
   'letter',
-  'charade',
   'isCapital',
   'personality',
-  'wordplay',
   'bearing',
   'distance',
   'climate',
@@ -24,6 +22,9 @@ export const CLUE_ORDER: ClueId[] = [
   'airportCode',
   'currency',
   'phoneCode',
+  // The two word-game clues close the list, whatever their cost.
+  'charade',
+  'wordplay',
 ];
 
 // Reuses Compass's category id/emoji/label conventions (see games/compass/constants.ts and

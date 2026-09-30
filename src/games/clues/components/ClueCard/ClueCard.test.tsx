@@ -231,14 +231,14 @@ describe('ClueCard — charade progressive reveal', () => {
     expect(getByText(/se dit « deaux »/)).toBeTruthy();
   });
 
-  it('the final stage spells the name out in clear, on top of every syllable line', async () => {
-    const { getByText } = await renderCard({
+  it('never spells the name out in clear, even past the last group', async () => {
+    const { getByText, queryByText } = await renderCard({
       charadeStage: 3,
       clueId: 'charade',
       place: charadePlace,
       state: 'revealed',
     });
-    expect(getByText('Bor-Deaux')).toBeTruthy();
+    expect(queryByText('Bor-Deaux')).toBeNull();
     expect(getByText(/se dit « bor »/)).toBeTruthy();
   });
 

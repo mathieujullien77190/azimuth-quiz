@@ -28,9 +28,9 @@ describe('clueHasMoreToReveal', () => {
     expect(clueHasMoreToReveal(['emoji', 'emoji', 'emoji'], 'emoji', PARIS)).toBe(false);
   });
 
-  it('caps charade at the place’s own max stage ("Paris" = 2 syllables + the clear stage = 3)', () => {
-    expect(clueHasMoreToReveal(['charade', 'charade'], 'charade', PARIS)).toBe(true);
-    expect(clueHasMoreToReveal(['charade', 'charade', 'charade'], 'charade', PARIS)).toBe(false);
+  it('caps charade at the place’s own max stage ("Paris" = 2 syllables = 2 stages)', () => {
+    expect(clueHasMoreToReveal(['charade'], 'charade', PARIS)).toBe(true);
+    expect(clueHasMoreToReveal(['charade', 'charade'], 'charade', PARIS)).toBe(false);
   });
 });
 

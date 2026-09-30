@@ -72,8 +72,8 @@ describe('charadeSyllableGroups', () => {
 });
 
 describe('charadeMaxStage', () => {
-  it('is the syllable count plus the final clear stage, below the cap', () => {
-    expect(charadeMaxStage({ syllables: ['Pa', 'ris'], riddles: [null, null] })).toBe(3);
+  it('is the syllable count, below the cap', () => {
+    expect(charadeMaxStage({ syllables: ['Pa', 'ris'], riddles: [null, null] })).toBe(2);
   });
 
   it('never exceeds CHARADE_MAX_STAGES, however many syllables the name actually has', () => {
@@ -99,10 +99,9 @@ describe('charadeLines', () => {
     expect(charadeLines(entry, 2).lines[1].text).toBe('se dit « deaux »');
   });
 
-  it('adds the name spelled out in clear once the stage goes past the last group', () => {
-    const { lines, clear } = charadeLines(entry, 3);
-    expect(lines).toHaveLength(2);
-    expect(clear).toBe('Bor-Deaux');
+  it('never spells the name out in clear, whatever the stage', () => {
+    expect(charadeLines(entry, 3)).toEqual(charadeLines(entry, 2));
+    expect(charadeLines(entry, 3)).not.toHaveProperty('clear');
   });
 
   it('never reveals more lines than there are groups, and clamps stage 0 or negative to nothing', () => {

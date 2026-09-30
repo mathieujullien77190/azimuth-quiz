@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 import { fontSize, spacing } from '@/data';
 import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 import type { Theme } from '@/types';
-import { COMPASS_CLUE_SIZE, EARTH_CLUE_SIZE } from './constants';
+import { CHARADE_LINE_HEIGHT, COMPASS_CLUE_SIZE, EARTH_CLUE_SIZE } from './constants';
 
 export const createStyles = ({ colors, radius, typography }: Theme) =>
   StyleSheet.create({
@@ -86,19 +86,12 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       ...typography.body,
       color: colors.text,
       fontSize: fontSize.caption + 1,
+      lineHeight: CHARADE_LINE_HEIGHT,
       textAlign: 'center',
     },
     charadeLabel: {
       ...typography.label,
       color: colors.accent,
-    },
-    charadeClear: {
-      ...typography.heading,
-      color: colors.accent,
-      fontSize: fontSize.body,
-      letterSpacing: 1,
-      textAlign: 'center',
-      marginTop: 2,
     },
     // Same variable-height reasoning as `bodyCharade`: a pun sentence doesn't fit the fixed 42px
     // every other card body has.

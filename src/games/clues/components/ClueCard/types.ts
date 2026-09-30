@@ -39,6 +39,6 @@ export type ClueCardProps = {
    * per word. */
   letterStage?: number;
   /** Only for the `charade` clue: how many syllable-groups are revealed (see `charadeSyllableGroups`);
-   * one past the last group shows the name spelled out in clear (see `charadeLines`). */
+   * the last group is the clue's last stage (see `charadeLines`). */
   charadeStage?: number;
 };

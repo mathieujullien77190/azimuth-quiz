@@ -372,8 +372,8 @@ commentees en francais :
   `remainingScore` (0 tant que ce n'est pas le cas — jamais montre au joueur, l'ecran affiche encore
   le splash de chargement a ce moment-la).
 - **Indices : la charade** (`ClueId` `'charade'`, `helpers/charade.ts`) — une devinette par syllabe du
-  nom du lieu, style jeu de societe ("mon premier est...", "mon deuxieme est...", puis le nom epele en
-  clair au dernier clic, filet de securite). Le decoupage en syllabes est stocke dans le lieu
+  nom du lieu, style jeu de societe ("mon premier est...", "mon deuxieme est..."), sans jamais epeler le nom en
+  clair (cette derniere etape a ete retiree : l'indice coute un clic par groupe de syllabes). Le decoupage en syllabes est stocke dans le lieu
   (`places/{cle}.clues.syllables`, `CluePlace.syllables`, un tableau eventuellement vide : certains noms n'ont
   aucune syllabe utilisable, ex. "Bălți", et l'indice est alors retire) ; les devinettes le sont aussi, une par
   syllabe, dans `clues.riddles` (`CluePlace.riddles`, `null` quand il n'y en a pas). Rien n'est calcule ni lu

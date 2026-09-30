@@ -1,3 +1,14 @@
+import { spacing } from '@/data';
+
+import { CHARADE_LINE_HEIGHT, CHARADE_LINES_PER_GROUP } from './constants';
+
+/** Height of a revealed charade card's body, made for all its riddle lines at once: two lines per group of
+ * syllables, the gap between the lines of two groups and the body's vertical padding. */
+export const charadeBodyHeight = (groupCount: number): number =>
+  groupCount * CHARADE_LINES_PER_GROUP * CHARADE_LINE_HEIGHT +
+  Math.max(0, groupCount - 1) * spacing.xs +
+  2 * spacing.xs;
+
 /** Every vowel in the name, in order, accents stripped and uppercased, space-separated (e.g.
  * "São Paulo" -> "A O A U O"). */
 export const vowelsOf = (name: string): string =>

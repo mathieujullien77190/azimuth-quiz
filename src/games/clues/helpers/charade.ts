@@ -32,9 +32,9 @@ export const charadeReady = (place: Pick<CluePlace, 'syllables' | 'riddles'>): b
 export const CHARADE_SYLLABLE_STAGE_CAP = 4;
 
 /** The clue's absolute worst case: `CHARADE_SYLLABLE_STAGE_CAP` syllable-reveal stages (whatever
- * the real syllable count, past the cap they share the last one), plus the final "spelled out
- * in clear" stage. A short name reaches its own, lower `charadeMaxStage` well before this. */
-export const CHARADE_MAX_STAGES = CHARADE_SYLLABLE_STAGE_CAP + 1;
+ * the real syllable count, past the cap they share the last one). A short name reaches its own,
+ * lower `charadeMaxStage` well before this. */
+export const CHARADE_MAX_STAGES = CHARADE_SYLLABLE_STAGE_CAP;
 
 /**
  * `entry.syllables`' indices, grouped into the stages a player reveals one click at a time: one
@@ -53,10 +53,8 @@ export const charadeSyllableGroups = (syllableCount: number): number[][] => {
   return groups;
 };
 
-/** How many clicks `entry`'s card takes to reveal everything: one per `charadeSyllableGroups`
- * group, plus the final "in clear" stage. */
-export const charadeMaxStage = (entry: CharadeEntry): number =>
-  charadeSyllableGroups(entry.syllables.length).length + 1;
+/** How many clicks `entry`'s card takes to reveal everything: one per `charadeSyllableGroups` group. */
+export const charadeMaxStage = (entry: CharadeEntry): number => charadeSyllableGroups(entry.syllables.length).length;
 
 const ORDINALS = ['mon premier', 'mon deuxième', 'mon troisième', 'mon quatrième'];
 
@@ -67,11 +65,10 @@ export type CharadeLine = { label: string; text: string };
 
 /**
  * What a card shows after `stage` clicks: the riddle lines for every syllable-group revealed so
- * far (see `charadeSyllableGroups`), and, once `stage` goes past the last syllable-group (the
- * clue's final stage), the whole name spelled out as its syllables in clear (e.g. "Bor-deaux") —
- * the filet de sécurité, same spirit as the `letter` clue's own last stage.
+ * far (see `charadeSyllableGroups`). The last group is the clue's last stage: the name is never spelled
+ * out in clear.
  */
-export const charadeLines = (entry: CharadeEntry, stage: number): { lines: CharadeLine[]; clear?: string } => {
+export const charadeLines = (entry: CharadeEntry, stage: number): { lines: CharadeLine[] } => {
   const groups = charadeSyllableGroups(entry.syllables.length);
   const revealedGroups = groups.slice(0, Math.max(0, Math.min(stage, groups.length)));
   const lines = revealedGroups.map((group, index) => {
@@ -84,9 +81,5 @@ export const charadeLines = (entry: CharadeEntry, stage: number): { lines: Chara
     }
     return { label: 'mes dernières syllabes', text: group.map(syllableText).join(', ') };
   });
-  const clear =
-    stage > groups.length
-      ? entry.syllables.map((syllable) => syllable.charAt(0).toUpperCase() + syllable.slice(1).toLowerCase()).join('-')
-      : undefined;
-  return { lines, clear };
+  return { lines };
 };
