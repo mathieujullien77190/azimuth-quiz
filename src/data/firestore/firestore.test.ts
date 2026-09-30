@@ -4,7 +4,15 @@ import personalityJobsData from '../personalityJobs.json';
 import { decodeAllPlaces } from '../places/codec';
 import { decodeAllCountries } from '../places/countries';
 
-import { buildCompassCounts, buildCountryDocs, buildJobDocs, buildPlaceDocs, buildRiddleDocs, flattenPoints, unflattenPoints } from './build';
+import {
+  buildCompassCounts,
+  buildCountryDocs,
+  buildJobDocs,
+  buildPlaceDocs,
+  buildRiddleDocs,
+  flattenPoints,
+  unflattenPoints,
+} from './build';
 import { cluesFromDoc, compassFromDoc, contourFromDoc } from './read';
 
 const places = buildPlaceDocs();
@@ -79,7 +87,9 @@ describe('firestore docs', () => {
       emojis: ['a', 'b', 'c'],
       syllables: ['x'],
     };
-    expect(cluesFromDoc('xxx', { ...base, clues, personality: { name: 'P', jobCode: null } }, { countries: {}, jobs: {} })).toMatchObject({
+    expect(
+      cluesFromDoc('xxx', { ...base, clues, personality: { name: 'P', jobCode: null } }, { countries: {}, jobs: {} }),
+    ).toMatchObject({
       country: 'ZZ',
       phoneCode: '',
       currency: '',
@@ -104,9 +114,20 @@ describe('firestore docs', () => {
       expect(numbers.slice().sort((a, b) => a - b)).toEqual(numbers.map((_, index) => index + 1));
       expect((counts as Record<string, Record<string, number>>)[category][difficulty]).toBe(numbers.length);
     }
-    expect(Object.values(counts).flatMap((byDifficulty) => Object.values(byDifficulty!)).reduce((sum, size) => sum + size, 0)).toBe(
-      Object.values(places).filter((doc) => doc.compass).length,
-    );
+    expect(
+      Object.values(counts)
+        .flatMap((byDifficulty) => Object.values(byDifficulty!))
+        .reduce((sum, size) => sum + size, 0),
+    ).toBe(Object.values(places).filter((doc) => doc.compass).length);
+  });
+
+  it('shuffles the numbering (not the import order) and marks the counts as shuffled', () => {
+    expect(buildCompassCounts().shuffled).toBe(true);
+    const biggest = Object.values(places)
+      .filter((doc) => doc.compass?.category === 'cities' && doc.difficulty === 'hard')
+      .map((doc) => doc.n!);
+    // The import order would give 1, 2, 3...: the shuffled order does not.
+    expect(biggest).not.toEqual(biggest.map((_, index) => index + 1));
   });
 
   it('mirrors the riddle and job dictionaries', () => {

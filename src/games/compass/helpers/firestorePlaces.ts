@@ -1,34 +1,32 @@
-import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import { and, collection, getDocs, or, query, where } from 'firebase/firestore';
 
-import { slotAt, type Slot } from '@/data/firestore/numbering';
+import type { Group, Slot } from '@/data/firestore/numbering';
 import { compassFromDoc } from '@/data/firestore/read';
-import { COLLECTIONS, COMPASS_COUNTS_DOC, type CompassCountsDoc, type PlaceDoc } from '@/data/firestore/types';
-import { MIN_PLACE_DISTANCE_KM } from '@/games/compass/constants';
+import { COLLECTIONS, type PlaceDoc } from '@/data/firestore/types';
 import type { Language } from '@/i18n';
-import type { Coordinates, Difficulty, GameSettings, Place } from '@/types';
+import type { Difficulty, GameSettings, Place } from '@/types';
 
-import { distanceKm } from '@/helpers/geo';
 import { db } from '@/helpers/firebase';
 import { shuffle } from '@/helpers/random';
 
+import { loadCompassCounts } from './compassCounts';
+import { splitEvenly } from './splitEvenly';
+import { groupKey, loadCompassCursors, saveCompassCursors } from './compassCursors';
 import { effectiveDifficulty } from './places';
-import { forgetCompassGroups, groupKey, hasPlayed, loadCompassHistory, recordCompassPlays } from './placeHistory';
 
 // Not re-exported from `helpers/index.ts`'s barrel, same reason as `room.ts`: `firebase/firestore` is
 // ESM-only and crashes Jest for every test that imports the barrel for something unrelated.
 
-/** Positions drawn per round on the first pass: slack for the difficulty and distance filters. */
-const DRAW_PER_ROUND = 3;
+/** Positions drawn per round when French places may be bumped a tier (English): only some of the ones
+ * read from the tier below are kept, the rest is slack. In every other case each position drawn is kept. */
+const DRAW_PER_ROUND_WITH_BUMP = 3;
 
 /** Firestore's cap on the values of one `in` filter. */
 const IN_LIMIT = 30;
 
-/** Passes after which enough (but too close) places are taken as is instead of reading the whole pool. */
-const MAX_FAR_PASSES = 3;
-
 const DIFFICULTY_ORDER: Difficulty[] = ['easy', 'intermediate', 'hard'];
 
-/** A place read from Firestore, with the group and `n` it was read at (what the history remembers). */
+/** A place read from Firestore, with the group and `n` it was read at. */
 type Drawn = { place: Place; slot: Slot };
 
 /** Stored difficulties that can display as `difficulty` once `effectiveDifficulty` ran: in English a
@@ -38,88 +36,133 @@ const storedTiers = (difficulty: Difficulty, language: Language): Difficulty[] =
   return language === 'en' && below ? [difficulty, below] : [difficulty];
 };
 
-/** Reads the given slots (`n`-th place of a group) with one query per group and chunk of 30. */
+/** Reads the given slots (the `n`-th place of a group) with as few queries as possible: ONE query per 30
+ * slots, whatever their groups — an `or` of one `(category, difficulty, n in [...])` clause per group, which
+ * Firestore caps at 30 values in total. The answer is a single list of documents; a slot with no document
+ * (the sizes are read once per launch, the admin may have removed places since) is just missing from it. */
 const readSlots = async (slots: Slot[]): Promise<Drawn[]> => {
-  const byGroup = new Map<string, { category: Slot['category']; difficulty: Slot['difficulty']; numbers: number[] }>();
-  for (const { category, difficulty, n } of slots) {
-    const id = groupKey({ category, difficulty });
-    if (!byGroup.has(id)) byGroup.set(id, { category, difficulty, numbers: [] });
-    byGroup.get(id)!.numbers.push(n);
-  }
   const places = collection(db, COLLECTIONS.places);
-  const queries = [...byGroup.values()].flatMap(({ category, difficulty, numbers }) =>
-    Array.from({ length: Math.ceil(numbers.length / IN_LIMIT) }, (_, chunk) =>
-      getDocs(
-        query(places, where('compass.category', '==', category), where('difficulty', '==', difficulty), where('n', 'in', numbers.slice(chunk * IN_LIMIT, (chunk + 1) * IN_LIMIT))),
-      ),
-    ),
-  );
-  return (await Promise.all(queries)).flatMap((snapshot) =>
-    snapshot.docs.map((document) => {
+  const queries = Array.from({ length: Math.ceil(slots.length / IN_LIMIT) }, (_, chunk) => {
+    const byGroup = new Map<
+      string,
+      { category: Slot['category']; difficulty: Slot['difficulty']; numbers: number[] }
+    >();
+    for (const { category, difficulty, n } of slots.slice(chunk * IN_LIMIT, (chunk + 1) * IN_LIMIT)) {
+      const id = groupKey({ category, difficulty });
+      if (!byGroup.has(id)) byGroup.set(id, { category, difficulty, numbers: [] });
+      byGroup.get(id)!.numbers.push(n);
+    }
+    const clauses = [...byGroup.values()].map(({ category, difficulty, numbers }) =>
+      and(where('compass.category', '==', category), where('difficulty', '==', difficulty), where('n', 'in', numbers)),
+    );
+    return getDocs(query(places, clauses.length === 1 ? clauses[0] : or(...clauses)));
+  });
+  return (await Promise.all(queries)).flatMap((snapshot) => {
+    const drawn = snapshot.docs.map((document) => {
       const data = document.data() as PlaceDoc & { compass: NonNullable<PlaceDoc['compass']> };
-      return { place: compassFromDoc(data), slot: { category: data.compass.category, difficulty: data.difficulty, n: data.n! } };
-    }),
+      return {
+        id: document.id,
+        place: compassFromDoc(data),
+        slot: { category: data.compass.category, difficulty: data.difficulty, n: data.n! },
+      };
+    });
+    console.log(
+      `[firestore] places: ${drawn.length} document(s) received`,
+      drawn.map(
+        ({ id, place, slot }) =>
+          `${id} · ${place.name} (${place.code}) · ${slot.category}|${slot.difficulty} #${slot.n}`,
+      ),
+    );
+    return drawn.map(({ place, slot }) => ({ place, slot }));
+  });
+};
+
+/** How one group is gone through in a game: from its cursor (a random place the first time), one position
+ * after the other, wrapping at the end of the group. */
+type Walk = { key: string; group: Group; size: number; start: number; taken: number };
+
+const remaining = (walks: Walk[]): number => walks.reduce((sum, walk) => sum + walk.size - walk.taken, 0);
+
+/** The next place of a group: its cursor, moved on by one (wrapping at the end of the group). */
+const takeFrom = (walk: Walk): Slot => {
+  const n = ((walk.start + walk.taken) % walk.size) + 1;
+  walk.taken += 1;
+  return { ...walk.group, n };
+};
+
+/**
+ * The next `count` places (fewer when the groups run out), shared as evenly as possible between the
+ * selected categories (`splitEvenly`: 5 places over 6 categories is one each for 5 of them, chosen at
+ * random), then, inside a category, between its tiers (there are two in English), each place being the next
+ * one of its group.
+ */
+const takeSlots = (walks: Walk[], count: number): Slot[] => {
+  const byCategory = [...new Set(walks.map((walk) => walk.group.category))].map((category) =>
+    walks.filter((walk) => walk.group.category === category),
+  );
+  const perCategory = splitEvenly(
+    count,
+    byCategory.map((group) => remaining(group)),
+  );
+  return byCategory.flatMap((group, index) =>
+    splitEvenly(
+      perCategory[index],
+      group.map((walk) => walk.size - walk.taken),
+    ).flatMap((taken, position) => Array.from({ length: taken }, () => takeFrom(group[position]))),
   );
 };
 
 /**
  * Draws the game's places from Firestore. It has no "N random documents" query, so Compass places are
- * numbered 1..size inside their group (category x difficulty, see `data/firestore/numbering.ts`) and the
- * group sizes live in `meta/compassCounts`: one read for the sizes, then random positions over the groups
- * the game selected, then `n in [...]` queries (1 read per place). In English a French place is bumped one
- * difficulty tier (`effectiveDifficulty`), so the tier below is drawn from too and filtered afterwards.
- * Places too close to the starting point are dropped, unless too few are far enough — the nearer ones
- * complete the draw. Only the host draws (the places are then written into the room), joiners never query.
- *
- * Variety: the numbers already played on this device (`placeHistory.ts`) come last in the random order, so
- * the draw takes new places whenever enough exist; once the whole pool has been seen, its history is
- * forgotten and the cycle starts over. The places returned are recorded as played.
+ * numbered 1..size inside their group (category x difficulty, in a shuffled order fixed once, see
+ * `data/firestore/numbering.ts`) and the group sizes live in `meta/compassCounts`. Each group has a cursor
+ * on this device (`compassCursors.ts`): a game takes the next places of its groups from there and moves the
+ * cursors on, wrapping at the end, so a group is gone through completely before a place comes back; the
+ * first time, a group starts at a random place. With several categories selected, the places are shared
+ * between them as evenly as possible (`splitEvenly`). Everything is read with one `or` query (1 read per place). The
+ * difficulty is filtered by the query itself (it selects the groups); only in English, where a French place
+ * is bumped one tier (`effectiveDifficulty`), the tier below is read too, with some slack, and filtered
+ * afterwards. Only the host draws (the places are then written into the room), joiners never query.
  *
  * No fallback on the bundled list: rejects when Firestore fails or when fewer than `rounds` matching
- * places exist at all — the host's start flow shows a notice and nothing is started.
+ * places exist at all — the host's start flow shows a notice and nothing is started (cursors untouched).
  */
-export const fetchRandomPlaces = async (origin: Coordinates, settings: GameSettings, language: Language): Promise<Place[]> => {
+export const fetchRandomPlaces = async (settings: GameSettings, language: Language): Promise<Place[]> => {
   const { categories, difficulty, rounds } = settings;
-  const history = await loadCompassHistory();
-  const countsSnapshot = await getDoc(doc(db, COMPASS_COUNTS_DOC.collection, COMPASS_COUNTS_DOC.id));
-  const { counts } = (countsSnapshot.data() ?? { counts: {} }) as CompassCountsDoc;
-  const pool = categories.flatMap((category) =>
-    storedTiers(difficulty, language).map((tier) => ({ category, difficulty: tier, size: counts[category]?.[tier] ?? 0 })),
-  ).filter(({ size }) => size > 0);
-  const total = pool.reduce((sum, { size }) => sum + size, 0);
+  const cursors = await loadCompassCursors();
+  const counts = await loadCompassCounts();
+  const tiers = storedTiers(difficulty, language);
+  const walks: Walk[] = categories
+    .flatMap((category) => tiers.map((tier) => ({ category, difficulty: tier })))
+    .map((group) => ({ group, size: counts[group.category]?.[group.difficulty] ?? 0 }))
+    .filter(({ size }) => size > 0)
+    .map(({ group, size }) => {
+      const key = groupKey(group);
+      return { key, group, size, start: (cursors[key] ?? Math.floor(Math.random() * size)) % size, taken: 0 };
+    });
+  const total = remaining(walks);
   if (total < rounds) throw new Error(`Not enough places for this game (${total} found, ${rounds} needed)`);
 
-  // Every position once, in random order — the ones never played on this device first. Everything
-  // already seen: the pool's history is forgotten so the cycle starts over.
-  const positions = Array.from({ length: total }, (_, position) => position);
-  const seen = positions.filter((position) => hasPlayed(history, slotAt(pool, position)));
-  const seenSet = new Set(seen);
-  const unseen = positions.filter((position) => !seenSet.has(position));
-  if (unseen.length === 0) forgetCompassGroups(pool.map(groupKey));
-  const order = unseen.length === 0 ? shuffle(positions) : [...shuffle(unseen), ...shuffle(seen)];
-
-  // Each pass reads the next slice of that order, doubling in size.
+  // The first pass takes exactly what is needed (plus slack when a tier needs filtering); a place missing
+  // or filtered out brings a next pass, doubling in size, until the groups run out.
   const candidates: Drawn[] = [];
-  const isFar = ({ place }: Drawn) => distanceKm(origin, place.coordinates) >= MIN_PLACE_DISTANCE_KM;
-  let drawn = 0;
-  for (let pass = 1; drawn < total; pass += 1) {
-    const size = DRAW_PER_ROUND * rounds * 2 ** (pass - 1);
-    const slots = order.slice(drawn, drawn + size).map((position) => slotAt(pool, position));
-    drawn += size;
+  for (let pass = 1; candidates.length < rounds && remaining(walks) > 0; pass += 1) {
+    const slots = takeSlots(walks, rounds * (tiers.length > 1 ? DRAW_PER_ROUND_WITH_BUMP : 1) * 2 ** (pass - 1));
     const read = await readSlots(slots);
     candidates.push(...read.filter(({ place }) => effectiveDifficulty(place, language) === difficulty));
-    if (candidates.filter(isFar).length >= rounds || (candidates.length >= rounds && pass >= MAX_FAR_PASSES)) break;
   }
-  if (candidates.length < rounds) throw new Error(`Not enough places for this game (${candidates.length} found, ${rounds} needed)`);
+  if (candidates.length < rounds)
+    throw new Error(`Not enough places for this game (${candidates.length} found, ${rounds} needed)`);
 
-  const farOnes = candidates.filter(isFar);
-  const near = candidates
-    .filter((candidate) => !farOnes.includes(candidate))
-    .sort((a, b) => distanceKm(origin, b.place.coordinates) - distanceKm(origin, a.place.coordinates));
-  // A pass can read the whole (small) pool at once: the choice itself also puts new places first.
-  const isNew = ({ slot }: Drawn) => !hasPlayed(history, slot);
-  const farOrdered = [...shuffle(farOnes.filter(isNew)), ...shuffle(farOnes.filter((candidate) => !isNew(candidate)))];
-  const chosen = [...farOrdered, ...near].slice(0, rounds);
-  recordCompassPlays(chosen.map(({ slot }) => slot));
-  return shuffle(chosen.map(({ place }) => place));
+  // Every place taken counts as gone through, also the slack that was read but not kept.
+  saveCompassCursors(
+    Object.fromEntries(
+      walks.filter((walk) => walk.taken > 0).map((walk) => [walk.key, (walk.start + walk.taken) % walk.size]),
+    ),
+  );
+  return shuffle(
+    shuffle(candidates)
+      .slice(0, rounds)
+      .map(({ place }) => place),
+  );
 };

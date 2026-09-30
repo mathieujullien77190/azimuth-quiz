@@ -164,27 +164,45 @@ Au lancement, l'hote tire les lieux de la partie avec `fetchRandomPlaces`
 (documents de `data/firestore/`, edites par l'admin). Firestore n'a pas de requete "N documents au hasard" :
 les lieux Compass sont donc **numerotes `n` = 1..taille dans leur groupe (`compass.category` x `difficulty`)**
 et les tailles vivent dans `meta/compassCounts` (`{ counts: { categorie: { difficulte: taille } } }`). L'hote
-lit ce document (1 lecture), forme le pool des groupes choisis (en anglais les lieux FR sont remontes d'un
-cran par `effectiveDifficulty`, donc le palier du dessous en fait partie et est refiltre ensuite), tire des
-positions distinctes au hasard sur tout le pool (`slotAt` -> groupe + `n`, 3 x manches sur la 1re passe puis
-le double...), et lit ces lieux par groupe avec `compass.category == c`, `difficulty == d`, `n in [...]`
-(30 valeurs max par requete) : 1 lecture par lieu, hasard uniforme. Meme regles que l'ancien `pickPlaces` :
-pas trop pres de l'origine (`MIN_PLACE_DISTANCE_KM`, on complete avec les plus eloignes des trop proches s'il
-n'y en a pas assez de loin, sans lire tout le pool). **Aucun repli sur les JSON** : si Firestore echoue ou si
+lit ce document (1 lecture, chargee des le lancement de l'appli, `compassCounts.ts`), forme le pool des groupes
+choisis (en anglais les lieux FR sont remontes d'un cran par `effectiveDifficulty`, donc le palier du dessous
+en fait partie et est refiltre ensuite). **Un curseur par groupe sur l'appareil** (`compassCursors.ts`,
+AsyncStorage donc mobile et web : `"cities|easy" -> 17` = prochaine place = la 18e) : une partie prend les
+places suivantes de chaque groupe a partir de son curseur et le fait avancer, en revenant au debut au bout de la
+liste ; le 1er tirage d'un groupe part d'une place au hasard. Un groupe est donc parcouru en entier avant qu'une
+place revienne. Avec plusieurs categories, les places sont reparties le plus egalement possible entre elles
+(`splitEvenly`, `helpers/splitEvenly.ts` : 5 manches sur 6 categories = 1 chacune pour 5 tirees au hasard,
+5 sur 2 = 3+2 ou 2+3 ; une categorie trop petite est remplie et les autres se partagent le reste), puis
+entre les paliers d'une categorie (deux en anglais) ; chaque place est la suivante de son groupe
+(`Walk`, `takeSlots`). Les positions sont lues en UNE requete par tranche de 30, tous groupes
+confondus : un `or` de clauses `and(compass.category == c, difficulty == d, n in [...])`, une par groupe
+(Firestore plafonne a 30 valeurs au total) ; la reponse est une seule liste de documents, un `n` sans document
+(tailles lues une fois par lancement) manque simplement. La difficulte est filtree par la requete elle-meme
+(elle choisit les groupes) : la 1re passe lit donc exactement `rounds` positions (1 lecture par lieu) ; seul
+l'anglais, ou le palier du dessous est refiltre, en lit 3 x `rounds`. Une passe suivante (double) ne part que
+s'il manque des lieux. Toute place prise compte comme parcourue (le curseur avance aussi pour celles lues puis
+ecartees) ; une partie qui echoue ne touche pas aux curseurs. Plus de filtre de distance a l'origine :
+`MIN_PLACE_DISTANCE_KM` ne sert plus qu'a l'ancien `pickPlaces`.
+**Aucun repli sur les JSON** : si Firestore echoue ou si
 moins de `rounds` lieux existent, `fetchRandomPlaces` rejette, `useSetupRoom` remet `starting` a faux, rien
 n'est ecrit dans la room (elle reste dans son salon) et une notice `startFailedNotice` s'affiche (tap ou
 4 s) ; le bouton "Lancer la partie" relance. Seul l'hote interroge (les lieux partent ensuite dans le
 document de la room). Index compose de `firestore.indexes.json` (`npx firebase-tools deploy --only
 firestore:indexes`).
 
-**La numerotation reste dense** (helpers purs de `data/firestore/numbering.ts` : `computeNumbering`,
-`isNumberingConsistent`, `planRegroup`, `slotAt`). L'import (`buildPlaceDocs`/`buildCompassCounts`) la pose ;
+**La numerotation reste dense et MELANGEE** (helpers purs de `data/firestore/numbering.ts` :
+`computeNumbering`, `shuffleRank`, `isNumberingConsistent`, `planRegroup`, `slotAt`). Les `n` d'un groupe sont
+attribues dans l'ordre d'un hash stable de la cle (`shuffleRank`), pas dans l'ordre d'import : des `n`
+consecutifs (ce que prend un curseur) ne sont ni du meme coin ni du meme type. L'import
+(`buildPlaceDocs`/`buildCompassCounts`, qui pose `shuffled: true` dans `meta/compassCounts`) la pose ;
 l'admin la maintient : supprimer un lieu, changer sa categorie ou sa difficulte passe par `applyPlaceChange`
 (`admin/src/data.ts`), qui ecrit dans UN seul batch le lieu, le dernier lieu de l'ancien groupe (il prend le
-`n` libere), les tailles et `dataVersion`. Un lieu sans `compass` n'est jamais numerote. Tant que la
-numerotation manque ou est incoherente, `AuthGate` affiche le bouton unique "Numeroter les lieux Compass"
-(`numberCompassPlaces`). Pas de fonction "ajouter un lieu" dans l'admin pour l'instant : la creer devra
-passer par `applyPlaceChange` (ajout en fin de groupe).
+`n` libere), les tailles (en gardant le marqueur `shuffled`) et `dataVersion`. Un lieu sans `compass` n'est
+jamais numerote. Tant que la numerotation manque, est incoherente **ou n'est pas encore melangee** (pas de
+`shuffled` : donnees numerotees dans l'ordre d'import), `AuthGate` affiche le bouton unique "Numeroter les
+lieux Compass" / "Melanger la numerotation Compass" (`numberCompassPlaces`, qui renumerote TOUS les groupes en
+ordre melange, `computeNumbering(..., { force: true })`, et pose `shuffled: true`). Pas de fonction "ajouter un
+lieu" dans l'admin pour l'instant : la creer devra passer par `applyPlaceChange` (ajout en fin de groupe).
 `pickPlaces`/`filterPlaces` et les JSON restent dans le repo, plus utilises par ce chemin (menage plus tard).
 
 ### Lieux : 5 petits fichiers, une cle courte partagee

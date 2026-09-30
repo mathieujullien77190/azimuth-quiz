@@ -11,7 +11,8 @@ import { computeNumbering } from './numbering';
 import type { CompassCountsDoc, CountryDoc, JobDoc, PlaceDoc, RiddleDoc } from './types';
 
 /** Flat `[lon, lat, lon, lat, ...]` (Firestore has no nested arrays). */
-export const flattenPoints = (points: readonly (readonly [number, number])[]): number[] => points.flatMap(([lon, lat]) => [lon, lat]);
+export const flattenPoints = (points: readonly (readonly [number, number])[]): number[] =>
+  points.flatMap(([lon, lat]) => [lon, lat]);
 
 export const unflattenPoints = (flat: readonly number[]): [number, number][] =>
   Array.from({ length: flat.length / 2 }, (_, index) => [flat[2 * index], flat[2 * index + 1]]);
@@ -68,11 +69,11 @@ const buildNumbered = () => {
 };
 
 /** Every `places/{key}` document: joined from the 5 place files + wordplay, Compass places numbered
- * `n` = 1..size inside their group (category x difficulty), in file order. */
+ * `n` = 1..size inside their group (category x difficulty), in the shuffled order of `shuffleRank`. */
 export const buildPlaceDocs = (): Record<string, PlaceDoc> => buildNumbered().places;
 
 /** `meta/compassCounts`: the size of every Compass group, matching `buildPlaceDocs`' numbering. */
-export const buildCompassCounts = (): CompassCountsDoc => ({ counts: buildNumbered().counts });
+export const buildCompassCounts = (): CompassCountsDoc => ({ counts: buildNumbered().counts, shuffled: true });
 
 /** Every `countries/{code}` document, joined from the 6 country files. */
 export const buildCountryDocs = (): Record<string, CountryDoc> =>
@@ -102,11 +103,16 @@ export const buildCountryDocs = (): Record<string, CountryDoc> =>
 /** Every `charadeRiddles/{syllable}` document: the complete dictionary, `null` when not curated. */
 export const buildRiddleDocs = (): Record<string, RiddleDoc> =>
   Object.fromEntries(
-    Object.entries(charadeData as unknown as Record<string, string | null>).map(([syllable, riddle]) => [syllable, { riddle }]),
+    Object.entries(charadeData as unknown as Record<string, string | null>).map(([syllable, riddle]) => [
+      syllable,
+      { riddle },
+    ]),
   );
 
 /** Every `personalityJobs/{code}` document. */
 export const buildJobDocs = (): Record<string, JobDoc> =>
   Object.fromEntries(
-    Object.entries(personalityJobsData as unknown as Record<string, readonly [string, string]>).map(([code, [fr, en]]) => [code, { fr, en }]),
+    Object.entries(personalityJobsData as unknown as Record<string, readonly [string, string]>).map(
+      ([code, [fr, en]]) => [code, { fr, en }],
+    ),
   );

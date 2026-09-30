@@ -32,13 +32,20 @@ type Cache = {
   jobs: Record<string, JobDoc>;
   /** `meta/compassCounts`: size of every Compass group, see `numbering.ts`. */
   compassCounts: CompassCounts;
+  /** `meta/compassCounts.shuffled`: the numbering follows the shuffled order (see `shuffleRank`). */
+  compassShuffled: boolean;
 };
 
 let cache: Cache | null = null;
 let contoursMemo: ContourCountry[] | null = null;
 
-const readCollection = async <T>(name: string): Promise<Record<string, T>> =>
-  Object.fromEntries((await getDocs(collection(db, name))).docs.map((snapshot) => [snapshot.id, snapshot.data() as T]));
+const readCollection = async <T>(name: string): Promise<Record<string, T>> => {
+  const { docs } = await getDocs(collection(db, name));
+  console.groupCollapsed(`[firestore] ${name}: ${docs.length} document(s) received`);
+  console.log(docs.map((snapshot) => snapshot.id));
+  console.groupEnd();
+  return Object.fromEntries(docs.map((snapshot) => [snapshot.id, snapshot.data() as T]));
+};
 
 const fetchAll = async (): Promise<Cache> => {
   const [places, countries, riddles, jobs, counts] = await Promise.all([
@@ -54,6 +61,7 @@ const fetchAll = async (): Promise<Cache> => {
     riddles: Object.fromEntries(Object.entries(riddles).map(([syllable, { riddle }]) => [syllable, riddle])),
     jobs,
     compassCounts: (counts.data() as CompassCountsDoc | undefined)?.counts ?? {},
+    compassShuffled: (counts.data() as CompassCountsDoc | undefined)?.shuffled === true,
   };
 };
 
@@ -82,7 +90,11 @@ export const loadData = async (): Promise<void> => {
   const snapshot = await readSnapshot<Snapshot>();
   if (snapshot) {
     // A local copy saved before `meta/compassCounts` existed has no counts: the numbering screen shows up.
-    cache = { ...snapshot.cache, compassCounts: snapshot.cache.compassCounts ?? {} };
+    cache = {
+      ...snapshot.cache,
+      compassCounts: snapshot.cache.compassCounts ?? {},
+      compassShuffled: snapshot.cache.compassShuffled ?? false,
+    };
     syncedAt = snapshot.syncedAt;
     contoursMemo = null;
     return;
@@ -118,7 +130,11 @@ export const contours = (): ContourCountry[] => {
 };
 
 const bumpVersion = () =>
-  setDoc(doc(db, DATA_VERSION_DOC.collection, DATA_VERSION_DOC.id), { version: increment(1), updatedAt: Date.now() }, { merge: true });
+  setDoc(
+    doc(db, DATA_VERSION_DOC.collection, DATA_VERSION_DOC.id),
+    { version: increment(1), updatedAt: Date.now() },
+    { merge: true },
+  );
 
 export const putPlace = async (key: string, value: PlaceDoc): Promise<void> => {
   await setDoc(doc(db, COLLECTIONS.places, key), value);
@@ -167,14 +183,18 @@ const BATCH_SIZE = 400;
 
 const versionBump = { version: increment(1), updatedAt: Date.now() };
 
-/** True while the Compass numbering (`PlaceDoc.n` + `meta/compassCounts`) is missing or inconsistent:
- * the game's random draw depends on it, `AuthGate` asks for the one-off numbering before anything else. */
-export const compassNumberingPending = (): boolean => !isNumberingConsistent(data().places, data().compassCounts);
+/** True while the Compass numbering (`PlaceDoc.n` + `meta/compassCounts`) is missing or inconsistent. */
+export const compassNumberingBroken = (): boolean => !isNumberingConsistent(data().places, data().compassCounts);
 
-/** One-off: numbers every Compass place inside its group (keeps a group's existing numbers when they are
- * already dense) and writes the places' `n` (merge, nothing else touched) plus `meta/compassCounts`. */
+/** True while the Compass numbering is missing, inconsistent or not shuffled yet: the game's cursor draw
+ * depends on it (consecutive `n` must look random), `AuthGate` asks for the one-off numbering first. */
+export const compassNumberingPending = (): boolean => compassNumberingBroken() || !data().compassShuffled;
+
+/** One-off: numbers every Compass place inside its group in the shuffled order (`force`: even a group that was
+ * already dense, numbered in the import order) and writes the places' `n` (merge, nothing else touched) plus
+ * `meta/compassCounts`, marked `shuffled`. */
 export const numberCompassPlaces = async (onProgress: (done: number, total: number) => void): Promise<void> => {
-  const { numbers, counts } = computeNumbering(Object.entries(data().places));
+  const { numbers, counts } = computeNumbering(Object.entries(data().places), { force: true });
   const changed = Object.entries(numbers).filter(([key, n]) => data().places[key].n !== n);
   for (let start = 0; start < changed.length; start += BATCH_SIZE) {
     const batch = writeBatch(db);
@@ -184,8 +204,12 @@ export const numberCompassPlaces = async (onProgress: (done: number, total: numb
     for (const [key, n] of chunk) data().places[key].n = n;
     onProgress(start + chunk.length, changed.length);
   }
-  await setDoc(doc(db, COMPASS_COUNTS_DOC.collection, COMPASS_COUNTS_DOC.id), { counts } satisfies CompassCountsDoc);
+  await setDoc(doc(db, COMPASS_COUNTS_DOC.collection, COMPASS_COUNTS_DOC.id), {
+    counts,
+    shuffled: true,
+  } satisfies CompassCountsDoc);
   data().compassCounts = counts;
+  data().compassShuffled = true;
   persist();
   await bumpVersion();
 };
@@ -207,7 +231,10 @@ export const applyPlaceChange = async (key: string, next: PlaceDoc | null): Prom
   if (written) batch.set(doc(db, COLLECTIONS.places, key), written);
   else batch.delete(doc(db, COLLECTIONS.places, key));
   for (const [otherKey, n] of Object.entries(plan.moved)) batch.update(doc(db, COLLECTIONS.places, otherKey), { n });
-  batch.set(doc(db, COMPASS_COUNTS_DOC.collection, COMPASS_COUNTS_DOC.id), { counts: plan.counts } satisfies CompassCountsDoc);
+  batch.set(doc(db, COMPASS_COUNTS_DOC.collection, COMPASS_COUNTS_DOC.id), {
+    counts: plan.counts,
+    ...(data().compassShuffled && { shuffled: true as const }),
+  } satisfies CompassCountsDoc);
   batch.set(doc(db, DATA_VERSION_DOC.collection, DATA_VERSION_DOC.id), versionBump, { merge: true });
   await batch.commit();
   if (written) places[key] = written;

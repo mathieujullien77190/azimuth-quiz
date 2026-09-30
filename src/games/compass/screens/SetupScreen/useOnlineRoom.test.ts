@@ -38,7 +38,7 @@ describe('useOnlineRoom', () => {
     await result.current.startOnlineGame();
 
     expect(resolveOrigin).toHaveBeenCalledTimes(1);
-    expect(fetchRandomPlaces).toHaveBeenCalledWith(DEVICE_ORIGIN.coordinates, settings, 'fr');
+    expect(fetchRandomPlaces).toHaveBeenCalledWith(settings, 'fr');
     expect(startRoomGame).toHaveBeenCalledWith('tabofuna', { origin: DEVICE_ORIGIN, places: PLACES });
   });
 
@@ -52,7 +52,7 @@ describe('useOnlineRoom', () => {
     const origin = jest.mocked(startRoomGame).mock.calls[0][1].origin;
     expect(origin.coordinates).toEqual({ latitude: 10, longitude: 20 });
     expect(origin.isDevicePosition).toBe(false);
-    expect(fetchRandomPlaces).toHaveBeenCalledWith({ latitude: 10, longitude: 20 }, settings, 'fr');
+    expect(fetchRandomPlaces).toHaveBeenCalledWith(settings, 'fr');
   });
 
   it('starts nothing when the places cannot be drawn (the shared start flow reports the failure)', async () => {

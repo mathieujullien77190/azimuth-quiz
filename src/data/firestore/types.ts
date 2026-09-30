@@ -1,4 +1,11 @@
-import type { Category, ClueFlagColorId, CluePositionInCountry, ContourCenterLabel, ContourNeighbor, Difficulty } from '@/types';
+import type {
+  Category,
+  ClueFlagColorId,
+  CluePositionInCountry,
+  ContourCenterLabel,
+  ContourNeighbor,
+  Difficulty,
+} from '@/types';
 
 /**
  * Firestore shape of the game data (phase 1: written by `scripts/seedFirestore.ts`, read and edited
@@ -86,7 +93,9 @@ export type DataVersionDoc = { version: number; updatedAt: number };
 /** Size of every Compass group, `counts[category][difficulty]` — a group with no place is absent. */
 export type CompassCounts = Partial<Record<Category, Partial<Record<Difficulty, number>>>>;
 
-/** `meta/compassCounts`: read once by the host at launch to draw random positions (see `numbering.ts`). */
-export type CompassCountsDoc = { counts: CompassCounts };
+/** `meta/compassCounts`: read once by the host at launch (see `numbering.ts`). `shuffled` says the `n` of
+ * every group follow the shuffled order of `shuffleRank` (set by the seed and by the admin's numbering
+ * screen): while it is missing the admin offers to shuffle. The game ignores it. */
+export type CompassCountsDoc = { counts: CompassCounts; shuffled?: true };
 
 export const COMPASS_COUNTS_DOC = { collection: COLLECTIONS.meta, id: 'compassCounts' } as const;

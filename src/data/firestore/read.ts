@@ -48,7 +48,10 @@ export const cluesFromDoc = (
     emojis: doc.clues.emojis as unknown as CluePlace['emojis'],
     syllables: [...doc.clues.syllables],
     ...(personality && {
-      personality: { name: personality.name, description: personality.jobCode !== null ? jobs[personality.jobCode].fr : null },
+      personality: {
+        name: personality.name,
+        description: personality.jobCode !== null ? jobs[personality.jobCode].fr : null,
+      },
     }),
   };
 };

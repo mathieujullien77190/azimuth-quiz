@@ -26,9 +26,29 @@ const withSize = (counts: CompassCounts, { category, difficulty }: Group, size: 
   return next;
 };
 
-/** Numbers every Compass place of `entries` (in the given order, groups filled first-come): keeps the
- * existing `n` of a group when they already are exactly 1..size, renumbers the whole group otherwise. */
-export const computeNumbering = (entries: [string, PlaceDoc][]): { numbers: Record<string, number>; counts: CompassCounts } => {
+/** A stable pseudo-random rank for a place key (FNV-1a + murmur3 finalizer): always the same for a key,
+ * spread evenly. Numbering a group in this order shuffles it once for all, so consecutive `n` — what the
+ * game's per-group cursor takes — look random instead of following the import order. */
+export const shuffleRank = (key: string): number => {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < key.length; index += 1) {
+    hash ^= key.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  hash ^= hash >>> 16;
+  hash = Math.imul(hash, 0x85ebca6b);
+  hash ^= hash >>> 13;
+  hash = Math.imul(hash, 0xc2b2ae35);
+  hash ^= hash >>> 16;
+  return (hash >>> 0) / 2 ** 32;
+};
+
+/** Numbers every Compass place of `entries`: a group that already is exactly 1..size keeps its `n`, any other
+ * group (or every group when `force` is set) is renumbered 1..size in the shuffled order of `shuffleRank`. */
+export const computeNumbering = (
+  entries: [string, PlaceDoc][],
+  { force = false }: { force?: boolean } = {},
+): { numbers: Record<string, number>; counts: CompassCounts } => {
   const groups = new Map<string, { group: Group; keys: [string, PlaceDoc][] }>();
   for (const entry of entries) {
     const group = groupOf(entry[1]);
@@ -41,10 +61,10 @@ export const computeNumbering = (entries: [string, PlaceDoc][]): { numbers: Reco
   let counts: CompassCounts = {};
   for (const { group, keys } of groups.values()) {
     const existing = keys.map(([, place]) => place.n ?? 0).sort((a, b) => a - b);
-    const dense = existing.every((n, index) => n === index + 1);
-    keys.forEach(([key, place], index) => {
-      numbers[key] = dense ? place.n! : index + 1;
-    });
+    const keep = !force && existing.every((n, index) => n === index + 1);
+    const shuffled = [...keys].sort(([a], [b]) => shuffleRank(a) - shuffleRank(b));
+    if (keep) keys.forEach(([key, place]) => (numbers[key] = place.n!));
+    else shuffled.forEach(([key], index) => (numbers[key] = index + 1));
     counts = withSize(counts, group, keys.length);
   }
   return { numbers, counts };
@@ -60,7 +80,10 @@ export const isNumberingConsistent = (places: Record<string, PlaceDoc>, counts: 
 const sortedCounts = (counts: CompassCounts): [string, [string, number][]][] =>
   Object.entries(counts)
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([category, byDifficulty]) => [category, Object.entries(byDifficulty!).sort(([a], [b]) => a.localeCompare(b)) as [string, number][]]);
+    .map(([category, byDifficulty]) => [
+      category,
+      Object.entries(byDifficulty!).sort(([a], [b]) => a.localeCompare(b)) as [string, number][],
+    ]);
 
 export type Regroup = {
   /** The changed place's own `n` (`null` when it has no Compass group any more / never had one). */
@@ -75,7 +98,12 @@ export type Regroup = {
  * group (the last-numbered place of that group takes the freed `n`, the group shrinks by one) and joins
  * its new one at the end (`size + 1`). Nothing moves when the group is the same.
  */
-export const planRegroup = (places: Record<string, PlaceDoc>, counts: CompassCounts, key: string, next: PlaceDoc | null): Regroup => {
+export const planRegroup = (
+  places: Record<string, PlaceDoc>,
+  counts: CompassCounts,
+  key: string,
+  next: PlaceDoc | null,
+): Regroup => {
   const previous = places[key];
   const from = groupOf(previous);
   const to = groupOf(next);
@@ -86,7 +114,10 @@ export const planRegroup = (places: Record<string, PlaceDoc>, counts: CompassCou
   if (from) {
     const size = sizeOf(counts, from);
     if (previous.n !== size) {
-      const last = Object.entries(places).find(([otherKey, other]) => otherKey !== key && other.n === size && groupOf(other) && groupId(groupOf(other)!) === groupId(from));
+      const last = Object.entries(places).find(
+        ([otherKey, other]) =>
+          otherKey !== key && other.n === size && groupOf(other) && groupId(groupOf(other)!) === groupId(from),
+      );
       if (last) moved[last[0]] = previous.n!;
     }
     nextCounts = withSize(nextCounts, from, size - 1);

@@ -58,7 +58,7 @@ export const useOnlineRoom = (settings: GameSettings, updateSettings: (patch: Pa
             isDevicePosition: false,
           };
       // Drawn from Firestore, no fallback: a failure rejects, and the shared start flow shows a notice.
-      const places = await fetchRandomPlaces(origin.coordinates, settings, language);
+      const places = await fetchRandomPlaces(settings, language);
       await startRoomGame(code, { origin, places });
     });
 

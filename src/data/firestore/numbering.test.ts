@@ -1,6 +1,6 @@
 import type { Category, Difficulty } from '@/types';
 
-import { computeNumbering, isNumberingConsistent, planRegroup, slotAt } from './numbering';
+import { computeNumbering, isNumberingConsistent, planRegroup, shuffleRank, slotAt } from './numbering';
 import type { PlaceDoc } from './types';
 
 const place = (category: Category | null, difficulty: Difficulty = 'easy', n?: number): PlaceDoc => ({
@@ -13,8 +13,19 @@ const place = (category: Category | null, difficulty: Difficulty = 'easy', n?: n
   ...(n !== undefined && { n }),
 });
 
+describe('shuffleRank', () => {
+  it('is stable for a key and spread over [0, 1)', () => {
+    expect(shuffleRank('par')).toBe(shuffleRank('par'));
+    expect(shuffleRank('par')).not.toBe(shuffleRank('lon'));
+    const ranks = Array.from({ length: 200 }, (_, index) => shuffleRank(`key${index}`));
+    expect(ranks.every((rank) => rank >= 0 && rank < 1)).toBe(true);
+    expect(Math.min(...ranks)).toBeLessThan(0.1);
+    expect(Math.max(...ranks)).toBeGreaterThan(0.9);
+  });
+});
+
 describe('computeNumbering', () => {
-  it('numbers each group 1..size in order and ignores non-Compass places', () => {
+  it('numbers each group 1..size in the shuffled order and ignores non-Compass places', () => {
     const { numbers, counts } = computeNumbering([
       ['a', place('cities')],
       ['b', place(null)],
@@ -23,8 +34,22 @@ describe('computeNumbering', () => {
       ['e', place('capital')],
     ]);
 
-    expect(numbers).toEqual({ a: 1, c: 2, d: 1, e: 1 });
+    expect(Object.keys(numbers).sort()).toEqual(['a', 'c', 'd', 'e']);
+    expect([numbers.a, numbers.c].sort()).toEqual([1, 2]);
+    expect(numbers.a).toBe(shuffleRank('a') < shuffleRank('c') ? 1 : 2);
+    expect([numbers.d, numbers.e]).toEqual([1, 1]);
     expect(counts).toEqual({ cities: { easy: 2, hard: 1 }, capital: { easy: 1 } });
+  });
+
+  it('is deterministic, dense and not in the import order', () => {
+    const entries: [string, PlaceDoc][] = Array.from({ length: 40 }, (_, index) => [`p${index}`, place('cities')]);
+
+    const first = computeNumbering(entries).numbers;
+    const again = computeNumbering([...entries].reverse()).numbers;
+
+    expect(again).toEqual(first);
+    expect(Object.values(first).sort((a, b) => a - b)).toEqual(Array.from({ length: 40 }, (_, index) => index + 1));
+    expect(entries.map(([key]) => first[key])).not.toEqual(Array.from({ length: 40 }, (_, index) => index + 1));
   });
 
   it('keeps a group that already is exactly 1..size, renumbers one with holes or duplicates', () => {
@@ -36,7 +61,23 @@ describe('computeNumbering', () => {
       ['e', place('nature', 'easy', 5)],
     ]);
 
-    expect(numbers).toEqual({ a: 2, b: 1, c: 1, d: 2, e: 1 });
+    expect([numbers.a, numbers.b]).toEqual([2, 1]);
+    expect([numbers.c, numbers.d].sort()).toEqual([1, 2]);
+    expect(numbers.e).toBe(1);
+  });
+
+  it('renumbers even a dense group when forced (the one-off shuffle of an existing numbering)', () => {
+    const dense: [string, PlaceDoc][] = Array.from({ length: 30 }, (_, index) => [
+      `p${index}`,
+      place('cities', 'easy', index + 1),
+    ]);
+
+    const kept = computeNumbering(dense).numbers;
+    const forced = computeNumbering(dense, { force: true }).numbers;
+
+    expect(kept.p7).toBe(8);
+    expect(Object.values(forced).sort((a, b) => a - b)).toEqual(Array.from({ length: 30 }, (_, index) => index + 1));
+    expect(forced).not.toEqual(kept);
   });
 });
 
@@ -71,9 +112,13 @@ describe('planRegroup', () => {
   const counts = { cities: { easy: 3 }, capital: { easy: 1 } };
 
   it('changes nothing when the group stays the same', () => {
-    expect(planRegroup(places, counts, 'b', { ...places.b, compass: { category: 'cities', description: 'x' } })).toEqual({ n: 2, moved: {}, counts });
+    expect(
+      planRegroup(places, counts, 'b', { ...places.b, compass: { category: 'cities', description: 'x' } }),
+    ).toEqual({ n: 2, moved: {}, counts });
     expect(planRegroup(places, counts, 'a', places.a).n).toBe(1);
-    expect(planRegroup({ x: place('cities', 'easy') }, { cities: { easy: 1 } }, 'x', place('cities', 'easy')).n).toBeNull();
+    expect(
+      planRegroup({ x: place('cities', 'easy') }, { cities: { easy: 1 } }, 'x', place('cities', 'easy')).n,
+    ).toBeNull();
   });
 
   it('gives the freed number to the last place of the group the place leaves, and joins the new group last', () => {
@@ -89,7 +134,12 @@ describe('planRegroup', () => {
   });
 
   it('does not move anything when the counts and the numbers disagree (nobody holds the last number)', () => {
-    const plan = planRegroup({ a: place('cities', 'easy', 1), b: place('cities', 'easy', 2) }, { cities: { easy: 3 } }, 'a', null);
+    const plan = planRegroup(
+      { a: place('cities', 'easy', 1), b: place('cities', 'easy', 2) },
+      { cities: { easy: 3 } },
+      'a',
+      null,
+    );
 
     expect(plan).toEqual({ n: null, moved: {}, counts: { cities: { easy: 2 } } });
   });
@@ -101,7 +151,11 @@ describe('planRegroup', () => {
   });
 
   it('ignores a place without Compass on both sides and numbers a place that just got Compass', () => {
-    expect(planRegroup(places, counts, 'e', { ...places.e, difficulty: 'hard' })).toEqual({ n: null, moved: {}, counts });
+    expect(planRegroup(places, counts, 'e', { ...places.e, difficulty: 'hard' })).toEqual({
+      n: null,
+      moved: {},
+      counts,
+    });
     expect(planRegroup(places, counts, 'e', { ...places.e, compass: { category: 'cities' } })).toEqual({
       n: 4,
       moved: {},
@@ -110,7 +164,11 @@ describe('planRegroup', () => {
   });
 
   it('keeps the counts of a group that never existed out of the way', () => {
-    expect(planRegroup({}, {}, 'new', place('kids', 'hard'))).toEqual({ n: 1, moved: {}, counts: { kids: { hard: 1 } } });
+    expect(planRegroup({}, {}, 'new', place('kids', 'hard'))).toEqual({
+      n: 1,
+      moved: {},
+      counts: { kids: { hard: 1 } },
+    });
   });
 });
 

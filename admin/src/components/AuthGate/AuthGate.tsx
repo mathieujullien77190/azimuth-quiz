@@ -1,7 +1,7 @@
 import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebase/auth';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 
-import { compassNumberingPending, loadData, numberCompassPlaces } from '../../data';
+import { compassNumberingBroken, compassNumberingPending, loadData, numberCompassPlaces } from '../../data';
 import { ADMIN_EMAIL, auth } from '../../firebase';
 
 type Phase = 'auth' | 'loading' | 'ready';
@@ -56,16 +56,22 @@ export const AuthGate = ({ children }: { children: ReactNode }) => {
 
   if (user === undefined) return <div className="empty">Connexion…</div>;
 
-  // Compass places not numbered yet (or counts out of sync): the game's random draw needs `n` on every
-  // Compass place and `meta/compassCounts`, see `data/firestore/numbering.ts`.
+  // Compass places not numbered yet, counts out of sync, or numbered in the import order: the game's cursor
+  // draw needs `n` on every Compass place (in the shuffled order) and `meta/compassCounts`, see
+  // `data/firestore/numbering.ts`.
   if (isAdmin && phase === 'ready' && (progress !== null || compassNumberingPending())) {
     return (
       <div className="wrap">
         <div className="empty">
-          <p>Les lieux Compass ne sont pas (bien) numérotés : le tirage au sort des lieux du jeu en a besoin.</p>
+          <p>
+            {compassNumberingBroken()
+              ? 'Les lieux Compass ne sont pas (bien) numérotés : le tirage des lieux du jeu en a besoin.'
+              : 'Les lieux Compass sont numérotés dans l’ordre d’import : mélange la numérotation pour que le tirage des lieux du jeu varie.'}
+          </p>
           {error && <p>{error}</p>}
           <button className="reset" type="button" disabled={progress !== null} onClick={runNumbering}>
-            {progress ?? 'Numéroter les lieux Compass'}
+            {progress ??
+              (compassNumberingBroken() ? 'Numéroter les lieux Compass' : 'Mélanger la numérotation Compass')}
           </button>
         </div>
       </div>
