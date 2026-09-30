@@ -73,7 +73,15 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   if (gameState.screen === 'end') {
     const end = frozenEnd ?? { players: onlinePlayers, records: game.records, totals };
     const endLocalName = end.players.find((player) => player.uid === localUid)?.name ?? '';
-    return <EndScreen localName={endLocalName} onMenu={onQuit} players={end.players} records={end.records} totals={end.totals} />;
+    return (
+      <EndScreen
+        localName={endLocalName}
+        onMenu={onQuit}
+        players={end.players}
+        records={end.records}
+        totals={end.totals}
+      />
+    );
   }
 
   if (localUid === null || roomSettings === null || place === undefined || gameState.origin === null) {

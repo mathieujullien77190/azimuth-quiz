@@ -19,9 +19,7 @@ jest.mock('./HelicopterButton', () => {
   const { Text } = jest.requireActual('react-native');
   return {
     __esModule: true,
-    default: ({ accessibilityLabel }: { accessibilityLabel: string }) => (
-      <Text>helicopter:{accessibilityLabel}</Text>
-    ),
+    default: ({ accessibilityLabel }: { accessibilityLabel: string }) => <Text>helicopter:{accessibilityLabel}</Text>,
   };
 });
 
