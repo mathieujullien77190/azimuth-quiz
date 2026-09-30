@@ -66,6 +66,14 @@ const AdminApp = () => {
             >
               Métiers
             </button>
+            <button
+              type="button"
+              className="chip game-chip"
+              aria-pressed={tab === 'wordplay'}
+              onClick={() => setTab('wordplay')}
+            >
+              Jeux de mots
+            </button>
           </div>
           <button
             className="reset"
