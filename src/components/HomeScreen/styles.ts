@@ -14,14 +14,8 @@ export const createStyles = ({ colors, typography }: Theme) =>
       position: 'absolute',
       zIndex: 10,
       elevation: 10,
-    },
-    mascotButtonDefault: {
       top: spacing.sm,
       right: spacing.lg,
-    },
-    mascotButtonRoaming: {
-      top: 0,
-      left: 0,
     },
     title: {
       ...typography.display,

@@ -61,9 +61,6 @@ describe('GameHeader', () => {
           ready: true,
           setThemeId: jest.fn(),
           resetThemeId: jest.fn(),
-          animationsEnabled: false,
-          setAnimationsEnabled: jest.fn(),
-          resetAnimationsEnabled: jest.fn(),
         }}
       >
         <GameHeader {...baseProps} />

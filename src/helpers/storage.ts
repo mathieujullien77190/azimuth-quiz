@@ -1,13 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLocales } from 'expo-localization';
 
-import {
-  ANIMATIONS_ENABLED_STORAGE_KEY,
-  MASCOT_CAUGHT_STORAGE_KEY,
-  LANGUAGE_STORAGE_KEY,
-  PLAYER_NAME_STORAGE_KEY,
-  THEME_STORAGE_KEY,
-} from '@/data';
+import { LANGUAGE_STORAGE_KEY, PLAYER_NAME_STORAGE_KEY, THEME_STORAGE_KEY } from '@/data';
 import { BEST_SCORE_STORAGE_KEY, SETTINGS_STORAGE_KEY } from '@/games/compass/constants';
 import type { Language } from '@/i18n';
 import type { GameSettings, ThemeId } from '@/types';
@@ -38,22 +32,6 @@ export const saveSettings = async (settings: GameSettings): Promise<void> => {
     await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   } catch {
     // Settings not saved: not critical.
-  }
-};
-
-export const loadMascotCaught = async (): Promise<boolean> => {
-  try {
-    return (await AsyncStorage.getItem(MASCOT_CAUGHT_STORAGE_KEY)) === 'true';
-  } catch {
-    return false;
-  }
-};
-
-export const saveMascotCaught = async (): Promise<void> => {
-  try {
-    await AsyncStorage.setItem(MASCOT_CAUGHT_STORAGE_KEY, 'true');
-  } catch {
-    // Not saved: the mascot will start moving again on next launch, not critical.
   }
 };
 
@@ -109,25 +87,7 @@ export const savePlayerName = async (name: string): Promise<void> => {
   }
 };
 
-/** Off by default: some devices stutter on the mascot roaming/backdrop drift animations. */
-export const loadAnimationsEnabled = async (): Promise<boolean> => {
-  try {
-    return (await AsyncStorage.getItem(ANIMATIONS_ENABLED_STORAGE_KEY)) === 'true';
-  } catch {
-    return false;
-  }
-};
-
-export const saveAnimationsEnabled = async (enabled: boolean): Promise<void> => {
-  try {
-    await AsyncStorage.setItem(ANIMATIONS_ENABLED_STORAGE_KEY, enabled ? 'true' : 'false');
-  } catch {
-    // Not saved: not critical, defaults back to off on next launch.
-  }
-};
-
-/** Clears everything the app saves on the device: Compass settings, language, theme, whether
- * the home screen's mascot has been caught, whether animations are enabled, the shared player
+/** Clears everything the app saves on the device: Compass settings, language, theme, the shared player
  * name, Clues' and Compass' place cursors (+ a possible "best score" left over from an earlier version).
  * Clues'/Contour's own settings aren't persisted in the first place (reset every launch). */
 export const clearAppData = async (): Promise<void> => {
@@ -140,8 +100,6 @@ export const clearAppData = async (): Promise<void> => {
       SETTINGS_STORAGE_KEY,
       LANGUAGE_STORAGE_KEY,
       THEME_STORAGE_KEY,
-      MASCOT_CAUGHT_STORAGE_KEY,
-      ANIMATIONS_ENABLED_STORAGE_KEY,
       PLAYER_NAME_STORAGE_KEY,
     ]);
   } catch {

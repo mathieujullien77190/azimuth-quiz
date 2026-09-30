@@ -601,8 +601,8 @@ sur react-native-web s'il n'a pas de `style={{ flexGrow: 0, flexShrink: 0 }}` ex
 (pas seulement `contentContainerStyle`) — voir `PlayerTabs.tsx`.
 
 **Exception (Contour)** : tout l'ecran de
-`OnlineContourGameScreen` n'utilise pas `Screen` du tout — `ContourFullBleedScreen`, un `SafeAreaView` +
-`ThemeBackdrop` propres, avec la silhouette qui occupe tout l'ecran mesure (`useRoundBoard`, `onLayout`) et
+`OnlineContourGameScreen` n'utilise pas `Screen` du tout — `ContourFullBleedScreen`, un `SafeAreaView`
+propre (fond `colors.background`), avec la silhouette qui occupe tout l'ecran mesure (`useRoundBoard`, `onLayout`) et
 les header/footer qui flottent par-dessus en `position: 'absolute'` (fond `${colors.surfaceHigh}F0`)
 plutot que de reserver leur propre espace — pour que le contour du pays touche les bords de l'ecran.
 La barre de reponse (indice + champ + Valider) est `ContourGuessBar`. La fin de manche garde ce meme
@@ -635,8 +635,10 @@ mort (knip, modes dev et prod). Il rapporte, il ne corrige ni ne commit sans dem
 
 ## Theme
 
-Deux themes, `night` (sombre, bleu nuit + ambre, ciel etoile) et `day` (clair, ciel
-bleu + orange, nuages qui derivent — meme `ThemeBackdrop`, branche sur `theme.isDark`).
+Deux themes, `night` (sombre, bleu nuit + ambre) et `day` (clair, bleu + orange). Fond uni
+(`colors.background`) : il n'y a plus ni ciel etoile ni nuages, ni reglage d'animations ni mascotte qui se
+balade sur l'accueil (retires) ; la mascotte reste fixe en haut a droite et n'a que ses animations sur
+place (flottement, feux, rotor, engrenage).
 Choix persiste (`ThemeProvider`/`ThemeSettingsContext`, cle `azimuthquiz:theme`),
 selecteur dans `SettingsScreen`. `useTheme()` lit le theme courant via le contexte ;
 `useThemeSettings()` donne `{ themeId, ready, setThemeId, resetThemeId }`. Quelques
@@ -674,9 +676,7 @@ environnement).
   que la phase de placement de lieux (voir la section Silhouette) — pur composant
   d'affichage desormais, plus concerne.
 - `react-hooks/refs` se declenche aussi, de facon attendue et inevitable, partout ou
-  l'API `Animated` de React Native est utilisee (`HomeScreen.tsx` : position/rotation de
-  la mascotte, soucoupe la nuit ou helicoptere le jour — voir `MascotButton` ;
-  `EarthSection.tsx` : orbite du satellite/avion) — lire `.current` d'un
+  l'API `Animated` de React Native est utilisee (`EarthSection.tsx` : orbite du satellite/avion) — lire `.current` d'un
   `Animated.Value`/`ValueXY` cree via `useRef` puis l'utiliser dans le style au rendu est
   le pattern officiel de cette API, incompatible
   avec cette regle stricte. Meme categorie que les 4 fichiers ci-dessus, pas une erreur a

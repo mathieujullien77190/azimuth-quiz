@@ -12,9 +12,6 @@ const inDay = (children: React.ReactNode) => (
       ready: true,
       setThemeId: jest.fn(),
       resetThemeId: jest.fn(),
-      animationsEnabled: false,
-      setAnimationsEnabled: jest.fn(),
-      resetAnimationsEnabled: jest.fn(),
     }}
   >
     {children}

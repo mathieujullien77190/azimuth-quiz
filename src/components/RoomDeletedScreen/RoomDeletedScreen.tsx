@@ -5,7 +5,6 @@ import { useTranslation } from '@/i18n';
 import { useTheme } from '@/themes';
 
 import NoticeOverlay from '@/components/NoticeOverlay';
-import ThemeBackdrop from '@/components/ThemeBackdrop';
 
 import { styles } from './styles';
 
@@ -24,7 +23,6 @@ export const RoomDeletedScreen = ({ message }: { message?: string }) => {
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
-      <ThemeBackdrop />
       <NoticeOverlay message={message ?? t.setup.online.roomDeletedNotice} onDismiss={() => router.dismissTo('/')} />
     </SafeAreaView>
   );

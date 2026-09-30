@@ -1,25 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLocales } from 'expo-localization';
 
-import {
-  ANIMATIONS_ENABLED_STORAGE_KEY,
-  MASCOT_CAUGHT_STORAGE_KEY,
-  LANGUAGE_STORAGE_KEY,
-  PLAYER_NAME_STORAGE_KEY,
-  THEME_STORAGE_KEY,
-} from '@/data';
+import { LANGUAGE_STORAGE_KEY, PLAYER_NAME_STORAGE_KEY, THEME_STORAGE_KEY } from '@/data';
 import { BEST_SCORE_STORAGE_KEY, SETTINGS_STORAGE_KEY } from '@/games/compass/constants';
 
 import {
   clearAppData,
-  loadAnimationsEnabled,
-  loadMascotCaught,
   loadLanguage,
   loadPlayerName,
   loadSettings,
   loadThemeId,
-  saveAnimationsEnabled,
-  saveMascotCaught,
   saveLanguage,
   savePlayerName,
   saveSettings,
@@ -87,22 +77,6 @@ describe('loadSettings / saveSettings', () => {
   });
 });
 
-describe('loadMascotCaught / saveMascotCaught', () => {
-  it('is false until saved', async () => {
-    expect(await loadMascotCaught()).toBe(false);
-    await saveMascotCaught();
-    expect(await loadMascotCaught()).toBe(true);
-  });
-
-  it('tolerates read/write failures', async () => {
-    (AsyncStorage.getItem as jest.Mock).mockRejectedValueOnce(new Error('boom'));
-    expect(await loadMascotCaught()).toBe(false);
-
-    (AsyncStorage.setItem as jest.Mock).mockRejectedValueOnce(new Error('boom'));
-    await expect(saveMascotCaught()).resolves.toBeUndefined();
-  });
-});
-
 describe('loadLanguage / saveLanguage', () => {
   it('falls back to the system language when nothing is stored', async () => {
     mockedGetLocales.mockReturnValue([{ languageCode: 'en' }]);
@@ -152,28 +126,6 @@ describe('loadThemeId / saveThemeId', () => {
   });
 });
 
-describe('loadAnimationsEnabled / saveAnimationsEnabled', () => {
-  it('is false until saved', async () => {
-    expect(await loadAnimationsEnabled()).toBe(false);
-    await saveAnimationsEnabled(true);
-    expect(await loadAnimationsEnabled()).toBe(true);
-  });
-
-  it('round-trips back to false', async () => {
-    await saveAnimationsEnabled(true);
-    await saveAnimationsEnabled(false);
-    expect(await loadAnimationsEnabled()).toBe(false);
-  });
-
-  it('tolerates read/write failures', async () => {
-    (AsyncStorage.getItem as jest.Mock).mockRejectedValueOnce(new Error('boom'));
-    expect(await loadAnimationsEnabled()).toBe(false);
-
-    (AsyncStorage.setItem as jest.Mock).mockRejectedValueOnce(new Error('boom'));
-    await expect(saveAnimationsEnabled(true)).resolves.toBeUndefined();
-  });
-});
-
 describe('loadPlayerName / savePlayerName', () => {
   it('is null until saved', async () => {
     expect(await loadPlayerName()).toBeNull();
@@ -196,8 +148,6 @@ describe('clearAppData', () => {
     await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, '{}');
     await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, 'en');
     await AsyncStorage.setItem(THEME_STORAGE_KEY, 'day');
-    await AsyncStorage.setItem(MASCOT_CAUGHT_STORAGE_KEY, 'true');
-    await AsyncStorage.setItem(ANIMATIONS_ENABLED_STORAGE_KEY, 'true');
     await AsyncStorage.setItem(PLAYER_NAME_STORAGE_KEY, 'Zoé');
 
     await clearAppData();
@@ -206,8 +156,6 @@ describe('clearAppData', () => {
     expect(await AsyncStorage.getItem(SETTINGS_STORAGE_KEY)).toBeNull();
     expect(await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY)).toBeNull();
     expect(await AsyncStorage.getItem(THEME_STORAGE_KEY)).toBeNull();
-    expect(await AsyncStorage.getItem(MASCOT_CAUGHT_STORAGE_KEY)).toBeNull();
-    expect(await AsyncStorage.getItem(ANIMATIONS_ENABLED_STORAGE_KEY)).toBeNull();
     expect(await AsyncStorage.getItem(PLAYER_NAME_STORAGE_KEY)).toBeNull();
   });
 

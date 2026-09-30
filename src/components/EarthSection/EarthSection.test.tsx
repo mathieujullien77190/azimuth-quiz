@@ -37,9 +37,7 @@ describe('EarthSection — marks rendering', () => {
 
 describe('EarthSection — zoom controls', () => {
   it('starts at the ideal zoom, − decreases and can reach the disabled minimum', async () => {
-    const { getAllByRole } = await render(
-      <EarthSection marks={[nearMark]} size={240} zoomControls />,
-    );
+    const { getAllByRole } = await render(<EarthSection marks={[nearMark]} size={240} zoomControls />);
     const [minus] = getAllByRole('button');
     for (let i = 0; i < ZOOM_STEPS.length; i += 1) {
       await fireEvent.press(minus);
@@ -48,9 +46,7 @@ describe('EarthSection — zoom controls', () => {
   });
 
   it('+ increases zoom and can reach the disabled maximum', async () => {
-    const { getAllByRole } = await render(
-      <EarthSection marks={[nearMark]} size={240} zoomControls />,
-    );
+    const { getAllByRole } = await render(<EarthSection marks={[nearMark]} size={240} zoomControls />);
     const [, plus] = getAllByRole('button');
     for (let i = 0; i < ZOOM_STEPS.length; i += 1) {
       await fireEvent.press(plus);
@@ -59,9 +55,7 @@ describe('EarthSection — zoom controls', () => {
   });
 
   it('using a far mark (ideal zoom at the minimum), + starts enabled and increases the zoom', async () => {
-    const { getAllByRole } = await render(
-      <EarthSection marks={[farMark]} size={240} zoomControls />,
-    );
+    const { getAllByRole } = await render(<EarthSection marks={[farMark]} size={240} zoomControls />);
     const [minus, plus] = getAllByRole('button');
     expect(minus.props.accessibilityState.disabled).toBe(true);
     expect(plus.props.accessibilityState.disabled).toBe(false);
@@ -86,24 +80,18 @@ describe('EarthSection — satellite', () => {
   });
 
   it('does not show the satellite when allowSatellite is false', async () => {
-    const { queryByText } = await render(
-      <EarthSection allowSatellite={false} marks={[farMark]} size={240} />,
-    );
+    const { queryByText } = await render(<EarthSection allowSatellite={false} marks={[farMark]} size={240} />);
     expect(queryByText('🛰️')).toBeNull();
     expect(startMock).not.toHaveBeenCalled();
   });
 
   it('does not show the satellite when zoomed in past scale 1, even if allowed', async () => {
-    const { queryByText } = await render(
-      <EarthSection allowSatellite marks={[nearMark]} size={240} />,
-    );
+    const { queryByText } = await render(<EarthSection allowSatellite marks={[nearMark]} size={240} />);
     expect(queryByText('🛰️')).toBeNull();
   });
 
   it('shows the satellite at zoom 1 with allowSatellite, and loops the orbit animation', async () => {
-    const { getByText } = await render(
-      <EarthSection allowSatellite marks={[farMark]} size={240} />,
-    );
+    const { getByText } = await render(<EarthSection allowSatellite marks={[farMark]} size={240} />);
     expect(getByText('🛰️')).toBeTruthy();
     expect(timingSpy).toHaveBeenCalledWith(
       expect.anything(),
@@ -123,9 +111,7 @@ describe('EarthSection — satellite', () => {
   });
 
   it('stops looping after unmount even if the in-flight animation reports finished', async () => {
-    const { unmount, getByText } = await render(
-      <EarthSection allowSatellite marks={[farMark]} size={240} />,
-    );
+    const { unmount, getByText } = await render(<EarthSection allowSatellite marks={[farMark]} size={240} />);
     getByText('🛰️');
     const callsBeforeUnmount = startMock.mock.calls.length;
     const onFinished = startMock.mock.calls[callsBeforeUnmount - 1][0] as (result: { finished: boolean }) => void;
@@ -143,9 +129,6 @@ describe('EarthSection — satellite', () => {
           ready: true,
           setThemeId: jest.fn(),
           resetThemeId: jest.fn(),
-          animationsEnabled: false,
-          setAnimationsEnabled: jest.fn(),
-          resetAnimationsEnabled: jest.fn(),
         }}
       >
         <EarthSection allowSatellite marks={[farMark]} size={240} />
@@ -156,9 +139,7 @@ describe('EarthSection — satellite', () => {
   });
 
   it('toggles the joke bubble on tap and hides it again on a second tap', async () => {
-    const { getByText, queryByText } = await render(
-      <EarthSection allowSatellite marks={[farMark]} size={240} />,
-    );
+    const { getByText, queryByText } = await render(<EarthSection allowSatellite marks={[farMark]} size={240} />);
     expect(queryByText(SATELLITE_QUIP)).toBeNull();
     await fireEvent.press(getByText('🛰️'));
     expect(getByText(SATELLITE_QUIP)).toBeTruthy();

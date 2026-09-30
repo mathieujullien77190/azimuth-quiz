@@ -27,14 +27,12 @@ const mockedUseLanguage = useLanguage as jest.Mock;
 const mockedUseSettings = useSettings as unknown as jest.Mock;
 const mockedUseThemeSettings = useThemeSettings as jest.Mock;
 
-const renderSettings = async (language: 'fr' | 'en' = 'fr', themeId: ThemeId = 'night', animationsEnabled = false) => {
+const renderSettings = async (language: 'fr' | 'en' = 'fr', themeId: ThemeId = 'night') => {
   const setLanguage = jest.fn();
   const resetLanguage = jest.fn();
   const resetSettings = jest.fn();
   const setThemeId = jest.fn();
   const resetThemeId = jest.fn();
-  const setAnimationsEnabled = jest.fn();
-  const resetAnimationsEnabled = jest.fn();
   mockedUseLanguage.mockReturnValue({ language, ready: true, setLanguage, resetLanguage });
   mockedUseSettings.mockReturnValue({ settings: {}, ready: true, updateSettings: jest.fn(), resetSettings });
   mockedUseThemeSettings.mockReturnValue({
@@ -42,9 +40,6 @@ const renderSettings = async (language: 'fr' | 'en' = 'fr', themeId: ThemeId = '
     ready: true,
     setThemeId,
     resetThemeId,
-    animationsEnabled,
-    setAnimationsEnabled,
-    resetAnimationsEnabled,
   });
   const onBack = jest.fn();
   const utils = await render(<SettingsScreen onBack={onBack} />);
@@ -56,8 +51,6 @@ const renderSettings = async (language: 'fr' | 'en' = 'fr', themeId: ThemeId = '
     resetSettings,
     setThemeId,
     resetThemeId,
-    setAnimationsEnabled,
-    resetAnimationsEnabled,
   };
 };
 
@@ -93,23 +86,14 @@ describe('SettingsScreen', () => {
     expect(getByRole('button', { name: '☀️ Jour' }).props.accessibilityState.selected).toBe(true);
   });
 
-  it('animations toggle reflects the current value and calls setAnimationsEnabled on change', async () => {
-    const { getByLabelText, setAnimationsEnabled } = await renderSettings('fr', 'night', false);
-    const toggle = getByLabelText('Animations');
-    expect(toggle.props.value).toBe(false);
-    fireEvent(toggle, 'valueChange', true);
-    expect(setAnimationsEnabled).toHaveBeenCalledWith(true);
-  });
-
-  it('clears app data: calls clearAppData, resetSettings, resetLanguage, resetThemeId, resetAnimationsEnabled, and disables the button', async () => {
-    const { getByText, resetSettings, resetLanguage, resetThemeId, resetAnimationsEnabled } = await renderSettings();
+  it('clears app data: calls clearAppData, resetSettings, resetLanguage, resetThemeId, and disables the button', async () => {
+    const { getByText, resetSettings, resetLanguage, resetThemeId } = await renderSettings();
     const clearButton = getByText('Vider les données');
     await fireEvent.press(clearButton);
     expect(clearAppData).toHaveBeenCalledTimes(1);
     expect(resetSettings).toHaveBeenCalledTimes(1);
     expect(resetLanguage).toHaveBeenCalledTimes(1);
     expect(resetThemeId).toHaveBeenCalledTimes(1);
-    expect(resetAnimationsEnabled).toHaveBeenCalledTimes(1);
     expect(getByText('Données effacées.')).toBeTruthy();
   });
 

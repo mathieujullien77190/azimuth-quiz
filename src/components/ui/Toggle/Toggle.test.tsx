@@ -23,7 +23,9 @@ describe('Toggle', () => {
 
   it('calls onValueChange with the new value', async () => {
     const onValueChange = jest.fn();
-    const { getByLabelText } = await render(<Toggle label="Live compass" onValueChange={onValueChange} value={false} />);
+    const { getByLabelText } = await render(
+      <Toggle label="Live compass" onValueChange={onValueChange} value={false} />,
+    );
     fireEvent(getByLabelText('Live compass'), 'valueChange', true);
     expect(onValueChange).toHaveBeenCalledWith(true);
   });
@@ -36,7 +38,7 @@ describe('Toggle', () => {
   it('uses a dedicated thumb color when enabled by day', async () => {
     const { toJSON } = await render(
       <ThemeSettingsContext.Provider
-        value={{ themeId: 'day', ready: true, setThemeId: jest.fn(), resetThemeId: jest.fn(), animationsEnabled: false, setAnimationsEnabled: jest.fn(), resetAnimationsEnabled: jest.fn() }}
+        value={{ themeId: 'day', ready: true, setThemeId: jest.fn(), resetThemeId: jest.fn() }}
       >
         <Toggle label="Live compass" onValueChange={jest.fn()} value={true} />
       </ThemeSettingsContext.Provider>,

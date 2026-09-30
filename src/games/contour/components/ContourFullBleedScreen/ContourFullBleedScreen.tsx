@@ -3,7 +3,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useThemedStyles } from '@/themes';
 
-import ThemeBackdrop from '@/components/ThemeBackdrop';
 import { boardShapeFor } from '@/games/contour/helpers/roundBoard';
 import ContourBoard from '../ContourBoard';
 import type { ContourFullBleedScreenProps } from './types';
@@ -34,7 +33,6 @@ export const ContourFullBleedScreen = ({
 
   return (
     <SafeAreaView style={styles.fullBleedSafeArea}>
-      <ThemeBackdrop />
       <View onLayout={onBoardAreaLayout} style={styles.fullBleedBoardArea}>
         <View style={styles.boardFrame}>
           <ContourBoard

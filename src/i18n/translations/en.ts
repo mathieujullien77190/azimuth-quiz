@@ -140,10 +140,6 @@ export const en: Translations = {
     languageOptions: { fr: 'Français', en: 'English' },
     appearanceTitle: 'Appearance',
     appearanceOptions: { night: '🌙 Night', day: '☀️ Day' },
-    animationsToggle: {
-      label: 'Animations',
-      description: 'Roaming mascot and animated sky on the home screen. Off by default (can stutter on some phones).',
-    },
     aboutTitle: 'About',
     author: 'By Matou.',
     claudeMention: 'Made for drinks with friends: no ads, no tracking, just you and a stubborn compass.',

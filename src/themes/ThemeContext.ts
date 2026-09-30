@@ -16,13 +16,6 @@ export type ThemeSettingsValue = {
    * (used after "Clear data": otherwise the app keeps the theme in memory until the next
    * launch, even though storage is already empty). */
   resetThemeId: () => void;
-  /** Home screen mascot roaming + starry/cloudy backdrop drift: off by default (some devices
-   * stutter on them). Not really "theme" but shares the same persisted-display-setting plumbing
-   * (see `ThemeProvider`), so it rides along here rather than a whole separate context. */
-  animationsEnabled: boolean;
-  setAnimationsEnabled: (enabled: boolean) => void;
-  /** Same idea as `resetThemeId`, for "Clear data". */
-  resetAnimationsEnabled: () => void;
 };
 
 export const ThemeSettingsContext = createContext<ThemeSettingsValue>({
@@ -30,9 +23,6 @@ export const ThemeSettingsContext = createContext<ThemeSettingsValue>({
   ready: true,
   setThemeId: () => {},
   resetThemeId: () => {},
-  animationsEnabled: false,
-  setAnimationsEnabled: () => {},
-  resetAnimationsEnabled: () => {},
 });
 
 export const useThemeSettings = (): ThemeSettingsValue => useContext(ThemeSettingsContext);

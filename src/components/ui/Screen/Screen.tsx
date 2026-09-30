@@ -2,7 +2,6 @@ import { ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemedStyles } from '@/themes';
 
-import ThemeBackdrop from '../../ThemeBackdrop';
 import type { ScreenProps } from './types';
 
 import { createStyles } from './styles';
@@ -12,7 +11,6 @@ export const Screen = ({ children, header, footer, scrollRef, onScroll }: Screen
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ThemeBackdrop />
       {header}
       <ScrollView
         contentContainerStyle={styles.content}

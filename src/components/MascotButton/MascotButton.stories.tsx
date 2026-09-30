@@ -31,9 +31,6 @@ export const Night: Story = {
           ready: true,
           setThemeId: () => {},
           resetThemeId: () => {},
-          animationsEnabled: false,
-          setAnimationsEnabled: () => {},
-          resetAnimationsEnabled: () => {},
         }}
       >
         <Story />
@@ -54,9 +51,6 @@ export const Day: Story = {
           ready: true,
           setThemeId: () => {},
           resetThemeId: () => {},
-          animationsEnabled: false,
-          setAnimationsEnabled: () => {},
-          resetAnimationsEnabled: () => {},
         }}
       >
         <Story />

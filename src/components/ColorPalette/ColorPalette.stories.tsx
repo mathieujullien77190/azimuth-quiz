@@ -19,9 +19,6 @@ const pinnedTo = (themeId: ThemeId): Decorator => {
         ready: true,
         setThemeId: () => {},
         resetThemeId: () => {},
-        animationsEnabled: false,
-        setAnimationsEnabled: () => {},
-        resetAnimationsEnabled: () => {},
       }}
     >
       <div style={{ background: THEMES[themeId].colors.background, padding: 24, minHeight: '100vh' }}>

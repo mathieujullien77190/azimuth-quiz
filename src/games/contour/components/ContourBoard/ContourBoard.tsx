@@ -51,9 +51,9 @@ export const ContourBoard = ({
         <Path
           d={polylinePath(outline)}
           // A filled silhouette rather than a bare outline, matching the game mode's own name —
-          // `surfaceHigh` by night reads as a raised panel over `ThemeBackdrop`; by day plain
+          // `surfaceHigh` by night reads as a raised panel over the background; by day plain
           // white (`surface`) instead, since `surfaceHigh`'s pale blue there is barely
-          // distinguishable from the sky backdrop right behind it.
+          // distinguishable from the light blue background right behind it.
           fill={isDark ? colors.surfaceHigh : colors.surface}
         />
         {coastPath !== '' && (

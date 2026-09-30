@@ -19,12 +19,6 @@ export const LOCATION_TIMEOUT_MS = 6000;
 // state on next launch, rather than keeping the old prefix forever for continuity.
 export const LANGUAGE_STORAGE_KEY = 'azimuthquiz:language';
 export const THEME_STORAGE_KEY = 'azimuthquiz:theme';
-/** Once the home screen's mascot (UFO by night, helicopter by day) is caught (clicked), it stops
- * moving forever. */
-export const MASCOT_CAUGHT_STORAGE_KEY = 'azimuthquiz:ufo-caught';
-/** Home screen mascot roaming + starry/cloudy backdrop drift: off by default (some devices
- * stutter on them), opt-in via Settings. */
-export const ANIMATIONS_ENABLED_STORAGE_KEY = 'azimuthquiz:animations-enabled';
 /** The player's name, shared by the 3 games (see `useSetupRoom`'s prefill): typing it in one
  * game's setup fills it in for the others too, even though only Compass' own `GameSettings`
  * otherwise persists across launches. */
