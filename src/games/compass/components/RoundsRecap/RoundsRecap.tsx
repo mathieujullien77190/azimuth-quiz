@@ -27,7 +27,7 @@ export const RoundsRecap = ({ title, columns, rows }: RoundsRecapProps) => {
       </View>
       {rows.map((row, index) => (
         <View key={row.label + index} style={[styles.row, styles.rowBorder]}>
-          <Text numberOfLines={2} style={[styles.name, styles.label]}>
+          <Text style={[styles.name, styles.label]}>
             {row.label}
           </Text>
           {row.cells.map((cell, cellIndex) => (

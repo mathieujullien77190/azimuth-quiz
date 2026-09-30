@@ -23,7 +23,7 @@ export const PlaceCard = memo(function PlaceCard({ place, showCountry, descripti
 
   return (
     <Card style={styles.card}>
-      <Text adjustsFontSizeToFit numberOfLines={2} style={styles.name}>
+      <Text style={styles.name}>
         {place.name}
       </Text>
       <Text style={styles.country}>
