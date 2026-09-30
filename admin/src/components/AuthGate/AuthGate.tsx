@@ -1,7 +1,7 @@
 import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebase/auth';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 
-import { contourRingsPending, encodeContourRings, loadData } from '../../data';
+import { contourMergePending, loadData, mergeContoursIntoCountries } from '../../data';
 import { ADMIN_EMAIL, auth } from '../../firebase';
 
 type Phase = 'auth' | 'loading' | 'ready';
@@ -47,14 +47,14 @@ export const AuthGate = ({ children }: { children: ReactNode }) => {
 
   if (user === undefined) return <div className="empty">Connexion…</div>;
 
-  // One-off: the silhouettes get their encoded outline and the outline of their neighbours, so a round reads
-  // one document (see `encodeContourRings`). Delete this screen once it has run everywhere.
-  if (isAdmin && phase === 'ready' && (running || contourRingsPending())) {
+  // One-off: the silhouettes move from the `contours` collection into their country's document, neighbours
+  // merged in one list (see `mergeContoursIntoCountries`). Delete this screen once it has run everywhere.
+  if (isAdmin && phase === 'ready' && (running || contourMergePending())) {
     const run = () => {
       setError(null);
       setRunning(true);
       setProgress('Écriture…');
-      encodeContourRings((done, total) => setProgress(`Écriture : ${done} / ${total}`))
+      mergeContoursIntoCountries((done, total) => setProgress(`Écriture : ${done} / ${total}`))
         .then(() => setRunning(false))
         .catch((err: Error) => setError(err.message))
         .finally(() => setProgress(null));
@@ -63,12 +63,12 @@ export const AuthGate = ({ children }: { children: ReactNode }) => {
       <div className="wrap">
         <div className="empty">
           <p>
-            Les silhouettes n’ont pas encore leur contour encodé ni celui de leurs voisins : un tour de jeu lira alors
-            un seul document.
+            Les silhouettes sont encore dans la collection « contours » : elles passent dans le document de leur pays
+            (avec leurs voisins, en une seule liste), qu’un tour de jeu lira alors seul.
           </p>
           {error && <p>{error}</p>}
           <button className="reset" type="button" disabled={progress !== null} onClick={run}>
-            {progress ?? 'Encoder les contours et embarquer les voisins'}
+            {progress ?? 'Fusionner les contours dans les pays'}
           </button>
         </div>
       </div>

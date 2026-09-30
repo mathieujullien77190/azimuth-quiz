@@ -210,34 +210,41 @@ testes dans `denormalize.ts`, `denormalizeClues.ts`, `numbering.ts`.
 
 **Collections** : `places/{cle}` (cle = code court de 3 lettres, permanent, ex. `par` ; identite + `compass` +
 `clues` + `country` + `personality` + `wordplay`), `countries/{ISO}` (nom fr/en, drapeau, devise, indicatif,
-pays frontaliers ; la source que l'admin edite), `contours/{ISO}`, `charadeRiddles/{syllabe normalisee}`
+pays frontaliers ; la source que l'admin edite ET, pour un pays avec silhouette, tout ce que lit Silhouette), `charadeRiddles/{syllabe normalisee}`
 (devinette globale ou `null`), `personalityJobs/{code}` (`{ fr, en }`), `meta/*` (`compassCounts`, `cluesCounts`,
 `contourCounts`, `dataVersion`). Firestore refuse les tableaux imbriques et `undefined` : contours a plat
 (`[lon, lat, lon, lat...]`), couleurs de drapeau en objets, champ optionnel absent = omis. Le jeu ne lit que
-`places`, `contours` et `meta` ; `countries`, `charadeRiddles` et `personalityJobs` sont la source des copies
-(l'admin les recopie dans les lieux/contours qui les utilisent).
+`places`, `countries` (Silhouette seulement) et `meta` ; `charadeRiddles` et `personalityJobs` sont la source des
+copies (l'admin les recopie dans les lieux qui les utilisent). La collection `contours/{ISO}` (ancien emplacement
+des silhouettes) est **TEMPORAIRE** : elle n'est plus lue que par la fusion de l'admin, a supprimer ensuite.
 
 - **`places/{cle}.country`** (`CountrySnapshot`) : copie du pays (`fr`, `en`, `flag`, `currency`, `currencySymbol`,
   `phoneCode`) dans CHAQUE lieu de ce pays (Compass et Clues) : pas de `countryName()` ni de lecture de pays au
   runtime (`Place.country` cote Compass, `CluePlace.country/flagColors/...` cote Indices).
-  `applyCountryChange` (admin) ecrit le pays ET tous ses lieux ET les contours qui le citent (`planCountryChange`)
+  `applyCountryChange` (admin) ecrit le pays ET tous ses lieux ET les autres pays qui le citent comme voisin (`planCountryChange`)
   par tranches de 400 operations (chaque tranche atomique) ; `saveCountry` passe par la.
 - **Numerotation Indices**, meme mecanique que Compass avec `CLUES_NUMBERING` : `places/{cle}.clues.category`
   (`capital` / `citiesFr` / `cities`, derivee de la categorie Compass par `cluesCategory`, stockee parce qu'on
   requete dessus) et `clues.n` (1..taille dans `clues.category` x `difficulty`, ordre melange), tailles dans
   `meta/cluesCounts` (`shuffled: true`). `applyPlaceChange` garde les DEUX numerotations denses dans le meme batch
   (un changement de categorie Compass peut regrouper la categorie Indices).
-- **`contours/{code}`** (`ContourCountryDoc`, sorti de `countries/{code}.contour`) : `ring` (contour en polyline
-  encodee, `data/firestore/polyline.ts`, 3 decimales, ~3 Ko au lieu de ~12) et `neighborRings` (le contour de chaque
-  pays frontalier, copie tel quel pour que les aretes communes gardent les memes sommets : une manche = UNE lecture),
-  `difficulty`, `centerLabel`, `neighbors` (avec `fr`/`en` copies),
-  **TEMPORAIRES** `points` (a plat) et `borderCodes` (ancienne lecture en deux temps) a supprimer avec le repli de
-  `loadRoundData` une fois la migration confirmee partout (ecran unique de l'admin "Encoder les contours et
-  embarquer les voisins", `contourRingFields`/`contoursNeedingRings`, a supprimer ensuite), `fr`/`en`, `capital` et `cities` precalcules
-  comme le faisait `contourPlacesFor` a chaque manche, `n` (1..taille dans la difficulte, ordre melange) ; tailles
-  dans `meta/contourCounts`. Les edits de voisins / ancre du label ecrivent `contours/{code}`.
-- `firestore.rules` : bloc `contours` (lecture publique, ecriture admin). `firestore.indexes.json` : index
-  (`clues.category`, `difficulty`, `clues.n`) et (`difficulty`, `n`) sur `contours` — a deployer.
+- **Silhouette dans `countries/{code}`** (`CountryDoc`, champs de silhouette ; présents seulement sur un pays qui en a
+  une, `hasSilhouette`) : `ring` (contour en polyline encodee, `data/firestore/polyline.ts`, 3 decimales, ~3 Ko
+  au lieu de ~12), `difficulty`, `centerLabel`, `n` (1..taille dans la difficulte, ordre melange ; tailles dans
+  `meta/contourCounts`), `capital` et `cities` precalcules comme le faisait `contourPlacesFor` a chaque manche, et
+  UNE liste `neighbors: [{ code, fr, en, ring?, x?, y? }]` : `ring` (le contour du voisin, copie tel quel pour que
+  les aretes communes gardent les memes sommets) = un pays qui partage une frontiere, dessine en decor et dans le
+  decoupage cote/frontiere ; `x`/`y` (fraction du plateau) = un voisin place en indice. Les deux roles sont
+  independants (un decor n'est pas forcement un indice et inversement). Une manche = UNE lecture. Les edits de
+  voisins / ancre du label ecrivent `countries/{code}` ; "supprimer un voisin" ne retire que son role d'indice
+  (`x`/`y`), pas son decor. `applyCountryChange` reecrit aussi `fr`/`en` des entrees qui citent un pays renomme.
+  **TEMPORAIRES** : la collection `contours/{ISO}` (`ContourCountryDoc`), son index et le chargement admin qui la
+  lit, l'ecran unique "Fusionner les contours dans les pays" (`contoursToMerge`/`countryContourFields` de
+  `data/firestore/countryContours.ts`, `mergeContoursIntoCountries` de `admin/src/data.ts`), a supprimer une fois la
+  fusion faite partout.
+- `firestore.rules` : `countries` (lecture publique, ecriture admin) porte tout ; `contours` reste (temporaire).
+  `firestore.indexes.json` : index (`clues.category`, `difficulty`, `clues.n`) sur `places` et (`difficulty`, `n`)
+  sur `countries` (Silhouette) — a deployer ; celui de `contours` est temporaire.
 
 ### Indices : les lieux sont tires dans Firestore, et tout ce qu'une manche lit est dans le lieu
 
@@ -474,9 +481,9 @@ part d'un pays au hasard. Une requete par tranche de 30 numeros (`difficulty == 
 pays) ; un numero sans document (l'admin l'a retire) en redemande d'autres. Si Firestore echoue ou s'il y a moins
 de `rounds` pays, `fetchContourRoundCodes` rejette : `useSetupRoom` affiche `startFailedNotice`, la room reste dans
 son salon, "Lancer la partie" relance. *Manche* (tous les appareils, hote compris) : `useRoundData` lit le document du
-pays de la manche (`contours/{code}`), qui porte le contour de ses voisins (`neighborRings`) : UNE lecture par
-manche (`loadRoundData`, gardee en memoire pour la session ; TEMPORAIRE : un document sans `neighborRings` se lit
-encore en deux temps, avec les documents de `borderCodes` par tranche de 30) — et charge deja la
+pays de la manche (`countries/{code}`), qui porte son contour, ses voisins (indices et decor) et ses villes : UNE
+lecture par manche (`loadRoundData`, gardee en memoire pour la session ; les documents ramenes par le tirage de
+l'hote y sont deja, donc aucune lecture de plus) — et charge deja la
 manche SUIVANTE pendant qu'on joue (changement de manche sans attente). Le plateau se construit a partir de ces
 documents seuls (`ContourRoundCountry`, `roundCountryFromDoc` : noms fr/en du pays et des voisins, capitale et villes
 precalculees) : plus de `CONTOURS`, de `countryName` ni de `contourPlacesFor(PLACES)` a l'execution ;
@@ -513,7 +520,7 @@ reglages de la room + le pays, rien de plus n'est stocke par manche. Le niveau d
 n'apparaissent qu'a `neighborShapes` (jamais sans, meme categorie `neighbors` desactivee). Les etiquettes sont
 `buildHintLabels(board, plan, hints, language)` ; la forme `boardShapeFor(board, plan, hints)`. Bareme
 `contourGuessPoints(hints, N)` : 500 x (1 - 0.85 * hints / (N - 1)) arrondi pour hints < N, 0 a N (un plan reduit
-au seul `reveal` donne 500 puis 0). Villes et capitale sont precalculees dans le document du pays (`capital`, `cities` de `contours/{code}`) : categories
+au seul `reveal` donne 500 puis 0). Villes et capitale sont precalculees dans le document du pays (`capital`, `cities` de `countries/{code}`) : categories
 `capital`, `cities`, `citiesFr` du pays, limitees a l'emprise (bbox) de l'anneau principal (exclut l'outre-mer), au plus
 `MAX_CITY_HINTS` (5) villes hors capitale, les plus faciles d'abord ; elles n'ont qu'un nom (pas de traduction). Elles sont projetees avec le MEME
 projecteur que le contour (`RoundBoard.cityMarks`/`capitalMark`) : un point `●` par ville, une etoile pour la
@@ -524,14 +531,14 @@ des que chaque hint est devenu un point fixe plutot qu'une etiquette pointant ve
 
 Filtre par difficulte, meme enum `Difficulty` que Compass/Clues, choix unique dans les trois jeux
 (`GameSettings.difficulty`, `ClueSettings.difficulty`, `ContourSettings.difficulty`) : determine le groupe dans lequel
-les pays sont tires (`difficulty` du document `contours/{code}`, curee a la main dans l'admin — France et Espagne
+les pays sont tires (`difficulty` du document `countries/{code}`, curee a la main dans l'admin — France et Espagne
 en `easy`, seule la Norvege en `hard`, `intermediate` pour tous les autres ; deliberement desequilibre, ne pas
 tenter de rectifier sans demande explicite). Un groupe plus petit que le nombre de manches (2 pays en `easy`) est
 reparcouru, sans jamais le meme pays deux fois de suite quand il y a le choix.
 
 **Pays et contours dans Firestore, cle = code ISO.** `countries/{ISO}` (nom fr/en, drapeau, devise, indicatif,
-`borders` = pays frontaliers) est la source que l'admin edite ; `contours/{ISO}` (voir "Modele Firestore
-denormalise") est ce que lit le jeu, avec les noms deja copies. Les voisins positionnes sur le plateau
+`borders` = pays frontaliers) est la source que l'admin edite ET ce que lit Silhouette (voir "Modele Firestore
+denormalise"), avec les noms des voisins deja copies. Les voisins positionnes sur le plateau
 (`{ type: 'country', code, x, y, fr, en }` — uniquement des pays, plus de voisin mer/ocean) sont propres a chaque pays :
 un meme voisin peut avoir une position differente selon le pays qui le cite. Les `points` de TOUS les pays viennent
 d'une seule topologie du monde entier simplifiee une fois (world-atlas 50m) : un arc partage entre deux pays reste
@@ -541,7 +548,7 @@ l'anneau principal de chaque pays est garde, donc une frontiere portee par un au
 enclaves) n'est pas detectee. Les scripts qui generaient ces donnees (`generate:contours`...) ont ete supprimes avec
 les JSON : les contours ne se regenerent plus, ils s'editent (positions des voisins, ancre du label) dans l'admin.
 
-**Voisins bruts de chaque pays** (`countries/{ISO}.borders` et `contours/{ISO}.borderCodes`) : codes ISO tries des pays
+**Voisins bruts de chaque pays** (`countries/{ISO}.borders`) : codes ISO tries des pays
 qui partagent une frontiere terrestre, ex. `"MC": ["FR"]`, symetriques (A voisin de B <=> B voisin de A). Un pays sans
 voisin (iles) n'a pas de champ. Rien a voir avec `neighbors` (les quelques voisins POSITIONNES sur le plateau pour les
 indices) ; les frontieres dessinees, elles, sont deduites de la geometrie (ci-dessous), donc n'incluent pas les
@@ -578,12 +585,12 @@ decor : les indices (drapeaux/noms) restent ceux de `ContourCountry.neighbors`/`
 Aucune donnee de frontiere n'est stockee : les voisins se deduisent des `points` des autres pays.
 
 Admin : pas d'onglet a part — un bouton "🗺️ Silhouette" apparait dans la carte pays de
-`admin/src/views/CountriesView` pour tout pays possedant un document `contours/{ISO}` (`allContours().find`), et deplie
+`admin/src/views/CountriesView` pour tout pays possedant une silhouette (`allContours().find`), et deplie
 `admin/src/views/ContourView/ContourEditor.tsx` juste en dessous, dans cette meme carte (recherche/pagination/tri deja
 fournis par CountriesView, partages entre pays classiques et Silhouette). `ContourEditor` prend un seul
 `initialCountry` en prop (pas de selecteur de pays a lui, CountriesView fait deja ce role) : chaque voisin (et le
 point drapeau/nom du pays cible, un seul point) se glisse a la souris et se pose exactement ou on le lache — chaque
-deplacement/suppression est ecrit directement dans `contours/{ISO}` (`saveNeighborPosition`,
+deplacement/suppression est ecrit directement dans `countries/{ISO}` (`saveNeighborPosition`,
 `saveCenterLabelPosition`, `deleteNeighbor`, `admin/src/api/contour.ts`). Un lieu ne se supprime que via
 `deletePlace` (`admin/src/api/places.ts`), partage avec Compass/Clues.
 

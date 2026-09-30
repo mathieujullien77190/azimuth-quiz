@@ -1,7 +1,7 @@
 import { getDocs } from 'firebase/firestore';
 
 import { encodeRing } from '@/data/firestore/polyline';
-import type { ContourCountryDoc } from '@/data/firestore/types';
+import type { CountryDoc } from '@/data/firestore/types';
 
 import { loadContourCounts } from './contourCounts';
 import { loadContourCursors, saveContourCursors } from './contourCursors';
@@ -10,7 +10,7 @@ import { clearContourDocuments, fetchContourRoundCodes, loadRoundData } from './
 type Filter = { field: string; op: string; value: unknown };
 
 jest.mock('firebase/firestore', () => ({
-  collection: jest.fn(() => 'contours'),
+  collection: jest.fn(() => 'countries'),
   documentId: jest.fn(() => '__name__'),
   getDocs: jest.fn(),
   query: jest.fn((_collection: unknown, ...filters: unknown[]) => filters),
@@ -20,19 +20,25 @@ jest.mock('@/helpers/firebase', () => ({ db: {} }));
 jest.mock('./contourCounts', () => ({ loadContourCounts: jest.fn() }));
 jest.mock('./contourCursors', () => ({ loadContourCursors: jest.fn(), saveContourCursors: jest.fn() }));
 
-const doc = (overrides: Partial<ContourCountryDoc> = {}): ContourCountryDoc => ({
+const SQUARE = encodeRing([
+  [0, 0],
+  [1, 0],
+  [1, 1],
+  [0, 0],
+]);
+
+const doc = (overrides: Partial<CountryDoc> = {}): CountryDoc => ({
   fr: 'Pays',
   en: 'Country',
-  points: [0, 0, 1, 0, 1, 1, 0, 0],
+  ring: SQUARE,
   difficulty: 'intermediate',
   centerLabel: { x: 0.5, y: 0.5 },
   neighbors: [],
-  borderCodes: [],
   ...overrides,
 });
 
-/** A fake `contours` collection: `byDifficulty.intermediate[n - 1]` is the country numbered `n` there. */
-const installDb = (byDifficulty: Record<string, string[]>, byCode: Record<string, ContourCountryDoc> = {}) => {
+/** A fake `countries` collection: `byDifficulty.intermediate[n - 1]` is the country numbered `n` there. */
+const installDb = (byDifficulty: Record<string, string[]>, byCode: Record<string, CountryDoc> = {}) => {
   jest.mocked(getDocs).mockImplementation((async (filters: Filter[]) => {
     const value = (field: string) => filters.find((filter) => filter.field === field)?.value;
     const numbers = value('n') as number[] | undefined;
@@ -175,88 +181,82 @@ describe('fetchContourRoundCodes', () => {
 });
 
 describe('loadRoundData', () => {
-  const FRANCE = doc({ borderCodes: ['ES', 'XX'], fr: 'France', en: 'France' });
-  const SPAIN = doc({ fr: 'Espagne', en: 'Spain' });
-
-  it("reads the country's document, then those of the countries around it", async () => {
-    installDb({}, { FR: FRANCE, ES: SPAIN });
-
-    const round = await loadRoundData('FR');
-
-    expect(round.country.code).toBe('FR');
-    expect(round.country.fr).toBe('France');
-    // A neighbor without a silhouette is just not drawn.
-    expect(round.neighborCountries.map((country) => country.code)).toEqual(['ES']);
-    expect(getDocs).toHaveBeenCalledTimes(2);
+  const ES_RING = encodeRing([
+    [1, 0],
+    [2, 0],
+    [2, 1],
+    [1, 0],
+  ]);
+  const FRANCE = doc({
+    fr: 'France',
+    en: 'France',
+    neighbors: [
+      { code: 'ES', fr: 'Espagne', en: 'Spain', ring: ES_RING, x: 0.1, y: 0.9 },
+      { code: 'BE', fr: 'Belgique', en: 'Belgium', ring: SQUARE },
+      { code: 'GB', fr: 'Royaume-Uni', en: 'United Kingdom', x: 0.5, y: 0.1 },
+    ],
+    capital: { name: 'Paris', lon: 2.35, lat: 48.85 },
+    cities: [{ name: 'Lyon', lon: 4.83, lat: 45.76 }],
   });
 
-  it('reads ONE document when it carries the outline of its neighbours', async () => {
-    const migrated = doc({
-      borderCodes: ['ES'],
-      ring: encodeRing([
-        [0, 0],
-        [1, 0],
-        [1, 1],
-        [0, 0],
-      ]),
-      neighborRings: {
-        ES: encodeRing([
-          [1, 0],
-          [2, 0],
-          [2, 1],
-          [1, 0],
-        ]),
-      },
-    });
-    installDb({}, { FR: migrated });
+  it('reads ONE document: the outline, the hints, the backdrop, the capital and the cities are all in it', async () => {
+    installDb({}, { FR: FRANCE });
 
     const round = await loadRoundData('FR');
 
     expect(getDocs).toHaveBeenCalledTimes(1);
+    expect(round.country).toMatchObject({ code: 'FR', fr: 'France', en: 'France', difficulty: 'intermediate' });
     expect(round.country.points).toEqual([
       [0, 0],
       [1, 0],
       [1, 1],
       [0, 0],
     ]);
-    expect(round.neighborCountries.map(({ code, points }) => [code, points])).toEqual([
-      [
-        'ES',
-        [
-          [1, 0],
-          [2, 0],
-          [2, 1],
-          [1, 0],
-        ],
-      ],
+    // The hints are the neighbours with a position, whether they have an outline or not.
+    expect(round.country.neighbors.map(({ code, fr, x, y }) => [code, fr, x, y])).toEqual([
+      ['ES', 'Espagne', 0.1, 0.9],
+      ['GB', 'Royaume-Uni', 0.5, 0.1],
     ]);
+    // The backdrop is the neighbours with an outline, whether they are a hint or not.
+    expect(round.neighborCountries.map(({ code }) => code)).toEqual(['ES', 'BE']);
+    expect(round.neighborCountries[0].points).toEqual([
+      [1, 0],
+      [2, 0],
+      [2, 1],
+      [1, 0],
+    ]);
+    expect(round.country.capital).toEqual({ name: 'Paris', longitude: 2.35, latitude: 48.85 });
+    expect(round.country.cities).toEqual([{ name: 'Lyon', longitude: 4.83, latitude: 45.76 }]);
   });
 
-  it('keeps what it read: the same round again, or another one around the same countries, reads nothing more', async () => {
-    installDb({}, { FR: FRANCE, ES: SPAIN, PT: doc({ borderCodes: ['ES', 'XX'] }) });
+  it('keeps what it read: the same round again reads nothing more, another round reads its own document', async () => {
+    installDb({}, { FR: FRANCE, PT: doc() });
 
     const first = await loadRoundData('FR');
     expect(await loadRoundData('FR')).toBe(first);
-    expect(jest.mocked(getDocs)).toHaveBeenCalledTimes(2);
+    expect(jest.mocked(getDocs)).toHaveBeenCalledTimes(1);
 
     await loadRoundData('PT');
-    // PT itself: one query; ES and the absent XX are already known.
-    expect(jest.mocked(getDocs)).toHaveBeenCalledTimes(3);
+    expect(jest.mocked(getDocs)).toHaveBeenCalledTimes(2);
   });
 
-  it('reads a country with many borders in queries of 30 documents', async () => {
-    const codes = Array.from({ length: 35 }, (_, index) => `B${index}`);
-    installDb({}, { RU: doc({ borderCodes: codes }), ...Object.fromEntries(codes.map((code) => [code, doc()])) });
+  it('reads nothing more for a country the draw already brought whole', async () => {
+    installDb({ intermediate: SIX });
+    const codes = await fetchContourRoundCodes({ difficulty: 'intermediate', rounds: 2 });
+    const reads = jest.mocked(getDocs).mock.calls.length;
 
-    const round = await loadRoundData('RU');
+    const round = await loadRoundData(codes[0]);
 
-    expect(round.neighborCountries).toHaveLength(35);
-    // The country, then 30 + 5 neighbors.
-    expect(jest.mocked(getDocs)).toHaveBeenCalledTimes(3);
+    expect(round.country.code).toBe(codes[0]);
+    expect(jest.mocked(getDocs)).toHaveBeenCalledTimes(reads);
   });
 
-  it('rejects for a country without a document, and forgets the failure', async () => {
+  it('rejects for a country without a document or without a silhouette, and forgets the failure', async () => {
     installDb({}, {});
+    await expect(loadRoundData('ZZ')).rejects.toThrow('No silhouette for ZZ');
+
+    installDb({}, { ZZ: { fr: 'Zed', en: 'Zed' } });
+    clearContourDocuments();
     await expect(loadRoundData('ZZ')).rejects.toThrow('No silhouette for ZZ');
 
     installDb({}, { ZZ: doc() });
@@ -268,7 +268,7 @@ describe('loadRoundData', () => {
     jest.mocked(getDocs).mockRejectedValueOnce(new Error('offline'));
     await expect(loadRoundData('FR')).rejects.toThrow('offline');
 
-    installDb({}, { FR: FRANCE, ES: SPAIN });
+    installDb({}, { FR: FRANCE });
     expect((await loadRoundData('FR')).country.code).toBe('FR');
   });
 });

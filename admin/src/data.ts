@@ -10,11 +10,11 @@ import {
   type WriteBatch,
 } from 'firebase/firestore';
 
-import { contourRingFields, contoursNeedingRings } from '@/data/firestore/contourRings';
+import { countryContourFields, contoursToMerge } from '@/data/firestore/countryContours';
 import { planCountryChange } from '@/data/firestore/denormalize';
 import { planJobChange, planRiddleChange } from '@/data/firestore/denormalizeClues';
 import { CLUES_NUMBERING, cluesCategory, COMPASS_NUMBERING, planRegroup } from '@/data/firestore/numbering';
-import { contourFromDoc } from '@/data/firestore/read';
+import { contourFromDoc, hasSilhouette } from '@/data/firestore/read';
 import { normalizeSyllable } from '@/data/firestore/riddles';
 import {
   CLUES_COUNTS_DOC,
@@ -44,7 +44,8 @@ import { readSnapshot, writeSnapshot } from './snapshotStore';
 type Cache = {
   places: Record<string, PlaceDoc>;
   countries: Record<string, CountryDoc>;
-  /** `contours/{code}`: one document per silhouette. */
+  /** `contours/{code}`: the previous home of the silhouettes. TEMPORARY: only read as the source of the merge into
+   * the country documents (`mergeContoursIntoCountries`), then dropped with the collection. */
   contours: Record<string, ContourCountryDoc>;
   /** `charadeRiddles`, flattened to `syllable -> riddle`. */
   riddles: Record<string, string | null>;
@@ -139,9 +140,11 @@ export const data = (): Cache => {
   return cache;
 };
 
-/** Every country's silhouette, decoded once (invalidated by any contour write). */
+/** Every country's silhouette, decoded once (invalidated by any country write). */
 export const contours = (): ContourCountry[] => {
-  contoursMemo ??= Object.entries(data().contours).map(([code, contour]) => contourFromDoc(code, contour));
+  contoursMemo ??= Object.entries(data().countries).flatMap(([code, country]) =>
+    hasSilhouette(country) ? [contourFromDoc(code, country)] : [],
+  );
   return contoursMemo;
 };
 
@@ -159,10 +162,10 @@ export const putPlace = async (key: string, value: PlaceDoc): Promise<void> => {
   await bumpVersion();
 };
 
-/** Rewrites `contours/{code}` (a neighbor moved, the label anchor moved...). */
-export const putContour = async (code: string, value: ContourCountryDoc): Promise<void> => {
-  await setDoc(doc(db, COLLECTIONS.contours, code), value);
-  data().contours[code] = value;
+/** Rewrites `countries/{code}` (a neighbor moved, the label anchor moved...). */
+export const putCountry = async (code: string, value: CountryDoc): Promise<void> => {
+  await setDoc(doc(db, COLLECTIONS.countries, code), value);
+  data().countries[code] = value;
   contoursMemo = null;
   persist();
   await bumpVersion();
@@ -207,26 +210,28 @@ const commitInBatches = async (operations: ((batch: WriteBatch) => void)[]): Pro
   }
 };
 
-// --- One-off: encoded outlines, neighbours embedded ----------------------------------------------------------
+// --- One-off: the silhouettes move from `contours/` into the country documents ---------------------------------
 
-/** True while some silhouette lacks (up to date) its encoded `ring` and the `neighborRings` copied from its neighbours. */
-export const contourRingsPending = (): boolean => contoursNeedingRings(data().contours).length > 0;
+/** True while some silhouette of the old `contours/` collection is not in its country document yet. TEMPORARY. */
+export const contourMergePending = (): boolean => contoursToMerge(data().contours, data().countries).length > 0;
 
 /**
- * Adds `ring` and `neighborRings` to the silhouettes that lack them (merge: nothing else is touched), so a game
- * round reads ONE document. Computed from the loaded documents, written in batches; safe to run again.
+ * Copies each silhouette of `contours/{code}` into `countries/{code}` (merge: nothing else in the country is
+ * touched): outline, difficulty, label anchor, position, capital, cities and ONE list of neighbours (hints with
+ * their position, backdrop with their outline). Computed from the loaded documents, written in batches; safe to
+ * run again. TEMPORARY, with the collection it reads.
  */
-export const encodeContourRings = async (onProgress: (done: number, total: number) => void): Promise<void> => {
-  const docs = data().contours;
-  const codes = contoursNeedingRings(docs);
-  const fields = Object.fromEntries(codes.map((code) => [code, contourRingFields(docs[code], docs)]));
+export const mergeContoursIntoCountries = async (onProgress: (done: number, total: number) => void): Promise<void> => {
+  const { contours: old, countries } = data();
+  const codes = contoursToMerge(old, countries);
+  const fields = Object.fromEntries(codes.map((code) => [code, countryContourFields(old[code], old, countries)]));
   onProgress(0, codes.length);
   await commitInBatches(
     codes.map(
-      (code) => (batch: WriteBatch) => batch.set(doc(db, COLLECTIONS.contours, code), fields[code], { merge: true }),
+      (code) => (batch: WriteBatch) => batch.set(doc(db, COLLECTIONS.countries, code), fields[code], { merge: true }),
     ),
   );
-  for (const code of codes) Object.assign(docs[code], fields[code]);
+  for (const code of codes) Object.assign(countries[code], fields[code]);
   contoursMemo = null;
   persist();
   onProgress(codes.length, codes.length);
@@ -236,10 +241,11 @@ export const encodeContourRings = async (onProgress: (done: number, total: numbe
 
 /**
  * Writes `next` as `countries/{code}` and rewrites, in the same run of batches, every copy of it: the
- * country of each of its places and the names in the contours that cite it (see `planCountryChange`).
+ * country of each of its places and the names in the other countries that cite it as a neighbour (see
+ * `planCountryChange`).
  */
 export const applyCountryChange = async (code: string, next: CountryDoc): Promise<void> => {
-  const plan = planCountryChange(code, next, data().places, data().contours);
+  const plan = planCountryChange(code, next, data().places, data().countries);
   await commitInBatches([
     (batch) => batch.set(doc(db, COLLECTIONS.countries, code), next),
     ...Object.entries(plan.places).map(
@@ -247,15 +253,15 @@ export const applyCountryChange = async (code: string, next: CountryDoc): Promis
         (batch: WriteBatch) =>
           batch.update(doc(db, COLLECTIONS.places, key), { country: place.country }),
     ),
-    ...Object.entries(plan.contours).map(
-      ([contourCode, contour]) =>
+    ...Object.entries(plan.countries).map(
+      ([otherCode, other]) =>
         (batch: WriteBatch) =>
-          batch.set(doc(db, COLLECTIONS.contours, contourCode), contour),
+          batch.set(doc(db, COLLECTIONS.countries, otherCode), other),
     ),
   ]);
   data().countries[code] = next;
   Object.assign(data().places, plan.places);
-  Object.assign(data().contours, plan.contours);
+  Object.assign(data().countries, plan.countries);
   contoursMemo = null;
   persist();
 };

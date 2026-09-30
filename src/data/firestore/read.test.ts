@@ -1,5 +1,15 @@
-import { cluesFromDoc, compassFromDoc, contourFromDoc, roundCountryFromDoc, unflattenPoints } from './read';
-import type { ContourCountryDoc, PlaceDoc } from './types';
+import { encodeRing } from './polyline';
+import {
+  backdropFromDoc,
+  cluesFromDoc,
+  compassFromDoc,
+  contourFromDoc,
+  hasSilhouette,
+  roundCountryFromDoc,
+  unflattenPoints,
+  type SilhouetteCountryDoc,
+} from './read';
+import type { PlaceDoc } from './types';
 
 const paris: PlaceDoc = {
   name: 'Paris',
@@ -117,31 +127,92 @@ describe('cluesFromDoc', () => {
   });
 });
 
-const franceDoc: ContourCountryDoc = {
-  points: [0, 0, 1, 1, 0, 0],
+const OUTLINE = [
+  [0, 0],
+  [1, 1],
+  [0, 0],
+] as [number, number][];
+
+const franceDoc: SilhouetteCountryDoc = {
+  ring: encodeRing(OUTLINE),
   difficulty: 'easy',
   centerLabel: { x: 0.5, y: 0.5 },
-  neighbors: [{ type: 'country', code: 'ES', x: 0.3, y: 0.9, fr: 'Espagne', en: 'Spain' }],
+  neighbors: [
+    {
+      code: 'ES',
+      fr: 'Espagne',
+      en: 'Spain',
+      ring: encodeRing([
+        [5, 5],
+        [6, 6],
+        [5, 5],
+      ]),
+      x: 0.3,
+      y: 0.9,
+    },
+    {
+      code: 'BE',
+      fr: 'Belgique',
+      en: 'Belgium',
+      ring: encodeRing([
+        [7, 7],
+        [8, 8],
+        [7, 7],
+      ]),
+    },
+    { code: 'GB', fr: 'Royaume-Uni', en: 'United Kingdom', x: 0.5, y: 0.1 },
+  ],
   fr: 'France',
   en: 'France',
-  borderCodes: ['ES'],
   n: 1,
   capital: { name: 'Paris', lon: 2.35, lat: 48.85 },
   cities: [{ name: 'Lyon', lon: 4.83, lat: 45.76 }],
 };
 
+describe('hasSilhouette', () => {
+  it('is true for a country carrying the outline, difficulty, label anchor and neighbours', () => {
+    expect(hasSilhouette(franceDoc)).toBe(true);
+  });
+
+  it('is false as soon as one of them is missing', () => {
+    expect(hasSilhouette({ fr: 'Ile', en: 'Isle' })).toBe(false);
+    expect(hasSilhouette({ ...franceDoc, ring: undefined })).toBe(false);
+    expect(hasSilhouette({ ...franceDoc, difficulty: undefined })).toBe(false);
+    expect(hasSilhouette({ ...franceDoc, centerLabel: undefined })).toBe(false);
+    expect(hasSilhouette({ ...franceDoc, neighbors: undefined })).toBe(false);
+  });
+});
+
 describe('contourFromDoc', () => {
-  it('builds the outline the board draws', () => {
+  it('builds the outline the board draws, with the neighbours that are hints (those with a position)', () => {
     expect(contourFromDoc('FR', franceDoc)).toEqual({
       code: 'FR',
-      points: [
-        [0, 0],
-        [1, 1],
-        [0, 0],
+      points: OUTLINE,
+      neighbors: [
+        { type: 'country', code: 'ES', x: 0.3, y: 0.9, fr: 'Espagne', en: 'Spain' },
+        { type: 'country', code: 'GB', x: 0.5, y: 0.1, fr: 'Royaume-Uni', en: 'United Kingdom' },
       ],
-      neighbors: franceDoc.neighbors,
       centerLabel: { x: 0.5, y: 0.5 },
       difficulty: 'easy',
+    });
+  });
+});
+
+describe('backdropFromDoc', () => {
+  it('draws the neighbours that carry an outline, whether they are a hint or not', () => {
+    const backdrop = backdropFromDoc(franceDoc);
+
+    expect(backdrop.map(({ code }) => code)).toEqual(['ES', 'BE']);
+    expect(backdrop[1]).toEqual({
+      code: 'BE',
+      points: [
+        [7, 7],
+        [8, 8],
+        [7, 7],
+      ],
+      neighbors: [],
+      centerLabel: { x: 0.5, y: 0.5 },
+      difficulty: 'intermediate',
     });
   });
 });

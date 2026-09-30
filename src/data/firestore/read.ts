@@ -1,8 +1,17 @@
-import type { CluePlace, ContourCountry, ContourPlace, ContourRoundCountry, Place } from '@/types';
+import type {
+  CluePlace,
+  ContourCenterLabel,
+  ContourCountry,
+  ContourNamedNeighbor,
+  ContourPlace,
+  ContourRoundCountry,
+  Difficulty,
+  Place,
+} from '@/types';
 
 import { cluesCategory } from './numbering';
 import { decodeRing } from './polyline';
-import type { CompassDoc, ContourCountryDoc, ContourPlaceDoc, PlaceDoc } from './types';
+import type { CompassDoc, CountryDoc, CountryNeighborDoc, ContourPlaceDoc, PlaceDoc } from './types';
 
 /** `[lon, lat, lon, lat, ...]` back to `[[lon, lat], ...]` (Firestore has no nested arrays). */
 export const unflattenPoints = (flat: readonly number[]): [number, number][] =>
@@ -54,15 +63,52 @@ export const cluesFromDoc = (key: string, doc: PlaceDoc & { clues: NonNullable<P
   };
 };
 
-/** `ContourCountry` (what the board draws) from a `contours/{code}` document. */
-export const contourFromDoc = (code: string, doc: ContourCountryDoc): ContourCountry => ({
+/** A country document with a silhouette: the fields the board needs are all there. */
+export type SilhouetteCountryDoc = CountryDoc & {
+  ring: string;
+  difficulty: Difficulty;
+  centerLabel: ContourCenterLabel;
+  neighbors: CountryNeighborDoc[];
+};
+
+export const hasSilhouette = (doc: CountryDoc): doc is SilhouetteCountryDoc =>
+  doc.ring !== undefined &&
+  doc.difficulty !== undefined &&
+  doc.centerLabel !== undefined &&
+  doc.neighbors !== undefined;
+
+const DEFAULT_CENTER_LABEL: ContourCenterLabel = { x: 0.5, y: 0.5 };
+
+/** The neighbours placed on the board as hints: the entries with a position. */
+const hintNeighborsOf = (doc: SilhouetteCountryDoc): ContourNamedNeighbor[] =>
+  doc.neighbors.flatMap(({ code, fr, en, x, y }) =>
+    x !== undefined && y !== undefined ? [{ type: 'country' as const, code, x, y, fr, en }] : [],
+  );
+
+/** `ContourCountry` (what the board draws) from the `countries/{code}` document of a country with a silhouette. */
+export const contourFromDoc = (code: string, doc: SilhouetteCountryDoc): ContourCountry => ({
   code,
-  // The encoded ring when the document has one, else the flat points (not migrated yet).
-  points: doc.ring === undefined ? unflattenPoints(doc.points) : decodeRing(doc.ring),
-  neighbors: doc.neighbors,
+  points: decodeRing(doc.ring),
+  neighbors: hintNeighborsOf(doc),
   centerLabel: doc.centerLabel,
   difficulty: doc.difficulty,
 });
+
+/** The countries drawn around the round's country as a backdrop: the neighbours carrying an outline. */
+export const backdropFromDoc = (doc: SilhouetteCountryDoc): ContourCountry[] =>
+  doc.neighbors.flatMap(({ code, ring }) =>
+    ring === undefined
+      ? []
+      : [
+          {
+            code,
+            points: decodeRing(ring),
+            neighbors: [],
+            centerLabel: DEFAULT_CENTER_LABEL,
+            difficulty: 'intermediate' as const,
+          },
+        ],
+  );
 
 const contourPlaceFromDoc = ({ name, lon, lat }: ContourPlaceDoc): ContourPlace => ({
   name,
@@ -70,13 +116,13 @@ const contourPlaceFromDoc = ({ name, lon, lat }: ContourPlaceDoc): ContourPlace 
   latitude: lat,
 });
 
-/** What a Silhouette round needs about its country (`ContourRoundCountry`) from its `contours/{code}`
- * document: names, capital and cities are in it, nothing is looked up elsewhere. */
-export const roundCountryFromDoc = (code: string, doc: ContourCountryDoc): ContourRoundCountry => ({
+/** What a Silhouette round needs about its country (`ContourRoundCountry`) from its `countries/{code}` document:
+ * names, capital and cities are in it, nothing is looked up elsewhere. */
+export const roundCountryFromDoc = (code: string, doc: SilhouetteCountryDoc): ContourRoundCountry => ({
   ...contourFromDoc(code, doc),
+  neighbors: hintNeighborsOf(doc),
   fr: doc.fr,
   en: doc.en,
-  neighbors: doc.neighbors,
   capital: doc.capital ? contourPlaceFromDoc(doc.capital) : null,
   cities: (doc.cities ?? []).map(contourPlaceFromDoc),
 });

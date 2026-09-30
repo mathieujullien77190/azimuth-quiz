@@ -98,7 +98,7 @@ l'utiliser** (onglet « Show code ») plutôt que le JSX reconstruit depuis les 
 ## Données des lieux
 
 Toutes les données du jeu (lieux, pays, silhouettes, devinettes, métiers) vivent dans **Firestore** (collections
-`places`, `countries`, `contours`, `charadeRiddles`, `personalityJobs`, `meta`) : plus aucun fichier de données dans
+`places`, `countries` (avec les silhouettes), `charadeRiddles`, `personalityJobs`, `meta` ; l'ancienne collection `contours` est temporaire) : plus aucun fichier de données dans
 l'appli. Pour les parcourir/éditer, une petite app d'admin (React + Vite) est déployée sur GitHub Pages, à côté du jeu :
 
 🔗 **[Éditeur de lieux](https://mathieujullien77190.github.io/azimuth-quiz/admin/)**

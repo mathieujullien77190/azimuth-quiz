@@ -1,5 +1,5 @@
 import { countrySnapshot, planCountryChange } from './denormalize';
-import type { ContourCountryDoc, CountryDoc, PlaceDoc } from './types';
+import type { CountryDoc, CountryNeighborDoc, PlaceDoc } from './types';
 
 const france: CountryDoc = {
   fr: 'France',
@@ -20,14 +20,10 @@ const place = (code: string, country?: PlaceDoc['country']): PlaceDoc => ({
   ...(country && { country }),
 });
 
-const contour = (fr: string, neighbors: ContourCountryDoc['neighbors'] = []): ContourCountryDoc => ({
+const country = (fr: string, neighbors?: CountryNeighborDoc[]): CountryDoc => ({
   fr,
   en: fr,
-  points: [],
-  difficulty: 'easy',
-  centerLabel: { x: 0.5, y: 0.5 },
-  neighbors,
-  borderCodes: [],
+  ...(neighbors && { neighbors }),
 });
 
 describe('countrySnapshot', () => {
@@ -53,33 +49,41 @@ describe('planCountryChange', () => {
 
     expect(Object.keys(plan.places).sort()).toEqual(['a', 'c']);
     expect(plan.places.a.country).toEqual(countrySnapshot(renamed));
-    expect(plan.contours).toEqual({});
+    expect(plan.countries).toEqual({});
   });
 
-  it('rewrites the contour of the country and every contour citing it as a neighbor', () => {
-    const cite = (fr: string) => ({ type: 'country' as const, code: 'FR', x: 0, y: 0, fr, en: fr });
-    const contours = {
-      FR: contour('France'),
-      ES: contour('Espagne', [
-        cite('France'),
-        { type: 'country' as const, code: 'PT', x: 0, y: 0, fr: 'Portugal', en: 'Portugal' },
+  it('rewrites the names in every country document citing it as a neighbour, keeping the rest of the entry', () => {
+    const cite = (fr: string, extra: Partial<CountryNeighborDoc> = {}): CountryNeighborDoc => ({
+      code: 'FR',
+      fr,
+      en: fr,
+      ...extra,
+    });
+    const countries = {
+      FR: country('France', [{ code: 'ES', fr: 'Espagne', en: 'Spain' }]),
+      ES: country('Espagne', [
+        cite('France', { ring: 'abc', x: 0.1, y: 0.2 }),
+        { code: 'PT', fr: 'Portugal', en: 'Portugal' },
       ]),
-      IT: contour('Italie', [{ ...cite('République française'), en: 'France' }]),
-      DE: contour('Allemagne'),
+      IT: country('Italie', [{ ...cite('République française'), en: 'France' }]),
+      DE: country('Allemagne'),
     };
 
-    const plan = planCountryChange('FR', renamed, {}, contours);
+    const plan = planCountryChange('FR', renamed, {}, countries);
 
-    expect(Object.keys(plan.contours).sort()).toEqual(['ES', 'FR']);
-    expect(plan.contours.FR).toMatchObject({ fr: 'République française', en: 'France' });
-    expect(plan.contours.ES.neighbors.map((neighbor) => neighbor.fr)).toEqual(['République française', 'Portugal']);
-    expect(plan.contours.ES.fr).toBe('Espagne');
+    // FR itself is written by the caller; IT already carries the new names; DE cites nobody.
+    expect(Object.keys(plan.countries)).toEqual(['ES']);
+    expect(plan.countries.ES.neighbors).toEqual([
+      { code: 'FR', fr: 'République française', en: 'France', ring: 'abc', x: 0.1, y: 0.2 },
+      { code: 'PT', fr: 'Portugal', en: 'Portugal' },
+    ]);
+    expect(plan.countries.ES.fr).toBe('Espagne');
   });
 
   it('does nothing when nothing a copy carries changed', () => {
-    expect(planCountryChange('FR', france, { a: places.a }, { FR: contour('France') })).toEqual({
+    expect(planCountryChange('FR', france, { a: places.a }, { FR: country('France') })).toEqual({
       places: {},
-      contours: {},
+      countries: {},
     });
   });
 });

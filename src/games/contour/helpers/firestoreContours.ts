@@ -1,8 +1,7 @@
 import { collection, documentId, getDocs, query, where } from 'firebase/firestore';
 
-import { decodeRing } from '@/data/firestore/polyline';
-import { contourFromDoc, roundCountryFromDoc } from '@/data/firestore/read';
-import { COLLECTIONS, type ContourCountryDoc } from '@/data/firestore/types';
+import { backdropFromDoc, hasSilhouette, roundCountryFromDoc } from '@/data/firestore/read';
+import { COLLECTIONS, type CountryDoc } from '@/data/firestore/types';
 import type { ContourCountry, ContourRoundCountry, ContourSettings } from '@/types';
 
 import { db } from '@/helpers/firebase';
@@ -17,9 +16,9 @@ import { loadContourCursors, saveContourCursors } from './contourCursors';
 /** Firestore's cap on the values of one `in` filter. */
 const IN_LIMIT = 30;
 
-/** The `contours/{code}` documents read so far in this session (`null`: known to be absent, so it is not
- * asked again). A silhouette weighs a few KB: a session only ever holds the rounds it played. */
-const documents = new Map<string, ContourCountryDoc | null>();
+/** The `countries/{code}` documents read so far in this session (`null`: known to be absent, so it is not asked
+ * again). A silhouette country weighs a few KB: a session only ever holds the rounds it played. */
+const documents = new Map<string, CountryDoc | null>();
 
 const chunked = <T>(items: T[]): T[][] =>
   Array.from({ length: Math.ceil(items.length / IN_LIMIT) }, (_, index) =>
@@ -30,8 +29,8 @@ const chunked = <T>(items: T[]): T[][] =>
 const remember = (snapshots: Awaited<ReturnType<typeof getDocs>>[]): string[] => {
   const ids = snapshots.flatMap((snapshot) => snapshot.docs.map((document) => document.id));
   for (const snapshot of snapshots)
-    for (const document of snapshot.docs) documents.set(document.id, document.data() as ContourCountryDoc);
-  console.log(`[firestore] contours: ${ids.length} document(s) received`, ids);
+    for (const document of snapshot.docs) documents.set(document.id, document.data() as CountryDoc);
+  console.log(`[firestore] countries: ${ids.length} document(s) received`, ids);
   return ids;
 };
 
@@ -40,9 +39,9 @@ const remember = (snapshots: Awaited<ReturnType<typeof getDocs>>[]): string[] =>
 const readDocuments = async (codes: string[]): Promise<void> => {
   const missing = [...new Set(codes)].filter((code) => !documents.has(code));
   if (missing.length === 0) return;
-  const contours = collection(db, COLLECTIONS.contours);
+  const countries = collection(db, COLLECTIONS.countries);
   const snapshots = await Promise.all(
-    chunked(missing).map((chunk) => getDocs(query(contours, where(documentId(), 'in', chunk)))),
+    chunked(missing).map((chunk) => getDocs(query(countries, where(documentId(), 'in', chunk)))),
   );
   remember(snapshots);
   for (const code of missing) if (!documents.has(code)) documents.set(code, null);
@@ -60,8 +59,8 @@ const repeatTo = (codes: string[], length: number): string[] => {
 };
 
 /**
- * Draws the game's countries from Firestore, the same way Compass and Clues draw their places: silhouettes
- * are numbered `n` = 1..size inside their difficulty group (shuffled order, fixed once — see
+ * Draws the game's countries from Firestore, the same way Compass and Clues draw their places: silhouette
+ * countries are numbered `n` = 1..size inside their difficulty group (shuffled order, fixed once — see
  * `data/firestore/numbering.ts`), the sizes are in `meta/contourCounts`, and this device has a cursor per
  * difficulty: a game takes the next countries from there and moves it on, wrapping at the end, so a group is
  * gone through completely before a country comes back; the first time it starts at a random country. One
@@ -90,7 +89,7 @@ export const fetchContourRoundCodes = async (
     const numbers = Array.from({ length: count }, (_, index) => ((start + taken + index) % size) + 1);
     taken += count;
     const snapshot = await getDocs(
-      query(collection(db, COLLECTIONS.contours), where('difficulty', '==', difficulty), where('n', 'in', numbers)),
+      query(collection(db, COLLECTIONS.countries), where('difficulty', '==', difficulty), where('n', 'in', numbers)),
     );
     codes.push(...remember([snapshot]));
   }
@@ -108,14 +107,10 @@ export type RoundData = { country: ContourRoundCountry; neighborCountries: Conto
 const rounds = new Map<string, Promise<RoundData>>();
 
 /**
- * Everything one round needs, from Firestore: the country's document, which carries the outline of every country
- * it borders (`neighborRings`, encoded polylines) — ONE read per round. Shared and kept for the session, so the
- * next round can be loaded while the current one is played (`useRoundData`) and a round change shows no wait. A
- * failed load is forgotten: the next call tries again.
- *
- * TEMPORARY fallback: a document without `neighborRings` (the polyline migration has not reached it) is read the
- * old way — then the documents of its `borderCodes`. Delete that branch, `borderCodes` and the flat `points` once
- * the migration is confirmed everywhere.
+ * Everything one round needs, from ONE document: the country's `countries/{code}`, which carries its outline,
+ * its neighbours (hints with their position, backdrop with their outline), capital and cities. Shared and kept
+ * for the session, so the next round can be loaded while the current one is played (`useRoundData`) and a round
+ * change shows no wait. A failed load is forgotten: the next call tries again.
  */
 export const loadRoundData = (code: string): Promise<RoundData> => {
   let round = rounds.get(code);
@@ -123,28 +118,8 @@ export const loadRoundData = (code: string): Promise<RoundData> => {
     round = (async () => {
       await readDocuments([code]);
       const document = documents.get(code);
-      if (!document) throw new Error(`No silhouette for ${code}`);
-      if (document.neighborRings !== undefined) {
-        return {
-          country: roundCountryFromDoc(code, document),
-          neighborCountries: Object.entries(document.neighborRings).map(([neighbor, ring]) => ({
-            code: neighbor,
-            points: decodeRing(ring),
-            neighbors: [],
-            centerLabel: { x: 0.5, y: 0.5 },
-            difficulty: document.difficulty,
-          })),
-        };
-      }
-      // TEMPORARY (see above): the neighbours as documents of their own.
-      await readDocuments(document.borderCodes);
-      return {
-        country: roundCountryFromDoc(code, document),
-        neighborCountries: document.borderCodes.flatMap((neighbor) => {
-          const neighborDocument = documents.get(neighbor);
-          return neighborDocument ? [contourFromDoc(neighbor, neighborDocument)] : [];
-        }),
-      };
+      if (!document || !hasSilhouette(document)) throw new Error(`No silhouette for ${code}`);
+      return { country: roundCountryFromDoc(code, document), neighborCountries: backdropFromDoc(document) };
     })();
     rounds.set(code, round);
     round.catch(() => rounds.delete(code));

@@ -81,8 +81,8 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Silhouettes : un document par pays (contour, voisins, capitale et villes), lu par manche au lieu de
-    // charger toute la liste des pays.
+    // Silhouettes (ancien emplacement, TEMPORAIRE) : elles vivent désormais dans le document de leur pays
+    // (`countries/{code}`) ; cette collection ne sert plus que de source à la fusion faite par l'admin.
     match /contours/{code} {
       allow read: if true;
       allow write: if isAdmin();

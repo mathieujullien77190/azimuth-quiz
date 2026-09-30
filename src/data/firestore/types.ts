@@ -92,15 +92,18 @@ export type PlaceDoc = {
 
 export type FlagColorDoc = { id: ClueFlagColorId; hex: string; percent: number };
 
-export type ContourDoc = {
-  /** Flat closed ring: `[lon, lat, lon, lat, ...]`. */
-  points: number[];
-  neighbors?: ContourNeighbor[];
-  centerLabel?: ContourCenterLabel;
-  difficulty?: Difficulty;
-};
+/**
+ * A neighbour of a silhouette, in the country's own document (`CountryDoc.neighbors`), names copied in so the
+ * game never looks a country up. Two independent roles, told apart by what the entry carries:
+ * - `ring` (the neighbour's outline as an encoded polyline, copied as is so the shared edges stay exact): the
+ *   country shares a land border, the board draws it as a backdrop and splits the outline into coast/border;
+ * - `x`/`y` (a fraction of the board, see `ContourNeighbor`): the neighbour is a hint placed on the board.
+ * A country can be a backdrop without being a hint and the other way round.
+ */
+export type CountryNeighborDoc = { code: string; fr: string; en: string; ring?: string; x?: number; y?: number };
 
-/** `countries/{ISO code}`. */
+/** `countries/{ISO code}`: the country's data, plus everything one Silhouette round needs when it has a silhouette
+ * (`ring`, `difficulty`, `centerLabel`, `neighbors`, `n`, and the capital and cities offered as hints). */
 export type CountryDoc = {
   fr: string;
   en: string;
@@ -108,9 +111,17 @@ export type CountryDoc = {
   currency?: string;
   currencySymbol?: string;
   phoneCode?: string;
-  contour?: ContourDoc;
   /** ISO codes of the land neighbors, sorted, absent for an island. */
   borders?: string[];
+  /** Own outline as an encoded polyline (`polyline.ts`): present only on a country with a silhouette. */
+  ring?: string;
+  difficulty?: Difficulty;
+  centerLabel?: ContourCenterLabel;
+  neighbors?: CountryNeighborDoc[];
+  capital?: ContourPlaceDoc;
+  cities?: ContourPlaceDoc[];
+  /** Position 1..size inside the country's difficulty group, only on a country with a silhouette. */
+  n?: number;
 };
 
 /** `charadeRiddles/{normalized syllable}`. */
@@ -144,10 +155,9 @@ export type ContourPlaceDoc = { name: string; lon: number; lat: number };
 export type ContourNeighborDoc = ContourNeighbor & { fr: string; en: string };
 
 /**
- * `contours/{ISO code}`: everything one Silhouette round needs about its country in a single document
- * (moved out of `countries/{code}.contour`, which the countries list read in full). Names are copied in,
- * and so are the capital and the cities offered as hints (chosen once by `buildContourDocs`, as the game
- * used to choose them at every round). `n` is the position 1..size inside the country's difficulty group.
+ * `contours/{ISO code}`: the previous home of a silhouette (one document per country). TEMPORARY: the silhouettes
+ * now live in `countries/{code}` (see `CountryDoc`); this collection only stays as the source of the one-off
+ * merge (`countryContourFields`) and goes away with it. `n` is the position 1..size inside the difficulty group.
  */
 export type ContourCountryDoc = {
   fr: string;
