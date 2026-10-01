@@ -15,7 +15,7 @@
       }
     },
     "android": {
-      "package": "com.mathieujullien77190.azimuthquiz",
+      "package": "com.azimuthquiz.app",
       "adaptiveIcon": {
         "backgroundColor": "#0B1220",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -26,7 +26,8 @@
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
-      ]
+      ],
+      "versionCode": 3
     },
     "web": {
       "favicon": "./assets/favicon.png",

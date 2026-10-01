@@ -85,6 +85,25 @@ C'est ce que montrent l'écran Réglages et l'en-tête de l'admin : « v2.55.3 �
 `versionLabel` de `src/helpers/version.ts`). Le dire à l'utilisateur dans le compte rendu (« 2.56.0, le redFox 🦊 »). Le nom
 d'animal ne va ni dans `package.json` ni dans `package-lock.json`.
 
+## Android (Play Console) : à garder en tête au moment de livrer
+
+Le push ne construit ni ne publie l'app Android (c'est `eas build` puis Play Console, à la demande de l'utilisateur), mais
+il doit en garder le code cohérent :
+
+- **`expo.android.versionCode` est écrit par EAS** : le profil `production` a `autoIncrement` et `appVersionSource: local`,
+  donc chaque `eas build -p android --profile production` incrémente `versionCode` **dans `app.json`**. Après un build, le
+  fichier est modifié : le **commiter** (sinon le build suivant repart de l'ancien numéro et Play refuse l'import, un
+  `versionCode` doit toujours croître). Il se range avec le commit de version, ou dans un `chore: bump android versionCode`.
+- **Package Android** : `expo.android.package` = `com.azimuthquiz.app`, définitif (Play Console le fige au premier import) :
+  ne jamais le modifier. Le keystore de signature est créé et gardé par EAS pour ce package.
+- **Variables Firebase côté EAS** : `.env` est ignoré par Git, donc le build cloud ne le voit pas. Les 7 variables
+  `EXPO_PUBLIC_FIREBASE_*` sont déclarées dans l'environnement EAS `production` (`npx eas-cli env:list production`) ; sans
+  elles l'app **plante au démarrage** (`getAuth` sans clé API). Une nouvelle variable `EXPO_PUBLIC_*` se crée là aussi
+  (`npx eas-cli env:create production --name … --value … --visibility plaintext`), pas seulement dans `.env`.
+- **Release de test interne** : un `.aab` se dépose à la main dans « Tests internes → Créer une version » (l'outil d'envoi
+  de fichier est limité à 10 Mo) ; ne pas inclure la release précédente si elle plantait ; les notes de version veulent
+  chaque balise `<fr-FR>` sur sa propre ligne.
+
 ## 2. Committer
 
 - **Les changements d'abord, la version à part.** Un ou plusieurs commits pour le travail (un sujet = un commit, voir

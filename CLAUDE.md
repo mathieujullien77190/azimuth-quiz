@@ -226,6 +226,7 @@ exige la facturation Firebase).
   est requis. `.github/workflows/deploy-pages.yml` exporte le jeu, l'admin (`dist/admin/`) et Storybook et les publie a chaque
   push sur `master` (Pages en source « GitHub Actions »).
 - **Version** : `app.json` `expo.version` + un animal par version (`expo.extra.codename`, emoji + nom anglais en camelCase sans espace, ex. 🦉❄️ snowyOwl, affiche par Reglages et l'admin via `versionLabel`) ; le skill `push` en choisit un nouveau a chaque montee.
+- **Android** : package `com.azimuthquiz.app` (definitif), `versionCode` incremente par EAS dans `app.json` a chaque build (a commiter), variables `EXPO_PUBLIC_FIREBASE_*` declarees dans l'environnement EAS `production` (sans elles l'app plante au demarrage) ; details dans le skill `push`.
 - **Skills du projet** (dans le depot, `.claude/skills/`) : `quality-check` (couverture 100 %, structure, Storybook, code
   mort : rapporte sans corriger), `push` (verifier, versionner, committer, pousser), `firestore-data` (modifier les donnees
   Firestore). Les skills `react-structure`, `storybook-story` et `commit-push` sont des skills **personnels** (dossier
