@@ -19,7 +19,6 @@ export const ORBIT_TICK_MS = 50;
 /** Degrees between two points of the equator and of the Greenwich meridian (smooth to the eye at this step). */
 export const GUIDE_STEP = 5;
 export const GUIDE_DASH = '5 4';
-/** The north axis: a line through the middle of the globe, this much longer than its radius, with an "N" at its north end. */
-export const AXIS_RATIO = 1.05;
+/** The north pole is a dot with an "N" next to it. */
 export const AXIS_LABEL_SIZE = 11;
 export const POLE_RADIUS = 3;

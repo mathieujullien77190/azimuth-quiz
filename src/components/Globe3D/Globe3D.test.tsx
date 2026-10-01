@@ -86,7 +86,7 @@ describe('Globe3D — land and guides', () => {
   });
 });
 
-describe('Globe3D — north axis', () => {
+describe('Globe3D — north pole', () => {
   type Node = { type?: string; props?: { r?: number; content?: string | null }; children?: Node[] | null };
   const count = (node: Node, test: (n: Node) => boolean): number =>
     (test(node) ? 1 : 0) + (node.children ?? []).reduce((total, child) => total + count(child, test), 0);
@@ -94,27 +94,27 @@ describe('Globe3D — north axis', () => {
   const isN = (n: Node) => n.type === 'RNSVGTSpan' && n.props?.content === 'N';
   const isPole = (n: Node) => n.type === 'RNSVGCircle' && n.props?.r === POLE_RADIUS;
 
-  it('draws the axis with an N, and a dot at the north pole when it is in front', async () => {
+  it('marks the north pole with a dot and an N, and no line', async () => {
     const { toJSON } = await render(<Globe3D marks={[]} origin={PARIS} size={240} />);
-    expect(count(toJSON() as Node, isLine)).toBe(1);
-    expect(count(toJSON() as Node, isN)).toBe(1);
     expect(count(toJSON() as Node, isPole)).toBe(1);
+    expect(count(toJSON() as Node, isN)).toBe(1);
+    expect(count(toJSON() as Node, isLine)).toBe(0);
   });
 
-  it('loses the dot, not the axis, once the globe is tipped so that the north pole is behind', async () => {
+  it('loses both once the globe is tipped so that the north pole is behind', async () => {
     const createSpy = jest.spyOn(PanResponder, 'create');
     const { toJSON } = await render(<Globe3D marks={[]} origin={PARIS} size={240} />);
     const config = createSpy.mock.calls[createSpy.mock.calls.length - 1][0] as PanConfig;
     await act(() => config.onPanResponderGrant?.({} as never, {} as never));
     await act(() => config.onPanResponderMove?.({} as never, { dx: 0, dy: -4000 } as never));
-    expect(count(toJSON() as Node, isLine)).toBe(1);
     expect(count(toJSON() as Node, isPole)).toBe(0);
+    expect(count(toJSON() as Node, isN)).toBe(0);
     createSpy.mockRestore();
   });
 
   it('can be left out', async () => {
-    const { toJSON } = await render(<Globe3D axis={false} marks={[]} origin={PARIS} size={240} />);
-    expect(count(toJSON() as Node, isLine)).toBe(0);
+    const { toJSON } = await render(<Globe3D marks={[]} north={false} origin={PARIS} size={240} />);
+    expect(count(toJSON() as Node, isPole)).toBe(0);
     expect(count(toJSON() as Node, isN)).toBe(0);
   });
 });

@@ -12,9 +12,9 @@ export type Globe3DProps = {
   /** Draws the land (the world's outline). Without it the globe is a bare ball, which the equator and the Greenwich
    * meridian can still mark. Defaults to true. */
   land?: boolean;
-  /** Draws the north axis (the line the Earth turns on, "N" at its north end, and a dot where the north pole is when it's
-   * in front), so the player can see how the globe is tilted as it turns. Defaults to true. */
-  axis?: boolean;
+  /** Marks the north pole with a dot and an "N" next to it while it is in front, so the player can see how the globe is
+   * tilted as it turns. Defaults to true. */
+  north?: boolean;
   /** Draws the equator (dashed) so that the player can read where the answer is. */
   equator?: boolean;
   /** Draws the Greenwich meridian (dashed). */

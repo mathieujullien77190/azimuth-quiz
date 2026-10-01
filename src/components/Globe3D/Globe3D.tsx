@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { PanResponder, Pressable, Text, View } from 'react-native';
-import Svg, { Circle, G, Line, Path, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, G, Path, Text as SvgText } from 'react-native-svg';
 
 import { PLAYER_LABEL, SATELLITE_EMOJI, SATELLITE_QUIP } from '@/components/EarthSection/constants';
 import { useTheme, useThemedStyles } from '@/themes';
@@ -8,7 +8,6 @@ import type { Coordinates } from '@/types';
 
 import {
   AXIS_LABEL_SIZE,
-  AXIS_RATIO,
   CAPTION_GLOBE,
   END_RADIUS,
   GLOBE_MARGIN,
@@ -55,7 +54,7 @@ export const Globe3D = ({
   origin,
   marks,
   land: showLand = true,
-  axis = true,
+  north = true,
   equator = false,
   greenwich = false,
   satellite: withSatellite = true,
@@ -99,6 +98,9 @@ export const Globe3D = ({
         ? []
         : routePaths(routePoints(origin, item.bearing, item.distanceKm, ROUTE_STEPS), center, cx, cy, radius),
   }));
+  // The north pole is in front of the globe (and so seen) while it is tipped towards us; it is at the top of the outline
+  // when we look at it from the side and closer to the middle the more we look down on it.
+  const northY = cy - radius * Math.cos((center.latitude * Math.PI) / 180);
   const start = screenPoint(origin, center, cx, cy, radius);
   const landD = useMemo(
     () => (showLand ? landPath(LAND_RINGS, center, cx, cy, radius) : ''),
@@ -137,24 +139,9 @@ export const Globe3D = ({
           />
         ))}
 
-        {axis && (
+        {north && center.latitude >= 0 && (
           <>
-            <Line
-              stroke={colors.textMuted}
-              strokeWidth={1.5}
-              x1={cx}
-              x2={cx}
-              y1={cy + radius * AXIS_RATIO}
-              y2={cy - radius * AXIS_RATIO}
-            />
-            {center.latitude >= 0 && (
-              <Circle
-                cx={cx}
-                cy={cy - radius * Math.cos((center.latitude * Math.PI) / 180)}
-                fill={colors.text}
-                r={POLE_RADIUS}
-              />
-            )}
+            <Circle cx={cx} cy={northY} fill={colors.text} r={POLE_RADIUS} stroke={colors.surface} strokeWidth={1} />
             <SvgText
               fill={colors.text}
               fontFamily={typography.heading.fontFamily}
@@ -162,7 +149,7 @@ export const Globe3D = ({
               fontWeight="800"
               textAnchor="start"
               x={cx + POLE_RADIUS + 3}
-              y={cy - radius * AXIS_RATIO + AXIS_LABEL_SIZE / 2}
+              y={northY + AXIS_LABEL_SIZE / 3}
             >
               N
             </SvgText>
