@@ -23,7 +23,8 @@ export const ContourGuessBar = ({
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
   const t = useTranslation();
-  const canSubmit = guessText.trim().length > 0;
+  // Spectators see the turn-holder's text in the field: only what this device typed itself can be validated.
+  const canSubmit = !readOnly && guessText.trim().length > 0;
 
   return (
     <View style={styles.bar}>
@@ -41,7 +42,7 @@ export const ContourGuessBar = ({
           value={guessText}
         />
       </Pressable>
-      {!readOnly && <Button disabled={!canSubmit} label={t.game.validate} onPress={onSubmit} />}
+      <Button disabled={!canSubmit} label={t.game.validate} onPress={onSubmit} />
     </View>
   );
 };

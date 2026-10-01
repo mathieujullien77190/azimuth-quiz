@@ -32,13 +32,13 @@ describe('ContourGuessBar', () => {
     expect(baseProps.onSubmit).not.toHaveBeenCalled();
   });
 
-  it("is read-only on somebody else's turn: shows their text, no validation, and reports a tap", async () => {
+  it("is read-only on somebody else's turn: shows their text, keeps Valider greyed out, and reports a tap", async () => {
     const onReadOnlyPress = jest.fn();
-    const { getByDisplayValue, queryByText } = await render(
+    const { getByDisplayValue, getByRole } = await render(
       <ContourGuessBar {...baseProps} onReadOnlyPress={onReadOnlyPress} readOnly />,
     );
     expect(getByDisplayValue('Fra').props.editable).toBe(false);
-    expect(queryByText('Valider')).toBeNull();
+    expect(getByRole('button', { name: 'Valider' }).props.accessibilityState.disabled).toBe(true);
     await fireEvent.press(getByDisplayValue('Fra'));
     expect(onReadOnlyPress).toHaveBeenCalledTimes(1);
   });

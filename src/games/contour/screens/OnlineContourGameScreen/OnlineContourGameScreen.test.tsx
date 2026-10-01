@@ -248,11 +248,22 @@ describe('OnlineContourGameScreen — the outline gets precise with the hints', 
 });
 
 describe("OnlineContourGameScreen — somebody else's turn (watching)", () => {
-  it('keeps the answer field, read-only, with what the turn-holder types', async () => {
+  it('keeps the answer field, read-only, with what the turn-holder types, and Valider greyed out', async () => {
     setGame({ isMyTurn: false, gameState: gameState({ turnUid: 'max' }), typedByActivePlayer: 'Fran' });
-    const { getByDisplayValue, queryByText } = await renderScreen();
+    const { getByDisplayValue, getByRole } = await renderScreen();
     expect(getByDisplayValue('Fran').props.editable).toBe(false);
-    expect(queryByText('Valider')).toBeNull();
+    expect(getByRole('button', { name: 'Valider' }).props.accessibilityState.disabled).toBe(true);
+  });
+
+  it('says nobody found it, 0 point, once every hint is out and it is not their turn', async () => {
+    setGame({
+      isMyTurn: false,
+      gameState: gameState({ hintsRevealed: FULL_PLAN.length, turnUid: 'max' }),
+      pointsAtStake: 0,
+    });
+    const { getByText, queryByText } = await renderScreen();
+    expect(getByText(t.common.noOneFound)).toBeTruthy();
+    expect(queryByText(t.contourGame.pointsAtStake('0'))).toBeNull();
   });
 
   it('explains it is not their turn when they tap a hint, instead of revealing it', async () => {
@@ -273,10 +284,10 @@ describe("OnlineContourGameScreen — somebody else's turn (watching)", () => {
 });
 
 describe("OnlineContourGameScreen — somebody else's turn", () => {
-  it('has no control and no banner naming the turn-holder', async () => {
+  it('has no active control and no banner naming the turn-holder', async () => {
     setGame({ isMyTurn: false, gameState: gameState({ turnUid: 'max' }) });
-    const { queryByText } = await renderScreen();
-    expect(queryByText('Valider')).toBeNull();
+    const { getByRole, queryByText } = await renderScreen();
+    expect(getByRole('button', { name: 'Valider' }).props.accessibilityState.disabled).toBe(true);
     expect(queryByText(/Au tour de/)).toBeNull();
   });
 
@@ -307,10 +318,10 @@ describe('OnlineContourGameScreen — the round is over', () => {
     expect(getByText(t.game.last)).toBeTruthy();
   });
 
-  it('gives a joiner nothing to press: it waits for the host', async () => {
+  it('gives a joiner nothing to press and no waiting message', async () => {
     over({ isHost: false });
-    const { getByText, queryByText } = await renderScreen();
-    expect(getByText(t.game.waitingForOthers)).toBeTruthy();
+    const { queryByText } = await renderScreen();
+    expect(queryByText(t.game.waitingForOthers)).toBeNull();
     expect(queryByText(t.contourGame.continueLabel)).toBeNull();
   });
 

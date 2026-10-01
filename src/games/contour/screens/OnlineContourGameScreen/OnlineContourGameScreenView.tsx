@@ -18,8 +18,6 @@ import type { OnlineContourGameScreenViewProps } from './types';
 
 import { createStyles } from './OnlineContourGameScreenView.styles';
 
-const noop = () => {};
-
 /**
  * Pur rendu, un seul ecran plein cadre pour les 3 etats (tour actif, en attente, manche revelee) :
  * jamais de swap de composant entre eux. La geometrie du plateau est mesuree ici (`useRoundBoard`,
@@ -74,6 +72,17 @@ export const OnlineContourGameScreenView = ({
   const shownHints = roundOver ? plan.length : hintsRevealed;
   const hintLabels = buildHintLabels(board, plan, shownHints, language);
 
+  // "At stake: 450 points": the number in the main text color, the sentence stays muted.
+  const stakeValue = formatNumber(pointsAtStake);
+  const [stakeBefore, stakeAfter] = t.contourGame.pointsAtStake(stakeValue).split(stakeValue);
+  const stakeLine = (
+    <Text style={styles.pointsAtStake}>
+      {stakeBefore}
+      <Text style={styles.pointsAtStakeValue}>{stakeValue}</Text>
+      {stakeAfter}
+    </Text>
+  );
+
   const footer = roundOver ? (
     <View style={styles.footer}>
       {verdict === 'correct' ? (
@@ -81,20 +90,18 @@ export const OnlineContourGameScreenView = ({
       ) : (
         <NoOneFoundText players={players.map((player) => player.name)} />
       )}
-      {isHost ? (
-        <Button label={isLastRound ? t.game.last : t.contourGame.continueLabel} onPress={onNextRound} />
-      ) : (
-        <Text style={styles.waiting}>{t.game.waitingForOthers}</Text>
-      )}
+      {isHost && <Button label={isLastRound ? t.game.last : t.contourGame.continueLabel} onPress={onNextRound} />}
     </View>
   ) : !isMyTurn ? (
     <View style={styles.footer}>
+      {/* Every hint is out: nothing is at stake any more, say it to the players waiting for the turn-holder. */}
+      {hintsRevealed >= plan.length ? <NoOneFoundText players={players.map((player) => player.name)} /> : stakeLine}
       <ContourHintList disabled groups={hintGroups} onPick={onRevealHint} />
       <ContourGuessBar
         guessText={typedByActivePlayer}
-        onChangeGuessText={noop}
+        onChangeGuessText={onChangeGuessText}
         onReadOnlyPress={onNotYourTurn}
-        onSubmit={noop}
+        onSubmit={onSubmitGuess}
         readOnly
       />
     </View>
@@ -105,7 +112,7 @@ export const OnlineContourGameScreenView = ({
     </View>
   ) : (
     <View style={styles.footer}>
-      <Text style={styles.pointsAtStake}>{t.contourGame.pointsAtStake(formatNumber(pointsAtStake))}</Text>
+      {stakeLine}
       <ContourHintList groups={hintGroups} onPick={onRevealHint} />
       <ContourGuessBar
         guessText={guessText}

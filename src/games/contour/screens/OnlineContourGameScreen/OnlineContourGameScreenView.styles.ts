@@ -13,11 +13,8 @@ export const createStyles = ({ colors, typography }: Theme) =>
       fontSize: fontSize.caption + 1,
       textAlign: 'center',
     },
-    waiting: {
-      ...typography.heading,
-      color: colors.textMuted,
-      fontSize: fontSize.body,
-      textAlign: 'center',
+    pointsAtStakeValue: {
+      color: colors.text,
     },
     banner: {
       ...typography.heading,
