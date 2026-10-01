@@ -68,11 +68,10 @@ export const PlacesView = () => {
   };
 
   const handleDifficultyChange = (row: PlaceRow, difficulty: Difficulty) => {
-    if (!rows) return;
     const previousCompass = row.compass;
     const previousClues = row.clues;
-    setRows(
-      rows.map((r) =>
+    setRows((cur) =>
+      cur!.map((r) =>
         r.key === row.key
           ? { ...r, compass: r.compass && { ...r.compass, difficulty }, clues: r.clues && { ...r.clues, difficulty } }
           : r,
@@ -82,48 +81,46 @@ export const PlacesView = () => {
 
     saveDifficulty(row, difficulty)
       .then(({ compass, clues }) => {
-        setRows((cur) => cur?.map((r) => (r.key === row.key ? { ...r, compass, clues } : r)) ?? cur);
+        setRows((cur) => cur!.map((r) => (r.key === row.key ? { ...r, compass, clues } : r)));
         setSaveState({ key: row.key, field: 'difficulty', status: 'saved' });
       })
       .catch((err: Error) => {
-        setRows((cur) => cur?.map((r) => (r.key === row.key ? { ...r, compass: previousCompass, clues: previousClues } : r)) ?? cur);
+        setRows((cur) => cur!.map((r) => (r.key === row.key ? { ...r, compass: previousCompass, clues: previousClues } : r)));
         setSaveState({ key: row.key, field: 'difficulty', status: 'error', message: err.message });
       });
   };
 
   const handleCompassChange = (row: PlaceRow, patch: CompassPatch) => {
-    if (!rows || !row.compass) return;
     const field: Field = 'category' in patch ? 'category' : 'description';
     const previous = row.compass;
-    setRows(rows.map((r) => (r.key === row.key ? { ...r, compass: { ...r.compass!, ...patch } } : r)));
+    setRows((cur) => cur!.map((r) => (r.key === row.key ? { ...r, compass: { ...r.compass!, ...patch } } : r)));
     setSaveState({ key: row.key, field, status: 'saving' });
 
     saveCompass(row, patch)
       .then((updated) => {
-        setRows((cur) => cur?.map((r) => (r.key === row.key ? { ...r, compass: updated } : r)) ?? cur);
+        setRows((cur) => cur!.map((r) => (r.key === row.key ? { ...r, compass: updated } : r)));
         setSaveState({ key: row.key, field, status: 'saved' });
       })
       .catch((err: Error) => {
-        setRows((cur) => cur?.map((r) => (r.key === row.key ? { ...r, compass: previous } : r)) ?? cur);
+        setRows((cur) => cur!.map((r) => (r.key === row.key ? { ...r, compass: previous } : r)));
         setSaveState({ key: row.key, field, status: 'error', message: err.message });
       });
   };
 
   const handleCluesChange = (row: PlaceRow, patch: CluesPatch) => {
-    if (!rows || !row.clues) return;
     const key = Object.keys(patch)[0];
     const field = CLUE_FIELD_BY_KEY[key];
     const previous = row.clues;
-    setRows(rows.map((r) => (r.key === row.key ? { ...r, clues: { ...r.clues!, ...patch } } : r)));
+    setRows((cur) => cur!.map((r) => (r.key === row.key ? { ...r, clues: { ...r.clues!, ...patch } } : r)));
     setSaveState({ key: row.key, field, status: 'saving' });
 
     saveClues(row, patch)
       .then((updated) => {
-        setRows((cur) => cur?.map((r) => (r.key === row.key ? { ...r, clues: updated } : r)) ?? cur);
+        setRows((cur) => cur!.map((r) => (r.key === row.key ? { ...r, clues: updated } : r)));
         setSaveState({ key: row.key, field, status: 'saved' });
       })
       .catch((err: Error) => {
-        setRows((cur) => cur?.map((r) => (r.key === row.key ? { ...r, clues: previous } : r)) ?? cur);
+        setRows((cur) => cur!.map((r) => (r.key === row.key ? { ...r, clues: previous } : r)));
         setSaveState({ key: row.key, field, status: 'error', message: err.message });
       });
   };
@@ -142,7 +139,7 @@ export const PlacesView = () => {
 
   const handleDelete = async (row: PlaceRow) => {
     await deletePlace(row);
-    setRows((cur) => (cur ?? []).filter((r) => r.key !== row.key));
+    setRows((cur) => cur!.filter((r) => r.key !== row.key));
   };
 
   if (loadError) {
@@ -342,7 +339,7 @@ export const PlacesView = () => {
                             saveFlag={saveFlagFor(row, 'emojis')}
                             onSave={(next) => {
                               const parts = next.split(/\s+/).filter(Boolean);
-                              handleCluesChange(row, { emojis: [parts[0] ?? '', parts[1] ?? '', parts[2] ?? ''] });
+                              handleCluesChange(row, { emojis: [parts[0], parts[1] ?? '', parts[2] ?? ''] });
                             }}
                           />
                         </td>

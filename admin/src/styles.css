@@ -357,6 +357,14 @@ a.chip {
   border-top: 1px solid rgba(37, 51, 79, 0.6);
 }
 
+/* The errors page: room between two errors so each one reads on its own. */
+.errors-table th,
+.errors-table td {
+  padding-top: 14px;
+  padding-bottom: 14px;
+  line-height: 1.5;
+}
+
 .coord {
   font-variant-numeric: tabular-nums;
 }

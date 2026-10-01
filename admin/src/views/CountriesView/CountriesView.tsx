@@ -79,33 +79,31 @@ export const CountriesView = () => {
   const pageRows = useMemo(() => paginate(visible, page), [visible, page]);
 
   const handleChange = (row: CountryRecord, field: Field, patch: CountryPatch) => {
-    if (!countries) return;
-    const previous = countries.find((c) => c.code === row.code)!;
-    setCountries(countries.map((c) => (c.code === row.code ? { ...c, ...patch } : c)));
+    const previous = countries!.find((c) => c.code === row.code)!;
+    setCountries((cur) => cur!.map((c) => (c.code === row.code ? { ...c, ...patch } : c)));
     setSaveState({ code: row.code, field, status: 'saving' });
 
     saveCountry(row, patch)
       .then((updated) => {
-        setCountries((cur) => cur?.map((c) => (c.code === row.code ? updated : c)) ?? cur);
+        setCountries((cur) => cur!.map((c) => (c.code === row.code ? updated : c)));
         setSaveState({ code: row.code, field, status: 'saved' });
       })
       .catch((err: Error) => {
-        setCountries((cur) => cur?.map((c) => (c.code === row.code ? previous : c)) ?? cur);
+        setCountries((cur) => cur!.map((c) => (c.code === row.code ? previous : c)));
         setSaveState({ code: row.code, field, status: 'error', message: err.message });
       });
   };
 
   /** The Silhouette difficulty: its own write, because the group numbers follow (see `saveContourDifficulty`). */
   const handleDifficultyChange = (row: CountryRecord, difficulty: Difficulty) => {
-    if (!countries) return;
-    const previous = countries.find((c) => c.code === row.code)!;
-    setCountries(countries.map((c) => (c.code === row.code ? { ...c, difficulty } : c)));
+    const previous = countries!.find((c) => c.code === row.code)!;
+    setCountries((cur) => cur!.map((c) => (c.code === row.code ? { ...c, difficulty } : c)));
     setSaveState({ code: row.code, field: 'difficulty', status: 'saving' });
 
     saveContourDifficulty(row, difficulty)
       .then(() => setSaveState({ code: row.code, field: 'difficulty', status: 'saved' }))
       .catch((err: Error) => {
-        setCountries((cur) => cur?.map((c) => (c.code === row.code ? previous : c)) ?? cur);
+        setCountries((cur) => cur!.map((c) => (c.code === row.code ? previous : c)));
         setSaveState({ code: row.code, field: 'difficulty', status: 'error', message: err.message });
       });
   };

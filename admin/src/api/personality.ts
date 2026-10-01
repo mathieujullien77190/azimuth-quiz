@@ -78,11 +78,9 @@ const codeFromFr = (fr: string): string =>
  * else `base` + "2", "3"... */
 const freeJobCode = (base: string): string => {
   const jobs = data().jobs;
-  if (!(base in jobs)) return base;
-  for (let n = 2; ; n += 1) {
-    const candidate = `${base}${n}`;
-    if (!(candidate in jobs)) return candidate;
-  }
+  let candidate = base;
+  for (let n = 2; candidate in jobs; n += 1) candidate = `${base}${n}`;
+  return candidate;
 };
 
 /** Every curated job, its two translations, and which places currently use it. Alphabetical by

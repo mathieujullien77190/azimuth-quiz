@@ -43,7 +43,6 @@ const AddRow = ({ onAdd }: { onAdd: (fr: string, en: string) => void }) => {
   const [en, setEn] = useState('');
 
   const submit = () => {
-    if (fr.trim() === '' || en.trim() === '') return;
     onAdd(fr.trim(), en.trim());
     setFr('');
     setEn('');

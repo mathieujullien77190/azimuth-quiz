@@ -61,7 +61,7 @@ export const ErrorsView = () => {
             .filter((change) => change.type === 'added')
             .map((change) => toRow(change.doc))
             .reverse();
-          if (added.length > 0) setRows((current) => [...added, ...(current ?? [])].slice(0, MAX_ROWS));
+          if (added.length > 0) setRows((current) => [...added, ...current!].slice(0, MAX_ROWS));
         });
       })
       .catch((error: Error) => {
@@ -77,7 +77,7 @@ export const ErrorsView = () => {
 
   const remove = async (row: ErrorRow) => {
     await deleteDoc(doc(db, 'errors', row.id));
-    setRows((current) => (current ?? []).filter((r) => r.id !== row.id));
+    setRows((current) => current!.filter((r) => r.id !== row.id));
   };
 
   /** The errors past their `expireAt` (30 days): a TTL policy would do it by itself but needs Firebase billing. */
@@ -89,7 +89,7 @@ export const ErrorsView = () => {
       expired.docs.forEach((snapshot) => batch.delete(snapshot.ref));
       await batch.commit();
       const gone = new Set(expired.docs.map((snapshot) => snapshot.id));
-      setRows((current) => (current ?? []).filter((r) => !gone.has(r.id)));
+      setRows((current) => current!.filter((r) => !gone.has(r.id)));
     } finally {
       setCleaning(false);
     }
@@ -120,7 +120,7 @@ export const ErrorsView = () => {
         <>
           <div className="place-card">
             <h3 className="game-title">Par action</h3>
-            <table className="kv-table">
+            <table className="kv-table errors-table">
               <tbody>
                 {groups.map((group) => (
                   <tr key={`${group.action}|${group.code}`}>
@@ -137,7 +137,7 @@ export const ErrorsView = () => {
 
           <div className="place-card">
             <h3 className="game-title">Détail</h3>
-            <table className="kv-table">
+            <table className="kv-table errors-table">
               <tbody>
                 {rows.map((row) => (
                   <tr key={row.id}>
