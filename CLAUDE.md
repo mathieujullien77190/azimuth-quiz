@@ -555,9 +555,10 @@ des que chaque hint est devenu un point fixe plutot qu'une etiquette pointant ve
 
 Filtre par difficulte, meme enum `Difficulty` que Compass/Clues, choix unique dans les trois jeux
 (`GameSettings.difficulty`, `ClueSettings.difficulty`, `ContourSettings.difficulty`) : determine le groupe dans lequel
-les pays sont tires (`difficulty` du document `countries/{code}`, curee a la main dans l'admin — France et Espagne
-en `easy`, seule la Norvege en `hard`, `intermediate` pour tous les autres ; deliberement desequilibre, ne pas
-tenter de rectifier sans demande explicite). Un groupe plus petit que le nombre de manches (2 pays en `easy`) est
+les pays sont tires (`difficulty` du document `countries/{code}`, modifiable dans l'admin, sur la carte du pays
+(`applyContourDifficultyChange` renumerote les groupes et `meta/contourCounts`). Repartition actuelle (2026-10) : France
+et Espagne en `easy` (2 pays), les pays d'Europe en `intermediate` (33), le reste du monde en `hard` (118) ; ce
+decoupage est voulu, ne pas le "reequilibrer" sans demande explicite). Un groupe plus petit que le nombre de manches (2 pays en `easy`) est
 reparcouru, sans jamais le meme pays deux fois de suite quand il y a le choix.
 
 **Pays et contours dans Firestore, cle = code ISO.** `countries/{ISO}` (nom fr/en, drapeau, devise, indicatif,
