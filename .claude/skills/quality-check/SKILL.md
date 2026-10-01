@@ -20,7 +20,7 @@ npx expo lint
 ```
 
 - `tsc` : **0 erreur**. Ajoute `(cd admin && npx tsc --noEmit -p .)` si tu as touché un fichier importé par `admin/`.
-- Lint : la base connue est **21 erreurs** (20 `react-hooks/refs`, 1 `set-state-in-effect`, listées dans CLAUDE.md,
+- Lint : la base connue est **14 erreurs** (`react-hooks/refs` et `set-state-in-effect`, listées dans CLAUDE.md,
   "Etat connu"), **0 warning**. Plus = régression : trouve la règle et le fichier (`npx expo lint | grep -B3 error`).
 
 ## 1. Couverture de tests (seuil 100 %)

@@ -1,63 +1,23 @@
 # Azimuth Quiz
 
 🔗 **[Jouer dans le navigateur](https://mathieujullien77190.github.io/azimuth-quiz/)**
-· 🗺️ **[Données (éditeur de lieux)](https://mathieujullien77190.github.io/azimuth-quiz/admin/)**
+· 🗺️ **[Admin des données](https://mathieujullien77190.github.io/azimuth-quiz/admin/)**
 · 🧩 **[Storybook](https://mathieujullien77190.github.io/azimuth-quiz/storybook/)**
 
-Trois jeux de géographie, choisis depuis l'écran d'accueil :
+Trois jeux de géographie, jusqu'à 10 joueurs (un téléphone par joueur) et 20 manches :
 
-- **Boussole** : un lieu du monde s'affiche (ville, montagne, monument ou site
-  naturel) — oriente la boussole vers lui et estime la distance depuis ton point de
-  départ (ta position GPS, ou Paris par défaut). Tout le monde répond en même temps,
-  puis c'est la révélation.
-- **Indices** : devine une ville à partir d'indices qui se révèlent progressivement
-  (drapeau, population, monnaie, description...). Chacun son tour, on choisit un
-  indice à dévoiler ou on tente une réponse.
-- **Silhouette** : la silhouette d'un pays s'affiche — devine lequel grâce à des
-  indices partagés en 4 paliers (drapeaux puis noms des pays voisins, drapeau puis
-  nom du pays). Chacun son tour, on révèle l'indice suivant ou on tente une réponse.
+- **Boussole** : un lieu s'affiche, vise-le avec la boussole et estime la distance depuis ton point
+  de départ (GPS, ou Paris par défaut). Tout le monde répond en même temps, puis révélation.
+- **Indices** : devine une ville grâce à des indices qui se dévoilent (drapeau, population, monnaie,
+  charade...). Chacun son tour : on dévoile un indice ou on tente une réponse.
+- **Silhouette** : la silhouette d'un pays s'affiche, devine lequel avec des indices partagés
+  (silhouette plus précise, voisins, villes, capitale). Chacun son tour, on choisit l'indice suivant.
 
-Jusqu'à 10 joueurs, **un téléphone par joueur**, jusqu'à 20 manches.
+## Jouer
 
-## Jouer à plusieurs (ou seul)
-
-Toute partie est une **room en ligne** :
-
-- **Solo** : « Lancer la partie » crée une room cachée dont tu es le seul joueur (il faut
-  donc du réseau, même seul).
-- **Héberger** : un code de partie est généré (ex. `tabofuna`) — les autres le tapent
-  pour rejoindre. Seul l'hôte règle les options et lance la partie ; les invités voient
-  les réglages en lecture seule.
-- **Rejoindre** : tape le code de l'hôte. Le code reste affiché dans l'en-tête de jeu,
-  à côté de la croix pour quitter.
-- **Connexion perdue** : celui qui perd la connexion quitte la partie. L'hôte retire un
-  joueur silencieux depuis plus de 90 s (la main passe au suivant) ; si c'est l'hôte qui
-  disparaît, les invités quittent aussi.
-
-Pas de compte à créer : une identité anonyme Firebase est utilisée en coulisses.
-
-## Fonctionnalités
-
-- **Catégories** (Boussole, Indices) : villes, capitales, montagnes, monuments, nature,
-  enfants — combinables — et difficulté facile / moyen / difficile.
-- **Indices progressifs** : drapeau, position, population, monnaie, indicatif
-  téléphonique et description se dévoilent au fil de la manche ; les points en jeu
-  baissent à chaque indice, et une mauvaise réponse coûte des points.
-- **Silhouette** : ~150 pays disponibles, points dégressifs selon le nombre d'indices
-  révélés avant la bonne réponse, pénalité de 50 points par mauvaise réponse.
-- **Boussole réelle** (mobile) : le nord de la boussole suit le capteur du téléphone.
-- **Thèmes** nuit et jour, **français / anglais** (langue du système par défaut,
-  modifiable dans les réglages).
-- Score basé sur l'écart de direction et de distance (Boussole), classement final à
-  la fin de la partie.
-
-## Stack technique
-
-Expo (SDK 57) + Expo Router, React Native + react-native-web, TypeScript strict,
-`react-native-svg` pour la boussole et le schéma de la Terre, Zustand pour l'état,
-AsyncStorage pour la persistance locale (réglages), Firebase (Firestore + authentification
-anonyme) pour les rooms en ligne, i18n maison (FR/EN). Tests unitaires avec Jest + Testing
-Library, composants documentés dans Storybook.
+Toute partie est une **room en ligne**, sans compte (identité anonyme Firebase). Solo : « Lancer la partie »
+crée une room cachée dont tu es le seul joueur. À plusieurs : l'hôte règle et lance, les autres rejoignent avec
+le code affiché dans l'en-tête. Qui perd la connexion quitte la partie. Thèmes nuit et jour, français et anglais.
 
 ## Lancer en local
 
@@ -65,59 +25,34 @@ Library, composants documentés dans Storybook.
 npm install
 npx expo start        # menu Expo (web / iOS / Android)
 npx expo start --web  # directement le web
+npm run admin         # l'admin des données
+npm run storybook     # les composants
 ```
 
 ```bash
-npx tsc --noEmit    # typecheck
-npx expo lint        # lint
-npm test             # tests unitaires
-npm run test:coverage
-npm run storybook    # Storybook (composants + code d'utilisation)
+npx tsc --noEmit
+npx expo lint
+npm run test:coverage   # seuil de couverture : 100 %
 ```
 
-Les rooms en ligne demandent la configuration Firebase (variables d'environnement) et les
-règles Firestore de `firestore.rules`, à déployer avec
-`npx firebase-tools deploy --only firestore:rules`.
+Les rooms demandent la configuration Firebase (variables `EXPO_PUBLIC_FIREBASE_*`) et les règles de
+`firestore.rules`, à déployer à part : `npx firebase-tools deploy --only firestore:rules`.
 
-## Déploiement web
+## Données
 
-Le site est exporté en statique (`web.output: "static"`, `experiments.baseUrl:
-"/azimuth-quiz"` dans `app.json`) et publié sur GitHub Pages par
-`.github/workflows/deploy-pages.yml` à chaque push sur `master`. Le même workflow
-build l'app d'admin (`admin/`, base path `/azimuth-quiz/admin`) et Storybook, et les
-place dans `dist/admin/` et `dist/storybook/` avant publication, pour qu'ils finissent
-sur le même site.
+Lieux, pays, silhouettes, devinettes et métiers vivent dans **Firestore** (aucun fichier de données dans l'appli).
+L'admin (React + Vite, une page par onglet : lieux, pays, syllabes, métiers, jeux de mots) se connecte avec un
+compte Google déclaré dans `firestore.rules` et enregistre chaque modification directement. Les données étant
+dupliquées, elles se modifient par l'admin ou en suivant le skill `.claude/skills/firestore-data`.
 
-## Storybook
+## Déploiement
 
-Chaque composant sans store ni routeur a sa story, avec **le code qu'on écrirait pour
-l'utiliser** (onglet « Show code ») plutôt que le JSX reconstruit depuis les `args` :
+Un push sur `master` publie le jeu web, l'admin (`/admin/`) et Storybook sur GitHub Pages
+(`.github/workflows/deploy-pages.yml`). Règles et index Firestore ne sont pas déployés par ce push.
 
-🔗 **[Storybook](https://mathieujullien77190.github.io/azimuth-quiz/storybook/)**
+## Stack et structure
 
-## Données des lieux
-
-Toutes les données du jeu (lieux, pays, silhouettes, devinettes, métiers) vivent dans **Firestore** (collections
-`places`, `countries` (avec les silhouettes), `charadeRiddles`, `personalityJobs`, `meta`) : plus aucun fichier de données dans
-l'appli. Pour les parcourir/éditer, une petite app d'admin (React + Vite) est déployée sur GitHub Pages, à côté du jeu :
-
-🔗 **[Éditeur de lieux](https://mathieujullien77190.github.io/azimuth-quiz/admin/)**
-
-L'admin se connecte avec un compte Google (seul l'administrateur déclaré dans `firestore.rules` peut écrire),
-garde une copie locale des données (bouton « Synchroniser » pour la relire) et **enregistre directement** chaque
-modification dans Firestore. Boussole et Indices tirent leurs lieux dans Firestore, Silhouette ses pays et leurs
-silhouettes (éléments numérotés par groupe, curseur par appareil, voir CLAUDE.md, « Modèle Firestore dénormalisé »).
-Règles et index : `npx firebase-tools deploy --only firestore:rules,firestore:indexes`.
-En local :
-
-```bash
-npm run admin   # installe ses dépendances au premier lancement, puis lance le serveur dev
-```
-
-## Structure du projet
-
-Un composant = un dossier auto-contenu (`index.ts` + `<Nom>.tsx` + `helpers.ts` +
-`constants.ts` + `types.ts` + `styles.ts`), alias `@/` → `src/`. Détails de
-l'architecture (couche multijoueur commune aux trois jeux, détection de coupure),
-du domaine (cap/distance, scoring) et des pièges connus : voir
-[`CLAUDE.md`](CLAUDE.md).
+Expo (SDK 57) + Expo Router, React Native + react-native-web, TypeScript, Zustand, Firebase (Firestore + auth
+anonyme), Jest + Testing Library, Storybook. Un composant = un dossier (`index.ts`, `<Nom>.tsx`, `helpers.ts`,
+`constants.ts`, `types.ts`, `styles.ts`), alias `@/` → `src/`. L'architecture, les jeux et les pièges connus sont
+dans [`CLAUDE.md`](CLAUDE.md).
