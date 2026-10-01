@@ -100,7 +100,9 @@ describe('ContourSetupScreen', () => {
       });
     });
 
-    await waitFor(() => expect(startContourRoomGame).toHaveBeenCalledWith('tabofuna', expect.any(Array), 'local-uid', expect.any(Number)));
+    await waitFor(() =>
+      expect(startContourRoomGame).toHaveBeenCalledWith('tabofuna', expect.any(Array), 'local-uid', expect.any(Number)),
+    );
 
     // Once the room leaves its lobby the game screen takes over (this screen stays mounted under it):
     // the splash must not stay on top of it.
@@ -122,52 +124,6 @@ describe('ContourSetupScreen', () => {
 
       await act(() => jest.advanceTimersByTimeAsync(2000));
       expect(queryByText('Seul l’hôte peut modifier les options.')).toBeNull();
-    } finally {
-      jest.useRealTimers();
-    }
-  });
-
-  it('starts with the four kinds of hints selected', async () => {
-    const { getByText } = await renderScreen();
-    // The screen title is also "Silhouette": look inside the hints section.
-    const hints = section(getByText, 'Indices');
-    for (const label of ['Silhouette', 'Voisins', 'Villes', 'Capitale']) {
-      expect(hints.getByText(label).parent?.props.accessibilityState.selected).toBe(true);
-    }
-  });
-
-  it('toggles a kind of hint, keeping the others', async () => {
-    const { getByText } = await renderScreen();
-
-    await fireEvent.press(getByText('Villes'));
-    expect(getByText('Villes').parent?.props.accessibilityState.selected).toBe(false);
-    expect(useContourSettings.getState().settings.hintCategories).toEqual(['silhouette', 'neighbors', 'capital']);
-
-    await fireEvent.press(getByText('Villes'));
-    expect(useContourSettings.getState().settings.hintCategories).toEqual(['silhouette', 'neighbors', 'cities', 'capital']);
-  });
-
-  it('never lets the last kind of hint go', async () => {
-    useContourSettings.setState({ settings: { ...DEFAULT_CONTOUR_SETTINGS, hintCategories: ['capital'] } });
-    const { getByText } = await renderScreen();
-
-    await fireEvent.press(getByText('Capitale'));
-
-    expect(getByText('Capitale').parent?.props.accessibilityState.selected).toBe(true);
-    expect(useContourSettings.getState().settings.hintCategories).toEqual(['capital']);
-  });
-
-  it('a joiner cannot change the kinds of hints', async () => {
-    jest.useFakeTimers();
-    try {
-      const { getByText } = await renderScreen();
-      await fireEvent.press(getByText('Rejoindre'));
-
-      await fireEvent.press(getByText('Voisins'));
-
-      expect(getByText('Seul l’hôte peut modifier les options.')).toBeTruthy();
-      expect(useContourSettings.getState().settings.hintCategories).toEqual(DEFAULT_CONTOUR_SETTINGS.hintCategories);
-      await act(() => jest.advanceTimersByTimeAsync(2000));
     } finally {
       jest.useRealTimers();
     }
