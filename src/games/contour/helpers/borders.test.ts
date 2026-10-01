@@ -101,6 +101,18 @@ describe('computeBorders', () => {
     ]);
   });
 
+  it("gives the neighbors' own lines: their outline minus the edge they share with the country", () => {
+    const { neighborRuns } = computeBorders(left, [left, right, far, corner]);
+    expect(neighborRuns).toEqual([
+      [
+        [1, 0],
+        [2, 0],
+        [2, 1],
+        [1, 1],
+      ],
+    ]);
+  });
+
   it('gives the very same segment from both sides of a border', () => {
     const fromLeft = computeBorders(left, [left, right]).borderRuns[0];
     const fromRight = computeBorders(right, [left, right]).borderRuns[0];

@@ -1,7 +1,17 @@
 import { MAX_CONTOUR_POINTS } from '@/games/contour/constants';
 import type { ContourHintCategory, ContourRoundCountry } from '@/types';
 
-import { buildHintPlan, contourGuessPoints, normalizeHintCategories, revealedSteps, silhouetteLevel } from './hintPlan';
+import {
+  buildHintPlan,
+  contourGuessPoints,
+  hintGroupOf,
+  hintGroupsView,
+  normalizeHintCategories,
+  orderHintPlan,
+  revealedSteps,
+  silhouetteLevel,
+  type HintStep,
+} from './hintPlan';
 
 const places = {
   capital: { name: 'Capitale', longitude: 1, latitude: 1 },
@@ -39,6 +49,7 @@ describe('buildHintPlan', () => {
       'silhouette3',
       'neighborShapes',
       'neighborFlags',
+      'neighborCodes',
       'neighborNames',
       'cityPositions',
       'cityNames',
@@ -117,5 +128,80 @@ describe('contourGuessPoints', () => {
 
   it('is 0 without a plan', () => {
     expect(contourGuessPoints(0, 0)).toBe(0);
+  });
+});
+
+describe('hintGroupOf', () => {
+  it('puts the capital with the cities, and the country on its own', () => {
+    expect(hintGroupOf('silhouette2')).toBe('silhouette');
+    expect(hintGroupOf('neighborFlags')).toBe('neighbors');
+    expect(hintGroupOf('capitalName')).toBe('cities');
+    expect(hintGroupOf('reveal')).toBe('reveal');
+  });
+});
+
+describe('orderHintPlan', () => {
+  const plan: HintStep[] = ['silhouette1', 'silhouette2', 'neighborShapes', 'neighborFlags', 'cityPositions', 'reveal'];
+
+  it('keeps the plan as it is while nothing was picked', () => {
+    expect(orderHintPlan(plan, [])).toEqual(plan);
+  });
+
+  it('brings forward the next step of each group picked, in the order picked, the rest following', () => {
+    expect(orderHintPlan(plan, ['cities', 'neighbors', 'neighbors'])).toEqual([
+      'cityPositions',
+      'neighborShapes',
+      'neighborFlags',
+      'silhouette1',
+      'silhouette2',
+      'reveal',
+    ]);
+  });
+
+  it('ignores a group with no step left', () => {
+    expect(orderHintPlan(plan, ['cities', 'cities'])).toEqual([
+      'cityPositions',
+      'silhouette1',
+      'silhouette2',
+      'neighborShapes',
+      'neighborFlags',
+      'reveal',
+    ]);
+  });
+});
+
+describe('hintGroupsView', () => {
+  const plan: HintStep[] = ['silhouette1', 'silhouette2', 'neighborShapes', 'neighborFlags', 'reveal'];
+
+  it('lists the groups the round has, in the display order, with what is out and what comes next', () => {
+    expect(hintGroupsView(plan, 3)).toEqual([
+      {
+        group: 'silhouette',
+        steps: [
+          { step: 'silhouette1', revealed: true },
+          { step: 'silhouette2', revealed: true },
+        ],
+        next: undefined,
+      },
+      {
+        group: 'neighbors',
+        steps: [
+          { step: 'neighborShapes', revealed: true },
+          { step: 'neighborFlags', revealed: false },
+        ],
+        next: 'neighborFlags',
+      },
+    ]);
+  });
+
+  it('offers the country only once every other hint has been taken', () => {
+    expect(hintGroupsView(plan, 3).some((entry) => entry.group === 'reveal')).toBe(false);
+    const all = hintGroupsView(plan, 4);
+    expect(all.map((entry) => entry.group)).toEqual(['silhouette', 'neighbors', 'reveal']);
+    expect(all[2].next).toBe('reveal');
+  });
+
+  it('has no next step for a group that is entirely out', () => {
+    expect(hintGroupsView(plan, 5).every((entry) => entry.next === undefined)).toBe(true);
   });
 });

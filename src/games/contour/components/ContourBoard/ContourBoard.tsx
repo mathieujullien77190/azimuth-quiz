@@ -6,7 +6,7 @@ import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 import type { Point2D } from '@/types';
 
 import {
-  BORDER_STROKE_WIDTH,
+  BORDER_DASH,
   HINT_ICON_FONT_SIZE,
   HINT_LABEL_FONT_SIZE,
   NEIGHBOR_FILL_OPACITY,
@@ -36,11 +36,13 @@ export const ContourBoard = ({
   neighborOutlines = NO_LINES,
   coastlines,
   borders = NO_LINES,
+  neighborBorders = NO_LINES,
   hintLabels = NO_HINT_LABELS,
 }: ContourBoardProps) => {
   const { colors, isDark, typography } = useTheme();
   const coastPath = coastlines ? multiPath(coastlines) : polylinePath(outline);
   const borderPath = multiPath(borders);
+  const neighborBorderPath = multiPath(neighborBorders);
 
   return (
     <View style={[styles.board, { width, height }]}>
@@ -73,7 +75,18 @@ export const ContourBoard = ({
             stroke={colors.textMuted}
             strokeLinecap="round"
             strokeLinejoin="round"
-            strokeWidth={BORDER_STROKE_WIDTH}
+            strokeWidth={VISIBLE_STROKE_WIDTH}
+          />
+        )}
+        {neighborBorderPath !== '' && (
+          <Path
+            d={neighborBorderPath}
+            fill="none"
+            stroke={colors.textMuted}
+            strokeDasharray={BORDER_DASH}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={VISIBLE_STROKE_WIDTH}
           />
         )}
         {hintLabels.map((label, index) => (

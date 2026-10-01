@@ -14,6 +14,10 @@ export type CountryBorders = {
   coastRuns: LonLat[][];
   /** Stretches of the target's outline shared with a neighbor: stroked ONCE, at the target's side. */
   borderRuns: LonLat[][];
+  /** The neighbors' own outlines WITHOUT the edges they share with the target (those are `borderRuns`): their
+   * far coast and their borders with the countries beyond — drawn dashed by the game, the only part of the
+   * neighbors it shows. */
+  neighborRuns: LonLat[][];
 };
 
 const pointKey = (point: LonLat): string => `${point[0]},${point[1]}`;
@@ -105,5 +109,10 @@ export const computeBorders = (country: ContourCountry, countries: readonly Cont
     neighborRings,
     coastRuns: runs.filter((run) => !run.shared).map((run) => run.points),
     borderRuns: runs.filter((run) => run.shared).map((run) => run.points),
+    neighborRuns: neighborRings.flatMap((ring) =>
+      splitRing(ring, sharedEdges)
+        .filter((run) => !run.shared)
+        .map((run) => run.points),
+    ),
   };
 };

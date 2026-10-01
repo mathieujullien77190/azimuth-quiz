@@ -16,8 +16,9 @@ export const ContourGuessBar = ({
   guessText,
   onChangeGuessText,
   onSubmit,
-  onHint,
   wrongText = null,
+  readOnly = false,
+  onReadOnlyPress,
 }: ContourGuessBarProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
@@ -27,18 +28,10 @@ export const ContourGuessBar = ({
   return (
     <View style={styles.bar}>
       {wrongText !== null && <Text style={styles.wrongText}>{wrongText}</Text>}
-      <View style={styles.inputRow}>
-        <Pressable
-          accessibilityLabel={t.contourGame.hintButton}
-          accessibilityRole="button"
-          hitSlop={8}
-          onPress={onHint}
-          style={styles.hintFab}
-        >
-          <Text style={styles.hintFabIcon}>💡</Text>
-        </Pressable>
+      <Pressable disabled={!readOnly} onPress={onReadOnlyPress} style={styles.inputRow}>
         <TextInput
           autoCapitalize="words"
+          editable={!readOnly}
           onChangeText={onChangeGuessText}
           onSubmitEditing={() => canSubmit && onSubmit()}
           placeholder={t.contourGame.guessPlaceholder}
@@ -47,8 +40,8 @@ export const ContourGuessBar = ({
           style={styles.input}
           value={guessText}
         />
-      </View>
-      <Button disabled={!canSubmit} label={t.game.validate} onPress={onSubmit} />
+      </Pressable>
+      {!readOnly && <Button disabled={!canSubmit} label={t.game.validate} onPress={onSubmit} />}
     </View>
   );
 };

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { CONTOUR_WRONG_GUESS_PENALTY } from '@/games/contour/constants';
 import {
@@ -12,14 +12,23 @@ import {
   reportContourRoomCorrect,
   reportContourRoomWrong,
   revealContourRoomHint,
+  setContourRoomTyping,
 } from '@/games/contour/helpers/room';
 import { normalizeContourGuess, roundCountryName } from '@/games/contour/helpers/contourCountry';
-import { buildHintPlan, contourGuessPoints, normalizeHintCategories } from '@/games/contour/helpers/hintPlan';
+import {
+  buildHintPlan,
+  contourGuessPoints,
+  hintGroupsView,
+  normalizeHintCategories,
+  orderHintPlan,
+  type HintGroup,
+} from '@/games/contour/helpers/hintPlan';
 import { roundSimplifySeed } from '@/games/contour/helpers/simplify';
 import { useRoundData } from '@/games/contour/helpers/useRoundData';
 import type { ContourCountry } from '@/types';
 import { useContourRoomStore } from '@/games/contour/store/roomStore';
 import { nextPlayerUid } from '@/helpers/roomPlayers';
+import { useDebouncedValue } from '@/helpers/useDebouncedValue';
 import { useGuessDraft } from '@/helpers/useGuessDraft';
 import { useHostTurnRecovery } from '@/helpers/useHostTurnRecovery';
 import { useHostTurnScoring } from '@/helpers/useHostTurnScoring';
@@ -56,18 +65,39 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
     gameState.roundIndex,
     gameState.countryCodes[gameState.roundIndex] ?? '',
   );
-  // The round's hint steps: rebuilt on every device from the host's categories (in the room's
-  // settings) and the country, so there is nothing more to store per round.
+  // The round's hint steps: rebuilt on every device from the host's categories (in the room's settings) and the
+  // country, then put in the order the players picked them (`hintPicks`, the only thing stored per round).
   const roomCategories = roomSettings?.hintCategories;
-  const plan = useMemo(
+  const basePlan = useMemo(
     () => (country === undefined ? [] : buildHintPlan(normalizeHintCategories(roomCategories), country)),
     [country, roomCategories],
   );
+  const { hintsRevealed, hintPicks } = gameState;
+  const plan = useMemo(() => orderHintPlan(basePlan, hintPicks), [basePlan, hintPicks]);
+  const hintGroups = useMemo(() => hintGroupsView(plan, hintsRevealed), [plan, hintsRevealed]);
   const isMyTurn = localUid !== null && localUid === gameState.turnUid;
-  const { hintsRevealed } = gameState;
 
   // This device's own in-progress guess text, and the "you got it wrong" banner.
   const { guessText, setGuessText, lastWrong, setLastWrong } = useGuessDraft(gameState.roundIndex, gameState.turnUid);
+
+  // Mirrors this device's own guess text to the room, ~500ms after it stops changing, so the other players can watch the
+  // turn-holder type it live (`typing` in `ContourRoomGameState`, same as Clues). Solo (nobody else could see it) and
+  // spectators never write; a round already over stops writing too, and an unchanged debounced value is not sent again.
+  const debouncedGuessText = useDebouncedValue(guessText, 500);
+  const lastWrittenTypingRef = useRef('');
+  useEffect(() => {
+    if (!isMyTurn || localUid === null || gameState.verdict !== null || onlinePlayers.length <= 1) return;
+    if (lastWrittenTypingRef.current === debouncedGuessText) return;
+    lastWrittenTypingRef.current = debouncedGuessText;
+    setContourRoomTyping(code, localUid, debouncedGuessText).catch(() => {});
+  }, [debouncedGuessText, isMyTurn, localUid, gameState.verdict, onlinePlayers.length, code]);
+
+  // What the turn-holder is typing, for everybody else mid-round: `typing.uid` is checked against `turnUid` because it is
+  // never reset by itself on a turn change, so a leftover of the previous turn-holder must not leak into the new one's.
+  const typedByActivePlayer =
+    !isMyTurn && gameState.verdict === null && gameState.typing !== null && gameState.typing.uid === gameState.turnUid
+      ? gameState.typing.text
+      : '';
 
   /** What a correct guess earns right now: drops with each hint, 0 once the country is revealed. */
   const pointsAtStake = contourGuessPoints(hintsRevealed, plan.length);
@@ -82,10 +112,15 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
   const passTurn = useCallback((uid: string) => passRoomTurn(code, uid), [code]);
   useHostTurnRecovery(isHost, gameState, onlinePlayers, passTurn);
 
-  const revealHint = () => {
+  /** Reveals the next step of `group` (the one the player tapped) and passes the turn. The country itself (the
+   * `reveal` group) only once every other hint is out. */
+  const revealHint = (group: HintGroup) => {
     const next = nextPlayerUid(onlinePlayers, localUid);
-    if (!isMyTurn || hintsRevealed >= plan.length || next === undefined) return;
-    revealContourRoomHint(code, hintsRevealed + 1, next).catch(() => {});
+    if (!isMyTurn || next === undefined) return;
+    const target = hintGroups.find((entry) => entry.group === group);
+    const othersOut = hintGroups.every((entry) => entry.group === 'reveal' || entry.next === undefined);
+    if (target?.next === undefined || (group === 'reveal' && !othersOut)) return;
+    revealContourRoomHint(code, [...hintPicks, group], next).catch(() => {});
   };
 
   const submitGuess = () => {
@@ -126,11 +161,13 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
     roundFailed,
     retryRound,
     plan,
+    hintGroups,
     simplifySeed,
     isMyTurn,
     pointsAtStake,
     guessText,
     setGuessText,
+    typedByActivePlayer,
     lastWrong,
     revealHint,
     submitGuess,

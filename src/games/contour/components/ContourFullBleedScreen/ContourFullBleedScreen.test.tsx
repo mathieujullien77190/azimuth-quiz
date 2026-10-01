@@ -36,6 +36,7 @@ const board: RoundBoard = {
   ],
   precisionOutlines: [COARSE, FULL, FULL, FULL],
   neighborOutlines: [],
+  neighborBorders: [],
   coastlines: [
     [
       { x: 0, y: 0 },

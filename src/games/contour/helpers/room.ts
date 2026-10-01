@@ -4,6 +4,8 @@ import type { ContourSettings } from '@/types';
 
 import { createRoomApi } from '@/helpers/roomBase';
 
+import type { HintGroup } from './hintPlan';
+
 // Not re-exported from `helpers/index.ts`'s barrel: `firebase/firestore` is ESM-only and crashes
 // Jest the moment anything requires it transitively (see `helpers/firebase.ts`'s own note).
 //
@@ -65,18 +67,25 @@ export const startContourRoomGame = (
     simplifySeed,
     roundIndex: 0,
     hintsRevealed: 0,
+    hintPicks: [],
     turnUid: firstTurnUid,
     verdict: null,
     roundWinnerUid: null,
     wrongGuessUid: null,
     wrongGuessSeq: 0,
     totalScores: {},
+    typing: null,
   });
 
-/** Turn-holder-only (security rules check `request.auth.uid == resource.data.turnUid`): reveals
- * the next hint tier and passes the turn. */
-export const revealContourRoomHint = (code: string, hintsRevealed: number, nextTurnUid: string): Promise<void> =>
-  updateDoc(roomRef(code), { hintsRevealed, turnUid: nextTurnUid });
+/** Turn-holder-only (security rules check `request.auth.uid == resource.data.turnUid`): reveals the hint
+ * the player picked (`picks` = every group picked so far this round, in order; see `orderHintPlan`) and passes the turn. */
+export const revealContourRoomHint = (code: string, picks: HintGroup[], nextTurnUid: string): Promise<void> =>
+  updateDoc(roomRef(code), { hintPicks: picks, hintsRevealed: picks.length, turnUid: nextTurnUid });
+
+/** Turn-holder-only: mirrors the answer being typed, so the other players can watch it live (same as Clues'
+ * `setClueRoomTyping`). */
+export const setContourRoomTyping = (code: string, uid: string, text: string): Promise<void> =>
+  updateDoc(roomRef(code), { typing: { uid, text } satisfies ContourRoomGameState['typing'] });
 
 /** Turn-holder-only: self-reports having found the country — ends the round. The score itself is
  * never written here (see `applyContourRoomScore`): the guesser only ever reports the event, the
@@ -115,9 +124,11 @@ export const nextContourRoomRound = (
     screen: (roundIndex < roundCount ? 'game' : 'end') satisfies ContourRoomScreen,
     roundIndex,
     hintsRevealed: 0,
+    hintPicks: [],
     turnUid: firstTurnUid,
     verdict: null,
     roundWinnerUid: null,
+    typing: null,
   });
 
 export type ContourRoomGameState = {
@@ -129,7 +140,11 @@ export type ContourRoomGameState = {
   roundIndex: number;
   /** How many steps of the round hint plan are revealed (0 to its length, the last step reveals the country), see `buildHintPlan`/`contourGuessPoints`. */
   hintsRevealed: number;
+  /** The groups picked so far this round, in order (see `orderHintPlan`): `hintsRevealed` of them. */
+  hintPicks: HintGroup[];
   turnUid: string | null;
+  /** The turn-holder's in-progress answer text, live (see `setContourRoomTyping`): `null` outside any typing. */
+  typing: { uid: string; text: string } | null;
   verdict: 'correct' | 'giveUp' | null;
   roundWinnerUid: string | null;
   /** Last wrong guess reported — never reset between rounds, `wrongGuessSeq` only ever increases,
@@ -151,7 +166,9 @@ export const subscribeToRoomGame = (code: string, onUpdate: (state: ContourRoomG
       simplifySeed: (data?.simplifySeed as number | undefined) ?? 0,
       roundIndex: (data?.roundIndex as number | undefined) ?? 0,
       hintsRevealed: (data?.hintsRevealed as number | undefined) ?? 0,
+      hintPicks: (data?.hintPicks as HintGroup[] | undefined) ?? [],
       turnUid: (data?.turnUid as string | undefined) ?? null,
+      typing: (data?.typing as ContourRoomGameState['typing'] | undefined) ?? null,
       verdict: (data?.verdict as ContourRoomGameState['verdict'] | undefined) ?? null,
       roundWinnerUid: (data?.roundWinnerUid as string | undefined) ?? null,
       wrongGuessUid: (data?.wrongGuessUid as string | undefined) ?? null,

@@ -1,6 +1,6 @@
 import { fireEvent, render } from '@testing-library/react-native';
 
-import { buildHintPlan } from '@/games/contour/helpers/hintPlan';
+import { buildHintPlan, hintGroupsView, type HintStep } from '@/games/contour/helpers/hintPlan';
 import type { ContourRoomGameState } from '@/games/contour/helpers/room';
 import { translations } from '@/i18n/translations';
 import { FIXTURE_CONTOURS as CONTOURS, SAMPLE_CONTOUR_COUNTRY } from '@/helpers/storyFixtures';
@@ -18,7 +18,7 @@ jest.mock('./useOnlineContourGame', () => ({ useOnlineContourGame: () => mockGam
 // France with its names, capital and cities, as a round's document gives them.
 const FRANCE = SAMPLE_CONTOUR_COUNTRY;
 
-// Every kind of hint: 11 steps for France (3 silhouette, 3 neighbors, 2 cities, 2 capital, the reveal).
+// Every kind of hint: 12 steps for France (3 silhouette, 3 neighbors, 2 cities, 2 capital, the reveal).
 const FULL_PLAN = buildHintPlan(['silhouette', 'neighbors', 'cities', 'capital'], FRANCE);
 
 const ZOE = { uid: 'zoe', name: 'Zoé', color: '#EF4444' };
@@ -30,6 +30,8 @@ const gameState = (overrides: Partial<ContourRoomGameState> = {}): ContourRoomGa
   simplifySeed: 3,
   roundIndex: 0,
   hintsRevealed: 0,
+  hintPicks: [],
+  typing: null,
   turnUid: 'zoe',
   verdict: null,
   roundWinnerUid: null,
@@ -59,6 +61,7 @@ const setGame = (overrides: Record<string, unknown> = {}) => {
     guessText: '',
     setGuessText: jest.fn(),
     lastWrong: null,
+    typedByActivePlayer: '',
     revealHint: jest.fn(),
     submitGuess: jest.fn(),
     giveUp: jest.fn(),
@@ -66,6 +69,10 @@ const setGame = (overrides: Record<string, unknown> = {}) => {
     handleQuit: jest.fn(),
     ...overrides,
   };
+  mockGame.hintGroups ??= hintGroupsView(
+    mockGame.plan as HintStep[],
+    (mockGame.gameState as ContourRoomGameState).hintsRevealed,
+  );
 };
 
 const renderScreen = () => render(<OnlineContourGameScreen code="tabofuna" onQuit={jest.fn()} />);
@@ -148,12 +155,12 @@ describe('OnlineContourGameScreen — the turn-holder', () => {
     expect(mockGame.setGuessText).toHaveBeenCalledWith('France');
   });
 
-  it('reveals a hint and validates an answer', async () => {
+  it('reveals the hint picked in the list and validates an answer', async () => {
     setGame({ guessText: 'Fra' });
-    const { getByLabelText, getByText } = await renderScreen();
-    await fireEvent.press(getByLabelText(/Indice/));
+    const { getByRole, getByText } = await renderScreen();
+    await fireEvent.press(getByRole('button', { name: 'Plus net' }));
     await fireEvent.press(getByText('Valider'));
-    expect((mockGame.revealHint as jest.Mock).mock.calls).toHaveLength(1);
+    expect(mockGame.revealHint).toHaveBeenCalledWith('silhouette');
     expect((mockGame.submitGuess as jest.Mock).mock.calls).toHaveLength(1);
   });
 
@@ -195,20 +202,20 @@ describe('OnlineContourGameScreen — the outline gets precise with the hints', 
     }
   });
 
-  it('draws the neighbors around it, and the borders once, from tier 4 on', async () => {
+  it('draws the borders once and the neighbors as dashed lines only, from tier 4 on', async () => {
     setGame({ gameState: gameState({ hintsRevealed: 4 }) });
-    expect(await paths()).toBeGreaterThan(3);
+    expect(await paths()).toBe(4);
     // a step earlier (the full ring alone), no neighbor yet
     setGame({ gameState: gameState({ hintsRevealed: 3 }) });
     expect(await paths()).toBe(2);
   });
 
   it('draws the cities as dots, then their names, at their position', async () => {
-    setGame({ gameState: gameState({ hintsRevealed: 7 }) });
+    setGame({ gameState: gameState({ hintsRevealed: 8 }) });
     const dots = await renderScreen();
     expect(JSON.stringify(dots.toJSON())).toContain('●');
     expect(JSON.stringify(dots.toJSON())).not.toContain('Marseille');
-    setGame({ gameState: gameState({ hintsRevealed: 8 }) });
+    setGame({ gameState: gameState({ hintsRevealed: 9 }) });
     const names = await renderScreen();
     expect(JSON.stringify(names.toJSON())).toContain('Marseille');
   });
@@ -236,22 +243,48 @@ describe('OnlineContourGameScreen — the outline gets precise with the hints', 
 
   it('shows the full ring when the round is over, whatever the tier', async () => {
     setGame({ gameState: gameState({ hintsRevealed: 0, verdict: 'giveUp' }) });
-    expect(await paths()).toBeGreaterThan(3);
+    expect(await paths()).toBe(4);
+  });
+});
+
+describe("OnlineContourGameScreen — somebody else's turn (watching)", () => {
+  it('keeps the answer field, read-only, with what the turn-holder types', async () => {
+    setGame({ isMyTurn: false, gameState: gameState({ turnUid: 'max' }), typedByActivePlayer: 'Fran' });
+    const { getByDisplayValue, queryByText } = await renderScreen();
+    expect(getByDisplayValue('Fran').props.editable).toBe(false);
+    expect(queryByText('Valider')).toBeNull();
+  });
+
+  it('explains it is not their turn when they tap a hint, instead of revealing it', async () => {
+    setGame({ isMyTurn: false, gameState: gameState({ turnUid: 'max' }) });
+    const { getByRole, getByText, queryByText } = await renderScreen();
+    expect(queryByText(t.contourGame.notYourTurn('Max'))).toBeNull();
+    await fireEvent.press(getByRole('button', { name: 'Plus net' }));
+    expect(getByText(t.contourGame.notYourTurn('Max'))).toBeTruthy();
+    expect(mockGame.revealHint).not.toHaveBeenCalled();
+  });
+
+  it('says so too when they tap the read-only answer field', async () => {
+    setGame({ isMyTurn: false, gameState: gameState({ turnUid: 'max' }), typedByActivePlayer: 'Fran' });
+    const { getByDisplayValue, getByText } = await renderScreen();
+    await fireEvent.press(getByDisplayValue('Fran'));
+    expect(getByText(t.contourGame.notYourTurn('Max'))).toBeTruthy();
   });
 });
 
 describe("OnlineContourGameScreen — somebody else's turn", () => {
-  it('says whose turn it is, without any control', async () => {
+  it('has no control and no banner naming the turn-holder', async () => {
     setGame({ isMyTurn: false, gameState: gameState({ turnUid: 'max' }) });
-    const { getByText, queryByText } = await renderScreen();
-    expect(getByText(t.contourGame.waitingForTurn('Max'))).toBeTruthy();
+    const { queryByText } = await renderScreen();
     expect(queryByText('Valider')).toBeNull();
+    expect(queryByText(/Au tour de/)).toBeNull();
   });
 
-  it('names nobody when the turn-holder is not in the players list', async () => {
+  it('names nobody in the notice when the turn-holder is not in the players list', async () => {
     setGame({ isMyTurn: false, gameState: gameState({ turnUid: 'ghost' }) });
-    const { getByText } = await renderScreen();
-    expect(getByText(t.contourGame.waitingForTurn(''))).toBeTruthy();
+    const { getByRole, getByText } = await renderScreen();
+    await fireEvent.press(getByRole('button', { name: 'Plus net' }));
+    expect(getByText(t.contourGame.notYourTurn(''))).toBeTruthy();
   });
 });
 

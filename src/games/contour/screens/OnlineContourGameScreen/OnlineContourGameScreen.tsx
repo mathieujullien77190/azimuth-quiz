@@ -1,3 +1,4 @@
+import { useTransientFlag } from '@/helpers/useTransientFlag';
 import { useTranslation } from '@/i18n';
 
 import FinalStandings from '@/components/FinalStandings';
@@ -14,9 +15,14 @@ import { useOnlineContourGame } from './useOnlineContourGame';
  * `useOnlineContourGame()` + every derived label, mapped onto `OnlineContourGameScreenView` (pure
  * rendering).
  */
+/** How long the "it's not your turn" notice stays up (a tap closes it earlier). */
+const NOT_YOUR_TURN_NOTICE_MS = 4000;
+
 export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScreenProps) => {
   const t = useTranslation();
   const game = useOnlineContourGame(code, onQuit);
+  // Tapping a hint or the answer field out of turn: a short notice, closing by itself or on a tap.
+  const notYourTurn = useTransientFlag(NOT_YOUR_TURN_NOTICE_MS);
 
   // The host just quit: the store is already reset, and this screen is only on its way out. Not the
   // "loading" splash below — that one is for a room that hasn't delivered its state yet.
@@ -71,6 +77,7 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
       guessText={game.guessText}
       name={myName}
       points={gameState.totalScores[localUid] ?? 0}
+      hintGroups={game.hintGroups}
       hintsRevealed={gameState.hintsRevealed}
       plan={game.plan}
       simplifySeed={game.simplifySeed}
@@ -78,11 +85,15 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
       isLastRound={gameState.roundIndex + 1 >= gameState.countryCodes.length}
       isMyTurn={game.isMyTurn}
       lastWrong={game.lastWrong}
+      typedByActivePlayer={game.typedByActivePlayer}
+      notice={notYourTurn.visible ? t.contourGame.notYourTurn(onlinePlayers[turnIndex]?.name ?? '') : null}
+      onDismissNotice={notYourTurn.hide}
+      onNotYourTurn={notYourTurn.show}
       onChangeGuessText={game.setGuessText}
       onGiveUp={game.giveUp}
       onNextRound={game.goToNextRound}
       onQuit={game.handleQuit}
-      onRevealHint={game.revealHint}
+      onRevealHint={game.isMyTurn ? game.revealHint : notYourTurn.show}
       onSubmitGuess={game.submitGuess}
       players={onlinePlayers}
       pointsAtStake={game.pointsAtStake}
@@ -90,7 +101,6 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
       roundNumber={gameState.roundIndex + 1}
       totalRounds={gameState.countryCodes.length}
       turnIndex={turnIndex}
-      turnPlayerName={onlinePlayers[turnIndex]?.name ?? ''}
       verdict={gameState.verdict ?? undefined}
       winnerName={winnerName}
     />

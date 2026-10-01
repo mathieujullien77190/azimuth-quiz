@@ -47,6 +47,9 @@ export type RoundBoard = {
   coastlines: Point2D[][];
   /** Stretches of the outline shared with a neighbor: stroked once, thinner. */
   borders: Point2D[][];
+  /** The neighbors' own outlines minus the edges they share with the target (see `computeBorders`): the
+   * dashed lines around the silhouette. */
+  neighborBorders: Point2D[][];
   /** The country's cities offered as hints (capital excluded, from the country's document), projected with
    * the very same projector as the outline. */
   cityMarks: BoardMark[];
@@ -105,6 +108,7 @@ export const projectRound = (
     neighborOutlines: borders.neighborRings.map((ring) => projectPoints(ring, project)),
     coastlines: borders.coastRuns.map((run) => projectPoints(run, project)),
     borders: borders.borderRuns.map((run) => projectPoints(run, project)),
+    neighborBorders: borders.neighborRuns.map((run) => projectPoints(run, project)),
     cityMarks: country.cities.map((city) => ({ name: city.name, position: project([city.longitude, city.latitude]) })),
     capitalMark: country.capital
       ? { name: country.capital.name, position: project([country.capital.longitude, country.capital.latitude]) }
@@ -119,25 +123,32 @@ export const projectRound = (
   };
 };
 
-/** The shape props `ContourBoard` gets after `hintsRevealed` steps of `plan`. Below the full ring
- * (the silhouette hints): the outline at its current precision level, as one single stroke and with
- * no neighbors. On the full ring: the outline alone until the `neighborShapes` step, then the
- * neighbors as a backdrop and coast/borders drawn once (their shared edges only line up on the full
- * ring, see `borders.ts` — the plan puts the silhouette steps before the neighbors' anyway). */
+/** The shape props `ContourBoard` gets after `hintsRevealed` steps of `plan`. The neighbors are never filled: the
+ * `neighborShapes` step adds the borders the country shares with them (thin) and the rest of their outlines
+ * (dashed), at their full precision. Below the full ring (the silhouette hints): the outline at its current precision
+ * level, as one single stroke — with those lines once their step is out (the players pick the order: they can come
+ * while the outline is still coarse). On the full ring: the outline alone until the `neighborShapes` step, then the
+ * coast and those lines (the shared edges only line up on the full ring, see `borders.ts`, hence no coast/border
+ * split below it). */
 export const boardShapeFor = (board: RoundBoard, plan: readonly HintStep[], hintsRevealed: number) => {
   const level = silhouetteLevel(plan, hintsRevealed);
-  if (level < FULL_PRECISION) return { outline: board.precisionOutlines[level] };
-  if (!revealedSteps(plan, hintsRevealed).has('neighborShapes')) return { outline: board.outline };
+  const neighborsOut = revealedSteps(plan, hintsRevealed).has('neighborShapes');
+  if (level < FULL_PRECISION) {
+    return neighborsOut
+      ? { outline: board.precisionOutlines[level], borders: board.borders, neighborBorders: board.neighborBorders }
+      : { outline: board.precisionOutlines[level] };
+  }
+  if (!neighborsOut) return { outline: board.outline };
   return {
     outline: board.outline,
-    neighborOutlines: board.neighborOutlines,
     coastlines: board.coastlines,
     borders: board.borders,
+    neighborBorders: board.neighborBorders,
   };
 };
 
 /** The labels of the steps out after `hintsRevealed` steps of `plan`, all drawn straight on the
- * board. Neighbors: every flag at its own curated spot, then each name stacked just below its icon
+ * board. Neighbors: every flag at its own curated spot, then each country code and, one step later, its full name, stacked just below its icon
  * (both stay up so the icon keeps reading as "this is what that name refers to"). Cities and capital:
  * a marker at the place's position, then its name stacked below. `reveal`: the country's own flag at
  * its curated spot with its name below (effectively the answer). */
@@ -153,7 +164,12 @@ export const buildHintLabels = (
 
   const neighborLabels = board.neighborHints.flatMap(({ neighbor, position }) => [
     ...(out.has('neighborFlags') ? [{ position, icon: true, text: neighborIcon(neighbor) }] : []),
-    ...(out.has('neighborNames') ? [{ position: below(position), text: neighborName(neighbor, language) }] : []),
+    // Under the flag: first the country code ("IT"), then — the next step — the full name in its place.
+    ...(out.has('neighborNames')
+      ? [{ position: below(position), text: neighborName(neighbor, language) }]
+      : out.has('neighborCodes')
+        ? [{ position: below(position), text: neighbor.code }]
+        : []),
   ]);
   const cityLabels = board.cityMarks.flatMap(({ name, position }) => [
     ...(out.has('cityPositions') ? [{ position, text: CITY_MARKER }] : []),

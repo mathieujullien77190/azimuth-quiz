@@ -2,10 +2,8 @@ import { FIXTURE_CONTOURS as CONTOURS } from '@/helpers/storyFixtures';
 import { flagEmoji } from '@/helpers/flagEmoji';
 import type { ContourCountry, ContourRoundCountry } from '@/types';
 
-import { computeBorders } from './borders';
-import { buildHintPlan } from './hintPlan';
+import { buildHintPlan, type HintStep } from './hintPlan';
 import { boardShapeFor, buildHintLabels, projectRound, roundGeometry } from './roundBoard';
-import { simplificationLevels } from './simplify';
 
 // A 2:1 rectangle at the equator, so `boardDimensionsFor` keeps a predictable aspect ratio.
 const country: ContourRoundCountry = {
@@ -79,10 +77,7 @@ describe('projectRound borders', () => {
   };
 
   it('projects the neighbors, the coast and the borders in the same frame as the outline', () => {
-    const board = projectRound(closed, 400, 400, {
-      borders: computeBorders(closed, [closed, neighbor]),
-      rings: simplificationLevels(closed.points, 1),
-    });
+    const board = projectRound(closed, 400, 400, roundGeometry(closed, 1, [closed, neighbor]));
     expect(board.neighborOutlines).toHaveLength(1);
     expect(board.neighborOutlines[0]).toHaveLength(neighbor.points.length);
     // The shared edge is one border segment, on the right side of the country.
@@ -153,41 +148,50 @@ describe('buildHintLabels', () => {
     ]);
   });
 
-  it('stacks the neighbors names under their flag, in the requested language', () => {
-    const fr = labels(6);
+  it('puts the neighbors country code under their flag first', () => {
+    const codes = labels(6).filter((label) => !label.icon);
+    expect(codes).toEqual([
+      { position: { x: board.neighborHints[0].position.x, y: board.neighborHints[0].position.y + gap }, text: 'ES' },
+      { position: { x: board.neighborHints[1].position.x, y: board.neighborHints[1].position.y + gap }, text: 'DE' },
+    ]);
+  });
+
+  it('replaces the code with the full name, under their flag, in the requested language', () => {
+    const fr = labels(7);
     expect(fr).toHaveLength(4);
+    expect(fr.some((label) => label.text === 'ES')).toBe(false);
     const espagne = fr.find((label) => label.text === 'Espagne');
     expect(espagne?.position).toEqual({
       x: board.neighborHints[0].position.x,
       y: board.neighborHints[0].position.y + gap,
     });
-    expect(labels(6, fullPlan, 'en').some((label) => label.text === 'Spain')).toBe(true);
+    expect(labels(7, fullPlan, 'en').some((label) => label.text === 'Spain')).toBe(true);
   });
 
   it('puts the cities as dots, then their names under them', () => {
-    const dots = labels(7).filter((label) => label.text === '●');
+    const dots = labels(8).filter((label) => label.text === '●');
     expect(dots.map((label) => label.position)).toEqual(board.cityMarks.map((mark) => mark.position));
-    const names = labels(8).filter((label) => label.text.startsWith('Ville'));
+    const names = labels(9).filter((label) => label.text.startsWith('Ville'));
     expect(names).toEqual([
       { position: { x: board.cityMarks[0].position.x, y: board.cityMarks[0].position.y + gap }, text: 'Ville A' },
       { position: { x: board.cityMarks[1].position.x, y: board.cityMarks[1].position.y + gap }, text: 'Ville B' },
     ]);
-    expect(labels(7).some((label) => label.text === 'Ville A')).toBe(false);
+    expect(labels(8).some((label) => label.text === 'Ville A')).toBe(false);
   });
 
   it('puts the capital as a star (an icon), then its name under it', () => {
-    const star = labels(9).find((label) => label.text === '⭐');
+    const star = labels(10).find((label) => label.text === '⭐');
     expect(star).toEqual({ position: board.capitalMark!.position, icon: true, text: '⭐' });
-    expect(labels(9).some((label) => label.text === 'Capitale')).toBe(false);
-    expect(labels(10).find((label) => label.text === 'Capitale')?.position).toEqual({
+    expect(labels(10).some((label) => label.text === 'Capitale')).toBe(false);
+    expect(labels(11).find((label) => label.text === 'Capitale')?.position).toEqual({
       x: board.capitalMark!.position.x,
       y: board.capitalMark!.position.y + gap,
     });
   });
 
   it('puts the country flag and name at its curated spot on the reveal step only', () => {
-    expect(labels(10).some((label) => label.text === 'France')).toBe(false);
-    const all = labels(11);
+    expect(labels(11).some((label) => label.text === 'France')).toBe(false);
+    const all = labels(12);
     expect(all).toContainEqual({ position: board.centerPosition, icon: true, text: flagEmoji('FR') });
     expect(all).toContainEqual({
       position: { x: board.centerPosition.x, y: board.centerPosition.y + gap },
@@ -261,21 +265,38 @@ describe('the precision levels of a round', () => {
     expect(boardShapeFor(board, plan, 3)).toEqual({ outline: board.outline });
   });
 
-  it('draws the neighbors and the coast/border split from the neighborShapes step on', () => {
+  it('draws the coast/border split from the neighborShapes step on, never the neighbors themselves', () => {
     const shape = boardShapeFor(board, plan, 4);
     expect(shape.outline).toBe(board.outline);
-    expect(shape).toMatchObject({
-      neighborOutlines: board.neighborOutlines,
+    expect(shape).toEqual({
+      outline: board.outline,
       coastlines: board.coastlines,
       borders: board.borders,
+      neighborBorders: board.neighborBorders,
     });
-    expect(board.neighborOutlines.length).toBeGreaterThan(0);
+    expect(board.borders.length).toBeGreaterThan(0);
+    expect(board.neighborBorders.length).toBeGreaterThan(0);
+  });
+
+  it('draws the neighbors lines over a coarse outline when they are picked before the outline is sharp', () => {
+    const neighborsFirst: HintStep[] = ['neighborShapes', 'silhouette1', 'silhouette2', 'silhouette3', 'reveal'];
+    expect(boardShapeFor(board, neighborsFirst, 0)).toEqual({ outline: board.precisionOutlines[0] });
+    expect(boardShapeFor(board, neighborsFirst, 1)).toEqual({
+      outline: board.precisionOutlines[0],
+      borders: board.borders,
+      neighborBorders: board.neighborBorders,
+    });
+    expect(boardShapeFor(board, neighborsFirst, 2)).toEqual({
+      outline: board.precisionOutlines[1],
+      borders: board.borders,
+      neighborBorders: board.neighborBorders,
+    });
   });
 
   it('starts on the full ring, without neighbors, when the silhouette hints are off', () => {
     const noSilhouette = buildHintPlan(['neighbors', 'capital'], france);
     expect(boardShapeFor(board, noSilhouette, 0)).toEqual({ outline: board.outline });
-    expect(boardShapeFor(board, noSilhouette, 1)).toHaveProperty('neighborOutlines');
+    expect(boardShapeFor(board, noSilhouette, 1)).toHaveProperty('borders');
   });
 
   it('never draws the neighbors when the neighbor hints are off', () => {

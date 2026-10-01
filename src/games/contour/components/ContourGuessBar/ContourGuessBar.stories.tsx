@@ -29,7 +29,7 @@ const meta = {
       </div>
     ),
   ],
-  args: { guessText: '', onChangeGuessText: fn(), onHint: fn(), onSubmit: fn() },
+  args: { guessText: '', onChangeGuessText: fn(), onSubmit: fn() },
   render: InteractiveDemo,
 } satisfies Meta<typeof ContourGuessBar>;
 

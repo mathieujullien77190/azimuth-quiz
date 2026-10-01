@@ -26,6 +26,8 @@ export type ContourBoardProps = {
   coastlines?: Point2D[][];
   /** Stretches of `outline` shared with a neighbor, stroked once (thin line). */
   borders?: Point2D[][];
+  /** The neighbors' own lines (their outlines minus what they share with the country), stroked dashed. */
+  neighborBorders?: Point2D[][];
   /** Directional hint labels (e.g. every revealed neighbor's flag/name, the target country's own
    * flag/name at its center) — see `ContourBoardHintLabel`. */
   hintLabels?: ContourBoardHintLabel[];

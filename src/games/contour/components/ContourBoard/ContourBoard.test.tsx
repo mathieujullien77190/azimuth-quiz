@@ -3,6 +3,9 @@ import { render } from '@testing-library/react-native';
 import { ThemeSettingsContext } from '@/themes';
 
 import ContourBoard from '.';
+import { VISIBLE_STROKE_WIDTH } from './constants';
+
+const strokes = (json: string) => json.match(new RegExp(`"strokeWidth":${VISIBLE_STROKE_WIDTH}`, 'g')) ?? [];
 
 const outline = [
   { x: 0, y: 0 },
@@ -57,8 +60,7 @@ describe('ContourBoard', () => {
   it('strokes the whole outline as one path when no coast is given', async () => {
     const { toJSON } = await render(<ContourBoard height={50} outline={outline} width={100} />);
     const json = JSON.stringify(toJSON());
-    expect(json).toContain('"strokeWidth":3');
-    expect(json).not.toContain('"strokeWidth":1.5');
+    expect(strokes(json)).toHaveLength(1);
   });
 
   it('strokes coast and shared borders as separate paths, and the neighbors not at all', async () => {
@@ -91,8 +93,8 @@ describe('ContourBoard', () => {
     const json = JSON.stringify(toJSON());
     // silhouette fill + neighbor fill + coast + border
     expect(json.match(/RNSVGPath/g)).toHaveLength(4);
-    expect(json).toContain('"strokeWidth":3');
-    expect(json).toContain('"strokeWidth":1.5');
+    // the coast and the border have the very same width
+    expect(strokes(json)).toHaveLength(2);
     expect(json).toContain('M 100 0 L 100 50');
     // only the two lines carry a stroke: the fills (silhouette, neighbor) have none
     expect(json.match(/"stroke":/g)).toHaveLength(2);
@@ -103,8 +105,28 @@ describe('ContourBoard', () => {
       <ContourBoard borders={[outline]} coastlines={[]} height={50} outline={outline} width={100} />,
     );
     const json = JSON.stringify(toJSON());
-    expect(json).not.toContain('"strokeWidth":3');
-    expect(json).toContain('"strokeWidth":1.5');
+    expect(strokes(json)).toHaveLength(1);
+  });
+
+  it("strokes the neighbors' own lines dashed, at the same width as the rest", async () => {
+    const { toJSON } = await render(
+      <ContourBoard
+        height={50}
+        neighborBorders={[
+          [
+            { x: 100, y: 0 },
+            { x: 150, y: 0 },
+          ],
+        ]}
+        outline={outline}
+        width={100}
+      />,
+    );
+    const json = JSON.stringify(toJSON());
+    expect(json).toContain('M 100 0 L 150 0');
+    expect(json).toContain('"strokeDasharray":["4","4"]');
+    // the outline's own stroke plus the dashed line
+    expect(strokes(json)).toHaveLength(2);
   });
 
   it('fills the silhouette with the surface color by day, and the raised one by night', async () => {

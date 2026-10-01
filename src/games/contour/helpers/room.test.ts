@@ -10,6 +10,7 @@ import {
   reportContourRoomCorrect,
   reportContourRoomWrong,
   revealContourRoomHint,
+  setContourRoomTyping,
   startContourRoomGame,
   subscribeToRoomGame,
 } from './room';
@@ -68,6 +69,8 @@ describe('game writes', () => {
       simplifySeed: 1234,
       roundIndex: 0,
       hintsRevealed: 0,
+      hintPicks: [],
+      typing: null,
       turnUid: 'zoe',
       verdict: null,
       roundWinnerUid: null,
@@ -77,9 +80,18 @@ describe('game writes', () => {
     });
   });
 
-  it('revealContourRoomHint writes the new tier and hands the turn over', async () => {
-    await revealContourRoomHint('tabofuna', 2, 'max');
-    expect(updateDoc).toHaveBeenCalledWith(REF, { hintsRevealed: 2, turnUid: 'max' });
+  it('revealContourRoomHint writes the picks, their count, and hands the turn over', async () => {
+    await revealContourRoomHint('tabofuna', ['silhouette', 'neighbors'], 'max');
+    expect(updateDoc).toHaveBeenCalledWith(REF, {
+      hintPicks: ['silhouette', 'neighbors'],
+      hintsRevealed: 2,
+      turnUid: 'max',
+    });
+  });
+
+  it('setContourRoomTyping mirrors the text being typed, with who types it', async () => {
+    await setContourRoomTyping('tabofuna', 'zoe', 'Fra');
+    expect(updateDoc).toHaveBeenCalledWith(REF, { typing: { uid: 'zoe', text: 'Fra' } });
   });
 
   it('reportContourRoomCorrect names the winner', async () => {
@@ -108,6 +120,8 @@ describe('game writes', () => {
       screen: 'game',
       roundIndex: 2,
       hintsRevealed: 0,
+      hintPicks: [],
+      typing: null,
       turnUid: 'zoe',
       verdict: null,
       roundWinnerUid: null,
@@ -137,6 +151,8 @@ describe('subscribeToRoomGame', () => {
       simplifySeed: 99,
       roundIndex: 1,
       hintsRevealed: 3,
+      hintPicks: ['silhouette', 'neighbors', 'cities'],
+      typing: { uid: 'zoe', text: 'Fra' },
       turnUid: 'zoe',
       verdict: 'giveUp',
       roundWinnerUid: 'zoe',
@@ -160,6 +176,8 @@ describe('subscribeToRoomGame', () => {
       simplifySeed: 0,
       roundIndex: 0,
       hintsRevealed: 0,
+      hintPicks: [],
+      typing: null,
       turnUid: null,
       verdict: null,
       roundWinnerUid: null,

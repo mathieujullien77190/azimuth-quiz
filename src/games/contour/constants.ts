@@ -5,8 +5,8 @@ export const MAX_CONTOUR_POINTS = 500;
 /** Share of `MAX_CONTOUR_POINTS` lost between the first and the last hint of a round's plan. */
 export const CONTOUR_HINT_POINTS_DROP = 0.85;
 
-/** The kinds of hints the setup lets the players pick (label: `t.contourSetup.hintCategories`), in the
- * fixed order their steps come in a round (see `buildHintPlan`). */
+/** The kinds of hints a round can use (all of them by default), in the fixed order their steps come in a
+ * round (see `buildHintPlan`). */
 export const CONTOUR_HINT_CATEGORIES: { id: ContourHintCategory; emoji: string }[] = [
   { id: 'silhouette', emoji: '🗺️' },
   { id: 'neighbors', emoji: '🧩' },

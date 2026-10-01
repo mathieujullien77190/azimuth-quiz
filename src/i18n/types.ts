@@ -1,4 +1,5 @@
-import type { Category, ContourHintCategory, Difficulty, ClueId } from '@/types';
+import type { HintGroup, HintStep } from '@/games/contour/helpers/hintPlan';
+import type { Category, Difficulty, ClueId } from '@/types';
 
 export type Language = 'fr' | 'en';
 
@@ -200,9 +201,6 @@ export type Translations = {
     playerNameAccessibility: (index: number) => string;
     difficultyTitle: string;
     difficultyHint: string;
-    hintCategoriesTitle: string;
-    hintCategoriesHint: string;
-    hintCategories: Record<ContourHintCategory, string>;
   };
   contourGame: {
     /** Online only: the round's country could not be read; a tap tries again. */
@@ -210,13 +208,12 @@ export type Translations = {
     /** Shown in the country-identity slot during the 'guess' phase, in place of the (not yet
      * known) country name/flag. */
     guessPrompt: string;
-    /** The shared "reveal a hint" icon button, inline with the guess input, clickable by any
-     * player — reveals the next hint of the round each click (a more precise outline, the neighbors,
-     * the cities, the capital, depending on the categories picked in the setup), the last one
-     * revealing the country itself. */
-    hintButton: string;
-    /** Online only: the turn-holder's banner, "Zoé's turn…" (everyone else waits). */
-    waitingForTurn: (name: string) => string;
+    /** The hint list under the country: a title per group (the outline, the neighbors, the cities) and a label
+     * per hint step; the turn-holder taps the next step of the group they want (see `ContourHintList`). */
+    hintGroups: Record<HintGroup, string>;
+    hintSteps: Record<HintStep, string>;
+    /** Online only: the notice shown when somebody taps a hint or the answer field out of their turn. */
+    notYourTurn: (name: string) => string;
     /** Online only: round result when someone found the country ("Zoé scores 375 points!"). */
     found: (name: string, points: string) => string;
     /** Online only: what a correct guess would earn right now, dropping with each hint. */

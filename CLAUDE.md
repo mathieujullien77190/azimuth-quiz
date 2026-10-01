@@ -352,8 +352,12 @@ commentees en francais :
   seul emplacement (on tape "Dijon", elle reste bloquee sur "D") — donc `typedSkeleton` (`helpers/clueGame.ts`,
   pur) fabrique les memes cases directement depuis ce qui est tape (un groupe par mot separe par un espace, un
   tiret reste hors case comme dans le vrai squelette) : rien tant que rien n'est tape, la lettre de l'indice des
-  qu'elle existe, puis le mot tape en entier des la premiere frappe. Pas de champ equivalent pour Silhouette
-  (pas demande).
+  qu'elle existe, puis le mot tape en entier des la premiere frappe. Silhouette a la meme chose (`ContourRoomGameState.typing`, `setContourRoomTyping`, meme debounce de 500 ms,
+`typedByActivePlayer` dans `useOnlineContourGame`) : hors de son tour, le champ de reponse reste affiche, en lecture seule
+(`ContourGuessBar` `readOnly`, sans « Valider »), avec ce que le detenteur du tour tape. Taper un indice ou ce champ
+hors de son tour ouvre l'avis « c'est au tour de X » (`contourGame.notYourTurn`, `useTransientFlag`, comme Indices) :
+`ContourHintList` reste touchable et rapporte le tap meme `disabled`. `firestore.rules` : `typing` fait partie des champs du
+detenteur du tour (`silhouette`).
 - **Indices : qui vient de se tromper, vu de tout le monde** — `wrongGuesserName` (`useOnlineClueGame`), derive
   de `wrongGuessUid`/`wrongGuessSeq` (deja partages par la room, jamais remis a zero entre manches : le score
   de l'hote s'appuie sur leur progression strictement croissante, voir `useHostTurnScoring`) plutot que de
@@ -512,14 +516,26 @@ ratio, jamais la meme taille absolue), la position relative reste identique part
 voir `BOARD_PADDING_RATIO`/`HINT_STACK_GAP_RATIO` (`games/contour/components/ContourBoard/constants.ts`),
 en fraction de `Math.min(width, height)` plutot qu'en pixels fixes, meme raison.
 
-**Indices par categories (plan d'indices).** Le setup Silhouette propose 4 categories en chips multi-select
-(au moins une, `ContourSettings.hintCategories`, defaut les 4, `HintCategorySection`) : `silhouette` (le trait
+**Liste d'indices a choisir (Silhouette).** Sous le pays, `ContourHintList` (`components/ContourHintList`, dumb) montre les
+indices en petites cartes cote a cote (titre + « sortis/total » + UN seul bouton, le prochain indice du groupe ; un ✓ quand
+le groupe est epuise), une par GROUPE : `silhouette` (contour), `neighbors` (voisins), `cities` (villes ET
+capitale : `cityPositions`, `cityNames`, `capitalPosition`, `capitalName`), puis `reveal` (le pays) seulement une fois tout le
+reste sorti. Le joueur qui a la main touche le PROCHAIN indice du groupe de son choix : il n'y a plus de bouton « Indice » qui revele l'etape suivante d'un ordre fixe, ni de choix des types au setup.
+Etat de la room : `hintPicks` (les groupes choisis depuis le debut de la manche, dans l'ordre ; `hintsRevealed` en est la
+longueur, gardee pour le bareme et les regles), remis a `[]` a chaque manche ; `firestore.rules` l'autorise dans les champs
+du detenteur du tour. `orderHintPlan(plan, picks)` (`helpers/hintPlan.ts`, pur) range le plan dans l'ordre des choix : les
+`picks.length` premieres etapes sont celles sorties, donc `buildHintLabels`/`boardShapeFor`/`contourGuessPoints` continuent de
+lire « les N premieres etapes » sans rien savoir du choix ; `hintGroupsView` (pur) donne la liste a afficher. Chaque indice
+pris coute autant que dans l'ancien plan (bareme inchange) et passe la main au joueur suivant.
+
+**Indices par categories (plan d'indices).** Il y a 4 categories (`ContourSettings.hintCategories`, toujours les 4 par defaut ; le setup
+ne les propose plus en option, l'ancienne `HintCategorySection` est supprimee mais le champ de la room reste) : `silhouette` (le trait
 se precise), `neighbors` (voisins), `cities` (villes hors capitale), `capital`. Le reglage est un champ des
 reglages de la room (l'hote le fixe, les joiners le lisent comme `difficulty`/`rounds` ; `firestore.rules` ne
 contraint pas la forme des reglages, seulement qui les ecrit) ; une room ou un reglage sans le champ = les 4
 (`normalizeHintCategories`). `buildHintPlan(categories, country)` (`helpers/hintPlan.ts`, pur) donne la liste
 ordonnee des etapes, ordre fixe des categories : silhouette (`silhouette1-3`), neighbors (`neighborShapes` =
-formes + frontieres en decor, `neighborFlags`, `neighborNames`), cities (`cityPositions`, `cityNames`),
+formes + frontieres en decor, `neighborFlags`, `neighborCodes` = le code pays « IT » sous le drapeau, `neighborNames` = le nom en entier, a sa place), cities (`cityPositions`, `cityNames`),
 capital (`capitalPosition`, `capitalName`), puis toujours `reveal` (drapeau + nom du pays = abandon). Une etape
 que le pays ne peut pas offrir est omise (pas de voisins curees, pas de capitale/villes dans les donnees) : le
 plan s'adapte. `hintsRevealed` (0..N, N = `plan.length`) indexe ce plan ; chaque appareil le recalcule depuis les
@@ -578,8 +594,20 @@ pour une ancienne room) ; la graine d'une manche est `roundSimplifySeed(simplify
 projecteur) reste celui de l'anneau COMPLET : la forme ne bouge ni ne change d'echelle en se precisant. **Voisins
 en decor a leur propre etape (`neighborShapes`)** : tant que le trait n'est pas l'anneau complet, ou que cette etape n'est pas
 sortie (`boardShapeFor`), on ne dessine que la silhouette, en un seul trait et sans voisins (leurs aretes communes ne
-coincident qu'avec l'anneau complet) ; ensuite anneau complet + voisins + frontieres ; fin de manche = tout. Admin : dans l'editeur Silhouette, "Aperçu simplification" (niveaux 0-3 avec
-leur nombre de sommets, puis niveau 4 = voisins, "Autre variante" tire une nouvelle graine) ; l'edition a la souris reste sur le tracé complet.
+coincident qu'avec l'anneau complet) ; ensuite anneau complet + voisins + frontieres ; fin de manche = tout. Admin : dans l'editeur Silhouette, plus de bouton Editer/Apercu : les niveaux de simplification sont toujours la
+(niveaux 0-3 avec leur nombre de sommets, puis niveau 4 = voisins comme dans le jeu, leurs lignes en pointillé sans fond,
+"Autre variante" tire une nouvelle graine), le niveau 4 (voisins) est celui par defaut, et les villes (point) et la capitale (etoile)
+que le jeu propose en indice y sont affichees a leur place, avec leur nom dessous ; les drapeaux des voisins et
+du pays se deplacent (et les voisins se suppriment) a tous les niveaux.
+
+**Voisins : jamais remplis, leurs lignes en pointillé (jeu).** Dans la partie, l'etape `neighborShapes` ne remplit plus les
+voisins (plus de fond colore) : la frontiere commune reste le trait fin du pays (`borders`), et le reste du contour des
+voisins — leur cote lointaine et leurs frontieres avec les pays d'apres, c'est-a-dire leurs aretes NON communes avec le pays —
+est trace en pointillé (`neighborBorders`, `BORDER_DASH`), a leur precision complete. `computeBorders` les donne dans
+`neighborRuns` (l'anneau de chaque voisin decoupe par `splitRing`, aretes communes retirees). Les voisins se proposent a tout moment : si l'etape sort avant que le trait soit net, leurs
+lignes et la frontiere commune se posent sur le contour grossier, sans decoupage cote/frontiere (les aretes ne coincident
+qu'avec l'anneau complet, `boardShapeFor`, `helpers/roundBoard.ts`). `ContourBoard` sait encore remplir des voisins
+(`neighborOutlines`) : l'apercu de l'admin s'en sert.
 
 **Frontieres dessinees une seule fois.** `helpers/borders.ts` (`computeBorders`, appele par
 `useRoundBoard` une fois par pays puis passe a `projectRound`) trouve les pays voisins par
@@ -587,7 +615,7 @@ egalite exacte d'arete (memes deux sommets, dans un sens ou dans l'autre — pas
 geometrique) et coupe l'anneau du pays cible en tronçons `coastlines` (aucune arete partagee) et
 `borders` (arete partagee). `ContourBoard` empile : voisins remplis (`colors.border` a
 `NEIGHBOR_FILL_OPACITY`) **sans contour**, pays cible rempli sans contour, puis ses deux traits
-par-dessus — cote en `VISIBLE_STROKE_WIDTH`, frontiere plus fine en `BORDER_STROKE_WIDTH`. Comme
+par-dessus — cote, frontiere et lignes des voisins, tous a la meme epaisseur (`VISIBLE_STROKE_WIDTH`). Comme
 seul le pays cible trace un trait, une frontiere n'est jamais doublee. Les voisins ne sont qu'un
 decor : les indices (drapeaux/noms) restent ceux de `ContourCountry.neighbors`/`buildHintLabels`.
 Aucune donnee de frontiere n'est stockee : les voisins se deduisent des `points` des autres pays.

@@ -8,13 +8,17 @@ import GameFooter from '@/components/GameFooter';
 import GameHeader from '@/components/GameHeader';
 import Button from '@/components/ui/Button';
 import NoOneFoundText from '@/components/ui/NoOneFoundText';
+import NoticeOverlay from '@/components/NoticeOverlay';
 import ContourFullBleedScreen from '../../components/ContourFullBleedScreen';
 import ContourGuessBar from '../../components/ContourGuessBar';
+import ContourHintList from '../../components/ContourHintList';
 import { buildHintLabels } from '../../helpers/roundBoard';
 import { useRoundBoard } from '../../helpers/useRoundBoard';
 import type { OnlineContourGameScreenViewProps } from './types';
 
 import { createStyles } from './OnlineContourGameScreenView.styles';
+
+const noop = () => {};
 
 /**
  * Pur rendu, un seul ecran plein cadre pour les 3 etats (tour actif, en attente, manche revelee) :
@@ -32,16 +36,20 @@ export const OnlineContourGameScreenView = ({
   country,
   neighborCountries,
   plan,
+  hintGroups,
   hintsRevealed,
   simplifySeed,
   pointsAtStake,
   players,
   turnIndex,
   isMyTurn,
-  turnPlayerName,
   verdict,
   winnerName,
   lastWrong,
+  typedByActivePlayer,
+  notice,
+  onDismissNotice,
+  onNotYourTurn,
   guessText,
   onChangeGuessText,
   onSubmitGuess,
@@ -80,7 +88,16 @@ export const OnlineContourGameScreenView = ({
       )}
     </View>
   ) : !isMyTurn ? (
-    <Text style={styles.waiting}>{t.contourGame.waitingForTurn(turnPlayerName)}</Text>
+    <View style={styles.footer}>
+      <ContourHintList disabled groups={hintGroups} onPick={onRevealHint} />
+      <ContourGuessBar
+        guessText={typedByActivePlayer}
+        onChangeGuessText={noop}
+        onReadOnlyPress={onNotYourTurn}
+        onSubmit={noop}
+        readOnly
+      />
+    </View>
   ) : hintsRevealed >= plan.length ? (
     <View style={styles.footer}>
       <NoOneFoundText players={players.map((player) => player.name)} />
@@ -89,10 +106,10 @@ export const OnlineContourGameScreenView = ({
   ) : (
     <View style={styles.footer}>
       <Text style={styles.pointsAtStake}>{t.contourGame.pointsAtStake(formatNumber(pointsAtStake))}</Text>
+      <ContourHintList groups={hintGroups} onPick={onRevealHint} />
       <ContourGuessBar
         guessText={guessText}
         onChangeGuessText={onChangeGuessText}
-        onHint={onRevealHint}
         onSubmit={onSubmitGuess}
         wrongText={lastWrong !== null ? t.contourGame.wrongGuess(lastWrong) : null}
       />
@@ -100,30 +117,33 @@ export const OnlineContourGameScreenView = ({
   );
 
   return (
-    <ContourFullBleedScreen
-      board={board}
-      footer={<GameFooter>{footer}</GameFooter>}
-      header={
-        <GameHeader
-          code={roomCode}
-          difficulty={difficulty}
-          name={name}
-          onQuit={onQuit}
-          players={players}
-          points={points}
-          question={roundOver ? undefined : t.contourGame.guessPrompt}
-          roundNumber={roundNumber}
-          totalRounds={totalRounds}
-          turnIndex={roundOver ? -1 : turnIndex}
-        />
-      }
-      hintLabels={hintLabels}
-      hintsRevealed={shownHints}
-      plan={plan}
-      onBoardAreaLayout={onBoardAreaLayout}
-      onOverlayBottomLayout={onOverlayBottomLayout}
-      onOverlayTopLayout={onOverlayTopLayout}
-      roundKey={roundNumber}
-    />
+    <>
+      <ContourFullBleedScreen
+        board={board}
+        footer={<GameFooter>{footer}</GameFooter>}
+        header={
+          <GameHeader
+            code={roomCode}
+            difficulty={difficulty}
+            name={name}
+            onQuit={onQuit}
+            players={players}
+            points={points}
+            question={roundOver ? undefined : t.contourGame.guessPrompt}
+            roundNumber={roundNumber}
+            totalRounds={totalRounds}
+            turnIndex={roundOver ? -1 : turnIndex}
+          />
+        }
+        hintLabels={hintLabels}
+        hintsRevealed={shownHints}
+        plan={plan}
+        onBoardAreaLayout={onBoardAreaLayout}
+        onOverlayBottomLayout={onOverlayBottomLayout}
+        onOverlayTopLayout={onOverlayTopLayout}
+        roundKey={roundNumber}
+      />
+      <NoticeOverlay message={notice} onDismiss={onDismissNotice} />
+    </>
   );
 };

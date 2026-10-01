@@ -16,7 +16,7 @@ const { board, onBoardAreaLayout, onOverlayTopLayout, onOverlayBottomLayout } = 
   board={board}
   footer={
     <GameFooter>
-      <ContourGuessBar guessText={guessText} onChangeGuessText={setGuessText} onHint={revealHint} onSubmit={submitGuess} />
+      <ContourGuessBar guessText={guessText} onChangeGuessText={setGuessText} onSubmit={submitGuess} />
     </GameFooter>
   }
   header={<GameHeader {...headerProps} />}

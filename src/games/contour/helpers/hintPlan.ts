@@ -12,6 +12,7 @@ export type HintStep =
   | 'silhouette3'
   | 'neighborShapes'
   | 'neighborFlags'
+  | 'neighborCodes'
   | 'neighborNames'
   | 'cityPositions'
   | 'cityNames'
@@ -21,7 +22,7 @@ export type HintStep =
 
 const STEPS_BY_CATEGORY: Record<ContourHintCategory, HintStep[]> = {
   silhouette: ['silhouette1', 'silhouette2', 'silhouette3'],
-  neighbors: ['neighborShapes', 'neighborFlags', 'neighborNames'],
+  neighbors: ['neighborShapes', 'neighborFlags', 'neighborCodes', 'neighborNames'],
   cities: ['cityPositions', 'cityNames'],
   capital: ['capitalPosition', 'capitalName'],
 };
@@ -56,6 +57,69 @@ export const buildHintPlan = (categories: readonly ContourHintCategory[], countr
     (id) => STEPS_BY_CATEGORY[id],
   );
   return [...steps, 'reveal'];
+};
+
+/** The three kinds of hints the players pick from (the outline, the neighbors, the cities and the capital), and the
+ * final `reveal` of the country: each pick reveals the NEXT step of the group it is made in. */
+export type HintGroup = 'silhouette' | 'neighbors' | 'cities' | 'reveal';
+
+/** The groups in the order the hint list shows them. */
+export const HINT_GROUP_ORDER: readonly HintGroup[] = ['silhouette', 'neighbors', 'cities', 'reveal'];
+
+const GROUP_OF: Record<HintStep, HintGroup> = {
+  silhouette1: 'silhouette',
+  silhouette2: 'silhouette',
+  silhouette3: 'silhouette',
+  neighborShapes: 'neighbors',
+  neighborFlags: 'neighbors',
+  neighborCodes: 'neighbors',
+  neighborNames: 'neighbors',
+  cityPositions: 'cities',
+  cityNames: 'cities',
+  capitalPosition: 'cities',
+  capitalName: 'cities',
+  reveal: 'reveal',
+};
+
+/** The group a step belongs to. */
+export const hintGroupOf = (step: HintStep): HintGroup => GROUP_OF[step];
+
+/**
+ * `plan` re-ordered by what the players picked: each pick (a group, in the order they were made) brings forward
+ * the next step of that group not out yet, so the first `picks.length` steps of the result are the ones revealed
+ * (`hintsRevealed` = `picks.length`) and everything downstream (labels, shape, points) keeps reading "the first N
+ * steps". A group with no step left is ignored; the steps nobody picked follow in the plan's own order.
+ */
+export const orderHintPlan = (plan: readonly HintStep[], picks: readonly HintGroup[]): HintStep[] => {
+  const remaining = [...plan];
+  const ordered: HintStep[] = [];
+  for (const group of picks) {
+    const index = remaining.findIndex((step) => GROUP_OF[step] === group);
+    if (index !== -1) ordered.push(...remaining.splice(index, 1));
+  }
+  return [...ordered, ...remaining];
+};
+
+/** One group of the hint list: its steps (revealed or not) and the one a pick would reveal. */
+export type HintGroupView = {
+  group: HintGroup;
+  steps: { step: HintStep; revealed: boolean }[];
+  next: HintStep | undefined;
+};
+
+/**
+ * The hint list for an (already ordered) `plan` with `hintsRevealed` steps out: only the groups the round has, and
+ * the country itself (`reveal`) only once every other hint has been taken.
+ */
+export const hintGroupsView = (plan: readonly HintStep[], hintsRevealed: number): HintGroupView[] => {
+  const groups = HINT_GROUP_ORDER.flatMap((group) => {
+    const steps = plan
+      .map((step, index) => ({ step, revealed: index < hintsRevealed }))
+      .filter(({ step }) => GROUP_OF[step] === group);
+    return steps.length === 0 ? [] : [{ group, steps, next: steps.find((entry) => !entry.revealed)?.step }];
+  });
+  const othersOut = groups.every((entry) => entry.group === 'reveal' || entry.next === undefined);
+  return othersOut ? groups : groups.filter((entry) => entry.group !== 'reveal');
 };
 
 /** The steps out once `hintsRevealed` of them have been revealed. */

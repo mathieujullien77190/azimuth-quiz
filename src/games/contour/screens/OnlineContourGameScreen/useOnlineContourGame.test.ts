@@ -11,6 +11,7 @@ import {
   reportContourRoomCorrect,
   reportContourRoomWrong,
   revealContourRoomHint,
+  setContourRoomTyping,
 } from '@/games/contour/helpers/room';
 import type { ContourRoomGameState } from '@/games/contour/helpers/room';
 import { roundSimplifySeed } from '@/games/contour/helpers/simplify';
@@ -30,6 +31,7 @@ jest.mock('@/games/contour/helpers/room', () => ({
   reportContourRoomCorrect: jest.fn(() => Promise.resolve()),
   reportContourRoomWrong: jest.fn(() => Promise.resolve()),
   revealContourRoomHint: jest.fn(() => Promise.resolve()),
+  setContourRoomTyping: jest.fn(() => Promise.resolve()),
   subscribeToRoomGame: jest.fn(),
   subscribeToRoomPlayers: jest.fn(),
   subscribeToRoomSettings: jest.fn(),
@@ -40,7 +42,7 @@ jest.mock('@/games/contour/helpers/firestoreContours', () => ({ loadRoundData: j
 const NAMES: Record<string, [string, string]> = { FR: ['France', 'France'], ES: ['Espagne', 'Spain'] };
 
 /** What a round's documents give: the country with its names, one neighbor, a capital and a city (so a
- * plan with every category has 11 steps), and the rings around it. */
+ * plan with every category has 12 steps), and the rings around it. */
 const roundData = (code: string) => ({
   country: {
     code,
@@ -73,6 +75,8 @@ const gameState = (overrides: Partial<ContourRoomGameState> = {}): ContourRoomGa
   simplifySeed: 3,
   roundIndex: 0,
   hintsRevealed: 0,
+  hintPicks: [],
+  typing: null,
   turnUid: 'host',
   verdict: null,
   roundWinnerUid: null,
@@ -152,16 +156,16 @@ describe('useOnlineContourGame — the round', () => {
   });
 
   it('drops the points at stake with every hint, down to 0 once the country is revealed', async () => {
-    // A room without `hintCategories` (an old one) plays every category: 11 steps for France.
+    // A room without `hintCategories` (an old one) plays every category: 12 steps for France.
     const { result } = await setup();
-    expect(result.current.plan).toHaveLength(11);
+    expect(result.current.plan).toHaveLength(12);
     expect(result.current.pointsAtStake).toBe(MAX_CONTOUR_POINTS);
     await act(async () => useContourRoomStore.setState({ gameState: gameState({ hintsRevealed: 2 }) }));
-    expect(result.current.pointsAtStake).toBe(contourGuessPoints(2, 11));
-    await act(async () => useContourRoomStore.setState({ gameState: gameState({ hintsRevealed: 10 }) }));
-    expect(result.current.pointsAtStake).toBe(contourGuessPoints(10, 11));
-    expect(result.current.pointsAtStake).toBeGreaterThan(0);
+    expect(result.current.pointsAtStake).toBe(contourGuessPoints(2, 12));
     await act(async () => useContourRoomStore.setState({ gameState: gameState({ hintsRevealed: 11 }) }));
+    expect(result.current.pointsAtStake).toBe(contourGuessPoints(11, 12));
+    expect(result.current.pointsAtStake).toBeGreaterThan(0);
+    await act(async () => useContourRoomStore.setState({ gameState: gameState({ hintsRevealed: 12 }) }));
     expect(result.current.pointsAtStake).toBe(0);
   });
 });
@@ -222,38 +226,140 @@ describe('useOnlineContourGame — the draft guess', () => {
 });
 
 describe('useOnlineContourGame — revealing a hint', () => {
-  it('reveals the next tier and hands the turn to the next player', async () => {
-    const { result } = await setup({ gameState: gameState({ hintsRevealed: 1 }) });
-    await act(async () => result.current.revealHint());
-    expect(revealContourRoomHint).toHaveBeenCalledWith('tabofuna', 2, 'guest');
+  it('reveals the next step of the group picked and hands the turn to the next player', async () => {
+    const { result } = await setup({ gameState: gameState({ hintsRevealed: 1, hintPicks: ['silhouette'] }) });
+    await act(async () => result.current.revealHint('cities'));
+    expect(revealContourRoomHint).toHaveBeenCalledWith('tabofuna', ['silhouette', 'cities'], 'guest');
+  });
+
+  it('lets the neighbors be picked at any time, even before the outline is sharp', async () => {
+    const { result } = await setup();
+    await act(async () => result.current.revealHint('neighbors'));
+    expect(revealContourRoomHint).toHaveBeenCalledWith('tabofuna', ['neighbors'], 'guest');
+  });
+
+  it('puts the picked steps first in the plan, in the order they were picked', async () => {
+    const picks = [...Array(3).fill('silhouette'), 'neighbors', 'cities'] as ContourRoomGameState['hintPicks'];
+    const { result } = await setup({ gameState: gameState({ hintsRevealed: 5, hintPicks: picks }) });
+    expect(result.current.plan.slice(3, 5)).toEqual(['neighborShapes', 'cityPositions']);
+    const neighbors = result.current.hintGroups.find((entry) => entry.group === 'neighbors');
+    expect(neighbors?.next).toBe('neighborFlags');
   });
 
   it('wraps around to the first player after the last one', async () => {
     const { result } = await setup({ localUid: 'guest', gameState: gameState({ turnUid: 'guest' }) });
-    await act(async () => result.current.revealHint());
-    expect(revealContourRoomHint).toHaveBeenCalledWith('tabofuna', 1, 'host');
+    await act(async () => result.current.revealHint('silhouette'));
+    expect(revealContourRoomHint).toHaveBeenCalledWith('tabofuna', ['silhouette'], 'host');
   });
 
   it('swallows a failed write', async () => {
     jest.mocked(revealContourRoomHint).mockRejectedValueOnce(new Error('offline'));
     const { result } = await setup();
-    await act(async () => result.current.revealHint());
+    await act(async () => result.current.revealHint('silhouette'));
     expect(revealContourRoomHint).toHaveBeenCalledTimes(1);
   });
 
-  it('is only for the turn-holder, and only until the name is out', async () => {
+  it('is only for the turn-holder', async () => {
     const guest = await setup({ localUid: 'guest' });
-    await act(async () => guest.result.current.revealHint());
-    await guest.unmount();
-    const allOut = await setup({ gameState: gameState({ hintsRevealed: 11 }) });
-    await act(async () => allOut.result.current.revealHint());
+    await act(async () => guest.result.current.revealHint('silhouette'));
     expect(revealContourRoomHint).not.toHaveBeenCalled();
+  });
+
+  it('does nothing for a group with no step left, and keeps the country for the end', async () => {
+    const picks: ContourRoomGameState['hintPicks'] = [
+      ...Array(3).fill('silhouette'),
+      ...Array(4).fill('neighbors'),
+      ...Array(4).fill('cities'),
+    ];
+    const early = await setup();
+    await act(async () => early.result.current.revealHint('reveal'));
+    await early.unmount();
+    const allOut = await setup({ gameState: gameState({ hintsRevealed: 11, hintPicks: picks }) });
+    await act(async () => allOut.result.current.revealHint('silhouette'));
+    expect(revealContourRoomHint).not.toHaveBeenCalled();
+    await act(async () => allOut.result.current.revealHint('reveal'));
+    expect(revealContourRoomHint).toHaveBeenCalledWith('tabofuna', [...picks, 'reveal'], 'guest');
   });
 
   it('does nothing with nobody in the room to hand the turn to', async () => {
     const { result } = await setup({ players: {} });
-    await act(async () => result.current.revealHint());
+    await act(async () => result.current.revealHint('silhouette'));
     expect(revealContourRoomHint).not.toHaveBeenCalled();
+  });
+});
+
+describe("useOnlineContourGame — sharing this device's draft guess", () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  it("mirrors the turn-holder's text to the room, 500ms after it stops changing", async () => {
+    const { result } = await setup();
+    await act(async () => result.current.setGuessText('Fr'));
+    await act(async () => jest.advanceTimersByTime(499));
+    expect(setContourRoomTyping).not.toHaveBeenCalled();
+    await act(async () => jest.advanceTimersByTime(1));
+    expect(setContourRoomTyping).toHaveBeenCalledWith('tabofuna', 'host', 'Fr');
+  });
+
+  it('writes once per pause, and not again for an unchanged value', async () => {
+    const { result } = await setup();
+    await act(async () => result.current.setGuessText('F'));
+    await act(async () => jest.advanceTimersByTime(200));
+    await act(async () => result.current.setGuessText('Fr'));
+    await act(async () => jest.advanceTimersByTime(500));
+    expect(setContourRoomTyping).toHaveBeenCalledTimes(1);
+    await act(async () => jest.advanceTimersByTime(500));
+    expect(setContourRoomTyping).toHaveBeenCalledTimes(1);
+  });
+
+  it('never writes for a spectator, once the round is over, or alone in the room', async () => {
+    const spectator = await setup({ localUid: 'guest' });
+    await act(async () => spectator.result.current.setGuessText('Fr'));
+    await act(async () => jest.advanceTimersByTime(500));
+    await spectator.unmount();
+    const over = await setup({ gameState: gameState({ verdict: 'giveUp' }) });
+    await act(async () => over.result.current.setGuessText('Fr'));
+    await act(async () => jest.advanceTimersByTime(500));
+    await over.unmount();
+    const alone = await setup({ players: { host: { name: 'Zoé', joinedAt: arrivedAt(1) } } });
+    await act(async () => alone.result.current.setGuessText('Fr'));
+    await act(async () => jest.advanceTimersByTime(500));
+    expect(setContourRoomTyping).not.toHaveBeenCalled();
+  });
+
+  it('swallows a failed write', async () => {
+    jest.mocked(setContourRoomTyping).mockRejectedValueOnce(new Error('offline'));
+    const { result } = await setup();
+    await act(async () => result.current.setGuessText('Fr'));
+    await act(async () => jest.advanceTimersByTime(500));
+    expect(setContourRoomTyping).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('useOnlineContourGame — watching the turn-holder type', () => {
+  it("shows the turn-holder's live text to a spectator", async () => {
+    const { result } = await setup({
+      localUid: 'guest',
+      gameState: gameState({ typing: { uid: 'host', text: 'Fra' } }),
+    });
+    expect(result.current.typedByActivePlayer).toBe('Fra');
+  });
+
+  it('shows nothing to the turn-holder themself, for a leftover of an earlier turn-holder, or once the round is over', async () => {
+    const own = await setup({ gameState: gameState({ typing: { uid: 'host', text: 'Fra' } }) });
+    expect(own.result.current.typedByActivePlayer).toBe('');
+    await own.unmount();
+    const leftover = await setup({
+      localUid: 'guest',
+      gameState: gameState({ turnUid: 'host', typing: { uid: 'guest', text: 'Esp' } }),
+    });
+    expect(leftover.result.current.typedByActivePlayer).toBe('');
+    await leftover.unmount();
+    const over = await setup({
+      localUid: 'guest',
+      gameState: gameState({ verdict: 'correct', typing: { uid: 'host', text: 'Fra' } }),
+    });
+    expect(over.result.current.typedByActivePlayer).toBe('');
   });
 });
 
@@ -358,7 +464,7 @@ describe('useOnlineContourGame — host duties', () => {
     );
     expect(applyContourRoomScore).toHaveBeenCalledWith('tabofuna', {
       host: 5,
-      guest: contourGuessPoints(1, 11),
+      guest: contourGuessPoints(1, 12),
     });
   });
 

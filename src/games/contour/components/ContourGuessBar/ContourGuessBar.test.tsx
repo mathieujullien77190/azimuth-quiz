@@ -6,19 +6,16 @@ const baseProps = {
   guessText: 'Fra',
   onChangeGuessText: jest.fn(),
   onSubmit: jest.fn(),
-  onHint: jest.fn(),
 };
 
 beforeEach(() => jest.clearAllMocks());
 
 describe('ContourGuessBar', () => {
-  it('forwards typing, the hint button and validation', async () => {
-    const { getByDisplayValue, getByLabelText, getByText } = await render(<ContourGuessBar {...baseProps} />);
+  it('forwards typing and validation', async () => {
+    const { getByDisplayValue, getByText } = await render(<ContourGuessBar {...baseProps} />);
     await fireEvent.changeText(getByDisplayValue('Fra'), 'France');
-    await fireEvent.press(getByLabelText(/Indice/));
     await fireEvent.press(getByText('Valider'));
     expect(baseProps.onChangeGuessText).toHaveBeenCalledWith('France');
-    expect(baseProps.onHint).toHaveBeenCalledTimes(1);
     expect(baseProps.onSubmit).toHaveBeenCalledTimes(1);
   });
 
@@ -33,6 +30,17 @@ describe('ContourGuessBar', () => {
     expect(getByRole('button', { name: 'Valider' }).props.accessibilityState.disabled).toBe(true);
     await fireEvent(getByPlaceholderText('Nom du pays…'), 'submitEditing');
     expect(baseProps.onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("is read-only on somebody else's turn: shows their text, no validation, and reports a tap", async () => {
+    const onReadOnlyPress = jest.fn();
+    const { getByDisplayValue, queryByText } = await render(
+      <ContourGuessBar {...baseProps} onReadOnlyPress={onReadOnlyPress} readOnly />,
+    );
+    expect(getByDisplayValue('Fra').props.editable).toBe(false);
+    expect(queryByText('Valider')).toBeNull();
+    await fireEvent.press(getByDisplayValue('Fra'));
+    expect(onReadOnlyPress).toHaveBeenCalledTimes(1);
   });
 
   it('shows the feedback about the previous wrong attempt only when given', async () => {

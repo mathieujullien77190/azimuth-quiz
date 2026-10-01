@@ -124,7 +124,7 @@ service cloud.firestore {
             && turnBasedPlayer(['players', 'revealedClueIds', 'turnUid', 'verdict', 'roundWinnerUid',
               'wrongGuessUid', 'wrongGuessSeq', 'typing']))
           || (resource.data.game == 'silhouette'
-            && turnBasedPlayer(['players', 'hintsRevealed', 'turnUid', 'verdict', 'roundWinnerUid',
+            && turnBasedPlayer(['players', 'hintsRevealed', 'hintPicks', 'typing', 'turnUid', 'verdict', 'roundWinnerUid',
               'wrongGuessUid', 'wrongGuessSeq'])));
 
       // Seul l'hôte supprime sa room : à la fermeture de la partie, et avant d'en créer une nouvelle

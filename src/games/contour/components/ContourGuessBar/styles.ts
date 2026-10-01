@@ -18,20 +18,6 @@ export const createStyles = ({ colors, typography }: Theme) =>
       alignItems: 'center',
       gap: spacing.sm,
     },
-    // Round icon-only button, inline in the input row.
-    hintFab: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.surfaceHigh,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-    },
-    hintFabIcon: {
-      fontSize: fontSize.subtitle,
-    },
     input: {
       ...typography.heading,
       flex: 1,

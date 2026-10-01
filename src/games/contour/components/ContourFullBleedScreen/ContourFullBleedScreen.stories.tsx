@@ -26,7 +26,7 @@ const t = translations.fr;
 const board = projectRound(SAMPLE_CONTOUR_COUNTRY, 380, 300);
 
 // Every kind of hint in play: 3 silhouette steps, 3 for the neighbors, 2 for the cities, 2 for the capital,
-// then the reveal (11 steps for France).
+// then the reveal (12 steps for France).
 const PLAN = buildHintPlan(['silhouette', 'neighbors', 'cities', 'capital'], SAMPLE_CONTOUR_COUNTRY);
 
 /** The header (with the round's question), in the toolbar's language. */
@@ -52,7 +52,7 @@ const guessingArgs = (_texts: Translations, _args: Record<string, unknown>, lang
   hintsRevealed: 8,
   footer: (
     <GameFooter>
-      <ContourGuessBar guessText="" onChangeGuessText={fn()} onHint={fn()} onSubmit={fn()} />
+      <ContourGuessBar guessText="" onChangeGuessText={fn()} onSubmit={fn()} />
     </GameFooter>
   ),
 });
