@@ -34,7 +34,8 @@ de branche ni de PR, sauf si l'utilisateur le demande.
      (`coverage-gaps.cjs` donne fichier et ligne), écrire les tests qui manquent (pas de `/* istanbul ignore */` ; un code
      jamais atteint se supprime plutôt que de se tester), ou déléguer à l'agent `unit-test-upgrader`. Puis relancer.
      Un test cassé par le changement se répare, il ne se supprime pas pour passer.
-   - Si du code de `src/` utilisé par l'admin a bougé : `npm run build` dans `admin/` (et `npx tsc --noEmit -p .` dedans).
+   - **Admin** : `(cd admin && npx tsc --noEmit -p . && npm run test:coverage)` : les tests Vitest passent et la couverture de
+     `admin/src` est aussi de **100 %** (même règle : sous 100 %, on n'avance pas). Puis `npm run build` dans `admin/`.
    - Pour un gros lot, proposer `/quality-check` (structure des composants, Storybook, code mort) avant de pousser.
 3. **Règles et index Firestore : le push ne les déploie pas**, et c'est ce qui a déjà cassé le jeu (`hintPicks` ajouté au
    dépôt mais pas en ligne : l'indice du joueur non hôte « revenait »). Donc, à chaque push :

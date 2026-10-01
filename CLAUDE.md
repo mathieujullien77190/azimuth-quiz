@@ -16,7 +16,7 @@ un seul contributeur, commits directs sur `master`.
 
 ## Structure
 
-Convention du skill `react-structure` : chaque composant est un dossier `index.ts` + `<Name>.tsx` (export nomme) +
+Convention du skill personnel `react-structure` (hors depot) : chaque composant est un dossier `index.ts` + `<Name>.tsx` (export nomme) +
 `helpers.ts` + `constants.ts` + `types.ts` + `styles.ts` (le seul `createStyles`, jamais de logique dedans). Dans un dossier
 `screens/<Screen>/` qui contient le container ET sa vue (`OnlineGameScreen.tsx` + `OnlineGameScreenView.tsx`), chacun a son
 fichier de styles nomme d'apres lui (`OnlineGameScreenView.styles.ts`). Alias `@/` → `src/`. Identifiants de code en anglais.
@@ -115,7 +115,8 @@ On choisit un cap et on estime la distance **de surface** (`Guess` = `bearing` +
 droite. Score (`games/compass/helpers/scoring.ts`) : courbe logarithmique sur l'ecart de distance et ecart angulaire 2D,
 500 points max pour la direction et 500 pour la distance. Lieux tires par `fetchRandomPlaces`
 (`games/compass/helpers/firestorePlaces.ts`, hors barrel). `EarthSection` dessine la Terre de profil (le joueur en haut,
-cap = gauche/ouest ou droite/est) ; son zoom est continu (`fitZoom` sur les marques actuelles, jusqu'a `MAX_ZOOM`).
+cap = gauche/ouest ou droite/est) ; son zoom est continu (`fitZoom` sur les marques actuelles, jusqu'a `MAX_ZOOM`). Quand
+l'appelant donne `origin` (le point de depart, Boussole le fait, seulement a la solution), un bouton « 3D » bascule sur `Globe3D` : une boule qu'on tourne au doigt (projection orthographique en SVG, decor `globeLand.ts`, contours Natural Earth 110 m simplifies sans l'Antarctique : un asset decoratif, pas une donnee de jeu) ou chaque reponse est son trajet de grand cercle (`destinationPoint`/`routePoints`, coupe au bord de la boule quand il passe derriere) ; la vraie reponse n'est qu'un point entoure. A tout zoom. Au depart la boule montre le cote de la Terre ou sont le depart et les reponses (`centerOn`). Un satellite (avion le jour) fait le tour de la Terre sur le grand cercle depart → lieu (`orbitPoint`, vu aussi derriere la boule au-dela du bord), cliquable (message). En vue 3D, pas de zoom +/−.
 
 ## Indices
 
@@ -128,6 +129,7 @@ tire** : le document `places/{cle}` porte les copies (`country`, `clues.riddles`
   pas en France (heure locale, capitale ou non, couleurs du drapeau, devise, indicatif). `personality`, `wordplay` et
   `charade` ne sont offerts que si le lieu les a cures (charade : TOUTES les syllabes ont une devinette, `charadeReady`).
   `ClueGrid` boucle sur `cluesFor`, et `vowelsUnlocked` attend que tous les indices offerts soient pioches.
+- **Globe 3D** (`globe`, 2 clics, carte pleine largeur) : `Globe3D` avec le point de depart (`gameState.origin`, passe en prop `origin` jusqu'a `ClueCard`) et le lieu entoure ; 1er clic = boule nue + equateur + meridien de Greenwich (props `equator`/`greenwich`, `land={false}`), 2e clic = les terres s'ajoutent.
 - **Score** : `maxScoreForRound`/`remainingScore(revealedClueIds, place)` suivent la liste reellement offerte.
 - **Charade** (`helpers/charade.ts`) : une devinette par syllabe du nom (`clues.syllables`, possiblement vide), dictionnaire
   global `charadeRiddles`, paliers plafonnes a `CHARADE_SYLLABLE_STAGE_CAP` (4) + un palier final. L'admin edite le
@@ -196,7 +198,7 @@ Une ecriture Firestore qui echoue ne doit plus etre avalee : on met `.catch(repo
 (`helpers/reportError.ts`), jamais `.catch(() => {})`. `reportError` log en console, previent le joueur quand c'etait
 une de ses actions (`kind: 'game'`, notice `ErrorNoticeHost`) et enregistre l'erreur dans la collection `errors`
 (`helpers/errorSink.ts`, installe dans `app/_layout.tsx`) ; `kind: 'background'` (presence, saisie en direct, nettoyage)
-n'affiche rien. Une meme erreur n'est enregistree qu'une fois par 10 s (jeu) ou 60 s (fond), avec un compteur de
+n'affiche rien (`console.debug` : en dev, un `console.error` s'affiche en toast rouge). Une meme erreur n'est enregistree qu'une fois par 10 s (jeu) ou 60 s (fond), avec un compteur de
 repetitions. Les regles n'acceptent une erreur que dans le meme lot que deux compteurs du jour (`errorQuota`) : 30 par
 appareil et 1000 au total par jour ; ni `errors` ni `errorQuota` ne passent par le journal ni par `dataVersion`. Elles se
 lisent dans la page « Erreurs » de l'admin (nouvelles erreurs en direct, nettoyage des plus de 30 jours : pas de TTL, il
@@ -214,7 +216,7 @@ exige la facturation Firebase).
   `countries`, `syllables`, `jobs`, `wordplay`, `errors` ; `/admin/` = lieux), declaree dans `admin/src/pageList.ts` ; l'admin lit les
   donnees dans une copie locale (IndexedDB) tenue a jour par le journal, voir le skill `firestore-data`.
 - **Storybook** : stories colocalisees (`src/**/<Name>.stories.tsx`, config dans `admin/.storybook`, `npm run storybook`),
-  code reel affiche via `source(code)` + `<Story>.source.md` (skill `storybook-story`). Menu : `Common`, `Compass`, `Clues`,
+  code reel affiche via `source(code)` + `<Story>.source.md` (skill personnel `storybook-story`, hors depot). Menu : `Common`, `Compass`, `Clues`,
   `Silhouette`, `Setup`, `UI` (ordre dans `admin/.storybook/preview.tsx` : y ajouter toute nouvelle section). La barre
   d'outils propose theme et langue. Un composant dumb a sa story, pas les containers smart.
 
@@ -223,15 +225,19 @@ exige la facturation Firebase).
 - **Web / GitHub Pages** : `app.json` `web.output: "static"` + `experiments.baseUrl: "/azimuth-quiz"` ; `@expo/metro-runtime`
   est requis. `.github/workflows/deploy-pages.yml` exporte le jeu, l'admin (`dist/admin/`) et Storybook et les publie a chaque
   push sur `master` (Pages en source « GitHub Actions »).
-- **Skills du projet** (`.claude/skills/`) : `quality-check` (couverture 100 %, structure, Storybook, code mort : rapporte sans
-  corriger), `push` (verifier, versionner, committer, pousser), `firestore-data` (modifier les donnees Firestore),
-  `react-structure`, `storybook-story`, `commit-push`.
-- **Avant de pousser** : `npx tsc --noEmit`, `npx expo lint`, `npx jest --coverage` (seuil **100 %**), build de l'admin si
-  du code partage a bouge. Ne jamais committer sans demande.
+- **Skills du projet** (dans le depot, `.claude/skills/`) : `quality-check` (couverture 100 %, structure, Storybook, code
+  mort : rapporte sans corriger), `push` (verifier, versionner, committer, pousser), `firestore-data` (modifier les donnees
+  Firestore). Les skills `react-structure`, `storybook-story` et `commit-push` sont des skills **personnels** (dossier
+  utilisateur `~/.claude/skills/`, hors depot) : le projet s'y refere mais ne les contient pas.
+- **Tests** : le jeu avec Jest (`npx jest --coverage`, seuil **100 %**, ignore `admin/`) et l'admin avec **Vitest**
+  (`cd admin && npm run test:coverage`, seuil **100 %** sur `admin/src`, jsdom + Testing Library ; `main.tsx` seul est exclu).
+  Pas de `/* istanbul ignore */` : un morceau inatteignable se supprime ou se reecrit plutot que de se contourner.
+- **Avant de pousser** : `npx tsc --noEmit`, `npx expo lint`, `npx jest --coverage` et `npm run test:coverage` dans `admin/`
+  (les deux a **100 %**), build de l'admin si du code partage a bouge. Ne jamais committer sans demande.
 
 ## Etat connu
 
-- `npx expo lint` : 14 erreurs, toutes `react-hooks/refs` ou `react-hooks/set-state-in-effect`, dans `Compass.tsx`,
+- `npx expo lint` : 15 erreurs, toutes `react-hooks/refs` ou `react-hooks/set-state-in-effect`, dans `Compass.tsx`, `Globe3D.tsx`,
   `useHeading.ts`, `EarthSection.tsx` et `SliderTrack.tsx`. Elles viennent d'idiomes voulus (un ref mis a jour a chaque rendu
   pour rester lisible depuis le `PanResponder`, `Animated.Value` lu au rendu pour l'orbite) : pas des erreurs a corriger une
   par une.

@@ -30,6 +30,10 @@ npx jest --coverage --coverageReporters=json --coverageReporters=json-summary
 node .claude/skills/quality-check/scripts/coverage-gaps.cjs
 ```
 
+L'admin a ses propres tests (Vitest, hors Jest) et son propre seuil de **100 %** : `cd admin && npm run test:coverage`
+(statements, branches, functions, lines ; seul `src/main.tsx` est exclu). Même règle que pour le jeu : un trou = un cas de
+test qui manque, ou du code inatteignable a supprimer, jamais un commentaire d'exclusion.
+
 - Critère : tous les tests passent ET `coverage-gaps.cjs` répond "Nothing uncovered" (le `coverageThreshold` de
   `package.json` fait aussi échouer jest sous 100 %). Les fichiers `*.stories.tsx`, `storyFixtures.ts` et
   `src/storybook/**` sont exclus du calcul (`collectCoverageFrom`) — ne les ajoute pas au périmètre.
