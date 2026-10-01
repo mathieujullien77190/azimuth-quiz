@@ -4,15 +4,25 @@ import { flagEmoji } from '@/helpers/flagEmoji';
 import { allContours } from '../../api/contour';
 import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 
-import { fetchCountries, saveCountry, type CountryPatch, type CountryRecord } from '../../api/countries';
+import {
+  fetchCountries,
+  saveContourDifficulty,
+  saveCountry,
+  type CountryPatch,
+  type CountryRecord,
+} from '../../api/countries';
+import { DIFFICULTY_COLORS, DIFFICULTY_LABELS, DIFFICULTY_ORDER } from '../../constants';
 import { countryName } from '../../data';
 import { EditableValue } from '../../components/EditableValue';
 import { Pagination, pageCount, paginate } from '../../components/Pagination';
 import { ContourEditor } from '../ContourView';
 
 import { FlagEditor } from './FlagEditor';
+import { CONTINENT_LABELS, CONTINENT_ORDER } from './constants';
 import { filterCountries, sortCountries } from './helpers';
-import type { Field, SaveState, SortKey } from './types';
+import type { Difficulty } from '@/types';
+
+import type { Continent, Field, SaveState, SortKey } from './types';
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'fr', label: 'Nom (FR)' },
@@ -26,6 +36,7 @@ export const CountriesView = () => {
   const [saveState, setSaveState] = useState<SaveState | null>(null);
 
   const [query, setQuery] = useState('');
+  const [continent, setContinent] = useState<Continent | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>('fr');
   const [sortDir, setSortDir] = useState<1 | -1>(1);
   const [page, setPage] = useState(1);
@@ -57,12 +68,12 @@ export const CountriesView = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [query, sortKey, sortDir]);
+  }, [query, continent, sortKey, sortDir]);
 
   const visible = useMemo(() => {
     if (!countries) return [];
-    return sortCountries(filterCountries(countries, query), sortKey, sortDir);
-  }, [countries, query, sortKey, sortDir]);
+    return sortCountries(filterCountries(countries, query, continent), sortKey, sortDir);
+  }, [countries, query, continent, sortKey, sortDir]);
 
   const totalPages = pageCount(visible.length);
   const pageRows = useMemo(() => paginate(visible, page), [visible, page]);
@@ -81,6 +92,21 @@ export const CountriesView = () => {
       .catch((err: Error) => {
         setCountries((cur) => cur?.map((c) => (c.code === row.code ? previous : c)) ?? cur);
         setSaveState({ code: row.code, field, status: 'error', message: err.message });
+      });
+  };
+
+  /** The Silhouette difficulty: its own write, because the group numbers follow (see `saveContourDifficulty`). */
+  const handleDifficultyChange = (row: CountryRecord, difficulty: Difficulty) => {
+    if (!countries) return;
+    const previous = countries.find((c) => c.code === row.code)!;
+    setCountries(countries.map((c) => (c.code === row.code ? { ...c, difficulty } : c)));
+    setSaveState({ code: row.code, field: 'difficulty', status: 'saving' });
+
+    saveContourDifficulty(row, difficulty)
+      .then(() => setSaveState({ code: row.code, field: 'difficulty', status: 'saved' }))
+      .catch((err: Error) => {
+        setCountries((cur) => cur?.map((c) => (c.code === row.code ? previous : c)) ?? cur);
+        setSaveState({ code: row.code, field: 'difficulty', status: 'error', message: err.message });
       });
   };
 
@@ -110,6 +136,23 @@ export const CountriesView = () => {
         <div className="row">
           <span className="field-label">Recherche</span>
           <input type="search" placeholder="Nom ou code…" value={query} onChange={(e) => setQuery(e.target.value)} />
+        </div>
+        <div className="row">
+          <span className="field-label">Continent</span>
+          <button className="chip" type="button" aria-pressed={continent === null} onClick={() => setContinent(null)}>
+            Tous
+          </button>
+          {CONTINENT_ORDER.map((key) => (
+            <button
+              key={key}
+              className="chip"
+              type="button"
+              aria-pressed={continent === key}
+              onClick={() => setContinent(continent === key ? null : key)}
+            >
+              {CONTINENT_LABELS[key]}
+            </button>
+          ))}
         </div>
         <div className="row">
           <span className="field-label">Tri</span>
@@ -154,6 +197,24 @@ export const CountriesView = () => {
                   >
                     {showNeighbors ? 'Masquer les voisins' : 'Afficher les voisins'}
                   </button>
+                  {row.difficulty !== null && (
+                    <div className="field-cell">
+                      <select
+                        className="field-select"
+                        aria-label="Difficulté Silhouette"
+                        style={{ '--tier-color': DIFFICULTY_COLORS[row.difficulty] } as React.CSSProperties}
+                        value={row.difficulty}
+                        onChange={(e) => handleDifficultyChange(row, e.target.value as Difficulty)}
+                      >
+                        {DIFFICULTY_ORDER.map((d) => (
+                          <option key={d} value={d}>
+                            {DIFFICULTY_LABELS[d]}
+                          </option>
+                        ))}
+                      </select>
+                      {saveFlagFor(row, 'difficulty')}
+                    </div>
+                  )}
                   {contourCountry && (
                     <button
                       type="button"

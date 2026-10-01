@@ -1,5 +1,7 @@
 export type SortKey = 'code' | 'fr' | 'en';
 
-export type Field = 'fr' | 'en' | 'currency' | 'currencySymbol' | 'phoneCode' | 'flag';
+export type Continent = 'europe' | 'asia' | 'africa' | 'northAmerica' | 'southAmerica' | 'oceania' | 'other';
+
+export type Field = 'fr' | 'en' | 'currency' | 'currencySymbol' | 'phoneCode' | 'flag' | 'difficulty';
 
 export type SaveState = { code: string; field: Field; status: 'saving' | 'saved' | 'error'; message?: string };

@@ -1,7 +1,8 @@
 import type { CountryDoc } from '@/data/firestore/types';
-import type { ClueFlagColorRow } from '@/types';
+import { hasSilhouette } from '@/data/firestore/read';
+import type { ClueFlagColorRow, Difficulty } from '@/types';
 
-import { applyCountryChange, data } from '../data';
+import { applyContourDifficultyChange, applyCountryChange, data } from '../data';
 
 /** A country as the admin lists and edits it. */
 export type CountryRecord = {
@@ -14,6 +15,8 @@ export type CountryRecord = {
   phoneCode: string | null;
   /** ISO codes of the countries sharing a land border. */
   neighbors: readonly string[];
+  /** Silhouette difficulty, `null` for a country without a silhouette. */
+  difficulty: Difficulty | null;
 };
 
 const recordOf = (code: string, doc: CountryDoc): CountryRecord => ({
@@ -25,6 +28,7 @@ const recordOf = (code: string, doc: CountryDoc): CountryRecord => ({
   currencySymbol: doc.currencySymbol ?? null,
   phoneCode: doc.phoneCode ?? null,
   neighbors: doc.borders ?? [],
+  difficulty: hasSilhouette(doc) ? doc.difficulty : null,
 });
 
 /** Reads the in-memory copy of Firestore (see `data.ts`): kept `async` so call sites don't care. */
@@ -56,4 +60,10 @@ export const saveCountry = async (row: CountryRecord, patch: CountryPatch): Prom
   // The country and every copy of it (its places, the contours citing it) are written together.
   await applyCountryChange(row.code, doc);
   return { ...row, ...patch };
+};
+
+/** Silhouette difficulty of a country that has one (its group numbers follow, see `applyContourDifficultyChange`). */
+export const saveContourDifficulty = async (row: CountryRecord, difficulty: Difficulty): Promise<CountryRecord> => {
+  await applyContourDifficultyChange(row.code, difficulty);
+  return { ...row, difficulty };
 };

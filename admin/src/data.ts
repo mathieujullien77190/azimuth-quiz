@@ -18,25 +18,33 @@ import {
 import { collapseJournal } from '@/data/firestore/journal';
 import { planCountryChange } from '@/data/firestore/denormalize';
 import { planJobChange, planRiddleChange, planSyllableRemoval } from '@/data/firestore/denormalizeClues';
-import { CLUES_NUMBERING, cluesCategory, COMPASS_NUMBERING, planRegroup } from '@/data/firestore/numbering';
+import {
+  CLUES_NUMBERING,
+  cluesCategory,
+  COMPASS_NUMBERING,
+  planContourDifficultyChange,
+  planRegroup,
+} from '@/data/firestore/numbering';
 import { contourFromDoc, hasSilhouette } from '@/data/firestore/read';
 import { normalizeSyllable } from '@/data/firestore/riddles';
 import {
   CLUES_COUNTS_DOC,
   COLLECTIONS,
   COMPASS_COUNTS_DOC,
+  CONTOUR_COUNTS_DOC,
   DATA_VERSION_DOC,
   JOURNAL_COLLECTION,
   type CluesCountsDoc,
   type CompassCounts,
   type CompassCountsDoc,
+  type ContourCountsDoc,
   type CountryDoc,
   type JobDoc,
   type JournalChange,
   type JournalDoc,
   type PlaceDoc,
 } from '@/data/firestore/types';
-import type { ContourCountry } from '@/types';
+import type { ContourCountry, Difficulty } from '@/types';
 
 import { db } from './firebase';
 import { readSnapshot, writeSnapshot } from './snapshotStore';
@@ -349,6 +357,43 @@ export const applyCountryChange = async (code: string, next: CountryDoc): Promis
   data().countries[code] = next;
   Object.assign(data().places, plan.places);
   Object.assign(data().countries, plan.countries);
+  contoursMemo = null;
+  persist();
+};
+
+/**
+ * Changes the Silhouette difficulty of country `code` and keeps the numbering of the difficulty groups dense in the same
+ * run (see `planContourDifficultyChange`): the country's own `n`, the country that takes the number it frees, and
+ * `meta/contourCounts`. The game draws its countries from those numbers, so a difficulty written alone would leave a hole.
+ */
+export const applyContourDifficultyChange = async (code: string, difficulty: Difficulty): Promise<void> => {
+  const current = data().countries[code];
+  if (!current || current.difficulty === difficulty) return;
+  const stored = await readMeta<ContourCountsDoc>(CONTOUR_COUNTS_DOC);
+  const plan = planContourDifficultyChange(data().countries, stored?.counts ?? {}, code, difficulty);
+  const next: CountryDoc = { ...current, difficulty, n: plan.n };
+  await commitInBatches(
+    [
+      (batch) => batch.set(doc(db, COLLECTIONS.countries, code), next),
+      ...Object.entries(plan.moved).map(
+        ([otherCode, n]) =>
+          (batch: WriteBatch) =>
+            batch.update(doc(db, COLLECTIONS.countries, otherCode), { n }),
+      ),
+      (batch) =>
+        batch.set(doc(db, CONTOUR_COUNTS_DOC.collection, CONTOUR_COUNTS_DOC.id), {
+          counts: plan.counts,
+          ...(stored?.shuffled && { shuffled: true as const }),
+        } satisfies ContourCountsDoc),
+    ],
+    [
+      { c: 'countries', id: code, op: 'set' },
+      ...Object.keys(plan.moved).map((id) => ({ c: 'countries' as const, id, op: 'set' as const })),
+      { c: 'meta', id: CONTOUR_COUNTS_DOC.id, op: 'set' },
+    ],
+  );
+  data().countries[code] = next;
+  for (const [otherCode, n] of Object.entries(plan.moved)) data().countries[otherCode] = { ...data().countries[otherCode], n };
   contoursMemo = null;
   persist();
 };
