@@ -45,13 +45,18 @@ const messageOf = (error: unknown): string =>
   (error instanceof Error ? error.message : String(error)).slice(0, MAX_MESSAGE_LENGTH);
 
 /**
- * Where a failed Firestore write used to vanish (`.catch(() => {})`): logs it to the console, tells the player when it
+ * Where a failed Firestore write used to vanish (`.catch(() => {})`): logs it to the console (as an error only for the player's own actions), tells the player when it
  * was one of their own actions, and records it in the error log (throttled, see `INTERVAL_MS`). Never throws and never
  * reports its own failures: a log that cannot be written is simply lost.
  */
 export const reportError = (action: string, error: unknown, { kind = 'game', room = null }: ReportOptions = {}): void => {
-  console.error(`[${action}]`, error);
-  if (kind === 'game') useErrorNotice.getState().show();
+  // Upkeep stays out of the console's error channel: dev builds turn every console.error into a red toast on screen.
+  if (kind === 'game') {
+    console.error(`[${action}]`, error);
+    useErrorNotice.getState().show();
+  } else {
+    console.debug(`[${action}]`, error);
+  }
 
   const code = codeOf(error);
   const key = `${action}|${code}|${room}`;

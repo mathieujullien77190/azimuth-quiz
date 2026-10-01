@@ -4,11 +4,13 @@ import { reportError, reporting, resetErrorThrottle, setErrorReporter, type Erro
 const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 let consoleError: jest.SpyInstance;
+let consoleDebug: jest.SpyInstance;
 let now = 1_000_000;
 const sink = jest.fn<Promise<void>, [ErrorRecord]>(() => Promise.resolve());
 
 beforeEach(() => {
   consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+  consoleDebug = jest.spyOn(console, 'debug').mockImplementation(() => {});
   jest.spyOn(Date, 'now').mockImplementation(() => now);
   sink.mockReset();
   sink.mockImplementation(() => Promise.resolve());
@@ -31,7 +33,8 @@ describe('reportError', () => {
 
   it('keeps upkeep errors away from the player', () => {
     reportError('room.heartbeat', new Error('boom'), { kind: 'background' });
-    expect(consoleError).toHaveBeenCalled();
+    expect(consoleDebug).toHaveBeenCalledWith('[room.heartbeat]', expect.any(Error));
+    expect(consoleError).not.toHaveBeenCalled();
     expect(useErrorNotice.getState().visible).toBe(false);
   });
 

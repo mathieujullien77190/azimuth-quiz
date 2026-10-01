@@ -80,7 +80,7 @@ describe('game writes', () => {
     expect(updateDoc).toHaveBeenCalledWith(REF, { revealedClueIds: ['distance', 'distance'], turnUid: 'max' });
   });
 
-  it('setClueRoomTyping mirrors the turn-holder\'s in-progress text', async () => {
+  it("setClueRoomTyping mirrors the turn-holder's in-progress text", async () => {
     await setClueRoomTyping('tabofuna', 'zoe', 'Pari');
     expect(updateDoc).toHaveBeenCalledWith(REF, { typing: { uid: 'zoe', text: 'Pari' } });
   });

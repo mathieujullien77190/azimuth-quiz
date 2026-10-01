@@ -185,8 +185,10 @@ service cloud.firestore {
               'wrongGuessUid', 'wrongGuessSeq'])));
 
       // Seul l'hôte supprime sa room : à la fermeture de la partie, et avant d'en créer une nouvelle
-      // (`deletePreviousRoomsByHost`, qui efface toutes ses anciennes rooms, quel que soit le jeu).
-      allow delete: if isHost();
+      // (`deletePreviousRoomsByHost`, qui efface toutes ses anciennes rooms, quel que soit le jeu). Supprimer une room
+      // qui n'existe deja plus (l'hote l'a fermee juste avant, le menage de l'ecran de preparation passe apres) ne fait
+      // rien : c'est permis, plutot qu'un « permission denied » sans objet.
+      allow delete: if request.auth != null && (resource == null || isHost());
     }
   }
 }
