@@ -703,6 +703,33 @@ td.muted {
   display: block;
 }
 
+/* The cities and the capital the game offers as hints: a dot (a star for the capital), its name just below. */
+.contour-place-dot,
+.contour-place-star {
+  fill: var(--text);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.contour-place-dot {
+  font-size: 11px;
+}
+
+.contour-place-star {
+  font-size: 18px;
+}
+
+.contour-place-name {
+  fill: var(--text);
+  font-size: 11px;
+  font-weight: 800;
+  text-anchor: middle;
+  dominant-baseline: hanging;
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 3px;
+}
+
 .contour-outline {
   fill: none;
   stroke: var(--text-muted);
@@ -727,7 +754,17 @@ td.muted {
 .contour-border {
   fill: none;
   stroke: var(--text-muted);
-  stroke-width: 1;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* The neighbors in the preview, as in the game: only their own lines, dashed, same width as the rest. */
+.contour-neighbor-line {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 2;
+  stroke-dasharray: 4 4;
   stroke-linejoin: round;
   stroke-linecap: round;
 }

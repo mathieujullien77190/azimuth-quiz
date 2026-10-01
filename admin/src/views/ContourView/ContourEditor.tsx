@@ -10,7 +10,7 @@ import {
   polylinePath,
   projectPoints,
 } from '@/games/contour/components/ContourBoard/helpers';
-import { BOARD_PADDING_RATIO } from '@/games/contour/components/ContourBoard/constants';
+import { BOARD_PADDING_RATIO, HINT_STACK_GAP_RATIO } from '@/games/contour/components/ContourBoard/constants';
 // Pure too (no React Native): which countries touch this one, and its outline cut into coast and
 // shared borders — the very same split the game draws.
 import { computeBorders } from '@/games/contour/helpers/borders';
@@ -20,7 +20,7 @@ import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 import type { ContourCountry, ContourNeighbor, Point2D } from '@/types';
 
 import { allContours, deleteNeighbor, saveCenterLabelPosition, saveNeighborPosition } from '../../api/contour';
-import { countryName } from '../../data';
+import { countryName, data } from '../../data';
 import { DeleteX } from '../../components/DeleteX';
 
 import { neighborIcon, neighborName } from './helpers';
@@ -51,12 +51,11 @@ export const ContourEditor = ({
   const [dragPos, setDragPos] = useState<{ index: number; pos: Point2D } | null>(null);
   // Same idea as `dragPos`, for the target country's own flag/name anchor (see `ContourCountry.centerLabel`).
   const [centerDragPos, setCenterDragPos] = useState<Point2D | null>(null);
-  // "Aperçu simplification": a read-only preview of the outline at one precision level (the way the
-  // game shows it hint after hint); "Éditer" (default) is the drag-and-drop editing on the full ring.
-  const [mode, setMode] = useState<'edit' | 'preview'>('edit');
-  const [level, setLevel] = useState(0);
+  // The outline at one precision level, the way the game shows it hint after hint: 0 to 3 (3 = the full ring), then
+  // 4 = the neighbors (the default: the whole map, neighbors included). The neighbors' flags and the country's own
+  // flag can be dragged whatever the level.
+  const [level, setLevel] = useState(FULL_PRECISION + 1);
   const [seed, setSeed] = useState(newSimplifySeed);
-  const previewing = mode === 'preview';
 
   // Exactly the game's own framing (`ContourGameScreen`'s `projectRound`): fit to the country's
   // own outline alone — the canvas every neighbor's curated `x`/`y` (a fraction of it) scales
@@ -80,7 +79,8 @@ export const ContourEditor = ({
   const levels = useMemo(() => simplificationLevels(country.points, seed), [country.points, seed]);
   // Below the full ring the game draws the simplified outline alone: no neighbors, one stroke; the
   // neighbors are their own tier, after the full ring.
-  const simplified = previewing && level < FULL_PRECISION;
+  const simplified = level < FULL_PRECISION;
+  const neighborsTier = level > FULL_PRECISION;
   const simplifiedPath = useMemo(
     () => polylinePath(projectPoints(levels[Math.min(level, FULL_PRECISION)], project)),
     [levels, level, project],
@@ -89,11 +89,12 @@ export const ContourEditor = ({
     () => (simplified ? projectPoints(levels[level].slice(0, -1), project) : []),
     [simplified, levels, level, project],
   );
-  const drawNeighbors = previewing ? level > FULL_PRECISION : showNeighbors;
+  const drawNeighbors = neighborsTier || (level === FULL_PRECISION && showNeighbors);
 
-  // Same layering as the game's ContourBoard: neighbors filled without a stroke, the country filled
-  // without a stroke, then its coast (heavy) and its shared borders (thin) on top — so a border is one
-  // line, not one per country.
+  // Same layering as the game's ContourBoard: the country filled without a stroke, then its coast and its shared
+  // borders on top — so a border is one line, not one per country. The neighbors are filled (a backdrop) when the
+  // "Afficher les voisins" option is on; on the neighbors tier (the game's own look) they are dashed lines only: their
+  // outline minus the edges they share with the country.
   const decor = useMemo(() => {
     if (!drawNeighbors) return null;
     const borders = computeBorders(country, allContours());
@@ -101,10 +102,26 @@ export const ContourEditor = ({
       runs.map((run) => polylinePath(projectPoints(run, project))).join(' ');
     return {
       neighbors: borders.neighborRings.map((ring) => polylinePath(projectPoints(ring, project))),
+      neighborLines: runsPath(borders.neighborRuns),
       coast: runsPath(borders.coastRuns),
       border: runsPath(borders.borderRuns),
     };
   }, [drawNeighbors, country, project]);
+
+  // The cities and the capital the game offers as hints (precomputed in the country's document), at the very same
+  // spots: projected like the outline, a dot (a star for the capital) with the name stacked just below.
+  const places = useMemo(() => {
+    const doc = data().countries[country.code];
+    const gap = Math.min(boardSize.width, boardSize.height) * HINT_STACK_GAP_RATIO;
+    const mark = (place: { name: string; lon: number; lat: number }, capital: boolean) => {
+      const { x, y } = project([place.lon, place.lat]);
+      return { name: place.name, capital, x, y, nameY: y + gap };
+    };
+    return [
+      ...(doc?.cities ?? []).map((city) => mark(city, false)),
+      ...(doc?.capital ? [mark(doc.capital, true)] : []),
+    ];
+  }, [country.code, project, boardSize]);
 
   // Refs, not state: a drag session's own starting point never needs to trigger a re-render by
   // itself (only `dragPos`, updated on every move, does).
@@ -238,39 +255,29 @@ export const ContourEditor = ({
     <div className="contour-editor">
       <div className="precision-panel">
         <span className="field-label">Précision du tracé</span>
-        <button type="button" className="chip" aria-pressed={!previewing} onClick={() => setMode('edit')}>
-          Éditer
+        {levels.map((ring, index) => (
+          <button
+            key={index}
+            type="button"
+            className="chip"
+            aria-pressed={level === index}
+            onClick={() => setLevel(index)}
+          >
+            Niveau {index} — {ring.length - 1} sommets
+          </button>
+        ))}
+        <button
+          type="button"
+          className="chip"
+          aria-pressed={neighborsTier}
+          onClick={() => setLevel(FULL_PRECISION + 1)}
+        >
+          Niveau {FULL_PRECISION + 1} — voisins
         </button>
-        <button type="button" className="chip" aria-pressed={previewing} onClick={() => setMode('preview')}>
-          Aperçu simplification
+        <button type="button" className="chip" onClick={() => setSeed(newSimplifySeed())}>
+          Autre variante
         </button>
-        {previewing && (
-          <>
-            {levels.map((ring, index) => (
-              <button
-                key={index}
-                type="button"
-                className="chip"
-                aria-pressed={level === index}
-                onClick={() => setLevel(index)}
-              >
-                Niveau {index} — {ring.length - 1} sommets
-              </button>
-            ))}
-            <button
-              type="button"
-              className="chip"
-              aria-pressed={level > FULL_PRECISION}
-              onClick={() => setLevel(FULL_PRECISION + 1)}
-            >
-              Niveau {FULL_PRECISION + 1} — voisins
-            </button>
-            <button type="button" className="chip" onClick={() => setSeed(newSimplifySeed())}>
-              Autre variante
-            </button>
-            <span className="place-meta">graine {seed}</span>
-          </>
-        )}
+        <span className="place-meta">graine {seed}</span>
       </div>
       <div className="contour-main-row">
         <div className="contour-board-wrap" style={{ width: boardSize.width, height: boardSize.height }}>
@@ -285,61 +292,71 @@ export const ContourEditor = ({
               </>
             ) : decor ? (
               <>
-                {decor.neighbors.map((d, index) => (
-                  <path className="contour-neighbor-shape" d={d} key={index} />
-                ))}
+                {!neighborsTier &&
+                  decor.neighbors.map((d, index) => <path className="contour-neighbor-shape" d={d} key={index} />)}
                 <path className="contour-silhouette" d={outlinePath} />
                 {decor.coast !== '' && <path className="contour-outline" d={decor.coast} />}
                 {decor.border !== '' && <path className="contour-border" d={decor.border} />}
+                {neighborsTier && decor.neighborLines !== '' && (
+                  <path className="contour-neighbor-line" d={decor.neighborLines} />
+                )}
               </>
             ) : (
               <path className="contour-outline" d={outlinePath} />
             )}
+            {places.map((place) => (
+              <g key={`${place.capital ? 'capital' : 'city'}:${place.name}`}>
+                <text className={place.capital ? 'contour-place-star' : 'contour-place-dot'} x={place.x} y={place.y}>
+                  {place.capital ? '⭐' : '●'}
+                </text>
+                <text className="contour-place-name" x={place.x} y={place.nameY}>
+                  {place.name}
+                </text>
+              </g>
+            ))}
           </svg>
-          {!previewing &&
-            country.neighbors.map((neighbor, index) => {
-              const pos = positionFor(index, neighbor);
-              return (
-                <div
-                  key={index}
-                  className={`contour-neighbor${dragPos?.index === index ? ' dragging' : ''}`}
-                  style={{ left: pos.x, top: pos.y }}
-                  onMouseDown={beginDrag(index, neighbor)}
-                >
-                  {/* Icon at `pos`, name stacked just below — same layout as the real game's tier
+          {country.neighbors.map((neighbor, index) => {
+            const pos = positionFor(index, neighbor);
+            return (
+              <div
+                key={index}
+                className={`contour-neighbor${dragPos?.index === index ? ' dragging' : ''}`}
+                style={{ left: pos.x, top: pos.y }}
+                onMouseDown={beginDrag(index, neighbor)}
+              >
+                {/* Icon at `pos`, name stacked just below — same layout as the real game's tier
                     1 (icon)/tier 2 (icon+name), shown here always at once since this is a static
                     preview rather than a tiered reveal. */}
-                  <span className="contour-neighbor-icon" style={{ fontFamily: FLAG_FONT_FAMILY }}>
-                    {neighborIcon(neighbor)}
-                  </span>
-                  <span className="contour-neighbor-name">{neighborName(neighbor)}</span>
-                  {/* Stops the mousedown from bubbling to the anchor's own `onMouseDown` above (which
+                <span className="contour-neighbor-icon" style={{ fontFamily: FLAG_FONT_FAMILY }}>
+                  {neighborIcon(neighbor)}
+                </span>
+                <span className="contour-neighbor-name">{neighborName(neighbor)}</span>
+                {/* Stops the mousedown from bubbling to the anchor's own `onMouseDown` above (which
                     would otherwise start a drag instead of letting this click through). */}
-                  <span className="contour-neighbor-delete" onMouseDown={(event) => event.stopPropagation()}>
-                    <DeleteX name={neighborName(neighbor)} onDelete={() => handleDelete(neighbor)} />
-                  </span>
-                </div>
-              );
-            })}
+                <span className="contour-neighbor-delete" onMouseDown={(event) => event.stopPropagation()}>
+                  <DeleteX name={neighborName(neighbor)} onDelete={() => handleDelete(neighbor)} />
+                </span>
+              </div>
+            );
+          })}
           {/* Tier 3/4's own on-board anchor (see `ContourCountry.centerLabel`) — one single
               draggable point, never deletable (every country always has one); flag icon at the
               point, its name stacked below, same as a neighbor above. */}
-          {!previewing &&
-            (() => {
-              const pos = centerLabelPosition();
-              return (
-                <div
-                  className={`contour-neighbor contour-center-label${centerDragPos ? ' dragging' : ''}`}
-                  style={{ left: pos.x, top: pos.y }}
-                  onMouseDown={beginCenterDrag()}
-                >
-                  <span className="contour-neighbor-icon" style={{ fontFamily: FLAG_FONT_FAMILY }}>
-                    {flagEmoji(country.code)}
-                  </span>
-                  <span className="contour-neighbor-name">{countryName(country.code)}</span>
-                </div>
-              );
-            })()}
+          {(() => {
+            const pos = centerLabelPosition();
+            return (
+              <div
+                className={`contour-neighbor contour-center-label${centerDragPos ? ' dragging' : ''}`}
+                style={{ left: pos.x, top: pos.y }}
+                onMouseDown={beginCenterDrag()}
+              >
+                <span className="contour-neighbor-icon" style={{ fontFamily: FLAG_FONT_FAMILY }}>
+                  {flagEmoji(country.code)}
+                </span>
+                <span className="contour-neighbor-name">{countryName(country.code)}</span>
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>
