@@ -1,3 +1,4 @@
+import { reporting } from '@/helpers/reportError';
 import { useEffect, useMemo, useState } from 'react';
 
 import type { CompassCounts } from '@/data/firestore/types';
@@ -24,7 +25,7 @@ export const ClueSetupScreen = ({ onBack }: ClueSetupScreenProps) => {
   useEffect(() => {
     loadCluesCounts()
       .then(setCounts)
-      .catch(() => {});
+      .catch(reporting('clues.loadCounts', { kind: 'background' }));
   }, []);
   const available = useMemo(
     () =>

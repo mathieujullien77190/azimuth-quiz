@@ -1,3 +1,4 @@
+import { reporting } from './reportError';
 import { useEffect } from 'react';
 
 import type { OnlinePlayer } from './roomPlayers';
@@ -23,6 +24,6 @@ export const useHostTurnRecovery = (
   useEffect(() => {
     if (!isHost || screen !== 'game' || verdict !== null || turnUid === null) return;
     if (firstUid === undefined || turnHolderPresent) return;
-    passTurn(firstUid).catch(() => {});
+    passTurn(firstUid).catch(reporting('room.passTurn', { kind: 'background' }));
   }, [isHost, screen, verdict, turnUid, firstUid, turnHolderPresent, passTurn]);
 };

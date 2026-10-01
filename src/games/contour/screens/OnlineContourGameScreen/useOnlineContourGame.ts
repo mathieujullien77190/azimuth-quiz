@@ -1,3 +1,4 @@
+import { reporting } from '@/helpers/reportError';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { CONTOUR_WRONG_GUESS_PENALTY } from '@/games/contour/constants';
@@ -89,7 +90,7 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
     if (!isMyTurn || localUid === null || gameState.verdict !== null || onlinePlayers.length <= 1) return;
     if (lastWrittenTypingRef.current === debouncedGuessText) return;
     lastWrittenTypingRef.current = debouncedGuessText;
-    setContourRoomTyping(code, localUid, debouncedGuessText).catch(() => {});
+    setContourRoomTyping(code, localUid, debouncedGuessText).catch(reporting('silhouette.typing', { kind: 'background', room: code }));
   }, [debouncedGuessText, isMyTurn, localUid, gameState.verdict, onlinePlayers.length, code]);
 
   // What the turn-holder is typing, for everybody else mid-round: `typing.uid` is checked against `turnUid` because it is
@@ -120,17 +121,17 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
     const target = hintGroups.find((entry) => entry.group === group);
     const othersOut = hintGroups.every((entry) => entry.group === 'reveal' || entry.next === undefined);
     if (target?.next === undefined || (group === 'reveal' && !othersOut)) return;
-    revealContourRoomHint(code, [...hintPicks, group], next).catch(() => {});
+    revealContourRoomHint(code, [...hintPicks, group], next).catch(reporting('silhouette.revealHint', { room: code }));
   };
 
   const submitGuess = () => {
     if (!isMyTurn || localUid === null || country === undefined) return;
     const correct = normalizeContourGuess(guessText) === normalizeContourGuess(roundCountryName(country, language));
     if (correct) {
-      reportContourRoomCorrect(code, localUid).catch(() => {});
+      reportContourRoomCorrect(code, localUid).catch(reporting('silhouette.reportCorrect', { room: code }));
       return;
     }
-    reportContourRoomWrong(code, localUid, gameState.wrongGuessSeq + 1).catch(() => {});
+    reportContourRoomWrong(code, localUid, gameState.wrongGuessSeq + 1).catch(reporting('silhouette.reportWrong', { room: code }));
     setLastWrong(onlinePlayers.find((player) => player.uid === localUid)?.name ?? '');
     setGuessText('');
   };
@@ -139,13 +140,13 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
    * than an automatic transition the instant the name appears, like the local game. */
   const giveUp = () => {
     if (!isMyTurn) return;
-    giveUpContourRoom(code).catch(() => {});
+    giveUpContourRoom(code).catch(reporting('silhouette.giveUp', { room: code }));
   };
 
   const goToNextRound = () => {
     const firstTurnUid = onlinePlayers[0]?.uid;
     if (!isHost || firstTurnUid === undefined) return;
-    nextContourRoomRound(code, gameState.roundIndex + 1, gameState.countryCodes.length, firstTurnUid).catch(() => {});
+    nextContourRoomRound(code, gameState.roundIndex + 1, gameState.countryCodes.length, firstTurnUid).catch(reporting('silhouette.nextRound', { room: code }));
   };
 
   return {

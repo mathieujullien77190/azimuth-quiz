@@ -1,3 +1,4 @@
+import { reporting } from '@/helpers/reportError';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { bearingDeg, distanceKm, nameSkeleton } from '@/helpers';
@@ -77,7 +78,7 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     if (!isMyTurn || localUid === null || gameState.verdict !== null || onlinePlayers.length <= 1) return;
     if (lastWrittenTypingRef.current === debouncedGuessText) return;
     lastWrittenTypingRef.current = debouncedGuessText;
-    setClueRoomTyping(code, localUid, debouncedGuessText).catch(() => {});
+    setClueRoomTyping(code, localUid, debouncedGuessText).catch(reporting('clues.typing', { kind: 'background', room: code }));
   }, [debouncedGuessText, isMyTurn, localUid, gameState.verdict, onlinePlayers.length, code]);
 
   // Only meaningful for a spectator watching the current turn-holder, mid-round: `typing.uid` is
@@ -122,17 +123,17 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     if (!isMyTurn || localUid === null) return;
     const nextTurnUid = nextPlayerUid(onlinePlayers, localUid);
     if (nextTurnUid === undefined) return;
-    pickClueRoomClue(code, [...gameState.revealedClueIds, clueId], nextTurnUid).catch(() => {});
+    pickClueRoomClue(code, [...gameState.revealedClueIds, clueId], nextTurnUid).catch(reporting('clues.pickClue', { room: code }));
   };
 
   const submitGuess = () => {
     if (!isMyTurn || localUid === null || place === undefined) return;
     const correct = normalizePlaceGuess(guessText) === normalizePlaceGuess(place.name);
     if (correct) {
-      reportClueRoomCorrect(code, localUid).catch(() => {});
+      reportClueRoomCorrect(code, localUid).catch(reporting('clues.reportCorrect', { room: code }));
       return;
     }
-    reportClueRoomWrong(code, localUid, gameState.wrongGuessSeq + 1).catch(() => {});
+    reportClueRoomWrong(code, localUid, gameState.wrongGuessSeq + 1).catch(reporting('clues.reportWrong', { room: code }));
     setGuessText('');
   };
 
@@ -141,7 +142,7 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
   // check), so no rule change is needed for this to work off the host's own turn too.
   const giveUp = () => {
     if (!isHost) return;
-    giveUpClueRoom(code).catch(() => {});
+    giveUpClueRoom(code).catch(reporting('clues.giveUp', { room: code }));
   };
 
   const goToNextRound = () => {
@@ -154,7 +155,7 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
       gameState.places.length,
       firstTurnUid,
       roomSettings?.startWithFirstLetter ?? false,
-    ).catch(() => {});
+    ).catch(reporting('clues.nextRound', { room: code }));
   };
 
   return {

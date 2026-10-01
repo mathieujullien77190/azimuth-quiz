@@ -1,3 +1,4 @@
+import { reporting } from './reportError';
 import { doc, getDoc } from 'firebase/firestore';
 
 import type { CompassCounts } from '@/data/firestore/types';
@@ -37,7 +38,7 @@ export const createGroupCounts = <C = CompassCounts>(source: { collection: strin
     /** Starts the read without waiting for it (app launch). A failure here is silent: starting a game
      * reads again and reports it. */
     preload: (): void => {
-      load().catch(() => {});
+      load().catch(reporting('draw.preloadCounts', { kind: 'background' }));
     },
     /** Forgets the shared read (the next call reads Firestore again). */
     clear: (): void => {

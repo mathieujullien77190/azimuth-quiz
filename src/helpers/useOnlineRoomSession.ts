@@ -1,3 +1,4 @@
+import { reporting } from './reportError';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect } from 'react';
 
@@ -71,7 +72,7 @@ export const useOnlineRoomSession = <Settings, GameState>(
   // very much alive.
   const handleQuit = () => {
     if (isHost) {
-      roomApi.deleteRoom(code).catch(() => {});
+      roomApi.deleteRoom(code).catch(reporting('room.deleteOnQuit', { kind: 'background', room: code }));
       store.getState().disconnect();
       router.dismissTo('/');
       return;
@@ -81,7 +82,7 @@ export const useOnlineRoomSession = <Settings, GameState>(
       // to the same players update this produces, and can't otherwise tell "I just quit" apart
       // from "the host removed me" — both look identical in Firestore (present, then not).
       store.getState().markVoluntaryLeave();
-      roomApi.removeRoomPlayer(code, localUid).catch(() => {});
+      roomApi.removeRoomPlayer(code, localUid).catch(reporting('room.leaveOnQuit', { kind: 'background', room: code }));
     }
     onQuit();
   };

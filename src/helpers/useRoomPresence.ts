@@ -1,3 +1,4 @@
+import { reporting } from './reportError';
 import { useEffect, useRef } from 'react';
 
 import type { RoomPlayers } from './roomBase';
@@ -67,7 +68,7 @@ export const useRoomPresence = (store: PresenceStore, api: PresenceApi, code: st
         .then(() => {
           lastAckRef.current = Date.now();
         })
-        .catch(() => {});
+        .catch(reporting('room.heartbeat', { kind: 'background', room: code }));
     lastAckRef.current = Date.now();
     beat();
     const interval = setInterval(beat, HEARTBEAT_MS);
@@ -109,14 +110,14 @@ export const useRoomPresence = (store: PresenceStore, api: PresenceApi, code: st
 
       if (now - lastAckRef.current > LOST_AFTER_MS || (!isHost && hostSilent)) {
         state.markConnectionLost();
-        if (isHost) api.deleteRoom(code).catch(() => {});
-        else api.removeRoomPlayer(code, localUid).catch(() => {});
+        if (isHost) api.deleteRoom(code).catch(reporting('room.deleteOnLoss', { kind: 'background', room: code }));
+        else api.removeRoomPlayer(code, localUid).catch(reporting('room.leaveOnLoss', { kind: 'background', room: code }));
         return;
       }
       if (isHost) {
         silentJoiners.forEach((uid) => {
           seen.delete(uid);
-          api.removeRoomPlayer(code, uid).catch(() => {});
+          api.removeRoomPlayer(code, uid).catch(reporting('room.removeSilent', { kind: 'background', room: code }));
         });
       }
     }, CHECK_MS);

@@ -24,6 +24,8 @@ export type Translations = {
     /** Solo play only: names the one player instead of the generic "nobody" (there's no one else
      * it could have been). */
     soloNotFound: (name: string) => string;
+    /** Short notice when a game action (hint, answer...) could not reach the room. */
+    actionFailed: string;
   };
   /** The 8 abbreviated cardinal points, for formatBearing (e.g. "S · 173°"). */
   cardinals: CardinalLabels;

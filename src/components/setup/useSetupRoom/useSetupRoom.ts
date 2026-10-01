@@ -1,3 +1,4 @@
+import { reporting } from '@/helpers/reportError';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -80,7 +81,7 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
   // device's own presence — a leftover doc with no host is what let a joiner "reconnect" to a
   // room its creator had already walked away from).
   const leaveHostedRoom = () => {
-    if (mode === 'host' && roomCode !== null) adapter.deleteRoom(roomCode).catch(() => {});
+    if (mode === 'host' && roomCode !== null) adapter.deleteRoom(roomCode).catch(reporting('setup.deleteRoom', { kind: 'background', room: roomCode }));
   };
 
   const resetChoice = useCallback(() => {
@@ -123,7 +124,7 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
   // reads this promise's result, so there's nothing useful to do with the error here anyway.
   useEffect(() => {
     if (mode !== 'host' || roomCode === null) return;
-    adapter.updateRoomSettings(roomCode, adapter.roomSettingsFrom(settings)).catch(() => {});
+    adapter.updateRoomSettings(roomCode, adapter.roomSettingsFrom(settings)).catch(reporting('setup.updateSettings', { room: roomCode }));
   }, [adapter, mode, roomCode, settings]);
 
   // Join: once a well-formed code is typed, a one-shot check decides whether it's valid — checked
@@ -143,7 +144,7 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
       .then((exists) => {
         if (!cancelled) setJoinStatus(exists ? 'valid' : 'invalid');
       })
-      .catch(() => {});
+      .catch(reporting('setup.roomExists', { kind: 'background' }));
 
     return () => {
       cancelled = true;
@@ -272,8 +273,8 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     if (connectedRoomCode === null || localUid === null) return;
     const isHostOfThisRoom = localUid === hostUid;
     return () => {
-      if (isHostOfThisRoom) adapter.deleteRoom(connectedRoomCode).catch(() => {});
-      else adapter.removeRoomPlayer(connectedRoomCode, localUid).catch(() => {});
+      if (isHostOfThisRoom) adapter.deleteRoom(connectedRoomCode).catch(reporting('setup.deleteRoom', { kind: 'background', room: connectedRoomCode }));
+      else adapter.removeRoomPlayer(connectedRoomCode, localUid).catch(reporting('setup.leaveRoom', { kind: 'background', room: connectedRoomCode }));
     };
   }, [adapter, connectedRoomCode, localUid, hostUid]);
 
@@ -365,7 +366,7 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
       const color = adapter.colors[index % adapter.colors.length];
       if (player.color !== color) colorByUid[uid] = color;
     });
-    adapter.updateRoomPlayerColors(connectedRoomCode, colorByUid).catch(() => {});
+    adapter.updateRoomPlayerColors(connectedRoomCode, colorByUid).catch(reporting('setup.updateColors', { room: connectedRoomCode }));
   }, [adapter, isHost, connectedRoomCode, players]);
 
   // Read-only sections still react to a tap/toggle, but only to explain why nothing happened —
@@ -421,7 +422,7 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     isHost,
     onKick: (uid) => {
       if (connectedRoomCode === null) return;
-      adapter.removeRoomPlayer(connectedRoomCode, uid).catch(() => {});
+      adapter.removeRoomPlayer(connectedRoomCode, uid).catch(reporting('setup.kickPlayer', { room: connectedRoomCode }));
     },
     onlineChoice,
     onChooseSolo: chooseSolo,

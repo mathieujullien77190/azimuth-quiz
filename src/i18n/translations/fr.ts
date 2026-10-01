@@ -6,6 +6,7 @@ export const fr: Translations = {
     pts: 'pts',
     noOneFound: 'Personne n’a trouvé — 0 point.',
     soloNotFound: (name) => `${name} n’a pas trouvé — 0 point.`,
+    actionFailed: 'Action impossible : vérifie ta connexion et réessaie.',
   },
   cardinals: ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'],
   compassWestLabel: 'O',

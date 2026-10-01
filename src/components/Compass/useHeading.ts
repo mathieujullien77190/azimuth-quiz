@@ -1,3 +1,4 @@
+import { reporting } from '@/helpers/reportError';
 import * as Location from 'expo-location';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
@@ -58,7 +59,7 @@ export const useHeading = (enabled: boolean): UseHeadingResult => {
         .then((result) => {
           if (result === 'granted') attach();
         })
-        .catch(() => {});
+        .catch(reporting('compass.headingPermission', { kind: 'background' }));
     } else {
       attach();
     }

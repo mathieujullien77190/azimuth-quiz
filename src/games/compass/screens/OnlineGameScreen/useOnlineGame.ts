@@ -1,3 +1,4 @@
+import { reporting } from '@/helpers/reportError';
 import { useEffect, useRef, useState } from 'react';
 
 import { DEFAULT_DISTANCE_KM } from '@/games/compass/constants';
@@ -97,7 +98,7 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
       scores[uid] = results[index].score;
       totalScores[uid] = (gameState.totalScores[uid] ?? 0) + results[index].score.total;
     });
-    finishRoomRound(code, scores, totalScores).catch(() => {});
+    finishRoomRound(code, scores, totalScores).catch(reporting('compass.finishRound', { kind: 'background', room: code }));
   }, [isHost, gameState, onlinePlayers, place, code]);
 
   // Keyed by uid (not derived from `records`' array position): the host writes this to the room
@@ -110,7 +111,7 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
   const submit = async () => {
     if (localUid === null) return;
     const guess = { bearing, distanceKm };
-    await submitRoomGuess(code, localUid, guess).catch(() => {});
+    await submitRoomGuess(code, localUid, guess).catch(reporting('compass.submitGuess', { room: code }));
   };
 
   // Host only: expels a player from the room mid-game — never yourself (nothing to hand the host
@@ -118,11 +119,11 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
   const kickPlayer = isHost
     ? (index: number) => {
         const uid = onlinePlayers[index]?.uid;
-        if (uid !== undefined && uid !== localUid) removeRoomPlayer(code, uid).catch(() => {});
+        if (uid !== undefined && uid !== localUid) removeRoomPlayer(code, uid).catch(reporting('compass.kickPlayer', { room: code }));
       }
     : undefined;
 
-  const goToNextRound = () => nextRoomRound(code, gameState.roundIndex + 1, gameState.places.length).catch(() => {});
+  const goToNextRound = () => nextRoomRound(code, gameState.roundIndex + 1, gameState.places.length).catch(reporting('compass.nextRound', { room: code }));
 
   return {
     localUid,

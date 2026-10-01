@@ -1,3 +1,4 @@
+import { reporting } from './reportError';
 import { useEffect, useRef } from 'react';
 
 /** The slice of a turn-based room's game state the host's scoring needs (Clues, Silhouette). */
@@ -36,7 +37,7 @@ export const useHostTurnScoring = (
     if (!isHost || verdict !== 'correct' || roundWinnerUid === null) return;
     if (scoredRoundRef.current === roundIndex) return;
     scoredRoundRef.current = roundIndex;
-    applyScore({ ...totalScores, [roundWinnerUid]: (totalScores[roundWinnerUid] ?? 0) + reward }).catch(() => {});
+    applyScore({ ...totalScores, [roundWinnerUid]: (totalScores[roundWinnerUid] ?? 0) + reward }).catch(reporting('room.scoreWin', { kind: 'background' }));
   }, [isHost, verdict, roundWinnerUid, roundIndex, totalScores, reward, applyScore]);
 
   const lastAppliedWrongSeqRef = useRef<number | null>(null);
@@ -51,6 +52,6 @@ export const useHostTurnScoring = (
     }
     if (wrongGuessUid === null || wrongGuessSeq <= lastAppliedWrongSeqRef.current) return;
     lastAppliedWrongSeqRef.current = wrongGuessSeq;
-    applyScore({ ...totalScores, [wrongGuessUid]: (totalScores[wrongGuessUid] ?? 0) - penalty }).catch(() => {});
+    applyScore({ ...totalScores, [wrongGuessUid]: (totalScores[wrongGuessUid] ?? 0) - penalty }).catch(reporting('room.scoreWrong', { kind: 'background' }));
   }, [isHost, wrongGuessUid, wrongGuessSeq, totalScores, penalty, applyScore]);
 };

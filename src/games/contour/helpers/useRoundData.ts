@@ -1,3 +1,4 @@
+import { reporting } from '@/helpers/reportError';
 import { useEffect, useState } from 'react';
 
 import { loadRoundData, type RoundData } from './firestoreContours';
@@ -26,7 +27,7 @@ export const useRoundData = (countryCodes: readonly string[], roundIndex: number
         if (!cancelled) setFailure({ code, attempt });
       });
     // The next round is read in the background: an error here will show when it becomes the current one.
-    if (nextCode !== undefined) loadRoundData(nextCode).catch(() => {});
+    if (nextCode !== undefined) loadRoundData(nextCode).catch(reporting('silhouette.prefetchRound', { kind: 'background' }));
     return () => {
       cancelled = true;
     };

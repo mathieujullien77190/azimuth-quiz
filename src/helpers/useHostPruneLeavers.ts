@@ -1,3 +1,4 @@
+import { reporting } from './reportError';
 import { useEffect } from 'react';
 
 import type { RoomPlayers } from './roomBase';
@@ -34,6 +35,6 @@ export const useHostPruneLeavers = (
       if (uids.length > 0) stale[field] = uids;
     }
     if (Object.keys(stale).length === 0) return;
-    prune(stale).catch(() => {});
+    prune(stale).catch(reporting('room.pruneLeavers', { kind: 'background' }));
   }, [isHost, localUid, players, gameState, prune]);
 };
