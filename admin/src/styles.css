@@ -70,6 +70,23 @@ h1 .dim {
   gap: 8px;
 }
 
+.tabs-select {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .tabs {
+    display: none;
+  }
+
+  .tabs-select {
+    display: block;
+    flex: 0 0 auto;
+    font-size: 14px;
+    padding: 6px 12px;
+  }
+}
+
 .panel {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -159,6 +176,10 @@ textarea:focus-visible,
     border-color 0.12s,
     color 0.12s,
     background 0.12s;
+}
+
+a.chip {
+  text-decoration: none;
 }
 
 .chip .dot {

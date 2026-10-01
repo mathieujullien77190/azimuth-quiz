@@ -5,16 +5,32 @@ import appConfig from '../../app.json';
 
 import { AuthGate } from './components/AuthGate';
 import { dataRevision, startJournalSync, subscribeRevision } from './data';
+import { hrefOf, PAGES, pageFromPath, type PageId } from './pages';
 import { CountriesView } from './views/CountriesView';
 import { JobsView } from './views/JobsView';
 import { PlacesView } from './views/PlacesView';
 import { SyllablesView } from './views/SyllablesView';
 import { WordplayView } from './views/WordplayView';
 
-type Tab = 'places' | 'countries' | 'syllables' | 'jobs' | 'wordplay';
 
 const AdminApp = () => {
-  const [tab, setTab] = useState<Tab>('places');
+  const [tab, setTab] = useState<PageId>(() => pageFromPath(window.location.pathname));
+  // Back/forward move between the pages already visited.
+  useEffect(() => {
+    const onPopState = () => setTab(pageFromPath(window.location.pathname));
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+  useEffect(() => {
+    const label = PAGES.find((page) => page.id === tab)!.label;
+    document.title = `Azimuth Quiz — Admin · ${label}`;
+  }, [tab]);
+  /** Changes page without reloading, and puts its URL in the address bar (`/admin/` stays as it is on the first page). */
+  const goTo = (id: PageId) => {
+    if (id === tab) return;
+    window.history.pushState(null, '', hrefOf(id));
+    setTab(id);
+  };
   // Somebody else's change landed in the local copy: the views remount to show it.
   const revision = useSyncExternalStore(subscribeRevision, dataRevision);
   useEffect(() => startJournalSync(), []);
@@ -32,47 +48,36 @@ const AdminApp = () => {
             Admin <span className="dim">— Azimuth Quiz v{appConfig.expo.version}</span>
           </h1>
           <div className="tabs">
-            <button
-              type="button"
-              className="chip game-chip"
-              aria-pressed={tab === 'places'}
-              onClick={() => setTab('places')}
-            >
-              Lieux
-            </button>
-            <button
-              type="button"
-              className="chip game-chip"
-              aria-pressed={tab === 'countries'}
-              onClick={() => setTab('countries')}
-            >
-              Pays
-            </button>
-            <button
-              type="button"
-              className="chip game-chip"
-              aria-pressed={tab === 'syllables'}
-              onClick={() => setTab('syllables')}
-            >
-              Syllabes
-            </button>
-            <button
-              type="button"
-              className="chip game-chip"
-              aria-pressed={tab === 'jobs'}
-              onClick={() => setTab('jobs')}
-            >
-              Métiers
-            </button>
-            <button
-              type="button"
-              className="chip game-chip"
-              aria-pressed={tab === 'wordplay'}
-              onClick={() => setTab('wordplay')}
-            >
-              Jeux de mots
-            </button>
+            {PAGES.map(({ id, label }) => (
+              <a
+                key={id}
+                href={hrefOf(id)}
+                className="chip game-chip"
+                aria-pressed={tab === id}
+                onClick={(event) => {
+                  // Ctrl/Cmd/middle click keep the browser's own behaviour (a new tab on the page's real URL).
+                  if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+                  event.preventDefault();
+                  goTo(id);
+                }}
+              >
+                {label}
+              </a>
+            ))}
           </div>
+          {/* Narrow screens: the chips collapse into one select (see `.tabs-select` in styles.css). */}
+          <select
+            className="field-select tabs-select"
+            aria-label="Page"
+            value={tab}
+            onChange={(event) => goTo(event.target.value as PageId)}
+          >
+            {PAGES.map(({ id, label }) => (
+              <option key={id} value={id}>
+                {label}
+              </option>
+            ))}
+          </select>
         </div>
       </header>
 

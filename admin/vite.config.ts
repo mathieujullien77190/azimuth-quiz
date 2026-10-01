@@ -1,12 +1,32 @@
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
+import { PAGES } from './src/pageList';
 import { sharedDefine, sharedOptimizeDeps, sharedResolve } from './vite.shared';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
+
+/** GitHub Pages serves files, with no fallback to the app: every page gets its own copy of `index.html` in
+ * `dist/<page>/` (`/admin/places` → `dist/places/index.html`), asset URLs being absolute they work from there. */
+const staticPages = () => ({
+  name: 'static-pages',
+  apply: 'build' as const,
+  closeBundle() {
+    const dist = path.resolve(rootDir, 'dist');
+    const html = readFileSync(path.join(dist, 'index.html'), 'utf8');
+    for (const { path: page, label } of PAGES) {
+      mkdirSync(path.join(dist, page), { recursive: true });
+      writeFileSync(
+        path.join(dist, page, 'index.html'),
+        html.replace(/<title>[^<]*<\/title>/, `<title>Azimuth Quiz — Admin · ${label}</title>`),
+      );
+    }
+  },
+});
 
 export default defineConfig(({ command }) => ({
   // Only the production build needs the subpath: it's served under the main app's GitHub Pages
@@ -16,7 +36,7 @@ export default defineConfig(({ command }) => ({
   // Reuses the game's root `.env` (Firebase config, `EXPO_PUBLIC_*`) instead of duplicating it.
   envDir: path.resolve(rootDir, '..'),
   envPrefix: ['VITE_', 'EXPO_PUBLIC_'],
-  plugins: [react()],
+  plugins: [react(), staticPages()],
   resolve: sharedResolve,
   define: sharedDefine(command),
   optimizeDeps: sharedOptimizeDeps,
