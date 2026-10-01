@@ -25,12 +25,11 @@ const chunked = <T>(items: T[]): T[][] =>
     items.slice(index * IN_LIMIT, (index + 1) * IN_LIMIT),
   );
 
-/** Keeps what a query returned in memory and logs it. */
+/** Keeps what a query returned in memory. */
 const remember = (snapshots: Awaited<ReturnType<typeof getDocs>>[]): string[] => {
   const ids = snapshots.flatMap((snapshot) => snapshot.docs.map((document) => document.id));
   for (const snapshot of snapshots)
     for (const document of snapshot.docs) documents.set(document.id, document.data() as CountryDoc);
-  console.log(`[firestore] countries: ${ids.length} document(s) received`, ids);
   return ids;
 };
 

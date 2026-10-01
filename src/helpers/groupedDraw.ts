@@ -143,13 +143,6 @@ export const drawFromGroups = async <T>(options: GroupedDrawOptions<T>): Promise
           slot: { ...group, n: numbering.numberOf(data)! },
         };
       });
-      console.log(
-        `[firestore] places: ${drawn.length} document(s) received`,
-        drawn.map(
-          ({ id, data, slot }) =>
-            `${id} · ${data.name} (${data.code}) · ${slot.category}|${slot.difficulty} #${slot.n}`,
-        ),
-      );
       return drawn.map(({ item, slot }) => ({ item, slot }));
     });
   };

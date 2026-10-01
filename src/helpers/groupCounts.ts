@@ -19,13 +19,7 @@ export const createGroupCounts = <C = CompassCounts>(source: { collection: strin
 
   const load = (): Promise<C> => {
     loading ??= getDoc(doc(db, source.collection, source.id))
-      .then((snapshot) => {
-        console.log(
-          `[firestore] ${source.collection}/${source.id}: ${snapshot.data() ? 1 : 0} document(s) received`,
-          snapshot.data(),
-        );
-        return ((snapshot.data() ?? { counts: {} }) as { counts: C }).counts;
-      })
+      .then((snapshot) => ((snapshot.data() ?? { counts: {} }) as { counts: C }).counts)
       .catch((error: unknown) => {
         loading = null;
         throw error;

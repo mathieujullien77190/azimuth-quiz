@@ -76,9 +76,6 @@ let contoursMemo: ContourCountry[] | null = null;
 
 const readCollection = async <T>(name: string): Promise<Record<string, T>> => {
   const { docs } = await getDocs(collection(db, name));
-  console.groupCollapsed(`[firestore] ${name}: ${docs.length} document(s) received`);
-  console.log(docs.map((snapshot) => snapshot.id));
-  console.groupEnd();
   return Object.fromEntries(docs.map((snapshot) => [snapshot.id, snapshot.data() as T]));
 };
 
