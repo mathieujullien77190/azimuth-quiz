@@ -56,7 +56,7 @@ const WordplayLine = ({
     <tr>
       <td className="wordplay-name">
         <b>{row.name}</b>
-        <span className="muted"> {row.country}</span>
+        <span className="muted"> · {row.country}</span>
       </td>
       <td>
         <textarea
