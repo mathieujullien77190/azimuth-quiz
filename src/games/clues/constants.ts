@@ -14,6 +14,7 @@ export const CLUE_ORDER: ClueId[] = [
   'personality',
   'bearing',
   'distance',
+  'globe',
   'climate',
   'emoji',
   'flagColors',

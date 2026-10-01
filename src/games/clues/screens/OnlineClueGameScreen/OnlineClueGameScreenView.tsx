@@ -34,6 +34,7 @@ export const OnlineClueGameScreenView = ({
   revealedClueIds,
   bearingDeg,
   distanceKm,
+  origin,
   skeletonGroups,
   skeletonLengthKnown,
   players,
@@ -87,7 +88,10 @@ export const OnlineClueGameScreenView = ({
                 {displayGroups.map((group, groupIndex) => (
                   <View key={groupIndex} style={styles.skeletonWord}>
                     {group.map((letter, letterIndex) => (
-                      <View key={letterIndex} style={letter === HYPHEN_SLOT ? styles.skeletonHyphen : styles.skeletonSlot}>
+                      <View
+                        key={letterIndex}
+                        style={letter === HYPHEN_SLOT ? styles.skeletonHyphen : styles.skeletonSlot}
+                      >
                         {letter !== null && <Text style={styles.skeletonLetter}>{letter}</Text>}
                       </View>
                     ))}
@@ -177,6 +181,7 @@ export const OnlineClueGameScreenView = ({
       <ClueGrid
         bearingDeg={bearingDeg}
         distanceKm={distanceKm}
+        origin={origin}
         onPickClue={roundOver ? undefined : onPickClue}
         place={place}
         revealedClueIds={revealedClueIds}

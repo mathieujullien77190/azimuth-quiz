@@ -75,6 +75,7 @@ export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps
       bearingDeg={game.bearing}
       difficulty={roomSettings.difficulty}
       distanceKm={game.distance}
+      origin={game.origin}
       guessText={game.guessText}
       name={myName}
       points={gameState.totalScores[localUid] ?? 0}

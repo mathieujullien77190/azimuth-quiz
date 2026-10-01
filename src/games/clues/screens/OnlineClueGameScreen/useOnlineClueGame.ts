@@ -78,7 +78,9 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     if (!isMyTurn || localUid === null || gameState.verdict !== null || onlinePlayers.length <= 1) return;
     if (lastWrittenTypingRef.current === debouncedGuessText) return;
     lastWrittenTypingRef.current = debouncedGuessText;
-    setClueRoomTyping(code, localUid, debouncedGuessText).catch(reporting('clues.typing', { kind: 'background', room: code }));
+    setClueRoomTyping(code, localUid, debouncedGuessText).catch(
+      reporting('clues.typing', { kind: 'background', room: code }),
+    );
   }, [debouncedGuessText, isMyTurn, localUid, gameState.verdict, onlinePlayers.length, code]);
 
   // Only meaningful for a spectator watching the current turn-holder, mid-round: `typing.uid` is
@@ -123,7 +125,9 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     if (!isMyTurn || localUid === null) return;
     const nextTurnUid = nextPlayerUid(onlinePlayers, localUid);
     if (nextTurnUid === undefined) return;
-    pickClueRoomClue(code, [...gameState.revealedClueIds, clueId], nextTurnUid).catch(reporting('clues.pickClue', { room: code }));
+    pickClueRoomClue(code, [...gameState.revealedClueIds, clueId], nextTurnUid).catch(
+      reporting('clues.pickClue', { room: code }),
+    );
   };
 
   const submitGuess = () => {
@@ -133,7 +137,9 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
       reportClueRoomCorrect(code, localUid).catch(reporting('clues.reportCorrect', { room: code }));
       return;
     }
-    reportClueRoomWrong(code, localUid, gameState.wrongGuessSeq + 1).catch(reporting('clues.reportWrong', { room: code }));
+    reportClueRoomWrong(code, localUid, gameState.wrongGuessSeq + 1).catch(
+      reporting('clues.reportWrong', { room: code }),
+    );
     setGuessText('');
   };
 
@@ -170,6 +176,7 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     place,
     bearing,
     distance,
+    origin: gameState.origin?.coordinates,
     isMyTurn,
     typedByActivePlayer,
     skeletonGroups,

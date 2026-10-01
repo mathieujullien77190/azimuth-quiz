@@ -17,7 +17,15 @@ const MAX_FLAG_STAGE = 3;
  * The grid of clue cards, plus the hidden "vowels" card once unlocked — rendered from the room's
  * shared state (`revealedClueIds`) with the per-clue stage-counting logic kept out of the screen. Dumb: everything it needs is already resolved by the caller.
  */
-export const ClueGrid = ({ place, bearingDeg, distanceKm, revealedClueIds, roundOver, onPickClue }: ClueGridProps) => {
+export const ClueGrid = ({
+  place,
+  bearingDeg,
+  distanceKm,
+  origin,
+  revealedClueIds,
+  roundOver,
+  onPickClue,
+}: ClueGridProps) => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
   // What this particular place actually offers: `CLUE_ORDER` minus whatever doesn't apply to it
@@ -37,6 +45,7 @@ export const ClueGrid = ({ place, bearingDeg, distanceKm, revealedClueIds, round
           const isEmoji = clueId === 'emoji';
           const isFlag = clueId === 'flagColors';
           const isDistance = clueId === 'distance';
+          const isGlobe = clueId === 'globe';
           const isElevation = clueId === 'elevation';
           const isPopulation = clueId === 'population';
           const isCurrency = clueId === 'currency';
@@ -55,6 +64,7 @@ export const ClueGrid = ({ place, bearingDeg, distanceKm, revealedClueIds, round
               distanceStage={isDistance ? (roundOver ? 2 : stage) : undefined}
               elevationStage={isElevation ? (roundOver ? 2 : stage) : undefined}
               emojiStage={isEmoji ? (roundOver ? 3 : stage) : undefined}
+              globeStage={isGlobe ? (roundOver ? 2 : stage) : undefined}
               flagStage={isFlag ? (roundOver ? MAX_FLAG_STAGE : stage) : undefined}
               key={clueId}
               label={t.cluesGame.clues[clueId]}
@@ -62,6 +72,7 @@ export const ClueGrid = ({ place, bearingDeg, distanceKm, revealedClueIds, round
               localTimeStage={isLocalTime ? (roundOver ? 2 : stage) : undefined}
               moreToReveal={moreToReveal}
               populationStage={isPopulation ? (roundOver ? 2 : stage) : undefined}
+              origin={origin}
               onPress={onPickClue === undefined ? undefined : () => onPickClue(clueId)}
               place={place}
               state={revealed ? 'revealed' : 'locked'}

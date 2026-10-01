@@ -1,3 +1,5 @@
+import type { Coordinates } from '@/types';
+
 /** An answer to draw on the Earth, as an arc following the surface. */
 export type EarthMark = {
   bearing: number;
@@ -12,6 +14,9 @@ export type EarthMark = {
 
 export type EarthSectionProps = {
   size: number;
+  /** The starting point of the answers. When given, the Earth can be switched to a 3D globe
+   * (`Globe3D`) where each answer is its great-circle route: without it there is nothing to place on a map. */
+  origin?: Coordinates;
   marks: EarthMark[];
   /** Shows the +/- buttons (reveal): starts from the ideal zoom, goes down to 1 (whole Earth). */
   zoomControls?: boolean;

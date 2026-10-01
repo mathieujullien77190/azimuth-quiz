@@ -1,4 +1,4 @@
-import type { ClueId, CluePlace } from '@/types';
+import type { ClueId, CluePlace, Coordinates } from '@/types';
 
 export type ClueState = 'locked' | 'revealed';
 
@@ -15,6 +15,11 @@ export type ClueCardProps = {
   /** Only for the `bearing`/`distance` clues: heading and distance from the player. */
   bearingDeg?: number;
   distanceKm?: number;
+  /** Only for the 'globe' clue: the starting point, which the heading and the distance are from. */
+  origin?: Coordinates;
+  /** Only for the 'globe' clue: 1 = the place and the starting point with the equator and the Greenwich meridian, 2 =
+   * and the land. */
+  globeStage?: number;
   /** Only for the `emoji` clue: how many of the 3 emoji are already revealed (0-3). */
   emojiStage?: number;
   /** Only for the `flagColors` clue: how many of the flag's colors are already revealed

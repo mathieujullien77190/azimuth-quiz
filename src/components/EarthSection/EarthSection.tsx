@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, Text, View } from 'react-native';
 import Svg, { Circle, Defs, G, Path, RadialGradient, Stop, Text as SvgText } from 'react-native-svg';
 
+import Globe3D from '@/components/Globe3D';
 import { useTheme, useThemedStyles } from '@/themes';
 
 import {
@@ -17,6 +18,8 @@ import {
   SATELLITE_EMOJI,
   SATELLITE_ORBIT_MS,
   SATELLITE_QUIP,
+  SWITCH_TO_EARTH,
+  SWITCH_TO_GLOBE,
   ZOOM_STEPS,
 } from './constants';
 import { arcPath, fitZoom, markEnd, sideOf, surfaceAngle } from './helpers';
@@ -38,6 +41,7 @@ import { createStyles } from './styles';
  */
 export const EarthSection = ({
   size,
+  origin,
   marks,
   zoomControls = false,
   allowSatellite = zoomControls,
@@ -65,10 +69,16 @@ export const EarthSection = ({
   const radius = baseRadius * zoom;
   const center: Point = { x: player.x, y: player.y + radius };
 
+  // The 3D globe is offered whatever the zoom, as soon as the caller gave the starting point (without it there is nothing to
+  // place on a globe).
+  const [globe, setGlobe] = useState(false);
+  const canFlip = origin !== undefined;
+  const globeOrigin = canFlip && globe ? origin : undefined;
+
   // Orbiting satellite, just for fun: only when `allowSatellite` (Compass reveal,
   // or the always-revealed mini-Earth of Clues' "Distance" clue), zoomed out to
   // the real scale (zoom 1, otherwise off-screen or grotesque).
-  const showSatellite = allowSatellite && zoom === 1;
+  const showSatellite = allowSatellite && zoom === 1 && globeOrigin === undefined;
   const satelliteAngle = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!showSatellite) return undefined;
@@ -126,65 +136,85 @@ export const EarthSection = ({
     <View style={styles.wrap}>
       <View style={styles.header}>
         <Text style={styles.caption}>{CAPTION_SURFACE.toUpperCase()}</Text>
-        {zoomControls && (
-          <View style={styles.zoomControls}>
+        <View style={styles.headerActions}>
+          {canFlip && (
             <Pressable
               accessibilityRole="button"
-              disabled={stepIndex === 0}
               hitSlop={8}
-              onPress={() => setManualIndex(Math.max(0, stepIndex - 1))}
-              style={[styles.zoomButton, stepIndex === 0 && { opacity: 0.4 }]}
+              onPress={() => setGlobe((value) => !value)}
+              style={styles.viewToggle}
             >
-              <Text style={styles.zoomButtonLabel}>−</Text>
+              <Text style={styles.viewToggleLabel}>
+                {globeOrigin === undefined ? SWITCH_TO_GLOBE : SWITCH_TO_EARTH}
+              </Text>
             </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              disabled={stepIndex === ZOOM_STEPS.length - 1}
-              hitSlop={8}
-              onPress={() => setManualIndex(Math.min(ZOOM_STEPS.length - 1, stepIndex + 1))}
-              style={[styles.zoomButton, stepIndex === ZOOM_STEPS.length - 1 && { opacity: 0.4 }]}
-            >
-              <Text style={styles.zoomButtonLabel}>+</Text>
-            </Pressable>
-          </View>
-        )}
+          )}
+          {zoomControls && globeOrigin === undefined && (
+            <View style={styles.zoomControls}>
+              <Pressable
+                accessibilityRole="button"
+                disabled={stepIndex === 0}
+                hitSlop={8}
+                onPress={() => setManualIndex(Math.max(0, stepIndex - 1))}
+                style={[styles.zoomButton, stepIndex === 0 && { opacity: 0.4 }]}
+              >
+                <Text style={styles.zoomButtonLabel}>−</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                disabled={stepIndex === ZOOM_STEPS.length - 1}
+                hitSlop={8}
+                onPress={() => setManualIndex(Math.min(ZOOM_STEPS.length - 1, stepIndex + 1))}
+                style={[styles.zoomButton, stepIndex === ZOOM_STEPS.length - 1 && { opacity: 0.4 }]}
+              >
+                <Text style={styles.zoomButtonLabel}>+</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
       </View>
 
       <View style={styles.svgWrap}>
-        <Svg accessibilityLabel={CAPTION_SURFACE} height={height} width={size}>
-          <Defs>
-            <RadialGradient id="earth" cx="50%" cy="40%" r="65%">
-              <Stop offset="0%" stopColor={compass.faceInner} />
-              <Stop offset="100%" stopColor={compass.faceOuter} />
-            </RadialGradient>
-          </Defs>
+        {globeOrigin !== undefined ? (
+          <View style={[styles.flatWrap, { height }]}>
+            <Globe3D marks={marks} origin={globeOrigin} size={Math.min(size, height)} />
+          </View>
+        ) : (
+          <Svg accessibilityLabel={CAPTION_SURFACE} height={height} width={size}>
+            <Defs>
+              <RadialGradient id="earth" cx="50%" cy="40%" r="65%">
+                <Stop offset="0%" stopColor={compass.faceInner} />
+                <Stop offset="100%" stopColor={compass.faceOuter} />
+              </RadialGradient>
+            </Defs>
 
-          <Circle cx={center.x} cy={center.y} r={radius} fill="url(#earth)" stroke={colors.border} strokeWidth={3} />
-          <Circle
-            cx={center.x}
-            cy={center.y}
-            r={radius * 0.28}
-            fill="none"
-            stroke={colors.border}
-            strokeWidth={1}
-            strokeDasharray="3 5"
-          />
+            <Circle cx={center.x} cy={center.y} r={radius} fill="url(#earth)" stroke={colors.border} strokeWidth={3} />
+            <Circle
+              cx={center.x}
+              cy={center.y}
+              r={radius * 0.28}
+              fill="none"
+              stroke={colors.border}
+              strokeWidth={1}
+              strokeDasharray="3 5"
+            />
 
-          {marks.map((item, index) => mark(item, `mark-${index}`))}
+            {marks.map((item, index) => mark(item, `mark-${index}`))}
 
-          <Circle cx={player.x} cy={player.y} r={6} fill={colors.text} stroke={colors.surface} strokeWidth={2} />
-          <SvgText
-            x={player.x}
-            y={player.y - 12}
-            fill={colors.text}
-            fontFamily={typography.heading.fontFamily}
-            fontSize={12}
-            fontWeight="800"
-            textAnchor="middle"
-          >
-            {PLAYER_LABEL}
-          </SvgText>
-        </Svg>
+            <Circle cx={player.x} cy={player.y} r={6} fill={colors.text} stroke={colors.surface} strokeWidth={2} />
+            <SvgText
+              x={player.x}
+              y={player.y - 12}
+              fill={colors.text}
+              fontFamily={typography.heading.fontFamily}
+              fontSize={12}
+              fontWeight="800"
+              textAnchor="middle"
+            >
+              {PLAYER_LABEL}
+            </SvgText>
+          </Svg>
+        )}
 
         {showSatellite && (
           <Animated.View

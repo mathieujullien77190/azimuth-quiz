@@ -20,6 +20,31 @@ export const createStyles = ({ colors, typography }: Theme) =>
       fontSize: 11,
       fontWeight: '700',
     },
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+    },
+    viewToggle: {
+      height: 28,
+      borderRadius: 14,
+      paddingHorizontal: spacing.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surfaceHigh,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    viewToggleLabel: {
+      ...typography.label,
+      color: colors.text,
+      fontSize: 11,
+      fontWeight: '700',
+    },
+    flatWrap: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
     zoomControls: {
       flexDirection: 'row',
       gap: spacing.xs,

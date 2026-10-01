@@ -5,6 +5,7 @@ import { SAMPLE_PLAYERS } from '@/helpers/storyFixtures';
 import { EarthSection } from './EarthSection';
 import { source } from '@/storybook/source';
 import surfaceCode from './Surface.source.md?raw';
+import withGlobeCode from './WithGlobe.source.md?raw';
 import withZoomControlsCode from './WithZoomControls.source.md?raw';
 
 const meta = {
@@ -30,6 +31,17 @@ export const WithZoomControls: Story = {
   parameters: source(withZoomControlsCode),
   args: {
     marks: [{ bearing: 30, distanceKm: 9000, color: SAMPLE_PLAYERS[1].color, isTruth: true }],
+    size: 160,
+    zoomControls: true,
+  },
+};
+
+/** At the whole-Earth zoom, a long answer can be seen on a 3D globe, turned with a finger: needs the starting point (`origin`). */
+export const WithGlobe: Story = {
+  parameters: source(withGlobeCode),
+  args: {
+    marks: [{ bearing: 291.6, distanceKm: 5837, color: SAMPLE_PLAYERS[0].color, isTruth: true }],
+    origin: { latitude: 48.8566, longitude: 2.3522 },
     size: 160,
     zoomControls: true,
   },

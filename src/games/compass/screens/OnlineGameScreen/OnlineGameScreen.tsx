@@ -162,6 +162,7 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
       difficulty={roomSettings.difficulty}
       distanceKm={game.distanceKm}
       earthMarks={record ? resultsEarthMarks : answerEarthMarks}
+      origin={gameState.origin.coordinates}
       extraNeedles={extraNeedles}
       name={onlinePlayers[myIndex]?.name ?? ''}
       points={totals[myIndex] ?? 0}

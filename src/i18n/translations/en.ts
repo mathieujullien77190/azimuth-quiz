@@ -184,6 +184,7 @@ export const en: Translations = {
       flagColors: 'Flag',
       bearing: 'Heading',
       distance: 'Distance',
+      globe: '3D globe',
       localTime: 'Local time',
       phoneCode: 'Phone code',
       currency: 'Currency',

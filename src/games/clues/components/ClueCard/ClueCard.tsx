@@ -13,7 +13,8 @@ import type { Theme } from '@/types';
 
 import Compass from '@/components/Compass';
 import EarthSection from '@/components/EarthSection';
-import { COMPASS_CLUE_SIZE, EARTH_CLUE_SIZE, POSITION_COORDS } from './constants';
+import Globe3D from '@/components/Globe3D';
+import { COMPASS_CLUE_SIZE, EARTH_CLUE_SIZE, GLOBE_CLUE_SIZE, POSITION_COORDS } from './constants';
 import {
   charadeBodyHeight,
   dayNightEmoji,
@@ -30,7 +31,7 @@ const POPULATION_DOT_SIZES = [6, 10, 14, 18, 22];
 
 /** Clues that always span the full width of the grid, locked or revealed (bigger visual, and
  * avoids relying on react-native-web's more forgiving flexbox to fit the compass/Earth). */
-const WIDE_CLUE_IDS = new Set(['bearing', 'distance', 'charade', 'wordplay']);
+const WIDE_CLUE_IDS = new Set(['bearing', 'distance', 'globe', 'charade', 'wordplay']);
 
 /** "1/2", "2/3"... above multi-click clues — `undefined` for single-click clues
  * (no badge in that case, see the call site in the component). */
@@ -41,6 +42,7 @@ const multiStageProgress = (
     emojiStage?: number;
     flagStage?: number;
     distanceStage?: number;
+    globeStage?: number;
     elevationStage?: number;
     populationStage?: number;
     currencyStage?: number;
@@ -58,6 +60,8 @@ const multiStageProgress = (
       return { stage: Math.min(stages.flagStage ?? 1, 3), max: 3 };
     case 'distance':
       return { stage: Math.min(stages.distanceStage ?? 1, 2), max: 2 };
+    case 'globe':
+      return { stage: Math.min(stages.globeStage ?? 1, 2), max: 2 };
     case 'elevation':
       return { stage: Math.min(stages.elevationStage ?? 1, 2), max: 2 };
     case 'population':
@@ -83,9 +87,11 @@ const revealedBody = (
     place,
     bearingDeg,
     distanceKm,
+    origin,
     emojiStage,
     flagStage,
     distanceStage,
+    globeStage,
     elevationStage,
     populationStage,
     currencyStage,
@@ -98,9 +104,11 @@ const revealedBody = (
     | 'place'
     | 'bearingDeg'
     | 'distanceKm'
+    | 'origin'
     | 'emojiStage'
     | 'flagStage'
     | 'distanceStage'
+    | 'globeStage'
     | 'elevationStage'
     | 'populationStage'
     | 'currencyStage'
@@ -266,6 +274,18 @@ const revealedBody = (
         </View>
       ) : null;
     }
+    case 'globe':
+      // The answer on a globe, turned with a finger: the starting point, and the place as a circled point (no route).
+      return origin !== undefined && bearingDeg !== undefined && distanceKm !== undefined ? (
+        <Globe3D
+          equator
+          greenwich
+          land={(globeStage ?? 1) >= 2}
+          marks={[{ bearing: bearingDeg, color: colors.accent, distanceKm, isTruth: true }]}
+          origin={origin}
+          size={GLOBE_CLUE_SIZE}
+        />
+      ) : null;
     case 'localTime': {
       const stage = localTimeStage ?? 1;
       if (stage < 2) return <Text style={styles.bigEmoji}>{dayNightEmoji(place.timezone)}</Text>;
@@ -294,7 +314,9 @@ export const ClueCard = ({
   moreToReveal = false,
   bearingDeg,
   distanceKm,
+  origin,
   distanceStage,
+  globeStage,
   elevationStage,
   emojiStage,
   flagStage,
@@ -317,6 +339,7 @@ export const ClueCard = ({
           currencyStage,
           distanceStage,
           elevationStage,
+          globeStage,
           emojiStage,
           flagStage,
           letterStage,
@@ -374,6 +397,7 @@ export const ClueCard = ({
           styles.body,
           wide && clueId === 'bearing' && styles.bodyCompass,
           wide && clueId === 'distance' && styles.bodyEarth,
+          wide && clueId === 'globe' && styles.bodyGlobe,
           clueId === 'flagColors' && state === 'revealed' && styles.bodyFlag,
           clueId === 'charade' && styles.bodyCharade,
           clueId === 'charade' &&
@@ -396,7 +420,9 @@ export const ClueCard = ({
                 clueId,
                 currencyStage,
                 distanceKm,
+                origin,
                 distanceStage,
+                globeStage,
                 elevationStage,
                 emojiStage,
                 flagStage,

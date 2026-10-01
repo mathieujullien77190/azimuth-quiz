@@ -14,6 +14,8 @@ import lockedCode from './Locked.source.md?raw';
 import populationRevealedCode from './PopulationRevealed.source.md?raw';
 import bearingRevealedCode from './BearingRevealed.source.md?raw';
 import distanceRevealedCode from './DistanceRevealed.source.md?raw';
+import globeRevealedCode from './GlobeRevealed.source.md?raw';
+import globeLandRevealedCode from './GlobeLandRevealed.source.md?raw';
 import flagColorsRevealedCode from './FlagColorsRevealed.source.md?raw';
 import letterRevealedSpaceCode from './LetterRevealedSpace.source.md?raw';
 import letterRevealedHyphenCode from './LetterRevealedHyphen.source.md?raw';
@@ -67,6 +69,29 @@ export const DistanceRevealed: Story = {
     place: SAMPLE_CLUE_PLACE,
     state: 'revealed',
   },
+};
+
+const PARIS = { latitude: 48.8566, longitude: 2.3522 };
+
+/** First stage: the starting point and the place on the bare ball, with the equator and the Greenwich meridian. */
+export const GlobeRevealed: Story = {
+  parameters: source(globeRevealedCode),
+  args: {
+    bearingDeg: SAMPLE_CLUE_BEARING,
+    clueId: 'globe',
+    distanceKm: SAMPLE_CLUE_DISTANCE_KM,
+    globeStage: 1,
+    label: 'Globe 3D',
+    origin: PARIS,
+    place: SAMPLE_CLUE_PLACE,
+    state: 'revealed',
+  },
+};
+
+/** Second stage: the world's land appears on the globe. */
+export const GlobeLandRevealed: Story = {
+  parameters: source(globeLandRevealedCode),
+  args: { ...GlobeRevealed.args, globeStage: 2 },
 };
 
 export const FlagColorsRevealed: Story = {

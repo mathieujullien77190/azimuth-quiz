@@ -188,6 +188,7 @@ export const fr: Translations = {
       flagColors: 'Drapeau',
       bearing: 'Cap',
       distance: 'Distance',
+      globe: 'Globe 3D',
       localTime: 'Heure locale',
       phoneCode: 'Indicatif tél.',
       currency: 'Devise',

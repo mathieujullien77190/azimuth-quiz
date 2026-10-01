@@ -158,6 +158,7 @@ export type ClueId =
   | 'flagColors'
   | 'bearing'
   | 'distance'
+  | 'globe'
   | 'localTime'
   | 'phoneCode'
   | 'currency'

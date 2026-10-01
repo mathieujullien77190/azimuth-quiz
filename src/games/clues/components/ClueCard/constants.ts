@@ -17,6 +17,8 @@ export const POSITION_COORDS: Record<CluePositionInCountry, { left: number; top:
 // compass / Earth (components reused as-is from Azimuth Quiz) room to breathe.
 export const COMPASS_CLUE_SIZE = 140;
 export const EARTH_CLUE_SIZE = 170;
+// The 'globe' clue: a full-width card too, the globe being turned with a finger.
+export const GLOBE_CLUE_SIZE = 220;
 
 // The charade card reserves room for CHARADE_LINES_PER_GROUP lines of CHARADE_LINE_HEIGHT px per group of
 // syllables from the moment it is revealed, so it does not grow (and push the grid down) click after click.

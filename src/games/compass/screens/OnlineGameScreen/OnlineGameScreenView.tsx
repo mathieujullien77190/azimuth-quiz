@@ -40,6 +40,7 @@ export const OnlineGameScreenView = ({
   bearing,
   onSetBearing,
   earthMarks,
+  origin,
   distanceKm,
   onSetDistanceKm,
   maxDistanceKm,
@@ -129,7 +130,13 @@ export const OnlineGameScreenView = ({
 
       <Card style={styles.earthCard}>
         <View style={styles.earthCenter}>
-          <EarthSection marks={earthMarks} size={earthSizeFor(width)} zoomControls={record !== undefined} />
+          {/* The 3D globe is for the solution only: no `origin`, no switch, while the players are still answering. */}
+          <EarthSection
+            marks={earthMarks}
+            origin={record === undefined ? undefined : origin}
+            size={earthSizeFor(width)}
+            zoomControls={record !== undefined}
+          />
         </View>
         {!record && (
           <SliderTrack

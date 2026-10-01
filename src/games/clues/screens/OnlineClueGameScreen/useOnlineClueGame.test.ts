@@ -148,11 +148,11 @@ describe('useOnlineClueGame — the draft guess', () => {
   });
 });
 
-describe('useOnlineClueGame — sharing this device\'s draft guess', () => {
+describe("useOnlineClueGame — sharing this device's draft guess", () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
 
-  it('mirrors the turn-holder\'s text to the room, 500ms after it stops changing', async () => {
+  it("mirrors the turn-holder's text to the room, 500ms after it stops changing", async () => {
     const { result } = await setup();
     await act(async () => result.current.setGuessText('Pa'));
     await act(async () => jest.advanceTimersByTime(499));

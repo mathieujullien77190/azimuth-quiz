@@ -1,6 +1,6 @@
 import type { NameSkeletonSlot } from '@/games/clues/helpers/clueSkeleton';
 import type { OnlinePlayer } from '@/helpers/roomPlayers';
-import type { ClueId, CluePlace, Difficulty } from '@/types';
+import type { ClueId, CluePlace, Coordinates, Difficulty } from '@/types';
 
 export type OnlineClueGameScreenProps = {
   code: string;
@@ -20,6 +20,8 @@ export type OnlineClueGameScreenViewProps = {
   place: CluePlace;
   bearingDeg: number;
   distanceKm: number;
+  /** The starting point (for the globe clue). */
+  origin?: Coordinates;
   revealedClueIds: ClueId[];
   skeletonGroups: NameSkeletonSlot[][];
   skeletonLengthKnown: boolean;

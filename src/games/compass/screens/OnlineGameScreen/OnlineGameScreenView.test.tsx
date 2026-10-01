@@ -60,6 +60,7 @@ const baseProps: OnlineGameScreenViewProps = {
   place: BERLIN,
   liveCompass: false,
   earthMarks: [],
+  origin: { latitude: 48.8566, longitude: 2.3522 },
   showCountry: false,
   compassColor: '#EF4444',
   bearing: 0,
@@ -87,6 +88,21 @@ describe('OnlineGameScreenView — answering', () => {
   it('has the slider only while answering', async () => {
     const { queryByLabelText } = await render(<OnlineGameScreenView {...baseProps} record={record} />);
     expect(queryByLabelText('slider')).toBeNull();
+  });
+});
+
+describe('OnlineGameScreenView — the 3D globe', () => {
+  // A far answer: the Earth is at its real scale, where the switch can show.
+  const far = [{ bearing: 90, distanceKm: 20000, color: '#EF4444' }];
+
+  it('is not offered while the players are still answering', async () => {
+    const { queryByText } = await render(<OnlineGameScreenView {...baseProps} earthMarks={far} />);
+    expect(queryByText('3D')).toBeNull();
+  });
+
+  it('is offered with the solution', async () => {
+    const { getByText } = await render(<OnlineGameScreenView {...baseProps} earthMarks={far} record={record} />);
+    expect(getByText('3D')).toBeTruthy();
   });
 });
 

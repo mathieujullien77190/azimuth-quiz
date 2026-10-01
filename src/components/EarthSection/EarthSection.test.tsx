@@ -4,7 +4,17 @@ import { Animated } from 'react-native';
 import { EARTH_RADIUS_KM } from '@/data';
 import { ThemeSettingsContext } from '@/themes';
 
-import { DAY_ORBIT_EMOJI, SATELLITE_ORBIT_MS, SATELLITE_QUIP, ZOOM_STEPS } from './constants';
+import { CAPTION_GLOBE } from '@/components/Globe3D/constants';
+
+import {
+  CAPTION_SURFACE,
+  DAY_ORBIT_EMOJI,
+  SATELLITE_ORBIT_MS,
+  SATELLITE_QUIP,
+  SWITCH_TO_EARTH,
+  SWITCH_TO_GLOBE,
+  ZOOM_STEPS,
+} from './constants';
 import EarthSection from '.';
 import type { EarthMark } from './types';
 
@@ -61,6 +71,46 @@ describe('EarthSection — zoom controls', () => {
     expect(plus.props.accessibilityState.disabled).toBe(false);
     await fireEvent.press(plus);
     expect(minus.props.accessibilityState.disabled).toBe(false);
+  });
+});
+
+const PARIS = { latitude: 48.8566, longitude: 2.3522 };
+
+describe('EarthSection — 3D globe', () => {
+  it('offers the switch whatever the zoom, but only with a starting point', async () => {
+    const far = await render(<EarthSection marks={[farMark]} origin={PARIS} size={240} />);
+    expect(far.getByText(SWITCH_TO_GLOBE)).toBeTruthy();
+    await far.unmount();
+    const noOrigin = await render(<EarthSection marks={[farMark]} size={240} />);
+    expect(noOrigin.queryByText(SWITCH_TO_GLOBE)).toBeNull();
+    await noOrigin.unmount();
+    const near = await render(<EarthSection marks={[nearMark]} origin={PARIS} size={240} />);
+    expect(near.getByText(SWITCH_TO_GLOBE)).toBeTruthy();
+  });
+
+  it('switches to the globe and back to the Earth', async () => {
+    const { getByText, getByLabelText, queryByLabelText } = await render(
+      <EarthSection marks={[farMark]} origin={PARIS} size={240} />,
+    );
+    expect(queryByLabelText(CAPTION_GLOBE)).toBeNull();
+    await fireEvent.press(getByText(SWITCH_TO_GLOBE));
+    expect(getByLabelText(CAPTION_GLOBE)).toBeTruthy();
+    expect(queryByLabelText(CAPTION_SURFACE)).toBeNull();
+    await fireEvent.press(getByText(SWITCH_TO_EARTH));
+    expect(getByLabelText(CAPTION_SURFACE)).toBeTruthy();
+    expect(queryByLabelText(CAPTION_GLOBE)).toBeNull();
+  });
+
+  it('has no zoom buttons on the globe, which come back with the Earth', async () => {
+    const { getByText, queryByText } = await render(
+      <EarthSection allowSatellite={false} marks={[farMark]} origin={PARIS} size={240} zoomControls />,
+    );
+    expect(queryByText('+')).toBeTruthy();
+    await fireEvent.press(getByText(SWITCH_TO_GLOBE));
+    expect(queryByText('+')).toBeNull();
+    expect(queryByText('−')).toBeNull();
+    await fireEvent.press(getByText(SWITCH_TO_EARTH));
+    expect(queryByText('+')).toBeTruthy();
   });
 });
 

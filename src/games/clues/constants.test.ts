@@ -12,6 +12,7 @@ const ALL_CLUE_IDS: ClueId[] = [
   'flagColors',
   'bearing',
   'distance',
+  'globe',
   'localTime',
   'phoneCode',
   'currency',

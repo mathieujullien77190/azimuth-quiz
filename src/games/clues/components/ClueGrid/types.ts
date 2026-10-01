@@ -1,9 +1,11 @@
-import type { ClueId, CluePlace } from '@/types';
+import type { ClueId, CluePlace, Coordinates } from '@/types';
 
 export type ClueGridProps = {
   place: CluePlace;
   bearingDeg: number;
   distanceKm: number;
+  /** The starting point (for the globe clue). */
+  origin?: Coordinates;
   revealedClueIds: ClueId[];
   /** Reveal everything, regardless of what's actually in `revealedClueIds` — end-of-round
    * display. */

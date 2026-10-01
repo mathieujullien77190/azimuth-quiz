@@ -86,7 +86,16 @@ describe('cluesFor', () => {
 });
 
 describe('totalRevealCount', () => {
-  const TWO_STAGE: ClueId[] = ['distance', 'elevation', 'population', 'currency', 'localTime', 'letter', 'wordplay'];
+  const TWO_STAGE: ClueId[] = [
+    'distance',
+    'globe',
+    'elevation',
+    'population',
+    'currency',
+    'localTime',
+    'letter',
+    'wordplay',
+  ];
   const THREE_STAGE: ClueId[] = ['emoji', 'flagColors'];
 
   /** Rebuilds the expected total the same way `totalRevealCount` should, but independently (from

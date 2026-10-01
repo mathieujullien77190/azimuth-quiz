@@ -19,6 +19,7 @@ export const clueHasMoreToReveal = (revealedClueIds: ClueId[], clueId: ClueId, p
     case 'flagColors':
       return stage < 3;
     case 'distance':
+    case 'globe':
     case 'elevation':
     case 'population':
     case 'currency':

@@ -36,7 +36,7 @@ describe('ClueCard — locked state', () => {
     expect(queryByRole('button')).toBeNull();
   });
 
-  it.each(['bearing', 'distance'] as const)('%s stays full-width even while locked', async (clueId) => {
+  it.each(['bearing', 'distance', 'globe'] as const)('%s stays full-width even while locked', async (clueId) => {
     const { getByRole } = await renderCard({ clueId, onPress: jest.fn(), state: 'locked' });
     const style = getByRole('button').props.style as unknown[];
     expect(style).toContainEqual(expect.objectContaining({ flexBasis: '100%' }));
@@ -128,6 +128,41 @@ describe('ClueCard — revealed content per clue', () => {
   it('distance: renders nothing when distanceKm is missing', async () => {
     const { toJSON } = await renderCard({ bearingDeg: 10, clueId: 'distance', state: 'revealed' });
     expect(toJSON()).toBeTruthy();
+  });
+
+  it('globe: renders the globe when the starting point, the heading and the distance are provided', async () => {
+    const { getByLabelText } = await renderCard({
+      bearingDeg: 10,
+      clueId: 'globe',
+      distanceKm: 500,
+      origin: { latitude: 48.85, longitude: 2.35 },
+      state: 'revealed',
+    });
+    expect(getByLabelText('Globe 3D')).toBeTruthy();
+  });
+
+  it.each([
+    ['origin', { bearingDeg: 10, distanceKm: 500 }],
+    ['bearingDeg', { distanceKm: 500, origin: { latitude: 1, longitude: 2 } }],
+    ['distanceKm', { bearingDeg: 10, origin: { latitude: 1, longitude: 2 } }],
+  ])('globe: renders nothing when %s is missing', async (_, props) => {
+    const { queryByLabelText } = await renderCard({ clueId: 'globe', state: 'revealed', ...props });
+    expect(queryByLabelText('Globe 3D')).toBeNull();
+  });
+
+  it('globe: shows its progress, 1/2 then 2/2', async () => {
+    const props = {
+      bearingDeg: 10,
+      clueId: 'globe',
+      distanceKm: 500,
+      origin: { latitude: 1, longitude: 2 },
+      state: 'revealed',
+    } as const;
+    const first = await renderCard(props);
+    expect(first.getByLabelText('1/2')).toBeTruthy();
+    await first.unmount();
+    const second = await renderCard({ ...props, globeStage: 2 });
+    expect(second.getByLabelText('2/2')).toBeTruthy();
   });
 
   it('localTime: stage 1 (default) renders a day/night emoji, not the time', async () => {
@@ -319,7 +354,12 @@ describe('ClueCard — wordplay', () => {
 
   it('shows the difficulty dot while locked too, next to the padlock', async () => {
     jest.mocked(wordplayFor).mockReturnValue({ sentence: 'Ce lac est Constance.', difficulty: 'hard' });
-    const { getByText, queryByText } = await renderCard({ clueId: 'wordplay', onPress: jest.fn(), place, state: 'locked' });
+    const { getByText, queryByText } = await renderCard({
+      clueId: 'wordplay',
+      onPress: jest.fn(),
+      place,
+      state: 'locked',
+    });
     expect(getByText('🔴')).toBeTruthy();
     expect(queryByText('Ce lac est Constance.')).toBeNull();
   });

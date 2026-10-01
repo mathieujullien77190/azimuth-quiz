@@ -3,7 +3,7 @@ import type { NativeScrollEvent, NativeSyntheticEvent, ScrollView } from 'react-
 
 import type { EarthMark } from '@/components/EarthSection';
 import type { OnlinePlayer } from '@/helpers/roomPlayers';
-import type { Difficulty, Place, RoundRecord } from '@/types';
+import type { Coordinates, Difficulty, Place, RoundRecord } from '@/types';
 
 export type OnlineGameScreenProps = {
   code: string;
@@ -38,6 +38,8 @@ export type OnlineGameScreenViewProps = OnlineHeaderProps & {
   place: Place;
   liveCompass: boolean;
   earthMarks: EarthMark[];
+  /** The round's starting point: at the reveal, lets the Earth view switch to the flat world map (see `EarthSection`). */
+  origin: Coordinates;
   // Answer phase only (ignored once `record` is set).
   showCountry: boolean;
   compassColor: string;

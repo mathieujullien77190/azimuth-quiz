@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 import { fontSize, spacing } from '@/data';
 import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 import type { Theme } from '@/types';
-import { CHARADE_LINE_HEIGHT, COMPASS_CLUE_SIZE, EARTH_CLUE_SIZE } from './constants';
+import { CHARADE_LINE_HEIGHT, COMPASS_CLUE_SIZE, EARTH_CLUE_SIZE, GLOBE_CLUE_SIZE } from './constants';
 
 export const createStyles = ({ colors, radius, typography }: Theme) =>
   StyleSheet.create({
@@ -67,6 +67,9 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
     },
     bodyEarth: {
       height: EARTH_CLUE_SIZE + spacing.xl,
+    },
+    bodyGlobe: {
+      height: GLOBE_CLUE_SIZE + spacing.md,
     },
     bodyFlag: {
       height: 78,
