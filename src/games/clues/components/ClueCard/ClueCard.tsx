@@ -281,6 +281,8 @@ const revealedBody = (
           equator
           greenwich
           land={(globeStage ?? 1) >= 2}
+          draggable={false}
+          satellite={false}
           marks={[{ bearing: bearingDeg, color: colors.accent, distanceKm, isTruth: true }]}
           origin={origin}
           size={GLOBE_CLUE_SIZE}

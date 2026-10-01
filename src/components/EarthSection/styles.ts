@@ -45,8 +45,12 @@ export const createStyles = ({ colors, typography }: Theme) =>
       justifyContent: 'center',
       alignItems: 'center',
     },
+    // Bottom right of the drawing, one above the other ("+" on top: the buttons come minus first, hence the reverse).
     zoomControls: {
-      flexDirection: 'row',
+      position: 'absolute',
+      right: 0,
+      bottom: 0,
+      flexDirection: 'column-reverse',
       gap: spacing.xs,
     },
     zoomButton: {
@@ -84,19 +88,6 @@ export const createStyles = ({ colors, typography }: Theme) =>
       textAlign: 'center',
       textAlignVertical: 'center',
       transform: [{ rotate: '-35deg' }],
-    },
-    // The plane glyph (✈️) points a different base direction than the satellite dish (🛰️): a
-    // 90deg clockwise offset, tuned by eye, lines it up with its orbit instead of reusing
-    // satelliteEmoji's -35deg (tuned for the satellite only).
-    dayOrbitEmoji: {
-      width: 20,
-      height: 20,
-      marginLeft: -10,
-      marginTop: -10,
-      fontSize: 16,
-      textAlign: 'center',
-      textAlignVertical: 'center',
-      transform: [{ rotate: '45deg' }],
     },
     // Counter-rotates relative to the orbit (see satelliteAngle) to stay legible regardless
     // of the satellite's angle at the moment of the click, rather than rotating with it.

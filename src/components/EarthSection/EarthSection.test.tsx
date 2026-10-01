@@ -8,7 +8,6 @@ import { CAPTION_GLOBE } from '@/components/Globe3D/constants';
 
 import {
   CAPTION_SURFACE,
-  DAY_ORBIT_EMOJI,
   SATELLITE_ORBIT_MS,
   SATELLITE_QUIP,
   SWITCH_TO_EARTH,
@@ -77,40 +76,41 @@ describe('EarthSection — zoom controls', () => {
 const PARIS = { latitude: 48.8566, longitude: 2.3522 };
 
 describe('EarthSection — 3D globe', () => {
-  it('offers the switch whatever the zoom, but only with a starting point', async () => {
+  it('shows the globe first, with a switch to the 2D Earth, whatever the zoom, but only with a starting point', async () => {
     const far = await render(<EarthSection marks={[farMark]} origin={PARIS} size={240} />);
-    expect(far.getByText(SWITCH_TO_GLOBE)).toBeTruthy();
+    expect(far.getByLabelText(CAPTION_GLOBE)).toBeTruthy();
+    expect(far.getByText(SWITCH_TO_EARTH)).toBeTruthy();
     await far.unmount();
+    const near = await render(<EarthSection marks={[nearMark]} origin={PARIS} size={240} />);
+    expect(near.getByLabelText(CAPTION_GLOBE)).toBeTruthy();
+    await near.unmount();
     const noOrigin = await render(<EarthSection marks={[farMark]} size={240} />);
     expect(noOrigin.queryByText(SWITCH_TO_GLOBE)).toBeNull();
-    await noOrigin.unmount();
-    const near = await render(<EarthSection marks={[nearMark]} origin={PARIS} size={240} />);
-    expect(near.getByText(SWITCH_TO_GLOBE)).toBeTruthy();
+    expect(noOrigin.queryByText(SWITCH_TO_EARTH)).toBeNull();
+    expect(noOrigin.getByLabelText(CAPTION_SURFACE)).toBeTruthy();
   });
 
-  it('switches to the globe and back to the Earth', async () => {
+  it('switches to the 2D Earth and back to the globe', async () => {
     const { getByText, getByLabelText, queryByLabelText } = await render(
       <EarthSection marks={[farMark]} origin={PARIS} size={240} />,
     );
+    await fireEvent.press(getByText(SWITCH_TO_EARTH));
+    expect(getByLabelText(CAPTION_SURFACE)).toBeTruthy();
     expect(queryByLabelText(CAPTION_GLOBE)).toBeNull();
     await fireEvent.press(getByText(SWITCH_TO_GLOBE));
     expect(getByLabelText(CAPTION_GLOBE)).toBeTruthy();
     expect(queryByLabelText(CAPTION_SURFACE)).toBeNull();
-    await fireEvent.press(getByText(SWITCH_TO_EARTH));
-    expect(getByLabelText(CAPTION_SURFACE)).toBeTruthy();
-    expect(queryByLabelText(CAPTION_GLOBE)).toBeNull();
   });
 
-  it('has no zoom buttons on the globe, which come back with the Earth', async () => {
+  it('has no zoom buttons on the globe, which come back with the 2D Earth', async () => {
     const { getByText, queryByText } = await render(
       <EarthSection allowSatellite={false} marks={[farMark]} origin={PARIS} size={240} zoomControls />,
     );
-    expect(queryByText('+')).toBeTruthy();
-    await fireEvent.press(getByText(SWITCH_TO_GLOBE));
     expect(queryByText('+')).toBeNull();
     expect(queryByText('−')).toBeNull();
     await fireEvent.press(getByText(SWITCH_TO_EARTH));
     expect(queryByText('+')).toBeTruthy();
+    expect(queryByText('−')).toBeTruthy();
   });
 });
 
@@ -171,8 +171,8 @@ describe('EarthSection — satellite', () => {
     expect(startMock).toHaveBeenCalledTimes(callsBeforeUnmount);
   });
 
-  it('shows a plane instead of the satellite by day', async () => {
-    const { getByText, queryByText } = await render(
+  it('has no satellite, nor plane, by day', async () => {
+    const { queryByText } = await render(
       <ThemeSettingsContext.Provider
         value={{
           themeId: 'day',
@@ -184,8 +184,8 @@ describe('EarthSection — satellite', () => {
         <EarthSection allowSatellite marks={[farMark]} size={240} />
       </ThemeSettingsContext.Provider>,
     );
-    expect(getByText(DAY_ORBIT_EMOJI)).toBeTruthy();
     expect(queryByText('🛰️')).toBeNull();
+    expect(queryByText('✈️')).toBeNull();
   });
 
   it('toggles the joke bubble on tap and hides it again on a second tap', async () => {

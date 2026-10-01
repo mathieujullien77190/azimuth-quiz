@@ -1,12 +1,14 @@
 import { useMemo, useRef, useState } from 'react';
 import { PanResponder, Pressable, Text, View } from 'react-native';
-import Svg, { Circle, G, Path, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, G, Line, Path, Text as SvgText } from 'react-native-svg';
 
-import { DAY_ORBIT_EMOJI, PLAYER_LABEL, SATELLITE_EMOJI, SATELLITE_QUIP } from '@/components/EarthSection/constants';
+import { PLAYER_LABEL, SATELLITE_EMOJI, SATELLITE_QUIP } from '@/components/EarthSection/constants';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Coordinates } from '@/types';
 
 import {
+  AXIS_LABEL_SIZE,
+  AXIS_RATIO,
   CAPTION_GLOBE,
   END_RADIUS,
   GLOBE_MARGIN,
@@ -17,6 +19,7 @@ import {
   ORBIT_RATIO,
   ORBIT_TICK_MS,
   ORIGIN_RADIUS,
+  POLE_RADIUS,
   ROUTE_STEPS,
   ROUTE_WIDTH,
   TRUTH_RING_RADIUS,
@@ -52,8 +55,11 @@ export const Globe3D = ({
   origin,
   marks,
   land: showLand = true,
+  axis = true,
   equator = false,
   greenwich = false,
+  satellite: withSatellite = true,
+  draggable = true,
 }: Globe3DProps) => {
   const { colors, compass, isDark, typography } = useTheme();
   // Room around the globe for the satellite, which flies above it.
@@ -84,6 +90,15 @@ export const Globe3D = ({
     });
   }, [radius]);
 
+  // Where each answer is on the drawing, and the visible parts of its route (none for the true answer, only circled).
+  const drawnMarks = marks.map((item, index) => ({
+    item,
+    end: screenPoint(ends[index], center, cx, cy, radius),
+    routes:
+      item.isTruth === true
+        ? []
+        : routePaths(routePoints(origin, item.bearing, item.distanceKm, ROUTE_STEPS), center, cx, cy, radius),
+  }));
   const start = screenPoint(origin, center, cx, cy, radius);
   const landD = useMemo(
     () => (showLand ? landPath(LAND_RINGS, center, cx, cy, radius) : ''),
@@ -102,10 +117,12 @@ export const Globe3D = ({
   const angle = useOrbitAngle(ORBIT_MS, ORBIT_TICK_MS);
   const guide = marks.find((item) => item.isTruth === true) ?? marks[0];
   const satellite =
-    guide === undefined ? undefined : orbitPoint(origin, guide.bearing, angle, center, cx, cy, radius, ORBIT_RATIO);
+    !withSatellite || !isDark || guide === undefined
+      ? undefined
+      : orbitPoint(origin, guide.bearing, angle, center, cx, cy, radius, ORBIT_RATIO);
 
   return (
-    <View {...pan.panHandlers}>
+    <View {...(draggable ? pan.panHandlers : {})}>
       <Svg accessibilityLabel={CAPTION_GLOBE} height={size} width={size}>
         <Circle cx={cx} cy={cy} fill={compass.faceOuter} r={radius} stroke={colors.border} strokeWidth={1.5} />
         {showLand && <Path d={landD} fill={colors.surfaceHigh} stroke={colors.border} strokeWidth={0.5} />}
@@ -120,25 +137,53 @@ export const Globe3D = ({
           />
         ))}
 
-        {marks.map((item, index) => {
-          const end = screenPoint(ends[index], center, cx, cy, radius);
+        {axis && (
+          <>
+            <Line
+              stroke={colors.textMuted}
+              strokeWidth={1.5}
+              x1={cx}
+              x2={cx}
+              y1={cy + radius * AXIS_RATIO}
+              y2={cy - radius * AXIS_RATIO}
+            />
+            {center.latitude >= 0 && (
+              <Circle
+                cx={cx}
+                cy={cy - radius * Math.cos((center.latitude * Math.PI) / 180)}
+                fill={colors.text}
+                r={POLE_RADIUS}
+              />
+            )}
+            <SvgText
+              fill={colors.text}
+              fontFamily={typography.heading.fontFamily}
+              fontSize={AXIS_LABEL_SIZE}
+              fontWeight="800"
+              textAnchor="start"
+              x={cx + POLE_RADIUS + 3}
+              y={cy - radius * AXIS_RATIO + AXIS_LABEL_SIZE / 2}
+            >
+              N
+            </SvgText>
+          </>
+        )}
+
+        {drawnMarks.map(({ item, end, routes }, index) => {
           const isTruth = item.isTruth === true;
           return (
             <G key={`mark-${index}`} opacity={item.opacity ?? 1}>
-              {!isTruth &&
-                routePaths(routePoints(origin, item.bearing, item.distanceKm, ROUTE_STEPS), center, cx, cy, radius).map(
-                  (d, part) => (
-                    <Path
-                      d={d}
-                      fill="none"
-                      key={`route-${part}`}
-                      stroke={item.color}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={ROUTE_WIDTH}
-                    />
-                  ),
-                )}
+              {routes.map((d, part) => (
+                <Path
+                  d={d}
+                  fill="none"
+                  key={`route-${part}`}
+                  stroke={item.color}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={ROUTE_WIDTH}
+                />
+              ))}
               {end.visible && (
                 <Circle
                   cx={end.x}
@@ -184,7 +229,7 @@ export const Globe3D = ({
         <View style={[styles.satellite, { left: satellite.x - 10, top: satellite.y - 10 }]}>
           {/* Like the satellite of the Earth view: a tap shows a joke, a second one hides it. */}
           <Pressable hitSlop={10} onPress={() => setShowQuip((value) => !value)}>
-            <Text style={styles.satelliteEmoji}>{isDark ? SATELLITE_EMOJI : DAY_ORBIT_EMOJI}</Text>
+            <Text style={styles.satelliteEmoji}>{SATELLITE_EMOJI}</Text>
           </Pressable>
           {showQuip && (
             <View pointerEvents="none" style={styles.quipWrap}>

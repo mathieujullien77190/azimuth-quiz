@@ -12,10 +12,17 @@ export type Globe3DProps = {
   /** Draws the land (the world's outline). Without it the globe is a bare ball, which the equator and the Greenwich
    * meridian can still mark. Defaults to true. */
   land?: boolean;
+  /** Draws the north axis (the line the Earth turns on, "N" at its north end, and a dot where the north pole is when it's
+   * in front), so the player can see how the globe is tilted as it turns. Defaults to true. */
+  axis?: boolean;
   /** Draws the equator (dashed) so that the player can read where the answer is. */
   equator?: boolean;
   /** Draws the Greenwich meridian (dashed). */
   greenwich?: boolean;
+  /** A satellite (at night only) flying round the Earth along the route, tappable for a joke. Defaults to true. */
+  satellite?: boolean;
+  /** Turns with a finger. Defaults to true; false keeps the globe where it was first shown. */
+  draggable?: boolean;
 };
 
 /** A point of the globe seen from the viewer: `x` to the right, `y` up, `z` towards the viewer (< 0 = far side). */

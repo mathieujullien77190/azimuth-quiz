@@ -9,7 +9,6 @@ import {
   AVAILABLE_X_RATIO,
   BOTTOM_MARGIN,
   CAPTION_SURFACE,
-  DAY_ORBIT_EMOJI,
   EARTH_RADIUS_RATIO,
   HEIGHT_RATIO,
   PLAYER_LABEL,
@@ -70,15 +69,15 @@ export const EarthSection = ({
   const center: Point = { x: player.x, y: player.y + radius };
 
   // The 3D globe is offered whatever the zoom, as soon as the caller gave the starting point (without it there is nothing to
-  // place on a globe).
-  const [globe, setGlobe] = useState(false);
+  // place on a globe), and it is what is shown first: `null` = no choice made yet, which means the globe.
+  const [globe, setGlobe] = useState<boolean | null>(null);
   const canFlip = origin !== undefined;
-  const globeOrigin = canFlip && globe ? origin : undefined;
+  const globeOrigin = canFlip && (globe ?? true) ? origin : undefined;
 
   // Orbiting satellite, just for fun: only when `allowSatellite` (Compass reveal,
   // or the always-revealed mini-Earth of Clues' "Distance" clue), zoomed out to
   // the real scale (zoom 1, otherwise off-screen or grotesque).
-  const showSatellite = allowSatellite && zoom === 1 && globeOrigin === undefined;
+  const showSatellite = allowSatellite && zoom === 1 && globeOrigin === undefined && isDark;
   const satelliteAngle = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!showSatellite) return undefined;
@@ -141,35 +140,13 @@ export const EarthSection = ({
             <Pressable
               accessibilityRole="button"
               hitSlop={8}
-              onPress={() => setGlobe((value) => !value)}
+              onPress={() => setGlobe(globeOrigin === undefined)}
               style={styles.viewToggle}
             >
               <Text style={styles.viewToggleLabel}>
                 {globeOrigin === undefined ? SWITCH_TO_GLOBE : SWITCH_TO_EARTH}
               </Text>
             </Pressable>
-          )}
-          {zoomControls && globeOrigin === undefined && (
-            <View style={styles.zoomControls}>
-              <Pressable
-                accessibilityRole="button"
-                disabled={stepIndex === 0}
-                hitSlop={8}
-                onPress={() => setManualIndex(Math.max(0, stepIndex - 1))}
-                style={[styles.zoomButton, stepIndex === 0 && { opacity: 0.4 }]}
-              >
-                <Text style={styles.zoomButtonLabel}>−</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                disabled={stepIndex === ZOOM_STEPS.length - 1}
-                hitSlop={8}
-                onPress={() => setManualIndex(Math.min(ZOOM_STEPS.length - 1, stepIndex + 1))}
-                style={[styles.zoomButton, stepIndex === ZOOM_STEPS.length - 1 && { opacity: 0.4 }]}
-              >
-                <Text style={styles.zoomButtonLabel}>+</Text>
-              </Pressable>
-            </View>
           )}
         </View>
       </View>
@@ -238,9 +215,7 @@ export const EarthSection = ({
             {/* No accessibilityRole="button" here: EarthSection can already be inside a real
             button (the "Distance" clue card), and web doesn't accept a nested <button>. */}
             <Pressable hitSlop={10} onPress={() => setShowQuip((v) => !v)}>
-              <Text style={isDark ? styles.satelliteEmoji : styles.dayOrbitEmoji}>
-                {isDark ? SATELLITE_EMOJI : DAY_ORBIT_EMOJI}
-              </Text>
+              <Text style={styles.satelliteEmoji}>{SATELLITE_EMOJI}</Text>
             </Pressable>
             {showQuip && (
               // Counter-rotates relative to the parent to stay legible regardless of the
@@ -268,6 +243,28 @@ export const EarthSection = ({
               </Animated.View>
             )}
           </Animated.View>
+        )}
+        {zoomControls && globeOrigin === undefined && (
+          <View style={styles.zoomControls}>
+            <Pressable
+              accessibilityRole="button"
+              disabled={stepIndex === 0}
+              hitSlop={8}
+              onPress={() => setManualIndex(Math.max(0, stepIndex - 1))}
+              style={[styles.zoomButton, stepIndex === 0 && { opacity: 0.4 }]}
+            >
+              <Text style={styles.zoomButtonLabel}>−</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              disabled={stepIndex === ZOOM_STEPS.length - 1}
+              hitSlop={8}
+              onPress={() => setManualIndex(Math.min(ZOOM_STEPS.length - 1, stepIndex + 1))}
+              style={[styles.zoomButton, stepIndex === ZOOM_STEPS.length - 1 && { opacity: 0.4 }]}
+            >
+              <Text style={styles.zoomButtonLabel}>+</Text>
+            </Pressable>
+          </View>
         )}
       </View>
     </View>

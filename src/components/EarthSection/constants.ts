@@ -12,14 +12,13 @@ export const MAX_ZOOM = 30;
 
 export const CAPTION_SURFACE = 'La Terre';
 /** Labels of the switch between the Earth seen from the side and the 3D globe (the one it leads to). */
-export const SWITCH_TO_EARTH = 'Terre';
+export const SWITCH_TO_EARTH = '2D';
 export const SWITCH_TO_GLOBE = '3D';
 export const PLAYER_LABEL = 'toi';
 
 // Orbiting satellite, just for fun: on reveal, and only zoomed out to the real scale (zoom 1 = the whole Earth visible, otherwise it would be
 // off-screen or grotesquely close). A plane by day instead (see EarthSection), same orbit.
 export const SATELLITE_EMOJI = '🛰️';
-export const DAY_ORBIT_EMOJI = '✈️';
 export const SATELLITE_ORBIT_MS = 28000;
 export const SATELLITE_CLEARANCE = 46;
 /** Joke on clicking the satellite (see `EarthSection`): hides itself after this delay, or

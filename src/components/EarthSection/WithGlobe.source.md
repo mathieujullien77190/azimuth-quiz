@@ -1,7 +1,7 @@
 ```tsx
 import EarthSection from '@/components/EarthSection';
 
-// With the starting point, the whole-Earth view (zoom 1) gets a "3D" switch to a globe turned with a finger: only the
+// With the starting point, the whole-Earth view (zoom 1) shows a globe turned with a finger first, with a "2D" switch back to the Earth seen from the side: only the
 // long answers need it, zooming in again brings the Earth back.
 <EarthSection
   marks={[{ bearing: 291.6, distanceKm: 5837, color: playerColor, isTruth: true }]}

@@ -141,6 +141,17 @@ describe('ClueCard — revealed content per clue', () => {
     expect(getByLabelText('Globe 3D')).toBeTruthy();
   });
 
+  it('globe: has no satellite', async () => {
+    const { queryByText } = await renderCard({
+      bearingDeg: 10,
+      clueId: 'globe',
+      distanceKm: 500,
+      origin: { latitude: 48.85, longitude: 2.35 },
+      state: 'revealed',
+    });
+    expect(queryByText('🛰️')).toBeNull();
+  });
+
   it.each([
     ['origin', { bearingDeg: 10, distanceKm: 500 }],
     ['bearingDeg', { distanceKm: 500, origin: { latitude: 1, longitude: 2 } }],

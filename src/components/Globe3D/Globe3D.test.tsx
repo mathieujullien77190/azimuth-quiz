@@ -3,10 +3,10 @@ import { PanResponder } from 'react-native';
 
 import type { EarthMark } from '@/components/EarthSection';
 
-import { DAY_ORBIT_EMOJI, SATELLITE_QUIP } from '@/components/EarthSection/constants';
+import { SATELLITE_QUIP } from '@/components/EarthSection/constants';
 import { ThemeSettingsContext } from '@/themes';
 
-import { CAPTION_GLOBE, ORBIT_MS } from './constants';
+import { CAPTION_GLOBE, ORBIT_MS, POLE_RADIUS } from './constants';
 import Globe3D from '.';
 
 const PARIS = { latitude: 48.8566, longitude: 2.3522 };
@@ -86,6 +86,49 @@ describe('Globe3D — land and guides', () => {
   });
 });
 
+describe('Globe3D — north axis', () => {
+  type Node = { type?: string; props?: { r?: number; content?: string | null }; children?: Node[] | null };
+  const count = (node: Node, test: (n: Node) => boolean): number =>
+    (test(node) ? 1 : 0) + (node.children ?? []).reduce((total, child) => total + count(child, test), 0);
+  const isLine = (n: Node) => n.type === 'RNSVGLine';
+  const isN = (n: Node) => n.type === 'RNSVGTSpan' && n.props?.content === 'N';
+  const isPole = (n: Node) => n.type === 'RNSVGCircle' && n.props?.r === POLE_RADIUS;
+
+  it('draws the axis with an N, and a dot at the north pole when it is in front', async () => {
+    const { toJSON } = await render(<Globe3D marks={[]} origin={PARIS} size={240} />);
+    expect(count(toJSON() as Node, isLine)).toBe(1);
+    expect(count(toJSON() as Node, isN)).toBe(1);
+    expect(count(toJSON() as Node, isPole)).toBe(1);
+  });
+
+  it('loses the dot, not the axis, once the globe is tipped so that the north pole is behind', async () => {
+    const createSpy = jest.spyOn(PanResponder, 'create');
+    const { toJSON } = await render(<Globe3D marks={[]} origin={PARIS} size={240} />);
+    const config = createSpy.mock.calls[createSpy.mock.calls.length - 1][0] as PanConfig;
+    await act(() => config.onPanResponderGrant?.({} as never, {} as never));
+    await act(() => config.onPanResponderMove?.({} as never, { dx: 0, dy: -4000 } as never));
+    expect(count(toJSON() as Node, isLine)).toBe(1);
+    expect(count(toJSON() as Node, isPole)).toBe(0);
+    createSpy.mockRestore();
+  });
+
+  it('can be left out', async () => {
+    const { toJSON } = await render(<Globe3D axis={false} marks={[]} origin={PARIS} size={240} />);
+    expect(count(toJSON() as Node, isLine)).toBe(0);
+    expect(count(toJSON() as Node, isN)).toBe(0);
+  });
+});
+
+describe('Globe3D — fixed', () => {
+  it('has no touch handlers when it cannot be turned', async () => {
+    const fixed = await render(<Globe3D draggable={false} marks={[]} origin={PARIS} size={240} />);
+    const turnable = await render(<Globe3D marks={[]} origin={PARIS} size={240} />);
+    const handlers = (tree: unknown) => (tree as { props: Record<string, unknown> }).props.onStartShouldSetResponder;
+    expect(handlers(fixed.toJSON())).toBeUndefined();
+    expect(handlers(turnable.toJSON())).toBeDefined();
+  });
+});
+
 describe('Globe3D — satellite', () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
@@ -114,20 +157,25 @@ describe('Globe3D — satellite', () => {
     expect(queryByText('🛰️')).toBeTruthy();
   });
 
+  it('has no satellite when asked not to have one', async () => {
+    const { queryByText } = await render(<Globe3D marks={[answer]} origin={PARIS} satellite={false} size={240} />);
+    expect(queryByText('🛰️')).toBeNull();
+  });
+
   it('has no satellite without an answer to follow', async () => {
     const { queryByText } = await render(<Globe3D marks={[]} origin={PARIS} size={240} />);
     expect(queryByText('🛰️')).toBeNull();
   });
 
-  it('sends a plane instead by day', async () => {
-    const { getByText, queryByText } = await render(
+  it('has no satellite, nor plane, by day', async () => {
+    const { queryByText } = await render(
       <ThemeSettingsContext.Provider
         value={{ themeId: 'day', ready: true, setThemeId: jest.fn(), resetThemeId: jest.fn() }}
       >
         <Globe3D marks={[answer]} origin={PARIS} size={240} />
       </ThemeSettingsContext.Provider>,
     );
-    expect(getByText(DAY_ORBIT_EMOJI)).toBeTruthy();
     expect(queryByText('🛰️')).toBeNull();
+    expect(queryByText('✈️')).toBeNull();
   });
 });

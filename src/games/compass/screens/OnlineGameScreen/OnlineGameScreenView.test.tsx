@@ -97,12 +97,12 @@ describe('OnlineGameScreenView — the 3D globe', () => {
 
   it('is not offered while the players are still answering', async () => {
     const { queryByText } = await render(<OnlineGameScreenView {...baseProps} earthMarks={far} />);
-    expect(queryByText('3D')).toBeNull();
+    expect(queryByText('2D')).toBeNull();
   });
 
   it('is offered with the solution', async () => {
     const { getByText } = await render(<OnlineGameScreenView {...baseProps} earthMarks={far} record={record} />);
-    expect(getByText('3D')).toBeTruthy();
+    expect(getByText('2D')).toBeTruthy();
   });
 });
 
