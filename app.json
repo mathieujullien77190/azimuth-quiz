@@ -3,7 +3,7 @@
     "name": "Azimuth Quiz",
     "slug": "azimuth-quiz",
     "scheme": "azimuthquiz",
-    "version": "2.52.1",
+    "version": "2.53.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
