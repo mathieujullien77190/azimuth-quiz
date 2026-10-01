@@ -29,6 +29,7 @@ const NO_STORY_OK = {
   HomeScreen: 'smart container (router, storage)',
   SettingsScreen: 'smart container (settings stores)',
   LanguageProvider: 'provider',
+  ErrorNoticeHost: 'reads the error store, mounted once at the root',
   ThemeProvider: 'provider',
   RoomDeletedScreen: 'reads the router',
   useSetupRoom: 'hook, not a component',

@@ -190,6 +190,18 @@ tour le champ est en lecture seule avec ce que tape le detenteur (`typing`, meme
   chaque deplacement/suppression ecrit directement `countries/{ISO}`, « supprimer un voisin » ne retire que son role
   d'indice) ; la carte porte aussi le choix de difficulte.
 
+## Erreurs de jeu
+
+Une ecriture Firestore qui echoue ne doit plus etre avalee : on met `.catch(reporting('jeu.action', { room }))`
+(`helpers/reportError.ts`), jamais `.catch(() => {})`. `reportError` log en console, previent le joueur quand c'etait
+une de ses actions (`kind: 'game'`, notice `ErrorNoticeHost`) et enregistre l'erreur dans la collection `errors`
+(`helpers/errorSink.ts`, installe dans `app/_layout.tsx`) ; `kind: 'background'` (presence, saisie en direct, nettoyage)
+n'affiche rien. Une meme erreur n'est enregistree qu'une fois par 10 s (jeu) ou 60 s (fond), avec un compteur de
+repetitions. Les regles n'acceptent une erreur que dans le meme lot que deux compteurs du jour (`errorQuota`) : 30 par
+appareil et 1000 au total par jour ; ni `errors` ni `errorQuota` ne passent par le journal ni par `dataVersion`. Elles se
+lisent dans la page « Erreurs » de l'admin (nouvelles erreurs en direct, nettoyage des plus de 30 jours : pas de TTL, il
+exige la facturation Firebase).
+
 ## Ecrans et UI
 
 - **`Screen`** accepte `header`/`footer` rendus hors du `ScrollView`. Piege : un `ScrollView` horizontal dans un `header`
@@ -199,7 +211,7 @@ tour le champ est en lecture seule avec ce que tape le detenteur (`typing`, meme
   `azimuthquiz:theme`). `useThemedStyles(createStyles)` est le pattern standard. Police unique `FONT_FAMILY` ; un composant
   SVG lit `typography.<token>.fontFamily` et la passe explicitement a `<SvgText>`.
 - **Admin** (`admin/`, app Vite deployee sous `/azimuth-quiz/admin/`) : une page statique par onglet (`/admin/places`,
-  `countries`, `syllables`, `jobs`, `wordplay` ; `/admin/` = lieux), declaree dans `admin/src/pageList.ts` ; l'admin lit les
+  `countries`, `syllables`, `jobs`, `wordplay`, `errors` ; `/admin/` = lieux), declaree dans `admin/src/pageList.ts` ; l'admin lit les
   donnees dans une copie locale (IndexedDB) tenue a jour par le journal, voir le skill `firestore-data`.
 - **Storybook** : stories colocalisees (`src/**/<Name>.stories.tsx`, config dans `admin/.storybook`, `npm run storybook`),
   code reel affiche via `source(code)` + `<Story>.source.md` (skill `storybook-story`). Menu : `Common`, `Compass`, `Clues`,
@@ -223,7 +235,5 @@ tour le champ est en lecture seule avec ce que tape le detenteur (`typing`, meme
   `useHeading.ts`, `EarthSection.tsx` et `SliderTrack.tsx`. Elles viennent d'idiomes voulus (un ref mis a jour a chaque rendu
   pour rester lisible depuis le `PanResponder`, `Animated.Value` lu au rendu pour l'orbite) : pas des erreurs a corriger une
   par une.
-- Les ecritures de room des jeux ignorent leurs erreurs (`.catch(() => {})`) : un refus des regles ou une coupure ne donne
-  aucun retour a l'ecran.
 - Le jeu garde chaque document Firestore lu en memoire pour la session (pas de cache disque, pas d'invalidation) : une donnee
   modifiee n'apparait qu'apres rechargement.

@@ -36,8 +36,19 @@ de branche ni de PR, sauf si l'utilisateur le demande.
      Un test cassé par le changement se répare, il ne se supprime pas pour passer.
    - Si du code de `src/` utilisé par l'admin a bougé : `npm run build` dans `admin/` (et `npx tsc --noEmit -p .` dedans).
    - Pour un gros lot, proposer `/quality-check` (structure des composants, Storybook, code mort) avant de pousser.
-3. Si `firestore.rules` ou `firestore.indexes.json` a changé : **le push ne les déploie pas**. Le dire à l'utilisateur et
-   proposer `npx firebase-tools deploy --only firestore:rules --project azimuth-quiz` (ou `firestore:indexes`).
+3. **Règles et index Firestore : le push ne les déploie pas**, et c'est ce qui a déjà cassé le jeu (`hintPicks` ajouté au
+   dépôt mais pas en ligne : l'indice du joueur non hôte « revenait »). Donc, à chaque push :
+   - Repérer si `firestore.rules` ou `firestore.indexes.json` change dans le lot (`git diff --stat` + `git diff origin/master
+     --stat -- firestore.rules firestore.indexes.json`). Si oui, **le dire à l'utilisateur avant de pousser** : « les règles
+     changent, je les déploie après le push ».
+   - **Que les règles aient changé ou non, comparer le dépôt à la production** : lire les règles déployées avec
+     l'outil MCP `firebase_get_security_rules` (type `firestore`, à charger avec ToolSearch), puis les comparer à
+     `firestore.rules` en ignorant les fins de ligne et les espaces de fin. Un écart = règles pas à jour en ligne.
+   - En cas d'écart ou de changement : valider (`firebase_validate_security_rules` ou la compilation du déploiement),
+     déployer avec `npx firebase-tools deploy --only firestore:rules --project azimuth-quiz` (et `firestore:indexes` si
+     les index ont bougé), puis **relire les règles déployées et confirmer qu'elles sont identiques** au dépôt.
+   - Ne jamais conclure « poussé » sans avoir dit où en sont les règles (identiques, déployées, ou écart à traiter).
+     Un champ qu'un joueur non hôte écrit dans une room doit être dans la liste `turnFields` des règles correspondantes.
 4. Les **données Firestore** (lieux, pays, silhouettes…) ne sont pas dans Git : rien à committer pour elles (voir le skill
    `firestore-data`).
 
@@ -96,6 +107,7 @@ git status -sb
 ```
 
 Auteur attendu, messages sans trailer, branche à jour avec `origin/master`, arbre propre. Puis dire à l'utilisateur, en
-quelques lignes : la version poussée, les commits créés, et que le déploiement GitHub Pages est lancé (l'état se suit dans
-l'onglet *Actions* du dépôt). Rappeler, s'il y a lieu, ce que le push **ne fait pas** : règles/index Firestore à déployer,
-rechargement des sessions de jeu ouvertes après un changement de données.
+quelques lignes : la version poussée, les commits créés, que le déploiement GitHub Pages est lancé (l'état se suit dans
+l'onglet *Actions* du dépôt), et **l'état des règles Firestore** (identiques à la production, déployées pendant ce push,
+ou écart restant : voir l'étape 0.3). Rappeler, s'il y a lieu, le rechargement des sessions de jeu ouvertes après un
+changement de données.
