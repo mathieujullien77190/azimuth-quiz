@@ -1,17 +1,18 @@
 import { polyfillCountryFlagEmojis } from 'country-flag-emoji-polyfill';
-import { Fragment, useEffect, useState, useSyncExternalStore } from 'react';
+import { Fragment, lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react';
 
 import appConfig from '../../app.json';
 
 import { AuthGate } from './components/AuthGate';
 import { dataRevision, startJournalSync, subscribeRevision } from './data';
 import { hrefOf, PAGES, pageFromPath, type PageId } from './pages';
-import { CountriesView } from './views/CountriesView';
-import { JobsView } from './views/JobsView';
-import { PlacesView } from './views/PlacesView';
-import { SyllablesView } from './views/SyllablesView';
-import { WordplayView } from './views/WordplayView';
 
+// One chunk per page: a page's code is only downloaded when it is opened.
+const PlacesView = lazy(() => import('./views/PlacesView').then((m) => ({ default: m.PlacesView })));
+const CountriesView = lazy(() => import('./views/CountriesView').then((m) => ({ default: m.CountriesView })));
+const SyllablesView = lazy(() => import('./views/SyllablesView').then((m) => ({ default: m.SyllablesView })));
+const JobsView = lazy(() => import('./views/JobsView').then((m) => ({ default: m.JobsView })));
+const WordplayView = lazy(() => import('./views/WordplayView').then((m) => ({ default: m.WordplayView })));
 
 const AdminApp = () => {
   const [tab, setTab] = useState<PageId>(() => pageFromPath(window.location.pathname));
@@ -82,11 +83,13 @@ const AdminApp = () => {
       </header>
 
       <Fragment key={revision}>
-        {tab === 'places' && <PlacesView />}
-        {tab === 'countries' && <CountriesView />}
-        {tab === 'syllables' && <SyllablesView />}
-        {tab === 'jobs' && <JobsView />}
-        {tab === 'wordplay' && <WordplayView />}
+        <Suspense fallback={<div className="empty">Chargement…</div>}>
+          {tab === 'places' && <PlacesView />}
+          {tab === 'countries' && <CountriesView />}
+          {tab === 'syllables' && <SyllablesView />}
+          {tab === 'jobs' && <JobsView />}
+          {tab === 'wordplay' && <WordplayView />}
+        </Suspense>
       </Fragment>
     </div>
   );

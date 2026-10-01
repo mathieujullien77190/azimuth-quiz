@@ -40,6 +40,20 @@ export default defineConfig(({ command }) => ({
   resolve: sharedResolve,
   define: sharedDefine(command),
   optimizeDeps: sharedOptimizeDeps,
+  build: {
+    // The Firebase SDK alone is ~670 kB (minified): it is a vendor chunk of its own, not something to split further.
+    chunkSizeWarningLimit: 700,
+    rollupOptions: {
+      output: {
+        // Heavy third-party code gets its own long-lived chunks, the rest is split by page (see `App.tsx`).
+        manualChunks(id: string) {
+          if (id.includes('node_modules/firebase') || id.includes('node_modules/@firebase')) return 'firebase';
+          if (id.includes('react-native-web') || id.includes('react-native-svg')) return 'react-native-web';
+          return undefined;
+        },
+      },
+    },
+  },
   server: {
     fs: { allow: [path.resolve(rootDir, '..')] },
   },
