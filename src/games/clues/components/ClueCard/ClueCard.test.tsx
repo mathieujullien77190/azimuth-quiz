@@ -317,10 +317,11 @@ describe('ClueCard — wordplay', () => {
     expect(getByText('🔴')).toBeTruthy();
   });
 
-  it('shows no difficulty dot while locked (nothing curated is ever leaked before reveal)', async () => {
+  it('shows the difficulty dot while locked too, next to the padlock', async () => {
     jest.mocked(wordplayFor).mockReturnValue({ sentence: 'Ce lac est Constance.', difficulty: 'hard' });
-    const { queryByText } = await renderCard({ clueId: 'wordplay', onPress: jest.fn(), place, state: 'locked' });
-    expect(queryByText('🔴')).toBeNull();
+    const { getByText, queryByText } = await renderCard({ clueId: 'wordplay', onPress: jest.fn(), place, state: 'locked' });
+    expect(getByText('🔴')).toBeTruthy();
+    expect(queryByText('Ce lac est Constance.')).toBeNull();
   });
 });
 

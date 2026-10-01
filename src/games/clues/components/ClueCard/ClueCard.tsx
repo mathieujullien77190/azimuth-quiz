@@ -325,8 +325,9 @@ export const ClueCard = ({
         })
       : undefined;
   // Plain colored dot (🟢/🟠/🔴), how tricky THIS pun is — never gates whether the clue is
-  // offered, purely informational, shown once revealed (see `wordplayFor`'s own doc comment).
-  const wordplayEntry = clueId === 'wordplay' && state === 'revealed' ? wordplayFor(place) : null;
+  // offered, purely informational, shown locked (next to the padlock) and revealed (see
+  // `wordplayFor`'s own doc comment).
+  const wordplayEntry = clueId === 'wordplay' ? wordplayFor(place) : null;
   const wordplayDifficultyEmoji =
     wordplayEntry === null
       ? undefined
