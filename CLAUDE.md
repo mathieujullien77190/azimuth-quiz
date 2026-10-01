@@ -225,6 +225,7 @@ exige la facturation Firebase).
 - **Web / GitHub Pages** : `app.json` `web.output: "static"` + `experiments.baseUrl: "/azimuth-quiz"` ; `@expo/metro-runtime`
   est requis. `.github/workflows/deploy-pages.yml` exporte le jeu, l'admin (`dist/admin/`) et Storybook et les publie a chaque
   push sur `master` (Pages en source « GitHub Actions »).
+- **Version** : `app.json` `expo.version` + un animal par version (`expo.extra.codename`, emoji + nom anglais en camelCase sans espace, ex. 🦉❄️ snowyOwl, affiche par Reglages et l'admin via `versionLabel`) ; le skill `push` en choisit un nouveau a chaque montee.
 - **Skills du projet** (dans le depot, `.claude/skills/`) : `quality-check` (couverture 100 %, structure, Storybook, code
   mort : rapporte sans corriger), `push` (verifier, versionner, committer, pousser), `firestore-data` (modifier les donnees
   Firestore). Les skills `react-structure`, `storybook-story` et `commit-push` sont des skills **personnels** (dossier

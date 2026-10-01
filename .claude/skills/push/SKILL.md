@@ -77,6 +77,14 @@ npm version <major|minor|patch> --no-git-tag-version     # met à jour package.j
 puis mettre la même valeur dans `app.json` (`expo.version`) à la main. Vérifier que les trois fichiers affichent la même
 chose (`git diff --stat` : exactement ces 3 fichiers, 2 lignes de `package-lock.json`).
 
+**Chaque version porte le nom d'un animal** : à chaque montée, choisir un **nouvel animal** (jamais celui de la version
+précédente ni d'une version déjà publiée, `git log -p -S"codename" -- app.json` donne les anciens) et l'écrire dans
+`app.json` → `expo.extra.codename` : `emoji` = l'emoji de l'animal, plus un second si l'animal en a un qui le précise
+(le harfang des neiges : `🦉❄️`), et `name` = son **nom en anglais en camelCase, sans espace** (`snowyOwl`, `redFox`).
+C'est ce que montrent l'écran Réglages et l'en-tête de l'admin : « v2.55.3 🦉❄️ snowyOwl » (nombre, emoji, lettres ;
+`versionLabel` de `src/helpers/version.ts`). Le dire à l'utilisateur dans le compte rendu (« 2.56.0, le redFox 🦊 »). Le nom
+d'animal ne va ni dans `package.json` ni dans `package-lock.json`.
+
 ## 2. Committer
 
 - **Les changements d'abord, la version à part.** Un ou plusieurs commits pour le travail (un sujet = un commit, voir
