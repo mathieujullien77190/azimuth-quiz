@@ -146,7 +146,7 @@ export const en: Translations = {
     claudeMention: 'Made for drinks with friends: no ads, no tracking, just you and a stubborn compass.',
     dataTitle: 'Data',
     dataHint:
-      'Everything the app saves on this phone: your game settings, language and appearance. Nothing is sent anywhere else. This button erases it.',
+      'A few pieces of data saved on your device to improve the experience, such as your settings. Nothing is sent anywhere else. This button erases them.',
     clearData: 'Clear data',
     dataCleared: 'Data cleared.',
   },

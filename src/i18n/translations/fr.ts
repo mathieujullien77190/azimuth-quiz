@@ -150,7 +150,7 @@ export const fr: Translations = {
       'Fait pour l’apéro entre potes : pas de pub, pas de tracking, juste vous et une boussole récalcitrante.',
     dataTitle: 'Données',
     dataHint:
-      'Tout ce que l’app sauvegarde sur ce téléphone : les réglages de partie, la langue et l’apparence. Rien n’est envoyé ailleurs. Ce bouton efface cela.',
+      'Quelques données sauvegardées sur votre appareil pour améliorer l’expérience utilisateur, telles que les réglages. Rien n’est envoyé ailleurs. Ce bouton les efface.',
     clearData: 'Vider les données',
     dataCleared: 'Données effacées.',
   },
