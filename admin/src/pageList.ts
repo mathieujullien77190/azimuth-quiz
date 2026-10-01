@@ -7,6 +7,7 @@ export const PAGES = [
   { id: 'syllables', path: 'syllables', label: 'Syllabes' },
   { id: 'jobs', path: 'jobs', label: 'Métiers' },
   { id: 'wordplay', path: 'wordplay', label: 'Jeux de mots' },
+  { id: 'errors', path: 'errors', label: 'Erreurs' },
 ] as const;
 
 export type PageId = (typeof PAGES)[number]['id'];

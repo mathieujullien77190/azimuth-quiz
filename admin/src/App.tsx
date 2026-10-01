@@ -13,6 +13,7 @@ const CountriesView = lazy(() => import('./views/CountriesView').then((m) => ({ 
 const SyllablesView = lazy(() => import('./views/SyllablesView').then((m) => ({ default: m.SyllablesView })));
 const JobsView = lazy(() => import('./views/JobsView').then((m) => ({ default: m.JobsView })));
 const WordplayView = lazy(() => import('./views/WordplayView').then((m) => ({ default: m.WordplayView })));
+const ErrorsView = lazy(() => import('./views/ErrorsView').then((m) => ({ default: m.ErrorsView })));
 
 const AdminApp = () => {
   const [tab, setTab] = useState<PageId>(() => pageFromPath(window.location.pathname));
@@ -89,6 +90,7 @@ const AdminApp = () => {
           {tab === 'syllables' && <SyllablesView />}
           {tab === 'jobs' && <JobsView />}
           {tab === 'wordplay' && <WordplayView />}
+          {tab === 'errors' && <ErrorsView />}
         </Suspense>
       </Fragment>
     </div>
