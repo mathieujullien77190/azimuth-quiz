@@ -1,4 +1,4 @@
-import type { DirectionalLight, Mesh, Scene } from 'three';
+import type { DirectionalLight, Group, Mesh, Scene } from 'three';
 
 import type { EarthMark } from '@/components/EarthSection';
 import type { Coordinates } from '@/types';
@@ -36,8 +36,12 @@ export type Globe3DProps = {
 
 /** The colors the scene is built with, taken from the theme by the component. */
 export type GlobeColors = {
+  /** The sea: the ball itself. */
   globe: string;
+  /** The coastlines, drawn as lines. */
   land: string;
+  /** The continents, painted inside those lines — another colour than the sea, or there would be no telling them apart. */
+  fill: string;
   guide: string;
   origin: string;
   pole: string;
@@ -60,6 +64,9 @@ export type GlobeScene = {
   headlight: DirectionalLight;
   screenSized: Mesh[];
 };
+
+/** The answers' routes, built apart from the scene because the zoom changes how thick they are (`buildRoutes`). */
+export type GlobeRoutes = Group;
 
 /** The fingers on the drawing at one moment: where the one that moved is, and how far apart two of them are
  * (`null` with a single finger down, so there is nothing to pinch). */

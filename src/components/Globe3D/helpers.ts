@@ -125,21 +125,37 @@ export const fingersOf = (event: {
 
 /**
  * Where a satellite flying at `ratio` times the radius is on the drawing, `angle` radians into its orbit: a circle
- * round the middle of the globe, tipped `ORBIT_TILT_DEG` out of the plane of the screen. It is seen as an ellipse, the
- * satellite passing over the ball and then behind it — where the globe hides it, unless it is out beyond the outline.
+ * round the middle of the globe, tipped `ORBIT_TILT_DEG` out of the plane of the screen and turned so that its long
+ * axis points at `target` — the answer it flies over. It is seen as an ellipse: the satellite passes over the answer,
+ * round the back of the ball, and comes up the other side. The globe hides it while it is behind, unless it is out
+ * beyond the outline.
  *
  * It used to fly the great circle of the answer's own route, which came out as sliding back and forth along a straight
  * line, for ever: the globe opens on the starting point (or close to it, see `centerOn`), and a circle through the very
  * point the camera looks at always has the camera in its own plane — so it is seen edge-on, whatever its heading.
  */
-export const orbitPoint = (angle: number, cx: number, cy: number, radius: number, ratio: number): ScreenPoint => {
+export const orbitPoint = (
+  angle: number,
+  target: Coordinates,
+  center: Coordinates,
+  cx: number,
+  cy: number,
+  radius: number,
+  ratio: number,
+): ScreenPoint => {
   const tilt = toRadians(ORBIT_TILT_DEG);
-  const x = Math.cos(angle);
-  const y = Math.sin(angle) * Math.cos(tilt);
+  const flat = Math.cos(angle);
+  const high = Math.sin(angle) * Math.cos(tilt);
   const towardsViewer = Math.sin(angle) * Math.sin(tilt);
+  // Which way the answer lies on the drawing, straight from the camera's point of view.
+  const along = viewPoint(target, center);
+  const axis = Math.atan2(along.y, along.x);
+  const x = flat * Math.cos(axis) - high * Math.sin(axis);
+  const y = flat * Math.sin(axis) + high * Math.cos(axis);
   return {
     x: cx + x * radius * ratio,
     y: cy - y * radius * ratio,
+    // Turning the orbit does not change how far out it is, so this reads the same at any axis.
     visible: towardsViewer >= 0 || Math.hypot(x, y) * ratio > 1,
   };
 };

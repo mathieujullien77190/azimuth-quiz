@@ -7,9 +7,11 @@ import type { Coordinates } from '@/types';
 import { CAMERA_DISTANCE, CAMERA_FAR, CAMERA_NEAR } from './constants';
 import { scenePoint } from './helpers';
 import { createRenderer } from './renderer';
-import type { GlobeScene } from './types';
+import type { GlobeRoutes, GlobeScene } from './types';
 
 type GlobeView = GlobeScene & {
+  /** The answers' routes, rebuilt by the caller whenever the zoom changes their thickness. */
+  routes: GlobeRoutes;
   /** The place shown in the middle of the drawing: the camera stands right above it. */
   center: Coordinates;
   /** Half of what the drawing shows, in globe radii: 1 = the ball exactly fills it, less = zoomed in. */
@@ -30,7 +32,16 @@ type Target = { gl: ExpoWebGLRenderingContext; renderer: WebGLRenderer };
  * time something it shows changes (the globe is turned, zoomed, an answer or the theme changes). A phone left on the
  * solution screen draws nothing at all, where a 60-per-second loop would have kept the chip warm for a still image.
  */
-export const useGlobeRenderer = ({ scene, headlight, screenSized, center, halfExtent, markScale, background }: GlobeView) => {
+export const useGlobeRenderer = ({
+  scene,
+  headlight,
+  screenSized,
+  routes,
+  center,
+  halfExtent,
+  markScale,
+  background,
+}: GlobeView) => {
   const [target, setTarget] = useState<Target | null>(null);
 
   // The graphics card keeps the surface it was given until it is told otherwise.
@@ -48,6 +59,7 @@ export const useGlobeRenderer = ({ scene, headlight, screenSized, center, halfEx
     // the scene — without which a light attached to it would light nothing.
     camera.add(headlight);
     scene.add(camera);
+    scene.add(routes);
     // The dots keep their size on screen rather than growing with the ball they sit on.
     screenSized.forEach((mark) => mark.scale.setScalar(markScale));
 
@@ -59,8 +71,9 @@ export const useGlobeRenderer = ({ scene, headlight, screenSized, center, halfEx
     return () => {
       camera.remove(headlight);
       scene.remove(camera);
+      scene.remove(routes);
     };
-  }, [target, scene, headlight, screenSized, center, halfExtent, markScale, background]);
+  }, [target, scene, headlight, screenSized, routes, center, halfExtent, markScale, background]);
 
   return useCallback((gl: ExpoWebGLRenderingContext) => setTarget({ gl, renderer: createRenderer(gl) }), []);
 };

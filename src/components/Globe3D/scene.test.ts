@@ -6,6 +6,7 @@ import {
   type MeshLambertMaterial,
   type Object3D,
   type TorusGeometry,
+  type TubeGeometry,
 } from 'three';
 
 import type { EarthMark } from '@/components/EarthSection';
@@ -14,13 +15,20 @@ import { rhumbDestination } from '@/helpers/geo';
 import { MARK_ALTITUDE, TRUTH_RING } from './constants';
 import { GLOBE_MASK } from './globeMask';
 import { scenePoint } from './helpers';
-import { buildGlobeScene, disposeScene } from './scene';
+import { buildGlobeScene, buildRoutes, disposeScene } from './scene';
 import type { GlobeSceneInput } from './types';
 
 const PARIS = { latitude: 48.8566, longitude: 2.3522 };
 const ANSWER: EarthMark = { bearing: 261.4, distanceKm: 6079, color: '#EF4444' };
 
-const COLORS = { globe: '#0B1220', land: '#93A0BC', guide: '#93A0BC', origin: '#F3F6FC', pole: '#F3F6FC' };
+const COLORS = {
+  globe: '#0B1220',
+  land: '#93A0BC',
+  fill: '#4ADE80',
+  guide: '#93A0BC',
+  origin: '#F3F6FC',
+  pole: '#F3F6FC',
+};
 
 const build = (overrides: Partial<GlobeSceneInput> = {}) =>
   buildGlobeScene({
@@ -139,16 +147,16 @@ describe('buildGlobeScene', () => {
     expect(guides[0].geometry.getAttribute('lineDistance')).toBeTruthy();
   });
 
-  it('gives a guess its route and its end point, and the true answer a circled point with no route', () => {
+  it('gives a guess its end point and the true answer a circled one, the routes being built apart', () => {
     const guess = meshes(build({ marks: [ANSWER] }).scene);
     const truth = meshes(build({ marks: [{ ...ANSWER, isTruth: true }] }).scene);
-    // The ball, the starting point, the end point, and (guess only) the route.
-    expect(guess).toHaveLength(4);
-    // The ball, the starting point, the end point and its ring.
+    // The ball, the starting point and the end point.
+    expect(guess).toHaveLength(3);
+    // The same, plus the ring around the true answer.
     expect(truth).toHaveLength(4);
-    expect(truth.some((mesh) => mesh.geometry.type === 'TubeGeometry')).toBe(false);
-    expect(guess.some((mesh) => mesh.geometry.type === 'TubeGeometry')).toBe(true);
     expect(truth.some((mesh) => mesh.geometry.type === 'TorusGeometry')).toBe(true);
+    // No route in the scene itself: the zoom owns how thick those are (see `buildRoutes`).
+    expect([...guess, ...truth].some((mesh) => mesh.geometry.type === 'TubeGeometry')).toBe(false);
   });
 
   it('ends the route exactly where the answer lands, and lays the ring flat on the ball there', () => {
@@ -163,14 +171,7 @@ describe('buildGlobeScene', () => {
     expect(ring.getWorldDirection(ring.position.clone()).length()).toBeCloseTo(1, 6);
   });
 
-  it('fades a faded answer and keeps a plain one opaque', () => {
-    const faded = meshes(build({ marks: [{ ...ANSWER, opacity: 0.4 }] }).scene).find(
-      (mesh) => mesh.geometry.type === 'TubeGeometry',
-    )!;
-    const plain = meshes(build({ marks: [ANSWER] }).scene).find((mesh) => mesh.geometry.type === 'TubeGeometry')!;
-    expect(faded.material).toMatchObject({ opacity: 0.4, transparent: true });
-    expect(plain.material).toMatchObject({ opacity: 1, transparent: false });
-  });
+
 
   it('hands back the dots and the rings as what must keep its size on screen, and nothing else', () => {
     const { scene, screenSized } = build({ land: true, marks: [{ ...ANSWER, isTruth: true }], north: true });
@@ -187,6 +188,42 @@ describe('buildGlobeScene', () => {
     const marked = meshes(build({ north: true }).scene);
     expect(marked).toHaveLength(3);
     expect(marked.some((mesh) => mesh.position.y > 1 && Math.abs(mesh.position.x) < 1e-9)).toBe(true);
+  });
+});
+
+describe('buildRoutes', () => {
+  it('gives every answer a route, the true one included: that is the way one would really have gone', () => {
+    const routes = buildRoutes(PARIS, [ANSWER, { ...ANSWER, isTruth: true, color: '#FACC15' }], 0.005);
+    expect(routes.children).toHaveLength(2);
+    expect(meshes(routes).every((mesh) => mesh.geometry.type === 'TubeGeometry')).toBe(true);
+    expect(meshes(routes).map((mesh) => (mesh.material as MeshBasicMaterial).color.getHexString())).toEqual([
+      'ef4444',
+      'facc15',
+    ]);
+  });
+
+  it('is as thick as it is told, so the zoom can keep it the same width on screen', () => {
+    const thin = buildRoutes(PARIS, [ANSWER], 0.001);
+    const thick = buildRoutes(PARIS, [ANSWER], 0.01);
+    const radiusOf = (group: Object3D) =>
+      (meshes(group)[0].geometry as TubeGeometry).parameters.radius;
+    expect(radiusOf(thin)).toBe(0.001);
+    expect(radiusOf(thick)).toBe(0.01);
+  });
+
+  it('fades a faded answer and keeps a plain one opaque', () => {
+    const faded = meshes(buildRoutes(PARIS, [{ ...ANSWER, opacity: 0.4 }], 0.005))[0];
+    const plain = meshes(buildRoutes(PARIS, [ANSWER], 0.005))[0];
+    expect(faded.material).toMatchObject({ opacity: 0.4, transparent: true });
+    expect(plain.material).toMatchObject({ opacity: 1, transparent: false });
+  });
+
+  it('hands its own geometries back like a scene does', () => {
+    const routes = buildRoutes(PARIS, [ANSWER], 0.005);
+    const disposed = jest.spyOn(meshes(routes)[0].geometry, 'dispose');
+    disposeScene(routes);
+    expect(disposed).toHaveBeenCalled();
+    expect(routes.children).toHaveLength(0);
   });
 });
 

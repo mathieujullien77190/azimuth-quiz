@@ -173,11 +173,21 @@ describe('dragCenter', () => {
 });
 
 describe('orbitPoint', () => {
-  const at = (degrees: number) => orbitPoint((degrees * Math.PI) / 180, 100, 100, 50, 1.12);
+  /** An answer due east of the middle of the view: its axis is the drawing's own horizontal. */
+  const EAST = { latitude: 0, longitude: 40 };
+  const at = (degrees: number, target = EAST) =>
+    orbitPoint((degrees * Math.PI) / 180, target, ORIGIN, 100, 100, 50, 1.12);
 
-  it('flies higher than the ground: always beyond the outline on the sides', () => {
+  it('flies in the axis of the answer: it passes over it, then over the other side', () => {
     expect(at(0).x).toBeCloseTo(100 + 50 * 1.12, 6);
+    expect(at(0).y).toBeCloseTo(100, 6);
     expect(at(180).x).toBeCloseTo(100 - 50 * 1.12, 6);
+  });
+
+  it('follows the answer wherever it is: an answer due north turns the whole orbit with it', () => {
+    const north = at(0, { latitude: 40, longitude: 0 });
+    expect(north.x).toBeCloseTo(100, 6);
+    expect(north.y).toBeCloseTo(100 - 50 * 1.12, 6);
   });
 
   it('goes over the ball, then behind it where the globe hides it', () => {

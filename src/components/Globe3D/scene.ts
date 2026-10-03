@@ -5,6 +5,7 @@ import {
   DataTexture,
   DirectionalLight,
   Float32BufferAttribute,
+  Group,
   Line,
   LineBasicMaterial,
   LineDashedMaterial,
@@ -18,6 +19,7 @@ import {
   RGBAFormat,
   Scene,
   SphereGeometry,
+  type Object3D,
   type Texture,
   TorusGeometry,
   TubeGeometry,
@@ -47,7 +49,6 @@ import {
   ROUTE_ALTITUDE,
   ROUTE_SIDES,
   ROUTE_STEPS,
-  ROUTE_THICKNESS,
   SPHERE_SEGMENTS,
   TRUTH_RING,
   TRUTH_RING_THICKNESS,
@@ -62,6 +63,8 @@ import {
   routePoints,
   scenePoint,
 } from './helpers';
+import type { EarthMark } from '@/components/EarthSection';
+
 import type { GlobeScene, GlobeSceneInput } from './types';
 
 /**
@@ -189,20 +192,43 @@ const ring = (point: Coordinates, color: string): Mesh => {
 };
 
 /** An answer's route, as a tube thick enough to be seen (a line would be one pixel wide on most devices). */
-const routeTube = (origin: Coordinates, bearing: number, distanceKm: number, color: string, opacity: number): Mesh => {
+const routeTube = (
+  origin: Coordinates,
+  bearing: number,
+  distanceKm: number,
+  color: string,
+  opacity: number,
+  thickness: number,
+): Mesh => {
   const curve = new CatmullRomCurve3(
     routePoints(origin, bearing, distanceKm, ROUTE_STEPS).map((point) => new Vector3(...scenePoint(point, ROUTE_ALTITUDE))),
   );
   return new Mesh(
-    new TubeGeometry(curve, ROUTE_STEPS, ROUTE_THICKNESS, ROUTE_SIDES, false),
+    new TubeGeometry(curve, ROUTE_STEPS, thickness, ROUTE_SIDES, false),
     new MeshBasicMaterial({ color, opacity, transparent: opacity < 1 }),
   );
 };
 
 /**
- * The whole globe as three.js objects: the ball, the world's outline, the guides, the starting point, and every answer
- * as its route and its end point (the true one only as a circled point, as on the Earth seen from the side). Nothing
- * here knows about the screen: what is in front and what is hidden behind the ball is the depth buffer's business, not
+ * The answers' routes, apart from the rest of the globe: how thick a tube is cannot be changed by scaling it (that
+ * would shorten it too), so they are rebuilt whenever `thickness` changes — which the zoom does, to keep the route the
+ * same width on screen as the dots keep their size. Everything else (the ball, the world, the dots) stays put.
+ *
+ * The true answer has one as well — the way one would actually have gone, which is the whole point of the screen —
+ * on top of its circled end point.
+ */
+export const buildRoutes = (origin: Coordinates, marks: EarthMark[], thickness: number): Group => {
+  const routes = new Group();
+  marks.forEach((mark) =>
+    routes.add(routeTube(origin, mark.bearing, mark.distanceKm, mark.color, mark.opacity ?? 1, thickness)),
+  );
+  return routes;
+};
+
+/**
+ * The whole globe as three.js objects: the ball, the world's outline and colour, the guides, the starting point and
+ * every answer's end point (the true one circled). The routes themselves are built apart (`buildRoutes`), since the
+ * zoom changes how thick they are. Nothing here knows about the screen: what is in front and what is hidden behind the ball is the depth buffer's business, not
  * ours — which is the whole point of drawing it in 3D.
  *
  * The lamp comes back out with the scene (`headlight`) instead of being added to it: the caller hangs it on the camera,
@@ -226,7 +252,7 @@ export const buildGlobeScene = ({ origin, marks, land, equator, greenwich, north
   if (land) {
     // The continents painted in, then their coast drawn over it: the colour comes from a picture of the world, the
     // sharp edge from the outline itself.
-    scene.add(landFill(colors.land));
+    scene.add(landFill(colors.fill));
     // Every coast in one object: 800 coastlines of their own would be 800 draws for the graphics card, and the world
     // can be as detailed as the asset is without that changing.
     const geometry = new BufferGeometry();
@@ -247,7 +273,6 @@ export const buildGlobeScene = ({ origin, marks, land, equator, greenwich, north
 
   marks.forEach((mark) => {
     const end = rhumbDestination(origin, mark.bearing, mark.distanceKm);
-    if (mark.isTruth !== true) scene.add(routeTube(origin, mark.bearing, mark.distanceKm, mark.color, mark.opacity ?? 1));
     addMark(dot(end, MARK_DOT, MARK_ALTITUDE, mark.color));
     if (mark.isTruth === true) addMark(ring(end, mark.color));
   });
@@ -258,9 +283,10 @@ export const buildGlobeScene = ({ origin, marks, land, equator, greenwich, north
   return { scene, headlight, screenSized };
 };
 
-/** Hands the ball's geometries and materials back to the graphics card: a new scene is built whenever an answer, the
- * theme or the stage of a clue changes, and the old one would otherwise stay there taking up memory. */
-export const disposeScene = (scene: Scene): void => {
+/** Hands the geometries and materials of a scene — or of any part of one, like a group of routes — back to the
+ * graphics card: a new one is built whenever an answer, the zoom, the theme or the stage of a clue changes, and the old
+ * one would otherwise stay there taking up memory. */
+export const disposeScene = (scene: Object3D): void => {
   scene.traverse((object) => {
     const drawn = object as Partial<Mesh>;
     drawn.geometry?.dispose();

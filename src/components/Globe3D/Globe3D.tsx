@@ -17,6 +17,7 @@ import {
   ORBIT_RATIO,
   ORBIT_TICK_MS,
   RESET_HINT,
+  ROUTE_THICKNESS,
   RESET_LABEL,
   ZOOM_IN_HINT,
   ZOOM_IN_LABEL,
@@ -25,7 +26,7 @@ import {
   ZOOM_STEP,
 } from './constants';
 import { centerOn, dragCenter, fingersOf, orbitPoint, screenPoint, zoomedBy } from './helpers';
-import { buildGlobeScene, disposeScene } from './scene';
+import { buildGlobeScene, buildRoutes, disposeScene } from './scene';
 import { createStyles } from './styles';
 import type { Fingers, Globe3DProps } from './types';
 import { useGlobeRenderer } from './useGlobeRenderer';
@@ -83,13 +84,16 @@ export const Globe3D = ({
 
   const sceneColors = useMemo(
     () => ({
+      // The sea is the ball's own colour; the continents are painted green over it (a map's own way of telling land
+      // from sea), with their coast drawn as a line on top.
       globe: compass.faceInner,
       land: colors.textMuted,
+      fill: colors.success,
       guide: colors.textMuted,
       origin: colors.text,
       pole: colors.text,
     }),
-    [compass.faceInner, colors.textMuted, colors.text],
+    [compass.faceInner, colors.textMuted, colors.success, colors.text],
   );
   const view = useMemo(
     () =>
@@ -105,11 +109,20 @@ export const Globe3D = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `marksKey` stands for `marks`, see above.
     [origin.latitude, origin.longitude, marksKey, showLand, equator, greenwich, north, sceneColors],
   );
+  // The answers' routes are built apart from the ball: a tube cannot be thinned by scaling it, so the zoom rebuilds
+  // them (and them alone) to keep them the width they have on screen unzoomed, like the dots.
+  const routes = useMemo(
+    () => buildRoutes(origin, marks, ROUTE_THICKNESS / zoom),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `marksKey` stands for `marks`, see above.
+    [origin.latitude, origin.longitude, marksKey, zoom],
+  );
   // The graphics card keeps every ball ever built until it is told otherwise.
   useEffect(() => () => disposeScene(view.scene), [view]);
+  useEffect(() => () => disposeScene(routes), [routes]);
 
   const onContextCreate = useGlobeRenderer({
     ...view,
+    routes,
     center,
     halfExtent: size / (2 * radius),
     markScale: 1 / zoom,
@@ -158,13 +171,22 @@ export const Globe3D = ({
     [radius],
   );
 
-  // The satellite goes right round the ball, over it and then behind it (see `orbitPoint`). Only once there is an
-  // answer to fly over, and only unzoomed: it would fly off the drawing.
+  // The satellite goes right round the ball in the axis of the answer it flies over — the true one when there is one
+  // — over the ball and then behind it (see `orbitPoint`). Only unzoomed: it would fly off the drawing.
   const angle = useOrbitAngle(ORBIT_MS, ORBIT_TICK_MS);
+  const flownOver = marks.find((item) => item.isTruth === true) ?? marks[0];
   const satellite =
-    !withSatellite || !isDark || marks.length === 0 || zoom !== MIN_ZOOM
+    !withSatellite || !isDark || flownOver === undefined || zoom !== MIN_ZOOM
       ? undefined
-      : orbitPoint(angle, cx, cy, radius, ORBIT_RATIO);
+      : orbitPoint(
+          angle,
+          rhumbDestination(origin, flownOver.bearing, flownOver.distanceKm),
+          center,
+          cx,
+          cy,
+          radius,
+          ORBIT_RATIO,
+        );
 
   const start = screenPoint(origin, center, cx, cy, radius);
   const pole = screenPoint(NORTH_POLE, center, cx, cy, radius);

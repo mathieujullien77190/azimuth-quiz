@@ -13,7 +13,7 @@ export const SPHERE_SEGMENTS = 72;
 export const LAND_FILL_SEGMENTS = 96;
 /** How strongly the continents are painted, over the colour the coastline is drawn in: enough to tell land from sea at
  * a glance, little enough for the coastline over it to stay the sharp edge. */
-export const LAND_FILL_OPACITY = 0.3;
+export const LAND_FILL_OPACITY = 0.4;
 /** What is drawn on the ground is pushed out a hair, in this order, so that each layer wins its pixels over the one
  * below instead of flickering against it. */
 export const LAND_FILL_ALTITUDE = 1.0004;
@@ -21,8 +21,9 @@ export const LAND_ALTITUDE = 1.001;
 export const GUIDE_ALTITUDE = 1.002;
 export const ROUTE_ALTITUDE = 1.004;
 export const MARK_ALTITUDE = 1.006;
-/** An answer's route is a tube, not a line: WebGL ignores the width of a line on most devices. */
-export const ROUTE_THICKNESS = 0.007;
+/** An answer's route is a tube, not a line: WebGL ignores the width of a line on most devices. Thinner than the dots
+ * are wide, and divided by the zoom (see `buildRoutes`) so that it keeps this width on screen all the way in. */
+export const ROUTE_THICKNESS = 0.005;
 export const ROUTE_SIDES = 6;
 /** The dots: the starting point, the end of an answer, the north pole. */
 export const ORIGIN_DOT = 0.03;
@@ -51,7 +52,7 @@ export const CAMERA_FAR = CAMERA_DISTANCE + 1.5;
 export const MAX_CENTER_LATITUDE = 85;
 /** Zoom 1 = the whole ball fits the drawing. */
 export const MIN_ZOOM = 1;
-export const MAX_ZOOM = 7;
+export const MAX_ZOOM = 14;
 /** One press on + or − multiplies (or divides) the zoom by this. */
 export const ZOOM_STEP = 1.4;
 /** Buttons: zoom, and back to the starting view (north up, everything in sight). */
