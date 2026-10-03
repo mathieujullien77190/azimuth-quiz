@@ -171,8 +171,9 @@ export const Globe3D = ({
     [radius],
   );
 
-  // The satellite goes right round the ball in the axis of the answer it flies over — the true one when there is one
-  // — over the ball and then behind it (see `orbitPoint`). Only unzoomed: it would fly off the drawing.
+  // The satellite goes right round the ball along the line of the answer it flies over — the true one when there is
+  // one, so the yellow line — over the ball and then behind it (see `orbitPoint`). Only unzoomed: it would fly off the
+  // drawing.
   const angle = useOrbitAngle(ORBIT_MS, ORBIT_TICK_MS);
   const flownOver = marks.find((item) => item.isTruth === true) ?? marks[0];
   const satellite =
@@ -180,6 +181,7 @@ export const Globe3D = ({
       ? undefined
       : orbitPoint(
           angle,
+          origin,
           rhumbDestination(origin, flownOver.bearing, flownOver.distanceKm),
           center,
           cx,

@@ -125,18 +125,20 @@ export const fingersOf = (event: {
 
 /**
  * Where a satellite flying at `ratio` times the radius is on the drawing, `angle` radians into its orbit: a circle
- * round the middle of the globe, tipped `ORBIT_TILT_DEG` out of the plane of the screen and turned so that its long
- * axis points at `target` — the answer it flies over. It is seen as an ellipse: the satellite passes over the answer,
- * round the back of the ball, and comes up the other side. The globe hides it while it is behind, unless it is out
- * beyond the outline.
+ * round the middle of the globe, tipped `ORBIT_TILT_DEG` out of the plane of the screen and turned to lie along the
+ * route from `from` to `to` — the answer's own line, as it is seen on the drawing. The satellite therefore flies along
+ * that line, carries on round the back of the ball, and comes up the other side; the globe hides it while it is behind,
+ * unless it is out beyond the outline.
  *
- * It used to fly the great circle of the answer's own route, which came out as sliding back and forth along a straight
- * line, for ever: the globe opens on the starting point (or close to it, see `centerOn`), and a circle through the very
- * point the camera looks at always has the camera in its own plane — so it is seen edge-on, whatever its heading.
+ * It used to fly the great circle through both of those points, which came out as sliding back and forth along a
+ * straight line, for ever: the globe opens on the middle of that route (see `centerOn`), and a circle the camera sits
+ * in the plane of is seen edge-on. Lying *along* the line while leaning out of the screen keeps both: the axis of the
+ * answer, and an orbit one can see turning.
  */
 export const orbitPoint = (
   angle: number,
-  target: Coordinates,
+  from: Coordinates,
+  to: Coordinates,
   center: Coordinates,
   cx: number,
   cy: number,
@@ -147,9 +149,10 @@ export const orbitPoint = (
   const flat = Math.cos(angle);
   const high = Math.sin(angle) * Math.cos(tilt);
   const towardsViewer = Math.sin(angle) * Math.sin(tilt);
-  // Which way the answer lies on the drawing, straight from the camera's point of view.
-  const along = viewPoint(target, center);
-  const axis = Math.atan2(along.y, along.x);
+  // Which way the answer's line runs on the drawing, from the camera's own point of view.
+  const start = viewPoint(from, center);
+  const end = viewPoint(to, center);
+  const axis = Math.atan2(end.y - start.y, end.x - start.x);
   const x = flat * Math.cos(axis) - high * Math.sin(axis);
   const y = flat * Math.sin(axis) + high * Math.cos(axis);
   return {

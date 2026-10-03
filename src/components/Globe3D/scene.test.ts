@@ -119,6 +119,29 @@ describe('buildGlobeScene', () => {
     }
   });
 
+  it('keeps the painted shell clear of the sea, bellies of its flats included', () => {
+    const { scene } = build({ land: true });
+    const painted = meshes(scene).find((mesh) => (mesh.material as MeshLambertMaterial).map != null)!;
+    const positions = painted.geometry.getAttribute('position');
+    const corners = painted.geometry.getIndex()!;
+    // A sphere drawn with flats dips below its own radius in the middle of each flat. The shell is painted over the
+    // ball and must stay outside it there too, or the sea hides the continents — which is exactly what happened.
+    let lowest = Infinity;
+    for (let corner = 0; corner < corners.count; corner += 3) {
+      const triangle = [0, 1, 2].map((offset) => corners.getX(corner + offset));
+      const middle = triangle.reduce(
+        (total, index) => ({
+          x: total.x + positions.getX(index) / 3,
+          y: total.y + positions.getY(index) / 3,
+          z: total.z + positions.getZ(index) / 3,
+        }),
+        { x: 0, y: 0, z: 0 },
+      );
+      lowest = Math.min(lowest, Math.hypot(middle.x, middle.y, middle.z));
+    }
+    expect(lowest).toBeGreaterThan(1);
+  });
+
   it('draws the whole world as one object, above the ball', () => {
     const { scene } = build({ land: true });
     const world = lines(scene);

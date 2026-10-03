@@ -7,23 +7,27 @@ export const GUIDE_STEP = 5;
 // --- The scene ---
 // The globe is a sphere of radius 1 around the middle of the scene: every size below is in those units.
 /** How round the ball is: enough segments for a smooth outline even zoomed all the way in. */
-export const SPHERE_SEGMENTS = 72;
-/** How round the shell the continents are painted on is. It carries the land/sea mask as a picture, so it only has to
- * be round — the detail of the coast comes from the mask, not from this grid. */
-export const LAND_FILL_SEGMENTS = 96;
+export const SPHERE_SEGMENTS = 144;
+/** How round the shell the continents are painted on is. It carries the land/sea mask as a picture, so the detail of
+ * the coast comes from the mask, not from this grid — but it has to be *fine*, not just round: a sphere drawn with
+ * flats has a belly that dips below its own radius, by `1 - cos(180 / segments)`, and the shell would sink under the
+ * sea there (and be hidden by it) unless `LAND_FILL_ALTITUDE` clears that dip. At 192 the dip is 0.00013. */
+export const LAND_FILL_SEGMENTS = 192;
 /** How strongly the continents are painted, over the colour the coastline is drawn in: enough to tell land from sea at
  * a glance, little enough for the coastline over it to stay the sharp edge. */
-export const LAND_FILL_OPACITY = 0.4;
+export const LAND_FILL_OPACITY = 0.5;
 /** What is drawn on the ground is pushed out a hair, in this order, so that each layer wins its pixels over the one
- * below instead of flickering against it. */
-export const LAND_FILL_ALTITUDE = 1.0004;
-export const LAND_ALTITUDE = 1.001;
-export const GUIDE_ALTITUDE = 1.002;
+ * below instead of flickering against it. The painted shell must clear the dip of its own flats (see
+ * `LAND_FILL_SEGMENTS`), and the coastline must in turn clear the shell's own highest point, or the paint would hide
+ * the line meant to sit on top of it. */
+export const LAND_FILL_ALTITUDE = 1.0008;
+export const LAND_ALTITUDE = 1.0016;
+export const GUIDE_ALTITUDE = 1.0022;
 export const ROUTE_ALTITUDE = 1.004;
 export const MARK_ALTITUDE = 1.006;
 /** An answer's route is a tube, not a line: WebGL ignores the width of a line on most devices. Thinner than the dots
  * are wide, and divided by the zoom (see `buildRoutes`) so that it keeps this width on screen all the way in. */
-export const ROUTE_THICKNESS = 0.005;
+export const ROUTE_THICKNESS = 0.01;
 export const ROUTE_SIDES = 6;
 /** The dots: the starting point, the end of an answer, the north pole. */
 export const ORIGIN_DOT = 0.03;

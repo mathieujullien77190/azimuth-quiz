@@ -173,21 +173,22 @@ describe('dragCenter', () => {
 });
 
 describe('orbitPoint', () => {
-  /** An answer due east of the middle of the view: its axis is the drawing's own horizontal. */
+  /** A route running due east across the middle of the view: its line is the drawing's own horizontal. */
+  const WEST = { latitude: 0, longitude: -40 };
   const EAST = { latitude: 0, longitude: 40 };
-  const at = (degrees: number, target = EAST) =>
-    orbitPoint((degrees * Math.PI) / 180, target, ORIGIN, 100, 100, 50, 1.12);
+  const at = (degrees: number, from = WEST, to = EAST) =>
+    orbitPoint((degrees * Math.PI) / 180, from, to, ORIGIN, 100, 100, 50, 1.12);
 
-  it('flies in the axis of the answer: it passes over it, then over the other side', () => {
+  it('flies along the answer line: it leaves on that line and comes back on it', () => {
     expect(at(0).x).toBeCloseTo(100 + 50 * 1.12, 6);
     expect(at(0).y).toBeCloseTo(100, 6);
     expect(at(180).x).toBeCloseTo(100 - 50 * 1.12, 6);
   });
 
-  it('follows the answer wherever it is: an answer due north turns the whole orbit with it', () => {
-    const north = at(0, { latitude: 40, longitude: 0 });
-    expect(north.x).toBeCloseTo(100, 6);
-    expect(north.y).toBeCloseTo(100 - 50 * 1.12, 6);
+  it('turns with that line: an answer running north/south turns the whole orbit upright', () => {
+    const up = at(0, { latitude: -40, longitude: 0 }, { latitude: 40, longitude: 0 });
+    expect(up.x).toBeCloseTo(100, 6);
+    expect(up.y).toBeCloseTo(100 - 50 * 1.12, 6);
   });
 
   it('goes over the ball, then behind it where the globe hides it', () => {
@@ -201,8 +202,14 @@ describe('orbitPoint', () => {
     const points = Array.from({ length: 72 }, (_, index) => at(index * 5));
     const widest = Math.max(...points.map((point) => Math.abs(point.x - 100)));
     const tallest = Math.max(...points.map((point) => Math.abs(point.y - 100)));
-    // An orbit seen edge-on (what following the answer's own route came down to) would be flat: no height at all.
+    // An orbit seen edge-on (what flying the answer's own great circle came down to) would be flat: no height at all.
     expect(tallest / widest).toBeGreaterThan(0.5);
+  });
+
+  it('holds its own when the whole route is one single point', () => {
+    const point = at(0, EAST, EAST);
+    expect(Number.isFinite(point.x)).toBe(true);
+    expect(Number.isFinite(point.y)).toBe(true);
   });
 });
 
