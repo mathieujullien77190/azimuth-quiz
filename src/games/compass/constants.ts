@@ -22,8 +22,10 @@ export const SCORE_CURVE_EXPONENT = 1.5;
 
 // --- Geography ---
 export const MIN_DISTANCE_KM = 10;
-/** Largest surface distance: half the Earth's circumference. */
-export const MAX_SURFACE_DISTANCE_KM = 20000;
+/** Largest surface distance to estimate. Holding the same heading all the way (see `helpers/geo`) is longer than
+ * half the Earth's circumference: the longest such route is about 21 180 km (two places a world apart, one far
+ * north and the other as far south), so the slider must go a bit beyond that. */
+export const MAX_SURFACE_DISTANCE_KM = 22000;
 // Marks shown below the distance sliders (logarithmic scale).
 export const DISTANCE_MARKS_KM = [100, 1000, 10000] as const;
 export const DEFAULT_DISTANCE_KM = 1000;

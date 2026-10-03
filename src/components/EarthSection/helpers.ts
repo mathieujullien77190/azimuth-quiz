@@ -12,7 +12,8 @@ export const surfacePoint = (center: Point, radius: number, angle: number): Poin
   y: center.y - radius * Math.cos(angle),
 });
 
-/** Central angle corresponding to a distance measured along the surface. */
+/** Central angle corresponding to a distance measured along the surface. A route holding its heading all the way
+ * (see `helpers/geo`) can be longer than half a turn of the Earth: it then stops at the far point of the profile. */
 export const surfaceAngle = (distanceKm: number): number => Math.min(Math.PI, distanceKm / EARTH_RADIUS_KM);
 
 /** Circle arc from the apex to `angle` radians, on the `side` side (`d` attribute of a <Path>). */

@@ -49,9 +49,9 @@ export type Origin = {
 };
 
 export type Guess = {
-  /** Heading on the horizontal plane, 0 = north. */
+  /** Heading on the horizontal plane, 0 = north: the one held all the way (rhumb line, see `helpers/geo`). */
   bearing: number;
-  /** Estimated distance along the surface. */
+  /** Estimated distance along the surface, following that heading. */
   distanceKm: number;
 };
 

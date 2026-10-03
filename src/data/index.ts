@@ -2,7 +2,7 @@ import type { Difficulty, Origin } from '@/types';
 
 export * from './theme';
 
-// --- Geography (shared: both Compass and Clues resolve an origin and do great-circle math) ---
+// --- Geography (shared: both Compass and Clues resolve an origin and measure a constant-heading route, see helpers/geo) ---
 export const EARTH_RADIUS_KM = 6371;
 
 export const DEFAULT_ORIGIN: Origin = {

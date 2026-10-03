@@ -40,7 +40,7 @@ export const WithZoomControls: Story = {
 export const WithGlobe: Story = {
   parameters: source(withGlobeCode),
   args: {
-    marks: [{ bearing: 291.6, distanceKm: 5837, color: SAMPLE_PLAYERS[0].color, isTruth: true }],
+    marks: [{ bearing: 261.4, distanceKm: 6079, color: SAMPLE_PLAYERS[0].color, isTruth: true }],
     origin: { latitude: 48.8566, longitude: 2.3522 },
     size: 160,
     zoomControls: true,
