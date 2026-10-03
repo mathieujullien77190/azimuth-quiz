@@ -1,4 +1,3 @@
-import { EARTH_RADIUS_KM } from '@/data';
 import { rhumbDestination } from '@/helpers/geo';
 
 import { MAX_CENTER_LATITUDE, MAX_ZOOM, MIN_ZOOM } from './constants';
@@ -7,7 +6,6 @@ import {
   dragCenter,
   equatorPoints,
   fingerGap,
-  greatCirclePoint,
   greenwichPoints,
   orbitPoint,
   parseRings,
@@ -20,36 +18,6 @@ import {
 } from './helpers';
 
 const PARIS = { latitude: 48.8566, longitude: 2.3522 };
-
-describe('greatCirclePoint', () => {
-  it('stays put for a distance of 0', () => {
-    const point = greatCirclePoint(PARIS, 123, 0);
-    expect(point.latitude).toBeCloseTo(PARIS.latitude, 6);
-    expect(point.longitude).toBeCloseTo(PARIS.longitude, 6);
-  });
-
-  it('goes up the same meridian heading north, a quarter of the Earth away reaches the pole', () => {
-    const point = greatCirclePoint({ latitude: 0, longitude: 20 }, 0, (Math.PI / 2) * EARTH_RADIUS_KM);
-    expect(point.latitude).toBeCloseTo(90, 4);
-  });
-
-  it('follows the equator heading east', () => {
-    const point = greatCirclePoint({ latitude: 0, longitude: 0 }, 90, (Math.PI / 2) * EARTH_RADIUS_KM);
-    expect(point.latitude).toBeCloseTo(0, 6);
-    expect(point.longitude).toBeCloseTo(90, 4);
-  });
-
-  it('comes out on the other side of the date line', () => {
-    const point = greatCirclePoint({ latitude: 0, longitude: 170 }, 90, (Math.PI / 9) * EARTH_RADIUS_KM);
-    expect(point.longitude).toBeCloseTo(-170, 3);
-  });
-
-  it('takes the shortest way: Paris to New York is 5837 km, leaving on a heading of 291 degrees', () => {
-    const point = greatCirclePoint(PARIS, 291.6, 5837);
-    expect(point.latitude).toBeCloseTo(40.7, 0);
-    expect(point.longitude).toBeCloseTo(-74, 0);
-  });
-});
 
 describe('routePoints', () => {
   it('goes from the origin to the destination in `steps` segments', () => {
@@ -205,25 +173,26 @@ describe('dragCenter', () => {
 });
 
 describe('orbitPoint', () => {
-  const at = (degrees: number) => orbitPoint(ORIGIN, 90, (degrees * Math.PI) / 180, ORIGIN, 100, 100, 50, 1.12);
+  const at = (degrees: number) => orbitPoint((degrees * Math.PI) / 180, 100, 100, 50, 1.12);
 
-  it('starts right above the starting point', () => {
-    const point = at(0);
-    expect(point.visible).toBe(true);
-    expect(point.x).toBeCloseTo(100);
-    expect(point.y).toBeCloseTo(100);
+  it('flies higher than the ground: always beyond the outline on the sides', () => {
+    expect(at(0).x).toBeCloseTo(100 + 50 * 1.12, 6);
+    expect(at(180).x).toBeCloseTo(100 - 50 * 1.12, 6);
   });
 
-  it('flies higher than the ground: seen above the outline at 90 degrees', () => {
-    expect(at(90).x).toBeCloseTo(100 + 50 * 1.12);
+  it('goes over the ball, then behind it where the globe hides it', () => {
+    expect(at(90).visible).toBe(true);
+    expect(at(90).y).toBeLessThan(100);
+    expect(at(270).visible).toBe(false);
+    expect(at(270).y).toBeGreaterThan(100);
   });
 
-  it('is still seen just behind the globe, as long as it is out of the way of the globe', () => {
-    expect(at(100).visible).toBe(true);
-  });
-
-  it('is hidden by the globe when it is right behind it', () => {
-    expect(at(180).visible).toBe(false);
+  it('is seen as a proper orbit, never as a flat line across the ball', () => {
+    const points = Array.from({ length: 72 }, (_, index) => at(index * 5));
+    const widest = Math.max(...points.map((point) => Math.abs(point.x - 100)));
+    const tallest = Math.max(...points.map((point) => Math.abs(point.y - 100)));
+    // An orbit seen edge-on (what following the answer's own route came down to) would be flat: no height at all.
+    expect(tallest / widest).toBeGreaterThan(0.5);
   });
 });
 

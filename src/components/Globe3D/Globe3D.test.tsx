@@ -1,5 +1,5 @@
 import { act, fireEvent, render } from '@testing-library/react-native';
-import { PanResponder } from 'react-native';
+import { PanResponder, Platform } from 'react-native';
 
 import type { EarthMark } from '@/components/EarthSection';
 
@@ -44,10 +44,16 @@ const PARIS = { latitude: 48.8566, longitude: 2.3522 };
 const answer: EarthMark = { bearing: 261.4, distanceKm: 6079, color: '#EF4444' };
 
 type PanConfig = Parameters<typeof PanResponder.create>[0];
-/** A one-finger move of the gesture (no pinch). */
-const oneFinger = { nativeEvent: { touches: [{ pageX: 0, pageY: 0 }] } } as never;
+/** One finger, at that place on the screen. */
+const finger = (x: number, y: number) =>
+  ({ nativeEvent: { pageX: x, pageY: y, touches: [{ pageX: x, pageY: y }] } }) as never;
+/** Two fingers, that far apart. */
 const pinch = (gap: number) =>
-  ({ nativeEvent: { touches: [{ pageX: 0, pageY: 0 }, { pageX: 0, pageY: gap }] } }) as never;
+  ({
+    nativeEvent: { pageX: 0, pageY: 0, touches: [{ pageX: 0, pageY: 0 }, { pageX: 0, pageY: gap }] },
+  }) as never;
+/** How many fingers the gesture says are on the glass; 0 = a stray move once they are gone. */
+const touching = (count: number) => ({ numberActiveTouches: count }) as never;
 
 /** Renders the globe and hands over the touch handlers it just set up. */
 const renderGlobe = async (props: Partial<React.ComponentProps<typeof Globe3D>> = {}) => {
@@ -103,18 +109,44 @@ describe('Globe3D — turning it with a finger', () => {
     const { config, queryByText } = await renderGlobe({ marks: [{ ...answer, isTruth: true }] });
     const drawings = renderer.render.mock.calls.length;
 
-    await act(() => config.onPanResponderGrant?.(oneFinger, {} as never));
-    // Moves are cumulative within a gesture: the second one only adds what is new since the first.
-    await act(() => config.onPanResponderMove?.(oneFinger, { dx: 10, dy: -1000 } as never));
-    await act(() => config.onPanResponderMove?.(oneFinger, { dx: 20, dy: -2000 } as never));
+    await act(() => config.onPanResponderGrant?.(finger(0, 0), touching(1)));
+    // Each move is the step since the previous one, so the globe follows the finger without adding it up twice.
+    await act(() => config.onPanResponderMove?.(finger(10, -1000), touching(1)));
+    await act(() => config.onPanResponderMove?.(finger(20, -2000), touching(1)));
     expect(queryByText(PLAYER_LABEL)).toBeNull();
     expect(queryByText('N')).toBeNull();
     expect(renderer.render.mock.calls.length).toBeGreaterThan(drawings);
 
-    // A new gesture starts from zero again: tipping the other way brings the starting point back.
-    await act(() => config.onPanResponderGrant?.(oneFinger, {} as never));
-    await act(() => config.onPanResponderMove?.(oneFinger, { dx: 0, dy: 4000 } as never));
+    // Tipping the other way brings the starting point back.
+    await act(() => config.onPanResponderMove?.(finger(20, 2000), touching(1)));
     expect(queryByText(PLAYER_LABEL)).toBeTruthy();
+  });
+
+  it('starts a new turn from where the finger lands, and ignores a move once the finger is gone', async () => {
+    const { config, queryByText } = await renderGlobe();
+    await act(() => config.onPanResponderGrant?.(finger(0, 0), touching(1)));
+    await act(() => config.onPanResponderMove?.(finger(0, -2000), touching(1)));
+    expect(queryByText(PLAYER_LABEL)).toBeNull();
+
+    // Letting go, then touching down far from there: the globe must not jump by the gap between the two places.
+    await act(() => config.onPanResponderRelease?.(finger(0, -2000), touching(0)));
+    await act(() => config.onPanResponderGrant?.(finger(0, 500), touching(1)));
+    await act(() => config.onPanResponderMove?.(finger(0, 510), touching(1)));
+    expect(queryByText(PLAYER_LABEL)).toBeNull();
+
+    // The web reports one last move once the finger is already gone: it used to send the globe back where it started.
+    await act(() => config.onPanResponderMove?.(finger(0, 4000), touching(0)));
+    expect(queryByText(PLAYER_LABEL)).toBeNull();
+
+    // A gesture cut short (a scroll taking over) leaves nothing behind either.
+    await act(() => config.onPanResponderTerminate?.(finger(0, 510), touching(0)));
+    await act(() => config.onPanResponderMove?.(finger(0, 9000), touching(1)));
+    expect(queryByText(PLAYER_LABEL)).toBeNull();
+  });
+
+  it('keeps the gesture to itself, so the page does not scroll under the finger', async () => {
+    const { config } = await renderGlobe();
+    expect(config.onShouldBlockNativeResponder?.({} as never, {} as never)).toBe(true);
   });
 
   it('has no touch handlers at all when it cannot be turned', async () => {
@@ -132,23 +164,33 @@ describe('Globe3D — zooming', () => {
 
   it('zooms in and out with two fingers', async () => {
     const { config, queryByText } = await renderGlobe();
-    await act(() => config.onPanResponderGrant?.(pinch(100), {} as never));
-    await act(() => config.onPanResponderMove?.(pinch(100), { dx: 0, dy: 0 } as never));
-    // The first move only tells how far apart the fingers are; the next one is what spreads them.
+    await act(() => config.onPanResponderGrant?.(pinch(100), touching(2)));
+    await act(() => config.onPanResponderMove?.(pinch(100), touching(2)));
+    // Fingers that have not moved apart yet change nothing.
     expect(zoomed(queryByText)).toBe(false);
-    await act(() => config.onPanResponderMove?.(pinch(300), { dx: 0, dy: 0 } as never));
+    await act(() => config.onPanResponderMove?.(pinch(300), touching(2)));
     expect(zoomed(queryByText)).toBe(true);
 
-    await act(() => config.onPanResponderMove?.(pinch(50), { dx: 0, dy: 0 } as never));
+    await act(() => config.onPanResponderMove?.(pinch(50), touching(2)));
     expect(zoomed(queryByText)).toBe(false);
+  });
+
+  it('only measures the gap on the move a second finger lands, then zooms', async () => {
+    const { config, queryByText } = await renderGlobe();
+    await act(() => config.onPanResponderGrant?.(finger(0, 0), touching(1)));
+    // Nothing to compare that first gap with: the zoom must not jump the moment the second finger touches down.
+    await act(() => config.onPanResponderMove?.(pinch(100), touching(2)));
+    expect(zoomed(queryByText)).toBe(false);
+    await act(() => config.onPanResponderMove?.(pinch(300), touching(2)));
+    expect(zoomed(queryByText)).toBe(true);
   });
 
   it('does not jump when a pinch goes back to a single finger', async () => {
     const { config, queryByText } = await renderGlobe();
-    await act(() => config.onPanResponderGrant?.(pinch(100), {} as never));
-    await act(() => config.onPanResponderMove?.(pinch(100), { dx: 200, dy: 0 } as never));
-    // Only the fingers spreading counted so far: lifting one and carrying on turns from there, not from the start.
-    await act(() => config.onPanResponderMove?.(oneFinger, { dx: 200, dy: 0 } as never));
+    await act(() => config.onPanResponderGrant?.(pinch(100), touching(2)));
+    await act(() => config.onPanResponderMove?.(pinch(100), touching(2)));
+    // Only the fingers spreading counted so far: lifting one and carrying on turns from where the last one is.
+    await act(() => config.onPanResponderMove?.(finger(0, 0), touching(1)));
     expect(queryByText(PLAYER_LABEL)).toBeTruthy();
   });
 
@@ -159,8 +201,8 @@ describe('Globe3D — zooming', () => {
     await fireEvent.press(getByLabelText(ZOOM_OUT_HINT));
     expect(zoomed(queryByText)).toBe(false);
 
-    await act(() => config.onPanResponderGrant?.(oneFinger, {} as never));
-    await act(() => config.onPanResponderMove?.(oneFinger, { dx: 0, dy: -2000 } as never));
+    await act(() => config.onPanResponderGrant?.(finger(0, 0), touching(1)));
+    await act(() => config.onPanResponderMove?.(finger(0, -2000), touching(1)));
     await fireEvent.press(getByLabelText(ZOOM_IN_HINT));
     expect(queryByText(PLAYER_LABEL)).toBeNull();
 
@@ -182,16 +224,39 @@ describe('Globe3D — zooming', () => {
   });
 });
 
+describe('Globe3D — on the web', () => {
+  const originalOS = Platform.OS;
+  afterEach(() => {
+    Platform.OS = originalOS;
+  });
+
+  const styleOf = (tree: unknown) => JSON.stringify((tree as { props: { style: unknown } }).props.style);
+
+  it('keeps the page from scrolling under the finger that turns the globe', async () => {
+    Platform.OS = 'web';
+    const { toJSON } = await render(<Globe3D marks={[]} origin={PARIS} size={240} />);
+    expect(styleOf(toJSON())).toContain('touchAction');
+  });
+
+  it('has nothing of the sort on a phone, where there is no page to scroll', async () => {
+    const { toJSON } = await render(<Globe3D marks={[]} origin={PARIS} size={240} />);
+    expect(styleOf(toJSON())).not.toContain('touchAction');
+  });
+});
+
 describe('Globe3D — satellite', () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
 
-  it('flies over the starting point, goes behind the globe and comes back', async () => {
+  it('flies over the ball, goes behind it and comes back', async () => {
     const { queryByText } = await renderGlobe();
+    expect(queryByText('🛰️')).toBeTruthy();
+    // A quarter of the way round it is over the ball, three quarters of the way it is behind it.
+    await act(() => jest.advanceTimersByTime(ORBIT_MS / 4));
     expect(queryByText('🛰️')).toBeTruthy();
     await act(() => jest.advanceTimersByTime(ORBIT_MS / 2));
     expect(queryByText('🛰️')).toBeNull();
-    await act(() => jest.advanceTimersByTime(ORBIT_MS / 2));
+    await act(() => jest.advanceTimersByTime(ORBIT_MS / 4));
     expect(queryByText('🛰️')).toBeTruthy();
   });
 

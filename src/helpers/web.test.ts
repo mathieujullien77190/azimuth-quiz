@@ -1,7 +1,7 @@
 import { polyfillCountryFlagEmojis } from 'country-flag-emoji-polyfill';
 import { Platform } from 'react-native';
 
-import { disableTextSelection, polyfillFlagEmoji } from './web';
+import { disableTextSelection, noPageScroll, polyfillFlagEmoji } from './web';
 
 jest.mock('country-flag-emoji-polyfill', () => ({ polyfillCountryFlagEmojis: jest.fn() }));
 
@@ -92,5 +92,22 @@ describe('polyfillFlagEmoji', () => {
     (globalThis as { document?: unknown }).document = {};
     polyfillFlagEmoji();
     expect(polyfillCountryFlagEmojis).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('noPageScroll', () => {
+  const originalOS = Platform.OS;
+  afterEach(() => {
+    Platform.OS = originalOS;
+  });
+
+  it('takes the touch for itself on the web', () => {
+    Platform.OS = 'web';
+    expect(noPageScroll()).toEqual({ touchAction: 'none' });
+  });
+
+  it('is nothing on a phone, where there is no page to scroll', () => {
+    Platform.OS = 'android';
+    expect(noPageScroll()).toBeUndefined();
   });
 });

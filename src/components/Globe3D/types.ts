@@ -59,6 +59,14 @@ export type GlobeScene = {
   headlight: DirectionalLight;
 };
 
+/** The fingers on the drawing at one moment: where the one that moved is, and how far apart two of them are
+ * (`null` with a single finger down, so there is nothing to pinch). */
+export type Fingers = {
+  x: number;
+  y: number;
+  gap: number | null;
+};
+
 /** A point of the globe seen from the viewer: `x` to the right, `y` up, `z` towards the viewer (< 0 = far side). */
 export type ViewPoint = {
   x: number;

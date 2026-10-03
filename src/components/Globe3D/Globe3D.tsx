@@ -4,6 +4,7 @@ import { PanResponder, Pressable, Text, View } from 'react-native';
 
 import { PLAYER_LABEL, SATELLITE_EMOJI, SATELLITE_QUIP } from '@/components/EarthSection/constants';
 import { rhumbDestination } from '@/helpers/geo';
+import { noPageScroll } from '@/helpers/web';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Coordinates } from '@/types';
 
@@ -23,10 +24,10 @@ import {
   ZOOM_OUT_LABEL,
   ZOOM_STEP,
 } from './constants';
-import { centerOn, dragCenter, fingerGap, orbitPoint, screenPoint, zoomedBy } from './helpers';
+import { centerOn, dragCenter, fingersOf, orbitPoint, screenPoint, zoomedBy } from './helpers';
 import { buildGlobeScene, disposeScene } from './scene';
 import { createStyles } from './styles';
-import type { Globe3DProps } from './types';
+import type { Fingers, Globe3DProps } from './types';
 import { useGlobeRenderer } from './useGlobeRenderer';
 import { useOrbitAngle } from './useOrbitAngle';
 
@@ -114,41 +115,55 @@ export const Globe3D = ({
     background: backgroundColor ?? colors.background,
   });
 
-  // One finger turns the globe (the surface follows the finger), two fingers zoom. Each move only adds what is new
-  // since the previous one, so a gesture never jumps when it goes from two fingers back to one.
-  const last = useRef({ dx: 0, dy: 0, gap: null as number | null });
+  // One finger turns the globe (the surface follows the finger), two fingers zoom.
+  //
+  // Everything is measured from where the fingers are *now* against where they were at the previous move, never from
+  // what a gesture has added up so far: a gesture then carries nothing over from the one before it, and a stray move
+  // reported once the finger is already gone (the web does that on release) cannot send the globe back where it
+  // started. `null` = no finger on the glass.
+  const last = useRef<Fingers | null>(null);
   const pan = useMemo(
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
+        // The gesture belongs to the globe until the finger is lifted: neither the page under it (scrolling while one
+        // turns the globe) nor a native view around it takes it away.
         onPanResponderTerminationRequest: () => false,
-        onPanResponderGrant: () => {
-          last.current = { dx: 0, dy: 0, gap: null };
+        onShouldBlockNativeResponder: () => true,
+        onPanResponderGrant: (event) => {
+          last.current = fingersOf(event.nativeEvent);
         },
         onPanResponderMove: (event, gesture) => {
-          const gap = fingerGap(event.nativeEvent.touches);
           const previous = last.current;
-          const previousGap = previous.gap;
-          last.current = { dx: gesture.dx, dy: gesture.dy, gap };
-          if (gap !== null) {
-            if (previousGap !== null) setZoom((current) => zoomedBy(current, gap / previousGap));
+          if (gesture.numberActiveTouches === 0 || previous === null) return;
+          const now = fingersOf(event.nativeEvent);
+          const spread = now.gap;
+          const spreadBefore = previous.gap;
+          last.current = now;
+          if (spread !== null) {
+            if (spreadBefore !== null) setZoom((current) => zoomedBy(current, spread / spreadBefore));
             return;
           }
-          setCenter((current) => dragCenter(current, gesture.dx - previous.dx, gesture.dy - previous.dy, radius));
+          setCenter((current) => dragCenter(current, now.x - previous.x, now.y - previous.y, radius));
+        },
+        onPanResponderRelease: () => {
+          last.current = null;
+        },
+        onPanResponderTerminate: () => {
+          last.current = null;
         },
       }),
     [radius],
   );
 
-  // The satellite goes right round the Earth on the way from the starting point to the answer (the true one when there
-  // is one), behind the globe too. Only unzoomed: it would fly off the drawing.
+  // The satellite goes right round the ball, over it and then behind it (see `orbitPoint`). Only once there is an
+  // answer to fly over, and only unzoomed: it would fly off the drawing.
   const angle = useOrbitAngle(ORBIT_MS, ORBIT_TICK_MS);
-  const guide = marks.find((item) => item.isTruth === true) ?? marks[0];
   const satellite =
-    !withSatellite || !isDark || guide === undefined || zoom !== MIN_ZOOM
+    !withSatellite || !isDark || marks.length === 0 || zoom !== MIN_ZOOM
       ? undefined
-      : orbitPoint(origin, guide.bearing, angle, center, cx, cy, radius, ORBIT_RATIO);
+      : orbitPoint(angle, cx, cy, radius, ORBIT_RATIO);
 
   const start = screenPoint(origin, center, cx, cy, radius);
   const pole = screenPoint(NORTH_POLE, center, cx, cy, radius);
@@ -156,7 +171,8 @@ export const Globe3D = ({
   return (
     <View
       accessibilityLabel={CAPTION_GLOBE}
-      style={[styles.wrap, { width: size, height: size }]}
+      // On the web the browser would scroll the page under the finger that turns the globe (`noPageScroll`).
+      style={[styles.wrap, { width: size, height: size }, noPageScroll()]}
       {...(draggable ? pan.panHandlers : {})}
     >
       <GLView onContextCreate={onContextCreate} style={{ width: size, height: size }} />

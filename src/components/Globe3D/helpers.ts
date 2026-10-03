@@ -1,29 +1,11 @@
-import { EARTH_RADIUS_KM } from '@/data';
-import { rhumbDestination, wrapLongitude } from '@/helpers/geo';
+import { rhumbDestination } from '@/helpers/geo';
 import type { Coordinates } from '@/types';
 
-import { MAX_CENTER_LATITUDE, MAX_ZOOM, MIN_ZOOM } from './constants';
-import type { ScreenPoint, ViewPoint } from './types';
+import { MAX_CENTER_LATITUDE, MAX_ZOOM, MIN_ZOOM, ORBIT_TILT_DEG } from './constants';
+import type { Fingers, ScreenPoint, ViewPoint } from './types';
 
 const toRadians = (degrees: number): number => (degrees * Math.PI) / 180;
 const toDegrees = (radians: number): number => (radians * 180) / Math.PI;
-
-/** Where you end up going `distanceKm` along the great circle (the shortest way, whose heading drifts as you go) that
- * leaves `origin` on `bearing`. Only the satellite flies it: an answer follows its constant heading (`routePoints`),
- * but a constant heading spirals into a pole instead of going right round the Earth. */
-export const greatCirclePoint = (origin: Coordinates, bearing: number, distanceKm: number): Coordinates => {
-  const angular = distanceKm / EARTH_RADIUS_KM;
-  const theta = toRadians(bearing);
-  const lat1 = toRadians(origin.latitude);
-  const lat2 = Math.asin(Math.sin(lat1) * Math.cos(angular) + Math.cos(lat1) * Math.sin(angular) * Math.cos(theta));
-  const lon2 =
-    toRadians(origin.longitude) +
-    Math.atan2(
-      Math.sin(theta) * Math.sin(angular) * Math.cos(lat1),
-      Math.cos(angular) - Math.sin(lat1) * Math.sin(lat2),
-    );
-  return { latitude: toDegrees(lat2), longitude: wrapLongitude(toDegrees(lon2)) };
-};
 
 /** The route of an answer: `distanceKm` from `origin` holding `bearing` all the way (the rhumb line, see `@/helpers/geo`),
  * as `steps + 1` points (the first one is the origin). A straight line on a Mercator map, a curve on the globe. */
@@ -133,24 +115,32 @@ export const zoomedBy = (zoom: number, factor: number): number =>
 export const fingerGap = (touches: { pageX: number; pageY: number }[]): number | null =>
   touches.length < 2 ? null : Math.hypot(touches[0].pageX - touches[1].pageX, touches[0].pageY - touches[1].pageY);
 
-/** Where a satellite flying at `ratio` times the radius is on the drawing, `angle` radians along the great circle that
- * leaves `origin` on `bearing` (so it does go right round the Earth, see `greatCirclePoint`). It is seen when it is in
- * front of the globe or, behind it, when it is out of the way of the globe (beyond its outline). */
-export const orbitPoint = (
-  origin: Coordinates,
-  bearing: number,
-  angle: number,
-  center: Coordinates,
-  cx: number,
-  cy: number,
-  radius: number,
-  ratio: number,
-): ScreenPoint => {
-  const view = viewPoint(greatCirclePoint(origin, bearing, angle * EARTH_RADIUS_KM), center);
+/** Where the fingers are on the screen right now: the one that moved, and how far apart two of them are. Absolute
+ * positions, which is what lets a turn or a pinch be the step since the previous move alone (see `Globe3D`). */
+export const fingersOf = (event: {
+  pageX: number;
+  pageY: number;
+  touches: { pageX: number; pageY: number }[];
+}): Fingers => ({ x: event.pageX, y: event.pageY, gap: fingerGap(event.touches) });
+
+/**
+ * Where a satellite flying at `ratio` times the radius is on the drawing, `angle` radians into its orbit: a circle
+ * round the middle of the globe, tipped `ORBIT_TILT_DEG` out of the plane of the screen. It is seen as an ellipse, the
+ * satellite passing over the ball and then behind it — where the globe hides it, unless it is out beyond the outline.
+ *
+ * It used to fly the great circle of the answer's own route, which came out as sliding back and forth along a straight
+ * line, for ever: the globe opens on the starting point (or close to it, see `centerOn`), and a circle through the very
+ * point the camera looks at always has the camera in its own plane — so it is seen edge-on, whatever its heading.
+ */
+export const orbitPoint = (angle: number, cx: number, cy: number, radius: number, ratio: number): ScreenPoint => {
+  const tilt = toRadians(ORBIT_TILT_DEG);
+  const x = Math.cos(angle);
+  const y = Math.sin(angle) * Math.cos(tilt);
+  const towardsViewer = Math.sin(angle) * Math.sin(tilt);
   return {
-    x: cx + view.x * radius * ratio,
-    y: cy - view.y * radius * ratio,
-    visible: view.z >= 0 || Math.hypot(view.x, view.y) * ratio > 1,
+    x: cx + x * radius * ratio,
+    y: cy - y * radius * ratio,
+    visible: towardsViewer >= 0 || Math.hypot(x, y) * ratio > 1,
   };
 };
 

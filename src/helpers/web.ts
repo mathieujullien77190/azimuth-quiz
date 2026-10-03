@@ -1,5 +1,5 @@
 import { polyfillCountryFlagEmojis } from 'country-flag-emoji-polyfill';
-import { Platform } from 'react-native';
+import { Platform, type ViewStyle } from 'react-native';
 
 const STYLE_ID = 'azimuthquiz-no-select';
 
@@ -30,3 +30,11 @@ export const polyfillFlagEmoji = (): void => {
   if (Platform.OS !== 'web' || typeof document === 'undefined') return;
   polyfillCountryFlagEmojis();
 };
+
+/**
+ * A view that takes the touch for itself on the web: the page neither scrolls nor zooms under a finger that is dragging
+ * what is inside it — the 3D globe one turns, for instance. `touchAction` is a CSS property react-native-web passes
+ * through, hence the cast; on a phone there is no page to scroll, and react-native would warn about the unknown style.
+ */
+export const noPageScroll = (): ViewStyle | undefined =>
+  Platform.OS === 'web' ? ({ touchAction: 'none' } as unknown as ViewStyle) : undefined;
