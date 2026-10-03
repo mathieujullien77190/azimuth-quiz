@@ -8,6 +8,7 @@ import {
   LineBasicMaterial,
   LineDashedMaterial,
   LineLoop,
+  LineSegments,
   Material,
   Mesh,
   MeshBasicMaterial,
@@ -55,8 +56,25 @@ import {
 } from './helpers';
 import type { GlobeScene, GlobeSceneInput } from './types';
 
-/** Read once: the world's outline never changes. */
-const LAND_RINGS = parseRings(GLOBE_LAND_PATH);
+/**
+ * The world's coastlines as one flat list of segment ends, worked out the first time the globe is drawn with the land
+ * on (reading 800 coastlines out of the asset is not work to do at import time, for a ball that may never show them).
+ * The outline never changes — only the colour it is drawn in — so it is kept for the next globe.
+ */
+let landSegments: number[] | null = null;
+
+const worldSegments = (): number[] => {
+  if (landSegments !== null) return landSegments;
+  const built: number[] = [];
+  parseRings(GLOBE_LAND_PATH).forEach((coastline) => {
+    coastline.forEach((point, index) => {
+      // A closed ring: the last point goes back to the first.
+      built.push(...scenePoint(point, LAND_ALTITUDE), ...scenePoint(coastline[(index + 1) % coastline.length], LAND_ALTITUDE));
+    });
+  });
+  landSegments = built;
+  return built;
+};
 
 /** A line (open or closed) through places, drawn at `altitude` above the ball. */
 const polyline = (points: Coordinates[], altitude: number, material: Material, closed: boolean): Line => {
@@ -125,8 +143,11 @@ export const buildGlobeScene = ({ origin, marks, land, equator, greenwich, north
   headlight.position.set(...HEADLIGHT_POSITION);
 
   if (land) {
-    const material = new LineBasicMaterial({ color: colors.land });
-    LAND_RINGS.forEach((coastline) => scene.add(polyline(coastline, LAND_ALTITUDE, material, true)));
+    // Every coast in one object: 800 coastlines of their own would be 800 draws for the graphics card, and the world
+    // can be as detailed as the asset is without that changing.
+    const geometry = new BufferGeometry();
+    geometry.setAttribute('position', new Float32BufferAttribute(worldSegments(), 3));
+    scene.add(new LineSegments(geometry, new LineBasicMaterial({ color: colors.land })));
   }
 
   const guide = () => new LineDashedMaterial({ color: colors.guide, dashSize: GUIDE_DASH, gapSize: GUIDE_GAP });

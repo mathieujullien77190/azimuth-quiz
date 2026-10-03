@@ -1,6 +1,19 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "entry": ["src/app/**/*.{ts,tsx}", "src/**/*.stories.tsx", "admin/src/**/*.{ts,tsx}", "scripts/*.mjs"],
-  "project": ["src/**/*.{ts,tsx}", "admin/src/**/*.{ts,tsx}"],
-  "ignoreDependencies": ["expo-updates", "expo-system-ui", "prettier"]
+  "entry": [
+    "src/app/**/*.{ts,tsx}",
+    "src/**/*.stories.tsx",
+    "admin/src/**/*.{ts,tsx}",
+    "scripts/*.mjs"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "admin/src/**/*.{ts,tsx}"
+  ],
+  "ignoreDependencies": [
+    "expo-updates",
+    "expo-system-ui",
+    "prettier",
+    "world-atlas"
+  ]
 }

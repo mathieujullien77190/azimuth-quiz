@@ -59,13 +59,23 @@ describe('buildGlobeScene', () => {
     expect(dot.position.z).toBeCloseTo(z, 6);
   });
 
-  it('draws the world as one closed line per coastline, above the ball', () => {
+  it('draws the whole world as one object, above the ball', () => {
     const { scene } = build({ land: true });
-    const coastlines = lines(scene);
-    expect(coastlines.length).toBeGreaterThan(50);
-    expect(coastlines.every((line) => line.type === 'LineLoop')).toBe(true);
-    const positions = coastlines[0].geometry.getAttribute('position');
+    const world = lines(scene);
+    // One object for every coast: what the graphics card gets is a single draw, however detailed the outline is.
+    expect(world).toHaveLength(1);
+    expect(world[0].type).toBe('LineSegments');
+    const positions = world[0].geometry.getAttribute('position');
+    // Pairs of ends, thousands of them, all sitting a hair above the ground.
+    expect(positions.count).toBeGreaterThan(10000);
+    expect(positions.count % 2).toBe(0);
     expect(Math.hypot(positions.getX(0), positions.getY(0), positions.getZ(0))).toBeGreaterThan(1);
+  });
+
+  it('works the world out once and keeps it for the next globe', () => {
+    const first = lines(build({ land: true }).scene)[0].geometry.getAttribute('position');
+    const second = lines(build({ land: true }).scene)[0].geometry.getAttribute('position');
+    expect(second.count).toBe(first.count);
   });
 
   it('draws the equator closed and the Greenwich meridian open, both dashed', () => {
@@ -125,7 +135,7 @@ describe('disposeScene', () => {
     const materials = drawn.map((object) => jest.spyOn(object.material as MeshBasicMaterial, 'dispose'));
 
     disposeScene(scene);
-    expect(geometries.length).toBeGreaterThan(50);
+    expect(geometries.length).toBeGreaterThan(3);
     expect(geometries.every((spy) => spy.mock.calls.length > 0)).toBe(true);
     expect(materials.every((spy) => spy.mock.calls.length > 0)).toBe(true);
     // The light has neither, and must not stop the others from being handed back.
