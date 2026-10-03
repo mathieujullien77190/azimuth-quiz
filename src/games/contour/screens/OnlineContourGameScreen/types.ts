@@ -33,7 +33,9 @@ export type OnlineContourGameScreenViewProps = {
   /** What a correct guess earns right now (drops one tier per hint, 0 once the name is out). */
   pointsAtStake: number;
 
+  /** The players in this round's own order (arrival order rotated by the round, see `playersForRound`). */
   players: OnlinePlayer[];
+  /** Index into `players` of whoever holds the turn. */
   turnIndex: number;
   isMyTurn: boolean;
 

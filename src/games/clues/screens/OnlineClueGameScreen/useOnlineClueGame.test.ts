@@ -93,6 +93,13 @@ describe('useOnlineClueGame — the round', () => {
     expect(result.current.remaining).toBeGreaterThan(0);
   });
 
+  it('turns the playing order round by round: the second to arrive opens the second round', async () => {
+    const { result } = await setup();
+    expect(result.current.roundPlayers.map((player) => player.uid)).toEqual(['host', 'guest']);
+    await setGame({ roundIndex: 1, turnUid: 'guest' });
+    expect(result.current.roundPlayers.map((player) => player.uid)).toEqual(['guest', 'host']);
+  });
+
   it('has no distance nor heading before the origin is known', async () => {
     const { result } = await setup({ gameState: gameState({ origin: null }) });
     expect(result.current.distance).toBe(0);
@@ -394,17 +401,23 @@ describe('useOnlineClueGame — who missed, shown to everyone', () => {
 });
 
 describe('useOnlineClueGame — next round', () => {
-  it('lets the host start the next round with the first player, honoring the first-letter option', async () => {
+  it('hands the next round to the next player in the rotation, honoring the first-letter option', async () => {
     jest.mocked(nextClueRoomRound).mockRejectedValueOnce(new Error('offline'));
     const { result } = await setup({ roomSettings: { startWithFirstLetter: true } as never });
     await act(async () => result.current.goToNextRound());
-    expect(nextClueRoomRound).toHaveBeenCalledWith('tabofuna', 1, 2, 'host', true);
+    expect(nextClueRoomRound).toHaveBeenCalledWith('tabofuna', 1, 2, 'guest', true);
+  });
+
+  it('comes back round to the first player after a full turn of the table', async () => {
+    const { result } = await setup({ gameState: gameState({ roundIndex: 1, turnUid: 'guest' }) });
+    await act(async () => result.current.goToNextRound());
+    expect(nextClueRoomRound).toHaveBeenCalledWith('tabofuna', 2, 2, 'host', false);
   });
 
   it('starts without the first letter when there are no settings yet', async () => {
     const { result } = await setup({ roomSettings: null });
     await act(async () => result.current.goToNextRound());
-    expect(nextClueRoomRound).toHaveBeenCalledWith('tabofuna', 1, 2, 'host', false);
+    expect(nextClueRoomRound).toHaveBeenCalledWith('tabofuna', 1, 2, 'guest', false);
   });
 
   it('is left to the host', async () => {

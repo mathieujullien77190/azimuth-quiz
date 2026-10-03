@@ -35,7 +35,7 @@ export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps
   // "the host left" notice `useSetupRoom` shows (it also sends the joiner home, on a tap or after a
   // couple of seconds) — the last state the room delivered is still in the store.
 
-  const { localUid, onlinePlayers, isHost, roomSettings, gameState, place } = game;
+  const { localUid, onlinePlayers, roundPlayers, isHost, roomSettings, gameState, place } = game;
 
   // The final standings come first: once the last round is over `roundIndex` points past the rounds, so
   // there is no round left to load — reading that as "not ready yet" showed the loading splash instead.
@@ -62,8 +62,9 @@ export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps
   }
 
   const myName = onlinePlayers.find((p) => p.uid === localUid)?.name ?? '';
-  const turnIndex = onlinePlayers.findIndex((p) => p.uid === gameState.turnUid);
-  const turnPlayerName = onlinePlayers[turnIndex]?.name ?? '';
+  // The tabs follow the round's order (`roundPlayers`), so the turn index is read on that list.
+  const turnIndex = roundPlayers.findIndex((p) => p.uid === gameState.turnUid);
+  const turnPlayerName = roundPlayers[turnIndex]?.name ?? '';
   const winnerName =
     gameState.roundWinnerUid !== null
       ? (onlinePlayers.find((p) => p.uid === gameState.roundWinnerUid)?.name ?? '')
@@ -95,7 +96,7 @@ export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps
       onQuit={game.handleQuit}
       onSubmitGuess={game.submitGuess}
       place={place}
-      players={onlinePlayers}
+      players={roundPlayers}
       remaining={game.remaining}
       revealedClueIds={gameState.revealedClueIds}
       roundNumber={gameState.roundIndex + 1}

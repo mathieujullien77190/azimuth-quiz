@@ -1,5 +1,5 @@
 import type { RoomPlayers } from './roomBase';
-import { nextPlayerUid, onlinePlayersFrom } from './roomPlayers';
+import { nextPlayerUid, onlinePlayersFrom, playersForRound } from './roomPlayers';
 
 describe('onlinePlayersFrom', () => {
   it('sorts by arrival order, earliest first', () => {
@@ -27,12 +27,35 @@ describe('onlinePlayersFrom', () => {
   });
 });
 
+const players = [
+  { uid: 'a', name: 'Zoé', color: '#EF4444' },
+  { uid: 'b', name: 'Max', color: '#16A34A' },
+  { uid: 'c', name: 'Eve', color: '#3B82F6' },
+];
+
+describe('playersForRound', () => {
+  const uidsForRound = (roundIndex: number) => playersForRound(players, roundIndex).map((player) => player.uid);
+
+  it('is the arrival order for the first round', () => {
+    expect(uidsForRound(0)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('moves the opening on by one player at every round, in the same order', () => {
+    expect(uidsForRound(1)).toEqual(['b', 'c', 'a']);
+    expect(uidsForRound(2)).toEqual(['c', 'a', 'b']);
+  });
+
+  it('comes back round to the first player after a full turn of the table', () => {
+    expect(uidsForRound(3)).toEqual(['a', 'b', 'c']);
+    expect(uidsForRound(7)).toEqual(['b', 'c', 'a']);
+  });
+
+  it('is an empty order with nobody in the room', () => {
+    expect(playersForRound([], 2)).toEqual([]);
+  });
+});
+
 describe('nextPlayerUid', () => {
-  const players = [
-    { uid: 'a', name: 'Zoé', color: '#EF4444' },
-    { uid: 'b', name: 'Max', color: '#16A34A' },
-    { uid: 'c', name: 'Eve', color: '#3B82F6' },
-  ];
 
   it('is the player who arrived right after', () => {
     expect(nextPlayerUid(players, 'a')).toBe('b');

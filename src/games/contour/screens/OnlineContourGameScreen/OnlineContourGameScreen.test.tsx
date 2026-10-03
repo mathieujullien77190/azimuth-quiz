@@ -45,6 +45,8 @@ const setGame = (overrides: Record<string, unknown> = {}) => {
   mockGame = {
     localUid: 'zoe',
     onlinePlayers: [ZOE, MAX],
+    // The round's playing order, rotated by the round number in the hook (`playersForRound`).
+    roundPlayers: [ZOE, MAX],
     isHost: true,
     connectionLost: false,
     connected: true,

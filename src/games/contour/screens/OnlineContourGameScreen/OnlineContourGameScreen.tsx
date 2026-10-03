@@ -35,7 +35,7 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
   // "the host left" notice `useSetupRoom` shows (it also sends the joiner home, on a tap or after a
   // couple of seconds) — the last state the room delivered is still in the store.
 
-  const { localUid, onlinePlayers, isHost, roomSettings, gameState, country } = game;
+  const { localUid, onlinePlayers, roundPlayers, isHost, roomSettings, gameState, country } = game;
 
   // The final standings come first: once the last round is over `roundIndex` points past the rounds, so
   // there is no round left to load — reading that as "not ready yet" showed the loading splash instead.
@@ -63,7 +63,8 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
     return <NoticeOverlay loading message={t.game.loading} />;
 
   const myName = onlinePlayers.find((player) => player.uid === localUid)?.name ?? '';
-  const turnIndex = onlinePlayers.findIndex((player) => player.uid === gameState.turnUid);
+  // The tabs follow the round's order (`roundPlayers`), so the turn index is read on that list.
+  const turnIndex = roundPlayers.findIndex((player) => player.uid === gameState.turnUid);
   const winnerName =
     gameState.roundWinnerUid !== null
       ? onlinePlayers.find((player) => player.uid === gameState.roundWinnerUid)?.name
@@ -86,7 +87,7 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
       isMyTurn={game.isMyTurn}
       lastWrong={game.lastWrong}
       typedByActivePlayer={game.typedByActivePlayer}
-      notice={notYourTurn.visible ? t.contourGame.notYourTurn(onlinePlayers[turnIndex]?.name ?? '') : null}
+      notice={notYourTurn.visible ? t.contourGame.notYourTurn(roundPlayers[turnIndex]?.name ?? '') : null}
       onDismissNotice={notYourTurn.hide}
       onNotYourTurn={notYourTurn.show}
       onChangeGuessText={game.setGuessText}
@@ -95,7 +96,7 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
       onQuit={game.handleQuit}
       onRevealHint={game.isMyTurn ? game.revealHint : notYourTurn.show}
       onSubmitGuess={game.submitGuess}
-      players={onlinePlayers}
+      players={roundPlayers}
       pointsAtStake={game.pointsAtStake}
       roomCode={code}
       roundNumber={gameState.roundIndex + 1}

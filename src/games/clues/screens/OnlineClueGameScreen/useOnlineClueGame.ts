@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { bearingDeg, distanceKm, nameSkeleton } from '@/helpers';
 import { useDebouncedValue } from '@/helpers/useDebouncedValue';
-import { nextPlayerUid } from '@/helpers/roomPlayers';
+import { nextPlayerUid, playersForRound } from '@/helpers/roomPlayers';
 import { useGuessDraft } from '@/helpers/useGuessDraft';
 import { useHostTurnRecovery } from '@/helpers/useHostTurnRecovery';
 import { useHostTurnScoring } from '@/helpers/useHostTurnScoring';
@@ -39,6 +39,9 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
 
   const place = gameState.places[gameState.roundIndex];
   const isMyTurn = localUid !== null && localUid === gameState.turnUid;
+  // Who plays in which order this round: arrival order rotated by the round number, so that each
+  // player in turn opens a round (`playersForRound`). What the tabs show, too.
+  const roundPlayers = playersForRound(onlinePlayers, gameState.roundIndex);
 
   // This device's own in-progress guess text.
   const { guessText, setGuessText } = useGuessDraft(gameState.roundIndex, gameState.turnUid);
@@ -119,7 +122,7 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
   );
   useHostTurnScoring(isHost, gameState, remaining, WRONG_ANSWER_PENALTY, applyScore);
   const passTurn = useCallback((uid: string) => passRoomTurn(code, uid), [code]);
-  useHostTurnRecovery(isHost, gameState, onlinePlayers, passTurn);
+  useHostTurnRecovery(isHost, gameState, roundPlayers, passTurn);
 
   const pickClue = (clueId: ClueId) => {
     if (!isMyTurn || localUid === null) return;
@@ -153,11 +156,13 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
 
   const goToNextRound = () => {
     if (!isHost) return;
-    const firstTurnUid = onlinePlayers[0]?.uid;
+    const nextRoundIndex = gameState.roundIndex + 1;
+    // The next round's own order: the player after this round's opener takes the lead.
+    const firstTurnUid = playersForRound(onlinePlayers, nextRoundIndex)[0]?.uid;
     if (firstTurnUid === undefined) return;
     nextClueRoomRound(
       code,
-      gameState.roundIndex + 1,
+      nextRoundIndex,
       gameState.places.length,
       firstTurnUid,
       roomSettings?.startWithFirstLetter ?? false,
@@ -168,6 +173,7 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     localUid,
     players,
     onlinePlayers,
+    roundPlayers,
     isHost,
     connectionLost,
     connected,

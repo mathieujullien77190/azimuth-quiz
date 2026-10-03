@@ -21,6 +21,18 @@ export const playersByArrival = (players: RoomPlayers): [string, RoomPlayer][] =
     ([, a], [, b]) => (a.joinedAt?.toMillis() ?? Infinity) - (b.joinedAt?.toMillis() ?? Infinity),
   );
 
+/**
+ * The playing order of round `roundIndex` (0-based) in a turn-based game: arrival order rotated by
+ * the round number, so the first to arrive doesn't open every single round — round 0 starts with
+ * the first player, round 1 with the second, and it wraps around. Every device derives it from the
+ * round number alone, so nothing more has to be agreed on in Firestore.
+ *
+ * It is the same ring of players in the same direction, only entered at another place: who plays
+ * after whom within a round stays `nextPlayerUid`'s business.
+ */
+export const playersForRound = (players: OnlinePlayer[], roundIndex: number): OnlinePlayer[] =>
+  players.map((_, index) => players[(index + roundIndex) % players.length]);
+
 /** Who plays after `uid`, in arrival order, wrapping around to the first player after the last one —
  * `undefined` with nobody in the room. A `uid` that isn't listed hands over to the first player. */
 export const nextPlayerUid = (players: OnlinePlayer[], uid: string | null): string | undefined =>

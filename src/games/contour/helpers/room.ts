@@ -112,8 +112,8 @@ export const reportContourRoomWrong = (code: string, uid: string, seq: number): 
 export const applyContourRoomScore = (code: string, totalScores: Record<string, number>): Promise<void> =>
   updateDoc(roomRef(code), { totalScores });
 
-/** Host-only: moves on to the next round (fresh board, first turn back to whoever went first) or,
- * past the last country, ends the game. */
+/** Host-only: moves on to the next round (fresh board, first turn to the next player in the
+ * rotation — see `playersForRound`) or, past the last country, ends the game. */
 export const nextContourRoomRound = (
   code: string,
   roundIndex: number,

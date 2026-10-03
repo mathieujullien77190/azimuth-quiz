@@ -155,6 +155,14 @@ describe('useOnlineContourGame — the round', () => {
     expect(noTurn.result.current.isMyTurn).toBe(false);
   });
 
+  it('turns the playing order round by round: the second to arrive opens the second round', async () => {
+    const { result, unmount } = await setup();
+    expect(result.current.roundPlayers.map((player) => player.uid)).toEqual(['host', 'guest']);
+    await unmount();
+    const second = await setup({ gameState: gameState({ roundIndex: 1, turnUid: 'guest' }) });
+    expect(second.result.current.roundPlayers.map((player) => player.uid)).toEqual(['guest', 'host']);
+  });
+
   it('drops the points at stake with every hint, down to 0 once the country is revealed', async () => {
     // A room without `hintCategories` (an old one) plays every category: 12 steps for France.
     const { result } = await setup();
@@ -428,11 +436,17 @@ describe('useOnlineContourGame — guessing', () => {
 });
 
 describe('useOnlineContourGame — next round', () => {
-  it('lets the host start the next round with the first player', async () => {
+  it('hands the next round to the next player in the rotation', async () => {
     jest.mocked(nextContourRoomRound).mockRejectedValueOnce(new Error('offline'));
     const { result } = await setup();
     await act(async () => result.current.goToNextRound());
-    expect(nextContourRoomRound).toHaveBeenCalledWith('tabofuna', 1, 2, 'host');
+    expect(nextContourRoomRound).toHaveBeenCalledWith('tabofuna', 1, 2, 'guest');
+  });
+
+  it('comes back round to the first player after a full turn of the table', async () => {
+    const { result } = await setup({ gameState: gameState({ roundIndex: 1, turnUid: 'guest' }) });
+    await act(async () => result.current.goToNextRound());
+    expect(nextContourRoomRound).toHaveBeenCalledWith('tabofuna', 2, 2, 'host');
   });
 
   it('is left to the host', async () => {

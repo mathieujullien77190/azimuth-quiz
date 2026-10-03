@@ -126,8 +126,8 @@ export const reportClueRoomWrong = (code: string, uid: string, seq: number): Pro
 export const applyClueRoomScore = (code: string, totalScores: Record<string, number>): Promise<void> =>
   updateDoc(roomRef(code), { totalScores });
 
-/** Host-only: moves on to the next round (fresh board, first turn back to whoever went first) or,
- * past the last place, ends the game. */
+/** Host-only: moves on to the next round (fresh board, first turn to the next player in the
+ * rotation — see `playersForRound`) or, past the last place, ends the game. */
 export const nextClueRoomRound = (
   code: string,
   roundIndex: number,

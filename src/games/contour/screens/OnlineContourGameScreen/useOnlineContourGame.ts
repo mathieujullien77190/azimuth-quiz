@@ -28,7 +28,7 @@ import { roundSimplifySeed } from '@/games/contour/helpers/simplify';
 import { useRoundData } from '@/games/contour/helpers/useRoundData';
 import type { ContourCountry } from '@/types';
 import { useContourRoomStore } from '@/games/contour/store/roomStore';
-import { nextPlayerUid } from '@/helpers/roomPlayers';
+import { nextPlayerUid, playersForRound } from '@/helpers/roomPlayers';
 import { useDebouncedValue } from '@/helpers/useDebouncedValue';
 import { useGuessDraft } from '@/helpers/useGuessDraft';
 import { useHostTurnRecovery } from '@/helpers/useHostTurnRecovery';
@@ -77,6 +77,9 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
   const plan = useMemo(() => orderHintPlan(basePlan, hintPicks), [basePlan, hintPicks]);
   const hintGroups = useMemo(() => hintGroupsView(plan, hintsRevealed), [plan, hintsRevealed]);
   const isMyTurn = localUid !== null && localUid === gameState.turnUid;
+  // Who plays in which order this round: arrival order rotated by the round number, so that each
+  // player in turn opens a round (`playersForRound`). What the tabs show, too.
+  const roundPlayers = playersForRound(onlinePlayers, gameState.roundIndex);
 
   // This device's own in-progress guess text, and the "you got it wrong" banner.
   const { guessText, setGuessText, lastWrong, setLastWrong } = useGuessDraft(gameState.roundIndex, gameState.turnUid);
@@ -111,7 +114,7 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
   );
   useHostTurnScoring(isHost, gameState, pointsAtStake, CONTOUR_WRONG_GUESS_PENALTY, applyScore);
   const passTurn = useCallback((uid: string) => passRoomTurn(code, uid), [code]);
-  useHostTurnRecovery(isHost, gameState, onlinePlayers, passTurn);
+  useHostTurnRecovery(isHost, gameState, roundPlayers, passTurn);
 
   /** Reveals the next step of `group` (the one the player tapped) and passes the turn. The country itself (the
    * `reveal` group) only once every other hint is out. */
@@ -144,9 +147,11 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
   };
 
   const goToNextRound = () => {
-    const firstTurnUid = onlinePlayers[0]?.uid;
+    const nextRoundIndex = gameState.roundIndex + 1;
+    // The next round's own order: the player after this round's opener takes the lead.
+    const firstTurnUid = playersForRound(onlinePlayers, nextRoundIndex)[0]?.uid;
     if (!isHost || firstTurnUid === undefined) return;
-    nextContourRoomRound(code, gameState.roundIndex + 1, gameState.countryCodes.length, firstTurnUid).catch(reporting('silhouette.nextRound', { room: code }));
+    nextContourRoomRound(code, nextRoundIndex, gameState.countryCodes.length, firstTurnUid).catch(reporting('silhouette.nextRound', { room: code }));
   };
 
   return {
@@ -156,6 +161,7 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
     roomSettings,
     gameState,
     onlinePlayers,
+    roundPlayers,
     isHost,
     country,
     neighborCountries,

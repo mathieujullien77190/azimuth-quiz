@@ -70,7 +70,12 @@ quelles regles de `firestore.rules` s'appliquent. Un code d'un autre jeu est ref
   `SetupScreenShell`/`PartySection`/`CategorySection`/`DifficultySection`/`RoundsSection`/`OptionsSection`.
 - **Ecran de jeu** : `useOnlineRoomSession` (etat, hote, joueurs dans l'ordre d'arrivee, redirection « room supprimee »,
   `handleQuit`) ; pour les jeux a tour de role `useHostTurnScoring` (l'hote seul ecrit `totalScores`), `useHostTurnRecovery`
-  (l'hote passe la main si le joueur actif est parti), `useGuessDraft`, `nextPlayerUid`, `useTransientFlag`. Composants :
+  (l'hote passe la main si le joueur actif est parti), `useGuessDraft`, `nextPlayerUid`, `useTransientFlag`. **L'ordre des
+  joueurs tourne d'une manche a l'autre** (Indices et Silhouette) : `playersForRound(onlinePlayers, roundIndex)` =
+  l'ordre d'arrivee decale du numero de manche, donc la manche 1 commence par le 1er arrive, la manche 2 par le 2e, etc.
+  (rien de plus dans Firestore : chaque appareil le deduit de `roundIndex`). C'est le meme anneau dans le meme sens, seul le
+  point d'entree change : `nextPlayerUid` reste sur l'ordre d'arrivee. Les hooks exposent `roundPlayers` (les onglets
+  `PlayerTabs` et `turnIndex` suivent cet ordre) ; `useHostTurnRecovery` rend la main au 1er de la manche. Composants :
   `GameHeader`/`GameFooter`, `NoticeOverlay`, `RoomDeletedScreen`, `FinalStandings`.
 - **Pas de partie locale** : jouer seul = heberger une room *cachee* (`hostedSilently` dans `useSetupRoom`), donc il faut du
   reseau. `startOnlineGame(run)` couvre les deux cas ; ce que `run` lit dans la room est lu *dans* `run`.
@@ -148,7 +153,7 @@ tire** : le document `places/{cle}` porte les copies (`country`, `clues.riddles`
 
 ## Silhouette
 
-Un plateau partage, un joueur actif a la fois (`turnUid`, ordre d'arrivee). A son tour il **choisit le prochain indice du
+Un plateau partage, un joueur actif a la fois (`turnUid`, ordre d'arrivee tourne par manche, voir `playersForRound`). A son tour il **choisit le prochain indice du
 groupe qu'il veut** (ce qui passe la main) ou tente une reponse (bonne : `verdict: 'correct'`, gain
 `contourGuessPoints(hintsRevealed, plan.length)` ; mauvaise : `wrongGuessSeq` +1, penalite `CONTOUR_WRONG_GUESS_PENALTY`, il
 garde la main). Une fois le pays revele il confirme l'abandon (`verdict: 'giveUp'`, personne ne marque, message « Personne

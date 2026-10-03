@@ -26,7 +26,9 @@ export type OnlineClueGameScreenViewProps = {
   skeletonGroups: NameSkeletonSlot[][];
   skeletonLengthKnown: boolean;
 
+  /** The players in this round's own order (arrival order rotated by the round, see `playersForRound`). */
   players: OnlinePlayer[];
+  /** Index into `players` of whoever holds the turn. */
   turnIndex: number;
   isMyTurn: boolean;
   /** The turn-holder's in-progress answer text, live — empty when there is nothing to show (this
