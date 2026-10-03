@@ -3,124 +3,121 @@ import { PanResponder } from 'react-native';
 
 import type { EarthMark } from '@/components/EarthSection';
 
-import { SATELLITE_QUIP } from '@/components/EarthSection/constants';
+import { PLAYER_LABEL, SATELLITE_QUIP } from '@/components/EarthSection/constants';
 import { ThemeSettingsContext } from '@/themes';
 
-import { CAPTION_GLOBE, ORBIT_MS, POLE_RADIUS } from './constants';
+import { CAPTION_GLOBE, ORBIT_MS, RESET_HINT, ZOOM_IN_HINT, ZOOM_OUT_HINT } from './constants';
 import Globe3D from '.';
 
+// The OpenGL surface, and the graphics card behind it: the globe is drawn for real everywhere else (see `scene.test.ts`),
+// here only what the component asks of the surface matters.
+jest.mock('expo-gl', () => {
+  /* eslint-disable @typescript-eslint/no-require-imports -- a jest.mock factory runs before the imports it would use */
+  const React = require('react');
+  const { View } = require('react-native');
+  /* eslint-enable @typescript-eslint/no-require-imports */
+  const context = { drawingBufferWidth: 240, drawingBufferHeight: 240, endFrameEXP: jest.fn() };
+  return {
+    __context: context,
+    GLView: ({ onContextCreate, ...props }: { onContextCreate: (gl: unknown) => void }) => {
+      // The surface arrives just after the first drawing, as on a device.
+      React.useEffect(() => onContextCreate(context), [onContextCreate]);
+      return React.createElement(View, props);
+    },
+  };
+});
+
+jest.mock('./renderer', () => {
+  const renderer = {
+    render: jest.fn(),
+    setSize: jest.fn(),
+    setClearColor: jest.fn(),
+    dispose: jest.fn(),
+  };
+  return { __renderer: renderer, createRenderer: jest.fn(() => renderer) };
+});
+
+const { __context: gl } = jest.requireMock('expo-gl');
+const { __renderer: renderer } = jest.requireMock('./renderer');
+
 const PARIS = { latitude: 48.8566, longitude: 2.3522 };
-const answer: EarthMark = { bearing: 291.6, distanceKm: 5837, color: '#EF4444' };
+const answer: EarthMark = { bearing: 261.4, distanceKm: 6079, color: '#EF4444' };
 
-type Json = { type?: string; props?: { content?: string | null }; children?: Json[] | null };
 type PanConfig = Parameters<typeof PanResponder.create>[0];
+/** A one-finger move of the gesture (no pinch). */
+const oneFinger = { nativeEvent: { touches: [{ pageX: 0, pageY: 0 }] } } as never;
+const pinch = (gap: number) =>
+  ({ nativeEvent: { touches: [{ pageX: 0, pageY: 0 }, { pageX: 0, pageY: gap }] } }) as never;
 
-/** The svg text node of the origin label (react-native-svg text is not reachable by the text queries). */
-const hasLabel = (node: Json): boolean =>
-  (node.type === 'RNSVGText' && node.children?.[0]?.props?.content === 'toi') || (node.children ?? []).some(hasLabel);
+/** Renders the globe and hands over the touch handlers it just set up. */
+const renderGlobe = async (props: Partial<React.ComponentProps<typeof Globe3D>> = {}) => {
+  const createSpy = jest.spyOn(PanResponder, 'create');
+  const screen = await render(<Globe3D marks={[answer]} origin={PARIS} size={240} {...props} />);
+  const config =
+    createSpy.mock.calls.length === 0 ? undefined : (createSpy.mock.calls[createSpy.mock.calls.length - 1][0] as PanConfig);
+  createSpy.mockRestore();
+  return { ...screen, config: config as PanConfig };
+};
+
+beforeEach(() => jest.clearAllMocks());
 
 describe('Globe3D', () => {
-  it('renders the globe with the origin labelled', async () => {
-    const { getByLabelText, toJSON } = await render(<Globe3D marks={[answer]} origin={PARIS} size={240} />);
+  it('draws the globe once the surface is there, and labels the starting point and the pole', async () => {
+    const { getByLabelText, queryByText } = await renderGlobe();
     expect(getByLabelText(CAPTION_GLOBE)).toBeTruthy();
-    expect(hasLabel(toJSON() as Json)).toBe(true);
+    expect(queryByText(PLAYER_LABEL)).toBeTruthy();
+    expect(queryByText('N')).toBeTruthy();
+    expect(renderer.render).toHaveBeenCalled();
+    expect(gl.endFrameEXP).toHaveBeenCalled();
   });
 
-  it('renders the true answer as a circled point and a faded answer without crashing', async () => {
-    const marks: EarthMark[] = [
-      { ...answer, isTruth: true },
-      { ...answer, color: '#16A34A', opacity: 0.4 },
-    ];
-    const { toJSON } = await render(<Globe3D marks={marks} origin={PARIS} size={240} />);
-    expect(toJSON()).toBeTruthy();
+  it('draws nothing more while nothing changes', async () => {
+    await renderGlobe();
+    const drawings = renderer.render.mock.calls.length;
+    await act(async () => {});
+    expect(renderer.render.mock.calls.length).toBe(drawings);
   });
 
-  it('renders without answers', async () => {
-    const { toJSON } = await render(<Globe3D marks={[]} origin={PARIS} size={240} />);
-    expect(hasLabel(toJSON() as Json)).toBe(true);
+  it('hands the graphics card back on the way out', async () => {
+    const { unmount } = await renderGlobe();
+    await unmount();
+    expect(renderer.dispose).toHaveBeenCalled();
   });
 
-  it('turns with the finger until the starting point and the true answer are behind the globe', async () => {
-    const createSpy = jest.spyOn(PanResponder, 'create');
-    const { toJSON } = await render(<Globe3D marks={[{ ...answer, isTruth: true }]} origin={PARIS} size={240} />);
-    const config = createSpy.mock.calls[createSpy.mock.calls.length - 1][0] as PanConfig;
+  it('can be left without a pole, and without answers', async () => {
+    const { queryByText } = await renderGlobe({ marks: [], north: false });
+    expect(queryByText('N')).toBeNull();
+    expect(queryByText(PLAYER_LABEL)).toBeTruthy();
+  });
+});
+
+describe('Globe3D — turning it with a finger', () => {
+  it('asks for the touches and keeps them once it has them', async () => {
+    const { config } = await renderGlobe();
     expect(config.onStartShouldSetPanResponder?.({} as never, {} as never)).toBe(true);
     expect(config.onMoveShouldSetPanResponder?.({} as never, {} as never)).toBe(true);
     expect(config.onPanResponderTerminationRequest?.({} as never, {} as never)).toBe(false);
+  });
 
-    await act(() => config.onPanResponderGrant?.({} as never, {} as never));
+  it('turns until the starting point and the pole are behind the globe, and draws it again', async () => {
+    const { config, queryByText } = await renderGlobe({ marks: [{ ...answer, isTruth: true }] });
+    const drawings = renderer.render.mock.calls.length;
+
+    await act(() => config.onPanResponderGrant?.(oneFinger, {} as never));
     // Moves are cumulative within a gesture: the second one only adds what is new since the first.
-    await act(() => config.onPanResponderMove?.({} as never, { dx: 10, dy: -1000 } as never));
-    await act(() => config.onPanResponderMove?.({} as never, { dx: 20, dy: -2000 } as never));
-    expect(hasLabel(toJSON() as Json)).toBe(false);
+    await act(() => config.onPanResponderMove?.(oneFinger, { dx: 10, dy: -1000 } as never));
+    await act(() => config.onPanResponderMove?.(oneFinger, { dx: 20, dy: -2000 } as never));
+    expect(queryByText(PLAYER_LABEL)).toBeNull();
+    expect(queryByText('N')).toBeNull();
+    expect(renderer.render.mock.calls.length).toBeGreaterThan(drawings);
 
     // A new gesture starts from zero again: tipping the other way brings the starting point back.
-    await act(() => config.onPanResponderGrant?.({} as never, {} as never));
-    await act(() => config.onPanResponderMove?.({} as never, { dx: 0, dy: 4000 } as never));
-    expect(hasLabel(toJSON() as Json)).toBe(true);
-    createSpy.mockRestore();
-  });
-});
-
-/** How many svg paths are drawn: the land, then the guides and the routes. */
-const countPaths = (node: Json): number =>
-  (node.type === 'RNSVGPath' ? 1 : 0) + (node.children ?? []).reduce((total, child) => total + countPaths(child), 0);
-
-describe('Globe3D — land and guides', () => {
-  const paths = async (props: Partial<React.ComponentProps<typeof Globe3D>>) => {
-    const { toJSON } = await render(<Globe3D marks={[]} origin={PARIS} size={240} {...props} />);
-    return countPaths(toJSON() as Json);
-  };
-
-  it('draws the land by default, and none without it', async () => {
-    expect(await paths({})).toBe(1);
-    expect(await paths({ land: false })).toBe(0);
+    await act(() => config.onPanResponderGrant?.(oneFinger, {} as never));
+    await act(() => config.onPanResponderMove?.(oneFinger, { dx: 0, dy: 4000 } as never));
+    expect(queryByText(PLAYER_LABEL)).toBeTruthy();
   });
 
-  it('draws the equator and the Greenwich meridian on request, seen from where the origin is', async () => {
-    expect(await paths({ land: false, equator: true })).toBeGreaterThanOrEqual(1);
-    expect(await paths({ land: false, greenwich: true })).toBeGreaterThanOrEqual(1);
-    expect(await paths({ land: false, equator: true, greenwich: true })).toBeGreaterThan(
-      await paths({ land: false, equator: true }),
-    );
-  });
-});
-
-describe('Globe3D — north pole', () => {
-  type Node = { type?: string; props?: { r?: number; content?: string | null }; children?: Node[] | null };
-  const count = (node: Node, test: (n: Node) => boolean): number =>
-    (test(node) ? 1 : 0) + (node.children ?? []).reduce((total, child) => total + count(child, test), 0);
-  const isLine = (n: Node) => n.type === 'RNSVGLine';
-  const isN = (n: Node) => n.type === 'RNSVGTSpan' && n.props?.content === 'N';
-  const isPole = (n: Node) => n.type === 'RNSVGCircle' && n.props?.r === POLE_RADIUS;
-
-  it('marks the north pole with a dot and an N, and no line', async () => {
-    const { toJSON } = await render(<Globe3D marks={[]} origin={PARIS} size={240} />);
-    expect(count(toJSON() as Node, isPole)).toBe(1);
-    expect(count(toJSON() as Node, isN)).toBe(1);
-    expect(count(toJSON() as Node, isLine)).toBe(0);
-  });
-
-  it('loses both once the globe is tipped so that the north pole is behind', async () => {
-    const createSpy = jest.spyOn(PanResponder, 'create');
-    const { toJSON } = await render(<Globe3D marks={[]} origin={PARIS} size={240} />);
-    const config = createSpy.mock.calls[createSpy.mock.calls.length - 1][0] as PanConfig;
-    await act(() => config.onPanResponderGrant?.({} as never, {} as never));
-    await act(() => config.onPanResponderMove?.({} as never, { dx: 0, dy: -4000 } as never));
-    expect(count(toJSON() as Node, isPole)).toBe(0);
-    expect(count(toJSON() as Node, isN)).toBe(0);
-    createSpy.mockRestore();
-  });
-
-  it('can be left out', async () => {
-    const { toJSON } = await render(<Globe3D marks={[]} north={false} origin={PARIS} size={240} />);
-    expect(count(toJSON() as Node, isPole)).toBe(0);
-    expect(count(toJSON() as Node, isN)).toBe(0);
-  });
-});
-
-describe('Globe3D — fixed', () => {
-  it('has no touch handlers when it cannot be turned', async () => {
+  it('has no touch handlers at all when it cannot be turned', async () => {
     const fixed = await render(<Globe3D draggable={false} marks={[]} origin={PARIS} size={240} />);
     const turnable = await render(<Globe3D marks={[]} origin={PARIS} size={240} />);
     const handlers = (tree: unknown) => (tree as { props: Record<string, unknown> }).props.onStartShouldSetResponder;
@@ -129,12 +126,68 @@ describe('Globe3D — fixed', () => {
   });
 });
 
+describe('Globe3D — zooming', () => {
+  /** The satellite only flies over the unzoomed globe: it says whether the zoom moved. */
+  const zoomed = (queryByText: (text: string) => unknown) => queryByText('🛰️') === null;
+
+  it('zooms in and out with two fingers', async () => {
+    const { config, queryByText } = await renderGlobe();
+    await act(() => config.onPanResponderGrant?.(pinch(100), {} as never));
+    await act(() => config.onPanResponderMove?.(pinch(100), { dx: 0, dy: 0 } as never));
+    // The first move only tells how far apart the fingers are; the next one is what spreads them.
+    expect(zoomed(queryByText)).toBe(false);
+    await act(() => config.onPanResponderMove?.(pinch(300), { dx: 0, dy: 0 } as never));
+    expect(zoomed(queryByText)).toBe(true);
+
+    await act(() => config.onPanResponderMove?.(pinch(50), { dx: 0, dy: 0 } as never));
+    expect(zoomed(queryByText)).toBe(false);
+  });
+
+  it('does not jump when a pinch goes back to a single finger', async () => {
+    const { config, queryByText } = await renderGlobe();
+    await act(() => config.onPanResponderGrant?.(pinch(100), {} as never));
+    await act(() => config.onPanResponderMove?.(pinch(100), { dx: 200, dy: 0 } as never));
+    // Only the fingers spreading counted so far: lifting one and carrying on turns from there, not from the start.
+    await act(() => config.onPanResponderMove?.(oneFinger, { dx: 200, dy: 0 } as never));
+    expect(queryByText(PLAYER_LABEL)).toBeTruthy();
+  });
+
+  it('zooms with the buttons, and the ⌖ N button puts the globe back where it started', async () => {
+    const { config, getByLabelText, queryByText } = await renderGlobe();
+    await fireEvent.press(getByLabelText(ZOOM_IN_HINT));
+    expect(zoomed(queryByText)).toBe(true);
+    await fireEvent.press(getByLabelText(ZOOM_OUT_HINT));
+    expect(zoomed(queryByText)).toBe(false);
+
+    await act(() => config.onPanResponderGrant?.(oneFinger, {} as never));
+    await act(() => config.onPanResponderMove?.(oneFinger, { dx: 0, dy: -2000 } as never));
+    await fireEvent.press(getByLabelText(ZOOM_IN_HINT));
+    expect(queryByText(PLAYER_LABEL)).toBeNull();
+
+    await fireEvent.press(getByLabelText(RESET_HINT));
+    expect(queryByText(PLAYER_LABEL)).toBeTruthy();
+    expect(zoomed(queryByText)).toBe(false);
+  });
+
+  it('has no buttons when the globe is fixed', async () => {
+    const { queryByLabelText } = await renderGlobe({ draggable: false });
+    expect(queryByLabelText(ZOOM_IN_HINT)).toBeNull();
+    expect(queryByLabelText(RESET_HINT)).toBeNull();
+  });
+
+  it('can be turned without the buttons', async () => {
+    const { queryByLabelText, config } = await renderGlobe({ controls: false });
+    expect(queryByLabelText(ZOOM_IN_HINT)).toBeNull();
+    expect(config).toBeDefined();
+  });
+});
+
 describe('Globe3D — satellite', () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
 
   it('flies over the starting point, goes behind the globe and comes back', async () => {
-    const { queryByText } = await render(<Globe3D marks={[answer]} origin={PARIS} size={240} />);
+    const { queryByText } = await renderGlobe();
     expect(queryByText('🛰️')).toBeTruthy();
     await act(() => jest.advanceTimersByTime(ORBIT_MS / 2));
     expect(queryByText('🛰️')).toBeNull();
@@ -143,7 +196,7 @@ describe('Globe3D — satellite', () => {
   });
 
   it('shows a joke when the satellite is tapped, and hides it on a second tap', async () => {
-    const { getByText, queryByText } = await render(<Globe3D marks={[answer]} origin={PARIS} size={240} />);
+    const { getByText, queryByText } = await renderGlobe();
     expect(queryByText(SATELLITE_QUIP)).toBeNull();
     await fireEvent.press(getByText('🛰️'));
     expect(getByText(SATELLITE_QUIP)).toBeTruthy();
@@ -153,18 +206,15 @@ describe('Globe3D — satellite', () => {
 
   it('follows the true answer when there is one', async () => {
     const marks: EarthMark[] = [answer, { ...answer, bearing: 90, isTruth: true }];
-    const { queryByText } = await render(<Globe3D marks={marks} origin={PARIS} size={240} />);
+    const { queryByText } = await renderGlobe({ marks });
     expect(queryByText('🛰️')).toBeTruthy();
   });
 
-  it('has no satellite when asked not to have one', async () => {
-    const { queryByText } = await render(<Globe3D marks={[answer]} origin={PARIS} satellite={false} size={240} />);
-    expect(queryByText('🛰️')).toBeNull();
-  });
-
-  it('has no satellite without an answer to follow', async () => {
-    const { queryByText } = await render(<Globe3D marks={[]} origin={PARIS} size={240} />);
-    expect(queryByText('🛰️')).toBeNull();
+  it('has none when asked not to, and none without an answer to follow', async () => {
+    const asked = await renderGlobe({ satellite: false });
+    expect(asked.queryByText('🛰️')).toBeNull();
+    const empty = await renderGlobe({ marks: [] });
+    expect(empty.queryByText('🛰️')).toBeNull();
   });
 
   it('has no satellite, nor plane, by day', async () => {

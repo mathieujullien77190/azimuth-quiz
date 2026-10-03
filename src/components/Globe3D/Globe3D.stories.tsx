@@ -17,15 +17,15 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Two answers from Paris: the true one (a circled point, no route) and a guess whose route follows the curve of the ball.
- * Drag the globe to turn it. */
+/** Two answers from Paris: the true one (a circled point, no route) and a guess whose route follows the curve of the
+ * ball. Drag the globe to turn it, pinch (or +/−) to zoom, "⌖ N" to put it back where it opened, north up. */
 export const ParisNewYork: Story = {
   parameters: source(parisNewYorkCode),
   args: {
     size: 320,
     origin: { latitude: 48.8566, longitude: 2.3522 },
     marks: [
-      { bearing: 291.6, distanceKm: 5837, color: SAMPLE_PLAYERS[0].color, isTruth: true },
+      { bearing: 261.4, distanceKm: 6079, color: SAMPLE_PLAYERS[0].color, isTruth: true },
       { bearing: 270, distanceKm: 5000, color: SAMPLE_PLAYERS[1].color },
     ],
   },
@@ -38,12 +38,13 @@ export const TokyoSydney: Story = {
   args: {
     size: 320,
     origin: { latitude: 35.68, longitude: 139.69 },
-    marks: [{ bearing: 160, distanceKm: 7800, color: SAMPLE_PLAYERS[2].color }],
+    marks: [{ bearing: 171.2, distanceKm: 7826, color: SAMPLE_PLAYERS[2].color }],
   },
 };
 
 /** The bare ball with the equator and the Greenwich meridian (dashed): enough to read where the answer is, without the
- * land. This is the first stage of the Clues game's 3D clue. */
+ * land. This is the first stage of the Clues game's 3D clue, where the card's taps matter more than turning the globe:
+ * `draggable={false}` also takes the buttons away. */
 export const BareWithGuides: Story = {
   parameters: source(bareWithGuidesCode),
   args: {
@@ -52,6 +53,7 @@ export const BareWithGuides: Story = {
     land: false,
     equator: true,
     greenwich: true,
-    marks: [{ bearing: 291.6, distanceKm: 5837, color: SAMPLE_PLAYERS[0].color, isTruth: true }],
+    draggable: false,
+    marks: [{ bearing: 261.4, distanceKm: 6079, color: SAMPLE_PLAYERS[0].color, isTruth: true }],
   },
 };

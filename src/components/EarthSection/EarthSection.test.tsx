@@ -4,7 +4,7 @@ import { Animated } from 'react-native';
 import { EARTH_RADIUS_KM } from '@/data';
 import { ThemeSettingsContext } from '@/themes';
 
-import { CAPTION_GLOBE } from '@/components/Globe3D/constants';
+import { CAPTION_GLOBE, RESET_HINT, ZOOM_IN_HINT } from '@/components/Globe3D/constants';
 
 import {
   CAPTION_SURFACE,
@@ -102,13 +102,17 @@ describe('EarthSection — 3D globe', () => {
     expect(queryByLabelText(CAPTION_SURFACE)).toBeNull();
   });
 
-  it('has no zoom buttons on the globe, which come back with the 2D Earth', async () => {
-    const { getByText, queryByText } = await render(
+  it('leaves the zooming to the globe, and takes it back with the 2D Earth', async () => {
+    const { getByLabelText, getByText, queryByLabelText, queryByText } = await render(
       <EarthSection allowSatellite={false} marks={[farMark]} origin={PARIS} size={240} zoomControls />,
     );
-    expect(queryByText('+')).toBeNull();
-    expect(queryByText('−')).toBeNull();
+    // The globe zooms by itself (and puts itself back north), continuously: not by the Earth's ladder of zoom steps.
+    expect(getByLabelText(ZOOM_IN_HINT)).toBeTruthy();
+    expect(getByLabelText(RESET_HINT)).toBeTruthy();
+
     await fireEvent.press(getByText(SWITCH_TO_EARTH));
+    expect(queryByLabelText(ZOOM_IN_HINT)).toBeNull();
+    expect(queryByLabelText(RESET_HINT)).toBeNull();
     expect(queryByText('+')).toBeTruthy();
     expect(queryByText('−')).toBeTruthy();
   });

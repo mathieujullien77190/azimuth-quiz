@@ -1,58 +1,51 @@
 import { EARTH_RADIUS_KM } from '@/data';
+import { rhumbDestination } from '@/helpers/geo';
 
-import { MAX_CENTER_LATITUDE } from './constants';
+import { MAX_CENTER_LATITUDE, MAX_ZOOM, MIN_ZOOM } from './constants';
 import {
   centerOn,
-  destinationPoint,
-  routePoints,
-  wrapLongitude,
   dragCenter,
   equatorPoints,
+  fingerGap,
+  greatCirclePoint,
   greenwichPoints,
-  landPath,
   orbitPoint,
   parseRings,
-  routePaths,
+  polylinePositions,
+  routePoints,
+  scenePoint,
   screenPoint,
   viewPoint,
+  zoomedBy,
 } from './helpers';
 
 const PARIS = { latitude: 48.8566, longitude: 2.3522 };
 
-describe('wrapLongitude', () => {
-  it('keeps a valid longitude and wraps the others', () => {
-    expect(wrapLongitude(10)).toBeCloseTo(10);
-    expect(wrapLongitude(190)).toBeCloseTo(-170);
-    expect(wrapLongitude(-190)).toBeCloseTo(170);
-    expect(wrapLongitude(540)).toBeCloseTo(-180);
-  });
-});
-
-describe('destinationPoint', () => {
+describe('greatCirclePoint', () => {
   it('stays put for a distance of 0', () => {
-    const point = destinationPoint(PARIS, 123, 0);
+    const point = greatCirclePoint(PARIS, 123, 0);
     expect(point.latitude).toBeCloseTo(PARIS.latitude, 6);
     expect(point.longitude).toBeCloseTo(PARIS.longitude, 6);
   });
 
   it('goes up the same meridian heading north, a quarter of the Earth away reaches the pole', () => {
-    const point = destinationPoint({ latitude: 0, longitude: 20 }, 0, (Math.PI / 2) * EARTH_RADIUS_KM);
+    const point = greatCirclePoint({ latitude: 0, longitude: 20 }, 0, (Math.PI / 2) * EARTH_RADIUS_KM);
     expect(point.latitude).toBeCloseTo(90, 4);
   });
 
   it('follows the equator heading east', () => {
-    const point = destinationPoint({ latitude: 0, longitude: 0 }, 90, (Math.PI / 2) * EARTH_RADIUS_KM);
+    const point = greatCirclePoint({ latitude: 0, longitude: 0 }, 90, (Math.PI / 2) * EARTH_RADIUS_KM);
     expect(point.latitude).toBeCloseTo(0, 6);
     expect(point.longitude).toBeCloseTo(90, 4);
   });
 
   it('comes out on the other side of the date line', () => {
-    const point = destinationPoint({ latitude: 0, longitude: 170 }, 90, (Math.PI / 9) * EARTH_RADIUS_KM);
+    const point = greatCirclePoint({ latitude: 0, longitude: 170 }, 90, (Math.PI / 9) * EARTH_RADIUS_KM);
     expect(point.longitude).toBeCloseTo(-170, 3);
   });
 
-  it('lands on a known place: Paris to New York is about 5837 km on a heading of 291 degrees', () => {
-    const point = destinationPoint(PARIS, 291.6, 5837);
+  it('takes the shortest way: Paris to New York is 5837 km, leaving on a heading of 291 degrees', () => {
+    const point = greatCirclePoint(PARIS, 291.6, 5837);
     expect(point.latitude).toBeCloseTo(40.7, 0);
     expect(point.longitude).toBeCloseTo(-74, 0);
   });
@@ -60,15 +53,16 @@ describe('destinationPoint', () => {
 
 describe('routePoints', () => {
   it('goes from the origin to the destination in `steps` segments', () => {
-    const points = routePoints(PARIS, 291.6, 5837, 8);
+    const points = routePoints(PARIS, 261.4, 6079, 8);
     expect(points).toHaveLength(9);
     expect(points[0].latitude).toBeCloseTo(PARIS.latitude, 6);
-    expect(points[8]).toEqual(destinationPoint(PARIS, 291.6, 5837));
+    expect(points[8]).toEqual(rhumbDestination(PARIS, 261.4, 6079));
   });
 
-  it('is not a straight line on a flat map: heading due east it starts at its northernmost point then curves back', () => {
-    const middle = routePoints({ latitude: 40, longitude: -100 }, 90, 9000, 2)[1];
-    expect(middle.latitude).toBeLessThan(40);
+  it('holds its heading all along: due east it stays on its parallel, at even steps of longitude', () => {
+    const points = routePoints({ latitude: 40, longitude: -100 }, 90, 9000, 2);
+    expect(points[1].latitude).toBeCloseTo(40, 6);
+    expect(points[1].longitude - points[0].longitude).toBeCloseTo(points[2].longitude - points[1].longitude, 6);
   });
 });
 
@@ -88,6 +82,55 @@ describe('parseRings', () => {
         { latitude: 5, longitude: 7 },
       ],
     ]);
+  });
+});
+
+describe('scenePoint', () => {
+  it('puts the Greenwich meridian in front of the camera, the north pole up and the east on the right', () => {
+    expect(scenePoint(ORIGIN)).toEqual([0, 0, 1]);
+    const [x, y, z] = scenePoint({ latitude: 90, longitude: 0 });
+    expect(x).toBeCloseTo(0);
+    expect(y).toBeCloseTo(1);
+    expect(z).toBeCloseTo(0);
+    expect(scenePoint({ latitude: 0, longitude: 90 })[0]).toBeCloseTo(1);
+    expect(scenePoint({ latitude: 0, longitude: -90 })[0]).toBeCloseTo(-1);
+  });
+
+  it('is on a ball of radius 1, or of `altitude` when asked', () => {
+    expect(Math.hypot(...scenePoint(PARIS))).toBeCloseTo(1, 6);
+    expect(Math.hypot(...scenePoint(PARIS, 1.5))).toBeCloseTo(1.5, 6);
+  });
+
+});
+
+describe('polylinePositions', () => {
+  it('lays every point out in a row, three numbers each', () => {
+    const positions = polylinePositions([ORIGIN, { latitude: 0, longitude: 90 }], 1);
+    expect(positions).toHaveLength(6);
+    expect(positions.slice(0, 3)).toEqual([0, 0, 1]);
+    expect(positions[3]).toBeCloseTo(1);
+  });
+});
+
+describe('zoomedBy', () => {
+  it('multiplies the zoom', () => {
+    expect(zoomedBy(2, 1.5)).toBe(3);
+  });
+
+  it('never goes past the limits', () => {
+    expect(zoomedBy(1, 0.1)).toBe(MIN_ZOOM);
+    expect(zoomedBy(4, 100)).toBe(MAX_ZOOM);
+  });
+});
+
+describe('fingerGap', () => {
+  it('is how far apart two fingers are', () => {
+    expect(fingerGap([{ pageX: 0, pageY: 0 }, { pageX: 3, pageY: 4 }])).toBe(5);
+  });
+
+  it('is nothing with a single finger on the glass', () => {
+    expect(fingerGap([{ pageX: 0, pageY: 0 }])).toBeNull();
+    expect(fingerGap([])).toBeNull();
   });
 });
 
@@ -130,104 +173,6 @@ describe('screenPoint', () => {
     const point = screenPoint({ latitude: 0, longitude: 180 }, ORIGIN, 100, 100, 50);
     expect(Number.isFinite(point.x)).toBe(true);
     expect(Number.isFinite(point.y)).toBe(true);
-  });
-});
-
-describe('landPath', () => {
-  const ring = [
-    { latitude: 0, longitude: -10 },
-    { latitude: 10, longitude: 0 },
-    { latitude: 0, longitude: 10 },
-  ];
-  const behind = ring.map((point) => ({ ...point, longitude: point.longitude + 180 }));
-  const arcs = (d: string) => d.match(/A50 50 0 [01] [01]/g) ?? [];
-  /** Every point of the path that is not an arc's radius or flags (those are drawn from the outline, not placed). */
-  const points = (d: string) =>
-    (d.replace(/A[^LZ]*/g, '').match(/-?\d+\.\d \d+\.\d/g) ?? []).map((pair) => pair.split(' ').map(Number));
-  const inside = (d: string) =>
-    points(d).forEach(([x, y]) => expect(Math.hypot(x - 100, y - 100)).toBeLessThanOrEqual(50.1));
-
-  it('draws a ring that is in front through its points, with no arc', () => {
-    const d = landPath([ring], ORIGIN, 100, 100, 50);
-    expect(d.startsWith('M')).toBe(true);
-    expect(d.endsWith('Z')).toBe(true);
-    expect(d.match(/L/g)).toHaveLength(2);
-    expect(arcs(d)).toEqual([]);
-  });
-
-  it('skips a ring that is entirely behind the globe', () => {
-    expect(landPath([behind], ORIGIN, 100, 100, 50)).toBe('');
-  });
-
-  it('cuts a ring at the outline and follows the outline where it goes behind the globe', () => {
-    const cut = [ring[0], { latitude: 40, longitude: 150 }, ring[2]];
-    const d = landPath([cut], ORIGIN, 100, 100, 50);
-    expect(arcs(d)).toHaveLength(1);
-    inside(d);
-  });
-
-  it('draws the same piece whichever point of the ring comes first', () => {
-    const cut = [ring[0], { latitude: 40, longitude: 150 }, ring[2]];
-    const shifted = [cut[1], cut[2], cut[0]];
-    expect(arcs(landPath([shifted], ORIGIN, 100, 100, 50))).toHaveLength(1);
-    inside(landPath([shifted], ORIGIN, 100, 100, 50));
-  });
-
-  it('runs the outline the other way, with the other flag, for a ring that goes the other way round', () => {
-    const cut = [ring[0], { latitude: 40, longitude: 150 }, ring[2]];
-    const [one = ''] = arcs(landPath([cut], ORIGIN, 100, 100, 50));
-    const [other = ''] = arcs(landPath([[...cut].reverse()], ORIGIN, 100, 100, 50));
-    expect(one.slice(-1)).not.toBe(other.slice(-1));
-  });
-
-  it('takes the short arc of the outline for a thin piece that dips in front of the globe', () => {
-    const dip = [
-      { latitude: 0, longitude: -60 },
-      { latitude: 5, longitude: 100 },
-      { latitude: 0, longitude: 60 },
-    ];
-    expect(arcs(landPath([dip], ORIGIN, 100, 100, 50))[0]?.[9]).toBe('0');
-  });
-
-  it('joins the stretches of coast that stay in front, each to the next one met along the outline', () => {
-    // Two peninsulas poking out in front of the globe from a land mass that is behind it.
-    const bays = [
-      { latitude: 0, longitude: 100 },
-      { latitude: 30, longitude: 60 },
-      { latitude: 60, longitude: 100 },
-      { latitude: 0, longitude: 100 },
-      { latitude: -30, longitude: 60 },
-      { latitude: -60, longitude: 100 },
-    ];
-    const d = landPath([bays], ORIGIN, 100, 100, 50);
-    expect(arcs(d)).toHaveLength(2);
-    expect(d.match(/M/g)).toHaveLength(2);
-    inside(d);
-  });
-});
-
-describe('routePaths', () => {
-  const around = [0, 45, 90, 135, 180, 225, 270, 315, 360].map((longitude) => ({ latitude: 0, longitude }));
-
-  it('keeps one piece for a route that stays in front', () => {
-    expect(routePaths(around.slice(0, 3), ORIGIN, 100, 100, 50)).toHaveLength(1);
-  });
-
-  it('cuts the route where it goes behind the globe and starts again where it comes back', () => {
-    const paths = routePaths(around, ORIGIN, 100, 100, 50);
-    expect(paths).toHaveLength(2);
-    expect(paths[0].startsWith('M 100 100')).toBe(true);
-    expect(paths[1].startsWith('M ')).toBe(true);
-  });
-
-  it('draws nothing for a route that stays behind', () => {
-    expect(routePaths(around.slice(3, 6), ORIGIN, 100, 100, 50)).toEqual([]);
-  });
-
-  it('starts at the outline for a route that begins behind and comes to the front', () => {
-    const paths = routePaths(around.slice(5, 9), ORIGIN, 100, 100, 50);
-    expect(paths).toHaveLength(1);
-    expect(paths[0].split('M')).toHaveLength(2);
   });
 });
 

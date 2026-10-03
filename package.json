@@ -8,6 +8,7 @@
     "country-flag-emoji-polyfill": "^0.1.10",
     "expo": "~57.0.24",
     "expo-constants": "~57.0.19",
+    "expo-gl": "~57.0.2",
     "expo-linking": "~57.0.10",
     "expo-localization": "~57.0.2",
     "expo-location": "~57.0.19",
@@ -21,6 +22,7 @@
     "react-native-screens": "~4.26.0",
     "react-native-svg": "15.15.4",
     "react-native-web": "^0.21.2",
+    "three": "^0.186.1",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
@@ -28,6 +30,7 @@
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "29.5.14",
     "@types/react": "~19.2.2",
+    "@types/three": "^0.186.0",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~57.0.2",
     "jest": "~29.7.0",
@@ -77,6 +80,11 @@
         "lines": 100,
         "statements": 100
       }
-    }
+    },
+    "transformIgnorePatterns": [
+      "/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|standard-navigation|three))",
+      "/node_modules/react-native-reanimated/plugin/",
+      "/node_modules/@react-native/babel-preset/"
+    ]
   }
 }

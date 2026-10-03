@@ -3,8 +3,50 @@ import { StyleSheet } from 'react-native';
 import { spacing } from '@/data';
 import type { Theme } from '@/types';
 
-export const createStyles = ({ colors, typography }: Theme) =>
+export const createStyles = ({ colors, radius, typography }: Theme) =>
   StyleSheet.create({
+    // Everything but the ball itself is laid over the OpenGL surface, at the place the projection gives.
+    wrap: {
+      position: 'relative',
+    },
+    // The origin's name, centred above its dot: a line as wide as the drawing, so centring needs no measuring.
+    label: {
+      ...typography.heading,
+      position: 'absolute',
+      color: colors.text,
+      fontSize: 12,
+      textAlign: 'center',
+    },
+    poleLabel: {
+      ...typography.heading,
+      position: 'absolute',
+      color: colors.text,
+      fontSize: 11,
+    },
+    // Bottom right: zoom in, zoom out, and back to the opening view.
+    controls: {
+      position: 'absolute',
+      right: spacing.xs,
+      bottom: spacing.xs,
+      flexDirection: 'row',
+      gap: spacing.xs,
+    },
+    button: {
+      minWidth: 28,
+      height: 28,
+      paddingHorizontal: spacing.xs,
+      borderRadius: radius.sm,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    buttonLabel: {
+      ...typography.heading,
+      color: colors.text,
+      fontSize: 13,
+    },
     // The satellite sits on top of the drawing, its centre at the point given by `left`/`top`.
     satellite: {
       position: 'absolute',

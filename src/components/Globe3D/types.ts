@@ -1,3 +1,5 @@
+import type { DirectionalLight, Scene } from 'three';
+
 import type { EarthMark } from '@/components/EarthSection';
 import type { Coordinates } from '@/types';
 
@@ -6,8 +8,8 @@ export type Globe3DProps = {
   size: number;
   /** The starting point: every answer is a bearing and a distance from here. */
   origin: Coordinates;
-  /** The same answers as the Earth seen from the side: each one is drawn as its great-circle route, the true one
-   * (`isTruth`) only as its circled end point. */
+  /** The same answers as the Earth seen from the side: each one is drawn as its constant-heading route (rhumb line),
+   * the true one (`isTruth`) only as its circled end point. */
   marks: EarthMark[];
   /** Draws the land (the world's outline). Without it the globe is a bare ball, which the equator and the Greenwich
    * meridian can still mark. Defaults to true. */
@@ -19,10 +21,42 @@ export type Globe3DProps = {
   equator?: boolean;
   /** Draws the Greenwich meridian (dashed). */
   greenwich?: boolean;
-  /** A satellite (at night only) flying round the Earth along the route, tappable for a joke. Defaults to true. */
+  /** A satellite (at night only, and only unzoomed) flying round the Earth along the route, tappable for a joke.
+   * Defaults to true. */
   satellite?: boolean;
-  /** Turns with a finger. Defaults to true; false keeps the globe where it was first shown. */
+  /** Turns with a finger, and zooms by pinching. Defaults to true; false keeps the globe where it was first shown. */
   draggable?: boolean;
+  /** The zoom and "back to north" buttons, in the corners of the drawing. Defaults to `draggable`: a globe nobody can
+   * turn has nothing to put back either. */
+  controls?: boolean;
+  /** What shows around the ball. The drawing is a real OpenGL surface, which cannot be see-through on every device: it
+   * is painted with this instead of letting what is behind show. Defaults to the theme's background. */
+  backgroundColor?: string;
+};
+
+/** The colors the scene is built with, taken from the theme by the component. */
+export type GlobeColors = {
+  globe: string;
+  land: string;
+  guide: string;
+  origin: string;
+  pole: string;
+};
+
+export type GlobeSceneInput = {
+  origin: Coordinates;
+  marks: EarthMark[];
+  land: boolean;
+  equator: boolean;
+  greenwich: boolean;
+  north: boolean;
+  colors: GlobeColors;
+};
+
+/** A built scene, and the lamp the caller hangs on the camera (see `buildGlobeScene`). */
+export type GlobeScene = {
+  scene: Scene;
+  headlight: DirectionalLight;
 };
 
 /** A point of the globe seen from the viewer: `x` to the right, `y` up, `z` towards the viewer (< 0 = far side). */

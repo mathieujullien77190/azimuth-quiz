@@ -281,6 +281,9 @@ const revealedBody = (
           equator
           greenwich
           land={(globeStage ?? 1) >= 2}
+          // The card itself is what the taps are for (one more stage of the clue): the globe is not turned here, and
+          // the OpenGL surface is painted with the card's own color rather than letting the card show through it.
+          backgroundColor={colors.surfaceHigh}
           draggable={false}
           satellite={false}
           marks={[{ bearing: bearingDeg, color: colors.accent, distanceKm, isTruth: true }]}

@@ -1,18 +1,17 @@
 import { EARTH_RADIUS_KM } from '@/data';
+import { rhumbDestination, wrapLongitude } from '@/helpers/geo';
 import type { Coordinates } from '@/types';
 
-import { MAX_CENTER_LATITUDE } from './constants';
+import { MAX_CENTER_LATITUDE, MAX_ZOOM, MIN_ZOOM } from './constants';
 import type { ScreenPoint, ViewPoint } from './types';
 
 const toRadians = (degrees: number): number => (degrees * Math.PI) / 180;
 const toDegrees = (radians: number): number => (radians * 180) / Math.PI;
 
-/** A longitude brought back into [-180, 180[. */
-export const wrapLongitude = (longitude: number): number => ((((longitude + 180) % 360) + 360) % 360) - 180;
-
-/** Where you end up going `distanceKm` along the surface from `origin`, keeping the initial `bearing` (degrees, 0 = north):
- * the standard spherical "destination point" formula. */
-export const destinationPoint = (origin: Coordinates, bearing: number, distanceKm: number): Coordinates => {
+/** Where you end up going `distanceKm` along the great circle (the shortest way, whose heading drifts as you go) that
+ * leaves `origin` on `bearing`. Only the satellite flies it: an answer follows its constant heading (`routePoints`),
+ * but a constant heading spirals into a pole instead of going right round the Earth. */
+export const greatCirclePoint = (origin: Coordinates, bearing: number, distanceKm: number): Coordinates => {
   const angular = distanceKm / EARTH_RADIUS_KM;
   const theta = toRadians(bearing);
   const lat1 = toRadians(origin.latitude);
@@ -26,10 +25,10 @@ export const destinationPoint = (origin: Coordinates, bearing: number, distanceK
   return { latitude: toDegrees(lat2), longitude: wrapLongitude(toDegrees(lon2)) };
 };
 
-/** The great circle from `origin` along `bearing` for `distanceKm`, as `steps + 1` points (the first one is the origin).
- * The shortest way between two places, the curve of long flights. */
+/** The route of an answer: `distanceKm` from `origin` holding `bearing` all the way (the rhumb line, see `@/helpers/geo`),
+ * as `steps + 1` points (the first one is the origin). A straight line on a Mercator map, a curve on the globe. */
 export const routePoints = (origin: Coordinates, bearing: number, distanceKm: number, steps: number): Coordinates[] =>
-  Array.from({ length: steps + 1 }, (_, index) => destinationPoint(origin, bearing, (distanceKm * index) / steps));
+  Array.from({ length: steps + 1 }, (_, index) => rhumbDestination(origin, bearing, (distanceKm * index) / steps));
 
 /** The land outline (`M lon lat L lon lat ... Z` per ring) as rings of coordinates. */
 export const parseRings = (path: string): Coordinates[][] =>
@@ -46,7 +45,27 @@ export const parseRings = (path: string): Coordinates[][] =>
         }),
     );
 
-/** Where a point is when the globe is turned to show `center` in the middle (orthographic projection, unit sphere). */
+/**
+ * Where a place sits in the scene: the globe is a ball of radius 1 (times `altitude`) around the middle of the scene,
+ * the north pole towards +y and the Greenwich meridian towards +z — the side the camera faces when the globe shows
+ * (0, 0). Three numbers in a row, the way three.js wants them.
+ */
+export const scenePoint = (point: Coordinates, altitude = 1): [number, number, number] => {
+  const lat = toRadians(point.latitude);
+  const lon = toRadians(point.longitude);
+  return [
+    altitude * Math.cos(lat) * Math.sin(lon),
+    altitude * Math.sin(lat),
+    altitude * Math.cos(lat) * Math.cos(lon),
+  ];
+};
+
+/** A line of places as the flat list of their coordinates in the scene, ready for a three.js buffer. */
+export const polylinePositions = (points: Coordinates[], altitude: number): number[] =>
+  points.flatMap((point) => scenePoint(point, altitude));
+
+/** Where a point is when the globe is turned to show `center` in the middle (orthographic projection, unit sphere):
+ * the camera's own point of view, used to place what is drawn over the canvas (labels, satellite). */
 export const viewPoint = (point: Coordinates, center: Coordinates): ViewPoint => {
   const lat = toRadians(point.latitude);
   const lat0 = toRadians(center.latitude);
@@ -78,147 +97,6 @@ export const screenPoint = (
   return { x: cx + x * radius, y: cy - y * radius, visible };
 };
 
-/** Where the segment between a visible point and a hidden one crosses the outline of the globe. */
-const limbCrossing = (from: ViewPoint, to: ViewPoint): { x: number; y: number } => {
-  const t = from.z / (from.z - to.z);
-  return onLimb(from.x + t * (to.x - from.x), from.y + t * (to.y - from.y));
-};
-
-/** The angle of a point around the middle of the globe, as seen on the drawing. */
-const angleOf = (point: { x: number; y: number }): number => Math.atan2(point.y, point.x);
-
-const TURN = 2 * Math.PI;
-
-/** How far one has to turn counter-clockwise to go from an angle to another, in [0, 2 pi[. */
-const turnBetween = (from: number, to: number): number => (((to - from) % TURN) + TURN) % TURN;
-
-/** True when the ring goes counter-clockwise (the land is on the left of the way), on the map as on the globe seen from
- * outside. Longitudes are followed continuously, so a ring across the date line is not mistaken for one around the world. */
-const isCounterClockwise = (ring: Coordinates[]): boolean => {
-  let longitude = ring[0].longitude;
-  const xs = ring.map((point, index) => {
-    if (index > 0) longitude += wrapLongitude(point.longitude - ring[index - 1].longitude);
-    return longitude;
-  });
-  const area = xs.reduce((total, x, index) => {
-    const next = (index + 1) % ring.length;
-    return total + x * ring[next].latitude - xs[next] * ring[index].latitude;
-  }, 0);
-  return area > 0;
-};
-
-/** `d` attribute of the land. A ring is cut exactly at the outline where it goes behind the globe: what stays in front
- * is a few stretches of coast, each from where it comes out from behind to where it goes back. They are joined by arcs of
- * the outline, every stretch ending on the next one met going round the globe in the direction that keeps the land on
- * the same side as along the coast (so a continent cut by the horizon fills up to the edge, not along a chord through
- * the globe, and not the sea instead). A ring fully behind the globe is skipped. */
-export const landPath = (
-  rings: Coordinates[][],
-  center: Coordinates,
-  cx: number,
-  cy: number,
-  radius: number,
-): string => {
-  const at = (point: { x: number; y: number }) =>
-    `${(cx + point.x * radius).toFixed(1)} ${(cy - point.y * radius).toFixed(1)}`;
-  let path = '';
-  for (const ring of rings) {
-    const views = ring.map((point) => viewPoint(point, center));
-    if (!views.some((view) => view.z >= 0)) continue;
-    const count = views.length;
-    // Start where the ring comes out from behind, so that the walk begins at the start of a stretch of coast.
-    const hidden = views.findIndex((view, index) => view.z < 0 && views[(index + 1) % count].z >= 0);
-    if (hidden === -1) {
-      path += `${views.map((view, index) => `${index === 0 ? 'M' : 'L'}${at(view)}`).join('')}Z`;
-      continue;
-    }
-    const walk = [...views.slice(hidden + 1), ...views.slice(0, hidden + 1)];
-    const stretches: { entry: { x: number; y: number }; exit: { x: number; y: number }; coast: string }[] = [];
-    let entry = { x: 0, y: 0 };
-    let coast = '';
-    walk.forEach((view, index) => {
-      const previous = walk[(index + count - 1) % count];
-      if (view.z >= 0) {
-        if (previous.z < 0) {
-          entry = limbCrossing(view, previous);
-          coast = '';
-        }
-        coast += `L${at(view)}`;
-      } else if (previous.z >= 0) {
-        const exit = limbCrossing(previous, view);
-        stretches.push({ entry, exit, coast: `${coast}L${at(exit)}` });
-      }
-    });
-
-    const counterClockwise = isCounterClockwise(ring);
-    const used = new Set<number>();
-    stretches.forEach((_, first) => {
-      if (used.has(first)) return;
-      used.add(first);
-      let d = `M${at(stretches[first].entry)}${stretches[first].coast}`;
-      let current = first;
-      for (;;) {
-        const left = angleOf(stretches[current].exit);
-        // The next stretch met along the outline, going the way the ring turns (the first one included: it closes the shape).
-        const next = stretches
-          .map((stretch, index) => ({
-            index,
-            turn: counterClockwise
-              ? turnBetween(left, angleOf(stretch.entry))
-              : turnBetween(angleOf(stretch.entry), left),
-          }))
-          .filter(({ index }) => !used.has(index) || index === first)
-          .reduce((best, candidate) => (candidate.turn < best.turn ? candidate : best));
-        // Counter-clockwise on the globe is sweep 0 once the drawing is flipped (y down).
-        d += `A${radius} ${radius} 0 ${next.turn > Math.PI ? 1 : 0} ${counterClockwise ? 0 : 1} ${at(stretches[next.index].entry)}`;
-        if (next.index === first) break;
-        used.add(next.index);
-        d += stretches[next.index].coast;
-        current = next.index;
-      }
-      path += `${d}Z`;
-    });
-  }
-  return path;
-};
-
-/** The visible parts of a route, each as a `d` attribute: where the route goes behind the globe it is cut exactly at the
- * outline, and starts again where it comes back. */
-export const routePaths = (
-  points: Coordinates[],
-  center: Coordinates,
-  cx: number,
-  cy: number,
-  radius: number,
-): string[] => {
-  const views = points.map((point) => viewPoint(point, center));
-  const paths: string[] = [];
-  let current = '';
-  const at = (x: number, y: number) => `${cx + x * radius} ${cy - y * radius}`;
-  const flush = () => {
-    if (current !== '') paths.push(current.trim());
-    current = '';
-  };
-  views.forEach((view, index) => {
-    const previous = views[index - 1];
-    if (view.z >= 0) {
-      if (previous !== undefined && previous.z < 0) {
-        const t = previous.z / (previous.z - view.z);
-        const edge = onLimb(previous.x + t * (view.x - previous.x), previous.y + t * (view.y - previous.y));
-        current += `M ${at(edge.x, edge.y)} `;
-      }
-      current += `${current === '' ? 'M' : 'L'} ${at(view.x, view.y)} `;
-    } else if (previous !== undefined && previous.z >= 0) {
-      const t = previous.z / (previous.z - view.z);
-      const edge = onLimb(previous.x + t * (view.x - previous.x), previous.y + t * (view.y - previous.y));
-      current += `L ${at(edge.x, edge.y)} `;
-      flush();
-    }
-  });
-  flush();
-  return paths;
-};
-
 /** The point to show in the middle so that all `points` are as visible as possible: the mean direction of the points. A
  * set that cancels out (two opposite points) falls back on the first one. */
 export const centerOn = (points: Coordinates[]): Coordinates => {
@@ -240,16 +118,24 @@ export const centerOn = (points: Coordinates[]): Coordinates => {
 };
 
 /** The new centre after the finger moved by (`dx`, `dy`) pixels on a globe of `radius`: the surface follows the finger,
- * so the centre goes the other way. The latitude is kept short of the poles. */
+ * so the centre goes the other way. The latitude is kept short of the poles, so north stays up. */
 export const dragCenter = (center: Coordinates, dx: number, dy: number, radius: number): Coordinates => {
   const degrees = toDegrees(1 / radius);
   const latitude = Math.max(-MAX_CENTER_LATITUDE, Math.min(MAX_CENTER_LATITUDE, center.latitude + dy * degrees));
   return { latitude, longitude: center.longitude - dx * degrees };
 };
 
+/** The zoom multiplied by `factor` (a press on +, or how much two fingers spread), kept within the limits. */
+export const zoomedBy = (zoom: number, factor: number): number =>
+  Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom * factor));
+
+/** How far apart two fingers are, to zoom by pinching; `null` with fewer than two of them on the glass. */
+export const fingerGap = (touches: { pageX: number; pageY: number }[]): number | null =>
+  touches.length < 2 ? null : Math.hypot(touches[0].pageX - touches[1].pageX, touches[0].pageY - touches[1].pageY);
+
 /** Where a satellite flying at `ratio` times the radius is on the drawing, `angle` radians along the great circle that
- * leaves `origin` on `bearing`. It is seen when it is in front of the globe or, behind it, when it is out of the way
- * of the globe (beyond its outline). */
+ * leaves `origin` on `bearing` (so it does go right round the Earth, see `greatCirclePoint`). It is seen when it is in
+ * front of the globe or, behind it, when it is out of the way of the globe (beyond its outline). */
 export const orbitPoint = (
   origin: Coordinates,
   bearing: number,
@@ -260,7 +146,7 @@ export const orbitPoint = (
   radius: number,
   ratio: number,
 ): ScreenPoint => {
-  const view = viewPoint(destinationPoint(origin, bearing, angle * EARTH_RADIUS_KM), center);
+  const view = viewPoint(greatCirclePoint(origin, bearing, angle * EARTH_RADIUS_KM), center);
   return {
     x: cx + view.x * radius * ratio,
     y: cy - view.y * radius * ratio,

@@ -35,6 +35,9 @@ export const dedupePackages = [
   'react-native-safe-area-context',
   'expo-location',
   'expo-localization',
+  // The 3D globe's OpenGL surface (`Globe3D`): its own `.web` build is a plain canvas, so the stories draw the real
+  // thing in the browser.
+  'expo-gl',
   '@react-native-async-storage/async-storage',
 ];
 
@@ -43,6 +46,7 @@ export const optimizeDepsInclude = [
   'react-native-svg',
   'expo-location',
   'expo-localization',
+  'expo-gl',
   '@react-native-async-storage/async-storage',
 ];
 
