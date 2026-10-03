@@ -1,9 +1,18 @@
-import { Line, LineDashedMaterial, Mesh, MeshBasicMaterial, type Object3D, type TorusGeometry } from 'three';
+import {
+  Line,
+  LineDashedMaterial,
+  Mesh,
+  MeshBasicMaterial,
+  type MeshLambertMaterial,
+  type Object3D,
+  type TorusGeometry,
+} from 'three';
 
 import type { EarthMark } from '@/components/EarthSection';
 import { rhumbDestination } from '@/helpers/geo';
 
 import { MARK_ALTITUDE, TRUTH_RING } from './constants';
+import { GLOBE_MASK } from './globeMask';
 import { scenePoint } from './helpers';
 import { buildGlobeScene, disposeScene } from './scene';
 import type { GlobeSceneInput } from './types';
@@ -57,6 +66,49 @@ describe('buildGlobeScene', () => {
     expect(dot.position.x).toBeCloseTo(x, 6);
     expect(dot.position.y).toBeCloseTo(y, 6);
     expect(dot.position.z).toBeCloseTo(z, 6);
+  });
+
+  it('paints the continents in, from a picture of the world that falls on the world', () => {
+    const { scene } = build({ land: true });
+    const painted = meshes(scene).find((mesh) => (mesh.material as MeshLambertMaterial).map !== null && (mesh.material as MeshLambertMaterial).map !== undefined)!;
+    const picture = (painted.material as MeshLambertMaterial).map!.image as {
+      width: number;
+      height: number;
+      data: Uint8Array;
+    };
+    expect(picture.width).toBe(GLOBE_MASK.width);
+    expect(picture.height).toBe(GLOBE_MASK.height);
+    // See-through over the sea, so the ball's own colour shows there.
+    expect(painted.material).toMatchObject({ transparent: true, depthWrite: false });
+
+    // Land is opaque, sea is not: the middle of Africa against the middle of the Pacific, read off the picture the
+    // way the shell reads it (u from the date line eastwards, v from the south pole up).
+    const alphaAt = (latitude: number, longitude: number) => {
+      const column = Math.floor(((longitude + 180) / 360) * GLOBE_MASK.width);
+      const row = Math.floor(((latitude + 90) / 180) * GLOBE_MASK.height);
+      return picture.data[(row * GLOBE_MASK.width + column) * 4 + 3];
+    };
+    expect(alphaAt(5, 20)).toBe(255);
+    expect(alphaAt(48.8, 2.3)).toBe(255);
+    expect(alphaAt(0, -140)).toBe(0);
+    expect(alphaAt(-30, -15)).toBe(0);
+  });
+
+  it('puts every corner of the painted shell where the map says, all the way round', () => {
+    const { scene } = build({ land: true });
+    const painted = meshes(scene).find((mesh) => (mesh.material as MeshLambertMaterial).map != null)!;
+    const positions = painted.geometry.getAttribute('position');
+    const uvs = painted.geometry.getAttribute('uv');
+    expect(uvs.count).toBe(positions.count);
+    for (let corner = 0; corner < positions.count; corner += 97) {
+      const latitude = uvs.getY(corner) * 180 - 90;
+      const longitude = uvs.getX(corner) * 360 - 180;
+      const [x, y, z] = scenePoint({ latitude, longitude }, 1);
+      const length = Math.hypot(positions.getX(corner), positions.getY(corner), positions.getZ(corner));
+      expect(positions.getX(corner) / length).toBeCloseTo(x, 6);
+      expect(positions.getY(corner) / length).toBeCloseTo(y, 6);
+      expect(positions.getZ(corner) / length).toBeCloseTo(z, 6);
+    }
   });
 
   it('draws the whole world as one object, above the ball', () => {
@@ -118,6 +170,17 @@ describe('buildGlobeScene', () => {
     const plain = meshes(build({ marks: [ANSWER] }).scene).find((mesh) => mesh.geometry.type === 'TubeGeometry')!;
     expect(faded.material).toMatchObject({ opacity: 0.4, transparent: true });
     expect(plain.material).toMatchObject({ opacity: 1, transparent: false });
+  });
+
+  it('hands back the dots and the rings as what must keep its size on screen, and nothing else', () => {
+    const { scene, screenSized } = build({ land: true, marks: [{ ...ANSWER, isTruth: true }], north: true });
+    // The starting point, the answer's own dot, its ring and the pole — not the ball, the painted land or a route.
+    expect(screenSized).toHaveLength(4);
+    expect(screenSized.every((mark) => meshes(scene).includes(mark))).toBe(true);
+    expect(screenSized.some((mark) => mark.geometry.type === 'TubeGeometry')).toBe(false);
+    expect(screenSized.some((mark) => mark.geometry.type === 'SphereGeometry' && mark.position.length() === 0)).toBe(
+      false,
+    );
   });
 
   it('marks the north pole when asked', () => {

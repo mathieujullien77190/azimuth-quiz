@@ -112,6 +112,7 @@ export const Globe3D = ({
     ...view,
     center,
     halfExtent: size / (2 * radius),
+    markScale: 1 / zoom,
     background: backgroundColor ?? colors.background,
   });
 

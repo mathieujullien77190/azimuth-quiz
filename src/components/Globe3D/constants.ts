@@ -8,8 +8,15 @@ export const GUIDE_STEP = 5;
 // The globe is a sphere of radius 1 around the middle of the scene: every size below is in those units.
 /** How round the ball is: enough segments for a smooth outline even zoomed all the way in. */
 export const SPHERE_SEGMENTS = 72;
+/** How round the shell the continents are painted on is. It carries the land/sea mask as a picture, so it only has to
+ * be round — the detail of the coast comes from the mask, not from this grid. */
+export const LAND_FILL_SEGMENTS = 96;
+/** How strongly the continents are painted, over the colour the coastline is drawn in: enough to tell land from sea at
+ * a glance, little enough for the coastline over it to stay the sharp edge. */
+export const LAND_FILL_OPACITY = 0.3;
 /** What is drawn on the ground is pushed out a hair, in this order, so that each layer wins its pixels over the one
  * below instead of flickering against it. */
+export const LAND_FILL_ALTITUDE = 1.0004;
 export const LAND_ALTITUDE = 1.001;
 export const GUIDE_ALTITUDE = 1.002;
 export const ROUTE_ALTITUDE = 1.004;
@@ -44,13 +51,13 @@ export const CAMERA_FAR = CAMERA_DISTANCE + 1.5;
 export const MAX_CENTER_LATITUDE = 85;
 /** Zoom 1 = the whole ball fits the drawing. */
 export const MIN_ZOOM = 1;
-export const MAX_ZOOM = 5;
+export const MAX_ZOOM = 7;
 /** One press on + or − multiplies (or divides) the zoom by this. */
 export const ZOOM_STEP = 1.4;
 /** Buttons: zoom, and back to the starting view (north up, everything in sight). */
 export const ZOOM_IN_LABEL = '+';
 export const ZOOM_OUT_LABEL = '−';
-export const RESET_LABEL = '⌖ N';
+export const RESET_LABEL = 'N';
 export const ZOOM_IN_HINT = 'Zoomer';
 export const ZOOM_OUT_HINT = 'Dézoomer';
 export const RESET_HINT = 'Remettre le globe au nord';

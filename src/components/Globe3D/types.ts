@@ -1,4 +1,4 @@
-import type { DirectionalLight, Scene } from 'three';
+import type { DirectionalLight, Mesh, Scene } from 'three';
 
 import type { EarthMark } from '@/components/EarthSection';
 import type { Coordinates } from '@/types';
@@ -53,10 +53,12 @@ export type GlobeSceneInput = {
   colors: GlobeColors;
 };
 
-/** A built scene, and the lamp the caller hangs on the camera (see `buildGlobeScene`). */
+/** A built scene, the lamp the caller hangs on the camera, and the dots it shrinks back to their screen size when
+ * the globe is zoomed in (see `buildGlobeScene`). */
 export type GlobeScene = {
   scene: Scene;
   headlight: DirectionalLight;
+  screenSized: Mesh[];
 };
 
 /** The fingers on the drawing at one moment: where the one that moved is, and how far apart two of them are

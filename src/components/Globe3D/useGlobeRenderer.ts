@@ -14,6 +14,8 @@ type GlobeView = GlobeScene & {
   center: Coordinates;
   /** Half of what the drawing shows, in globe radii: 1 = the ball exactly fills it, less = zoomed in. */
   halfExtent: number;
+  /** What the dots are scaled by so that they keep the size they have on screen unzoomed: 1 / zoom. */
+  markScale: number;
   /** Painted around the ball (an OpenGL surface cannot be see-through everywhere, see `Globe3DProps`). */
   background: string;
 };
@@ -28,7 +30,7 @@ type Target = { gl: ExpoWebGLRenderingContext; renderer: WebGLRenderer };
  * time something it shows changes (the globe is turned, zoomed, an answer or the theme changes). A phone left on the
  * solution screen draws nothing at all, where a 60-per-second loop would have kept the chip warm for a still image.
  */
-export const useGlobeRenderer = ({ scene, headlight, center, halfExtent, background }: GlobeView) => {
+export const useGlobeRenderer = ({ scene, headlight, screenSized, center, halfExtent, markScale, background }: GlobeView) => {
   const [target, setTarget] = useState<Target | null>(null);
 
   // The graphics card keeps the surface it was given until it is told otherwise.
@@ -46,6 +48,8 @@ export const useGlobeRenderer = ({ scene, headlight, center, halfExtent, backgro
     // the scene — without which a light attached to it would light nothing.
     camera.add(headlight);
     scene.add(camera);
+    // The dots keep their size on screen rather than growing with the ball they sit on.
+    screenSized.forEach((mark) => mark.scale.setScalar(markScale));
 
     target.renderer.setClearColor(background, 1);
     target.renderer.render(scene, camera);
@@ -56,7 +60,7 @@ export const useGlobeRenderer = ({ scene, headlight, center, halfExtent, backgro
       camera.remove(headlight);
       scene.remove(camera);
     };
-  }, [target, scene, headlight, center, halfExtent, background]);
+  }, [target, scene, headlight, screenSized, center, halfExtent, markScale, background]);
 
   return useCallback((gl: ExpoWebGLRenderingContext) => setTarget({ gl, renderer: createRenderer(gl) }), []);
 };

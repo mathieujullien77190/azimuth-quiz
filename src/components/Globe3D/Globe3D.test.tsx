@@ -6,7 +6,7 @@ import type { EarthMark } from '@/components/EarthSection';
 import { PLAYER_LABEL, SATELLITE_QUIP } from '@/components/EarthSection/constants';
 import { ThemeSettingsContext } from '@/themes';
 
-import { CAPTION_GLOBE, ORBIT_MS, RESET_HINT, ZOOM_IN_HINT, ZOOM_OUT_HINT } from './constants';
+import { CAPTION_GLOBE, ORBIT_MS, RESET_HINT, ZOOM_IN_HINT, ZOOM_OUT_HINT, ZOOM_STEP } from './constants';
 import Globe3D from '.';
 
 // The OpenGL surface, and the graphics card behind it: the globe is drawn for real everywhere else (see `scene.test.ts`),
@@ -55,6 +55,10 @@ const pinch = (gap: number) =>
 /** How many fingers the gesture says are on the glass; 0 = a stray move once they are gone. */
 const touching = (count: number) => ({ numberActiveTouches: count }) as never;
 
+/** How many "N" are on screen. The pole's label and the "back to north" button both say so, so the pole is there
+ * when there are two of them (one with the buttons hidden). */
+const northLabels = (queryAllByText: (text: string) => unknown[]) => queryAllByText('N').length;
+
 /** Renders the globe and hands over the touch handlers it just set up. */
 const renderGlobe = async (props: Partial<React.ComponentProps<typeof Globe3D>> = {}) => {
   const createSpy = jest.spyOn(PanResponder, 'create');
@@ -69,10 +73,10 @@ beforeEach(() => jest.clearAllMocks());
 
 describe('Globe3D', () => {
   it('draws the globe once the surface is there, and labels the starting point and the pole', async () => {
-    const { getByLabelText, queryByText } = await renderGlobe();
+    const { getByLabelText, queryAllByText, queryByText } = await renderGlobe();
     expect(getByLabelText(CAPTION_GLOBE)).toBeTruthy();
     expect(queryByText(PLAYER_LABEL)).toBeTruthy();
-    expect(queryByText('N')).toBeTruthy();
+    expect(northLabels(queryAllByText)).toBe(2);
     expect(renderer.render).toHaveBeenCalled();
     expect(gl.endFrameEXP).toHaveBeenCalled();
   });
@@ -91,8 +95,9 @@ describe('Globe3D', () => {
   });
 
   it('can be left without a pole, and without answers', async () => {
-    const { queryByText } = await renderGlobe({ marks: [], north: false });
-    expect(queryByText('N')).toBeNull();
+    const { queryAllByText, queryByText } = await renderGlobe({ marks: [], north: false });
+    // Only the button's own "N" is left.
+    expect(northLabels(queryAllByText)).toBe(1);
     expect(queryByText(PLAYER_LABEL)).toBeTruthy();
   });
 });
@@ -106,7 +111,7 @@ describe('Globe3D — turning it with a finger', () => {
   });
 
   it('turns until the starting point and the pole are behind the globe, and draws it again', async () => {
-    const { config, queryByText } = await renderGlobe({ marks: [{ ...answer, isTruth: true }] });
+    const { config, queryAllByText, queryByText } = await renderGlobe({ marks: [{ ...answer, isTruth: true }] });
     const drawings = renderer.render.mock.calls.length;
 
     await act(() => config.onPanResponderGrant?.(finger(0, 0), touching(1)));
@@ -114,7 +119,7 @@ describe('Globe3D — turning it with a finger', () => {
     await act(() => config.onPanResponderMove?.(finger(10, -1000), touching(1)));
     await act(() => config.onPanResponderMove?.(finger(20, -2000), touching(1)));
     expect(queryByText(PLAYER_LABEL)).toBeNull();
-    expect(queryByText('N')).toBeNull();
+    expect(northLabels(queryAllByText)).toBe(1);
     expect(renderer.render.mock.calls.length).toBeGreaterThan(drawings);
 
     // Tipping the other way brings the starting point back.
@@ -209,6 +214,28 @@ describe('Globe3D — zooming', () => {
     await fireEvent.press(getByLabelText(RESET_HINT));
     expect(queryByText(PLAYER_LABEL)).toBeTruthy();
     expect(zoomed(queryByText)).toBe(false);
+  });
+
+  it('shrinks the dots back to their screen size as it zooms in', async () => {
+    const { getByLabelText } = await renderGlobe();
+    // The scene is built for real here (only the graphics card is stood in for), so the globe handed over is the
+    // very one that would be drawn.
+    const dotScale = () => {
+      const drawn = renderer.render.mock.calls[renderer.render.mock.calls.length - 1][0] as {
+        children: { geometry?: { type: string }; scale: { x: number } }[];
+      };
+      return drawn.children.find((object) => object.geometry?.type === 'SphereGeometry' && object.scale.x !== 1)?.scale
+        .x;
+    };
+    expect(dotScale()).toBeUndefined();
+
+    await fireEvent.press(getByLabelText(ZOOM_IN_HINT));
+    expect(dotScale()).toBeCloseTo(1 / ZOOM_STEP, 6);
+    await fireEvent.press(getByLabelText(ZOOM_IN_HINT));
+    expect(dotScale()).toBeCloseTo(1 / ZOOM_STEP ** 2, 6);
+
+    await fireEvent.press(getByLabelText(RESET_HINT));
+    expect(dotScale()).toBeUndefined();
   });
 
   it('has no buttons when the globe is fixed', async () => {
