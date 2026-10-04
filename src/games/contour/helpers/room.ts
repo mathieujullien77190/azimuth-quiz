@@ -37,6 +37,7 @@ export const {
   removeRoomPlayer,
   deleteRoom,
   restartRoom,
+  sendReaction,
   pruneRoomPlayerData,
   sendHeartbeat,
   passRoomTurn,

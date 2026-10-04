@@ -41,6 +41,10 @@ export const ROOM_MAX_PLAYERS = 10;
 export type RoomPlayer = { name: string; joinedAt: Timestamp | null; color?: string; lastSeen?: Timestamp | null };
 export type RoomPlayers = Record<string, RoomPlayer>;
 
+/** The last emoji a player sent to the room (`sendReaction`): one field, overwritten by each send; `seq` (the sender's
+ * clock, in ms) tells two sends apart and nothing else — it is never compared with another device's clock. */
+export type RoomReaction = { uid: string; emoji: string; seq: number };
+
 /** The games that have online rooms: the value of a room's `game` field, set when it is created and never
  * changed (the Firestore rules refuse it). */
 export type RoomGame = 'compass' | 'clues' | 'silhouette';
@@ -137,6 +141,13 @@ export const createRoomApi = <Settings extends object>(game: RoomGame) => {
    * end screen. Nothing else is touched — the next start (each game's `startRoomGame`) rewrites every round field. */
   const restartRoom = (code: string): Promise<void> => updateDoc(roomRef(code), { screen: 'options' });
 
+  /** Sends an emoji to everyone in the room: overwrites the room's single `reaction` field (cosmetic, nothing keeps a
+   * history). Any player may write it — see `reactionOk` in the Firestore rules. */
+  const sendReaction = async (code: string, emoji: string): Promise<void> => {
+    const uid = await getLocalUid();
+    await updateDoc(roomRef(code), { reaction: { uid, emoji, seq: Date.now() } satisfies RoomReaction });
+  };
+
   /** "I'm still here": bumps this device's own `lastSeen`. The promise only settles once the server
    * acknowledged the write, so a device that can't reach it never sees it resolve — that's how
    * `useRoomPresence` notices its own connection dropping. Covered by the same "own `players` entry"
@@ -174,7 +185,13 @@ export const createRoomApi = <Settings extends object>(game: RoomGame) => {
    * across. */
   const subscribeToRoomPlayers = <Screen extends string>(
     code: string,
-    onUpdate: (players: RoomPlayers, hostUid: string | undefined, exists: boolean, screen: Screen) => void,
+    onUpdate: (
+      players: RoomPlayers,
+      hostUid: string | undefined,
+      exists: boolean,
+      screen: Screen,
+      reaction: RoomReaction | null,
+    ) => void,
   ): (() => void) =>
     onSnapshot(roomRef(code), (snapshot) => {
       const data = snapshot.data();
@@ -183,6 +200,7 @@ export const createRoomApi = <Settings extends object>(game: RoomGame) => {
         data?.hostUid as string | undefined,
         snapshot.exists(),
         (data?.screen as Screen | undefined) ?? ('options' as Screen),
+        (data?.reaction as RoomReaction | undefined) ?? null,
       );
     });
 
@@ -196,6 +214,7 @@ export const createRoomApi = <Settings extends object>(game: RoomGame) => {
     removeRoomPlayer,
     deleteRoom,
     restartRoom,
+    sendReaction,
     pruneRoomPlayerData,
     sendHeartbeat,
     passRoomTurn,

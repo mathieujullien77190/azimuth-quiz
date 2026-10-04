@@ -34,4 +34,13 @@ describe('Screen', () => {
     await fireEvent.scroll(getByText('Body'), { nativeEvent: { contentOffset: { x: 0, y: 40 } } });
     expect(onScroll).toHaveBeenCalledTimes(1);
   });
+
+  it('draws an overlay over everything when given one', async () => {
+    const { getByText } = await render(
+      <Screen overlay={<Text>Overlay</Text>}>
+        <Text>Body</Text>
+      </Screen>,
+    );
+    expect(getByText('Overlay')).toBeTruthy();
+  });
 });

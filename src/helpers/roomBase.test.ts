@@ -291,14 +291,22 @@ describe('subscriptions', () => {
     emit({ players: { zoe: player('Zoe') }, hostUid: 'zoe', screen: 'game' });
     const onUpdate = jest.fn();
     api.subscribeToRoomPlayers('tabofuna', onUpdate);
-    expect(onUpdate).toHaveBeenCalledWith({ zoe: player('Zoe') }, 'zoe', true, 'game');
+    expect(onUpdate).toHaveBeenCalledWith({ zoe: player('Zoe') }, 'zoe', true, 'game', null);
+  });
+
+  it('subscribeToRoomPlayers forwards the latest reaction', () => {
+    const reaction = { uid: 'zoe', emoji: '🔥', seq: 7 };
+    emit({ players: {}, hostUid: 'zoe', reaction });
+    const onUpdate = jest.fn();
+    api.subscribeToRoomPlayers('tabofuna', onUpdate);
+    expect(onUpdate).toHaveBeenCalledWith({}, 'zoe', true, 'options', reaction);
   });
 
   it('subscribeToRoomPlayers defaults for a deleted room', () => {
     emit(undefined);
     const onUpdate = jest.fn();
     api.subscribeToRoomPlayers('tabofuna', onUpdate);
-    expect(onUpdate).toHaveBeenCalledWith({}, undefined, false, 'options');
+    expect(onUpdate).toHaveBeenCalledWith({}, undefined, false, 'options', null);
   });
 });
 
@@ -306,5 +314,14 @@ describe('restartRoom', () => {
   it('sends the room back to its lobby, touching nothing else', async () => {
     await api.restartRoom('tabofuna');
     expect(updateDoc).toHaveBeenCalledWith({ path: 'rooms/tabofuna' }, { screen: 'options' });
+  });
+});
+
+describe('sendReaction', () => {
+  it("overwrites the room's single reaction field with this device, the emoji and the time", async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(1234);
+    await api.sendReaction('tabofuna', '🔥');
+    expect(updateDoc).toHaveBeenCalledWith({ path: 'rooms/tabofuna' }, { reaction: { uid: 'zoe', emoji: '🔥', seq: 1234 } });
+    jest.restoreAllMocks();
   });
 });

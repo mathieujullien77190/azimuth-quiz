@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { NAME_PLACEHOLDERS, PLAYER_COLORS } from '@/data';
+import { loadLastJoinedRoom, saveLastJoinedRoom } from '@/helpers/lastRoom';
 import { playersByArrival } from '@/helpers/roomPlayers';
 import { freePlaceholder, isNameTakenError } from '@/helpers/roomName';
 import { useDebouncedValue } from '@/helpers/useDebouncedValue';
@@ -73,6 +74,9 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState('');
   const [joinStatus, setJoinStatus] = useState<'idle' | 'valid' | 'invalid'>('idle');
+  // Bumped when "Join" is pressed again with a code already in the field: that code is checked again (the room may
+  // exist by now), which the unchanged text alone would not trigger.
+  const [joinAttempt, setJoinAttempt] = useState(0);
   const readOnly = mode === 'join';
 
   // Leaving host mode (Solo or switching to Join) takes the room down with it, same as
@@ -114,7 +118,15 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     setOnlineChoice('join');
     setHostedSilently(false);
     setRoomCode(null);
-    setJoinCode('');
+    // Pressed again while already on "Join", not connected: the code in the field is checked again, not wiped.
+    if (onlineChoice === 'join' && joinStatus !== 'valid') {
+      setJoinStatus('idle');
+      setJoinAttempt((attempt) => attempt + 1);
+      return;
+    }
+    // Coming from another choice, the previous room's code is offered; from "Join" itself once connected (the "Leave"
+    // chip) the field starts over, empty, or it would join the same room again at once.
+    setJoinCode(onlineChoice === 'join' ? '' : (previousCode ?? ''));
     setJoinStatus('idle');
   };
 
@@ -126,6 +138,21 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     if (mode !== 'host' || roomCode === null) return;
     adapter.updateRoomSettings(roomCode, adapter.roomSettingsFrom(settings)).catch(reporting('setup.updateSettings', { room: roomCode }));
   }, [adapter, mode, roomCode, settings]);
+
+  // The room this device joined last: picking "Join" fills the code field with it (connecting at once if that room is
+  // still there, else saying the code is invalid, like any typed code). Editable like any other.
+  const [previousCode, setPreviousCode] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    loadLastJoinedRoom()
+      .then((code) => {
+        if (!cancelled && code !== null && adapter.isValidRoomCode(code)) setPreviousCode(code);
+      })
+      .catch(reporting('setup.previousRoom', { kind: 'background' }));
+    return () => {
+      cancelled = true;
+    };
+  }, [adapter]);
 
   // Join: once a well-formed code is typed, a one-shot check decides whether it's valid — checked
   // against the room code's own consonant+vowel shape, not just its length, so a typo never fires
@@ -142,14 +169,19 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     adapter
       .roomExists(code)
       .then((exists) => {
-        if (!cancelled) setJoinStatus(exists ? 'valid' : 'invalid');
+        if (cancelled) return;
+        setJoinStatus(exists ? 'valid' : 'invalid');
+        if (exists) {
+          saveLastJoinedRoom(code);
+          setPreviousCode(code);
+        }
       })
       .catch(reporting('setup.roomExists', { kind: 'background' }));
 
     return () => {
       cancelled = true;
     };
-  }, [adapter, mode, joinCode]);
+  }, [adapter, mode, joinCode, joinAttempt]);
 
   // Code this device is currently connected to (as host or as a validated joiner) — null while
   // just browsing the host/join chips with nothing confirmed yet.

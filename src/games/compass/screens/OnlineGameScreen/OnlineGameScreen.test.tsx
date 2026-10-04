@@ -81,6 +81,7 @@ const setGame = (overrides: Record<string, unknown> = {}) => {
     totals: [850, 300],
     myIndex: 0,
     handleQuit: jest.fn(),
+    reactions: { reaction: null, send: jest.fn(), canReact: false },
     submit: jest.fn(),
     kickPlayer: jest.fn(),
     goToNextRound: jest.fn(),
@@ -245,5 +246,29 @@ describe('OnlineGameScreen — revealed', () => {
     const { queryByText } = await renderScreen();
     expect(queryByText(t.game.next)).toBeNull();
     expect(queryByText(t.game.last)).toBeNull();
+  });
+});
+
+describe('OnlineGameScreen — emoji reactions', () => {
+  it('offers the emojis in the footer when other players are there, and sends the one tapped', async () => {
+    const send = jest.fn();
+    setGame({ reactions: { reaction: null, send, canReact: true } });
+    const { getByLabelText } = await renderScreen();
+    await fireEvent.press(getByLabelText('Réactions'));
+    await fireEvent.press(getByLabelText('Envoyer 🤞'));
+    expect(send).toHaveBeenCalledWith('🤞');
+  });
+
+  it('has no emojis alone in the room', async () => {
+    setGame({ reactions: { reaction: null, send: jest.fn(), canReact: false } });
+    const { queryByLabelText } = await renderScreen();
+    expect(queryByLabelText('Réactions')).toBeNull();
+  });
+
+  it('shows a received reaction over the screen, with the name of whoever sent it', async () => {
+    setGame({ reactions: { reaction: { emoji: '👏', name: 'Lou', seq: 1 }, send: jest.fn(), canReact: false } });
+    const { getByText } = await renderScreen();
+    expect(getByText('👏')).toBeTruthy();
+    expect(getByText('Lou')).toBeTruthy();
   });
 });

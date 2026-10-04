@@ -30,13 +30,25 @@ service cloud.firestore {
         .hasOnly([request.auth.uid]);
     }
 
+    // Réaction emoji (`reaction`, voir useRoomReactions) : n'importe quel joueur peut écraser ce champ unique, à son nom
+    // (`uid` = le sien), avec un emoji court et un `seq` entier. Cosmétique : aucun historique, aucun autre champ.
+    function reactionOk() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['reaction'])
+        || (request.resource.data.reaction.keys().hasOnly(['uid', 'emoji', 'seq'])
+          && request.resource.data.reaction.uid == request.auth.uid
+          && request.resource.data.reaction.emoji is string
+          && request.resource.data.reaction.emoji.size() <= 8
+          && request.resource.data.reaction.seq is int);
+    }
+
     // Boussole : tout le monde répond en même temps. Un joueur qui n'est pas l'hôte ne peut toucher
     // qu'à sa propre entrée dans `players` (rejoindre, se renommer) et/ou dans `guesses` (envoyer sa
     // réponse de la manche) — jamais à celle d'un autre, ni à `settings`, `screen`, `origin`,
     // `places`, `scores` ou `totalScores`.
     function compassPlayer() {
       return request.auth != null
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['players', 'guesses'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['players', 'guesses', 'reaction'])
+        && reactionOk()
         && onlyOwnPlayerEntry()
         && request.resource.data.get('guesses', {}).diff(resource.data.get('guesses', {})).affectedKeys()
           .hasOnly([request.auth.uid]);
@@ -49,13 +61,15 @@ service cloud.firestore {
     // - s'il est le joueur dont c'est le tour (`turnUid`, lu dans le document *avant* l'écriture, donc
     //   c'est celui qui sortait qui autorise le passage de main, pas celui qui entre), modifier les
     //   champs de progression de la manche listés dans `turnFields` (voir helpers/room.ts de chaque
-    //   jeu). `settings`, `screen` et `totalScores` restent réservés à l'hôte.
+    //   jeu). `settings`, `screen` et `totalScores` restent réservés à l'hôte ;
+    // - envoyer une réaction emoji (`reaction`, voir `reactionOk`), seule ou avec ce qui précède.
     function turnBasedPlayer(turnFields) {
       return request.auth != null
-        && ((request.resource.data.diff(resource.data).affectedKeys().hasOnly(['players'])
+        && reactionOk()
+        && ((request.resource.data.diff(resource.data).affectedKeys().hasOnly(['players', 'reaction'])
             && onlyOwnPlayerEntry())
           || (request.auth.uid == resource.data.get('turnUid', null)
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(turnFields)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(turnFields.concat(['reaction']))
             && onlyOwnPlayerEntry()));
     }
 

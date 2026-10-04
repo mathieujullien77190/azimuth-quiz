@@ -3,6 +3,7 @@ import { act, renderHook } from '@testing-library/react-native';
 
 import { PLAYER_NAME_STORAGE_KEY } from '@/data';
 import { createRoomStore } from '@/helpers/createRoomStore';
+import { loadLastJoinedRoom } from '@/helpers/lastRoom';
 import { resetErrorThrottle, setErrorReporter } from '@/helpers/reportError';
 import { nameTakenError } from '@/helpers/roomName';
 import type { RoomPlayers } from '@/helpers/roomBase';
@@ -400,6 +401,81 @@ describe('useSetupRoom — cleanup that fails', () => {
     await act(async () => {});
     expect(reporter).toHaveBeenCalledTimes(recorded);
     setErrorReporter(null);
+  });
+});
+
+describe('useSetupRoom — the previous game', () => {
+  it('remembers the room it joined, and fills the code with it when joining again', async () => {
+    const ctx = await setup();
+    await joinRoom(ctx);
+    await expect(loadLastJoinedRoom()).resolves.toBe('tabofuna');
+
+    // Leaving it goes back to an empty field (the room would be joined again at once otherwise)...
+    await act(async () => ctx.result.current.party.onChooseJoin());
+    expect(ctx.result.current.party.joinCode).toBe('');
+    // ...and so does picking another choice and then Join: the code is offered again, and joined.
+    await act(async () => ctx.result.current.party.onChooseSolo());
+    await act(async () => ctx.result.current.party.onChooseJoin());
+    await flush();
+    expect(ctx.result.current.party.joinCode).toBe('tabofuna');
+    expect(ctx.result.current.party.joinStatus).toBe('valid');
+  });
+
+  it('offers the code saved by an earlier visit', async () => {
+    await AsyncStorage.setItem('azimuthquiz:last-joined-room', 'tabofuna');
+    const ctx = await setup();
+    await flush();
+    await act(async () => ctx.result.current.party.onChooseJoin());
+    await flush();
+    expect(ctx.result.current.party.joinCode).toBe('tabofuna');
+    expect(ctx.result.current.connectedRoomCode).toBe('tabofuna');
+  });
+
+  it('says the code is invalid when that room is gone, like any typed code', async () => {
+    await AsyncStorage.setItem('azimuthquiz:last-joined-room', 'tabofuna');
+    const ctx = await setup({ roomExists: jest.fn(() => Promise.resolve(false)) });
+    await flush();
+    await act(async () => ctx.result.current.party.onChooseJoin());
+    await flush();
+    expect(ctx.result.current.party.joinCode).toBe('tabofuna');
+    expect(ctx.result.current.party.joinStatus).toBe('invalid');
+    expect(ctx.result.current.connectedRoomCode).toBeNull();
+  });
+
+  it('checks the code again when Join is pressed again, instead of wiping it', async () => {
+    const roomExists = jest.fn(() => Promise.resolve(false));
+    const ctx = await setup({ roomExists });
+    await joinRoom(ctx);
+    expect(ctx.result.current.party.joinStatus).toBe('invalid');
+
+    // The room shows up in the meantime: the same code, checked again, now connects.
+    roomExists.mockImplementation(() => Promise.resolve(true));
+    await act(async () => ctx.result.current.party.onChooseJoin());
+    await flush();
+    expect(ctx.result.current.party.joinCode).toBe('tabofuna');
+    expect(ctx.result.current.party.joinStatus).toBe('valid');
+    expect(roomExists).toHaveBeenCalledTimes(2);
+  });
+
+  it('leaves the field empty when nothing was joined, or the saved code is malformed', async () => {
+    const none = await setup();
+    await flush();
+    await act(async () => none.result.current.party.onChooseJoin());
+    expect(none.result.current.party.joinCode).toBe('');
+
+    await AsyncStorage.setItem('azimuthquiz:last-joined-room', 'abc');
+    const malformed = await setup();
+    await flush();
+    await act(async () => malformed.result.current.party.onChooseJoin());
+    expect(malformed.result.current.party.joinCode).toBe('');
+  });
+
+  it('ignores the saved code if the screen is left before it is read', async () => {
+    await AsyncStorage.setItem('azimuthquiz:last-joined-room', 'tabofuna');
+    const ctx = await setup();
+    await ctx.unmount();
+    await flush();
+    expect(ctx.adapter.roomExists).not.toHaveBeenCalled();
   });
 });
 

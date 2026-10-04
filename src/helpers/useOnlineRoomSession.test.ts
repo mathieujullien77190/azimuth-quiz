@@ -23,6 +23,7 @@ const makeStore = (overrides: Partial<State> = {}) =>
     roomExists: true,
     roomSettings: null,
     gameState: { screen: 'playing' },
+    reaction: null,
     localUid: null,
     connectionLost: false,
     connect: jest.fn(),
@@ -38,6 +39,7 @@ const setup = async (overrides: Partial<State> = {}) => {
   const roomApi = {
     deleteRoom: jest.fn(() => Promise.resolve()),
     restartRoom: jest.fn(() => Promise.resolve()),
+    sendReaction: jest.fn(() => Promise.resolve()),
     pruneRoomPlayerData: jest.fn(() => Promise.resolve()),
     removeRoomPlayer: jest.fn(() => Promise.resolve()),
   };
@@ -225,5 +227,31 @@ describe('useOnlineRoomSession — replay', () => {
     const { store, onQuit } = await setup({ hostUid: 'zoe', localUid: 'max' });
     await act(async () => store.setState({ roomExists: false, gameState: { screen: 'options' } }));
     expect(onQuit).not.toHaveBeenCalled();
+  });
+});
+
+describe('useOnlineRoomSession — emoji reactions', () => {
+  const players: RoomPlayers = {
+    zoe: { name: 'Zoé', joinedAt: arrivedAt(1) },
+    max: { name: 'Max', joinedAt: arrivedAt(2) },
+  };
+
+  it('sends a reaction through the room api, for the room it is in', async () => {
+    const { result, roomApi } = await setup({ players, localUid: 'zoe' });
+    expect(result.current.reactions.canReact).toBe(true);
+    await act(async () => result.current.reactions.send('🔥'));
+    expect(roomApi.sendReaction).toHaveBeenCalledWith('tabofuna', '🔥');
+  });
+
+  it('shows the reaction the store gets, with the name of its sender', async () => {
+    const { result, store } = await setup({ players, localUid: 'zoe' });
+    expect(result.current.reactions.reaction).toBeNull();
+    await act(async () => store.setState({ reaction: { uid: 'max', emoji: '👏', seq: 5 } }));
+    expect(result.current.reactions.reaction).toEqual({ emoji: '👏', name: 'Max', seq: 5 });
+  });
+
+  it('cannot react alone in the room', async () => {
+    const { result } = await setup({ players: { zoe: players.zoe }, localUid: 'zoe' });
+    expect(result.current.reactions.canReact).toBe(false);
   });
 });

@@ -1,5 +1,5 @@
 import { createRoomStore } from './createRoomStore';
-import type { RoomPlayers } from './roomBase';
+import type { RoomPlayers, RoomReaction } from './roomBase';
 
 type Settings = { rounds: number };
 type GameState = { screen: string };
@@ -10,7 +10,13 @@ const setup = () => {
   const unsubscribePlayers = jest.fn();
   const unsubscribeSettings = jest.fn();
   const unsubscribeGame = jest.fn();
-  let onPlayers!: (players: RoomPlayers, hostUid: string | undefined, exists: boolean) => void;
+  let onPlayers!: (
+    players: RoomPlayers,
+    hostUid: string | undefined,
+    exists: boolean,
+    screen?: string,
+    reaction?: RoomReaction | null,
+  ) => void;
   let onSettings!: (settings: Settings) => void;
   let onGame!: (state: GameState) => void;
 
@@ -33,8 +39,8 @@ const setup = () => {
   return {
     store,
     unsubscribers: [unsubscribePlayers, unsubscribeSettings, unsubscribeGame],
-    emitPlayers: (players: RoomPlayers, hostUid: string | undefined, exists = true) =>
-      onPlayers(players, hostUid, exists),
+    emitPlayers: (players: RoomPlayers, hostUid: string | undefined, exists = true, reaction?: RoomReaction | null) =>
+      onPlayers(players, hostUid, exists, 'options', reaction),
     emitSettings: (settings: Settings) => onSettings(settings),
     emitGame: (state: GameState) => onGame(state),
   };
@@ -176,5 +182,21 @@ describe('createRoomStore — voluntary leave', () => {
     store.getState().markVoluntaryLeave();
     store.getState().connect('tabofuna');
     expect(store.getState().consumeVoluntaryLeave()).toBe(false);
+  });
+});
+
+describe('createRoomStore — reactions', () => {
+  it('keeps the latest reaction of the room, none until one is sent, and forgets it on disconnect', () => {
+    const { store, emitPlayers } = setup();
+    store.getState().connect('tabofuna');
+    emitPlayers(ZOE, 'zoe');
+    expect(store.getState().reaction).toBeNull();
+
+    const reaction = { uid: 'zoe', emoji: '👍', seq: 1 };
+    emitPlayers(ZOE, 'zoe', true, reaction);
+    expect(store.getState().reaction).toEqual(reaction);
+
+    store.getState().disconnect();
+    expect(store.getState().reaction).toBeNull();
   });
 });

@@ -40,4 +40,22 @@ describe('GameFooter', () => {
     );
     expect(getByText('Manche suivante')).toBeTruthy();
   });
+
+  it('shows the round reactions button above its children, each emoji calling back, when asked', async () => {
+    const onReact = jest.fn();
+    const { getByLabelText, getByText } = await render(
+      <GameFooter onReact={onReact}>
+        <Button label="Manche suivante" onPress={jest.fn()} />
+      </GameFooter>,
+    );
+    expect(getByText('Manche suivante')).toBeTruthy();
+    await fireEvent.press(getByLabelText('Réactions'));
+    await fireEvent.press(getByLabelText('Envoyer 🤞'));
+    expect(onReact).toHaveBeenCalledWith('🤞');
+  });
+
+  it('has no emojis row without a callback (alone in the room)', async () => {
+    const { queryByLabelText } = await render(<GameFooter>{null}</GameFooter>);
+    expect(queryByLabelText('Réactions')).toBeNull();
+  });
 });

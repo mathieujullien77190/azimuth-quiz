@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import NoticeOverlay from '@/components/NoticeOverlay';
 import NoOneFoundText from '@/components/ui/NoOneFoundText';
 import GameFooter from '@/components/GameFooter';
+import ReactionOverlay from '@/components/ReactionOverlay';
 import GameHeader from '@/components/GameHeader';
 import Screen from '@/components/ui/Screen';
 import { WRONG_ANSWER_PENALTY } from '@/games/clues/constants';
@@ -27,6 +28,8 @@ export const OnlineClueGameScreenView = ({
   name,
   points,
   roomCode,
+  reaction,
+  onReact,
   roundNumber,
   totalRounds,
   difficulty,
@@ -77,8 +80,9 @@ export const OnlineClueGameScreenView = ({
 
   return (
     <Screen
+      overlay={<ReactionOverlay reaction={reaction ?? null} />}
       footer={
-        <GameFooter>
+        <GameFooter onReact={onReact}>
           <View style={styles.footerContent}>
             {!roundOver && (
               <Text style={styles.pointsAtStake}>{t.cluesGame.pointsAtStake(formatNumber(remaining))}</Text>

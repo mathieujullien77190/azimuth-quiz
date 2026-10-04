@@ -24,6 +24,8 @@ export const THEME_STORAGE_KEY = 'azimuthquiz:theme';
  * otherwise persists across launches. */
 export const PLAYER_NAME_STORAGE_KEY = 'azimuthquiz:player-name';
 /** The room code this device hosted last, offered again for its next room (see `createRoom`). */
+/** The room this device joined last, offered as a one-tap "join" shortcut on the setup screen. */
+export const LAST_JOINED_ROOM_STORAGE_KEY = 'azimuthquiz:last-joined-room';
 export const ROOM_CODE_STORAGE_KEY = 'azimuthquiz:room-code';
 
 // --- Game options (shared by all 3 games) ---
@@ -76,3 +78,9 @@ export const DIFFICULTIES: { id: Difficulty; emoji: string }[] = [
  * selected chip's own accent-colored background (see DIFFICULTIES' comment). */
 export const difficultyEmoji = (difficulty: (typeof DIFFICULTIES)[number], isDark: boolean): string =>
   difficulty.id === 'intermediate' ? (isDark ? '🟠' : '🟡') : difficulty.emoji;
+
+/** The emojis a player can send to the room from the game footer (see `useRoomReactions`). */
+export const REACTION_EMOJIS = ['🤔', '🥰', '😡', '😱', '😭', '🤞', '👍', '👏'] as const;
+/** How long a received reaction stays on screen, and the least time between two reactions from the same device. */
+export const REACTION_DISPLAY_MS = 2500;
+export const REACTION_COOLDOWN_MS = 1000;

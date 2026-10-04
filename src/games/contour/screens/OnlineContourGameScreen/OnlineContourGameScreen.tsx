@@ -71,6 +71,8 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
 
   return (
     <OnlineContourGameScreenView
+      onReact={game.reactions.canReact ? game.reactions.send : undefined}
+      reaction={game.reactions.reaction}
       country={country}
       neighborCountries={game.neighborCountries}
       difficulty={roomSettings.difficulty}

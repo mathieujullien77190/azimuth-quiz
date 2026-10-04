@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import type { RoomPlayers } from './roomBase';
+import type { RoomPlayers, RoomReaction } from './roomBase';
 
 // Type-only import of `roomBase`: erased at compile time, so this file never pulls
 // `firebase/firestore` in at runtime — each game's store passes its own subscription functions in
@@ -17,6 +17,8 @@ export type RoomStoreState<Settings, GameState> = {
   roomExists: boolean;
   roomSettings: Settings | null;
   gameState: GameState;
+  /** The last emoji anyone sent to the room, or null (see `useRoomReactions`). */
+  reaction: RoomReaction | null;
   /** Not resolved here: the setup screen's own `joinRoomPresence` call already resolves this
    * device's uid (the same one `getLocalUid` would — same underlying anonymous auth session) as
    * a side effect of registering presence, and pushes it in via `setState` — no need for a second,
@@ -47,7 +49,13 @@ type RoomStoreConfig<Settings, GameState> = {
   defaultGameState: GameState;
   subscribeToRoomPlayers: (
     code: string,
-    onUpdate: (players: RoomPlayers, hostUid: string | undefined, exists: boolean) => void,
+    onUpdate: (
+      players: RoomPlayers,
+      hostUid: string | undefined,
+      exists: boolean,
+      screen?: string,
+      reaction?: RoomReaction | null,
+    ) => void,
   ) => () => void;
   subscribeToRoomSettings: (code: string, onSettings: (settings: Settings) => void) => () => void;
   subscribeToRoomGame: (code: string, onUpdate: (state: GameState) => void) => () => void;
@@ -76,6 +84,7 @@ export const createRoomStore = <Settings, GameState>({
     roomExists: true,
     roomSettings: null,
     gameState: defaultGameState,
+    reaction: null,
     localUid: null,
     connectionLost: false,
 
@@ -88,14 +97,14 @@ export const createRoomStore = <Settings, GameState>({
       set({ code, roomExists: true, connectionLost: false });
 
       unsubscribers = [
-        subscribeToRoomPlayers(code, (players, hostUid, exists) => {
+        subscribeToRoomPlayers(code, (players, hostUid, exists, _screen, reaction) => {
           if (exists) {
             hasSeenRoom = true;
           } else if (hasSeenRoom) {
             set({ roomExists: false });
             return;
           }
-          set({ players, hostUid: hostUid ?? null });
+          set({ players, hostUid: hostUid ?? null, reaction: reaction ?? null });
         }),
         subscribeToRoomSettings(code, (roomSettings) => set({ roomSettings })),
         subscribeToRoomGame(code, (gameState) => set({ gameState })),
@@ -112,6 +121,7 @@ export const createRoomStore = <Settings, GameState>({
         roomExists: true,
         roomSettings: null,
         gameState: defaultGameState,
+        reaction: null,
         localUid: null,
         connectionLost: false,
       });

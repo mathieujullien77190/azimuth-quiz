@@ -7,6 +7,7 @@ import Compass from '@/components/Compass';
 import EarthSection from '@/components/EarthSection';
 import FooterNav from '../../components/FooterNav';
 import GameFooter from '@/components/GameFooter';
+import ReactionOverlay from '@/components/ReactionOverlay';
 import GameHeader from '@/components/GameHeader';
 import { compassSizeFor, distanceSliderMarks, earthSizeFor } from './helpers';
 import PlaceCard from '../../components/PlaceCard';
@@ -62,6 +63,8 @@ export const OnlineGameScreenView = ({
   isHost,
   isLastRound,
   onNextRound,
+  reaction,
+  onReact,
 }: OnlineGameScreenViewProps) => {
   const { width } = useWindowDimensions();
   const styles = useThemedStyles(createStyles);
@@ -86,7 +89,8 @@ export const OnlineGameScreenView = ({
 
   return (
     <Screen
-      footer={footerContent && <GameFooter>{footerContent}</GameFooter>}
+      footer={(footerContent || onReact) && <GameFooter onReact={onReact}>{footerContent}</GameFooter>}
+      overlay={<ReactionOverlay reaction={reaction ?? null} />}
       header={
         <GameHeader
           code={roomCode}

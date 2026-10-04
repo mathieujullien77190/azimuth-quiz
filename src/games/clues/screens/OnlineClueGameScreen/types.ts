@@ -1,3 +1,4 @@
+import type { ReactionOverlayProps } from '@/components/ReactionOverlay';
 import type { NameSkeletonSlot } from '@/games/clues/helpers/clueSkeleton';
 import type { OnlinePlayer } from '@/helpers/roomPlayers';
 import type { ClueId, CluePlace, Coordinates, Difficulty } from '@/types';
@@ -9,6 +10,9 @@ export type OnlineClueGameScreenProps = {
 
 export type OnlineClueGameScreenViewProps = {
   onQuit: () => void;
+  /** The emoji reaction on screen right now, and what a tap on the footer's emojis calls (undefined alone in the room). */
+  reaction?: ReactionOverlayProps['reaction'];
+  onReact?: (emoji: string) => void;
   /** This device's player and running total, for the header. */
   name: string;
   points: number;

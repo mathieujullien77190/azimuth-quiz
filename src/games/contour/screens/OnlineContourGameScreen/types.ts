@@ -1,3 +1,4 @@
+import type { ReactionOverlayProps } from '@/components/ReactionOverlay';
 import type { HintGroup, HintGroupView, HintStep } from '@/games/contour/helpers/hintPlan';
 import type { OnlinePlayer } from '@/helpers/roomPlayers';
 import type { ContourCountry, ContourRoundCountry, Difficulty } from '@/types';
@@ -11,6 +12,9 @@ export type OnlineContourGameScreenProps = {
  * chaque valeur ici est deja resolue par `OnlineContourGameScreen`, chaque callback deja decide. */
 export type OnlineContourGameScreenViewProps = {
   onQuit: () => void;
+  /** The emoji reaction on screen right now, and what a tap on the footer's emojis calls (undefined alone in the room). */
+  reaction?: ReactionOverlayProps['reaction'];
+  onReact?: (emoji: string) => void;
   /** This device's player and running total, for the header. */
   name: string;
   points: number;

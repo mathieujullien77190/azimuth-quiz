@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import type { RoomStoreHook } from './createRoomStore';
 import { onlinePlayersFrom } from './roomPlayers';
 import { useHostPruneLeavers } from './useHostPruneLeavers';
+import { useRoomReactions } from './useRoomReactions';
 import type { StaleRoomData } from './useHostPruneLeavers';
 
 /**
@@ -18,6 +19,7 @@ export const useOnlineRoomSession = <Settings, GameState extends { screen: strin
   roomApi: {
     deleteRoom: (code: string) => Promise<void>;
     restartRoom: (code: string) => Promise<void>;
+    sendReaction: (code: string, emoji: string) => Promise<void>;
     removeRoomPlayer: (code: string, uid: string) => Promise<void>;
     pruneRoomPlayerData: (code: string, stale: StaleRoomData) => Promise<void>;
   },
@@ -35,6 +37,7 @@ export const useOnlineRoomSession = <Settings, GameState extends { screen: strin
   const connected = store((s) => s.code !== null);
   const roomSettings = store((s) => s.roomSettings);
   const gameState = store((s) => s.gameState);
+  const roomReaction = store((s) => s.reaction);
 
   // Once the room itself has disappeared (the host quit/deleted it — see `handleQuit` below),
   // every other device freezes on the round it was in, under a "the host left" notice (shown by
@@ -58,6 +61,9 @@ export const useOnlineRoomSession = <Settings, GameState extends { screen: strin
   useEffect(() => {
     if (backInLobby) onQuitRef.current();
   }, [backInLobby]);
+
+  // The footer's emojis, and the one received (any player's, mine included) shown over the screen.
+  const reactions = useRoomReactions(roomReaction, players, roomApi.sendReaction, code);
 
   const onlinePlayers = onlinePlayersFrom(players);
   const isHost = localUid !== null && localUid === hostUid;
@@ -119,5 +125,6 @@ export const useOnlineRoomSession = <Settings, GameState extends { screen: strin
     isHost,
     handleQuit,
     handleReplay,
+    reactions,
   };
 };

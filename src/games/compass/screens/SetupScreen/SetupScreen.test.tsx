@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, fireEvent, render, waitFor, within } from '@testing-library/react-native';
 
 import { DEFAULT_SETTINGS } from '@/games/compass/constants';
@@ -65,6 +66,7 @@ const mockedUpdateRoomSettings = updateRoomSettings as jest.Mock;
 // per-component `useState` it replaces), so its state survives across tests unless reset.
 const initialRoomState = useRoomStore.getState();
 beforeEach(() => {
+  AsyncStorage.clear();
   useRoomStore.setState(initialRoomState, true);
   jest.mocked(loadCompassCounts).mockResolvedValue({
     cities: { intermediate: 30, hard: 5 },

@@ -2,6 +2,7 @@ import type { RefObject } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent, ScrollView } from 'react-native';
 
 import type { EarthMark } from '@/components/EarthSection';
+import type { ReactionOverlayProps } from '@/components/ReactionOverlay';
 import type { OnlinePlayer } from '@/helpers/roomPlayers';
 import type { Coordinates, Difficulty, Place, RoundRecord } from '@/types';
 
@@ -68,4 +69,7 @@ export type OnlineGameScreenViewProps = OnlineHeaderProps & {
   isHost?: boolean;
   isLastRound?: boolean;
   onNextRound?: () => void;
+  /** The emoji reaction on screen right now, and what a tap on the footer's emojis calls (undefined alone in the room). */
+  reaction?: ReactionOverlayProps['reaction'];
+  onReact?: (emoji: string) => void;
 };

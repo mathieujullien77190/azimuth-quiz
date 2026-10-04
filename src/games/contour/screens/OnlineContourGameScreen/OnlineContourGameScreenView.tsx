@@ -5,6 +5,7 @@ import { useLanguage, useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 
 import GameFooter from '@/components/GameFooter';
+import ReactionOverlay from '@/components/ReactionOverlay';
 import GameHeader from '@/components/GameHeader';
 import Button from '@/components/ui/Button';
 import NoOneFoundText from '@/components/ui/NoOneFoundText';
@@ -28,6 +29,8 @@ export const OnlineContourGameScreenView = ({
   name,
   points,
   roomCode,
+  reaction,
+  onReact,
   roundNumber,
   totalRounds,
   difficulty,
@@ -127,7 +130,7 @@ export const OnlineContourGameScreenView = ({
     <>
       <ContourFullBleedScreen
         board={board}
-        footer={<GameFooter>{footer}</GameFooter>}
+        footer={<GameFooter onReact={onReact}>{footer}</GameFooter>}
         header={
           <GameHeader
             code={roomCode}
@@ -150,6 +153,7 @@ export const OnlineContourGameScreenView = ({
         onOverlayTopLayout={onOverlayTopLayout}
         roundKey={roundNumber}
       />
+      <ReactionOverlay reaction={reaction ?? null} />
       <NoticeOverlay message={notice} onDismiss={onDismissNotice} />
     </>
   );

@@ -72,6 +72,8 @@ export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps
 
   return (
     <OnlineClueGameScreenView
+      onReact={game.reactions.canReact ? game.reactions.send : undefined}
+      reaction={game.reactions.reaction}
       bearingDeg={game.bearing}
       difficulty={roomSettings.difficulty}
       distanceKm={game.distance}

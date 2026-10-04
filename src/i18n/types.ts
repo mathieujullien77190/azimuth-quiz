@@ -126,6 +126,12 @@ export type Translations = {
   sliders: {
     distance: string;
   };
+  reactions: {
+    /** The accessibility label of an emoji button of the footer. */
+    send: (emoji: string) => string;
+    /** The accessibility label of the footer's round button that opens and closes the emojis. */
+    toggle: string;
+  };
   roundResult: {
     truth: string;
     direction: string;

@@ -119,6 +119,10 @@ export const fr: Translations = {
   sliders: {
     distance: 'Distance estimée',
   },
+  reactions: {
+    send: (emoji) => `Envoyer ${emoji}`,
+    toggle: 'Réactions',
+  },
   roundResult: {
     truth: 'Réponse',
     direction: 'Direction',

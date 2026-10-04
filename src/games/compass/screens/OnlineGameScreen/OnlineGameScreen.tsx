@@ -157,6 +157,8 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   return (
     <OnlineGameScreenView
       answered={answered}
+      onReact={game.reactions.canReact ? game.reactions.send : undefined}
+      reaction={game.reactions.reaction}
       bearing={game.bearing}
       compassColor={myColor}
       confirmed={confirmed}
