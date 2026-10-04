@@ -9,7 +9,8 @@ import type { Coordinates, Guess, Place, PlayerResult } from '@/types';
 
 import { roundDistance } from './distanceScale';
 import { bearingDeg, distanceKm } from '@/helpers/geo';
-import { applyBestBonus, scoreRound } from './scoring';
+import { destinationPoint } from '@/components/Globe3D/helpers';
+import { applyBestBonus, guessGapKm, scoreRound } from './scoring';
 
 const origin: Coordinates = { latitude: 48.8566, longitude: 2.3522 };
 const place: Place = {
@@ -79,6 +80,30 @@ describe('scoreRound', () => {
   });
 });
 
+describe('guessGapKm', () => {
+  const resultFor = (guess: Guess): PlayerResult => ({ guess, score: scoreRound(origin, place, guess) });
+
+  it('is 0 for a perfect guess', () => {
+    expect(guessGapKm(resultFor({ bearing: trueBearing, distanceKm: trueSurfaceKm }))).toBeCloseTo(0, 3);
+  });
+
+  it('is large for the right distance on the opposite heading', () => {
+    expect(guessGapKm(resultFor({ bearing: (trueBearing + 180) % 360, distanceKm: trueSurfaceKm }))).toBeGreaterThan(
+      trueSurfaceKm,
+    );
+  });
+
+  it('matches the real distance between the aimed point and the place', () => {
+    const guess: Guess = { bearing: trueBearing + 20, distanceKm: trueSurfaceKm * 0.8 };
+    const aimed = destinationPoint(origin, guess.bearing, guess.distanceKm);
+    expect(guessGapKm(resultFor(guess))).toBeCloseTo(distanceKm(aimed, place.coordinates), 0);
+  });
+
+  it('clamps rounding noise instead of returning NaN', () => {
+    expect(guessGapKm(resultFor({ bearing: trueBearing, distanceKm: trueSurfaceKm }))).not.toBeNaN();
+  });
+});
+
 describe('applyBestBonus', () => {
   const makeResult = (directionError: number, distanceError: number): PlayerResult => ({
     guess: { bearing: 0, distanceKm: 100 },
@@ -102,13 +127,15 @@ describe('applyBestBonus', () => {
     expect(applyBestBonus(results)).toEqual(results);
   });
 
-  it('gives the bonus to whoever is closest on each axis independently', () => {
-    const closer = makeResult(5, 50);
-    const farther = makeResult(20, 10);
-    const [a, b] = applyBestBonus([closer, farther]);
-    expect(a.score.directionBonus).toBeGreaterThan(0);
+  it('gives both bonuses to whoever aimed closest to the place, not to the best on one axis', () => {
+    // Right distance but opposite heading: lands on the other side of the origin.
+    const oppositeRightDistance = makeResult(180, 0);
+    // Slightly off on both axes, but close to the place.
+    const nearMiss = { ...makeResult(5, 50), guess: { bearing: 5, distanceKm: 120 } };
+    const [a, b] = applyBestBonus([oppositeRightDistance, nearMiss]);
+    expect(a.score.directionBonus).toBe(0);
     expect(a.score.distanceBonus).toBe(0);
-    expect(b.score.directionBonus).toBe(0);
+    expect(b.score.directionBonus).toBeGreaterThan(0);
     expect(b.score.distanceBonus).toBeGreaterThan(0);
   });
 

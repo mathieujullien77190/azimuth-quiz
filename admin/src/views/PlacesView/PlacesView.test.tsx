@@ -17,7 +17,6 @@ vi.mock('../../constants', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../constants')>()),
   countryFor: (code: string) => ({ FR: 'France', IT: 'Italie' })[code] ?? code,
 }));
-vi.mock('./CharadeEditor', () => ({ CharadeEditor: () => <div>charade-editor</div> }));
 vi.mock('./WordplayEditor', () => ({ WordplayEditor: () => <div>wordplay-editor</div> }));
 vi.mock('./PersonalityEditor', () => ({ PersonalityEditor: () => <div>personality-editor</div> }));
 
@@ -42,7 +41,13 @@ const PARIS = {
   name: 'Paris',
   code: 'FR',
   coordinates: { latitude: 48.8566, longitude: 2.35 },
-  compass: { category: 'capital', difficulty: 'easy', description: 'La ville lumière', wikiFr: 'Paris', wikiEn: 'Paris' },
+  compass: {
+    category: 'capital',
+    difficulty: 'easy',
+    description: 'La ville lumière',
+    wikiFr: 'Paris',
+    wikiEn: 'Paris',
+  },
   clues: clues(),
 } as unknown as PlaceRow;
 
@@ -64,7 +69,8 @@ const NICE = {
   clues: clues({ difficulty: 'intermediate', emojis: ['🌴', '', ''] }),
 } as unknown as PlaceRow;
 
-const cardOf = (name: string) => screen.getByText(name, { selector: '.place-name' }).closest('.place-card') as HTMLElement;
+const cardOf = (name: string) =>
+  screen.getByText(name, { selector: '.place-name' }).closest('.place-card') as HTMLElement;
 
 const countLine = () => document.querySelector('.count-line')?.textContent;
 
@@ -115,11 +121,9 @@ describe('PlacesView cards', () => {
     expect(paris.getByText('2 000 000', { exact: false })).toBeInTheDocument();
     expect(paris.getByText('35 m')).toBeInTheDocument();
     expect(paris.getByText('CDG')).toBeInTheDocument();
-    expect(paris.getByText('charade-editor')).toBeInTheDocument();
     expect(within(cardOf('Rome')).getByText('41.9000° S')).toBeInTheDocument();
     expect(within(cardOf('Rome')).getByText('12.5000° O')).toBeInTheDocument();
     expect(within(cardOf('Rome')).getByText(/Absent d’Clues/)).toBeInTheDocument();
-    expect(within(cardOf('Rome')).queryByText('charade-editor')).not.toBeInTheDocument();
     expect(within(cardOf('Nice')).getByText('Absent de Compass')).toBeInTheDocument();
     expect(within(cardOf('Nice')).getAllByRole('combobox')).toHaveLength(1);
   });

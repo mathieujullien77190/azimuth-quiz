@@ -22,7 +22,6 @@ Projet Firebase : `azimuth-quiz`. Documents : `projects/azimuth-quiz/databases/(
 |---|---|
 | `countries/{ISO}` (noms fr/en, drapeau, devise, indicatif) | `places/{cle}.country` de **chaque lieu** du pays ; `neighbors[].fr/en` des **autres pays** qui le citent (fonction admin : `applyCountryChange`, tranches de 400 opérations) |
 | `countries/{ISO}.ring` (contour Silhouette) | `neighbors[].ring` dans le document de **chaque pays voisin** qui cite ce code (copie telle quelle : les arêtes communes doivent garder exactement les mêmes sommets) |
-| `charadeRiddles/{syllabe normalisée}` | `places/{cle}.clues.riddles` de chaque lieu qui a cette syllabe (`applyRiddleChange`). Normalisation : minuscule, `à`/`â` → `a` |
 | `personalityJobs/{code}` | `places/{cle}.personality.job` des personnalités étiquetées (`applyJobChange`) |
 | `places/{cle}.compass.category` | `places/{cle}.clues.category` (`cluesCategory` : `capital` / `citiesFr` / `cities`) |
 | numérotation d'un groupe | `places.n` (Boussole) **et** `places.clues.n` (Indices) + `meta/compassCounts` **et** `meta/cluesCounts` ; pour Silhouette `countries.n` + `meta/contourCounts` |
@@ -65,7 +64,7 @@ toutes les données qu'elle nomme écrites) :
 3. `meta/dataVersion` : `version` + 1 et `updatedAt` = maintenant en ms ;
 4. une entrée `journal/{id aléatoire}` :
    ```
-   { at: <timestamp>, changes: [ { c: 'places' | 'countries' | 'meta' | 'charadeRiddles' | 'personalityJobs',
+   { at: <timestamp>, changes: [ { c: 'places' | 'countries' | 'meta' | 'personalityJobs',
                                    id: '<id du document>', op: 'set' | 'delete' }, ... ] }
    ```
    Liste **tous** les documents touchés, y compris les compteurs (`{ c: 'meta', id: 'compassCounts', op: 'set' }`) et
@@ -105,12 +104,11 @@ Le journal n'est jamais purgé. Il est lisible et inscriptible par les admins un
 - **Contour ou voisins d'un pays** : le `ring` du pays **et** la copie `neighbors[].ring` dans chaque voisin ; garder les
   sommets communs identiques ; journal pour tous les pays touchés. Positions des voisins (`x`/`y`, fraction du plateau
   0-1) et ancre du label : seulement `countries/{ISO}`.
-- **Ajouter des lieux** : document complet (identité, `country`, `compass`, `clues` avec `category`, `syllables`,
-  `riddles` issus du dictionnaire, `n` des deux numérotations), compteurs, version, journal. Un lieu sans devinette pour
-  toutes ses syllabes n'a simplement pas l'indice « Charade ».
+- **Ajouter des lieux** : document complet (identité, `country`, `compass`, `clues` avec `category`,
+  `n` des deux numérotations), compteurs, version, journal.
 - **Supprimer / changer de catégorie ou de difficulté un lieu** : `applyPlaceChange` dans l'admin (il garde les deux
   numérotations denses dans le même batch).
-- **Devinette, métier** : `applyRiddleChange` / `applyJobChange` ou les éditeurs de l'admin.
+- **Métier** : `applyJobChange` ou les éditeurs de l'admin.
 
 ## 6. Après l'écriture : pourquoi ça n'apparaît pas
 

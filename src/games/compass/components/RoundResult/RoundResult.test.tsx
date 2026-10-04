@@ -1,5 +1,5 @@
 import { act, fireEvent, render } from '@testing-library/react-native';
-import { Dimensions } from 'react-native';
+import { Dimensions, Linking } from 'react-native';
 
 import { formatDistance } from '@/helpers';
 import type { Place, Player, RoundRecord } from '@/types';
@@ -84,6 +84,15 @@ describe('RoundResult — solo', () => {
     await fireEvent.press(getByText('Comment les points sont calculés'));
     expect(queryByText(/Cap et distance rapportent/)).toBeNull();
   });
+
+  it('opens the great-circle Wikipedia page from the scoring explanation', async () => {
+    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+    const { getByText } = await render(<RoundResult players={soloPlayers} record={soloRecord} totals={[850]} />);
+    await fireEvent.press(getByText('Comment les points sont calculés'));
+    await fireEvent.press(getByText('Orthodromie (Wikipédia)'));
+    expect(openURL).toHaveBeenCalledWith('https://fr.wikipedia.org/wiki/Orthodromie');
+    openURL.mockRestore();
+  });
 });
 
 describe('RoundResult — score bonus colouring', () => {
@@ -126,16 +135,30 @@ describe('RoundResult — score bonus colouring', () => {
       results: [
         {
           guess: { bearing: 80, distanceKm: 950 },
-          score: { ...scoreFixture, distanceBonus: 0, distanceExactBonus: 100 },
+          score: { ...scoreFixture, distanceBonus: 0, distanceExactBonus: 100, directionExactBonus: 100 },
         },
       ],
     };
-    const { getByText, queryByText } = await render(
+    const { getAllByText, queryByText } = await render(
       <RoundResult players={soloPlayers} record={exactDistanceRecord} totals={[850]} />,
     );
-    expect(getByText('PERFECT')).toBeTruthy();
-    expect(queryByText(/^\(\+.*km\)$/)).toBeNull();
-    expect(getByText('+450')).toBeTruthy();
+    // Exact on both axes: PERFECT on the heading row and on the distance row, no km gap.
+    expect(getAllByText('PERFECT')).toHaveLength(2);
+    expect(queryByText(/^\(.*km\)$/)).toBeNull();
+  });
+
+  it('keeps the km gap when only the distance is exact (wrong heading means a far-off point)', async () => {
+    const record: RoundRecord = {
+      place,
+      results: [
+        {
+          guess: { bearing: 80, distanceKm: 950 },
+          score: { ...scoreFixture, distanceBonus: 0, distanceExactBonus: 100, directionExactBonus: 0 },
+        },
+      ],
+    };
+    const { queryByText } = await render(<RoundResult players={soloPlayers} record={record} totals={[850]} />);
+    expect(queryByText('PERFECT')).toBeNull();
   });
 });
 

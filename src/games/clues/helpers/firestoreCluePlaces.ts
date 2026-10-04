@@ -17,7 +17,7 @@ import { loadClueCursors, saveClueCursors } from './clueCursors';
  * Draws the game's places from Firestore, the same way Compass does (see `drawFromGroups`): Clues places are
  * numbered inside their group (`clues.category` x `difficulty`, field `clues.n`), sizes in `meta/cluesCounts`,
  * cursors per group on the device, the selected categories sharing the rounds as evenly as possible. A place
- * comes back complete (country, riddles, personality, wordplay — see `cluesFromDoc`): a round reads nothing
+ * comes back complete (country, personality, wordplay — see `cluesFromDoc`): a round reads nothing
  * else, and the host writes it into the room for the joiners. In English a French place is bumped one tier
  * (`effectiveDifficulty`), so the tier below is read too and filtered afterwards.
  *

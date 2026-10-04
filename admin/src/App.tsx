@@ -11,7 +11,6 @@ import { hrefOf, PAGES, pageFromPath, type PageId } from './pages';
 // One chunk per page: a page's code is only downloaded when it is opened.
 const PlacesView = lazy(() => import('./views/PlacesView').then((m) => ({ default: m.PlacesView })));
 const CountriesView = lazy(() => import('./views/CountriesView').then((m) => ({ default: m.CountriesView })));
-const SyllablesView = lazy(() => import('./views/SyllablesView').then((m) => ({ default: m.SyllablesView })));
 const JobsView = lazy(() => import('./views/JobsView').then((m) => ({ default: m.JobsView })));
 const WordplayView = lazy(() => import('./views/WordplayView').then((m) => ({ default: m.WordplayView })));
 const ErrorsView = lazy(() => import('./views/ErrorsView').then((m) => ({ default: m.ErrorsView })));
@@ -48,7 +47,10 @@ const AdminApp = () => {
       <header className="top">
         <div className="top-inner">
           <h1>
-            Admin <span className="dim">— Azimuth Quiz {versionLabel(appConfig.expo.version, appConfig.expo.extra.codename)}</span>
+            Admin{' '}
+            <span className="dim">
+              — Azimuth Quiz {versionLabel(appConfig.expo.version, appConfig.expo.extra.codename)}
+            </span>
           </h1>
           <div className="tabs">
             {PAGES.map(({ id, label }) => (
@@ -88,7 +90,6 @@ const AdminApp = () => {
         <Suspense fallback={<div className="empty">Chargement…</div>}>
           {tab === 'places' && <PlacesView />}
           {tab === 'countries' && <CountriesView />}
-          {tab === 'syllables' && <SyllablesView />}
           {tab === 'jobs' && <JobsView />}
           {tab === 'wordplay' && <WordplayView />}
           {tab === 'errors' && <ErrorsView />}

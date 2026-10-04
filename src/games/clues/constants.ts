@@ -23,8 +23,7 @@ export const CLUE_ORDER: ClueId[] = [
   'airportCode',
   'currency',
   'phoneCode',
-  // The two word-game clues close the list, whatever their cost.
-  'charade',
+  // The word-game clue closes the list, whatever its cost.
   'wordplay',
 ];
 

@@ -4,7 +4,6 @@ import { Animated, Pressable, Text, View } from 'react-native';
 import { DIFFICULTIES, difficultyEmoji } from '@/data';
 import { flagEmoji } from '@/helpers/flagEmoji';
 import { formatDistance, formatNumber, nameSkeleton } from '@/helpers';
-import { charadeFor, charadeLines, charadeMaxStage } from '@/games/clues/helpers/charade';
 import { personalityFor } from '@/games/clues/helpers/personality';
 import { wordplayFor } from '@/games/clues/helpers/wordplay';
 import { useTranslation } from '@/i18n';
@@ -15,14 +14,7 @@ import Compass from '@/components/Compass';
 import EarthSection from '@/components/EarthSection';
 import Globe3D from '@/components/Globe3D';
 import { COMPASS_CLUE_SIZE, EARTH_CLUE_SIZE, GLOBE_CLUE_SIZE, POSITION_COORDS } from './constants';
-import {
-  charadeBodyHeight,
-  dayNightEmoji,
-  elevationTierEmoji,
-  localTimeFor,
-  populationTier,
-  vowelsOf,
-} from './helpers';
+import { dayNightEmoji, elevationTierEmoji, localTimeFor, populationTier, vowelsOf } from './helpers';
 import type { ClueCardProps } from './types';
 import { createStyles } from './styles';
 
@@ -31,13 +23,12 @@ const POPULATION_DOT_SIZES = [6, 10, 14, 18, 22];
 
 /** Clues that always span the full width of the grid, locked or revealed (bigger visual, and
  * avoids relying on react-native-web's more forgiving flexbox to fit the compass/Earth). */
-const WIDE_CLUE_IDS = new Set(['bearing', 'distance', 'globe', 'charade', 'wordplay']);
+const WIDE_CLUE_IDS = new Set(['bearing', 'distance', 'globe', 'wordplay']);
 
 /** "1/2", "2/3"... above multi-click clues — `undefined` for single-click clues
  * (no badge in that case, see the call site in the component). */
 const multiStageProgress = (
   clueId: ClueCardProps['clueId'],
-  place: ClueCardProps['place'],
   stages: {
     emojiStage?: number;
     flagStage?: number;
@@ -48,7 +39,6 @@ const multiStageProgress = (
     currencyStage?: number;
     localTimeStage?: number;
     letterStage?: number;
-    charadeStage?: number;
   },
 ): { stage: number; max: number } | undefined => {
   switch (clueId) {
@@ -72,10 +62,6 @@ const multiStageProgress = (
       return { stage: Math.min(stages.localTimeStage ?? 1, 2), max: 2 };
     case 'letter':
       return { stage: Math.min(stages.letterStage ?? 1, 2), max: 2 };
-    case 'charade': {
-      const max = charadeMaxStage(charadeFor(place));
-      return { stage: Math.min(stages.charadeStage ?? 1, max), max };
-    }
     default:
       return undefined;
   }
@@ -97,7 +83,6 @@ const revealedBody = (
     currencyStage,
     localTimeStage,
     letterStage,
-    charadeStage,
   }: Pick<
     ClueCardProps,
     | 'clueId'
@@ -114,7 +99,6 @@ const revealedBody = (
     | 'currencyStage'
     | 'localTimeStage'
     | 'letterStage'
-    | 'charadeStage'
   >,
   styles: ReturnType<typeof createStyles>,
   units: { population: string },
@@ -198,20 +182,6 @@ const revealedBody = (
           {groups.map((group, groupIndex) => (
             <Text key={groupIndex} style={styles.letterValue}>
               {group.map((slot) => slot ?? '_')}
-            </Text>
-          ))}
-        </View>
-      );
-    }
-    case 'charade': {
-      const entry = charadeFor(place);
-      const { lines } = charadeLines(entry, charadeStage ?? 1);
-      return (
-        <View style={styles.charadeLines}>
-          {lines.map((line, index) => (
-            <Text key={index} style={styles.charadeLine}>
-              <Text style={styles.charadeLabel}>{line.label} est </Text>
-              {line.text}
             </Text>
           ))}
         </View>
@@ -329,7 +299,6 @@ export const ClueCard = ({
   currencyStage,
   localTimeStage,
   letterStage,
-  charadeStage,
 }: ClueCardProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors, isDark } = useTheme();
@@ -339,8 +308,7 @@ export const ClueCard = ({
   const wide = WIDE_CLUE_IDS.has(clueId);
   const progress =
     state === 'revealed'
-      ? multiStageProgress(clueId, place, {
-          charadeStage,
+      ? multiStageProgress(clueId, {
           currencyStage,
           distanceStage,
           elevationStage,
@@ -404,9 +372,6 @@ export const ClueCard = ({
           wide && clueId === 'distance' && styles.bodyEarth,
           wide && clueId === 'globe' && styles.bodyGlobe,
           clueId === 'flagColors' && state === 'revealed' && styles.bodyFlag,
-          clueId === 'charade' && styles.bodyCharade,
-          clueId === 'charade' &&
-            state === 'revealed' && { minHeight: charadeBodyHeight(charadeMaxStage(charadeFor(place))) },
           clueId === 'wordplay' && styles.bodyWordplay,
         ]}
       >
@@ -435,7 +400,6 @@ export const ClueCard = ({
                 localTimeStage,
                 place,
                 populationStage,
-                charadeStage,
               },
               styles,
               { population: t.cluesGame.populationUnit },

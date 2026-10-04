@@ -42,6 +42,10 @@ export const createStyles = ({ colors, radius, typography }: Theme, compact: boo
       marginTop: spacing.xs,
       textAlign: 'center',
     },
+    scoringLink: {
+      color: colors.accent,
+      textDecorationLine: 'underline',
+    },
     truthRow: {
       flexDirection: 'row',
       alignItems: 'baseline',

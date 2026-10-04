@@ -123,7 +123,9 @@ export const en: Translations = {
     yourScore: 'Your score',
     scoringInfoLabel: 'How points are calculated',
     scoringInfo:
-      'Direction and distance each earn up to 500 points, based on how close your guess was. +100 bonus points on each category for whoever did best this round (multiplayer only). +100 extra bonus points for a heading nailed to the exact degree.',
+      'Direction and distance each earn up to 500 points, based on how close your guess was. +100 bonus points on each category for whoever aimed closest to the place (multiplayer only). +100 extra bonus points for a heading nailed to the exact degree. The number after → 🎯 is the gap between your aimed point and the place, measured along the Earth’s surface (great circle).',
+    greatCircleLabel: 'Great-circle distance (Wikipedia)',
+    greatCircleUrl: 'https://en.wikipedia.org/wiki/Great-circle_distance',
     perfect: 'PERFECT',
   },
   endScreen: {
@@ -190,7 +192,6 @@ export const en: Translations = {
       currency: 'Currency',
       airportCode: 'Airport code',
       isCapital: 'Capital',
-      charade: 'Charade',
       personality: 'Notable person',
       wordplay: 'Wordplay',
       vowels: 'Vowels',

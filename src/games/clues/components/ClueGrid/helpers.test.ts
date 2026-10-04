@@ -1,10 +1,7 @@
-import { FIXTURE_CLUE_PLACES as CLUE_PLACES } from '@/helpers/storyFixtures';
 import { CLUE_ORDER } from '@/games/clues/constants';
-import type { ClueId, CluePlace } from '@/types';
+import type { ClueId } from '@/types';
 
 import { clueHasMoreToReveal, clueStage, vowelsUnlocked } from './helpers';
-
-const PARIS: CluePlace = CLUE_PLACES.find((place) => place.name === 'Paris')!;
 
 describe('clueStage', () => {
   it('counts how many times a clue id was picked', () => {
@@ -15,22 +12,17 @@ describe('clueStage', () => {
 
 describe('clueHasMoreToReveal', () => {
   it('caps single-stage clues at 1 pick', () => {
-    expect(clueHasMoreToReveal([], 'isCapital', PARIS)).toBe(false);
+    expect(clueHasMoreToReveal([], 'isCapital')).toBe(false);
   });
 
   it('caps 2-stage clues (distance/elevation/population/currency/localTime/letter) at 2 picks', () => {
-    expect(clueHasMoreToReveal(['letter'], 'letter', PARIS)).toBe(true);
-    expect(clueHasMoreToReveal(['letter', 'letter'], 'letter', PARIS)).toBe(false);
+    expect(clueHasMoreToReveal(['letter'], 'letter')).toBe(true);
+    expect(clueHasMoreToReveal(['letter', 'letter'], 'letter')).toBe(false);
   });
 
   it('caps 3-stage clues (emoji/flagColors) at 3 picks', () => {
-    expect(clueHasMoreToReveal(['emoji', 'emoji'], 'emoji', PARIS)).toBe(true);
-    expect(clueHasMoreToReveal(['emoji', 'emoji', 'emoji'], 'emoji', PARIS)).toBe(false);
-  });
-
-  it('caps charade at the place’s own max stage ("Paris" = 2 syllables = 2 stages)', () => {
-    expect(clueHasMoreToReveal(['charade'], 'charade', PARIS)).toBe(true);
-    expect(clueHasMoreToReveal(['charade', 'charade'], 'charade', PARIS)).toBe(false);
+    expect(clueHasMoreToReveal(['emoji', 'emoji'], 'emoji')).toBe(true);
+    expect(clueHasMoreToReveal(['emoji', 'emoji', 'emoji'], 'emoji')).toBe(false);
   });
 });
 

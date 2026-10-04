@@ -1,5 +1,4 @@
 import { CLUE_ORDER } from '@/games/clues/constants';
-import { charadeFor, charadeMaxStage, charadeReady } from '@/games/clues/helpers/charade';
 import { HYPHEN_SLOT, type NameSkeletonSlot } from '@/games/clues/helpers/clueSkeleton';
 import { personalityFor } from '@/games/clues/helpers/personality';
 import { wordplayFor } from '@/games/clues/helpers/wordplay';
@@ -26,10 +25,7 @@ export const placeCategory = (place: Pick<CluePlace, 'category'>): ClueCategory 
  * The clue ids actually offered for `place`, in `CLUE_ORDER`'s order: a `citiesFr` place drops
  * the ones that never vary for a French city (`CITIES_FR_EXCLUDED_CLUE_IDS`), and any place
  * without a curated `personality`/`wordplay` (see `personalityFor`/`wordplayFor`) drops that one
- * too — never an empty, unclickable card for a fact/pun that simply isn't there. `charade` is the
- * same: it's only offered once EVERY one of `place`'s syllables has a curated riddle
- * (`charadeReady`) — a partially-curated charade (some syllables read as a real riddle, others
- * fall back to reading the syllable itself) is a worse experience than not offering it at all.
+ * too — never an empty, unclickable card for a fact/pun that simply isn't there.
  */
 export const cluesFor = (place: CluePlace): ClueId[] => {
   const categoryIds =
@@ -37,16 +33,12 @@ export const cluesFor = (place: CluePlace): ClueId[] => {
   return categoryIds.filter((id) => {
     if (id === 'personality') return personalityFor(place) !== null;
     if (id === 'wordplay') return wordplayFor(place) !== null;
-    if (id === 'charade') return charadeReady(place);
     return true;
   });
 };
 
-/** How many clicks one `clueId` takes to reveal everything, for `place` specifically: fixed for
- * every clue except `charade`, whose stage count depends on how many syllables `place`'s name
- * has (capped, see `charadeMaxStage`). */
-const clueStageCount = (clueId: ClueId, place: CluePlace): number => {
-  if (clueId === 'charade') return charadeMaxStage(charadeFor(place));
+/** How many clicks one `clueId` takes to reveal everything. */
+const clueStageCount = (clueId: ClueId): number => {
   if (THREE_STAGE_CLUE_IDS.has(clueId)) return 3;
   if (TWO_STAGE_CLUE_IDS.has(clueId)) return 2;
   return 1;
@@ -54,10 +46,10 @@ const clueStageCount = (clueId: ClueId, place: CluePlace): number => {
 
 /** Total number of possible clues in a round for `place` if all were taken, counted multiple
  * times for the ones that reveal in stages (see `clueStageCount`) — used as the base for
- * `maxScoreForRound`. Place-dependent on two counts: which clue ids `cluesFor(place)` even offers
- * (a `citiesFr` place has fewer), and `charade`'s own variable stage count. */
+ * `maxScoreForRound`. Place-dependent: which clue ids `cluesFor(place)` even offers
+ * (a `citiesFr` place has fewer). */
 export const totalRevealCount = (place: CluePlace): number =>
-  cluesFor(place).reduce((total, clueId) => total + clueStageCount(clueId, place), 0);
+  cluesFor(place).reduce((total, clueId) => total + clueStageCount(clueId), 0);
 
 /** Round's starting score: `totalReveals` rounded up to the nearest ten (e.g. 26 possible
  * clues -> 30), a round number rather than depending on the exact current clues. Goes down

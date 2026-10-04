@@ -24,7 +24,6 @@ vi.mock('./data', () => ({
 }));
 vi.mock('./views/PlacesView', () => ({ PlacesView: () => <div>places view</div> }));
 vi.mock('./views/CountriesView', () => ({ CountriesView: () => <div>countries view</div> }));
-vi.mock('./views/SyllablesView', () => ({ SyllablesView: () => <div>syllables view</div> }));
 vi.mock('./views/JobsView', () => ({ JobsView: () => <div>jobs view</div> }));
 vi.mock('./views/WordplayView', () => ({ WordplayView: () => <div>wordplay view</div> }));
 vi.mock('./views/ErrorsView', () => ({ ErrorsView: () => <div>errors view</div> }));
@@ -95,11 +94,11 @@ describe('App', () => {
   it('follows the back button', async () => {
     render(<App />);
     await screen.findByText('places view');
-    window.history.replaceState(null, '', hrefOf('syllables'));
+    window.history.replaceState(null, '', hrefOf('jobs'));
     await act(async () => {
       window.dispatchEvent(new PopStateEvent('popstate'));
     });
-    expect(await screen.findByText('syllables view')).toBeInTheDocument();
+    expect(await screen.findByText('jobs view')).toBeInTheDocument();
   });
 
   it('remounts the views when the data revision changes', async () => {
@@ -120,7 +119,7 @@ describe('App', () => {
   it('shows every page', async () => {
     render(<App />);
     await screen.findByText('places view');
-    for (const view of ['jobs', 'countries', 'syllables', 'wordplay', 'errors']) {
+    for (const view of ['jobs', 'countries', 'wordplay', 'errors']) {
       await userEvent.click(screen.getByRole('link', { name: labelOf(view) }));
       expect(await screen.findByText(`${view} view`)).toBeInTheDocument();
     }

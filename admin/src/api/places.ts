@@ -40,13 +40,6 @@ export const fetchPlaces = async (): Promise<PlaceRow[]> =>
     .map(([key, doc]) => rowOf(key, doc))
     .sort((a, b) => a.name.localeCompare(b.name, 'fr'));
 
-/** Every Clues place, for the syllable list. */
-export const cluePlaces = (): CluePlace[] =>
-  Object.entries(data().places).flatMap(([key, doc]) => {
-    const clues = cluesOf(key, doc);
-    return clues ? [clues] : [];
-  });
-
 export type CompassPatch = Partial<Pick<Place, 'category' | 'description'>>;
 // Position/elevation/timezone/airport code/phone code/currency are all read-only in the admin:
 // they come from real-world data (geography, IANA zones, ISO codes), not editorial judgment like

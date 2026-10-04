@@ -17,7 +17,7 @@ import {
 
 import { collapseJournal } from '@/data/firestore/journal';
 import { planCountryChange } from '@/data/firestore/denormalize';
-import { planJobChange, planRiddleChange, planSyllableRemoval } from '@/data/firestore/denormalizeClues';
+import { planJobChange } from '@/data/firestore/denormalizeClues';
 import {
   CLUES_NUMBERING,
   cluesCategory,
@@ -26,7 +26,6 @@ import {
   planRegroup,
 } from '@/data/firestore/numbering';
 import { contourFromDoc, hasSilhouette } from '@/data/firestore/read';
-import { normalizeSyllable } from '@/data/firestore/riddles';
 import {
   CLUES_COUNTS_DOC,
   COLLECTIONS,
@@ -59,8 +58,6 @@ import { readSnapshot, writeSnapshot } from './snapshotStore';
 type Cache = {
   places: Record<string, PlaceDoc>;
   countries: Record<string, CountryDoc>;
-  /** `charadeRiddles`, flattened to `syllable -> riddle`. */
-  riddles: Record<string, string | null>;
   jobs: Record<string, JobDoc>;
   /** `meta/compassCounts`: size of every Compass group, see `numbering.ts`. */
   compassCounts: CompassCounts;
@@ -83,10 +80,9 @@ const readMeta = async <T>({ collection: name, id }: { collection: string; id: s
   (await getDoc(doc(db, name, id))).data() as T | undefined;
 
 const fetchAll = async (): Promise<Cache> => {
-  const [places, countries, riddles, jobs, compass, clues] = await Promise.all([
+  const [places, countries, jobs, compass, clues] = await Promise.all([
     readCollection<PlaceDoc>(COLLECTIONS.places),
     readCollection<CountryDoc>(COLLECTIONS.countries),
-    readCollection<{ riddle: string | null }>(COLLECTIONS.charadeRiddles),
     readCollection<JobDoc>(COLLECTIONS.personalityJobs),
     readMeta<CompassCountsDoc>(COMPASS_COUNTS_DOC),
     readMeta<CluesCountsDoc>(CLUES_COUNTS_DOC),
@@ -94,7 +90,6 @@ const fetchAll = async (): Promise<Cache> => {
   return {
     places,
     countries,
-    riddles: Object.fromEntries(Object.entries(riddles).map(([syllable, { riddle }]) => [syllable, riddle])),
     jobs,
     compassCounts: compass?.counts ?? {},
     compassShuffled: compass?.shuffled === true,
@@ -167,25 +162,26 @@ const notifyRevision = () => {
   for (const listener of revisionListeners) listener();
 };
 
-/** Re-reads the documents `changes` names (a deletion needs no read) and puts them in the local copy. */
+/** Re-reads the documents `changes` names (a deletion needs no read) and puts them in the local copy. A change to a
+ * collection the admin no longer knows (an old journal entry) is skipped. */
 const applyChanges = async (current: Cache, changes: JournalChange[]): Promise<void> => {
   await Promise.all(
-    changes.map(async ({ c, id, op }) => {
-      const snapshot = op === 'delete' ? null : await getDoc(doc(db, COLLECTIONS[c], id));
-      const value = snapshot?.exists() ? snapshot.data() : undefined;
-      if (c === 'places') assign(current.places, id, value as PlaceDoc | undefined);
-      else if (c === 'countries') assign(current.countries, id, value as CountryDoc | undefined);
-      else if (c === 'personalityJobs') assign(current.jobs, id, value as JobDoc | undefined);
-      else if (c === 'charadeRiddles') {
-        assign(current.riddles, id, value === undefined ? undefined : (value as { riddle: string | null }).riddle);
-      } else if (id === COMPASS_COUNTS_DOC.id) {
-        current.compassCounts = (value as CompassCountsDoc | undefined)?.counts ?? {};
-        current.compassShuffled = (value as CompassCountsDoc | undefined)?.shuffled === true;
-      } else if (id === CLUES_COUNTS_DOC.id) {
-        current.cluesCounts = (value as CluesCountsDoc | undefined)?.counts ?? {};
-        current.cluesShuffled = (value as CluesCountsDoc | undefined)?.shuffled === true;
-      }
-    }),
+    changes
+      .filter(({ c }) => c in COLLECTIONS)
+      .map(async ({ c, id, op }) => {
+        const snapshot = op === 'delete' ? null : await getDoc(doc(db, COLLECTIONS[c], id));
+        const value = snapshot?.exists() ? snapshot.data() : undefined;
+        if (c === 'places') assign(current.places, id, value as PlaceDoc | undefined);
+        else if (c === 'countries') assign(current.countries, id, value as CountryDoc | undefined);
+        else if (c === 'personalityJobs') assign(current.jobs, id, value as JobDoc | undefined);
+        else if (id === COMPASS_COUNTS_DOC.id) {
+          current.compassCounts = (value as CompassCountsDoc | undefined)?.counts ?? {};
+          current.compassShuffled = (value as CompassCountsDoc | undefined)?.shuffled === true;
+        } else if (id === CLUES_COUNTS_DOC.id) {
+          current.cluesCounts = (value as CluesCountsDoc | undefined)?.counts ?? {};
+          current.cluesShuffled = (value as CluesCountsDoc | undefined)?.shuffled === true;
+        }
+      }),
   );
 };
 
@@ -278,12 +274,6 @@ export const putCountry = async (code: string, value: CountryDoc): Promise<void>
   await putDoc('countries', code, value);
   data().countries[code] = value;
   contoursMemo = null;
-  persist();
-};
-
-export const putRiddle = async (syllable: string, riddle: string | null): Promise<void> => {
-  await putDoc('charadeRiddles', syllable, { riddle });
-  data().riddles[syllable] = riddle;
   persist();
 };
 
@@ -390,60 +380,9 @@ export const applyContourDifficultyChange = async (code: string, difficulty: Dif
     ],
   );
   data().countries[code] = next;
-  for (const [otherCode, n] of Object.entries(plan.moved)) data().countries[otherCode] = { ...data().countries[otherCode], n };
+  for (const [otherCode, n] of Object.entries(plan.moved))
+    data().countries[otherCode] = { ...data().countries[otherCode], n };
   contoursMemo = null;
-  persist();
-};
-
-/**
- * Writes the riddle of `syllable` (`null`: cleared) as `charadeRiddles/{normalized syllable}` and rewrites, in the
- * same run of batches, the `clues.riddles` of every place holding that syllable (see `planRiddleChange`).
- */
-export const applyRiddleChange = async (syllable: string, riddle: string | null): Promise<void> => {
-  const id = normalizeSyllable(syllable);
-  const plan = planRiddleChange(syllable, riddle, data().places, data().riddles);
-  await commitInBatches(
-    [
-      (batch) => batch.set(doc(db, COLLECTIONS.charadeRiddles, id), { riddle }),
-      ...Object.entries(plan).map(
-        ([key, place]) =>
-          (batch: WriteBatch) =>
-            batch.set(doc(db, COLLECTIONS.places, key), place),
-      ),
-    ],
-    [
-      { c: 'charadeRiddles', id, op: 'set' },
-      ...Object.keys(plan).map((key) => ({ c: 'places' as const, id: key, op: 'set' as const })),
-    ],
-  );
-  data().riddles[id] = riddle;
-  Object.assign(data().places, plan);
-  persist();
-};
-
-/**
- * Deletes `charadeRiddles/{normalized syllable}` and rewrites, in the same run of batches, every place holding that
- * syllable without it (see `planSyllableRemoval`).
- */
-export const applySyllableRemoval = async (syllable: string): Promise<void> => {
-  const id = normalizeSyllable(syllable);
-  const plan = planSyllableRemoval(syllable, data().places, data().riddles);
-  await commitInBatches(
-    [
-      (batch) => batch.delete(doc(db, COLLECTIONS.charadeRiddles, id)),
-      ...Object.entries(plan).map(
-        ([key, place]) =>
-          (batch: WriteBatch) =>
-            batch.set(doc(db, COLLECTIONS.places, key), place),
-      ),
-    ],
-    [
-      { c: 'charadeRiddles', id, op: 'delete' },
-      ...Object.keys(plan).map((key) => ({ c: 'places' as const, id: key, op: 'set' as const })),
-    ],
-  );
-  delete data().riddles[id];
-  Object.assign(data().places, plan);
   persist();
 };
 

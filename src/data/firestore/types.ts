@@ -17,7 +17,6 @@ import type {
 export const COLLECTIONS = {
   places: 'places',
   countries: 'countries',
-  charadeRiddles: 'charadeRiddles',
   personalityJobs: 'personalityJobs',
   meta: 'meta',
 } as const;
@@ -36,11 +35,6 @@ export type CluesDoc = {
   timezone: string;
   airportCode: string;
   emojis: string[];
-  syllables: string[];
-  /** The riddle of each syllable, same order as `syllables` (`null` when it has none): copied here from
-   * `charadeRiddles/{syllable}` so a round reads no dictionary. The admin rewrites it when a riddle or the
-   * syllables change. */
-  riddles?: (string | null)[];
   /** The place's Clues category, derived from its Compass category (`capital` / `citiesFr`, otherwise
    * `cities`, see `cluesCategory`) but stored because the game queries on it. */
   category?: ClueCategory;
@@ -121,9 +115,6 @@ export type CountryDoc = {
   /** Position 1..size inside the country's difficulty group, only on a country with a silhouette. */
   n?: number;
 };
-
-/** `charadeRiddles/{normalized syllable}`. */
-export type RiddleDoc = { riddle: string | null };
 
 /** `personalityJobs/{code}`. */
 export type JobDoc = { fr: string; en: string };

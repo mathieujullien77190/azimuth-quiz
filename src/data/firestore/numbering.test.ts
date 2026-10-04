@@ -171,7 +171,6 @@ describe('Clues numbering', () => {
       timezone: 'Europe/Paris',
       airportCode: 'AAA',
       emojis: ['a', 'b', 'c'],
-      syllables: [],
       ...(n !== undefined && { n }),
     },
   });
@@ -277,7 +276,14 @@ describe('planContourDifficultyChange', () => {
   });
 
   it('does not move a country whose number is unknown', () => {
-    expect(planContourDifficultyChange({ x: { difficulty: 'hard' }, y: { difficulty: 'hard', n: 2 } }, { hard: 2 }, 'x', 'easy')).toEqual({
+    expect(
+      planContourDifficultyChange(
+        { x: { difficulty: 'hard' }, y: { difficulty: 'hard', n: 2 } },
+        { hard: 2 },
+        'x',
+        'easy',
+      ),
+    ).toEqual({
       n: 1,
       moved: {},
       counts: { hard: 1, easy: 1 },

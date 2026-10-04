@@ -60,7 +60,7 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------------------------------------------------
-    // Données du jeu (lieux, pays avec leur silhouette, devinettes de charade, métiers) : lisibles par tout le monde (elles
+    // Données du jeu (lieux, pays avec leur silhouette, métiers) : lisibles par tout le monde (elles
     // sont de toute façon embarquées dans l'appli), modifiables uniquement par les administrateurs (la liste ci-dessous), qui
     // se connectent à l'outil `admin/` avec leur compte Google (adresse vérifiée). Les joueurs, eux,
     // n'ont qu'une authentification anonyme : ils ne passent jamais ce test.
@@ -77,11 +77,6 @@ service cloud.firestore {
     }
 
     match /countries/{code} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /charadeRiddles/{syllable} {
       allow read: if true;
       allow write: if isAdmin();
     }

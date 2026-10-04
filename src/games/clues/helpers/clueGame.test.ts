@@ -1,6 +1,5 @@
 import { FIXTURE_CLUE_PLACES as CLUE_PLACES } from '@/helpers/storyFixtures';
 import { CLUE_ORDER } from '@/games/clues/constants';
-import { charadeFor, charadeMaxStage, charadeReady } from '@/games/clues/helpers/charade';
 import { personalityFor } from '@/games/clues/helpers/personality';
 import { wordplayFor } from '@/games/clues/helpers/wordplay';
 import { nameSkeleton } from '@/helpers';
@@ -20,10 +19,6 @@ import {
 
 jest.mock('@/games/clues/helpers/personality', () => ({ personalityFor: jest.fn(() => null) }));
 jest.mock('@/games/clues/helpers/wordplay', () => ({ wordplayFor: jest.fn(() => null) }));
-jest.mock('@/games/clues/helpers/charade', () => ({
-  ...jest.requireActual('@/games/clues/helpers/charade'),
-  charadeReady: jest.fn(),
-}));
 
 const PARIS = CLUE_PLACES.find((place) => place.name === 'Paris')!; // capital
 const MARSEILLE = CLUE_PLACES.find((place) => place.name === 'Marseille')!; // citiesFr
@@ -33,9 +28,6 @@ const CITIES_FR_EXCLUDED: ClueId[] = ['localTime', 'isCapital', 'flagColors', 'c
 beforeEach(() => {
   jest.mocked(personalityFor).mockReturnValue(null);
   jest.mocked(wordplayFor).mockReturnValue(null);
-  // Ready by default: most tests in this file care about something other than charade curation
-  // status, and real curation coverage (~18%) would otherwise make this flaky/unrepresentative.
-  jest.mocked(charadeReady).mockReturnValue(true);
 });
 
 describe('placeCategory', () => {
@@ -72,17 +64,6 @@ describe('cluesFor', () => {
     expect(cluesFor(PARIS)).toContain('wordplay');
     expect(cluesFor(MARSEILLE)).toContain('wordplay');
   });
-
-  it('offers charade once every syllable has a curated riddle', () => {
-    jest.mocked(charadeReady).mockReturnValue(true);
-    expect(cluesFor(PARIS)).toContain('charade');
-    expect(cluesFor(MARSEILLE)).toContain('charade');
-  });
-
-  it('drops charade until every syllable has a curated riddle (never a partially-curated card)', () => {
-    jest.mocked(charadeReady).mockReturnValue(false);
-    expect(cluesFor(PARIS)).not.toContain('charade');
-  });
 });
 
 describe('totalRevealCount', () => {
@@ -103,7 +84,6 @@ describe('totalRevealCount', () => {
    * function's own wiring rather than just mirroring its implementation line for line. */
   const expectedTotal = (place: CluePlace): number =>
     cluesFor(place).reduce((total, clueId) => {
-      if (clueId === 'charade') return total + charadeMaxStage(charadeFor(place));
       return total + (THREE_STAGE.includes(clueId) ? 3 : TWO_STAGE.includes(clueId) ? 2 : 1);
     }, 0);
 
@@ -112,18 +92,9 @@ describe('totalRevealCount', () => {
     expect(totalRevealCount(MARSEILLE)).toBe(expectedTotal(MARSEILLE));
   });
 
-  it('is lower for a citiesFr place, by exactly the dropped clues’ own cost (their charade cost aside)', () => {
-    // Isolates the citiesFr drop from the two places' own (different) charade cost: adds it back
-    // on both sides before comparing.
-    const withoutCharade = (place: CluePlace) => totalRevealCount(place) - charadeMaxStage(charadeFor(place));
+  it('is lower for a citiesFr place, by exactly the dropped clues’ own cost', () => {
     // localTime (2 stages) + isCapital (1) + flagColors (3) + currency (2 stages) + phoneCode (1) = 9.
-    expect(withoutCharade(PARIS) - withoutCharade(MARSEILLE)).toBe(9);
-  });
-
-  it('grows with the place’s own charade cost (more syllables, more possible clicks)', () => {
-    const short: CluePlace = { ...NEW_YORK, syllables: ['pau'] };
-    const long: CluePlace = { ...NEW_YORK, syllables: ['an', 'ta', 'na', 'na', 'ri', 'vo'] };
-    expect(totalRevealCount(long)).toBeGreaterThan(totalRevealCount(short));
+    expect(totalRevealCount(PARIS) - totalRevealCount(MARSEILLE)).toBe(9);
   });
 
   it('counts one more when personality is curated for the place', () => {

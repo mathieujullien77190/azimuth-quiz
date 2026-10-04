@@ -4,7 +4,6 @@
 export const PAGES = [
   { id: 'places', path: 'places', label: 'Lieux' },
   { id: 'countries', path: 'countries', label: 'Pays' },
-  { id: 'syllables', path: 'syllables', label: 'Syllabes' },
   { id: 'jobs', path: 'jobs', label: 'Métiers' },
   { id: 'wordplay', path: 'wordplay', label: 'Jeux de mots' },
   { id: 'errors', path: 'errors', label: 'Erreurs' },

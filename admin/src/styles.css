@@ -109,7 +109,6 @@ h1 .dim {
   flex-basis: auto;
 }
 
-
 .row {
   display: flex;
   align-items: center;
@@ -316,13 +315,13 @@ a.chip {
   font-style: italic;
 }
 
-.charade-editor {
+.clue-editor {
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px dashed var(--border);
 }
 
-.charade-editor-actions {
+.clue-editor-actions {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -369,24 +368,24 @@ a.chip {
   font-variant-numeric: tabular-nums;
 }
 
-.syllables-table td {
+.jobs-table td {
   padding: 6px 8px 6px 0;
   color: var(--text);
   vertical-align: top;
 }
 
-.syllables-table thead th {
+.jobs-table thead th {
   text-align: left;
   font-weight: 600;
   color: var(--text-muted);
   padding: 4px 8px 8px 0;
 }
 
-.syllables-table tr + tr td {
+.jobs-table tr + tr td {
   border-top: 1px solid rgba(37, 51, 79, 0.6);
 }
 
-.syllables-table .syllable-cell {
+.jobs-table .code-cell {
   font-weight: 600;
   white-space: nowrap;
 }
@@ -915,7 +914,6 @@ footer {
     font-size: 17px;
   }
 }
-
 
 .wordplay-table {
   width: 100%;

@@ -87,12 +87,10 @@ const clue = (
   ],
   airportCode: 'CDG',
   emojis: ['🏙️', '🎨', '🥖'],
-  syllables: [],
-  riddles: [],
   ...partial,
 });
 
-/** A few Clues places, in the shape the game reads them from a Firestore document (country, riddles... copied in). */
+/** A few Clues places, in the shape the game reads them from a Firestore document (country... copied in). */
 export const FIXTURE_CLUE_PLACES: CluePlace[] = [
   clue({
     key: 'par',
@@ -105,8 +103,6 @@ export const FIXTURE_CLUE_PLACES: CluePlace[] = [
     population: 2_100_000,
     airportCode: 'CDG',
     emojis: ['🗼', '🥐', '🎨'],
-    syllables: ['pa', 'ris'],
-    riddles: ['pas, sans le s', 'un fruit rouge, en anglais'],
   }),
   clue({
     key: 'tok',
@@ -127,8 +123,6 @@ export const FIXTURE_CLUE_PLACES: CluePlace[] = [
     ],
     airportCode: 'HND',
     emojis: ['🗼', '🍣', '🌸'],
-    syllables: ['to', 'kyo'],
-    riddles: ['un orteil, en anglais', null],
   }),
   clue({
     key: 'new',
@@ -144,8 +138,6 @@ export const FIXTURE_CLUE_PLACES: CluePlace[] = [
     currencyName: 'Dollar',
     airportCode: 'JFK',
     emojis: ['🗽', '🚕', '🍎'],
-    syllables: ['new', 'york'],
-    riddles: [null, null],
   }),
   clue({
     key: 'sai',
@@ -158,8 +150,6 @@ export const FIXTURE_CLUE_PLACES: CluePlace[] = [
     population: 46_000,
     airportCode: 'DNR',
     emojis: ['🏰', '🌊', '⚓'],
-    syllables: ['saint', 'ma', 'lo'],
-    riddles: [null, null, null],
   }),
   clue({
     key: 'mar',
@@ -172,8 +162,6 @@ export const FIXTURE_CLUE_PLACES: CluePlace[] = [
     population: 870_000,
     airportCode: 'MRS',
     emojis: ['⚓', '🐟', '☀️'],
-    syllables: ['mar', 'seille'],
-    riddles: [null, null],
   }),
 ];
 

@@ -1,12 +1,18 @@
 import { useEffect, useState } from 'react';
 
-import { jobOptions, personalityDraftFor, savePersonalityJob, savePersonalityName, type PersonalityDraft } from '../../api/personality';
+import {
+  jobOptions,
+  personalityDraftFor,
+  savePersonalityJob,
+  savePersonalityName,
+  type PersonalityDraft,
+} from '../../api/personality';
 import { EditableValue } from '../../components/EditableValue';
 import type { CluePlace } from '@/types';
 
 /**
  * A real, Wikipedia-documented person tied to the place (nom + métier optionnel). Same model as
- * `CharadeEditor`/`WordplayEditor` (deployed under a place's own "Clues" block in `PlacesView`,
+ * `WordplayEditor` (deployed under a place's own "Clues" block in `PlacesView`,
  * click-to-edit/save-on-blur via `EditableValue`, nothing written to disk, every change just
  * logged): the name starts empty for every place, curated by hand from scratch, so it opts into
  * `allowEmpty` — clearing it back to blank removes the curated entry entirely (see
@@ -19,7 +25,7 @@ import type { CluePlace } from '@/types';
 export const PersonalityEditor = ({ initialPlace }: { initialPlace: CluePlace }) => {
   const [place] = useState(initialPlace);
   const [draft, setDraft] = useState<PersonalityDraft>(() => personalityDraftFor(place));
-  // Which field last saved, for a brief "✓" next to it — same shape as CharadeEditor/WordplayEditor.
+  // Which field last saved, for a brief "✓" next to it — same shape as WordplayEditor.
   const [savedField, setSavedField] = useState<string | null>(null);
 
   useEffect(() => {
@@ -45,7 +51,7 @@ export const PersonalityEditor = ({ initialPlace }: { initialPlace: CluePlace })
   };
 
   return (
-    <div className="charade-editor">
+    <div className="clue-editor">
       <table className="kv-table">
         <tbody>
           <tr>
@@ -64,7 +70,11 @@ export const PersonalityEditor = ({ initialPlace }: { initialPlace: CluePlace })
             <th>Métier</th>
             <td>
               <div className="field-cell">
-                <select className="field-select" value={draft.jobCode ?? ''} onChange={(e) => handleSaveJob(e.target.value)}>
+                <select
+                  className="field-select"
+                  value={draft.jobCode ?? ''}
+                  onChange={(e) => handleSaveJob(e.target.value)}
+                >
                   <option value="">(aucun)</option>
                   {jobOptions().map(({ code, fr }) => (
                     <option key={code} value={code}>

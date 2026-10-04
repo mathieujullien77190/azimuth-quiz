@@ -126,7 +126,9 @@ export const fr: Translations = {
     yourScore: 'Ton score',
     scoringInfoLabel: 'Comment les points sont calculés',
     scoringInfo:
-      'Cap et distance rapportent chacun jusqu’à 500 points, selon la précision de l’estimation. +100 points bonus sur chaque catégorie pour le(s) meilleur(s) de la manche (à plusieurs seulement). +100 points bonus supplémentaires pour un cap trouvé pile au degré près.',
+      'Cap et distance rapportent chacun jusqu’à 500 points, selon la précision de l’estimation. +100 points bonus sur chaque catégorie pour celui qui vise le plus près du lieu (à plusieurs seulement). +100 points bonus supplémentaires pour un cap trouvé pile au degré près. Le chiffre après → 🎯 est l’écart entre ton point visé et le lieu, mesuré en suivant la surface de la Terre (grand cercle).',
+    greatCircleLabel: 'Orthodromie (Wikipédia)',
+    greatCircleUrl: 'https://fr.wikipedia.org/wiki/Orthodromie',
     perfect: 'PERFECT',
   },
   endScreen: {
@@ -194,7 +196,6 @@ export const fr: Translations = {
       currency: 'Devise',
       airportCode: 'Code aéroport',
       isCapital: 'Capitale',
-      charade: 'Charade',
       personality: 'Personnalité',
       wordplay: 'Jeu de mots',
       vowels: 'Voyelles',

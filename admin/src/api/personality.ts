@@ -61,7 +61,7 @@ export const savePersonalityJob = async (
 export type JobRow = { code: string; fr: string; en: string; examples: string[] };
 
 /** How many example place names to keep per job (just enough context to judge a rename/delete —
- * not an exhaustive list). Same idea as `SyllablesView`'s own `MAX_EXAMPLES`. */
+ * not an exhaustive list). */
 const MAX_JOB_EXAMPLES = 4;
 
 /** `fr` -> a lowercase, accent-stripped, letters-only 3-letter code (`"chanteuse"` -> `"cha"`) — a

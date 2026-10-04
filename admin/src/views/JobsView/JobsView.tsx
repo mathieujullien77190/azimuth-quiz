@@ -7,8 +7,7 @@ import { Pagination, pageCount, paginate } from '../../components/Pagination';
 
 /** One job, its two translations editable in place. Delete only
  * shows once nothing uses it any more (see `deleteJob`'s own doc comment) — same "only appears
- * when it would actually do something" convention as `SyllablesView`'s own "×", one step further
- * (here it's "only when it's safe", not just "only when there's something to clear"). */
+ * when it would actually do something" convention, here "only when it's safe". */
 const Row = ({
   row,
   onSaveFr,
@@ -23,7 +22,7 @@ const Row = ({
   saveFlag: (field: 'fr' | 'en') => React.ReactNode;
 }) => (
   <tr>
-    <td className="syllable-cell">{row.code}</td>
+    <td className="code-cell">{row.code}</td>
     <td>
       <EditableValue onSave={onSaveFr} saveFlag={saveFlag('fr')} value={row.fr} />
     </td>
@@ -35,7 +34,7 @@ const Row = ({
 );
 
 /** A new entry needs both texts at once (unlike a rename), so it's its own small form rather than
- * the single-field `EditableValue` "+ Ajouter…" pattern `CharadeEditor` uses — "Ajouter" stays
+ * the single-field `EditableValue` "+ Ajouter…" pattern `WordplayEditor` uses — "Ajouter" stays
  * disabled until both are filled in. The code itself is generated (`addJob`), never typed by
  * hand: it's an opaque lookup key, not something worth curating. */
 const AddRow = ({ onAdd }: { onAdd: (fr: string, en: string) => void }) => {
@@ -68,7 +67,7 @@ const AddRow = ({ onAdd }: { onAdd: (fr: string, en: string) => void }) => {
 
 /**
  * Every curated job (`data/personalityJobs.json`), flat and searchable, add/rename/delete —
- * same relationship to `PersonalityEditor` as `SyllablesView` has to `CharadeEditor`: that editor
+ * the shared vocabulary behind `PersonalityEditor`: that editor
  * only ever picks one existing job for one place; this sweeps the whole shared vocabulary at
  * once (renaming "chanteuse" here changes it everywhere it's tagged, adding one here makes it
  * pickable from every place's `PersonalityEditor` select right away).
@@ -139,12 +138,13 @@ export const JobsView = () => {
       </div>
 
       <p className="count-line">
-        <b>{visibleRows.length}</b> métier{visibleRows.length === 1 ? '' : 's'} affiché{visibleRows.length === 1 ? '' : 's'} sur {rows.length}
+        <b>{visibleRows.length}</b> métier{visibleRows.length === 1 ? '' : 's'} affiché
+        {visibleRows.length === 1 ? '' : 's'} sur {rows.length}
       </p>
 
       <Pagination page={page} totalPages={totalPages} onChange={setPage} />
 
-      <table className="kv-table syllables-table">
+      <table className="kv-table jobs-table">
         <thead>
           <tr>
             <th>Code</th>
@@ -161,7 +161,11 @@ export const JobsView = () => {
               onSaveEn={(next) => handleSaveEn(row, next)}
               onSaveFr={(next) => handleSaveFr(row, next)}
               row={row}
-              saveFlag={(field) => (savedField?.code === row.code && savedField.field === field ? <span className="save-flag saved">✓</span> : null)}
+              saveFlag={(field) =>
+                savedField?.code === row.code && savedField.field === field ? (
+                  <span className="save-flag saved">✓</span>
+                ) : null
+              }
             />
           ))}
           <AddRow onAdd={handleAdd} />

@@ -164,7 +164,6 @@ export type ClueId =
   | 'currency'
   | 'airportCode'
   | 'isCapital'
-  | 'charade'
   | 'personality'
   | 'wordplay'
   | 'vowels';
@@ -209,9 +208,6 @@ export type CluePlace = GeoPlace & {
   /** 3 candidate emoji evoking the city (landmark/culture/nature...): the clue draws one at
    * random on each reveal, not always the same one. */
   emojis: readonly [string, string, string];
-  /** This place's syllable split for the charade clue, stored in the place document (possibly empty: some names have
-   * no usable syllable, the clue is then dropped, see `helpers/charade.ts`). */
-  syllables: string[];
   /** A real, Wikipedia-documented person tied to this place (born there, or overwhelmingly
    * identified with it) — absent for the vast majority of places (curated by hand, never
    * invented, see `ClueRow`'s own doc comment). `description` is a short one/two-word tag (a
@@ -219,9 +215,6 @@ export type CluePlace = GeoPlace & {
   personality?: { name: string; description: string | null };
   /** Which of the 3 Clues categories the place falls into (capital, French city, other city). */
   category: ClueCategory;
-  /** The riddle of each syllable (same order as `syllables`), `null` for one that has none yet: the charade
-   * clue is only offered when every syllable has one (see `charadeReady`). Copied into the place. */
-  riddles: (string | null)[];
   /** The country's flag colors in order of appearance (objects, not tuples: a place is written to a room
    * document and Firestore refuses nested arrays). Copied from the country into the place. */
   flagColors: ClueFlagColor[];

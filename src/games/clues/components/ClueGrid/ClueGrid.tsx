@@ -4,7 +4,6 @@ import { useThemedStyles } from '@/themes';
 
 import ClueCard from '../ClueCard';
 import Card from '@/components/ui/Card';
-import { charadeFor, charadeMaxStage } from '@/games/clues/helpers/charade';
 import { cluesFor } from '@/games/clues/helpers/clueGame';
 import { clueHasMoreToReveal, clueStage, vowelsUnlocked } from './helpers';
 import type { ClueGridProps } from './types';
@@ -51,13 +50,11 @@ export const ClueGrid = ({
           const isCurrency = clueId === 'currency';
           const isLocalTime = clueId === 'localTime';
           const isLetter = clueId === 'letter';
-          const isCharade = clueId === 'charade';
           const stage = clueStage(revealedClueIds, clueId);
-          const moreToReveal = !roundOver && clueHasMoreToReveal(revealedClueIds, clueId, place);
+          const moreToReveal = !roundOver && clueHasMoreToReveal(revealedClueIds, clueId);
           return (
             <ClueCard
               bearingDeg={bearingDeg}
-              charadeStage={isCharade ? (roundOver ? charadeMaxStage(charadeFor(place)) : stage) : undefined}
               clueId={clueId}
               currencyStage={isCurrency ? (roundOver ? 2 : stage) : undefined}
               distanceKm={distanceKm}

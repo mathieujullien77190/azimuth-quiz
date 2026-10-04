@@ -1,11 +1,4 @@
-import {
-  charadeBodyHeight,
-  dayNightEmoji,
-  elevationTierEmoji,
-  localTimeFor,
-  populationTier,
-  vowelsOf,
-} from './helpers';
+import { dayNightEmoji, elevationTierEmoji, localTimeFor, populationTier, vowelsOf } from './helpers';
 
 describe('vowelsOf', () => {
   it('extracts every vowel in order, uppercased', () => {
@@ -100,16 +93,5 @@ describe('populationTier', () => {
     expect(populationTier(4_999_999)).toBe(4);
     expect(populationTier(5_000_000)).toBe(5);
     expect(populationTier(24_870_000)).toBe(5);
-  });
-});
-
-describe('charadeBodyHeight', () => {
-  it('makes room for two lines per group of syllables, the gaps between groups and the padding', () => {
-    expect(charadeBodyHeight(1)).toBe(2 * 18 + 8);
-    expect(charadeBodyHeight(3)).toBe(3 * 2 * 18 + 2 * 4 + 8);
-  });
-
-  it('reserves nothing for a place without any group', () => {
-    expect(charadeBodyHeight(0)).toBe(8);
   });
 });

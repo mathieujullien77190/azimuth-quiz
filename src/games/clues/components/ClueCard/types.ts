@@ -43,7 +43,4 @@ export type ClueCardProps = {
   /** Only for the `letter` clue: 1 = first letter alone, 2 = every letter's slot, real length
    * per word. */
   letterStage?: number;
-  /** Only for the `charade` clue: how many syllable-groups are revealed (see `charadeSyllableGroups`);
-   * the last group is the clue's last stage (see `charadeLines`). */
-  charadeStage?: number;
 };

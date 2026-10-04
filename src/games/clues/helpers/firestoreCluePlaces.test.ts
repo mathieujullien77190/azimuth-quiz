@@ -30,7 +30,7 @@ jest.mock('firebase/firestore', () => ({
 jest.mock('@/helpers/firebase', () => ({ db: {} }));
 
 /** A fake `places` collection: `groups['capital|easy'][n - 1]` is the Clues place numbered `n` in that group,
- * stored the way the admin writes it (country copy, riddles next to the syllables, job label in the
+ * stored the way the admin writes it (country copy, job label in the
  * personality). */
 const installDb = (groups: Record<string, string[]>, countsOverride?: CompassCounts | null) => {
   const counts: CompassCounts = {};
@@ -72,8 +72,6 @@ const installDb = (groups: Record<string, string[]>, countsOverride?: CompassCou
               timezone: 'Europe/Rome',
               airportCode: 'AAA',
               emojis: ['a', 'b', 'c'],
-              syllables: ['ro', 'me'],
-              riddles: ['un rôle', null],
               category,
               n,
             },
@@ -123,8 +121,6 @@ describe('fetchClueRoundPlaces', () => {
       currency: '€',
       currencyName: 'Euro',
       flagColors: [{ id: 'green', hex: '#008C45', percent: 33 }],
-      syllables: ['ro', 'me'],
-      riddles: ['un rôle', null],
       wordplay: { sentence: 'Une phrase.', difficulty: 'easy' },
       personality: { name: 'Jules', description: 'empereur' },
     });

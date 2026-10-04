@@ -14,7 +14,7 @@ vi.mock('../data', () => ({
   putPlace: (key: string, value: unknown) => h.putPlace(key, value),
 }));
 
-import { cluePlaces, deletePlace, fetchPlaces, saveClues, saveCompass, saveDifficulty, type PlaceRow } from './places';
+import { deletePlace, fetchPlaces, saveClues, saveCompass, saveDifficulty, type PlaceRow } from './places';
 
 const cluesDoc = (overrides: Partial<CluesDoc> = {}): CluesDoc => ({
   positionInCountry: 'center',
@@ -24,7 +24,6 @@ const cluesDoc = (overrides: Partial<CluesDoc> = {}): CluesDoc => ({
   timezone: 'Europe/Paris',
   airportCode: 'CDG',
   emojis: ['a'],
-  syllables: ['pa', 'ris'],
   ...overrides,
 });
 
@@ -71,16 +70,8 @@ describe('fetchPlaces', () => {
       clues: null,
     });
     expect(rows[1].compass).not.toBeNull();
-    expect(rows[1].clues).toMatchObject({ key: 'par', syllables: ['pa', 'ris'] });
+    expect(rows[1].clues).toMatchObject({ key: 'par', population: 100 });
     expect(rows[2]).toMatchObject({ compass: null, clues: null });
-  });
-});
-
-describe('cluePlaces', () => {
-  it('lists only the places that have Clues data', () => {
-    h.state.places = { par: place({ clues: cluesDoc() }), ams: place({ name: 'Amsterdam' }) };
-
-    expect(cluePlaces().map((each) => each.key)).toEqual(['par']);
   });
 });
 

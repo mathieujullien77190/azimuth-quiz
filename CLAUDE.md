@@ -96,7 +96,7 @@ numerotation, compteurs, `dataVersion`, journal de l'admin), suivre le skill `fi
 (`admin/src/data.ts`) sait deja le faire pour la plupart des cas.
 
 Collections : `places/{cle}` (cle = code de 3 lettres, permanent, opaque), `countries/{ISO}` (nom, drapeau, devise,
-indicatif, voisins ; plus tout ce que lit Silhouette), `charadeRiddles/{syllabe normalisee}`, `personalityJobs/{code}`,
+indicatif, voisins ; plus tout ce que lit Silhouette), `personalityJobs/{code}`,
 `meta/*` (`compassCounts`, `cluesCounts`, `contourCounts`, `dataVersion`), `journal/*` (admin seulement), `rooms/*`.
 Le jeu ne lit que `places`, `countries` (Silhouette), `meta` et `rooms`. Types dans `data/firestore/types.ts`.
 
@@ -132,18 +132,15 @@ l'appelant donne `origin` (le point de depart, Boussole le fait, seulement a la 
 
 Lieux tires par `fetchClueRoundPlaces` (`firestoreCluePlaces.ts`, hors barrel), groupes par `clues.category`
 (`capital` / `citiesFr` / `cities`, derivee de la categorie Compass par `cluesCategory`). **Une manche ne lit que le lieu
-tire** : le document `places/{cle}` porte les copies (`country`, `clues.riddles`, `personality.job`, `wordplay`,
+tire** : le document `places/{cle}` porte les copies (`country`, `personality.job`, `wordplay`,
 `clues.category`) et `cluesFromDoc` construit le `CluePlace` depuis ce seul document.
 
 - **Quels indices** : `cluesFor(place)` filtre `CLUE_ORDER` pour ce lieu. Une ville `citiesFr` perd 5 indices qui ne varient
-  pas en France (heure locale, capitale ou non, couleurs du drapeau, devise, indicatif). `personality`, `wordplay` et
-  `charade` ne sont offerts que si le lieu les a cures (charade : TOUTES les syllabes ont une devinette, `charadeReady`).
+  pas en France (heure locale, capitale ou non, couleurs du drapeau, devise, indicatif). `personality` et `wordplay`
+  ne sont offerts que si le lieu les a cures.
   `ClueGrid` boucle sur `cluesFor`, et `vowelsUnlocked` attend que tous les indices offerts soient pioches.
 - **Globe 3D** (`globe`, 2 clics, carte pleine largeur) : `Globe3D` avec le point de depart (`gameState.origin`, passe en prop `origin` jusqu'a `ClueCard`) et le lieu entoure ; 1er clic = boule nue + equateur + meridien de Greenwich (props `equator`/`greenwich`, `land={false}`), 2e clic = les terres s'ajoutent. Ici la boule ne tourne pas (`draggable={false}`, donc pas de boutons non plus) : les clics appartiennent a la carte d'indice, et `backgroundColor` prend la couleur de la carte.
 - **Score** : `maxScoreForRound`/`remainingScore(revealedClueIds, place)` suivent la liste reellement offerte.
-- **Charade** (`helpers/charade.ts`) : une devinette par syllabe du nom (`clues.syllables`, possiblement vide), dictionnaire
-  global `charadeRiddles`, paliers plafonnes a `CHARADE_SYLLABLE_STAGE_CAP` (4) + un palier final. L'admin edite le
-  decoupage et la devinette par lieu (`CharadeEditor`) et la devinette globale (onglet Syllabes).
 - **Personnalite** : nom + metier optionnel, uniquement des faits Wikipedia, `places.personality` (curation admin).
 - **Jeu de mots** : une phrase revelee en un clic ; `difficulty` (informative, point colore dans l'en-tete, visible aussi
   carte verrouillee) ne conditionne jamais l'indice. `wordplayFor(place)` rend `null` si la phrase est vide.
@@ -223,7 +220,7 @@ exige la facturation Firebase).
   `azimuthquiz:theme`). `useThemedStyles(createStyles)` est le pattern standard. Police unique `FONT_FAMILY` ; un composant
   SVG lit `typography.<token>.fontFamily` et la passe explicitement a `<SvgText>`.
 - **Admin** (`admin/`, app Vite deployee sous `/azimuth-quiz/admin/`) : une page statique par onglet (`/admin/places`,
-  `countries`, `syllables`, `jobs`, `wordplay`, `errors` ; `/admin/` = lieux), declaree dans `admin/src/pageList.ts` ; l'admin lit les
+  `countries`, `jobs`, `wordplay`, `errors` ; `/admin/` = lieux), declaree dans `admin/src/pageList.ts` ; l'admin lit les
   donnees dans une copie locale (IndexedDB) tenue a jour par le journal, voir le skill `firestore-data`.
 - **Storybook** : stories colocalisees (`src/**/<Name>.stories.tsx`, config dans `admin/.storybook`, `npm run storybook`),
   code reel affiche via `source(code)` + `<Story>.source.md` (skill personnel `storybook-story`, hors depot). Menu : `Common`, `Compass`, `Clues`,

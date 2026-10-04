@@ -134,6 +134,9 @@ export type Translations = {
     /** Accessibility label for the ⓘ button that shows/hides scoringInfo. */
     scoringInfoLabel: string;
     scoringInfo: string;
+    /** Link text and Wikipedia URL (in the app language) for the great-circle explanation. */
+    greatCircleLabel: string;
+    greatCircleUrl: string;
     /** Shown instead of "(+0°)" for an exact heading guess — kept in English in both
      * languages, on purpose (see git history). */
     perfect: string;

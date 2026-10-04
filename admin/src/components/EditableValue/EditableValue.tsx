@@ -20,7 +20,7 @@ export const EditableValue = ({
    * for a field where blank is itself a valid value to save (clearing it on purpose). */
   allowEmpty?: boolean;
   /** A text box that grows with what is typed (and a wider one) instead of a single-line input: for long
-   * sentences such as a charade riddle. Enter still saves. */
+   * sentences such as a pun. Enter still saves. */
   multiline?: boolean;
 }) => {
   const [editing, setEditing] = useState(false);

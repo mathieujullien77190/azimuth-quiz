@@ -1,7 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { deletePlace, fetchPlaces, saveCompass, saveDifficulty, saveClues, type CompassPatch, type CluesPatch, type PlaceRow } from '../../api/places';
-import { CharadeEditor } from './CharadeEditor';
+import {
+  deletePlace,
+  fetchPlaces,
+  saveCompass,
+  saveDifficulty,
+  saveClues,
+  type CompassPatch,
+  type CluesPatch,
+  type PlaceRow,
+} from '../../api/places';
 import { PersonalityEditor } from './PersonalityEditor';
 import { WordplayEditor } from './WordplayEditor';
 import { ChipGroup, toggleInSet } from '../../components/ChipGroup';
@@ -85,7 +93,9 @@ export const PlacesView = () => {
         setSaveState({ key: row.key, field: 'difficulty', status: 'saved' });
       })
       .catch((err: Error) => {
-        setRows((cur) => cur!.map((r) => (r.key === row.key ? { ...r, compass: previousCompass, clues: previousClues } : r)));
+        setRows((cur) =>
+          cur!.map((r) => (r.key === row.key ? { ...r, compass: previousCompass, clues: previousClues } : r)),
+        );
         setSaveState({ key: row.key, field: 'difficulty', status: 'error', message: err.message });
       });
   };
@@ -163,7 +173,12 @@ export const PlacesView = () => {
           <>
             <div className="row">
               <span className="field-label">Recherche</span>
-              <input type="search" placeholder="Nom du lieu, pays ou code…" value={query} onChange={(e) => setQuery(e.target.value)} />
+              <input
+                type="search"
+                placeholder="Nom du lieu, pays ou code…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
               <button className="reset" type="button" onClick={resetFilters}>
                 Réinitialiser
               </button>
@@ -194,7 +209,8 @@ export const PlacesView = () => {
       </div>
 
       <p className="count-line">
-        <b>{visibleRows.length}</b> lieu{visibleRows.length === 1 ? '' : 'x'} affiché{visibleRows.length === 1 ? '' : 's'} sur {rows.length}
+        <b>{visibleRows.length}</b> lieu{visibleRows.length === 1 ? '' : 'x'} affiché
+        {visibleRows.length === 1 ? '' : 's'} sur {rows.length}
       </p>
 
       <Pagination page={page} totalPages={totalPages} onChange={setPage} />
@@ -234,7 +250,9 @@ export const PlacesView = () => {
               <div className="field-cell">
                 <select
                   className="field-select"
-                  style={{ '--tier-color': DIFFICULTY_COLORS[(row.compass ?? row.clues)!.difficulty] } as React.CSSProperties}
+                  style={
+                    { '--tier-color': DIFFICULTY_COLORS[(row.compass ?? row.clues)!.difficulty] } as React.CSSProperties
+                  }
                   value={(row.compass ?? row.clues)!.difficulty}
                   onChange={(e) => handleDifficultyChange(row, e.target.value as Difficulty)}
                 >
@@ -349,7 +367,6 @@ export const PlacesView = () => {
                 ) : (
                   <p className="absent">Absent d’Clues</p>
                 )}
-                {row.clues && <CharadeEditor initialPlace={row.clues} />}
                 {row.clues && <WordplayEditor initialPlace={row.clues} />}
                 {row.clues && <PersonalityEditor initialPlace={row.clues} />}
               </div>

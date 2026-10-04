@@ -36,8 +36,6 @@ const paris: PlaceDoc = {
     timezone: 'Europe/Paris',
     airportCode: 'CDG',
     emojis: ['🗼', '🥐', '🎨'],
-    syllables: ['pa', 'ris'],
-    riddles: ['pas, sans le s'],
     category: 'capital',
   },
   personality: { name: 'Victor Hugo', jobCode: 'ecr', job: { fr: 'écrivain', en: 'writer' } },
@@ -84,9 +82,6 @@ describe('cluesFromDoc', () => {
         { id: 'blue', hex: '#0055A4', percent: 33 },
         { id: 'white', hex: '#FFFFFF', percent: 34 },
       ],
-      syllables: ['pa', 'ris'],
-      // A syllable without a riddle reads as null.
-      riddles: ['pas, sans le s', null],
       wordplay: { sentence: 'Un jeu de mots.', difficulty: 'intermediate' },
       personality: { name: 'Victor Hugo', description: 'écrivain' },
     });
@@ -99,7 +94,7 @@ describe('cluesFromDoc', () => {
       wordplay: undefined,
       personality: { name: 'Anonyme', jobCode: null },
       compass: { category: 'capital' },
-      clues: { ...paris.clues!, category: undefined, riddles: undefined },
+      clues: { ...paris.clues!, category: undefined },
     });
 
     expect(place).toMatchObject({
@@ -109,7 +104,6 @@ describe('cluesFromDoc', () => {
       currency: '',
       currencyName: '',
       flagColors: [],
-      riddles: [null, null],
       personality: { name: 'Anonyme', description: null },
     });
     expect(place).not.toHaveProperty('wordplay');

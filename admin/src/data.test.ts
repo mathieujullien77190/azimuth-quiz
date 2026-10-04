@@ -109,7 +109,6 @@ const cluesDoc = (overrides: Partial<CluesDoc> = {}): CluesDoc => ({
   timezone: 'Europe/Paris',
   airportCode: 'CDG',
   emojis: [],
-  syllables: [],
   ...overrides,
 });
 
@@ -117,7 +116,6 @@ type CacheShape = Awaited<ReturnType<typeof snapshotCache>>;
 const snapshotCache = async (overrides: Record<string, unknown> = {}) => ({
   places: {} as Record<string, PlaceDoc>,
   countries: {} as Record<string, CountryDoc>,
-  riddles: {} as Record<string, string | null>,
   jobs: {} as Record<string, { fr: string; en: string }>,
   compassCounts: {},
   compassShuffled: false,
@@ -182,7 +180,6 @@ describe('data / loadData', () => {
   it('does a full sync when there is no stored copy, and stores the result', async () => {
     h.collections.places = { par: place() };
     h.collections.countries = { FR: { fr: 'France', en: 'France' } };
-    h.collections.charadeRiddles = { pa: { riddle: 'R' }, ris: { riddle: null } };
     h.collections.personalityJobs = { cha: { fr: 'chanteuse', en: 'singer' } };
     h.meta.compassCounts = { counts: { capital: { easy: 1 } }, shuffled: true };
     h.meta.cluesCounts = { counts: { capital: { easy: 1 } }, shuffled: true };
@@ -196,7 +193,6 @@ describe('data / loadData', () => {
     expect(mod.data()).toEqual({
       places: { par: place() },
       countries: { FR: { fr: 'France', en: 'France' } },
-      riddles: { pa: 'R', ris: null },
       jobs: { cha: { fr: 'chanteuse', en: 'singer' } },
       compassCounts: { capital: { easy: 1 } },
       compassShuffled: true,
@@ -377,14 +373,12 @@ describe('data / startJournalSync', () => {
       places: { par: place({ name: 'old' }), gone: place() },
       countries: { FR: { fr: 'old', en: 'old' } },
       jobs: { cha: { fr: 'old', en: 'old' } },
-      riddles: { pa: 'old', zz: 'old', nul: 'old' },
       compassCounts: { cities: { easy: 9 } },
       cluesCounts: { cities: { easy: 9 } },
     });
     h.collections.places = { par: place({ name: 'new' }) };
     h.collections.countries = { FR: { fr: 'France', en: 'France' } };
     h.collections.personalityJobs = { cha: { fr: 'chanteuse', en: 'singer' } };
-    h.collections.charadeRiddles = { pa: { riddle: 'R' }, nul: { riddle: null } };
     h.meta.compassCounts = { counts: { capital: { easy: 1 } }, shuffled: true };
     h.meta.cluesCounts = { counts: { capital: { hard: 2 } } };
     mod.startJournalSync();
@@ -398,9 +392,7 @@ describe('data / startJournalSync', () => {
           { c: 'places', id: 'gone', op: 'delete' },
           { c: 'countries', id: 'FR', op: 'set' },
           { c: 'personalityJobs', id: 'cha', op: 'set' },
-          { c: 'charadeRiddles', id: 'pa', op: 'set' },
-          { c: 'charadeRiddles', id: 'nul', op: 'set' },
-          { c: 'charadeRiddles', id: 'zz', op: 'set' },
+          { c: 'removedCollection' as never, id: 'pa', op: 'set' },
           { c: 'meta', id: 'compassCounts', op: 'set' },
           { c: 'meta', id: 'cluesCounts', op: 'set' },
           { c: 'meta', id: 'dataVersion', op: 'set' },
@@ -413,7 +405,6 @@ describe('data / startJournalSync', () => {
     expect(copy.places).toEqual({ par: place({ name: 'new' }) });
     expect(copy.countries.FR).toEqual({ fr: 'France', en: 'France' });
     expect(copy.jobs.cha).toEqual({ fr: 'chanteuse', en: 'singer' });
-    expect(copy.riddles).toEqual({ pa: 'R', nul: null });
     expect(copy.compassCounts).toEqual({ capital: { easy: 1 } });
     expect(copy.compassShuffled).toBe(true);
     expect(copy.cluesCounts).toEqual({ capital: { hard: 2 } });
@@ -543,22 +534,6 @@ describe('data / single document writes', () => {
     expect(summary()[0]).toBe('set countries/FR');
     expectBookkeeping([{ c: 'countries', id: 'FR', op: 'set' }]);
     expect(mod.data().countries.FR).toEqual({ fr: 'France', en: 'France' });
-  });
-
-  it('putRiddle stores the riddle in an object, and null to clear it', async () => {
-    await load();
-
-    await mod.putRiddle('pa', 'R');
-    expect(lastBatch().ops[0]).toMatchObject({
-      op: 'set',
-      ref: { collection: 'charadeRiddles', id: 'pa' },
-      value: { riddle: 'R' },
-    });
-    expect(mod.data().riddles.pa).toBe('R');
-
-    await mod.putRiddle('pa', null);
-    expect(lastBatch().ops[0].value).toEqual({ riddle: null });
-    expect(mod.data().riddles.pa).toBeNull();
   });
 
   it('putJob and removeJob write then delete the job', async () => {
@@ -695,72 +670,6 @@ describe('data / applyContourDifficultyChange', () => {
       counts: { hard: 1 },
     });
     expect(mod.data().countries.B).toMatchObject({ difficulty: 'hard', n: 1 });
-  });
-});
-
-describe('data / applyRiddleChange', () => {
-  const places = () => ({
-    par: place({ clues: cluesDoc({ syllables: ['pa', 'ris'], riddles: [null, null] }) }),
-    lyo: place({ name: 'Lyon', clues: cluesDoc({ syllables: ['lyon'], riddles: [null] }) }),
-  });
-
-  it('writes the riddle under the normalized syllable and rewrites the places holding it', async () => {
-    await load({ places: places() });
-
-    await mod.applyRiddleChange('Pà', 'Mon premier');
-
-    expect(summary()).toEqual([
-      'set charadeRiddles/pa',
-      'set places/par',
-      'set meta/dataVersion',
-      expect.stringMatching(/^set journal\//),
-    ]);
-    expect(lastBatch().ops[0].value).toEqual({ riddle: 'Mon premier' });
-    expect((lastBatch().ops[1].value as PlaceDoc).clues!.riddles).toEqual(['Mon premier', null]);
-    expectBookkeeping([
-      { c: 'charadeRiddles', id: 'pa', op: 'set' },
-      { c: 'places', id: 'par', op: 'set' },
-    ]);
-    expect(mod.data().riddles.pa).toBe('Mon premier');
-    expect(mod.data().places.par.clues!.riddles).toEqual(['Mon premier', null]);
-    expect(mod.data().places.lyo.clues!.riddles).toEqual([null]);
-  });
-
-  it('stores null to clear a riddle', async () => {
-    await load({ places: places(), riddles: { pa: 'old' } });
-
-    await mod.applyRiddleChange('pa', null);
-
-    expect(lastBatch().ops[0].value).toEqual({ riddle: null });
-    expect(mod.data().riddles.pa).toBeNull();
-  });
-});
-
-describe('data / applySyllableRemoval', () => {
-  it('deletes the riddle and removes the syllable from the places holding it', async () => {
-    await load({
-      places: {
-        par: place({ clues: cluesDoc({ syllables: ['pa', 'ris'], riddles: ['R', 'S'] }) }),
-        lyo: place({ name: 'Lyon', clues: cluesDoc({ syllables: ['lyon'], riddles: [null] }) }),
-      },
-      riddles: { pa: 'R', ris: 'S' },
-    });
-
-    await mod.applySyllableRemoval('PÀ');
-
-    expect(summary()).toEqual([
-      'delete charadeRiddles/pa',
-      'set places/par',
-      'set meta/dataVersion',
-      expect.stringMatching(/^set journal\//),
-    ]);
-    expect((lastBatch().ops[1].value as PlaceDoc).clues).toMatchObject({ syllables: ['ris'], riddles: ['S'] });
-    expectBookkeeping([
-      { c: 'charadeRiddles', id: 'pa', op: 'delete' },
-      { c: 'places', id: 'par', op: 'set' },
-    ]);
-    expect(mod.data().riddles).toEqual({ ris: 'S' });
-    expect(mod.data().places.par.clues!.syllables).toEqual(['ris']);
   });
 });
 

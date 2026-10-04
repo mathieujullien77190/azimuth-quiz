@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
-import { Text, View, useWindowDimensions } from 'react-native';
+import { Linking, Text, View, useWindowDimensions } from 'react-native';
 import { formatBearing, formatDistance, formatNumber } from '@/helpers';
+import { guessGapKm } from '@/games/compass/helpers/scoring';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Player, Theme } from '@/types';
@@ -34,14 +35,15 @@ export const RoundResult = ({ record, players, totals, answered, localIndex, onK
       (entry): entry is { result: (typeof record.results)[number]; player: Player; index: number } =>
         entry.player !== undefined,
     );
-  // Players are ranked by points on the round (best first) — unless pending: there's no official
-  // score yet to rank by, so this device's own entry goes first instead (easiest to find while
-  // everyone else trickles in), the rest kept in their given (arrival) order.
+  // Players are ranked by how close their guessed point is to the place (best first) — unless
+  // pending: there's no official score yet to rank by, so this device's own entry goes first
+  // instead (easiest to find while everyone else trickles in), the rest kept in their given
+  // (arrival) order.
   const ranked = pending
     ? localIndex === undefined
       ? entries
       : [...entries.filter((e) => e.index === localIndex), ...entries.filter((e) => e.index !== localIndex)]
-    : entries.sort((a, b) => b.result.score.total - a.result.score.total);
+    : entries.sort((a, b) => guessGapKm(a.result) - guessGapKm(b.result));
 
   return (
     <Card style={styles.card}>
@@ -63,7 +65,14 @@ export const RoundResult = ({ record, players, totals, answered, localIndex, onK
           onPress={() => setShowScoringInfo((value) => !value)}
           style={styles.miniButtonSpacing}
         />
-        {showScoringInfo && <Text style={styles.scoringInfo}>{t.roundResult.scoringInfo}</Text>}
+        {showScoringInfo && (
+          <Text style={styles.scoringInfo}>
+            {t.roundResult.scoringInfo}{' '}
+            <Text style={styles.scoringLink} onPress={() => Linking.openURL(t.roundResult.greatCircleUrl)}>
+              {t.roundResult.greatCircleLabel}
+            </Text>
+          </Text>
+        )}
       </View>
 
       {ranked.map(({ result, player, index }, position) => {
@@ -129,12 +138,12 @@ export const RoundResult = ({ record, players, totals, answered, localIndex, onK
                   : [
                       formatDistance(result.guess.distanceKm),
                       ' ',
-                      result.score.distanceExactBonus > 0 ? (
+                      result.score.distanceExactBonus > 0 && result.score.directionExactBonus > 0 ? (
                         <Text key="perfect" style={{ color: colors.success }}>
                           {t.roundResult.perfect}
                         </Text>
                       ) : (
-                        `(+${formatDistance(Math.abs(result.guess.distanceKm - truth.trueSurfaceDistanceKm))})`
+                        `(→ 🎯 ${formatDistance(guessGapKm(result))})`
                       ),
                     ]}
                 {pending && !hasAnswered && '?'}

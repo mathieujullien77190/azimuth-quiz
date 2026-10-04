@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 import { fontSize, spacing } from '@/data';
 import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 import type { Theme } from '@/types';
-import { CHARADE_LINE_HEIGHT, COMPASS_CLUE_SIZE, EARTH_CLUE_SIZE, GLOBE_CLUE_SIZE } from './constants';
+import { COMPASS_CLUE_SIZE, EARTH_CLUE_SIZE, GLOBE_CLUE_SIZE } from './constants';
 
 export const createStyles = ({ colors, radius, typography }: Theme) =>
   StyleSheet.create({
@@ -74,29 +74,7 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
     bodyFlag: {
       height: 78,
     },
-    // The charade's card is `wide` (see WIDE_CLUE_IDS): its body grows with however many riddle
-    // lines are revealed, rather than the fixed 42px every other card body has.
-    bodyCharade: {
-      height: undefined,
-      minHeight: 42,
-      paddingVertical: spacing.xs,
-    },
-    charadeLines: {
-      gap: spacing.xs,
-      width: '100%',
-    },
-    charadeLine: {
-      ...typography.body,
-      color: colors.text,
-      fontSize: fontSize.caption + 1,
-      lineHeight: CHARADE_LINE_HEIGHT,
-      textAlign: 'center',
-    },
-    charadeLabel: {
-      ...typography.label,
-      color: colors.accent,
-    },
-    // Same variable-height reasoning as `bodyCharade`: a pun sentence doesn't fit the fixed 42px
+    // A pun sentence doesn't fit the fixed 42px
     // every other card body has.
     bodyWordplay: {
       height: undefined,

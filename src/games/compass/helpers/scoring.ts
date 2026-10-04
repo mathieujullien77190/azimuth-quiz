@@ -11,6 +11,7 @@ import {
 } from '@/games/compass/constants';
 import type { Coordinates, Guess, Place, PlayerResult, RoundScore } from '@/types';
 
+import { EARTH_RADIUS_KM } from '@/data';
 import { angleDifference, bearingDeg, distanceKm } from '@/helpers/geo';
 import { roundDistance } from './distanceScale';
 
@@ -55,24 +56,37 @@ export const scoreRound = (origin: Coordinates, place: Place, guess: Guess): Rou
 };
 
 /**
- * Bonus for the best of the round: 1/5 of each category's max, for the player(s)
- * who has it on that category (ties included). Only makes sense with several players — solo,
- * `results` has a single element and no one can stand out, so no bonus.
- * Compares the raw errors (`directionError`/`distanceError`), not the points: those are
- * capped at 0 as soon as you're out of tolerance, so two players both out of tolerance (and
- * thus at 0 points) would otherwise be considered tied and both "the closest".
+ * Surface distance (km) between the point the player aimed at and the true place, both seen from
+ * the same origin: spherical law of cosines on the two legs (true / guessed distance) and the
+ * angle between them. Someone with the exact distance but the opposite heading is far off.
+ */
+export const guessGapKm = ({ guess, score }: PlayerResult): number => {
+  const trueAngular = score.trueSurfaceDistanceKm / EARTH_RADIUS_KM;
+  const guessAngular = guess.distanceKm / EARTH_RADIUS_KM;
+  const cosGap =
+    Math.cos(trueAngular) * Math.cos(guessAngular) +
+    Math.sin(trueAngular) * Math.sin(guessAngular) * Math.cos((score.directionError * Math.PI) / 180);
+  return Math.acos(Math.max(-1, Math.min(1, cosGap))) * EARTH_RADIUS_KM;
+};
+
+/**
+ * Bonus for the winner of the round: the player(s) whose guessed point (heading + distance) is
+ * closest to the true place (ties included) get 1/5 of each category's max. Only makes sense with
+ * several players — solo, `results` has a single element and no one can stand out, so no bonus.
+ * Compares the gap to the place, not the points: those are capped at 0 as soon as you're out of
+ * tolerance, so two players both out of tolerance would otherwise be tied.
  */
 export const applyBestBonus = (results: PlayerResult[]): PlayerResult[] => {
   if (results.length < 2) return results;
 
   const directionBonus = Math.round(MAX_DIRECTION_POINTS * BEST_BONUS_RATIO);
   const distanceBonus = Math.round(MAX_DISTANCE_POINTS * BEST_BONUS_RATIO);
-  const bestDirectionError = Math.min(...results.map((result) => result.score.directionError));
-  const bestDistanceError = Math.min(...results.map((result) => result.score.distanceError));
+  const bestGap = Math.min(...results.map(guessGapKm));
 
   return results.map((result) => {
-    const earnedDirectionBonus = result.score.directionError === bestDirectionError ? directionBonus : 0;
-    const earnedDistanceBonus = result.score.distanceError === bestDistanceError ? distanceBonus : 0;
+    const isWinner = guessGapKm(result) === bestGap;
+    const earnedDirectionBonus = isWinner ? directionBonus : 0;
+    const earnedDistanceBonus = isWinner ? distanceBonus : 0;
     return {
       ...result,
       score: {

@@ -36,7 +36,7 @@ jest.mock('@/games/clues/helpers/room', () => ({
 
 const INITIAL_STATE = useClueRoomStore.getState();
 
-const PARIS = { name: 'Paris', coordinates: { latitude: 48.8566, longitude: 2.3522 }, syllables: [] } as never;
+const PARIS = { name: 'Paris', coordinates: { latitude: 48.8566, longitude: 2.3522 } } as never;
 const ORIGIN = { name: 'Ici', coordinates: { latitude: 40, longitude: -3 }, isDevicePosition: false };
 const arrivedAt = (millis: number) => ({ toMillis: () => millis }) as never;
 

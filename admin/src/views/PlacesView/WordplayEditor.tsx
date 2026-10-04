@@ -8,11 +8,10 @@ import type { CluePlace, Difficulty } from '@/types';
 
 /**
  * A pun on the place's name, one sentence revealed in a single click (no highlighted "explained"
- * second stage — dropped). Same model as `CharadeEditor` (deployed under a place's own "Clues"
+ * second stage — dropped). Same model as `PersonalityEditor` (deployed under a place's own "Clues"
  * block in `PlacesView`, click the text to edit it, blur/Enter to save — `EditableValue`, same as
  * everywhere else in the admin — nothing written to disk, every change just logged): the sentence
- * starts empty for every place, curated by hand from scratch (no heuristic fallback here, unlike
- * charade's syllable split), so it opts into `allowEmpty` (clearing it back to "not curated" is a
+ * starts empty for every place, curated by hand from scratch (no heuristic fallback here), so it opts into `allowEmpty` (clearing it back to "not curated" is a
  * valid save). `difficulty` (how tricky the pun is, defaults to 'intermediate') is a plain select,
  * same look as `PlacesView`'s own difficulty picker — shown in-game as a colored dot, see
  * `ClueCard`'s own wordplay case.
@@ -20,7 +19,7 @@ import type { CluePlace, Difficulty } from '@/types';
 export const WordplayEditor = ({ initialPlace }: { initialPlace: CluePlace }) => {
   const [place] = useState(initialPlace);
   const [entry, setEntry] = useState<WordplayEntry>(() => wordplayEntryFor(place));
-  // Which field last saved, for a brief "✓" next to it — same shape as `CharadeEditor`'s own.
+  // Which field last saved, for a brief "✓" next to it — same shape as `PersonalityEditor`'s own.
   const [savedField, setSavedField] = useState<string | null>(null);
 
   useEffect(() => {
@@ -46,7 +45,7 @@ export const WordplayEditor = ({ initialPlace }: { initialPlace: CluePlace }) =>
   };
 
   return (
-    <div className="charade-editor">
+    <div className="clue-editor">
       <table className="kv-table">
         <tbody>
           <tr>

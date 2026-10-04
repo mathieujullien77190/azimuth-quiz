@@ -18,7 +18,6 @@ const ALL_CLUE_IDS: ClueId[] = [
   'currency',
   'airportCode',
   'isCapital',
-  'charade',
   'personality',
   'wordplay',
 ];

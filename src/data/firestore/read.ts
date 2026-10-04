@@ -27,8 +27,8 @@ export const compassFromDoc = (doc: PlaceDoc & { compass: CompassDoc }): Place =
 });
 
 /** `CluePlace` from its document — everything a round shows comes from the document itself: the country (name,
- * flag colors, currency, phone code) is the copy the place carries (`doc.country`), the riddles sit next to the
- * syllables, the personality carries its job label. */
+ * flag colors, currency, phone code) is the copy the place carries (`doc.country`), the personality carries its
+ * job label. */
 export const cluesFromDoc = (key: string, doc: PlaceDoc & { clues: NonNullable<PlaceDoc['clues']> }): CluePlace => {
   const { country } = doc;
   const { personality, wordplay } = doc;
@@ -52,8 +52,6 @@ export const cluesFromDoc = (key: string, doc: PlaceDoc & { clues: NonNullable<P
     flagColors: (country?.flag ?? []).map(({ id, hex, percent }) => ({ id, hex, percent })),
     airportCode: doc.clues.airportCode,
     emojis: doc.clues.emojis as unknown as CluePlace['emojis'],
-    syllables: [...doc.clues.syllables],
-    riddles: doc.clues.syllables.map((_, index) => doc.clues.riddles?.[index] ?? null),
     ...(wordplay && { wordplay: { sentence: wordplay.sentence, difficulty: wordplay.difficulty } }),
     ...(personality && { personality: { name: personality.name, description: jobLabel ?? null } }),
   };
