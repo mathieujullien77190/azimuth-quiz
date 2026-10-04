@@ -275,16 +275,15 @@ describe('Globe3D — satellite', () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
 
-  it('flies over the ball, goes behind it and comes back', async () => {
+  it('flies round the equator: over the ball, then behind it, and back', async () => {
     const { queryByText } = await renderGlobe();
-    expect(queryByText('🛰️')).toBeTruthy();
-    // A quarter of the way round it is over the ball, three quarters of the way it is behind it.
-    await act(() => jest.advanceTimersByTime(ORBIT_MS / 4));
-    expect(queryByText('🛰️')).toBeTruthy();
-    await act(() => jest.advanceTimersByTime(ORBIT_MS / 2));
-    expect(queryByText('🛰️')).toBeNull();
-    await act(() => jest.advanceTimersByTime(ORBIT_MS / 4));
-    expect(queryByText('🛰️')).toBeTruthy();
+    const seen: boolean[] = [];
+    for (let step = 0; step < 16; step += 1) {
+      seen.push(queryByText('🛰️') !== null);
+      await act(() => jest.advanceTimersByTime(ORBIT_MS / 16));
+    }
+    expect(seen).toContain(true);
+    expect(seen).toContain(false);
   });
 
   it('shows a joke when the satellite is tapped, and hides it on a second tap', async () => {
@@ -296,17 +295,16 @@ describe('Globe3D — satellite', () => {
     expect(queryByText(SATELLITE_QUIP)).toBeNull();
   });
 
-  it('follows the true answer when there is one', async () => {
-    const marks: EarthMark[] = [answer, { ...answer, bearing: 90, isTruth: true }];
-    const { queryByText } = await renderGlobe({ marks });
-    expect(queryByText('🛰️')).toBeTruthy();
+  it('flies whatever the answers are, even with none', async () => {
+    const withAnswers = await renderGlobe({ marks: [answer, { ...answer, bearing: 90, isTruth: true }] });
+    expect(withAnswers.queryByText('🛰️')).toBeTruthy();
+    const empty = await renderGlobe({ marks: [] });
+    expect(empty.queryByText('🛰️')).toBeTruthy();
   });
 
-  it('has none when asked not to, and none without an answer to follow', async () => {
+  it('has none when asked not to', async () => {
     const asked = await renderGlobe({ satellite: false });
     expect(asked.queryByText('🛰️')).toBeNull();
-    const empty = await renderGlobe({ marks: [] });
-    expect(empty.queryByText('🛰️')).toBeNull();
   });
 
   it('has no satellite, nor plane, by day', async () => {

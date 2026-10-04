@@ -17,6 +17,7 @@ import {
   pickClueRoomClue,
   pruneRoomPlayerData,
   removeRoomPlayer,
+  restartRoom,
   reportClueRoomCorrect,
   reportClueRoomWrong,
   setClueRoomTyping,
@@ -34,8 +35,8 @@ import type { ClueId } from '@/types';
  * `useOnlineGame`/`OnlineGameScreen.tsx`.
  */
 export const useOnlineClueGame = (code: string, onQuit: () => void) => {
-  const { localUid, players, connectionLost, connected, roomSettings, gameState, onlinePlayers, isHost, handleQuit } =
-    useOnlineRoomSession(useClueRoomStore, { deleteRoom, removeRoomPlayer, pruneRoomPlayerData }, code, onQuit);
+  const { localUid, players, connectionLost, connected, roomSettings, gameState, onlinePlayers, isHost, handleQuit, handleReplay } =
+    useOnlineRoomSession(useClueRoomStore, { deleteRoom, restartRoom, removeRoomPlayer, pruneRoomPlayerData }, code, onQuit);
 
   const place = gameState.places[gameState.roundIndex];
   const isMyTurn = localUid !== null && localUid === gameState.turnUid;
@@ -196,5 +197,6 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     giveUp,
     goToNextRound,
     handleQuit,
+    handleReplay,
   };
 };

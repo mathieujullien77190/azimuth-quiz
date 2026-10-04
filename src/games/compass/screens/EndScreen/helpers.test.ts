@@ -21,6 +21,7 @@ const result = (directionPoints: number, distancePoints: number): PlayerResult =
     distanceBonus: 0,
     directionExactBonus: 0,
     distanceExactBonus: 0,
+    targetGapKm: 0,
     total: directionPoints + distancePoints,
   },
 });

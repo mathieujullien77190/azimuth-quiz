@@ -1,11 +1,11 @@
 ```tsx
 import FinalStandings from '@/components/FinalStandings';
-import Button from '@/components/ui/Button';
 
 <FinalStandings
   entries={[{ name: 'Zoé', total: 1250 }]}
   title={t.endScreen.title}
->
-  <Button label={t.endScreen.menu} onPress={handleQuit} />
-</FinalStandings>
+
+  onQuit={handleQuit}
+  onReplay={handleReplay}
+/>
 ```

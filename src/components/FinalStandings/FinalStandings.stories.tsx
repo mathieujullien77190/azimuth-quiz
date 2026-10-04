@@ -16,7 +16,7 @@ const textArgs = (t: Translations) => ({ title: t.endScreen.title });
 const meta = {
   title: 'Common/FinalStandings',
   component: FinalStandings,
-  args: textArgs(translations.fr),
+  args: { ...textArgs(translations.fr), onReplay: () => {}, onQuit: () => {} },
   decorators: [localizedArgs(textArgs)],
 } satisfies Meta<typeof FinalStandings>;
 

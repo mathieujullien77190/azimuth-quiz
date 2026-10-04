@@ -1,5 +1,7 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { signInAnonymously } from 'firebase/auth';
 
+import { ROOM_CODE_STORAGE_KEY } from '@/data';
 import { auth } from '@/helpers/firebase';
 
 // Not re-exported from `helpers/index.ts`'s barrel: `firebase/auth` drags in the same ESM-only
@@ -31,6 +33,26 @@ const randomChar = (chars: string): string => chars[Math.floor(Math.random() * c
  * on one. */
 export const generateRoomCode = (): string =>
   Array.from({ length: CODE_SYLLABLES }, () => randomChar(CODE_CONSONANTS) + randomChar(CODE_VOWELS)).join('');
+
+/** The code this device hosted last, if it kept one: the player keeps "their" code from one game or
+ * party to the next, and `createRoom` tries it first. Null when none was saved or storage fails. */
+export const loadMyRoomCode = async (): Promise<string | null> => {
+  try {
+    const code = await AsyncStorage.getItem(ROOM_CODE_STORAGE_KEY);
+    return code !== null && isValidRoomCode(code) ? code : null;
+  } catch {
+    return null;
+  }
+};
+
+/** Remembers the code this device just hosted under. Not critical if it fails: a fresh code is drawn next time. */
+export const saveMyRoomCode = async (code: string): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(ROOM_CODE_STORAGE_KEY, code);
+  } catch {
+    // Code not remembered: not critical.
+  }
+};
 
 /** An anonymous Firebase Auth uid, signing in if needed — proves "the device that created/joined
  * this room" to security rules without any actual login screen. Shared across every game's rooms:

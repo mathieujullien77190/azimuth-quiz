@@ -34,6 +34,7 @@ const scoreFixture = {
   distanceBonus: 0,
   directionExactBonus: 0,
   distanceExactBonus: 0,
+  targetGapKm: 0,
   total: 850,
 };
 
@@ -52,12 +53,12 @@ const soloPlayers: Player[] = [{ name: 'Zoé', color: '#EF4444' }];
 const multiRecord: RoundRecord = {
   place,
   results: [
-    // Zoé: lowest score -> ranked second despite player order.
-    { guess: { bearing: 80, distanceKm: 950 }, score: { ...scoreFixture, total: 500 } },
-    // Max: best score of the round -> ranked first.
+    // Zoé: aimed farthest from the place -> ranked second despite player order.
+    { guess: { bearing: 80, distanceKm: 950 }, score: { ...scoreFixture, total: 500, targetGapKm: 300 } },
+    // Max: aimed closest to the place -> ranked first.
     {
       guess: { bearing: 95, distanceKm: 1010 },
-      score: { ...scoreFixture, total: 900, distanceBonus: 100 },
+      score: { ...scoreFixture, total: 900, distanceBonus: 100, targetGapKm: 40 },
     },
   ],
 };
@@ -78,19 +79,19 @@ describe('RoundResult — solo', () => {
     const { getByText, queryByText } = await render(
       <RoundResult players={soloPlayers} record={soloRecord} totals={[850]} />,
     );
-    expect(queryByText(/Cap et distance rapportent/)).toBeNull();
+    expect(queryByText(/rapportent chacun/)).toBeNull();
     await fireEvent.press(getByText('Comment les points sont calculés'));
-    expect(getByText(/Cap et distance rapportent/)).toBeTruthy();
+    expect(getByText(/rapportent chacun/)).toBeTruthy();
     await fireEvent.press(getByText('Comment les points sont calculés'));
-    expect(queryByText(/Cap et distance rapportent/)).toBeNull();
+    expect(queryByText(/rapportent chacun/)).toBeNull();
   });
 
-  it('opens the great-circle Wikipedia page from the scoring explanation', async () => {
+  it('opens the rhumb-line Wikipedia page from the scoring explanation', async () => {
     const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
     const { getByText } = await render(<RoundResult players={soloPlayers} record={soloRecord} totals={[850]} />);
     await fireEvent.press(getByText('Comment les points sont calculés'));
-    await fireEvent.press(getByText('Orthodromie (Wikipédia)'));
-    expect(openURL).toHaveBeenCalledWith('https://fr.wikipedia.org/wiki/Orthodromie');
+    await fireEvent.press(getByText('loxodromique'));
+    expect(openURL).toHaveBeenCalledWith('https://fr.wikipedia.org/wiki/Loxodromie');
     openURL.mockRestore();
   });
 });
@@ -163,7 +164,7 @@ describe('RoundResult — score bonus colouring', () => {
 });
 
 describe('RoundResult — multiplayer', () => {
-  it('ranks players by round score, best first, and shows both names/dots', async () => {
+  it('ranks players by how close they aimed to the place, best first, and shows both names/dots', async () => {
     const { getAllByText } = await render(
       <RoundResult players={multiPlayers} record={multiRecord} totals={[500, 900]} />,
     );

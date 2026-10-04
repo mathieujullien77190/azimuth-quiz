@@ -10,6 +10,7 @@ import {
   nextRoomRound,
   pruneRoomPlayerData,
   removeRoomPlayer,
+  restartRoom,
   submitRoomGuess,
 } from '@/games/compass/helpers/room';
 import { useRoomStore } from '@/games/compass/store/roomStore';
@@ -26,8 +27,8 @@ import { buildRoundRecord } from './helpers';
  * `useGame`/`GameScreen.tsx`.
  */
 export const useOnlineGame = (code: string, onQuit: () => void) => {
-  const { localUid, players, connectionLost, connected, roomSettings, gameState, onlinePlayers, isHost, handleQuit } =
-    useOnlineRoomSession(useRoomStore, { deleteRoom, removeRoomPlayer, pruneRoomPlayerData }, code, onQuit);
+  const { localUid, players, connectionLost, connected, roomSettings, gameState, onlinePlayers, isHost, handleQuit, handleReplay } =
+    useOnlineRoomSession(useRoomStore, { deleteRoom, restartRoom, removeRoomPlayer, pruneRoomPlayerData }, code, onQuit);
   const place = gameState.places[gameState.roundIndex];
 
   // This device's own in-progress answer — reset at the top of every round. Adjusted during
@@ -145,6 +146,7 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
     totals,
     myIndex,
     handleQuit,
+    handleReplay,
     submit,
     kickPlayer,
     goToNextRound,

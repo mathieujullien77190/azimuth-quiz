@@ -1,7 +1,7 @@
-import { rhumbDestination } from '@/helpers/geo';
+import { rhumbDestination, wrapLongitude } from '@/helpers/geo';
 import type { Coordinates } from '@/types';
 
-import { MAX_CENTER_LATITUDE, MAX_ZOOM, MIN_ZOOM, ORBIT_TILT_DEG } from './constants';
+import { MAX_CENTER_LATITUDE, MAX_ZOOM, MIN_ZOOM } from './constants';
 import type { Fingers, ScreenPoint, ViewPoint } from './types';
 
 const toRadians = (degrees: number): number => (degrees * Math.PI) / 180;
@@ -124,42 +124,25 @@ export const fingersOf = (event: {
 }): Fingers => ({ x: event.pageX, y: event.pageY, gap: fingerGap(event.touches) });
 
 /**
- * Where a satellite flying at `ratio` times the radius is on the drawing, `angle` radians into its orbit: a circle
- * round the middle of the globe, tipped `ORBIT_TILT_DEG` out of the plane of the screen and turned to lie along the
- * route from `from` to `to` — the answer's own line, as it is seen on the drawing. The satellite therefore flies along
- * that line, carries on round the back of the ball, and comes up the other side; the globe hides it while it is behind,
- * unless it is out beyond the outline.
- *
- * It used to fly the great circle through both of those points, which came out as sliding back and forth along a
- * straight line, for ever: the globe opens on the middle of that route (see `centerOn`), and a circle the camera sits
- * in the plane of is seen edge-on. Lying *along* the line while leaning out of the screen keeps both: the axis of the
- * answer, and an orbit one can see turning.
+ * Where a satellite flying at `ratio` times the radius is on the drawing, `angle` radians into its orbit: right round
+ * the equator of the globe, eastwards, a little above the ground. It turns with the globe (the equator is seen from the
+ * camera's own point of view, see `viewPoint`): over the front of the ball it flies across it, behind it the globe hides
+ * it, unless it is out beyond the outline. With the globe turned to the equator the orbit is seen edge-on, a line across
+ * the ball; tipping the globe opens it into an ellipse.
  */
 export const orbitPoint = (
   angle: number,
-  from: Coordinates,
-  to: Coordinates,
   center: Coordinates,
   cx: number,
   cy: number,
   radius: number,
   ratio: number,
 ): ScreenPoint => {
-  const tilt = toRadians(ORBIT_TILT_DEG);
-  const flat = Math.cos(angle);
-  const high = Math.sin(angle) * Math.cos(tilt);
-  const towardsViewer = Math.sin(angle) * Math.sin(tilt);
-  // Which way the answer's line runs on the drawing, from the camera's own point of view.
-  const start = viewPoint(from, center);
-  const end = viewPoint(to, center);
-  const axis = Math.atan2(end.y - start.y, end.x - start.x);
-  const x = flat * Math.cos(axis) - high * Math.sin(axis);
-  const y = flat * Math.sin(axis) + high * Math.cos(axis);
+  const view = viewPoint({ latitude: 0, longitude: wrapLongitude(toDegrees(angle)) }, center);
   return {
-    x: cx + x * radius * ratio,
-    y: cy - y * radius * ratio,
-    // Turning the orbit does not change how far out it is, so this reads the same at any axis.
-    visible: towardsViewer >= 0 || Math.hypot(x, y) * ratio > 1,
+    x: cx + view.x * radius * ratio,
+    y: cy - view.y * radius * ratio,
+    visible: view.z >= 0 || Math.hypot(view.x, view.y) * ratio > 1,
   };
 };
 

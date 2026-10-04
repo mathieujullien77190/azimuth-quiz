@@ -154,7 +154,7 @@ export const EarthSection = ({
       <View style={styles.svgWrap}>
         {globeOrigin !== undefined ? (
           <View style={[styles.flatWrap, { height }]}>
-            <Globe3D marks={marks} origin={globeOrigin} size={Math.min(size, height)} />
+            <Globe3D equator marks={marks} origin={globeOrigin} size={Math.min(size, height)} />
           </View>
         ) : (
           <Svg accessibilityLabel={CAPTION_SURFACE} height={height} width={size}>

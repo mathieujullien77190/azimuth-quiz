@@ -76,7 +76,8 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
     return (
       <EndScreen
         localName={endLocalName}
-        onMenu={game.handleQuit}
+        onQuit={game.handleQuit}
+        onReplay={game.handleReplay}
         players={end.players}
         records={end.records}
         totals={end.totals}

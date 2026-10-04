@@ -126,11 +126,23 @@ const buildPath = (tolerance) => {
 const buildMask = (rings) => {
   const edges = [];
   for (const ring of rings) {
-    for (let index = 0; index < ring.length; index += 1) {
-      const from = ring[index];
-      const to = ring[(index + 1) % ring.length];
-      // A horizontal edge never crosses a row of the scan: it would only count twice.
-      if (from[1] !== to[1]) edges.push([from[0], from[1], to[0], to[1]]);
+    // A ring is not cut at the date line (Russia, Fiji...): it jumps from +180 to -180 and back. Followed the short way
+    // at each jump (the longitude going on past 180 instead of wrapping), the ring is a plain closed shape again, which
+    // a scan reads right; it then sits one turn of the world to the side of where it belongs, so it is also laid
+    // down one turn either way, and whatever falls in the map comes from one of the three.
+    const open = [ring[0][0]];
+    for (let index = 1; index < ring.length; index += 1) {
+      const jump = ring[index][0] - ring[index - 1][0];
+      const turn = Math.abs(jump) > 180 ? (jump > 0 ? -360 : 360) : 0;
+      open.push(open[index - 1] + jump + turn);
+    }
+    for (const shift of [-360, 0, 360]) {
+      for (let index = 0; index < ring.length; index += 1) {
+        const next = (index + 1) % ring.length;
+        // A horizontal edge never crosses a row of the scan: it would only count twice.
+        if (ring[index][1] === ring[next][1]) continue;
+        edges.push([open[index] + shift, ring[index][1], open[next] + shift, ring[next][1]]);
+      }
     }
   }
 

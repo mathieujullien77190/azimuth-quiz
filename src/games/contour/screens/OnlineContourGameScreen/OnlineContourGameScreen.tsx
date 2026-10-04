@@ -2,7 +2,6 @@ import { useTransientFlag } from '@/helpers/useTransientFlag';
 import { useTranslation } from '@/i18n';
 
 import FinalStandings from '@/components/FinalStandings';
-import Button from '@/components/ui/Button';
 import NoticeOverlay from '@/components/NoticeOverlay';
 import RoomDeletedScreen from '@/components/RoomDeletedScreen';
 import { OnlineContourGameScreenView } from './OnlineContourGameScreenView';
@@ -48,10 +47,10 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
           color: player.color,
         }))}
         localName={onlinePlayers.find((player) => player.uid === localUid)?.name ?? ''}
+        onQuit={game.handleQuit}
+        onReplay={game.handleReplay}
         title={t.endScreen.title}
-      >
-        <Button label={t.endScreen.menu} onPress={game.handleQuit} />
-      </FinalStandings>
+      />
     );
   }
 

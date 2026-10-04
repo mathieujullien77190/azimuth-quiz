@@ -23,6 +23,8 @@ export const THEME_STORAGE_KEY = 'azimuthquiz:theme';
  * game's setup fills it in for the others too, even though only Compass' own `GameSettings`
  * otherwise persists across launches. */
 export const PLAYER_NAME_STORAGE_KEY = 'azimuthquiz:player-name';
+/** The room code this device hosted last, offered again for its next room (see `createRoom`). */
+export const ROOM_CODE_STORAGE_KEY = 'azimuthquiz:room-code';
 
 // --- Game options (shared by all 3 games) ---
 export const ROUND_OPTIONS = [5, 10, 15, 20] as const;

@@ -1,9 +1,9 @@
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
 import FinalStandings from '.';
 
-const baseProps = { title: 'Classement final' };
+const baseProps = { title: 'Classement final', onReplay: jest.fn(), onQuit: jest.fn() };
 
 beforeEach(() => jest.clearAllMocks());
 
@@ -70,5 +70,20 @@ describe('FinalStandings — what the game adds', () => {
   it('shows nothing more without children', async () => {
     const { queryByText } = await render(<FinalStandings {...baseProps} entries={[{ name: 'Zoé', total: 1 }]} />);
     expect(queryByText('Récapitulatif')).toBeNull();
+  });
+});
+
+describe('FinalStandings — the buttons', () => {
+  it('plays again or leaves', async () => {
+    const onReplay = jest.fn();
+    const onQuit = jest.fn();
+    const { getByText } = await render(
+      <FinalStandings {...baseProps} entries={[{ name: 'Zoé', total: 1 }]} onQuit={onQuit} onReplay={onReplay} />,
+    );
+    await fireEvent.press(getByText('Rejouer'));
+    expect(onReplay).toHaveBeenCalledTimes(1);
+    expect(onQuit).not.toHaveBeenCalled();
+    await fireEvent.press(getByText('Quitter'));
+    expect(onQuit).toHaveBeenCalledTimes(1);
   });
 });

@@ -10,6 +10,7 @@ import {
   passRoomTurn,
   pruneRoomPlayerData,
   removeRoomPlayer,
+  restartRoom,
   reportContourRoomCorrect,
   reportContourRoomWrong,
   revealContourRoomHint,
@@ -48,8 +49,8 @@ const NO_NEIGHBOR_COUNTRIES: ContourCountry[] = [];
  */
 export const useOnlineContourGame = (code: string, onQuit: () => void) => {
   const { language } = useLanguage();
-  const { localUid, connectionLost, connected, roomSettings, gameState, onlinePlayers, isHost, handleQuit } =
-    useOnlineRoomSession(useContourRoomStore, { deleteRoom, removeRoomPlayer, pruneRoomPlayerData }, code, onQuit);
+  const { localUid, connectionLost, connected, roomSettings, gameState, onlinePlayers, isHost, handleQuit, handleReplay } =
+    useOnlineRoomSession(useContourRoomStore, { deleteRoom, restartRoom, removeRoomPlayer, pruneRoomPlayerData }, code, onQuit);
 
   // The room only carries the countries' codes: every device reads the round's country (and the ones around
   // it) from Firestore, the next round's already while this one is played.
@@ -181,5 +182,6 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
     giveUp,
     goToNextRound,
     handleQuit,
+    handleReplay,
   };
 };

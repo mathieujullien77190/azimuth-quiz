@@ -36,6 +36,7 @@ export const {
   joinRoomPresence,
   removeRoomPlayer,
   deleteRoom,
+  restartRoom,
   pruneRoomPlayerData,
   sendHeartbeat,
   passRoomTurn,

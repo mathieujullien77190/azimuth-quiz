@@ -1,8 +1,9 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { signInAnonymously } from 'firebase/auth';
 
 import { auth } from '@/helpers/firebase';
 
-import { generateRoomCode, getLocalUid, isValidRoomCode } from './roomCode';
+import { generateRoomCode, getLocalUid, isValidRoomCode, loadMyRoomCode, saveMyRoomCode } from './roomCode';
 
 jest.mock('firebase/auth', () => ({ signInAnonymously: jest.fn() }));
 jest.mock('@/helpers/firebase', () => ({ auth: { currentUser: null } }));
@@ -49,5 +50,27 @@ describe('getLocalUid', () => {
     (signInAnonymously as jest.Mock).mockResolvedValue({ user: { uid: 'fresh' } });
     await expect(getLocalUid()).resolves.toBe('fresh');
     expect(signInAnonymously).toHaveBeenCalledWith(auth);
+  });
+});
+
+describe('my room code', () => {
+  beforeEach(() => AsyncStorage.clear());
+
+  it('gives back the saved code', async () => {
+    await saveMyRoomCode('tarabota');
+    await expect(loadMyRoomCode()).resolves.toBe('tarabota');
+  });
+
+  it('gives null when nothing was saved or the saved value is not a room code', async () => {
+    await expect(loadMyRoomCode()).resolves.toBeNull();
+    await AsyncStorage.setItem('azimuthquiz:room-code', 'nope');
+    await expect(loadMyRoomCode()).resolves.toBeNull();
+  });
+
+  it('swallows storage failures', async () => {
+    jest.spyOn(AsyncStorage, 'getItem').mockRejectedValueOnce(new Error('boom'));
+    jest.spyOn(AsyncStorage, 'setItem').mockRejectedValueOnce(new Error('boom'));
+    await expect(loadMyRoomCode()).resolves.toBeNull();
+    await expect(saveMyRoomCode('tarabota')).resolves.toBeUndefined();
   });
 });

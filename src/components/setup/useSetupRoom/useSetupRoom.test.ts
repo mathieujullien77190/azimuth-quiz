@@ -3,6 +3,7 @@ import { act, renderHook } from '@testing-library/react-native';
 
 import { PLAYER_NAME_STORAGE_KEY } from '@/data';
 import { createRoomStore } from '@/helpers/createRoomStore';
+import { resetErrorThrottle, setErrorReporter } from '@/helpers/reportError';
 import { nameTakenError } from '@/helpers/roomName';
 import type { RoomPlayers } from '@/helpers/roomBase';
 import { usePlayerName } from '@/settings';
@@ -380,6 +381,25 @@ describe('useSetupRoom — cleanup that fails', () => {
     await ctx.emitPlayers({ zoe: player('Host'), max: player('Max') }, 'zoe');
     await ctx.unmount();
     expect(ctx.adapter.removeRoomPlayer).toHaveBeenCalledWith('tabofuna', 'max');
+  });
+
+  it.each([
+    ['permission-denied', 0],
+    ['unavailable', 1],
+  ])('joiner: a %s failure on leaving is recorded %i time(s) (denied = the room is already gone)', async (code, recorded) => {
+    const reporter = jest.fn(() => Promise.resolve());
+    setErrorReporter(reporter);
+    resetErrorThrottle();
+    const ctx = await setup({
+      joinRoomPresence: jest.fn(() => Promise.resolve('max')),
+      removeRoomPlayer: jest.fn(() => Promise.reject(Object.assign(new Error('x'), { code }))),
+    });
+    await joinRoom(ctx);
+    await ctx.emitPlayers({ zoe: player('Host'), max: player('Max') }, 'zoe');
+    await ctx.unmount();
+    await act(async () => {});
+    expect(reporter).toHaveBeenCalledTimes(recorded);
+    setErrorReporter(null);
   });
 });
 

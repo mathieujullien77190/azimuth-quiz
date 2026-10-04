@@ -137,7 +137,7 @@ const landFill = (color: string): Mesh => {
     for (let column = 0; column < columns; column += 1) {
       const corner = row * (columns + 1) + column;
       const above = corner + columns + 1;
-      corners.push(corner, above, corner + 1, above, above + 1, corner + 1);
+      corners.push(corner, corner + 1, above, above, corner + 1, above + 1);
     }
   }
   const geometry = new BufferGeometry();

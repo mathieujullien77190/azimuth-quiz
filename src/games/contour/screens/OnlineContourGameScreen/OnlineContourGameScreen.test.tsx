@@ -128,7 +128,7 @@ describe('OnlineContourGameScreen — the end', () => {
     setGame({ gameState: gameState({ screen: 'end', totalScores: { zoe: 900 } }) });
     const { getByText } = await renderScreen();
     expect(getByText(t.endScreen.title)).toBeTruthy();
-    await fireEvent.press(getByText(t.endScreen.menu));
+    await fireEvent.press(getByText(t.endScreen.quit));
     expect((mockGame.handleQuit as jest.Mock).mock.calls).toHaveLength(1);
   });
 

@@ -15,7 +15,7 @@ import {
 } from 'firebase/firestore';
 
 import { db } from '@/helpers/firebase';
-import { generateRoomCode, getLocalUid } from '@/helpers/roomCode';
+import { generateRoomCode, getLocalUid, loadMyRoomCode, saveMyRoomCode } from '@/helpers/roomCode';
 import { isNameTaken, nameTakenError } from '@/helpers/roomName';
 
 // Not re-exported from `helpers/index.ts`'s barrel: `firebase/firestore` is ESM-only and crashes
@@ -59,19 +59,23 @@ export const createRoomApi = <Settings extends object>(game: RoomGame) => {
     await Promise.all(snapshot.docs.map((roomDoc) => deleteDoc(roomDoc.ref)));
   };
 
-  /** Creates a new room under a fresh code, retrying on the rare collision with an existing one,
+  /** Creates a new room, under the code this device hosted last when it is still free (the player keeps
+   * their code across games and parties), else under a fresh one, retrying on the rare collision with an existing one,
    * seeded with the host's current settings and stamped with its uid and its game — security rules
    * only let that same uid update the room's settings afterwards, and nobody change the game. Returns the code that ended up winning.
    * First clears out any room this uid hosted before (see `deletePreviousRoomsByHost`). */
   const createRoom = async (settings: Settings): Promise<string> => {
     const hostUid = await getLocalUid();
     await deletePreviousRoomsByHost(hostUid);
+    let remembered = await loadMyRoomCode();
     for (;;) {
-      const code = generateRoomCode();
+      const code = remembered ?? generateRoomCode();
+      remembered = null;
       const ref = roomRef(code);
       if ((await getDoc(ref)).exists()) continue;
 
       await setDoc(ref, { createdAt: serverTimestamp(), hostUid, game, settings });
+      await saveMyRoomCode(code);
       return code;
     }
   };
@@ -128,6 +132,10 @@ export const createRoomApi = <Settings extends object>(game: RoomGame) => {
    * (`subscribeToRoomPlayers`'s `exists` flag going false) instead of being stuck on a room that
    * will never advance again. */
   const deleteRoom = (code: string): Promise<void> => deleteDoc(roomRef(code));
+
+  /** Host-only: sends the room back to its lobby (`screen: 'options'`) with everyone still in it: the "replay" of the
+   * end screen. Nothing else is touched — the next start (each game's `startRoomGame`) rewrites every round field. */
+  const restartRoom = (code: string): Promise<void> => updateDoc(roomRef(code), { screen: 'options' });
 
   /** "I'm still here": bumps this device's own `lastSeen`. The promise only settles once the server
    * acknowledged the write, so a device that can't reach it never sees it resolve — that's how
@@ -187,6 +195,7 @@ export const createRoomApi = <Settings extends object>(game: RoomGame) => {
     joinRoomPresence,
     removeRoomPlayer,
     deleteRoom,
+    restartRoom,
     pruneRoomPlayerData,
     sendHeartbeat,
     passRoomTurn,

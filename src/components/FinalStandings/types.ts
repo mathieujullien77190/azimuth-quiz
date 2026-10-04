@@ -16,8 +16,12 @@ export type FinalStandingsProps = {
    * "Vous gagnez !" instead of naming them, same treatment as Clues' own round-winner banner.
    * Omitted (e.g. a name-less sample in Storybook) always names the winner instead. */
   localName?: string;
-  /** What the game adds under the scores: its extras, and the button that leaves the game. */
+  /** What the game adds under the scores (Compass' rank card and round-by-round recap...). */
   children?: ReactNode;
+  /** "Rejouer": back to the lobby with every player still in the room. */
+  onReplay: () => void;
+  /** "Quitter": leaves the game, for the home screen. */
+  onQuit: () => void;
 };
 
 export type RankedEntry = StandingEntry & {

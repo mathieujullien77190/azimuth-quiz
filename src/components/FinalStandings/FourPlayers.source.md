@@ -1,6 +1,5 @@
 ```tsx
 import FinalStandings from '@/components/FinalStandings';
-import Button from '@/components/ui/Button';
 
 // The podium gets medals, the fourth player and beyond their rank number; tied totals share a rank.
 <FinalStandings
@@ -10,7 +9,8 @@ import Button from '@/components/ui/Button';
     color: player.color,
   }))}
   title={t.endScreen.title}
->
-  <Button label={t.endScreen.menu} onPress={handleQuit} />
-</FinalStandings>
+
+  onQuit={handleQuit}
+  onReplay={handleReplay}
+/>
 ```

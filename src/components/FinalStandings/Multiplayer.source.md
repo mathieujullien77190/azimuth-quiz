@@ -1,6 +1,5 @@
 ```tsx
 import FinalStandings from '@/components/FinalStandings';
-import Button from '@/components/ui/Button';
 
 <FinalStandings
   entries={onlinePlayers.map((player) => ({
@@ -9,7 +8,8 @@ import Button from '@/components/ui/Button';
     color: player.color,
   }))}
   title={t.endScreen.title}
->
-  <Button label={t.endScreen.menu} onPress={handleQuit} />
-</FinalStandings>
+
+  onQuit={handleQuit}
+  onReplay={handleReplay}
+/>
 ```

@@ -131,12 +131,13 @@ export type Translations = {
     direction: string;
     distance: string;
     yourScore: string;
-    /** Accessibility label for the ⓘ button that shows/hides scoringInfo. */
+    /** Accessibility label for the ⓘ button that shows/hides the scoring explanation. */
     scoringInfoLabel: string;
-    scoringInfo: string;
-    /** Link text and Wikipedia URL (in the app language) for the great-circle explanation. */
-    greatCircleLabel: string;
-    greatCircleUrl: string;
+    /** The scoring explanation, in three parts: the middle one (the rhumb-line wording) is the Wikipedia link. */
+    scoringInfoBefore: string;
+    rhumbLineLabel: string;
+    scoringInfoAfter: string;
+    rhumbLineUrl: string;
     /** Shown instead of "(+0°)" for an exact heading guess — kept in English in both
      * languages, on purpose (see git history). */
     perfect: string;
@@ -146,7 +147,9 @@ export type Translations = {
     title: string;
     /** Heading of the round-by-round recap (who was best at what). */
     recapTitle: string;
-    menu: string;
+    /** End screen buttons: back to the lobby with everyone / leave the game. */
+    replay: string;
+    quit: string;
     winner: (name: string) => string;
     /** Same as `winner`, but for the local device's own player — no need to name them to
      * themselves (see `FinalStandings`' `localName`). */

@@ -15,7 +15,7 @@ export const SPHERE_SEGMENTS = 144;
 export const LAND_FILL_SEGMENTS = 192;
 /** How strongly the continents are painted, over the colour the coastline is drawn in: enough to tell land from sea at
  * a glance, little enough for the coastline over it to stay the sharp edge. */
-export const LAND_FILL_OPACITY = 0.5;
+export const LAND_FILL_OPACITY = 0.38;
 /** What is drawn on the ground is pushed out a hair, in this order, so that each layer wins its pixels over the one
  * below instead of flickering against it. The painted shell must clear the dip of its own flats (see
  * `LAND_FILL_SEGMENTS`), and the coastline must in turn clear the shell's own highest point, or the paint would hide
@@ -74,9 +74,6 @@ export const GLOBE_MARGIN = 3;
 export const LABEL_OFFSET = 11;
 /** The satellite flies this much higher than the ground, as a share of the globe's radius: it is seen beyond the outline. */
 export const ORBIT_RATIO = 1.12;
-/** How far the satellite's orbit is tipped out of the plane of the screen, in degrees: 0 would be a circle seen
- * face-on, which never goes behind the ball, and 90 a flat line across it (see `orbitPoint`). */
-export const ORBIT_TILT_DEG = 35;
 /** One full turn round the Earth, and how often the satellite is moved while it flies. */
 export const ORBIT_MS = 24000;
 export const ORBIT_TICK_MS = 50;

@@ -1,6 +1,6 @@
 import { reporting } from './reportError';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import type { RoomStoreHook } from './createRoomStore';
 import { onlinePlayersFrom } from './roomPlayers';
@@ -13,10 +13,11 @@ import type { StaleRoomData } from './useHostPruneLeavers';
  * screen owns that lifecycle, see `useSetupRoom`), who's the host, the arrival-ordered players, the
  * "room deleted" redirect, and `handleQuit`. `roomApi` is the game's own Firestore helpers.
  */
-export const useOnlineRoomSession = <Settings, GameState>(
+export const useOnlineRoomSession = <Settings, GameState extends { screen: string }>(
   store: RoomStoreHook<Settings, GameState>,
   roomApi: {
     deleteRoom: (code: string) => Promise<void>;
+    restartRoom: (code: string) => Promise<void>;
     removeRoomPlayer: (code: string, uid: string) => Promise<void>;
     pruneRoomPlayerData: (code: string, stale: StaleRoomData) => Promise<void>;
   },
@@ -45,6 +46,18 @@ export const useOnlineRoomSession = <Settings, GameState>(
     const timeout = setTimeout(() => router.dismissTo('/'), 2000);
     return () => clearTimeout(timeout);
   }, [roomExists, connectionLost, router]);
+
+  // The room went back to its lobby (the host's "replay", see `handleReplay`): every game screen steps off, back to
+  // the setup screen underneath, which stays mounted and now shows everyone again. Never while disconnected: the
+  // store's reset state is also `'options'`, and that path (the host quitting) already goes home by itself.
+  const onQuitRef = useRef(onQuit);
+  useEffect(() => {
+    onQuitRef.current = onQuit;
+  });
+  const backInLobby = connected && roomExists && gameState.screen === 'options';
+  useEffect(() => {
+    if (backInLobby) onQuitRef.current();
+  }, [backInLobby]);
 
   const onlinePlayers = onlinePlayersFrom(players);
   const isHost = localUid !== null && localUid === hostUid;
@@ -87,6 +100,13 @@ export const useOnlineRoomSession = <Settings, GameState>(
     onQuit();
   };
 
+  // "Rejouer": the host sends the whole room back to its lobby (the effect above then moves every device, itself
+  // included, back to the setup screen); a joiner can't write the room, so it just goes back there and waits.
+  const handleReplay = () => {
+    if (isHost) roomApi.restartRoom(code).catch(reporting('room.restart', { room: code }));
+    else onQuit();
+  };
+
   return {
     localUid,
     players,
@@ -98,5 +118,6 @@ export const useOnlineRoomSession = <Settings, GameState>(
     onlinePlayers,
     isHost,
     handleQuit,
+    handleReplay,
   };
 };

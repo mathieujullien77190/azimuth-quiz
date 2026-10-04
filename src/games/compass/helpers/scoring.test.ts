@@ -8,9 +8,8 @@ import {
 import type { Coordinates, Guess, Place, PlayerResult } from '@/types';
 
 import { roundDistance } from './distanceScale';
-import { bearingDeg, distanceKm } from '@/helpers/geo';
-import { destinationPoint } from '@/components/Globe3D/helpers';
-import { applyBestBonus, guessGapKm, scoreRound } from './scoring';
+import { bearingDeg, distanceKm, rhumbDestination } from '@/helpers/geo';
+import { applyBestBonus, scoreRound } from './scoring';
 
 const origin: Coordinates = { latitude: 48.8566, longitude: 2.3522 };
 const place: Place = {
@@ -80,32 +79,26 @@ describe('scoreRound', () => {
   });
 });
 
-describe('guessGapKm', () => {
-  const resultFor = (guess: Guess): PlayerResult => ({ guess, score: scoreRound(origin, place, guess) });
+describe('targetGapKm', () => {
+  const gapFor = (guess: Guess): number => scoreRound(origin, place, guess).targetGapKm;
 
   it('is 0 for a perfect guess', () => {
-    expect(guessGapKm(resultFor({ bearing: trueBearing, distanceKm: trueSurfaceKm }))).toBeCloseTo(0, 3);
+    expect(gapFor({ bearing: trueBearing, distanceKm: trueSurfaceKm })).toBeCloseTo(0, 3);
   });
 
   it('is large for the right distance on the opposite heading', () => {
-    expect(guessGapKm(resultFor({ bearing: (trueBearing + 180) % 360, distanceKm: trueSurfaceKm }))).toBeGreaterThan(
-      trueSurfaceKm,
-    );
+    expect(gapFor({ bearing: (trueBearing + 180) % 360, distanceKm: trueSurfaceKm })).toBeGreaterThan(trueSurfaceKm / 4);
   });
 
-  it('matches the real distance between the aimed point and the place', () => {
+  it('is the rhumb distance between the aimed point and the place', () => {
     const guess: Guess = { bearing: trueBearing + 20, distanceKm: trueSurfaceKm * 0.8 };
-    const aimed = destinationPoint(origin, guess.bearing, guess.distanceKm);
-    expect(guessGapKm(resultFor(guess))).toBeCloseTo(distanceKm(aimed, place.coordinates), 0);
-  });
-
-  it('clamps rounding noise instead of returning NaN', () => {
-    expect(guessGapKm(resultFor({ bearing: trueBearing, distanceKm: trueSurfaceKm }))).not.toBeNaN();
+    const aimed = rhumbDestination(origin, guess.bearing, guess.distanceKm);
+    expect(gapFor(guess)).toBeCloseTo(distanceKm(aimed, place.coordinates), 6);
   });
 });
 
 describe('applyBestBonus', () => {
-  const makeResult = (directionError: number, distanceError: number): PlayerResult => ({
+  const makeResult = (directionError: number, distanceError: number, targetGapKm = 0): PlayerResult => ({
     guess: { bearing: 0, distanceKm: 100 },
     score: {
       trueBearing: 0,
@@ -118,6 +111,7 @@ describe('applyBestBonus', () => {
       distanceBonus: 0,
       directionExactBonus: 0,
       distanceExactBonus: 0,
+      targetGapKm,
       total: 0,
     },
   });
@@ -128,10 +122,10 @@ describe('applyBestBonus', () => {
   });
 
   it('gives both bonuses to whoever aimed closest to the place, not to the best on one axis', () => {
-    // Right distance but opposite heading: lands on the other side of the origin.
-    const oppositeRightDistance = makeResult(180, 0);
+    // Right distance but opposite heading: lands far from the place.
+    const oppositeRightDistance = makeResult(180, 0, 2000);
     // Slightly off on both axes, but close to the place.
-    const nearMiss = { ...makeResult(5, 50), guess: { bearing: 5, distanceKm: 120 } };
+    const nearMiss = makeResult(5, 50, 30);
     const [a, b] = applyBestBonus([oppositeRightDistance, nearMiss]);
     expect(a.score.directionBonus).toBe(0);
     expect(a.score.distanceBonus).toBe(0);
@@ -140,15 +134,15 @@ describe('applyBestBonus', () => {
   });
 
   it('gives the bonus to every player tied for closest', () => {
-    const tiedA = makeResult(10, 10);
-    const tiedB = makeResult(10, 10);
+    const tiedA = makeResult(10, 10, 40);
+    const tiedB = makeResult(10, 10, 40);
     const [a, b] = applyBestBonus([tiedA, tiedB]);
     expect(a.score.directionBonus).toBeGreaterThan(0);
     expect(b.score.directionBonus).toBeGreaterThan(0);
   });
 
   it('folds the bonus into the total', () => {
-    const [a] = applyBestBonus([makeResult(0, 0), makeResult(90, 90)]);
+    const [a] = applyBestBonus([makeResult(0, 0, 0), makeResult(90, 90, 900)]);
     expect(a.score.total).toBe(
       a.score.directionPoints + a.score.distancePoints + a.score.directionBonus + a.score.distanceBonus,
     );

@@ -1,5 +1,4 @@
 import FinalStandings from '@/components/FinalStandings';
-import Button from '@/components/ui/Button';
 import RoundsRecap from '@/games/compass/components/RoundsRecap';
 import type { RecapCell } from '@/games/compass/components/RoundsRecap';
 import { useTranslation } from '@/i18n';
@@ -22,9 +21,9 @@ const bestCell = (best: RoundBest | null, alone: boolean): RecapCell => {
 /**
  * Compass' end of game: the shared `FinalStandings` (scores, medals, winner) with this game's own extras
  * under it — the round-by-round recap of who was best at the heading and at the distance (the points won
- * when playing alone), and the button that leaves the game.
+ * when playing alone), and the shared replay/leave buttons.
  */
-export const EndScreen = ({ players, records, totals, localName, onMenu }: EndScreenProps) => {
+export const EndScreen = ({ players, records, totals, localName, onReplay, onQuit }: EndScreenProps) => {
   const t = useTranslation();
   const alone = players.length === 1;
 
@@ -32,6 +31,8 @@ export const EndScreen = ({ players, records, totals, localName, onMenu }: EndSc
     <FinalStandings
       entries={players.map((player, index) => ({ name: player.name, total: totals[index] ?? 0, color: player.color }))}
       localName={localName}
+      onQuit={onQuit}
+      onReplay={onReplay}
       title={t.endScreen.title}
     >
       <RoundsRecap
@@ -45,7 +46,6 @@ export const EndScreen = ({ players, records, totals, localName, onMenu }: EndSc
         }))}
         title={t.endScreen.recapTitle}
       />
-      <Button label={t.endScreen.menu} onPress={onMenu} />
     </FinalStandings>
   );
 };

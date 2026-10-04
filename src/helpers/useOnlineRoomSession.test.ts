@@ -37,6 +37,7 @@ const setup = async (overrides: Partial<State> = {}) => {
   const store = makeStore(overrides);
   const roomApi = {
     deleteRoom: jest.fn(() => Promise.resolve()),
+    restartRoom: jest.fn(() => Promise.resolve()),
     pruneRoomPlayerData: jest.fn(() => Promise.resolve()),
     removeRoomPlayer: jest.fn(() => Promise.resolve()),
   };
@@ -180,5 +181,49 @@ describe('useOnlineRoomSession — players who left', () => {
       gameState: { screen: 'playing', totalScores: { eve: 20 } } as never,
     });
     expect(roomApi.pruneRoomPlayerData).not.toHaveBeenCalled();
+  });
+});
+
+describe('useOnlineRoomSession — replay', () => {
+  it('host: asks the room to go back to its lobby', async () => {
+    const { result, roomApi, onQuit } = await setup({ hostUid: 'zoe', localUid: 'zoe' });
+    await act(async () => result.current.handleReplay());
+    expect(roomApi.restartRoom).toHaveBeenCalledWith('tabofuna');
+    expect(onQuit).not.toHaveBeenCalled();
+  });
+
+  it('host: survives a failing restart', async () => {
+    const { result, roomApi } = await setup({ hostUid: 'zoe', localUid: 'zoe' });
+    roomApi.restartRoom.mockRejectedValueOnce(new Error('offline'));
+    await act(async () => result.current.handleReplay());
+    expect(roomApi.restartRoom).toHaveBeenCalledTimes(1);
+  });
+
+  it('joiner: just goes back to its setup screen, without writing the room', async () => {
+    const { result, roomApi, onQuit } = await setup({ hostUid: 'zoe', localUid: 'max' });
+    await act(async () => result.current.handleReplay());
+    expect(onQuit).toHaveBeenCalledTimes(1);
+    expect(roomApi.restartRoom).not.toHaveBeenCalled();
+  });
+
+  it('steps off the game screen once the room is back in its lobby, only once', async () => {
+    const { store, onQuit } = await setup({ hostUid: 'zoe', localUid: 'max' });
+    expect(onQuit).not.toHaveBeenCalled();
+    await act(async () => store.setState({ gameState: { screen: 'options' } }));
+    expect(onQuit).toHaveBeenCalledTimes(1);
+    await act(async () => store.setState({ players: {} }));
+    expect(onQuit).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not step off when the store was disconnected (its reset state is also the lobby)', async () => {
+    const { store, onQuit } = await setup({ hostUid: 'zoe', localUid: 'zoe' });
+    await act(async () => store.setState({ code: null, gameState: { screen: 'options' } }));
+    expect(onQuit).not.toHaveBeenCalled();
+  });
+
+  it('does not step off when the room is gone', async () => {
+    const { store, onQuit } = await setup({ hostUid: 'zoe', localUid: 'max' });
+    await act(async () => store.setState({ roomExists: false, gameState: { screen: 'options' } }));
+    expect(onQuit).not.toHaveBeenCalled();
   });
 });

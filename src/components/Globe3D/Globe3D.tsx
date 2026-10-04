@@ -84,16 +84,16 @@ export const Globe3D = ({
 
   const sceneColors = useMemo(
     () => ({
-      // The sea is the ball's own colour; the continents are painted green over it (a map's own way of telling land
-      // from sea), with their coast drawn as a line on top.
+      // The sea is the ball's own colour; the continents are painted over it in the colour of their own coast (a
+      // map's way of telling land from sea), with that coast drawn as a line on top.
       globe: compass.faceInner,
       land: colors.textMuted,
-      fill: colors.success,
+      fill: colors.textMuted,
       guide: colors.textMuted,
       origin: colors.text,
       pole: colors.text,
     }),
-    [compass.faceInner, colors.textMuted, colors.success, colors.text],
+    [compass.faceInner, colors.textMuted, colors.text],
   );
   const view = useMemo(
     () =>
@@ -171,24 +171,11 @@ export const Globe3D = ({
     [radius],
   );
 
-  // The satellite goes right round the ball along the line of the answer it flies over — the true one when there is
-  // one, so the yellow line — over the ball and then behind it (see `orbitPoint`). Only unzoomed: it would fly off the
-  // drawing.
+  // The satellite goes right round the ball along its equator — over the ball and then behind it (see `orbitPoint`).
+  // Only unzoomed: it would fly off the drawing.
   const angle = useOrbitAngle(ORBIT_MS, ORBIT_TICK_MS);
-  const flownOver = marks.find((item) => item.isTruth === true) ?? marks[0];
   const satellite =
-    !withSatellite || !isDark || flownOver === undefined || zoom !== MIN_ZOOM
-      ? undefined
-      : orbitPoint(
-          angle,
-          origin,
-          rhumbDestination(origin, flownOver.bearing, flownOver.distanceKm),
-          center,
-          cx,
-          cy,
-          radius,
-          ORBIT_RATIO,
-        );
+    !withSatellite || !isDark || zoom !== MIN_ZOOM ? undefined : orbitPoint(angle, center, cx, cy, radius, ORBIT_RATIO);
 
   const start = screenPoint(origin, center, cx, cy, radius);
   const pole = screenPoint(NORTH_POLE, center, cx, cy, radius);

@@ -1,6 +1,6 @@
 import { collection, deleteDoc, getDoc, getDocs, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
 
-import { generateRoomCode, getLocalUid } from '@/helpers/roomCode';
+import { generateRoomCode, getLocalUid, loadMyRoomCode, saveMyRoomCode } from '@/helpers/roomCode';
 
 import { ROOM_MAX_PLAYERS, createRoomApi, type RoomPlayers } from './roomBase';
 
@@ -19,7 +19,12 @@ jest.mock('firebase/firestore', () => ({
   where: jest.fn((...args) => ({ where: args })),
 }));
 jest.mock('@/helpers/firebase', () => ({ db: {} }));
-jest.mock('@/helpers/roomCode', () => ({ generateRoomCode: jest.fn(), getLocalUid: jest.fn() }));
+jest.mock('@/helpers/roomCode', () => ({
+  generateRoomCode: jest.fn(),
+  getLocalUid: jest.fn(),
+  loadMyRoomCode: jest.fn(),
+  saveMyRoomCode: jest.fn(),
+}));
 
 type Settings = { rounds: number };
 const api = createRoomApi<Settings>('compass');
@@ -33,6 +38,8 @@ const player = (name: string, extra: Partial<RoomPlayers[string]> = {}) => ({ na
 beforeEach(() => {
   jest.clearAllMocks();
   jest.mocked(getLocalUid).mockResolvedValue('zoe');
+  jest.mocked(loadMyRoomCode).mockResolvedValue(null);
+  jest.mocked(saveMyRoomCode).mockResolvedValue();
   jest.mocked(getDocs).mockResolvedValue({ docs: [] } as never);
 });
 
@@ -53,6 +60,30 @@ describe('createRoom', () => {
       { path: 'rooms/tabofuna' },
       { createdAt: 'SERVER_TIMESTAMP', hostUid: 'zoe', game: 'compass', settings: { rounds: 5 } },
     );
+  });
+
+  it('remembers the code it ends up using', async () => {
+    jest.mocked(generateRoomCode).mockReturnValue('tabofuna');
+    jest.mocked(getDoc).mockResolvedValue(snapshot(undefined) as never);
+    await api.createRoom({ rounds: 5 });
+    expect(saveMyRoomCode).toHaveBeenCalledWith('tabofuna');
+  });
+
+  it('offers the code this device used last when it is free, without drawing a new one', async () => {
+    jest.mocked(loadMyRoomCode).mockResolvedValue('bagubaku');
+    jest.mocked(getDoc).mockResolvedValue(snapshot(undefined) as never);
+    await expect(api.createRoom({ rounds: 5 })).resolves.toBe('bagubaku');
+    expect(generateRoomCode).not.toHaveBeenCalled();
+  });
+
+  it('draws a fresh code when the remembered one is taken by someone else', async () => {
+    jest.mocked(loadMyRoomCode).mockResolvedValue('bagubaku');
+    jest.mocked(generateRoomCode).mockReturnValue('tabofuna');
+    jest
+      .mocked(getDoc)
+      .mockResolvedValueOnce(snapshot({}) as never)
+      .mockResolvedValueOnce(snapshot(undefined) as never);
+    await expect(api.createRoom({ rounds: 5 })).resolves.toBe('tabofuna');
   });
 
   it('retries with a fresh code on a collision', async () => {
@@ -268,5 +299,12 @@ describe('subscriptions', () => {
     const onUpdate = jest.fn();
     api.subscribeToRoomPlayers('tabofuna', onUpdate);
     expect(onUpdate).toHaveBeenCalledWith({}, undefined, false, 'options');
+  });
+});
+
+describe('restartRoom', () => {
+  it('sends the room back to its lobby, touching nothing else', async () => {
+    await api.restartRoom('tabofuna');
+    expect(updateDoc).toHaveBeenCalledWith({ path: 'rooms/tabofuna' }, { screen: 'options' });
   });
 });

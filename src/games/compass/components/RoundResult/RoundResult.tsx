@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Linking, Text, View, useWindowDimensions } from 'react-native';
 import { formatBearing, formatDistance, formatNumber } from '@/helpers';
-import { guessGapKm } from '@/games/compass/helpers/scoring';
 import { useTranslation } from '@/i18n';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Player, Theme } from '@/types';
@@ -43,7 +42,7 @@ export const RoundResult = ({ record, players, totals, answered, localIndex, onK
     ? localIndex === undefined
       ? entries
       : [...entries.filter((e) => e.index === localIndex), ...entries.filter((e) => e.index !== localIndex)]
-    : entries.sort((a, b) => guessGapKm(a.result) - guessGapKm(b.result));
+    : entries.sort((a, b) => a.result.score.targetGapKm - b.result.score.targetGapKm);
 
   return (
     <Card style={styles.card}>
@@ -67,10 +66,11 @@ export const RoundResult = ({ record, players, totals, answered, localIndex, onK
         />
         {showScoringInfo && (
           <Text style={styles.scoringInfo}>
-            {t.roundResult.scoringInfo}{' '}
-            <Text style={styles.scoringLink} onPress={() => Linking.openURL(t.roundResult.greatCircleUrl)}>
-              {t.roundResult.greatCircleLabel}
+            {t.roundResult.scoringInfoBefore}
+            <Text style={styles.scoringLink} onPress={() => Linking.openURL(t.roundResult.rhumbLineUrl)}>
+              {t.roundResult.rhumbLineLabel}
             </Text>
+            {t.roundResult.scoringInfoAfter}
           </Text>
         )}
       </View>
@@ -143,7 +143,7 @@ export const RoundResult = ({ record, players, totals, answered, localIndex, onK
                           {t.roundResult.perfect}
                         </Text>
                       ) : (
-                        `(→ 🎯 ${formatDistance(guessGapKm(result))})`
+                        `(🎯 ${formatDistance(result.score.targetGapKm)})`
                       ),
                     ]}
                 {pending && !hasAnswered && '?'}

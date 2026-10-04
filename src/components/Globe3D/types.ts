@@ -21,7 +21,7 @@ export type Globe3DProps = {
   equator?: boolean;
   /** Draws the Greenwich meridian (dashed). */
   greenwich?: boolean;
-  /** A satellite (at night only, and only unzoomed) flying round the Earth along the route, tappable for a joke.
+  /** A satellite (at night only, and only unzoomed) flying round the Earth along its equator, tappable for a joke.
    * Defaults to true. */
   satellite?: boolean;
   /** Turns with a finger, and zooms by pinching. Defaults to true; false keeps the globe where it was first shown. */

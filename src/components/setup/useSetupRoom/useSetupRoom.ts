@@ -274,7 +274,13 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     const isHostOfThisRoom = localUid === hostUid;
     return () => {
       if (isHostOfThisRoom) adapter.deleteRoom(connectedRoomCode).catch(reporting('setup.deleteRoom', { kind: 'background', room: connectedRoomCode }));
-      else adapter.removeRoomPlayer(connectedRoomCode, localUid).catch(reporting('setup.leaveRoom', { kind: 'background', room: connectedRoomCode }));
+      else {
+        const report = reporting('setup.leaveRoom', { kind: 'background', room: connectedRoomCode });
+        // `permission-denied` here is the room already being gone (the host left first): nothing to leave, not an error.
+        adapter.removeRoomPlayer(connectedRoomCode, localUid).catch((error) => {
+          if ((error as { code?: unknown } | null)?.code !== 'permission-denied') report(error);
+        });
+      }
     };
   }, [adapter, connectedRoomCode, localUid, hostUid]);
 

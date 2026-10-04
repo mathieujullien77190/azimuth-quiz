@@ -11,8 +11,7 @@ import {
 } from '@/games/compass/constants';
 import type { Coordinates, Guess, Place, PlayerResult, RoundScore } from '@/types';
 
-import { EARTH_RADIUS_KM } from '@/data';
-import { angleDifference, bearingDeg, distanceKm } from '@/helpers/geo';
+import { angleDifference, bearingDeg, distanceKm, rhumbDestination } from '@/helpers/geo';
 import { roundDistance } from './distanceScale';
 
 const curve = (ratio: number): number => Math.max(0, Math.min(1, ratio)) ** SCORE_CURVE_EXPONENT;
@@ -51,22 +50,9 @@ export const scoreRound = (origin: Coordinates, place: Place, guess: Guess): Rou
     distanceBonus: 0,
     directionExactBonus,
     distanceExactBonus,
+    targetGapKm: distanceKm(rhumbDestination(origin, guess.bearing, guess.distanceKm), place.coordinates),
     total: directionPoints + distancePoints + directionExactBonus + distanceExactBonus,
   };
-};
-
-/**
- * Surface distance (km) between the point the player aimed at and the true place, both seen from
- * the same origin: spherical law of cosines on the two legs (true / guessed distance) and the
- * angle between them. Someone with the exact distance but the opposite heading is far off.
- */
-export const guessGapKm = ({ guess, score }: PlayerResult): number => {
-  const trueAngular = score.trueSurfaceDistanceKm / EARTH_RADIUS_KM;
-  const guessAngular = guess.distanceKm / EARTH_RADIUS_KM;
-  const cosGap =
-    Math.cos(trueAngular) * Math.cos(guessAngular) +
-    Math.sin(trueAngular) * Math.sin(guessAngular) * Math.cos((score.directionError * Math.PI) / 180);
-  return Math.acos(Math.max(-1, Math.min(1, cosGap))) * EARTH_RADIUS_KM;
 };
 
 /**
@@ -81,10 +67,10 @@ export const applyBestBonus = (results: PlayerResult[]): PlayerResult[] => {
 
   const directionBonus = Math.round(MAX_DIRECTION_POINTS * BEST_BONUS_RATIO);
   const distanceBonus = Math.round(MAX_DISTANCE_POINTS * BEST_BONUS_RATIO);
-  const bestGap = Math.min(...results.map(guessGapKm));
+  const bestGap = Math.min(...results.map((result) => result.score.targetGapKm));
 
   return results.map((result) => {
-    const isWinner = guessGapKm(result) === bestGap;
+    const isWinner = result.score.targetGapKm === bestGap;
     const earnedDirectionBonus = isWinner ? directionBonus : 0;
     const earnedDistanceBonus = isWinner ? distanceBonus : 0;
     return {

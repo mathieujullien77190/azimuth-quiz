@@ -4,6 +4,7 @@ import { formatNumber } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 
+import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Screen from '@/components/ui/Screen';
 import { MEDALS } from './constants';
@@ -15,9 +16,10 @@ import { createStyles } from './styles';
 /**
  * End-of-game scoreboard shared by every game — dumb: title, the winner (or the tie) as a banner once
  * there's more than one player, the ranked scores (medals for the podium), then whatever the game adds
- * as `children` (Compass' rank card and round-by-round recap, the button that leaves the game...).
+ * as `children` (Compass' rank card and round-by-round recap...), and the two buttons every game shares: play
+ * again (back to the lobby with everyone) and leave.
  */
-export const FinalStandings = ({ title, entries, localName, children }: FinalStandingsProps) => {
+export const FinalStandings = ({ title, entries, localName, children, onReplay, onQuit }: FinalStandingsProps) => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
 
@@ -53,6 +55,9 @@ export const FinalStandings = ({ title, entries, localName, children }: FinalSta
       </Card>
 
       {children}
+
+      <Button label={t.endScreen.replay} onPress={onReplay} />
+      <Button label={t.endScreen.quit} onPress={onQuit} variant="ghost" />
     </Screen>
   );
 };

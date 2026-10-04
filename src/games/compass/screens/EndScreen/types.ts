@@ -7,5 +7,6 @@ export type EndScreenProps = {
   totals: number[];
   /** This device's own player name — see `FinalStandings`' own `localName`. */
   localName: string;
-  onMenu: () => void;
+  onReplay: () => void;
+  onQuit: () => void;
 };

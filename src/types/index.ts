@@ -77,6 +77,9 @@ export type RoundScore = {
    * at that magnitude (see EXACT_DISTANCE_BONUS/`roundDistance`). Independent of `distanceBonus`:
    * everyone who nails it gets it, not just the round's best. */
   distanceExactBonus: number;
+  /** Rhumb-line gap (km) between the point aimed at (heading + distance from the origin) and the true place:
+   * who aimed closest wins the round (see `applyBestBonus`). */
+  targetGapKm: number;
   total: number;
 };
 

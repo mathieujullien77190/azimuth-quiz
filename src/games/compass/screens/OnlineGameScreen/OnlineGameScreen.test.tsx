@@ -38,6 +38,7 @@ const score: RoundScore = {
   distanceBonus: 0,
   directionExactBonus: 0,
   distanceExactBonus: 0,
+  targetGapKm: 0,
   total: 850,
 };
 const record: RoundRecord = {
@@ -131,7 +132,7 @@ describe('OnlineGameScreen — the end', () => {
     const handleQuit = jest.fn();
     setGame({ gameState: gameState({ screen: 'end' }), records: [record], handleQuit });
     const { getByText } = await renderScreen();
-    await fireEvent.press(getByText(t.endScreen.menu));
+    await fireEvent.press(getByText(t.endScreen.quit));
     // The session's own quit (home, and the host takes the room down), not a bare `router.back()`.
     expect(handleQuit).toHaveBeenCalledTimes(1);
   });
@@ -149,7 +150,7 @@ describe('OnlineGameScreen — after the last round', () => {
     setGame({ gameState: gameState({ screen: 'end', roundIndex: 2 }), place: undefined, records: [record] });
     const { getByText, queryByText } = await renderScreen();
     expect(queryByText(t.game.loading)).toBeNull();
-    expect(getByText(t.endScreen.menu)).toBeTruthy();
+    expect(getByText(t.endScreen.quit)).toBeTruthy();
   });
 });
 

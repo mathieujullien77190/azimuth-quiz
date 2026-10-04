@@ -42,6 +42,7 @@ const record: RoundRecord = {
         distanceBonus: 0,
         directionExactBonus: 0,
         distanceExactBonus: 0,
+        targetGapKm: 0,
         total: 750,
       },
     },
