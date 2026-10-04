@@ -26,6 +26,7 @@ export type SetupScreenViewProps = {
   onToggleUseGps: (value: boolean) => void;
   onChangeCustomOrigin: (patch: { customLatitude?: number; customLongitude?: number }) => void;
   onToggleShowCountry: (value: boolean) => void;
+  onToggleTravel: (value: boolean) => void;
 
   overlayMessage: string | null;
   overlayLoading: boolean;

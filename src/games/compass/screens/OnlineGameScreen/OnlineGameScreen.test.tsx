@@ -1,9 +1,10 @@
-import { fireEvent, render } from '@testing-library/react-native';
+import { act, fireEvent, render } from '@testing-library/react-native';
 
 import type { RoomGameState } from '@/games/compass/helpers/room';
 import { translations } from '@/i18n/translations';
 import type { RoundRecord, RoundScore } from '@/types';
 
+import { TRAVEL_NOTICE_MS } from './constants';
 import { OnlineGameScreen } from './OnlineGameScreen';
 
 const t = translations.fr;
@@ -94,6 +95,94 @@ const renderScreen = (onQuit = jest.fn()) => render(<OnlineGameScreen code="tabo
 beforeEach(() => {
   jest.clearAllMocks();
   setGame();
+});
+
+describe('OnlineGameScreen — travel mode', () => {
+  const ROME = { ...BERLIN, name: 'Rome', coordinates: { latitude: 41.9, longitude: 12.5 } };
+  const TRAVEL = { difficulty: 'easy', liveCompass: false, showCountry: false, travel: true };
+  const youAreAtRome = t.game.youAreAt('Rome');
+  const revealState = (places: unknown[], roundIndex: number) =>
+    gameState({
+      screen: 'reveal',
+      places: places as never,
+      roundIndex,
+      guesses: { zoe: { bearing: 0, distanceKm: 1 }, max: { bearing: 0, distanceKm: 1 } },
+      scores: { zoe: score, max: score },
+    });
+
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  it('says where the player stands in the header and in a splash, after the first round only', async () => {
+    setGame({ roomSettings: TRAVEL, gameState: gameState({ places: [ROME as never, BERLIN as never], roundIndex: 1 }) });
+    const second = await renderScreen();
+    // The header line and the splash say the same sentence.
+    expect(second.getAllByText(youAreAtRome)).toHaveLength(2);
+
+    setGame({ roomSettings: TRAVEL, gameState: gameState({ places: [ROME as never, BERLIN as never], roundIndex: 0 }) });
+    const first = await renderScreen();
+    expect(first.queryByText(/Vous êtes/)).toBeNull();
+  });
+
+  it('hides the splash after three seconds, keeping the header line', async () => {
+    setGame({ roomSettings: TRAVEL, gameState: gameState({ places: [ROME as never, BERLIN as never], roundIndex: 1 }) });
+    const { getAllByText, getByText } = await renderScreen();
+    expect(getAllByText(youAreAtRome)).toHaveLength(2);
+    await act(async () => jest.advanceTimersByTime(TRAVEL_NOTICE_MS));
+    expect(getByText(youAreAtRome)).toBeTruthy();
+  });
+
+  it('hides the splash on a tap', async () => {
+    setGame({ roomSettings: TRAVEL, gameState: gameState({ places: [ROME as never, BERLIN as never], roundIndex: 1 }) });
+    const { getAllByText, getByText } = await renderScreen();
+    await fireEvent.press(getAllByText(youAreAtRome)[1]);
+    expect(getByText(youAreAtRome)).toBeTruthy();
+  });
+
+  it('comes back with the next round, and not on the reveal of the same one', async () => {
+    const places = [ROME, BERLIN, ROME];
+    setGame({ roomSettings: TRAVEL, gameState: gameState({ places: places as never, roundIndex: 1 }) });
+    const { getAllByText, getByText, rerender } = await renderScreen();
+    await act(async () => jest.advanceTimersByTime(TRAVEL_NOTICE_MS));
+
+    setGame({ roomSettings: TRAVEL, gameState: revealState(places, 1) });
+    await rerender(<OnlineGameScreen code="tabofuna" onQuit={jest.fn()} />);
+    expect(getByText(youAreAtRome)).toBeTruthy();
+
+    setGame({ roomSettings: TRAVEL, gameState: gameState({ places: places as never, roundIndex: 2 }) });
+    await rerender(<OnlineGameScreen code="tabofuna" onQuit={jest.fn()} />);
+    expect(getAllByText(t.game.youAreAt('Berlin'))).toHaveLength(2);
+  });
+
+  it('shows nothing without travel mode', async () => {
+    setGame({ gameState: gameState({ places: [ROME as never, BERLIN as never], roundIndex: 1 }) });
+    const { queryByText } = await renderScreen();
+    expect(queryByText(/Vous êtes/)).toBeNull();
+  });
+
+  it('keeps saying where the player stands in the header once the round is revealed', async () => {
+    setGame({ roomSettings: TRAVEL, gameState: revealState([ROME, BERLIN], 1), place: BERLIN });
+    const { getAllByText } = await renderScreen();
+    await act(async () => jest.advanceTimersByTime(TRAVEL_NOTICE_MS));
+    expect(getAllByText(youAreAtRome)).toHaveLength(1);
+  });
+
+  it('shows no splash on the final standings, nor while the round is still loading', async () => {
+    setGame({
+      roomSettings: TRAVEL,
+      gameState: gameState({ screen: 'end', places: [ROME as never, BERLIN as never], roundIndex: 2 }),
+    });
+    const end = await renderScreen();
+    expect(end.queryByText(/Vous êtes/)).toBeNull();
+
+    setGame({
+      roomSettings: TRAVEL,
+      place: undefined,
+      gameState: gameState({ places: [ROME as never, BERLIN as never], roundIndex: 1 }),
+    });
+    const loading = await renderScreen();
+    expect(loading.queryByText(/Vous êtes/)).toBeNull();
+  });
 });
 
 describe('OnlineGameScreen — before the round', () => {

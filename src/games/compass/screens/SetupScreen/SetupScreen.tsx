@@ -48,6 +48,7 @@ export const SetupScreen = ({ onBack }: SetupScreenProps) => {
       onToggleCategory={(id) => updateOrNotify(toggleCategoryFilter(settings, id))}
       onToggleLiveCompass={(value) => updateOrNotify({ liveCompass: value })}
       onToggleShowCountry={(value) => updateOrNotify({ showCountry: value })}
+      onToggleTravel={(value) => updateOrNotify({ travel: value })}
       onToggleUseGps={(value) => updateOrNotify({ useGps: value })}
       overlayLoading={room.overlayLoading}
       overlayMessage={room.overlayMessage}

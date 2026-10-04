@@ -27,6 +27,7 @@ export const GameHeader = ({
   difficulty,
   players,
   turnIndex = -1,
+  location,
   question,
 }: GameHeaderProps) => {
   const styles = useThemedStyles(createStyles);
@@ -48,6 +49,7 @@ export const GameHeader = ({
         <Text style={styles.separator}>·</Text>
         <DifficultyBadge difficulty={difficulty} />
       </View>
+      {location !== undefined && <Text style={styles.location}>{location}</Text>}
       {players !== undefined && (
         <PlayerTabs
           activeIndex={turnIndex}

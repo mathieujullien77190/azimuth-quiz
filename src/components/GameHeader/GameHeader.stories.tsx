@@ -6,6 +6,7 @@ import { source } from '@/storybook/source';
 
 import { GameHeader } from './GameHeader';
 import plainCode from './Plain.source.md?raw';
+import withLocationCode from './WithLocation.source.md?raw';
 import withPlayersCode from './WithPlayers.source.md?raw';
 import withQuestionCode from './WithQuestion.source.md?raw';
 
@@ -46,6 +47,13 @@ export const WithPlayers: Story = {
   name: 'With players',
   parameters: source(withPlayersCode),
   args: { players: SAMPLE_PLAYERS, turnIndex: 1 },
+};
+
+/** Travel mode (Compass): where the player stands, in white under the round row. */
+export const WithLocation: Story = {
+  name: 'With a location (travel mode)',
+  parameters: source(withLocationCode),
+  args: { location: 'Vous êtes à Cusco' },
 };
 
 /** With a `question`, centered at the bottom of the header — Silhouette's "Quel est ce pays ?". */

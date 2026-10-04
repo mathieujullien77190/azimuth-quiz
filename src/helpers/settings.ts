@@ -45,5 +45,6 @@ export const sanitizeSettings = (raw: unknown): GameSettings => {
     customLongitude: coordinate(raw.customLongitude, -180, 180, DEFAULT_SETTINGS.customLongitude),
     liveCompass: flag(raw.liveCompass, DEFAULT_SETTINGS.liveCompass),
     showCountry: flag(raw.showCountry, DEFAULT_SETTINGS.showCountry),
+    travel: flag(raw.travel, DEFAULT_SETTINGS.travel),
   };
 };

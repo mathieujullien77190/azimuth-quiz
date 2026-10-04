@@ -216,6 +216,19 @@ describe('useOnlineGame — scoring the round (host only)', () => {
     expect(totals.guest).toBe(scores.guest.total);
   });
 
+  it('in travel mode, scores a later round from the previous place, not from the starting point', async () => {
+    const ROME: Place = { ...PARIS, name: 'Rome', coordinates: { latitude: 41.9, longitude: 12.5 } };
+    await setup({
+      roomSettings: { difficulty: 'easy', travel: true } as never,
+      gameState: gameState({ places: [ROME, PARIS], roundIndex: 1, guesses: answered }),
+    });
+    const [, scores] = jest.mocked(finishRoomRound).mock.calls[0];
+    const expected = scoreRound(ROME.coordinates, PARIS, answered.host);
+    expect(scores.host.trueSurfaceDistanceKm).toBe(expected.trueSurfaceDistanceKm);
+    expect(scores.host.trueBearing).toBe(expected.trueBearing);
+    expect(scores.host.trueSurfaceDistanceKm).not.toBe(scoreRound(ORIGIN.coordinates, PARIS, answered.host).trueSurfaceDistanceKm);
+  });
+
   it('scores a round only once', async () => {
     await setup({ gameState: gameState({ guesses: answered }) });
     await act(async () => setRoom({ gameState: gameState({ guesses: answered, totalScores: { host: 1 } }) }));

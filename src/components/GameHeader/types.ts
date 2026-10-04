@@ -17,6 +17,8 @@ export type GameHeaderProps = {
   /** Index into `players` of whoever has the turn; -1 (the default) when nobody does, e.g. once
    * the round is over. Only meaningful with `players`. */
   turnIndex?: number;
+  /** Travel mode: where the player stands ("Vous êtes à Cusco"), already translated; a white line under the round row. */
+  location?: string;
   /** The round's question, centered at the bottom of the header ("Quel est ce pays ?"). */
   question?: string;
 };

@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { PLAYER_COLORS } from '@/data';
 import { MAX_SURFACE_DISTANCE_KM } from '@/games/compass/constants';
+import { originForRound, travelFromPlace } from '@/games/compass/helpers/originForRound';
 import { bearingDeg, distanceKm as computeDistanceKm } from '@/helpers';
 import type { OnlinePlayer } from '@/helpers/roomPlayers';
 import { useTranslation } from '@/i18n';
@@ -15,6 +16,7 @@ import RoomDeletedScreen from '@/components/RoomDeletedScreen';
 import { REVEAL_OPACITY } from './constants';
 import { buildRoundRecord } from './helpers';
 import { useSectionScroll } from './useSectionScroll';
+import { useTravelNotice } from './useTravelNotice';
 import { OnlineGameScreenView } from './OnlineGameScreenView';
 import type { Needle, OnlineGameScreenProps } from './types';
 import { useOnlineGame } from './useOnlineGame';
@@ -35,6 +37,18 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   // The "Suivant"/"Précédent" scroll nav — kept above every early return below so the hook order
   // never depends on which phase we're in.
   const { scrollRef, onCap, goToCap, goToDistance, handleScroll } = useSectionScroll();
+
+  // Travel mode, from round 2: the splash saying where the player stands (and the header line, below), only once the
+  // round is really on screen — not while loading, nor on the final standings. Above the early returns: hook order.
+  const roundShown =
+    game.gameState.screen !== 'end' &&
+    game.localUid !== null &&
+    game.roomSettings !== null &&
+    game.place !== undefined &&
+    originForRound(game.gameState, game.roomSettings.travel) !== null;
+  const travelPlace = roundShown ? travelFromPlace(game.gameState, game.roomSettings?.travel) : undefined;
+  const travelLocation = travelPlace === undefined ? undefined : t.game.youAreAt(travelPlace.name);
+  const { travelNotice, dismissTravelNotice } = useTravelNotice(game.gameState.roundIndex, travelLocation);
 
   // The final standings, frozen the first time they're reached: "Accueil" only navigates back
   // (`router.back()`, see the route) rather than disconnecting, so the room's live subscriptions
@@ -85,7 +99,9 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
     );
   }
 
-  if (localUid === null || roomSettings === null || place === undefined || gameState.origin === null) {
+  // Where this round is played from: the room's starting point, or the previous place in travel mode.
+  const roundOrigin = originForRound(gameState, roomSettings?.travel);
+  if (localUid === null || roomSettings === null || place === undefined || roundOrigin === null) {
     return <NoticeOverlay loading message={t.game.loading} />;
   }
   const maxDistanceKm = MAX_SURFACE_DISTANCE_KM;
@@ -125,8 +141,8 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
 
     const answeredPlayers = onlinePlayers.filter(({ uid }) => gameState.guesses[uid] !== undefined);
     const allAnswered = revealed || answeredPlayers.length === onlinePlayers.length;
-    const trueBearing = allAnswered ? bearingDeg(gameState.origin.coordinates, place.coordinates) : null;
-    const trueSurfaceDistanceKm = allAnswered ? computeDistanceKm(gameState.origin.coordinates, place.coordinates) : 0;
+    const trueBearing = allAnswered ? bearingDeg(roundOrigin, place.coordinates) : null;
+    const trueSurfaceDistanceKm = allAnswered ? computeDistanceKm(roundOrigin, place.coordinates) : 0;
 
     resultsEarthMarks = [
       ...(allAnswered
@@ -155,46 +171,50 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   const answerEarthMarks: EarthMark[] = [{ bearing: game.bearing, distanceKm: game.distanceKm, color: myColor }];
 
   return (
-    <OnlineGameScreenView
-      answered={answered}
-      onReact={game.reactions.canReact ? game.reactions.send : undefined}
-      reaction={game.reactions.reaction}
-      bearing={game.bearing}
-      compassColor={myColor}
-      confirmed={confirmed}
-      difficulty={roomSettings.difficulty}
-      distanceKm={game.distanceKm}
-      earthMarks={record ? resultsEarthMarks : answerEarthMarks}
-      origin={gameState.origin.coordinates}
-      extraNeedles={extraNeedles}
-      name={onlinePlayers[myIndex]?.name ?? ''}
-      points={totals[myIndex] ?? 0}
-      roomCode={code}
-      isHost={isHost}
-      isLastRound={isLastRound}
-      liveCompass={roomSettings.liveCompass}
-      localIndex={myIndex}
-      maxDistanceKm={maxDistanceKm}
-      onCap={onCap}
-      onGoToCap={goToCap}
-      onGoToDistance={goToDistance}
-      onKick={game.kickPlayer}
-      onNextRound={game.goToNextRound}
-      onQuit={game.handleQuit}
-      onScroll={handleScroll}
-      onSetBearing={game.setBearing}
-      onSetDistanceKm={game.setDistanceKm}
-      onSubmit={game.submit}
-      place={place}
-      players={onlinePlayers}
-      record={record}
-      roundNumber={gameState.roundIndex + 1}
-      scrollRef={scrollRef}
-      showCountry={roomSettings.showCountry}
-      submitDisabled={!game.bearingTouched || !game.distanceTouched}
-      totalRounds={gameState.places.length}
-      totals={totals}
-      truthBearing={truthBearing}
-    />
+    <>
+      <OnlineGameScreenView
+        answered={answered}
+        onReact={game.reactions.canReact ? game.reactions.send : undefined}
+        reaction={game.reactions.reaction}
+        bearing={game.bearing}
+        compassColor={myColor}
+        confirmed={confirmed}
+        difficulty={roomSettings.difficulty}
+        distanceKm={game.distanceKm}
+        earthMarks={record ? resultsEarthMarks : answerEarthMarks}
+        location={travelLocation}
+        origin={roundOrigin}
+        extraNeedles={extraNeedles}
+        name={onlinePlayers[myIndex]?.name ?? ''}
+        points={totals[myIndex] ?? 0}
+        roomCode={code}
+        isHost={isHost}
+        isLastRound={isLastRound}
+        liveCompass={roomSettings.liveCompass}
+        localIndex={myIndex}
+        maxDistanceKm={maxDistanceKm}
+        onCap={onCap}
+        onGoToCap={goToCap}
+        onGoToDistance={goToDistance}
+        onKick={game.kickPlayer}
+        onNextRound={game.goToNextRound}
+        onQuit={game.handleQuit}
+        onScroll={handleScroll}
+        onSetBearing={game.setBearing}
+        onSetDistanceKm={game.setDistanceKm}
+        onSubmit={game.submit}
+        place={place}
+        players={onlinePlayers}
+        record={record}
+        roundNumber={gameState.roundIndex + 1}
+        scrollRef={scrollRef}
+        showCountry={roomSettings.showCountry}
+        submitDisabled={!game.bearingTouched || !game.distanceTouched}
+        totalRounds={gameState.places.length}
+        totals={totals}
+        truthBearing={truthBearing}
+      />
+      <NoticeOverlay message={travelNotice} onDismiss={dismissTravelNotice} />
+    </>
   );
 };

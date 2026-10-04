@@ -29,6 +29,7 @@ export const SetupScreenView = ({
   onToggleUseGps,
   onChangeCustomOrigin,
   onToggleShowCountry,
+  onToggleTravel,
   overlayMessage,
   overlayLoading,
   onDismissOverlay,
@@ -97,6 +98,13 @@ export const SetupScreenView = ({
             description: t.setup.toggles.showCountry.description,
             value: settings.showCountry,
             onChange: onToggleShowCountry,
+          },
+          {
+            id: 'travel',
+            title: t.setup.toggles.travel.label,
+            description: t.setup.toggles.travel.description,
+            value: settings.travel,
+            onChange: onToggleTravel,
           },
         ]}
         title={t.setup.optionsTitle}

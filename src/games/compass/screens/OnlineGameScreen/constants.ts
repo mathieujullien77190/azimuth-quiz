@@ -27,3 +27,6 @@ export const MAX_EARTH_SIZE = 240;
 
 /** On reveal, players' answers are slightly faded to make the true answer stand out. */
 export const REVEAL_OPACITY = 0.8;
+
+/** How long the travel-mode "you are in ..." splash stays up on its own at the start of a round (ms). */
+export const TRAVEL_NOTICE_MS = 3000;

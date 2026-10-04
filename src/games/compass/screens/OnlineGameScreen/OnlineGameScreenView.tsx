@@ -42,6 +42,7 @@ export const OnlineGameScreenView = ({
   onSetBearing,
   earthMarks,
   origin,
+  location,
   distanceKm,
   onSetDistanceKm,
   maxDistanceKm,
@@ -95,6 +96,7 @@ export const OnlineGameScreenView = ({
         <GameHeader
           code={roomCode}
           difficulty={difficulty}
+          location={location}
           name={name}
           onQuit={onQuit}
           points={points}

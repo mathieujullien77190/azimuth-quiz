@@ -419,6 +419,12 @@ describe('SetupScreen — options toggles', () => {
     expect(updateSettings).toHaveBeenCalledWith({ showCountry: true });
   });
 
+  it('toggles the travel mode', async () => {
+    const { getByLabelText, updateSettings } = await renderSetup();
+    await fireEvent(getByLabelText('Mode voyage'), 'valueChange', true);
+    expect(updateSettings).toHaveBeenCalledWith({ travel: true });
+  });
+
   it('toggling useGps off reveals the custom origin inputs', async () => {
     const { getByLabelText, updateSettings, queryByText } = await renderSetup();
     expect(queryByText('Latitude')).toBeNull();

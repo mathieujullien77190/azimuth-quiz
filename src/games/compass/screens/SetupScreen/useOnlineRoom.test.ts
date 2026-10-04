@@ -42,6 +42,17 @@ describe('useOnlineRoom', () => {
     expect(startRoomGame).toHaveBeenCalledWith('tabofuna', { origin: DEVICE_ORIGIN, places: PLACES });
   });
 
+  it('in travel mode, keeps a place from following itself', async () => {
+    const rome = { name: 'Rome' };
+    jest.mocked(fetchRandomPlaces).mockResolvedValue([rome, rome, { name: 'Oslo' }] as never);
+    const settings = { ...DEFAULT_SETTINGS, useGps: true, travel: true };
+    const { result } = await renderHook(() => useOnlineRoom(settings, jest.fn()));
+
+    await result.current.startOnlineGame();
+
+    expect(jest.mocked(startRoomGame).mock.calls[0][1].places).toEqual([rome, { name: 'Oslo' }, rome]);
+  });
+
   it('starts from the custom coordinates, without asking the device, when GPS is off', async () => {
     const settings = { ...DEFAULT_SETTINGS, useGps: false, customLatitude: 10, customLongitude: 20 };
     const { result } = await renderHook(() => useOnlineRoom(settings, jest.fn()));

@@ -2,6 +2,7 @@ import { reporting } from '@/helpers/reportError';
 import { useEffect, useRef, useState } from 'react';
 
 import { DEFAULT_DISTANCE_KM } from '@/games/compass/constants';
+import { originForRound } from '@/games/compass/helpers/originForRound';
 import { applyBestBonus, scoreRound } from '@/helpers';
 import { useOnlineRoomSession } from '@/helpers/useOnlineRoomSession';
 import {
@@ -77,7 +78,7 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
   // more than once for the same round.
   const finishedRoundRef = useRef(-1);
   useEffect(() => {
-    const origin = gameState.origin;
+    const origin = originForRound(gameState, roomSettings?.travel);
     if (!isHost || gameState.screen !== 'game' || origin === null || place === undefined) return;
     if (finishedRoundRef.current === gameState.roundIndex) return;
     if (onlinePlayers.length === 0) return;
@@ -90,7 +91,7 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
         const guess = gameState.guesses[uid];
         return {
           guess,
-          score: scoreRound(origin.coordinates, place, guess),
+          score: scoreRound(origin, place, guess),
         };
       }),
     );
@@ -101,7 +102,7 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
       totalScores[uid] = (gameState.totalScores[uid] ?? 0) + results[index].score.total;
     });
     finishRoomRound(code, scores, totalScores).catch(reporting('compass.finishRound', { kind: 'background', room: code }));
-  }, [isHost, gameState, onlinePlayers, place, code]);
+  }, [isHost, gameState, roomSettings?.travel, onlinePlayers, place, code]);
 
   // Keyed by uid (not derived from `records`' array position): the host writes this to the room
   // after every round (see `finishRoomRound`), so it survives a kick reshuffling `onlinePlayers`'

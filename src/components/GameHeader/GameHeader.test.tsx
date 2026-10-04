@@ -35,6 +35,13 @@ describe('GameHeader', () => {
     expect(baseProps.onQuit).toHaveBeenCalledTimes(1);
   });
 
+  it('says where the player stands (travel mode) only when given a location', async () => {
+    const withLocation = await render(<GameHeader {...baseProps} location="Vous êtes à Cusco" />);
+    expect(withLocation.getByText('Vous êtes à Cusco')).toBeTruthy();
+    const without = await render(<GameHeader {...baseProps} />);
+    expect(without.queryByText(/Vous êtes/)).toBeNull();
+  });
+
   it('has no player tabs nor question unless given', async () => {
     const { queryByText } = await render(<GameHeader {...baseProps} />);
     expect(queryByText('MA')).toBeNull();

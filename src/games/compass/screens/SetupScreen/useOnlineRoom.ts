@@ -2,6 +2,7 @@ import { useSetupRoom, type SetupRoomAdapter } from '@/components/setup/useSetup
 import { ROOM_PLAYER_COLORS } from '@/data';
 import { resolveOrigin } from '@/helpers';
 import { fetchRandomPlaces } from '@/games/compass/helpers/firestorePlaces';
+import { separateRepeats } from '@/games/compass/helpers/originForRound';
 import {
   ROOM_MAX_PLAYERS,
   type RoomSettings,
@@ -58,7 +59,9 @@ export const useOnlineRoom = (settings: GameSettings, updateSettings: (patch: Pa
             isDevicePosition: false,
           };
       // Drawn from Firestore, no fallback: a failure rejects, and the shared start flow shows a notice.
-      const places = await fetchRandomPlaces(settings, language);
+      const drawn = await fetchRandomPlaces(settings, language);
+      // Travel mode starts each round from the previous place: no place twice in a row.
+      const places = settings.travel ? separateRepeats(drawn) : drawn;
       await startRoomGame(code, { origin, places });
     });
 

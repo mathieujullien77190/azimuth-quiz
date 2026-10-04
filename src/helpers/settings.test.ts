@@ -68,6 +68,12 @@ describe('sanitizeSettings', () => {
     expect(result.showCountry).toBe(DEFAULT_SETTINGS.showCountry);
   });
 
+  it('reads the travel mode as a flag, off by default (settings saved before it existed)', () => {
+    expect(sanitizeSettings({ travel: true }).travel).toBe(true);
+    expect(sanitizeSettings({ travel: 'yes' }).travel).toBe(false);
+    expect(sanitizeSettings({}).travel).toBe(false);
+  });
+
   it('keeps custom coordinates within range, falls back otherwise', () => {
     const result = sanitizeSettings({ customLatitude: 10, customLongitude: 20 });
     expect(result.customLatitude).toBe(10);

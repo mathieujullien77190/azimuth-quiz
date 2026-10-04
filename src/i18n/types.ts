@@ -97,6 +97,7 @@ export type Translations = {
       liveCompass: { label: string; description: string };
       useGps: { label: string; description: string };
       showCountry: { label: string; description: string };
+      travel: { label: string; description: string };
     };
     /** Latitude/longitude entered by hand when "Use my position" is off. */
     customOrigin: { latitude: string; longitude: string };
@@ -115,6 +116,8 @@ export type Translations = {
     previousStep: string;
     /** Replaces the initials on the active player's tab ("Matou's turn"). */
     playerTurn: (name: string) => string;
+    /** Travel mode, rounds after the first: where the player stands (the previous place), in the game header. */
+    youAreAt: (name: string) => string;
     /** Shown once this device has submitted, while other online players haven't yet
      * (`OnlineGameScreen`) — replaces the footer's Valider button. */
     waitingForOthers: string;

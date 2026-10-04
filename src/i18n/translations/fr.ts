@@ -95,6 +95,10 @@ export const fr: Translations = {
         label: 'Aide pays',
         description: 'Affiche le pays sous le nom du lieu.',
       },
+      travel: {
+        label: 'Mode voyage',
+        description: 'Chaque manche part du lieu précédent.',
+      },
     },
     customOrigin: { latitude: 'Latitude', longitude: 'Longitude' },
   },
@@ -109,6 +113,7 @@ export const fr: Translations = {
     nextStep: 'Suivant',
     previousStep: 'Précédent',
     playerTurn: (name) => `À ${name} de jouer`,
+    youAreAt: (name) => `Vous êtes à ${name}`,
     /** Shown once this device has submitted, while other online players haven't yet
      * (`OnlineGameScreen`) — nothing to do but wait, so it replaces the footer's Valider button. */
     waitingForOthers: 'En attente des autres joueurs…',

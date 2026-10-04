@@ -62,4 +62,5 @@ export const DEFAULT_SETTINGS: GameSettings = {
   customLongitude: DEFAULT_ORIGIN.coordinates.longitude,
   liveCompass: false,
   showCountry: false,
+  travel: false,
 };

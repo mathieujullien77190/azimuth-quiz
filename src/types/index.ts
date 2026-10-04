@@ -114,6 +114,9 @@ export type GameSettings = {
   liveCompass: boolean;
   /** Shows the country under the place's name. */
   showCountry: boolean;
+  /** Travel mode: every round after the first starts from the place of the previous round (see `originForRound`),
+   * instead of always from the starting point. A room made before this option existed has none: read as off. */
+  travel: boolean;
 };
 
 export type ThemeColors = {

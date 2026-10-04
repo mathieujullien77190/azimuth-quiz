@@ -94,6 +94,10 @@ export const en: Translations = {
         label: 'Country hint',
         description: 'Shows the country under the place name.',
       },
+      travel: {
+        label: 'Travel mode',
+        description: 'Each round starts from the previous place.',
+      },
     },
     customOrigin: { latitude: 'Latitude', longitude: 'Longitude' },
   },
@@ -108,6 +112,7 @@ export const en: Translations = {
     nextStep: 'Next',
     previousStep: 'Back',
     playerTurn: (name) => `${name}'s turn`,
+    youAreAt: (name) => `You are in ${name}`,
     waitingForOthers: 'Waiting for other players…',
   },
   placeCard: {

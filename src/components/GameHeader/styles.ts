@@ -52,6 +52,14 @@ export const createStyles = ({ colors, isDark, typography }: Theme) =>
       color: colors.textMuted,
       fontSize: fontSize.caption,
     },
+    // Travel mode: where the player stands, in white, aligned left like the round row.
+    location: {
+      ...typography.heading,
+      color: colors.text,
+      fontSize: fontSize.body + 2,
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.sm,
+    },
     // The round's question, centered at the bottom of the header.
     question: {
       ...typography.heading,

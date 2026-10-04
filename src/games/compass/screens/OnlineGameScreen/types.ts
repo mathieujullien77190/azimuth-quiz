@@ -41,6 +41,8 @@ export type OnlineGameScreenViewProps = OnlineHeaderProps & {
   earthMarks: EarthMark[];
   /** The round's starting point: at the reveal, lets the Earth view switch to the flat world map (see `EarthSection`). */
   origin: Coordinates;
+  /** Travel mode, rounds after the first: where the player stands ("Vous êtes à Cusco"), shown in the header. */
+  location?: string;
   // Answer phase only (ignored once `record` is set).
   showCountry: boolean;
   compassColor: string;
