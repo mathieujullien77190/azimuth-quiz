@@ -56,6 +56,8 @@ export default defineConfig(({ command }) => ({
         // Heavy third-party code gets its own long-lived chunks, the rest is split by page (see `App.tsx`).
         manualChunks(id: string) {
           if (id.includes('node_modules/firebase') || id.includes('node_modules/@firebase')) return 'firebase';
+          // The Monde page's 3D library is its own chunk: only that page downloads it.
+          if (id.includes('node_modules/three')) return 'three';
           if (id.includes('react-native-web') || id.includes('react-native-svg')) return 'react-native-web';
           return undefined;
         },

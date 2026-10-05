@@ -118,7 +118,7 @@ export const ErrorsView = () => {
         <div className="empty">Aucune erreur enregistrée.</div>
       ) : (
         <>
-          <div className="place-card">
+          <div className="place-card errors-card">
             <h3 className="game-title">Par action</h3>
             <table className="kv-table errors-table">
               <tbody>
@@ -135,7 +135,7 @@ export const ErrorsView = () => {
             </table>
           </div>
 
-          <div className="place-card">
+          <div className="place-card errors-card">
             <h3 className="game-title">Détail</h3>
             <table className="kv-table errors-table">
               <tbody>

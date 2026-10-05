@@ -24,9 +24,11 @@ vi.mock('./data', () => ({
 }));
 vi.mock('./views/PlacesView', () => ({ PlacesView: () => <div>places view</div> }));
 vi.mock('./views/CountriesView', () => ({ CountriesView: () => <div>countries view</div> }));
+vi.mock('./views/GlobeView', () => ({ GlobeView: () => <div>globe view</div> }));
 vi.mock('./views/JobsView', () => ({ JobsView: () => <div>jobs view</div> }));
 vi.mock('./views/WordplayView', () => ({ WordplayView: () => <div>wordplay view</div> }));
 vi.mock('./views/ErrorsView', () => ({ ErrorsView: () => <div>errors view</div> }));
+vi.mock('./views/FeedbackView', () => ({ FeedbackView: () => <div>feedback view</div> }));
 
 import { App } from './App';
 import { BASE_PATH, hrefOf, PAGES } from './pages';
@@ -52,6 +54,19 @@ describe('App', () => {
     window.history.replaceState(null, '', hrefOf('errors'));
     render(<App />);
     expect(await screen.findByText('errors view')).toBeInTheDocument();
+  });
+
+  it('gives the Monde page the whole width, and the other pages the usual one', async () => {
+    window.history.replaceState(null, '', hrefOf('globe'));
+    const { container } = render(<App />);
+    expect(await screen.findByText('globe view')).toBeInTheDocument();
+    expect(container.querySelector('.wrap')).toHaveClass('wide');
+  });
+
+  it('keeps the usual width on the other pages', async () => {
+    const { container } = render(<App />);
+    await screen.findByText('places view');
+    expect(container.querySelector('.wrap')).not.toHaveClass('wide');
   });
 
   it('switches page with a click and pushes the url', async () => {
@@ -119,7 +134,7 @@ describe('App', () => {
   it('shows every page', async () => {
     render(<App />);
     await screen.findByText('places view');
-    for (const view of ['jobs', 'countries', 'wordplay', 'errors']) {
+    for (const view of ['jobs', 'countries', 'wordplay', 'errors', 'feedback']) {
       await userEvent.click(screen.getByRole('link', { name: labelOf(view) }));
       expect(await screen.findByText(`${view} view`)).toBeInTheDocument();
     }

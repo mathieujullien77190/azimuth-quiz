@@ -11,9 +11,11 @@ import { hrefOf, PAGES, pageFromPath, type PageId } from './pages';
 // One chunk per page: a page's code is only downloaded when it is opened.
 const PlacesView = lazy(() => import('./views/PlacesView').then((m) => ({ default: m.PlacesView })));
 const CountriesView = lazy(() => import('./views/CountriesView').then((m) => ({ default: m.CountriesView })));
+const GlobeView = lazy(() => import('./views/GlobeView').then((m) => ({ default: m.GlobeView })));
 const JobsView = lazy(() => import('./views/JobsView').then((m) => ({ default: m.JobsView })));
 const WordplayView = lazy(() => import('./views/WordplayView').then((m) => ({ default: m.WordplayView })));
 const ErrorsView = lazy(() => import('./views/ErrorsView').then((m) => ({ default: m.ErrorsView })));
+const FeedbackView = lazy(() => import('./views/FeedbackView').then((m) => ({ default: m.FeedbackView })));
 
 const AdminApp = () => {
   const [tab, setTab] = useState<PageId>(() => pageFromPath(window.location.pathname));
@@ -43,7 +45,7 @@ const AdminApp = () => {
   }, []);
 
   return (
-    <div className="wrap">
+    <div className={`wrap${tab === 'globe' ? ' wide' : ''}`}>
       <header className="top">
         <div className="top-inner">
           <h1>
@@ -90,9 +92,11 @@ const AdminApp = () => {
         <Suspense fallback={<div className="empty">Chargement…</div>}>
           {tab === 'places' && <PlacesView />}
           {tab === 'countries' && <CountriesView />}
+          {tab === 'globe' && <GlobeView />}
           {tab === 'jobs' && <JobsView />}
           {tab === 'wordplay' && <WordplayView />}
           {tab === 'errors' && <ErrorsView />}
+          {tab === 'feedback' && <FeedbackView />}
         </Suspense>
       </Fragment>
     </div>

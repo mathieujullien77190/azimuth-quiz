@@ -38,6 +38,8 @@ export const dedupePackages = [
   // The 3D globe's OpenGL surface (`Globe3D`): its own `.web` build is a plain canvas, so the stories draw the real
   // thing in the browser.
   'expo-gl',
+  // The Monde page's 3D library: one copy, whichever folder imports it.
+  'three',
   '@react-native-async-storage/async-storage',
 ];
 

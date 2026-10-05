@@ -4,9 +4,11 @@
 export const PAGES = [
   { id: 'places', path: 'places', label: 'Lieux' },
   { id: 'countries', path: 'countries', label: 'Pays' },
+  { id: 'globe', path: 'globe', label: 'Monde' },
   { id: 'jobs', path: 'jobs', label: 'Métiers' },
   { id: 'wordplay', path: 'wordplay', label: 'Jeux de mots' },
   { id: 'errors', path: 'errors', label: 'Erreurs' },
+  { id: 'feedback', path: 'feedback', label: 'Avis difficulté' },
 ] as const;
 
 export type PageId = (typeof PAGES)[number]['id'];

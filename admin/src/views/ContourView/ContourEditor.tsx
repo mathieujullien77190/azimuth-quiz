@@ -16,6 +16,8 @@ import { BOARD_PADDING_RATIO, HINT_STACK_GAP_RATIO } from '@/games/contour/compo
 import { computeBorders } from '@/games/contour/helpers/borders';
 // Pure as well: the progressive, seeded simplification the game uses (level 0 = coarsest, 3 = full ring).
 import { FULL_PRECISION, newSimplifySeed, simplificationLevels } from '@/games/contour/helpers/simplify';
+// Pure too: the cell the game opens first in a round, for the preview's grid.
+import { startQuadrant } from '@/games/contour/helpers/quadrants';
 import { FLAG_FONT_FAMILY } from '@/themes/fonts';
 import type { ContourCountry, ContourNeighbor, Point2D } from '@/types';
 
@@ -23,6 +25,7 @@ import { allContours, deleteNeighbor, saveCenterLabelPosition, saveNeighborPosit
 import { countryName, data } from '../../data';
 import { DeleteX } from '../../components/DeleteX';
 
+import { ContourQuadrantGrid } from './ContourQuadrantGrid';
 import { neighborIcon, neighborName } from './helpers';
 
 const BOARD_MAX_WIDTH = 640;
@@ -314,6 +317,12 @@ export const ContourEditor = ({
                 </text>
               </g>
             ))}
+            {/* The game's 2 x 2 division, lines only: the game hides all but one cell, here nothing is hidden. */}
+            <ContourQuadrantGrid
+              height={boardSize.height}
+              start={startQuadrant(country, seed)}
+              width={boardSize.width}
+            />
           </svg>
           {country.neighbors.map((neighbor, index) => {
             const pos = positionFor(index, neighbor);
