@@ -1,5 +1,4 @@
 import { DEFAULT_CLUE_SETTINGS } from '@/games/clues/constants';
-import { DEFAULT_CONTOUR_SETTINGS } from '@/games/contour/constants';
 import { DEFAULT_SETTINGS } from '@/games/compass/constants';
 import { loadDevCode, loadPlayerName, loadSettings, saveDevCode, savePlayerName, saveSettings } from '@/helpers';
 
@@ -12,7 +11,6 @@ import {
   hydratePlayerName,
   hydrateSettings,
   useClueSettings,
-  useContourSettings,
   useDevCode,
   useDevMode,
   usePlayerName,
@@ -43,7 +41,6 @@ beforeEach(() => {
   mockedLoadSettings.mockResolvedValue(DEFAULT_SETTINGS);
   useSettings.setState({ settings: DEFAULT_SETTINGS, ready: false });
   useClueSettings.setState({ settings: DEFAULT_CLUE_SETTINGS });
-  useContourSettings.setState({ settings: DEFAULT_CONTOUR_SETTINGS });
   usePlayerName.setState({ playerName: '', ready: false });
   useDevCode.setState({ devCode: '', ready: false });
 });
@@ -89,7 +86,7 @@ describe('useSettings (Zustand store)', () => {
   });
 });
 
-// Clues/Silhouette settings: no persistence at all (see each store's own comment in
+// Clues settings: no persistence at all (see each store's own comment in
 // `settings/index.ts`) — just the default-state and merge behavior, no `loadSettings`/
 // `saveSettings` involved.
 describe('useClueSettings (Zustand store)', () => {
@@ -103,20 +100,6 @@ describe('useClueSettings (Zustand store)', () => {
     expect(useClueSettings.getState().settings.difficulty).toBe('hard');
     // The rest of the settings is preserved (a partial merge, not a replacement).
     expect(useClueSettings.getState().settings.rounds).toBe(DEFAULT_CLUE_SETTINGS.rounds);
-    expect(mockedSaveSettings).not.toHaveBeenCalled();
-  });
-});
-
-describe('useContourSettings (Zustand store)', () => {
-  it('starts with the default settings', () => {
-    expect(useContourSettings.getState().settings).toEqual(DEFAULT_CONTOUR_SETTINGS);
-  });
-
-  it('updateSettings merges a partial patch without touching storage', () => {
-    useContourSettings.getState().updateSettings({ rounds: 10 });
-
-    expect(useContourSettings.getState().settings.rounds).toBe(10);
-    expect(useContourSettings.getState().settings.playerName).toEqual(DEFAULT_CONTOUR_SETTINGS.playerName);
     expect(mockedSaveSettings).not.toHaveBeenCalled();
   });
 });

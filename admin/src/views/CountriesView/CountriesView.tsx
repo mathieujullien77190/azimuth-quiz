@@ -25,20 +25,6 @@ export const CountriesView = () => {
   const [sortKey, setSortKey] = useState<SortKey>('fr');
   const [sortDir, setSortDir] = useState<1 | -1>(1);
   const [page, setPage] = useState(1);
-  // Which card's own Contour/Silhouette editor is expanded (see the "🗺️ Silhouette" toggle below)
-  // — at most one at a time, so the page never mounts more than one interactive SVG board.
-  const [expandedContourCode, setExpandedContourCode] = useState<string | null>(null);
-
-  // Cards whose "Afficher les voisins" list is open (any number at once: it is only a line of text;
-  // the map decor it also turns on lives in the Silhouette editor, which stays one at a time).
-  const [neighborsOpen, setNeighborsOpen] = useState<ReadonlySet<string>>(new Set());
-  const toggleNeighbors = (code: string) =>
-    setNeighborsOpen((current) => {
-      const next = new Set(current);
-      if (!next.delete(code)) next.add(code);
-      return next;
-    });
-
   useEffect(() => {
     fetchCountries()
       .then(setCountries)
@@ -57,7 +43,7 @@ export const CountriesView = () => {
   const totalPages = pageCount(visible.length);
   const pageRows = useMemo(() => paginate(visible, page), [visible, page]);
 
-  const { saveFlagFor, handleChange, handleDifficultyChange } = useCountryEditing(countries, setCountries);
+  const { saveFlagFor, handleChange } = useCountryEditing(countries, setCountries);
 
   if (loadError) {
     return <div className="empty">Impossible de charger les pays : {loadError}</div>;
@@ -115,17 +101,7 @@ export const CountriesView = () => {
       <div className="cards-scroll">
         {pageRows.length === 0 && <div className="empty">Aucun pays ne correspond à cette recherche.</div>}
         {pageRows.map((row) => (
-          <CountryCard
-            key={row.code}
-            row={row}
-            saveFlagFor={saveFlagFor}
-            onChange={handleChange}
-            onDifficultyChange={handleDifficultyChange}
-            showNeighbors={neighborsOpen.has(row.code)}
-            onToggleNeighbors={(country) => toggleNeighbors(country.code)}
-            contourExpanded={expandedContourCode === row.code}
-            onToggleContour={(country) => setExpandedContourCode(expandedContourCode === country.code ? null : country.code)}
-          />
+          <CountryCard key={row.code} row={row} saveFlagFor={saveFlagFor} onChange={handleChange} />
         ))}
       </div>
 

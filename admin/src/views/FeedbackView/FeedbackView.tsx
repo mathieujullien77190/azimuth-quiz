@@ -25,7 +25,6 @@ const toRow = (snapshot: QueryDocumentSnapshot): FeedbackRow => {
   return {
     id: snapshot.id,
     game: data.game,
-    targetType: data.targetType,
     targetKey: data.targetKey,
     name: data.name,
     currentDifficulty: data.currentDifficulty,
@@ -35,7 +34,7 @@ const toRow = (snapshot: QueryDocumentSnapshot): FeedbackRow => {
 };
 
 /**
- * What the players said about how hard a place or a country is, in dev mode (`devFeedback`, see `useDevFeedback`): one
+ * What the players said about how hard a place is, in dev mode (`devFeedback`, see `useDevFeedback`): one
  * read-only text of instructions for an AI that edits the data ("Change la difficulté du lieu … de … à …"), which updates
  * by itself as opinions arrive, a "Copier" button, and "Nettoyer" which deletes every opinion (asks twice: a confirmation
  * inside the page, since a browser dialog would block). Reads Firestore directly: nothing here goes through the data copy

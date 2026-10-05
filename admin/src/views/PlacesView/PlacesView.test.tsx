@@ -13,10 +13,6 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('../../api/places', () => mocks);
-vi.mock('../../constants', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../../constants')>()),
-  countryFor: (code: string) => ({ FR: 'France', IT: 'Italie' })[code] ?? code,
-}));
 vi.mock('./WordplayEditor', () => ({ WordplayEditor: () => <div>wordplay-editor</div> }));
 vi.mock('./PersonalityEditor', () => ({ PersonalityEditor: () => <div>personality-editor</div> }));
 
@@ -40,6 +36,7 @@ const PARIS = {
   key: 'par',
   name: 'Paris',
   code: 'FR',
+  country: 'France',
   coordinates: { latitude: 48.8566, longitude: 2.35 },
   compass: {
     category: 'capital',
@@ -55,6 +52,7 @@ const ROME = {
   key: 'rom',
   name: 'Rome',
   code: 'IT',
+  country: 'Italie',
   coordinates: { latitude: -41.9, longitude: -12.5 },
   compass: { category: 'cities', difficulty: 'hard' },
   clues: null,
@@ -64,6 +62,7 @@ const NICE = {
   key: 'nic',
   name: 'Nice',
   code: 'FR',
+  country: 'France',
   coordinates: { latitude: 43.7, longitude: 7.26 },
   compass: null,
   clues: clues({ difficulty: 'intermediate', emojis: ['🌴', '', ''] }),

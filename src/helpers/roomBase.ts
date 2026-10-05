@@ -26,7 +26,7 @@ import { isNameTaken, nameTakenError } from '@/helpers/roomName';
 // Everything about an online room that has no game-specific coupling — lifecycle (create/join/
 // leave/delete), presence, player colors, settings sync — written once and bound to a game: every
 // game's rooms live in the one `rooms` collection, told apart by their immutable `game` field
-// (`createRoomApi('compass')`, `'clues'`, `'silhouette'`).
+// (`createRoomApi('compass')`, `'clues'`).
 // What a game writes into its room to actually play (round state, guesses, turns...) stays in that
 // game's own `helpers/room.ts`, built on `roomRef`.
 
@@ -47,7 +47,7 @@ export type RoomReaction = { uid: string; emoji: string; seq: number };
 
 /** The games that have online rooms: the value of a room's `game` field, set when it is created and never
  * changed (the Firestore rules refuse it). */
-export type RoomGame = 'compass' | 'clues' | 'silhouette';
+export type RoomGame = 'compass' | 'clues';
 
 /** Every game's rooms share this one collection. */
 const ROOMS_COLLECTION = 'rooms';

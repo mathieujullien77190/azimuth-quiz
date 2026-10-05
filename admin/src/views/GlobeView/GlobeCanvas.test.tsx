@@ -2,11 +2,8 @@ import { act, fireEvent, render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const fake = vi.hoisted(() => ({
-  setCountries: vi.fn(),
   setPlaces: vi.fn(),
-  setLayers: vi.fn(),
   setLabels: vi.fn(),
-  setCountryNames: vi.fn(),
   setMarks: vi.fn(),
   pick: vi.fn(),
   flyTo: vi.fn(),
@@ -18,7 +15,6 @@ vi.mock('./GlobeScene', () => ({ createGlobeScene: vi.fn(() => fake) }));
 
 import { GlobeCanvas, type GlobeCanvasProps } from './GlobeCanvas';
 import { createGlobeScene } from './GlobeScene';
-import { shapeOf } from './helpers';
 import type { PlaceBuffers } from './types';
 
 const buffers: PlaceBuffers = {
@@ -41,27 +37,9 @@ const emptyBuffers: PlaceBuffers = {
 };
 
 const props = (over: Partial<GlobeCanvasProps> = {}): GlobeCanvasProps => ({
-  countryGroups: [{ color: 1, positions: [0, 0, 1, 0, 1, 0] }],
   placeBuffers: buffers,
   placeKeys: ['par', 'tok'],
   placeNames: ['Paris', 'Tokyo'],
-  countryNames: [
-    { name: 'France', lon: 2, lat: 46 },
-    { name: 'Japon', lon: 138, lat: 36 },
-  ],
-  shapes: [
-    shapeOf(
-      'FR',
-      [
-        [0, 40],
-        [10, 40],
-        [10, 50],
-        [0, 50],
-      ],
-      'easy',
-    ),
-  ],
-  layers: { countries: true, places: true },
   selectedMark: null,
   hoveredMark: null,
   fly: null,
@@ -80,7 +58,7 @@ const pointer = (target: Element, type: string, clientX = 0, clientY = 0) =>
 beforeEach(() => {
   for (const method of Object.values(fake)) method.mockReset();
   vi.mocked(createGlobeScene).mockClear();
-  fake.pick.mockReturnValue({ place: null, lon: null, lat: null, x: 5, y: 6 });
+  fake.pick.mockReturnValue({ place: null, x: 5, y: 6 });
 });
 
 describe('GlobeCanvas scene', () => {
@@ -89,9 +67,7 @@ describe('GlobeCanvas scene', () => {
     expect(createGlobeScene).toHaveBeenCalledTimes(1);
     expect(createGlobeScene).toHaveBeenCalledWith(canvasOf(container));
     expect(fake.resize).toHaveBeenCalledTimes(1);
-    expect(fake.setCountries).toHaveBeenCalledWith([{ color: 1, positions: [0, 0, 1, 0, 1, 0] }]);
     expect(fake.setPlaces).toHaveBeenCalledWith(buffers);
-    expect(fake.setLayers).toHaveBeenCalledWith({ countries: true, places: true });
     expect(fake.setMarks).toHaveBeenCalledWith(null, null);
     expect(fake.flyTo).not.toHaveBeenCalled();
     expect(fake.resetView).not.toHaveBeenCalled();
@@ -103,18 +79,14 @@ describe('GlobeCanvas scene', () => {
     rerender(
       <GlobeCanvas
         {...props({
-          countryGroups: [],
           placeBuffers: emptyBuffers,
-          layers: { countries: false, places: true },
           selectedMark: marks,
           hoveredMark: marks,
         })}
       />,
     );
     expect(createGlobeScene).toHaveBeenCalledTimes(1);
-    expect(fake.setCountries).toHaveBeenLastCalledWith([]);
     expect(fake.setPlaces).toHaveBeenLastCalledWith(emptyBuffers);
-    expect(fake.setLayers).toHaveBeenLastCalledWith({ countries: false, places: true });
     expect(fake.setMarks).toHaveBeenLastCalledWith(marks, marks);
   });
 
@@ -129,18 +101,6 @@ describe('GlobeCanvas scene', () => {
     expect(name.style.top).toBe('25px');
     act(() => listener([]));
     expect(container.querySelector('.globe-name')).toBeNull();
-  });
-
-  it('writes the country names the scene asks for, bigger, at the spot it gives', () => {
-    const { container } = render(<GlobeCanvas {...props()} />);
-    expect(fake.setCountryNames).toHaveBeenCalledWith(props().countryNames, expect.any(Function));
-    const listener = fake.setCountryNames.mock.calls[0][1] as (labels: { index: number; x: number; y: number }[]) => void;
-    act(() => listener([{ index: 0, x: 70, y: 35 }]));
-    const name = container.querySelector('.globe-country-name') as HTMLElement;
-    expect(name.textContent).toBe('France');
-    expect(name.style.left).toBe('70px');
-    act(() => listener([]));
-    expect(container.querySelector('.globe-country-name')).toBeNull();
   });
 
   it('flies on a request, and again on a new request for the same spot', () => {
@@ -169,8 +129,8 @@ describe('GlobeCanvas scene', () => {
 });
 
 describe('GlobeCanvas pointer', () => {
-  it('hovers a place first, even over a country', () => {
-    fake.pick.mockReturnValue({ place: 1, lon: 5, lat: 45, x: 30, y: 40 });
+  it('hovers the place under the pointer', () => {
+    fake.pick.mockReturnValue({ place: 1, x: 30, y: 40 });
     const onHover = vi.fn();
     const { container } = render(<GlobeCanvas {...props({ onHover })} />);
     pointer(canvasOf(container), 'pointermove', 30, 40);
@@ -178,28 +138,18 @@ describe('GlobeCanvas pointer', () => {
     expect(onHover).toHaveBeenCalledWith({ kind: 'place', id: 'tok', x: 30, y: 40 });
   });
 
-  it('hovers the country around the point of the globe when no place is close', () => {
-    fake.pick.mockReturnValue({ place: null, lon: 5, lat: 45, x: 30, y: 40 });
+  it('hovers nothing over empty space, and when the pointer leaves', () => {
     const onHover = vi.fn();
     const { container } = render(<GlobeCanvas {...props({ onHover })} />);
-    pointer(canvasOf(container), 'pointermove');
-    expect(onHover).toHaveBeenCalledWith({ kind: 'country', id: 'FR', x: 30, y: 40 });
-  });
-
-  it('hovers nothing over the sea, over empty space, and when the pointer leaves', () => {
-    const onHover = vi.fn();
-    const { container } = render(<GlobeCanvas {...props({ onHover })} />);
-    fake.pick.mockReturnValue({ place: null, lon: -40, lat: 0, x: 1, y: 1 });
-    pointer(canvasOf(container), 'pointermove');
-    fake.pick.mockReturnValue({ place: null, lon: null, lat: null, x: 1, y: 1 });
+    fake.pick.mockReturnValue({ place: null, x: 1, y: 1 });
     pointer(canvasOf(container), 'pointermove');
     pointer(canvasOf(container), 'pointerout');
-    expect(onHover).toHaveBeenCalledTimes(3);
+    expect(onHover).toHaveBeenCalledTimes(2);
     expect(onHover.mock.calls.every(([hit]) => hit === null)).toBe(true);
   });
 
   it('selects what is under a press that did not move', () => {
-    fake.pick.mockReturnValue({ place: 0, lon: null, lat: null, x: 30, y: 40 });
+    fake.pick.mockReturnValue({ place: 0, x: 30, y: 40 });
     const onSelect = vi.fn();
     const { container } = render(<GlobeCanvas {...props({ onSelect })} />);
     pointer(canvasOf(container), 'pointerdown', 30, 40);

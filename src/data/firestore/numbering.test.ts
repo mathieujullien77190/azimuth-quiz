@@ -4,7 +4,6 @@ import {
   CLUES_NUMBERING,
   cluesCategory,
   computeNumbering,
-  planContourDifficultyChange,
   planRegroup,
   shuffleRank,
   slotAt,
@@ -202,91 +201,5 @@ describe('Clues numbering', () => {
     );
 
     expect(plan).toEqual({ n: 1, moved: { c: 1 }, counts: { cities: { easy: 2, hard: 1 } } });
-  });
-});
-
-describe('planContourDifficultyChange', () => {
-  const countries = {
-    a: { difficulty: 'intermediate' as Difficulty, n: 1 },
-    b: { difficulty: 'intermediate' as Difficulty, n: 2 },
-    c: { difficulty: 'intermediate' as Difficulty, n: 3 },
-    d: { difficulty: 'hard' as Difficulty, n: 1 },
-  };
-  const counts = { intermediate: 3, hard: 1 };
-
-  it('changes nothing when the difficulty stays the same', () => {
-    expect(planContourDifficultyChange(countries, counts, 'b', 'intermediate')).toEqual({ n: 2, moved: {}, counts });
-  });
-
-  it('has no number to report for a country without one that keeps its difficulty', () => {
-    expect(planContourDifficultyChange({ x: { difficulty: 'hard' } }, { hard: 4 }, 'x', 'hard')).toEqual({
-      n: 0,
-      moved: {},
-      counts: { hard: 4 },
-    });
-  });
-
-  it('treats an unknown group size as empty', () => {
-    expect(planContourDifficultyChange({ x: { difficulty: 'hard', n: 1 } }, {}, 'x', 'easy')).toEqual({
-      n: 1,
-      moved: {},
-      counts: { easy: 1 },
-    });
-  });
-
-  it('moves nobody when no other country holds the last number', () => {
-    const gap = { x: { difficulty: 'hard' as Difficulty, n: 1 }, y: { difficulty: 'hard' as Difficulty, n: 2 } };
-    expect(planContourDifficultyChange(gap, { hard: 3 }, 'x', 'easy')).toEqual({
-      n: 1,
-      moved: {},
-      counts: { hard: 2, easy: 1 },
-    });
-  });
-
-  it('gives the freed number to the last country of the old group and joins the new group last', () => {
-    expect(planContourDifficultyChange(countries, counts, 'a', 'hard')).toEqual({
-      n: 2,
-      moved: { c: 1 },
-      counts: { intermediate: 2, hard: 2 },
-    });
-  });
-
-  it('moves nobody when the country was the last of its group', () => {
-    expect(planContourDifficultyChange(countries, counts, 'c', 'easy')).toEqual({
-      n: 1,
-      moved: {},
-      counts: { intermediate: 2, hard: 1, easy: 1 },
-    });
-  });
-
-  it('removes a group that becomes empty', () => {
-    expect(planContourDifficultyChange(countries, counts, 'd', 'easy')).toEqual({
-      n: 1,
-      moved: {},
-      counts: { intermediate: 3, easy: 1 },
-    });
-  });
-
-  it('numbers a country with no difficulty yet at the end of its new group', () => {
-    expect(planContourDifficultyChange({ x: {} }, { hard: 2 }, 'x', 'hard')).toEqual({
-      n: 3,
-      moved: {},
-      counts: { hard: 3 },
-    });
-  });
-
-  it('does not move a country whose number is unknown', () => {
-    expect(
-      planContourDifficultyChange(
-        { x: { difficulty: 'hard' }, y: { difficulty: 'hard', n: 2 } },
-        { hard: 2 },
-        'x',
-        'easy',
-      ),
-    ).toEqual({
-      n: 1,
-      moved: {},
-      counts: { hard: 1, easy: 1 },
-    });
   });
 });

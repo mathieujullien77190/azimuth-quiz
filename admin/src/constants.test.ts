@@ -1,7 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('./data', () => ({ countryName: (code: string) => `name of ${code}` }));
-
 import { CATEGORIES } from '@/games/compass/constants';
 
 import {
@@ -13,7 +11,6 @@ import {
   DIFFICULTY_LABELS,
   DIFFICULTY_ORDER,
   POSITION_LABELS,
-  countryFor,
 } from './constants';
 
 describe('category constants', () => {
@@ -41,11 +38,5 @@ describe('difficulty and position constants', () => {
 
   it('labels the nine positions in a country', () => {
     expect(Object.keys(POSITION_LABELS).sort()).toEqual(['center', 'e', 'n', 'ne', 'nw', 's', 'se', 'sw', 'w']);
-  });
-});
-
-describe('countryFor', () => {
-  it('asks the loaded data for the country name', () => {
-    expect(countryFor('FR')).toBe('name of FR');
   });
 });

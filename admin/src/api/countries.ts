@@ -1,10 +1,9 @@
 import type { CountryDoc } from '@/data/firestore/types';
-import { hasSilhouette } from '@/data/firestore/read';
-import type { ClueFlagColorRow, Difficulty } from '@/types';
+import type { ClueFlagColorRow } from '@/types';
 
-import { applyContourDifficultyChange, applyCountryChange, data } from '../data';
+import { applyCountryChange, data } from '../data';
 
-/** A country as the admin lists and edits it. */
+/** A country as the admin lists and edits it: the data Indices shows (its places carry a copy of it). */
 export type CountryRecord = {
   code: string;
   fr: string;
@@ -13,10 +12,6 @@ export type CountryRecord = {
   currency: string | null;
   currencySymbol: string | null;
   phoneCode: string | null;
-  /** ISO codes of the countries sharing a land border. */
-  neighbors: readonly string[];
-  /** Silhouette difficulty, `null` for a country without a silhouette. */
-  difficulty: Difficulty | null;
 };
 
 const recordOf = (code: string, doc: CountryDoc): CountryRecord => ({
@@ -27,8 +22,6 @@ const recordOf = (code: string, doc: CountryDoc): CountryRecord => ({
   currency: doc.currency ?? null,
   currencySymbol: doc.currencySymbol ?? null,
   phoneCode: doc.phoneCode ?? null,
-  neighbors: doc.borders ?? [],
-  difficulty: hasSilhouette(doc) ? doc.difficulty : null,
 });
 
 /** Reads the in-memory copy of Firestore (see `data.ts`): kept `async` so call sites don't care. */
@@ -41,6 +34,7 @@ export type CountryPatch = Partial<
 
 export const saveCountry = async (row: CountryRecord, patch: CountryPatch): Promise<CountryRecord> => {
   const { flag, fr, en, currency, currencySymbol, phoneCode } = patch;
+  // The stored document is the starting point: whatever else it carries (the fields Silhouette left) is written back as is.
   const doc = { ...data().countries[row.code] };
   if (fr !== undefined) doc.fr = fr;
   if (en !== undefined) doc.en = en;
@@ -57,13 +51,7 @@ export const saveCountry = async (row: CountryRecord, patch: CountryPatch): Prom
     if (flag && flag.length > 0) doc.flag = flag.map(([id, hex, percent]) => ({ id, hex, percent }));
     else delete doc.flag;
   }
-  // The country and every copy of it (its places, the contours citing it) are written together.
+  // The country and every copy of it (its places) are written together.
   await applyCountryChange(row.code, doc);
   return { ...row, ...patch };
-};
-
-/** Silhouette difficulty of a country that has one (its group numbers follow, see `applyContourDifficultyChange`). */
-export const saveContourDifficulty = async (row: CountryRecord, difficulty: Difficulty): Promise<CountryRecord> => {
-  await applyContourDifficultyChange(row.code, difficulty);
-  return { ...row, difficulty };
 };

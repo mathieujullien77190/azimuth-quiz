@@ -14,10 +14,8 @@ const ROOTS = [
   'src/components',
   'src/games/compass/components',
   'src/games/clues/components',
-  'src/games/contour/components',
   'src/games/compass/screens',
   'src/games/clues/screens',
-  'src/games/contour/screens',
 ];
 
 /**
@@ -40,8 +38,6 @@ const NO_STORY_OK = {
   OnlineGameScreen: 'smart container',
   ClueSetupScreen: 'smart container',
   OnlineClueGameScreen: 'smart container',
-  ContourSetupScreen: 'smart container',
-  OnlineContourGameScreen: 'smart container',
 };
 
 /** Folders that are not components: no `<Name>.tsx` is expected. */

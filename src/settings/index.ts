@@ -2,10 +2,9 @@ import { create } from 'zustand';
 
 import { DEV_CODE } from '@/data';
 import { DEFAULT_CLUE_SETTINGS } from '@/games/clues/constants';
-import { DEFAULT_CONTOUR_SETTINGS } from '@/games/contour/constants';
 import { DEFAULT_SETTINGS } from '@/games/compass/constants';
 import { loadDevCode, loadPlayerName, loadSettings, saveDevCode, savePlayerName, saveSettings } from '@/helpers';
-import type { ClueSettings, ContourSettings, GameSettings } from '@/types';
+import type { ClueSettings, GameSettings } from '@/types';
 
 export type SettingsContextValue = {
   settings: GameSettings;
@@ -55,18 +54,6 @@ export const useClueSettings = create<ClueSettingsContextValue>()((set) => ({
   updateSettings: (patch) => set((state) => ({ settings: { ...state.settings, ...patch } })),
 }));
 
-/** Contour game settings: independent store, never mixed with `GameSettings`/`ClueSettings`. No
- * persistence, same as `useClueSettings` above. */
-export type ContourSettingsContextValue = {
-  settings: ContourSettings;
-  updateSettings: (patch: Partial<ContourSettings>) => void;
-};
-
-export const useContourSettings = create<ContourSettingsContextValue>()((set) => ({
-  settings: DEFAULT_CONTOUR_SETTINGS,
-  updateSettings: (patch) => set((state) => ({ settings: { ...state.settings, ...patch } })),
-}));
-
 export type PlayerNameContextValue = {
   playerName: string;
   /** False until the saved name has been read (see `hydratePlayerName`). */
@@ -74,10 +61,10 @@ export type PlayerNameContextValue = {
   setPlayerName: (name: string) => void;
 };
 
-/** The player's name, the one thing shared by the 3 games (`GameSettings`/`ClueSettings`/
- * `ContourSettings` each still keep their own `playerName` field, but only as a mirror of this —
+/** The player's name, the one thing shared by the 2 games (`GameSettings`/
+ * `ClueSettings` each still keep their own `playerName` field, but only as a mirror of this —
  * see `useSetupRoom`'s sync effect, which also migrates an already-persisted name (Compass, the
- * only one of the 3 to persist on its own) into this store the very first time it hydrates
+ * only one of the 2 to persist on its own) into this store the very first time it hydrates
  * empty). Persisted on every change (unlike a room rename, this never touches Firestore, so no
  * debounce is needed here — see `PLAYER_NAME_STORAGE_KEY`). */
 export const usePlayerName = create<PlayerNameContextValue>()((set) => ({

@@ -1,4 +1,4 @@
-/** What the "one guess per turn" rule reads from a turn-based room (Indices, Silhouette). */
+/** What the "one guess per turn" rule reads from a turn-based room (Indices). */
 type TurnGuessState = {
   turnUid: string | null;
   wrongGuessUid: string | null;

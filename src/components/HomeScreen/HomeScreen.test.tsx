@@ -1,4 +1,5 @@
 import { fireEvent, render } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 
 import HomeScreen from '.';
 
@@ -10,14 +11,22 @@ beforeEach(() => {
 });
 
 describe('HomeScreen — content', () => {
-  it('shows the title, tagline, and all three game cards', async () => {
+  it('shows the title, tagline, and both game cards', async () => {
     const { getByText, getAllByText } = await render(<HomeScreen />);
     expect(getByText('AZIMUTH QUIZ')).toBeTruthy();
     expect(getByText('Pas de GPS, que de l’instinct.')).toBeTruthy();
     expect(getByText('Boussole')).toBeTruthy();
     expect(getByText('Indices')).toBeTruthy();
-    expect(getByText('Silhouette')).toBeTruthy();
-    expect(getAllByText('Jouer')).toHaveLength(3);
+    expect(getAllByText('Jouer')).toHaveLength(2);
+  });
+
+  it('stacks the two cards at the bottom of the screen', async () => {
+    const { getByText } = await render(<HomeScreen />);
+    // Going up from the first card, the stack of both cards is the first container pushed to the end.
+    let node = getByText('Boussole').parent;
+    while (node && StyleSheet.flatten(node.props.style)?.justifyContent !== 'flex-end') node = node.parent;
+    expect(node).not.toBeNull();
+    expect(StyleSheet.flatten(node!.props.style).justifyContent).toBe('flex-end');
   });
 
   it('navigates to /setup when the Boussole card is played', async () => {
@@ -30,12 +39,6 @@ describe('HomeScreen — content', () => {
     const { getAllByText } = await render(<HomeScreen />);
     await fireEvent.press(getAllByText('Jouer')[1]);
     expect(mockPush).toHaveBeenCalledWith('/clues-setup');
-  });
-
-  it('navigates to /contour-setup when the Contour card is played', async () => {
-    const { getAllByText } = await render(<HomeScreen />);
-    await fireEvent.press(getAllByText('Jouer')[2]);
-    expect(mockPush).toHaveBeenCalledWith('/contour-setup');
   });
 });
 

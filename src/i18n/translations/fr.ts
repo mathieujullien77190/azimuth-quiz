@@ -26,12 +26,6 @@ export const fr: Translations = {
         tagline: 'Devine une ville, et en dessous des indices qui se révèlent petit à petit.',
         cta: 'Jouer',
       },
-      contour: {
-        title: 'Silhouette',
-        tagline:
-          'La silhouette d’un pays s’affiche. Devine lequel grâce aux indices, puis place des villes sur sa carte.',
-        cta: 'Jouer',
-      },
     },
   },
   setup: {
@@ -153,7 +147,6 @@ export const fr: Translations = {
   },
   devFeedback: {
     placeQuestion: (name) => `Le lieu ${name} était-il…`,
-    countryQuestion: (name) => `Le pays ${name} était-il…`,
     dismiss: 'Fermer sans répondre',
   },
   settings: {
@@ -222,46 +215,7 @@ export const fr: Translations = {
     isCapitalNo: 'Non',
     populationUnit: 'hab.',
   },
-  contourSetup: {
-    screenTitle: 'Silhouette',
-    start: 'Lancer la partie',
-    playersSection: {
-      title: 'Joueurs',
-      hint: 'Tout le monde joue sur le même téléphone, chacun son tour.',
-    },
-    playerNameAccessibility: (index) => `Nom du joueur ${index}`,
-    difficultyTitle: 'Difficulté',
-    difficultyHint: 'Détermine dans quelle réserve de pays la manche pioche.',
-  },
   splash: {
     loading: 'Chargement…',
-  },
-  contourGame: {
-    quadrantLabel: (cell) => `Dévoiler le carré ${cell}`,
-    quadrantCost: (points) => `−${points} pts`,
-    notYourTurn: (name) => `C’est au tour de ${name} : tu peux seulement regarder… ou faire semblant de réfléchir 🤔`,
-    loadFailed: 'Impossible de charger le pays. Vérifie ta connexion puis touche l’écran pour réessayer.',
-    guessPrompt: 'Quel est ce pays ?',
-    hintGroups: { silhouette: 'Contour', neighbors: 'Voisins', cities: 'Villes', reveal: 'Pays' },
-    hintSteps: {
-      silhouette1: 'Plus net',
-      silhouette2: 'Détaillé',
-      silhouette3: 'Complet',
-      neighborShapes: 'Formes',
-      neighborFlagFirst: 'Un drapeau',
-      neighborFlags: 'Tous les drapeaux',
-      neighborCodes: 'Codes pays',
-      neighborNames: 'Noms',
-      cityPositions: 'Positions',
-      cityNames: 'Noms des villes',
-      capitalPosition: 'Capitale',
-      capitalName: 'Nom de la capitale',
-      reveal: 'Révéler le pays',
-    },
-    found: (name, points) => `${name} marque ${points} points !`,
-    guessLabel: 'Pays',
-    guessPlaceholder: 'Nom du pays…',
-    wrongGuess: (name, points) => `${name} se trompe et perd ${points} points.`,
-    continueLabel: 'Continuer',
   },
 };

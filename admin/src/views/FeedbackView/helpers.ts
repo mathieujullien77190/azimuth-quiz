@@ -1,13 +1,12 @@
 import { DIFFICULTY_ORDER } from './constants';
 import type { FeedbackRow, FeedbackTarget } from './types';
 
-/** Counts the opinions per place/country (the newest opinion gives the difficulty the data had), most voted targets first. */
+/** Counts the opinions per place (the newest opinion gives the difficulty the data had), most voted targets first. */
 export const groupFeedback = (rows: FeedbackRow[]): FeedbackTarget[] => {
   const byTarget = new Map<string, FeedbackTarget & { lastAt: number }>();
   for (const row of rows) {
-    const key = `${row.targetType}|${row.targetKey}`;
+    const key = row.targetKey;
     const target = byTarget.get(key) ?? {
-      targetType: row.targetType,
       targetKey: row.targetKey,
       name: row.name,
       currentDifficulty: row.currentDifficulty,
@@ -36,7 +35,7 @@ export const groupFeedback = (rows: FeedbackRow[]): FeedbackTarget[] => {
 const votesWord = (count: number): string => (count === 1 ? 'vote' : 'votes');
 
 const subject = (target: FeedbackTarget): string =>
-  `${target.targetType === 'country' ? 'du pays' : 'du lieu'} « ${target.name} » (${target.targetKey})`;
+  `du lieu « ${target.name} » (${target.targetKey})`;
 
 /** "3 votes : 1 easy, 0 intermediate, 2 hard" */
 const tally = (target: FeedbackTarget): string =>
@@ -55,7 +54,7 @@ export const directiveFor = (target: FeedbackTarget): string => {
 const ALREADY_RIGHT_TITLE = 'Déjà corrects (rien à changer) :';
 
 /**
- * The whole opinion list as text, for the page's read-only box: first the directives (one line per place/country whose
+ * The whole opinion list as text, for the page's read-only box: first the directives (one line per place whose
  * difficulty the players want changed), then, apart, the ones the players agree with the data on.
  */
 export const feedbackText = (rows: FeedbackRow[]): string => {

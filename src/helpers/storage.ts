@@ -8,7 +8,6 @@ import type { GameSettings, ThemeId } from '@/types';
 
 import { clearClueCursors } from '@/games/clues/helpers/clueCursors';
 import { clearCompassCursors } from '@/games/compass/helpers/compassCursors';
-import { clearContourCursors } from '@/games/contour/helpers/contourCursors';
 
 import { sanitizeSettings } from './settings';
 
@@ -105,11 +104,10 @@ export const savePlayerName = async (name: string): Promise<void> => {
 
 /** Clears everything the app saves on the device: Compass settings, language, theme, the shared player
  * name, Clues' and Compass' place cursors (+ a possible "best score" left over from an earlier version).
- * Clues'/Contour's own settings aren't persisted in the first place (reset every launch). */
+ * Clues' own settings aren't persisted in the first place (reset every launch). */
 export const clearAppData = async (): Promise<void> => {
   clearClueCursors();
   clearCompassCursors();
-  clearContourCursors();
   try {
     await AsyncStorage.multiRemove([
       BEST_SCORE_STORAGE_KEY,

@@ -24,7 +24,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The panel every game's footer sits in — Silhouette's look (translucent surface, top border);
+/** The panel every game's footer sits in (translucent surface, top border);
  * the content is up to the game: here the host's "next round" button. */
 export const WithButton: Story = {
   parameters: source(withButtonCode),

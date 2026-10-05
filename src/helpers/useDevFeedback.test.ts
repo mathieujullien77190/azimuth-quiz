@@ -47,12 +47,6 @@ describe('useDevFeedback', () => {
     expect(ctx.result.current.question).toBe('Le lieu Chutes Victoria était-il…');
   });
 
-  it('asks about the previous country for a country target', async () => {
-    const ctx = await setup();
-    await moveOn(ctx, {}, { ...target, targetType: 'country', name: 'France' });
-    expect(ctx.result.current.question).toBe('Le pays France était-il…');
-  });
-
   it('asks nothing without the dev code, or when the round never had a target', async () => {
     useDevCode.setState({ devCode: 'nope' });
     const off = await setup();

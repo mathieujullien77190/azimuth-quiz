@@ -22,8 +22,6 @@ import {
   CAMERA_DISTANCE,
   CAMERA_FOV,
   CAMERA_NEAR,
-  COUNTRY_LABEL_CHAR_PX,
-  COUNTRY_LABEL_HEIGHT_PX,
   FLY_DISTANCE,
   FLY_MS,
   GLOBE_RADIUS,
@@ -32,7 +30,6 @@ import {
   LAND_ALTITUDE,
   LAND_LINE_COLOR,
   MARK_SIZE,
-  MAX_COUNTRY_LABELS,
   MAX_DISTANCE,
   MIN_DISTANCE,
   PICK_RADIUS_PX,
@@ -48,16 +45,12 @@ import {
   STAR_SIZE,
 } from './constants';
 import {
-  countryLabelsShownAt,
   drawShape,
-  fromVector,
-  labelBox,
   labelsShownAt,
   maxLabelsAt,
   nearestPoint,
   parseRings,
   PLACE_SHAPES,
-  raySphereHit,
   rotateSpeedAt,
   segmentsOf,
   selectLabels,
@@ -65,22 +58,17 @@ import {
   starPositions,
   toVector,
 } from './helpers';
-import type { CountryGroup, CountryNameSource, LabelPoint, Mark, PickResult, PlaceBuffers, PlaceShape, ProjectedPoint, Vec3 } from './types';
+import type { LabelPoint, Mark, PickResult, PlaceBuffers, PlaceShape, ProjectedPoint, Vec3 } from './types';
 
 /** What the page asks of the 3D scene: every drawing decision is taken outside (see `helpers.ts`), this only owns
  * the three.js objects, the camera and the loop that draws them. */
 export type GlobeScene = {
-  setCountries: (groups: CountryGroup[]) => void;
   setPlaces: (buffers: PlaceBuffers) => void;
-  setLayers: (layers: { countries: boolean; places: boolean }) => void;
   /** The names to write (one per place, in the places' order) and who to tell, whenever they change, which ones to
-   * draw and where (empty when zoomed out or the places are hidden): see `selectLabels`. */
+   * draw and where (empty when zoomed out): see `selectLabels`. */
   setLabels: (names: string[], listener: (labels: LabelPoint[]) => void) => void;
-  /** The country names to write (each at its visual centre) and who to tell which ones to draw and where, like
-   * `setLabels` — shown from further away than the cities' names, and winning their room over them. */
-  setCountryNames: (sources: CountryNameSource[], listener: (labels: LabelPoint[]) => void) => void;
   setMarks: (selected: Mark, hovered: Mark) => void;
-  /** What is under a pointer position (client pixels): the nearest place and the point of the globe behind it. */
+  /** What is under a pointer position (client pixels): the nearest place. */
   pick: (clientX: number, clientY: number) => PickResult;
   flyTo: (lon: number, lat: number) => void;
   resetView: () => void;
@@ -144,7 +132,6 @@ export const createGlobeScene = (canvas: HTMLCanvasElement): GlobeScene => {
   );
   scene.add(sea, land, stars);
 
-  const countries: Slot[] = [];
   const places: Slot[] = PLACE_SHAPES.map(() => ({ object: null }));
   const sprites = new Map<PlaceShape, CanvasTexture | null>();
   const selectedLine: Slot = { object: null };
@@ -156,12 +143,7 @@ export const createGlobeScene = (canvas: HTMLCanvasElement): GlobeScene => {
   let names: string[] = [];
   let labelListener: ((labels: LabelPoint[]) => void) | null = null;
   let labelSignature = '';
-  let countrySources: CountryNameSource[] = [];
-  let countryPositions: number[] = [];
-  let countryListener: ((labels: LabelPoint[]) => void) | null = null;
-  let countrySignature = '';
   let size = { width: 1, height: 1 };
-  let layers = { countries: true, places: true };
 
   /** Puts `next` in the slot's place, handing what was there back to the graphics card. */
   const replace = (slot: Slot, next: Drawn | null) => {
@@ -217,7 +199,7 @@ export const createGlobeScene = (canvas: HTMLCanvasElement): GlobeScene => {
   const applyDetail = () => {
     const distance = distanceOf();
     PLACE_SHAPES.forEach((shape, index) => {
-      if (places[index].object) places[index].object!.visible = layers.places && shapeShownAt(shape, distance);
+      if (places[index].object) places[index].object!.visible = shapeShownAt(shape, distance);
     });
   };
 
@@ -231,13 +213,6 @@ export const createGlobeScene = (canvas: HTMLCanvasElement): GlobeScene => {
     labelListener?.(labels);
   };
 
-  const emitCountryLabels = (labels: LabelPoint[]) => {
-    const signature = signatureOf(labels);
-    if (signature === countrySignature) return;
-    countrySignature = signature;
-    countryListener?.(labels);
-  };
-
   let frame = 0;
   const loop = (time: number) => {
     frame = requestAnimationFrame(loop);
@@ -246,36 +221,11 @@ export const createGlobeScene = (canvas: HTMLCanvasElement): GlobeScene => {
     controls.update();
     applyDetail();
     renderer.render(scene, camera);
-    const distance = distanceOf();
-    // The countries first: they win their room over the cities' names.
-    const countryLabels =
-      layers.countries && countryLabelsShownAt(distance)
-        ? selectLabels(
-            projectFlat(countryPositions, () => true, size.width, size.height),
-            countrySources.map(() => 'round' as const),
-            countrySources.map((source) => source.name),
-            size.width,
-            size.height,
-            MAX_COUNTRY_LABELS,
-            { charPx: COUNTRY_LABEL_CHAR_PX, lineHeight: COUNTRY_LABEL_HEIGHT_PX },
-          )
-        : [];
-    if (countryListener) emitCountryLabels(countryLabels);
     if (labelListener) {
-      const blocked = countryLabels.map((label) =>
-        labelBox(label, countrySources[label.index].name, COUNTRY_LABEL_CHAR_PX, COUNTRY_LABEL_HEIGHT_PX),
-      );
+      const distance = distanceOf();
       emitLabels(
-        layers.places && labelsShownAt(distance)
-          ? selectLabels(
-              projectedPlaces(size.width, size.height),
-              placeKinds,
-              names,
-              size.width,
-              size.height,
-              maxLabelsAt(distance),
-              { blocked },
-            )
+        labelsShownAt(distance)
+          ? selectLabels(projectedPlaces(size.width, size.height), placeKinds, names, size.width, size.height, maxLabelsAt(distance))
           : [],
       );
     }
@@ -308,22 +258,12 @@ export const createGlobeScene = (canvas: HTMLCanvasElement): GlobeScene => {
 
   const projectedPlaces = (width: number, height: number): ProjectedPoint[] => {
     const distance = distanceOf();
-    return projectFlat(placePositions, (index) => layers.places && shapeShownAt(placeKinds[index], distance), width, height);
+    return projectFlat(placePositions, (index) => shapeShownAt(placeKinds[index], distance), width, height);
   };
 
   frame = requestAnimationFrame(loop);
 
   return {
-    setCountries: (groups) => {
-      countries.forEach((slot) => replace(slot, null));
-      countries.length = 0;
-      for (const { color, positions } of groups) {
-        const slot: Slot = { object: null };
-        replace(slot, new LineSegments(geometryOf(positions), new LineBasicMaterial({ color })));
-        slot.object!.visible = layers.countries;
-        countries.push(slot);
-      }
-    },
     setPlaces: ({ positions, kinds, shapes }) => {
       placePositions = positions;
       placeKinds = kinds;
@@ -345,23 +285,10 @@ export const createGlobeScene = (canvas: HTMLCanvasElement): GlobeScene => {
       });
       applyDetail();
     },
-    setCountryNames: (sources, listener) => {
-      countrySources = sources;
-      countryPositions = sources.flatMap((source) => toVector(source.lon, source.lat, LAND_ALTITUDE));
-      countryListener = listener;
-      countrySignature = '';
-    },
     setLabels: (next, listener) => {
       names = next;
       labelListener = listener;
       labelSignature = '';
-    },
-    setLayers: (next) => {
-      layers = next;
-      countries.forEach((slot) => {
-        slot.object!.visible = next.countries;
-      });
-      applyDetail();
     },
     setMarks: (selected, hovered) => {
       setMark(selectedLine, selectedPoint, selected, SELECTED_COLOR);
@@ -372,11 +299,7 @@ export const createGlobeScene = (canvas: HTMLCanvasElement): GlobeScene => {
       const x = clientX - rect.left;
       const y = clientY - rect.top;
       const place = nearestPoint(projectedPlaces(rect.width, rect.height), x, y, PICK_RADIUS_PX);
-      const ray = new Vector3((x / rect.width) * 2 - 1, -((y / rect.height) * 2 - 1), 0.5).unproject(camera);
-      const eye = positionOf();
-      const hit = raySphereHit(eye, [ray.x - eye[0], ray.y - eye[1], ray.z - eye[2]], GLOBE_RADIUS);
-      const spot = hit ? fromVector(hit) : null;
-      return { place, lon: spot?.lon ?? null, lat: spot?.lat ?? null, x, y };
+      return { place, x, y };
     },
     flyTo: (lon, lat) => {
       flight = { from: positionOf(), to: cameraSpot(lon, lat, FLY_DISTANCE), start: null };
@@ -393,7 +316,7 @@ export const createGlobeScene = (canvas: HTMLCanvasElement): GlobeScene => {
     dispose: () => {
       cancelAnimationFrame(frame);
       controls.dispose();
-      [...countries, ...places, selectedLine, selectedPoint, hoveredLine, hoveredPoint].forEach((slot) => replace(slot, null));
+      [...places, selectedLine, selectedPoint, hoveredLine, hoveredPoint].forEach((slot) => replace(slot, null));
       for (const part of [sea, land, stars]) {
         part.geometry.dispose();
         (part.material as MeshBasicMaterial).dispose();

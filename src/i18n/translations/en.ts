@@ -26,11 +26,6 @@ export const en: Translations = {
         tagline: 'Guess a city from clues revealed one by one.',
         cta: 'Play',
       },
-      contour: {
-        title: 'Silhouette',
-        tagline: "A country's silhouette shows up. Guess which one from the clues, then mark cities on its map.",
-        cta: 'Play',
-      },
     },
   },
   setup: {
@@ -150,7 +145,6 @@ export const en: Translations = {
   },
   devFeedback: {
     placeQuestion: (name) => `Was the place ${name}…`,
-    countryQuestion: (name) => `Was the country ${name}…`,
     dismiss: 'Close without answering',
   },
   settings: {
@@ -218,46 +212,7 @@ export const en: Translations = {
     isCapitalNo: 'No',
     populationUnit: 'pop.',
   },
-  contourSetup: {
-    screenTitle: 'Silhouette',
-    start: 'Start game',
-    playersSection: {
-      title: 'Players',
-      hint: 'Everyone plays on the same phone, taking turns.',
-    },
-    playerNameAccessibility: (index) => `Player ${index} name`,
-    difficultyTitle: 'Difficulty',
-    difficultyHint: 'Sets which pool of countries the round draws from.',
-  },
   splash: {
     loading: 'Loading…',
-  },
-  contourGame: {
-    quadrantLabel: (cell) => `Reveal square ${cell}`,
-    quadrantCost: (points) => `−${points} pts`,
-    notYourTurn: (name) => `It’s ${name}’s turn: you can only watch… or pretend to think 🤔`,
-    loadFailed: 'Couldn’t load the country. Check your connection, then tap the screen to try again.',
-    guessPrompt: 'Which country is this?',
-    hintGroups: { silhouette: 'Outline', neighbors: 'Neighbors', cities: 'Cities', reveal: 'Country' },
-    hintSteps: {
-      silhouette1: 'Sharper',
-      silhouette2: 'Detailed',
-      silhouette3: 'Full',
-      neighborShapes: 'Shapes',
-      neighborFlagFirst: 'One flag',
-      neighborFlags: 'All flags',
-      neighborCodes: 'Country codes',
-      neighborNames: 'Names',
-      cityPositions: 'Positions',
-      cityNames: 'City names',
-      capitalPosition: 'Capital',
-      capitalName: 'Capital name',
-      reveal: 'Reveal the country',
-    },
-    found: (name, points) => `${name} scores ${points} points!`,
-    guessLabel: 'Country',
-    guessPlaceholder: 'Country name…',
-    wrongGuess: (name, points) => `${name} is wrong and loses ${points} points.`,
-    continueLabel: 'Continue',
   },
 };

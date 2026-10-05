@@ -8,12 +8,11 @@ import { GameCard } from './GameCard';
 import { source } from '@/storybook/source';
 import compassCode from './Compass.source.md?raw';
 import cluesCode from './Clues.source.md?raw';
-import contourCode from './Contour.source.md?raw';
 
 const t = translations.fr;
 
 /** The card's texts, in the toolbar's language. */
-const textArgs = (game: 'compass' | 'clues' | 'contour') => (texts: Translations) => ({
+const textArgs = (game: 'compass' | 'clues') => (texts: Translations) => ({
   ctaLabel: texts.home.games[game].cta,
   tagline: texts.home.games[game].tagline,
   title: texts.home.games[game].title,
@@ -24,7 +23,7 @@ const meta = {
   component: GameCard,
   decorators: [
     (Story) => (
-      <div style={{ width: 420 }}>
+      <div style={{ width: 420, display: 'flex', flexDirection: 'column' }}>
         <Story />
       </div>
     ),
@@ -52,18 +51,6 @@ export const Clues: Story = {
   args: {
     ...textArgs('clues')(t),
     icon: '🧩',
-    maxPlayers: 10,
-    onPress: () => {},
-  },
-};
-
-export const Contour: Story = {
-  parameters: source(contourCode),
-  decorators: [localizedArgs(textArgs('contour'))],
-  name: 'Silhouette',
-  args: {
-    ...textArgs('contour')(t),
-    icon: '🗺️',
     maxPlayers: 10,
     onPress: () => {},
   },

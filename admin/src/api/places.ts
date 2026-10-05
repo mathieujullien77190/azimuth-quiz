@@ -12,6 +12,8 @@ export type PlaceRow = {
   key: string;
   name: string;
   code: string;
+  /** The country's French name, as the place carries it (its code when it carries none). */
+  country: string;
   coordinates: { latitude: number; longitude: number };
   compass: Place | null;
   clues: CluePlace | null;
@@ -29,6 +31,7 @@ const rowOf = (key: string, doc: PlaceDoc): PlaceRow => ({
   key,
   name: doc.name,
   code: doc.code,
+  country: doc.country?.fr ?? doc.code,
   coordinates: { latitude: doc.latitude, longitude: doc.longitude },
   compass: compassOf(doc),
   clues: cluesOf(key, doc),

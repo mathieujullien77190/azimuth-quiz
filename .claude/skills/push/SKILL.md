@@ -50,7 +50,7 @@ de branche ni de PR, sauf si l'utilisateur le demande.
      les index ont bougé), puis **relire les règles déployées et confirmer qu'elles sont identiques** au dépôt.
    - Ne jamais conclure « poussé » sans avoir dit où en sont les règles (identiques, déployées, ou écart à traiter).
      Un champ qu'un joueur non hôte écrit dans une room doit être dans la liste `turnFields` des règles correspondantes.
-4. Les **données Firestore** (lieux, pays, silhouettes…) ne sont pas dans Git : rien à committer pour elles (voir le skill
+4. Les **données Firestore** (lieux, devinettes…) ne sont pas dans Git : rien à committer pour elles (voir le skill
    `firestore-data`).
 
 ## 1. Versionner

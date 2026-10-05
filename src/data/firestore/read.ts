@@ -1,17 +1,7 @@
-import type {
-  CluePlace,
-  ContourCenterLabel,
-  ContourCountry,
-  ContourNamedNeighbor,
-  ContourPlace,
-  ContourRoundCountry,
-  Difficulty,
-  Place,
-} from '@/types';
+import type { CluePlace, Place } from '@/types';
 
 import { cluesCategory } from './numbering';
-import { decodeRing } from './polyline';
-import type { CompassDoc, CountryDoc, CountryNeighborDoc, ContourPlaceDoc, PlaceDoc } from './types';
+import type { CompassDoc, PlaceDoc } from './types';
 
 /** `Place` (Compass) from its document. */
 export const compassFromDoc = (doc: PlaceDoc & { compass: CompassDoc }, key?: string): Place => ({
@@ -57,67 +47,3 @@ export const cluesFromDoc = (key: string, doc: PlaceDoc & { clues: NonNullable<P
     ...(personality && { personality: { name: personality.name, description: jobLabel ?? null } }),
   };
 };
-
-/** A country document with a silhouette: the fields the board needs are all there. */
-export type SilhouetteCountryDoc = CountryDoc & {
-  ring: string;
-  difficulty: Difficulty;
-  centerLabel: ContourCenterLabel;
-  neighbors: CountryNeighborDoc[];
-};
-
-export const hasSilhouette = (doc: CountryDoc): doc is SilhouetteCountryDoc =>
-  doc.ring !== undefined &&
-  doc.difficulty !== undefined &&
-  doc.centerLabel !== undefined &&
-  doc.neighbors !== undefined;
-
-const DEFAULT_CENTER_LABEL: ContourCenterLabel = { x: 0.5, y: 0.5 };
-
-/** The neighbours placed on the board as hints: the entries with a position. */
-const hintNeighborsOf = (doc: SilhouetteCountryDoc): ContourNamedNeighbor[] =>
-  doc.neighbors.flatMap(({ code, fr, en, x, y }) =>
-    x !== undefined && y !== undefined ? [{ type: 'country' as const, code, x, y, fr, en }] : [],
-  );
-
-/** `ContourCountry` (what the board draws) from the `countries/{code}` document of a country with a silhouette. */
-export const contourFromDoc = (code: string, doc: SilhouetteCountryDoc): ContourCountry => ({
-  code,
-  points: decodeRing(doc.ring),
-  neighbors: hintNeighborsOf(doc),
-  centerLabel: doc.centerLabel,
-  difficulty: doc.difficulty,
-});
-
-/** The countries drawn around the round's country as a backdrop: the neighbours carrying an outline. */
-export const backdropFromDoc = (doc: SilhouetteCountryDoc): ContourCountry[] =>
-  doc.neighbors.flatMap(({ code, ring }) =>
-    ring === undefined
-      ? []
-      : [
-          {
-            code,
-            points: decodeRing(ring),
-            neighbors: [],
-            centerLabel: DEFAULT_CENTER_LABEL,
-            difficulty: 'intermediate' as const,
-          },
-        ],
-  );
-
-const contourPlaceFromDoc = ({ name, lon, lat }: ContourPlaceDoc): ContourPlace => ({
-  name,
-  longitude: lon,
-  latitude: lat,
-});
-
-/** What a Silhouette round needs about its country (`ContourRoundCountry`) from its `countries/{code}` document:
- * names, capital and cities are in it, nothing is looked up elsewhere. */
-export const roundCountryFromDoc = (code: string, doc: SilhouetteCountryDoc): ContourRoundCountry => ({
-  ...contourFromDoc(code, doc),
-  neighbors: hintNeighborsOf(doc),
-  fr: doc.fr,
-  en: doc.en,
-  capital: doc.capital ? contourPlaceFromDoc(doc.capital) : null,
-  cities: (doc.cities ?? []).map(contourPlaceFromDoc),
-});

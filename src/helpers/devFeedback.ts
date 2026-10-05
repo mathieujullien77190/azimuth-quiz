@@ -9,11 +9,11 @@ import { getLocalUid } from './roomCode';
 // Not re-exported from `helpers/index.ts`'s barrel, like `room.ts`: `firebase/firestore` is ESM-only and crashes Jest for
 // every test that imports the barrel for something unrelated.
 
-/** One opinion about how hard a place or a country is, given by a device in dev mode (see `useDevFeedback`). */
+/** One opinion about how hard a place is, given by a device in dev mode (see `useDevFeedback`). */
 export type DevFeedback = {
-  game: 'compass' | 'clues' | 'silhouette';
-  targetType: 'place' | 'country';
-  /** The place's key (`places/{key}`) or the country's ISO code (`countries/{ISO}`). */
+  game: 'compass' | 'clues';
+  targetType: 'place';
+  /** The place's key (`places/{key}`). */
   targetKey: string;
   name: string;
   /** What the data says now. */

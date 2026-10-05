@@ -26,8 +26,8 @@ afterEach(() => {
 
 describe('reportError', () => {
   it('logs to the console and tells the player when one of their own actions failed', () => {
-    reportError('silhouette.revealHint', new Error('boom'));
-    expect(consoleError).toHaveBeenCalledWith('[silhouette.revealHint]', expect.any(Error));
+    reportError('clues.revealHint', new Error('boom'));
+    expect(consoleError).toHaveBeenCalledWith('[clues.revealHint]', expect.any(Error));
     expect(useErrorNotice.getState().visible).toBe(true);
   });
 

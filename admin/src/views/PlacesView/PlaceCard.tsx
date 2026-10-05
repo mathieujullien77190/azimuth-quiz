@@ -12,7 +12,6 @@ import {
   CATEGORY_EMOJIS,
   CATEGORY_LABELS,
   CATEGORY_ORDER,
-  countryFor,
   DIFFICULTY_COLORS,
   DIFFICULTY_LABELS,
   DIFFICULTY_ORDER,
@@ -40,8 +39,8 @@ export const PlaceCard = ({ row, saveFlagFor, onDifficultyChange, onCompassChang
       <div className="place-header">
         <div className="place-identity">
           <span className="place-name">{row.name}</span>
-          <span className="place-meta" title={countryFor(row.code)}>
-            {countryFor(row.code)} ({row.code})
+          <span className="place-meta" title={row.country}>
+            {row.country} ({row.code})
           </span>
         </div>
         <div className="place-coords">

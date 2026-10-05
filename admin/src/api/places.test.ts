@@ -40,6 +40,7 @@ const row = (key: string): PlaceRow => ({
   key,
   name: '',
   code: '',
+  country: '',
   coordinates: { latitude: 0, longitude: 0 },
   compass: null,
   clues: null,
@@ -55,7 +56,7 @@ describe('fetchPlaces', () => {
   it('lists the places sorted by name, with the data of each game when present', async () => {
     h.state.places = {
       zur: place({ name: 'Zurich' }),
-      par: place({ compass: { category: 'capital' }, clues: cluesDoc() }),
+      par: place({ compass: { category: 'capital' }, clues: cluesDoc(), country: { fr: 'France' } as PlaceDoc['country'] }),
       ams: place({ name: 'Amsterdam', compass: { category: 'cities', description: 'canals' } }),
     };
 
@@ -65,10 +66,13 @@ describe('fetchPlaces', () => {
     expect(rows[0]).toMatchObject({
       name: 'Amsterdam',
       code: 'FR',
+      // No country copy on this place: the code stands in for the name.
+      country: 'FR',
       coordinates: { latitude: 48.8, longitude: 2.3 },
       compass: { category: 'cities', description: 'canals' },
       clues: null,
     });
+    expect(rows[1].country).toBe('France');
     expect(rows[1].compass).not.toBeNull();
     expect(rows[1].clues).toMatchObject({ key: 'par', population: 100 });
     expect(rows[2]).toMatchObject({ compass: null, clues: null });

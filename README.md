@@ -4,14 +4,12 @@
 · 🗺️ **[Admin des données](https://mathieujullien77190.github.io/azimuth-quiz/admin/)**
 · 🧩 **[Storybook](https://mathieujullien77190.github.io/azimuth-quiz/storybook/)**
 
-Trois jeux de géographie, jusqu'à 10 joueurs (un téléphone par joueur) et 20 manches :
+Deux jeux de géographie, jusqu'à 10 joueurs (un téléphone par joueur) et 20 manches :
 
 - **Boussole** : un lieu s'affiche, vise-le avec la boussole et estime la distance depuis ton point
   de départ (GPS, ou Paris par défaut). Tout le monde répond en même temps, puis révélation.
 - **Indices** : devine une ville grâce à des indices qui se dévoilent (drapeau, population, monnaie,
   jeu de mots...). Chacun son tour : on dévoile un indice ou on tente une réponse.
-- **Silhouette** : la silhouette d'un pays s'affiche, devine lequel avec des indices partagés
-  (silhouette plus précise, voisins, villes, capitale). Chacun son tour, on choisit l'indice suivant.
 
 ## Jouer
 
@@ -40,8 +38,8 @@ Les rooms demandent la configuration Firebase (variables `EXPO_PUBLIC_FIREBASE_*
 
 ## Données
 
-Lieux, pays, silhouettes, devinettes et métiers vivent dans **Firestore** (aucun fichier de données dans l'appli).
-L'admin (React + Vite, une page par onglet : lieux, pays, métiers, jeux de mots) se connecte avec un
+Lieux, devinettes et métiers vivent dans **Firestore** (aucun fichier de données dans l'appli).
+L'admin (React + Vite, une page par onglet : lieux, métiers, jeux de mots) se connecte avec un
 compte Google déclaré dans `firestore.rules` et enregistre chaque modification directement. Les données étant
 dupliquées, elles se modifient par l'admin ou en suivant le skill `.claude/skills/firestore-data`.
 

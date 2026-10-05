@@ -90,7 +90,7 @@ cd admin && npx storybook build -o "$TMPDIR/sb" --quiet            # puis suppri
 Critère : le build se termine par "Storybook build completed successfully". Le script d'audit contrôle en plus :
 
 - chaque composant dumb a un `*.stories.tsx` ; le `title` commence par une racine du `storySort`
-  (`admin/.storybook/preview.tsx` : Common, Compass, Clues, Silhouette, Setup, UI) — une nouvelle racine s'y ajoute ;
+  (`admin/.storybook/preview.tsx` : Common, Compass, Clues, Setup, UI) — une nouvelle racine s'y ajoute ;
 - **`source()` sur chaque story, jamais sur le `meta`** ; le snippet vit dans un `<Story>.source.md` importé en
   `?raw`, commence par un bloc ```` ```tsx ````, est écrit du point de vue du *consommateur* (imports `@/…`) et
   n'est pas orphelin ;

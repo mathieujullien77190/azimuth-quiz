@@ -8,7 +8,6 @@ import { GameHeader } from './GameHeader';
 import plainCode from './Plain.source.md?raw';
 import withLocationCode from './WithLocation.source.md?raw';
 import withPlayersCode from './WithPlayers.source.md?raw';
-import withQuestionCode from './WithQuestion.source.md?raw';
 
 const meta = {
   title: 'Common/GameHeader',
@@ -54,25 +53,4 @@ export const WithLocation: Story = {
   name: 'With a location (travel mode)',
   parameters: source(withLocationCode),
   args: { location: 'Vous êtes à Cusco' },
-};
-
-/** With a `question`, centered at the bottom of the header — Silhouette's "Quel est ce pays ?". */
-export const WithQuestion: Story = {
-  name: 'With a question',
-  parameters: source(withQuestionCode),
-  args: { difficulty: 'easy', points: 500, question: 'Quel est ce pays ?', roundNumber: 1, totalRounds: 5 },
-};
-
-/** With a `questionDetail` right after the question, same line — Silhouette's "182 pts" on the right, the question on the left. */
-export const WithQuestionDetail: Story = {
-  name: 'With a question and its detail',
-  parameters: source(withQuestionCode),
-  args: {
-    difficulty: 'easy',
-    points: 500,
-    question: 'Quel est ce pays ?',
-    questionDetail: '182 pts',
-    roundNumber: 1,
-    totalRounds: 5,
-  },
 };

@@ -3,9 +3,8 @@ import type { Difficulty } from '@/types';
 /** One opinion of the `devFeedback` collection (written by the game in dev mode, see `src/helpers/devFeedback.ts`). */
 export type FeedbackRow = {
   id: string;
-  game: 'compass' | 'clues' | 'silhouette';
-  targetType: 'place' | 'country';
-  /** The place's key (`places/{key}`) or the country's ISO code. */
+  game: 'compass' | 'clues';
+  /** The place's key (`places/{key}`). */
   targetKey: string;
   name: string;
   /** What the data said when the opinion was given. */
@@ -15,9 +14,8 @@ export type FeedbackRow = {
   at: number;
 };
 
-/** The opinions about one place or country, counted per suggested difficulty. */
+/** The opinions about one place, counted per suggested difficulty. */
 export type FeedbackTarget = {
-  targetType: 'place' | 'country';
   targetKey: string;
   name: string;
   /** The difficulty the newest opinion saw in the data. */

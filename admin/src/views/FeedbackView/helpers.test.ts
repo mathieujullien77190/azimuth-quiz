@@ -7,7 +7,6 @@ let nextId = 0;
 const row = (over: Partial<FeedbackRow> = {}): FeedbackRow => ({
   id: `r${nextId++}`,
   game: 'compass',
-  targetType: 'place',
   targetKey: 'vic',
   name: 'Chutes Victoria',
   currentDifficulty: 'intermediate',
@@ -17,7 +16,7 @@ const row = (over: Partial<FeedbackRow> = {}): FeedbackRow => ({
 });
 
 describe('groupFeedback', () => {
-  it('counts the votes per place or country, with the winners', () => {
+  it('counts the votes per place, with the winners', () => {
     const [victoria] = groupFeedback([
       row({ suggestedDifficulty: 'hard' }),
       row({ suggestedDifficulty: 'hard' }),
@@ -29,14 +28,6 @@ describe('groupFeedback', () => {
       votes: { easy: 1, intermediate: 0, hard: 2 },
       winners: ['hard'],
     });
-  });
-
-  it('keeps a place and a country with the same key apart', () => {
-    const targets = groupFeedback([
-      row({ targetKey: 'FR' }),
-      row({ targetType: 'country', targetKey: 'FR', game: 'silhouette' }),
-    ]);
-    expect(targets).toHaveLength(2);
   });
 
   it('takes the name and the data difficulty from the newest opinion', () => {
@@ -89,18 +80,10 @@ describe('directiveFor', () => {
     );
   });
 
-  it('words it for a country, with a singular vote', () => {
-    const [target] = groupFeedback([
-      row({
-        targetType: 'country',
-        targetKey: 'FR',
-        name: 'France',
-        currentDifficulty: 'easy',
-        suggestedDifficulty: 'hard',
-      }),
-    ]);
+  it('words a single vote in the singular', () => {
+    const [target] = groupFeedback([row({ currentDifficulty: 'easy', suggestedDifficulty: 'hard' })]);
     expect(directiveFor(target)).toBe(
-      'Change la difficulté du pays « France » (FR) de easy à hard (1 vote : 0 easy, 0 intermediate, 1 hard).',
+      'Change la difficulté du lieu « Chutes Victoria » (vic) de easy à hard (1 vote : 0 easy, 0 intermediate, 1 hard).',
     );
   });
 

@@ -33,7 +33,6 @@ const feedbackDoc = (id: string, over: Record<string, unknown> = {}): Doc => ({
   id,
   data: () => ({
     game: 'compass',
-    targetType: 'place',
     targetKey: 'vic',
     name: 'Chutes Victoria',
     currentDifficulty: 'intermediate',

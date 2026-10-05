@@ -4,7 +4,7 @@ import type { Theme } from '@/types';
 
 export const createStyles = ({ colors, isDark, typography }: Theme) =>
   StyleSheet.create({
-    // Silhouette's floating-panel look, adopted here for every game's header rather than each one
+    // A floating-panel look, adopted here for every game's header rather than each one
     // picking its own bar color: `surfaceHigh`/`surface` at ~94% opacity (`F0`) reads as a raised
     // panel in both themes, translucent enough to stay legible without looking like a fully solid
     // bar.
@@ -59,36 +59,5 @@ export const createStyles = ({ colors, isDark, typography }: Theme) =>
       fontSize: fontSize.body + 2,
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.sm,
-    },
-    // The round's question, centered at the bottom of the header.
-    question: {
-      ...typography.heading,
-      color: colors.text,
-      fontSize: fontSize.subtitle,
-      textAlign: 'center',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.xs,
-      paddingBottom: spacing.xs,
-    },
-    // With a detail: one row, the question on the left, the detail pinned to the right edge.
-    questionRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: spacing.sm,
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.xs,
-      paddingBottom: spacing.xs,
-    },
-    questionLeft: {
-      ...typography.heading,
-      color: colors.text,
-      fontSize: fontSize.subtitle,
-      flexShrink: 1,
-    },
-    questionDetail: {
-      ...typography.heading,
-      color: colors.accent,
-      fontSize: fontSize.body + 2,
     },
   });

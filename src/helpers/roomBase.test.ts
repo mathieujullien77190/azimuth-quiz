@@ -134,16 +134,11 @@ describe('one collection for every game', () => {
   it('stamps each game on its rooms, all in the same collection', async () => {
     jest.mocked(generateRoomCode).mockReturnValue('tabofuna');
     jest.mocked(getDoc).mockResolvedValue(snapshot(undefined) as never);
-    for (const game of ['compass', 'clues', 'silhouette'] as const) {
+    for (const game of ['compass', 'clues'] as const) {
       await createRoomApi<Settings>(game).createRoom({ rounds: 5 });
     }
     expect(setDoc).toHaveBeenNthCalledWith(1, { path: 'rooms/tabofuna' }, expect.objectContaining({ game: 'compass' }));
     expect(setDoc).toHaveBeenNthCalledWith(2, { path: 'rooms/tabofuna' }, expect.objectContaining({ game: 'clues' }));
-    expect(setDoc).toHaveBeenNthCalledWith(
-      3,
-      { path: 'rooms/tabofuna' },
-      expect.objectContaining({ game: 'silhouette' }),
-    );
   });
 
   it("clears a host's previous rooms whatever their game", async () => {

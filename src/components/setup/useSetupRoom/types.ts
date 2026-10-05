@@ -30,7 +30,7 @@ export type SetupRoomStore<R> = {
 export type SetupRoomAdapter<S, R> = {
   store: SetupRoomStore<R>;
   /** Route both host and joiner are sent to once the host starts the game. */
-  gamePath: '/online-game' | '/clues-online-game' | '/contour-online-game';
+  gamePath: '/online-game' | '/clues-online-game';
   colors: readonly string[];
   maxPlayers: number;
   roomSettingsFrom: (settings: S) => R;

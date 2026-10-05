@@ -13,7 +13,7 @@ import { createStyles } from './styles';
 /**
  * The in-round footer shared by every game — dumb: just the panel (background, top border, padding)
  * around its `children` (and, in a room with other players, the round emoji-reactions button floating just above it: out of its flow, the footer's own content keeps its whole layout and width), the counterpart of `GameHeader` at the bottom of the screen. Where it sits
- * is the caller's: the `footer` of a `Screen`, or floating over the board in Silhouette.
+ * is the caller's: the `footer` of a `Screen`.
  */
 export const GameFooter = ({ children, onReact }: GameFooterProps) => {
   const styles = useThemedStyles(createStyles);

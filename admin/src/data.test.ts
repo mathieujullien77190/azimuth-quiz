@@ -1,7 +1,6 @@
 import { Timestamp } from 'firebase/firestore';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { encodeRing } from '@/data/firestore/polyline';
 import type { CluesDoc, CountryDoc, PlaceDoc } from '@/data/firestore/types';
 
 type Op = {
@@ -216,14 +215,27 @@ describe('data / loadData', () => {
   });
 
   it('reads the stored copy without any Firestore read, dropping the obsolete contours key', async () => {
-    const cache = await snapshotCache({ contours: { old: true }, places: { par: place() } });
+    const cache = await snapshotCache({ contours: { old: true }, countries: { FR: { fr: 'France', en: 'France' } }, places: { par: place() } });
     h.snapshot = { cache, syncedAt: 1, journalAt: 100 };
 
     await mod.loadData();
 
     expect(mod.data().places).toEqual({ par: place() });
     expect(mod.data()).not.toHaveProperty('contours');
+    expect(mod.data().countries).toEqual({ FR: { fr: 'France', en: 'France' } });
     expect(h.writeSnapshot).not.toHaveBeenCalled();
+  });
+
+  it('does one full read when the stored copy was saved without the countries', async () => {
+    const cache = await snapshotCache({ places: { par: place() } });
+    delete (cache as Partial<typeof cache>).countries;
+    h.snapshot = { cache, syncedAt: 1, journalAt: 100 };
+    h.collections.countries = { FR: { fr: 'France', en: 'France' } };
+
+    await mod.loadData();
+
+    expect(mod.data().countries).toEqual({ FR: { fr: 'France', en: 'France' } });
+    expect(h.writeSnapshot).toHaveBeenCalled();
   });
 
   it('does a full sync when the stored copy has no journal position', async () => {
@@ -234,56 +246,6 @@ describe('data / loadData', () => {
 
     expect(Object.keys(mod.data().places)).toEqual(['lyo']);
     expect(h.writeSnapshot).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('data / countryName and contours', () => {
-  const silhouette = (): CountryDoc => ({
-    fr: 'Autriche',
-    en: 'Austria',
-    ring: encodeRing([
-      [0, 0],
-      [1, 0],
-      [1, 1],
-    ]),
-    difficulty: 'hard',
-    centerLabel: { x: 0.4, y: 0.6 },
-    neighbors: [
-      { code: 'DE', fr: 'Allemagne', en: 'Germany', x: 0.1, y: 0.2 },
-      { code: 'CZ', fr: 'Tchéquie', en: 'Czechia', ring: encodeRing([[0, 0]]) },
-    ],
-  });
-
-  it('gives the French name of a known country and the code of an unknown one', async () => {
-    await load({ countries: { FR: { fr: 'France', en: 'France' } } });
-
-    expect(mod.countryName('FR')).toBe('France');
-    expect(mod.countryName('ZZ')).toBe('ZZ');
-  });
-
-  it('decodes only the countries that have a silhouette, once', async () => {
-    await load({ countries: { AT: silhouette(), FR: { fr: 'France', en: 'France' } } });
-
-    const first = mod.contours();
-
-    expect(first).toHaveLength(1);
-    expect(first[0]).toMatchObject({
-      code: 'AT',
-      difficulty: 'hard',
-      centerLabel: { x: 0.4, y: 0.6 },
-      neighbors: [{ code: 'DE', x: 0.1, y: 0.2 }],
-    });
-    expect(mod.contours()).toBe(first);
-  });
-
-  it('decodes again after a country write', async () => {
-    await load({ countries: { AT: silhouette() } });
-    const first = mod.contours();
-
-    await mod.putCountry('AT', { ...silhouette(), difficulty: 'easy' });
-
-    expect(mod.contours()).not.toBe(first);
-    expect(mod.contours()[0].difficulty).toBe('easy');
   });
 });
 
@@ -526,16 +488,6 @@ describe('data / single document writes', () => {
     expect(mod.data().places.par).toBe(next);
   });
 
-  it('putCountry rewrites the country', async () => {
-    await load();
-
-    await mod.putCountry('FR', { fr: 'France', en: 'France' });
-
-    expect(summary()[0]).toBe('set countries/FR');
-    expectBookkeeping([{ c: 'countries', id: 'FR', op: 'set' }]);
-    expect(mod.data().countries.FR).toEqual({ fr: 'France', en: 'France' });
-  });
-
   it('putJob and removeJob write then delete the job', async () => {
     await load();
 
@@ -563,18 +515,14 @@ describe('data / single document writes', () => {
 });
 
 describe('data / applyCountryChange', () => {
-  it('writes the country, the copy in its places and the names in the countries citing it, in one batch', async () => {
+  it('writes the country and the copy in its places, in one batch', async () => {
     await load({
       places: {
         par: place({ country: { fr: 'old', en: 'old' } }),
         rom: place({ name: 'Rome', code: 'IT' }),
         lyo: place({ name: 'Lyon', country: { fr: 'France', en: 'France' }, code: 'FR' }),
       },
-      countries: {
-        FR: { fr: 'old', en: 'old' },
-        DE: { fr: 'Allemagne', en: 'Germany', neighbors: [{ code: 'FR', fr: 'old', en: 'old' }] },
-        IT: { fr: 'Italie', en: 'Italy' },
-      },
+      countries: { FR: { fr: 'old', en: 'old' }, IT: { fr: 'Italie', en: 'Italy' } },
     });
     const next: CountryDoc = { fr: 'France', en: 'France', currency: 'EUR' };
 
@@ -584,23 +532,19 @@ describe('data / applyCountryChange', () => {
       'set countries/FR',
       'update places/par',
       'update places/lyo',
-      'set countries/DE',
       'set meta/dataVersion',
       expect.stringMatching(/^set journal\//),
     ]);
     expect(lastBatch().ops[0].value).toBe(next);
     expect(lastBatch().ops[1].value).toEqual({ country: { fr: 'France', en: 'France', currency: 'EUR' } });
-    expect((lastBatch().ops[3].value as CountryDoc).neighbors).toEqual([{ code: 'FR', fr: 'France', en: 'France' }]);
     expectBookkeeping([
       { c: 'countries', id: 'FR', op: 'set' },
       { c: 'places', id: 'par', op: 'set' },
       { c: 'places', id: 'lyo', op: 'set' },
-      { c: 'countries', id: 'DE', op: 'set' },
     ]);
     const copy = mod.data();
     expect(copy.countries.FR).toBe(next);
     expect(copy.places.par.country).toEqual({ fr: 'France', en: 'France', currency: 'EUR' });
-    expect(copy.countries.DE.neighbors![0].fr).toBe('France');
     expect(copy.places.rom.country).toBeUndefined();
   });
 
@@ -616,60 +560,6 @@ describe('data / applyCountryChange', () => {
     expect(h.batches[0].ops.some((op) => op.ref.collection === 'journal')).toBe(false);
     expect(versionOp(h.batches[1])).toBeDefined();
     expect((journalEntry(h.batches[1]).value as { changes: unknown[] }).changes).toHaveLength(451);
-  });
-});
-
-describe('data / applyContourDifficultyChange', () => {
-  const countries = (): Record<string, CountryDoc> => ({
-    A: { fr: 'A', en: 'A', difficulty: 'easy', n: 1 },
-    B: { fr: 'B', en: 'B', difficulty: 'easy', n: 2 },
-    C: { fr: 'C', en: 'C', difficulty: 'hard', n: 1 },
-    X: { fr: 'X', en: 'X' },
-  });
-
-  it('does nothing for an unknown country or an unchanged difficulty', async () => {
-    await load({ countries: countries() });
-
-    await mod.applyContourDifficultyChange('nope', 'hard');
-    await mod.applyContourDifficultyChange('A', 'easy');
-
-    expect(h.batches).toEqual([]);
-  });
-
-  it('renumbers the groups: own number, moved country, counts, and keeps the shuffled marker', async () => {
-    await load({ countries: countries() });
-    h.meta.contourCounts = { counts: { easy: 2, hard: 1 }, shuffled: true };
-
-    await mod.applyContourDifficultyChange('A', 'hard');
-
-    expect(summary()).toEqual([
-      'set countries/A',
-      'update countries/B',
-      'set meta/contourCounts',
-      'set meta/dataVersion',
-      expect.stringMatching(/^set journal\//),
-    ]);
-    expect(lastBatch().ops[0].value).toEqual({ fr: 'A', en: 'A', difficulty: 'hard', n: 2 });
-    expect(lastBatch().ops[1].value).toEqual({ n: 1 });
-    expect(lastBatch().ops[2].value).toEqual({ counts: { easy: 1, hard: 2 }, shuffled: true });
-    expectBookkeeping([
-      { c: 'countries', id: 'A', op: 'set' },
-      { c: 'countries', id: 'B', op: 'set' },
-      { c: 'meta', id: 'contourCounts', op: 'set' },
-    ]);
-    expect(mod.data().countries.A).toMatchObject({ difficulty: 'hard', n: 2 });
-    expect(mod.data().countries.B.n).toBe(1);
-  });
-
-  it('writes counts without the marker when the stored document is missing', async () => {
-    await load({ countries: countries() });
-
-    await mod.applyContourDifficultyChange('B', 'hard');
-
-    expect(lastBatch().ops.find((op) => op.ref.id === 'contourCounts')!.value).toEqual({
-      counts: { hard: 1 },
-    });
-    expect(mod.data().countries.B).toMatchObject({ difficulty: 'hard', n: 1 });
   });
 });
 

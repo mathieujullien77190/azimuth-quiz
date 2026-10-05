@@ -73,11 +73,11 @@ describe('App', () => {
     const push = vi.spyOn(window.history, 'pushState');
     render(<App />);
     await screen.findByText('places view');
-    await userEvent.click(screen.getByRole('link', { name: labelOf('countries') }));
-    expect(await screen.findByText('countries view')).toBeInTheDocument();
-    expect(push).toHaveBeenCalledWith(null, '', hrefOf('countries'));
-    expect(screen.getByRole('link', { name: labelOf('countries') })).toHaveAttribute('aria-pressed', 'true');
-    expect(document.title).toContain(labelOf('countries'));
+    await userEvent.click(screen.getByRole('link', { name: labelOf('jobs') }));
+    expect(await screen.findByText('jobs view')).toBeInTheDocument();
+    expect(push).toHaveBeenCalledWith(null, '', hrefOf('jobs'));
+    expect(screen.getByRole('link', { name: labelOf('jobs') })).toHaveAttribute('aria-pressed', 'true');
+    expect(document.title).toContain(labelOf('jobs'));
   });
 
   it('does not push anything when clicking the current page', async () => {

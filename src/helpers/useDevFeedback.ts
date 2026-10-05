@@ -75,11 +75,7 @@ export const useDevFeedback = ({ game, roundIndex, roundOver, gameOver, target }
     if (ended !== null) setHandledRound(ended.roundIndex);
   };
 
-  const question = !asking
-    ? null
-    : ended.target.targetType === 'place'
-      ? t.devFeedback.placeQuestion(ended.target.name)
-      : t.devFeedback.countryQuestion(ended.target.name);
+  const question = !asking ? null : t.devFeedback.placeQuestion(ended.target.name);
 
   return { question, choose, dismiss };
 };

@@ -29,7 +29,7 @@ jest.mock('expo-constants', () => ({
 }));
 
 const record: ErrorRecord = {
-  action: 'silhouette.revealHint',
+  action: 'clues.revealHint',
   code: 'permission-denied',
   message: 'no',
   room: 'abc',

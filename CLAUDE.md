@@ -2,13 +2,12 @@
 
 # Azimuth Quiz
 
-Trois jeux de geographie, **toujours en ligne** (une room par partie, meme seul), jusqu'a 10 joueurs et 20 manches :
+Deux jeux de geographie, **toujours en ligne** (une room par partie, meme seul), jusqu'a 10 joueurs et 20 manches :
 
 | Nom affiche | Dossier de code | Principe |
 |---|---|---|
 | Boussole | `compass` | un lieu s'affiche, chacun vise son cap et estime la distance depuis un point de depart |
 | Indices | `clues` | un lieu cache, on devoile des indices a tour de role et on devine son nom |
-| Silhouette | `contour` | la silhouette d'un pays, on devine lequel avec des indices partages |
 
 Le nom de code et le nom affiche different volontairement (les traductions restent dans `fr.ts`). Web statique sur GitHub
 Pages (`https://mathieujullien77190.github.io/azimuth-quiz/`) en plus des builds natifs. Repo `mathieujullien77190/azimuth-quiz`,
@@ -27,13 +26,13 @@ src/
   components/   # ce qui n'est pas propre a un jeu : ui/ (Button, Card, Chip, Screen...), HomeScreen, SettingsScreen,
                 # Compass, EarthSection, PlayerTabs, RoundCounter, DifficultyBadge, GameHeader/GameFooter, setup/...
   data/         # valeurs partagees par 2+ jeux (score/geo, options, palette joueurs), theme.ts, et data/firestore/
-                # (types des documents, lecteurs read.ts, numbering.ts, denormalize*.ts, polyline.ts, journal.ts)
+                # (types des documents, lecteurs read.ts, numbering.ts, denormalizeClues.ts, journal.ts)
   games/<jeu>/  # screens/ (dossiers `*Screen`, rendus par une route), components/, helpers/, store/, constants.ts
-  helpers/      # commun aux 3 jeux (geo, format, storage, location, random, firebase, settings, roomBase,
+  helpers/      # commun aux 2 jeux (geo, format, storage, location, random, firebase, settings, roomBase,
                 # createRoomStore, useOnlineRoomSession, groupedDraw...). Le barrel `index.ts` re-exporte aussi
                 # les helpers par jeu ; seuls les fichiers qui importent `firebase/firestore` (room.ts, roomBase.ts,
                 # roomStore.ts, firestorePlaces.ts...) restent HORS barrel (Jest plante a l'import) : import direct.
-  settings/     # GameSettings, ClueSettings, ContourSettings en stores Zustand (singletons) ; `usePlayerName`
+  settings/     # GameSettings, ClueSettings en stores Zustand (singletons) ; `usePlayerName`
   themes/       # night.ts, day.ts, fonts.ts, ThemeContext
   types/        # types de domaine partages
 admin/          # outil interne (app Vite a part), importe des fichiers de `src/` via le meme alias `@/`
@@ -51,18 +50,18 @@ des primitives UI, des constantes et des callbacks deja decides (`readOnly`, kic
 container.
 
 ### Nom du joueur
-Un seul nom pour les 3 jeux : `usePlayerName` (store persiste, hydrate dans `_layout.tsx`). Chaque jeu garde un
+Un seul nom pour les 2 jeux : `usePlayerName` (store persiste, hydrate dans `_layout.tsx`). Chaque jeu garde un
 `playerName` dans ses reglages comme miroir (requis par `useSetupRoom`), qui ne part jamais dans la room ; `onChangeName`
 ecrit dans les deux, et un effet a usage unique reconcilie au premier montage (le nom Compass deja sauve alimente le store
 partage).
 
 ## Parties en ligne (couche commune)
 
-Une seule collection `rooms`, un champ `game` (`'compass' | 'clues' | 'silhouette'`) fixe a la creation et immuable ; il dit
+Une seule collection `rooms`, un champ `game` (`'compass' | 'clues'`) fixe a la creation et immuable ; il dit
 quelles regles de `firestore.rules` s'appliquent. Un code d'un autre jeu est refuse a la jonction.
 
 - **Firestore** : `helpers/roomBase.ts` (`createRoomApi(game)` : creer/rejoindre/quitter, presence, couleurs, reglages) ;
-  chaque `games/<jeu>/helpers/room.ts` le lie a sa collection et ajoute l'etat de manche. Indices et Silhouette partagent la
+  chaque `games/<jeu>/helpers/room.ts` le lie a sa collection et ajoute l'etat de manche. Indices utilise la
   fonction de regles `turnBasedPlayer` : **tout champ qu'un joueur non hote ecrit doit etre dans sa liste de champs** dans
   `firestore.rules` (sinon l'ecriture est refusee et l'action « revient »).
 - **Store** : `helpers/createRoomStore.ts` (connexion, joueurs, hote, reglages, `gameState`).
@@ -71,7 +70,7 @@ quelles regles de `firestore.rules` s'appliquent. Un code d'un autre jeu est ref
 - **Ecran de jeu** : `useOnlineRoomSession` (etat, hote, joueurs dans l'ordre d'arrivee, redirection « room supprimee »,
   `handleQuit`) ; pour les jeux a tour de role `useHostTurnScoring` (l'hote seul ecrit `totalScores`), `useHostTurnRecovery`
   (l'hote passe la main si le joueur actif est parti), `useGuessDraft`, `nextPlayerUid`, `useTransientFlag`. **L'ordre des
-  joueurs tourne d'une manche a l'autre** (Indices et Silhouette) : `playersForRound(onlinePlayers, roundIndex)` =
+  joueurs tourne d'une manche a l'autre** (Indices) : `playersForRound(onlinePlayers, roundIndex)` =
   l'ordre d'arrivee decale du numero de manche, donc la manche 1 commence par le 1er arrive, la manche 2 par le 2e, etc.
   (rien de plus dans Firestore : chaque appareil le deduit de `roundIndex`). C'est le meme anneau dans le meme sens, seul le
   point d'entree change : `nextPlayerUid` reste sur l'ordre d'arrivee. Les hooks exposent `roundPlayers` (les onglets
@@ -91,20 +90,19 @@ quelles regles de `firestore.rules` s'appliquent. Un code d'un autre jeu est ref
 
 ## Donnees Firestore
 
-Firestore est la **seule source** des donnees (lieux, pays, silhouettes, devinettes, metiers) : aucun JSON embarque,
-**aucun repli** si Firestore echoue. Les donnees sont **dupliquees expres** (un document par lieu ou par pays porte tout ce
+Firestore est la **seule source** des donnees (lieux, devinettes, metiers) : aucun JSON embarque,
+**aucun repli** si Firestore echoue. Les donnees sont **dupliquees expres** (un document par lieu porte tout ce
 dont une manche a besoin) et numerotees pour le tirage. **Pour toute modification de donnees (copies a propager,
 numerotation, compteurs, `dataVersion`, journal de l'admin), suivre le skill `firestore-data`** ; l'admin
 (`admin/src/data.ts`) sait deja le faire pour la plupart des cas.
 
-Collections : `places/{cle}` (cle = code de 3 lettres, permanent, opaque), `countries/{ISO}` (nom, drapeau, devise,
-indicatif, voisins ; plus tout ce que lit Silhouette), `personalityJobs/{code}`,
-`meta/*` (`compassCounts`, `cluesCounts`, `contourCounts`, `dataVersion`), `journal/*` (admin seulement), `devFeedback/*` (avis de difficulte du mode dev, hors journal), `rooms/*`.
-Le jeu ne lit que `places`, `countries` (Silhouette), `meta` et `rooms`. Types dans `data/firestore/types.ts`.
+Collections : `places/{cle}` (cle = code de 3 lettres, permanent, opaque), `countries/{ISO}` (nom, drapeau, devise, indicatif : l'admin les edite et les recopie dans chaque lieu du pays, `places.country`, via `applyCountryChange` ; le jeu ne les lit pas ; les documents portent encore les champs de l'ancien jeu Silhouette, que l'admin ne lit ni n'efface), `personalityJobs/{code}`,
+`meta/*` (`compassCounts`, `cluesCounts`, `dataVersion`), `journal/*` (admin seulement), `devFeedback/*` (avis de difficulte du mode dev, hors journal), `rooms/*`.
+Le jeu ne lit que `places`, `meta` et `rooms`. Types dans `data/firestore/types.ts`.
 
-**Tirage des manches** (Boussole, Indices, Silhouette ont le meme moteur : `helpers/groupedDraw.ts` +
+**Tirage des manches** (Boussole et Indices ont le meme moteur : `helpers/groupedDraw.ts` +
 `groupCursors.ts`/`groupCounts.ts`) : l'hote tire seul. Chaque groupe (Boussole : `compass.category` × `difficulty` ;
-Indices : `clues.category` × `difficulty` ; Silhouette : `difficulty`) est numerote `n` = 1..taille (dense, ordre melange
+Indices : `clues.category` × `difficulty`) est numerote `n` = 1..taille (dense, ordre melange
 par hash de la cle, `numbering.ts`), les tailles sont dans `meta/*Counts` (lues une fois par lancement), et l'appareil garde
 **un curseur par groupe** (AsyncStorage) : une partie prend les numeros suivants et avance le curseur, en bouclant, donc un
 groupe est parcouru en entier avant qu'un element revienne. Plusieurs categories : repartition la plus egale possible
@@ -121,7 +119,7 @@ firestore:rules --project azimuth-quiz`) : un push ne les deploie pas.
 On choisit un cap et on estime la distance **de surface** (`Guess` = `bearing` + `distanceKm`) ; il n'y a plus de mode ligne
 droite. Cap et distance sont **loxodromiques** (`helpers/geo.ts`, un seul cap tenu tout le long, celui d'une boussole), pas
 orthodromiques : la distance est donc celle de cette route, un peu plus longue que le plus court chemin (jusqu'a ~21 180 km,
-d'ou `MAX_SURFACE_DISTANCE_KM` = 22 000). Les 3 jeux partagent ces helpers (Indices donne les memes cap/distance en indices).
+d'ou `MAX_SURFACE_DISTANCE_KM` = 22 000). Les 2 jeux partagent ces helpers (Indices donne les memes cap/distance en indices).
 Score (`games/compass/helpers/scoring.ts`) : courbe logarithmique sur l'ecart de distance et ecart angulaire 2D,
 500 points max pour la direction et 500 pour la distance. Lieux tires par `fetchRandomPlaces`
 (`games/compass/helpers/firestorePlaces.ts`, hors barrel). `EarthSection` dessine la Terre de profil (le joueur en haut,
@@ -152,84 +150,14 @@ tire** : le document `places/{cle}` porte les copies (`country`, `personality.jo
   autres le voient en cases, en MAJUSCULE (`previewText`, `typedSkeleton`), seulement si `typing.uid === turnUid`.
 - **Qui s'est trompe** : `wrongGuesserName` derive de `wrongGuessUid`/`wrongGuessSeq` (jamais remis a zero entre manches ;
   le score de l'hote s'appuie sur leur progression), garde par `turnUid` et une graine de manche.
-- **Une proposition par tour** (Indices et Silhouette) : apres une erreur, le detenteur du tour ne peut plus proposer avant
+- **Une proposition par tour** (Indices) : apres une erreur, le detenteur du tour ne peut plus proposer avant
   d'avoir devoile un indice (ce qui passe la main) ; `wrongGuessHints` (nombre d'indices au moment de l'erreur, ecrit avec
   `wrongGuessUid`/`wrongGuessSeq`, remis a `null` a chaque debut de manche, absent = pas de restriction) donne
   `hasGuessedThisTurn` (`helpers/turnGuess.ts`), qui retombe a faux des qu'un indice sort. le champ de reponse et « Valider » disparaissent
   (le brouillon est garde pour son prochain tour) et seule la ligne `t.game.alreadyGuessed` reste (l'hote garde « Je ne sais
-  pas » dans Indices) ; un verrou local couvre l'instant avant le retour de la room. Le message de l'erreur (« X se trompe… ») disparait chez tout le monde des qu'un indice (ou, dans Silhouette, l'ouverture d'une case) sort apres elle : `missIsFresh(wrongGuessHints, indicesSortis)`, meme en solo ou le tour revient au meme joueur. Le champ est dans la liste
+  pas » dans Indices) ; un verrou local couvre l'instant avant le retour de la room. Le message de l'erreur (« X se trompe… ») disparait chez tout le monde des qu'un indice sort apres elle : `missIsFresh(wrongGuessHints, indicesSortis)`, meme en solo ou le tour revient au meme joueur. Le champ est dans la liste
   `turnFields` des regles des deux jeux.
 - **« Je ne sais pas »** : reserve a l'hote (`giveUp`), meme hors de son tour, via `isHost()` des regles.
-
-## Silhouette
-
-Un plateau partage, un joueur actif a la fois (`turnUid`, ordre d'arrivee tourne par manche, voir `playersForRound`). A son tour il **choisit le prochain indice du
-groupe qu'il veut** (ce qui passe la main) ou tente une reponse (bonne : `verdict: 'correct'`, gain
-`contourGuessPoints(hintsRevealed, plan.length)` ; mauvaise : `wrongGuessSeq` +1, penalite `CONTOUR_WRONG_GUESS_PENALTY`, il
-garde la main). Une fois le pays revele il confirme l'abandon (`verdict: 'giveUp'`, personne ne marque, message « Personne
-n'a trouve — 0 point » pour tous). L'hote tire tous les pays d'avance (`countryCodes`, `fetchContourRoundCodes`) et seul
-l'hote ecrit les scores. Pied de page (`ContourGuessBar`) : une ligne « Pays » au-dessus du champ ; « N pts » est dans le header, a droite sur la meme ligne que
-« Quel est ce pays ? » (`GameHeader` `questionDetail`), plus de ligne « En jeu » ; le champ est ouvert a TOUS, a tout moment (chacun tape son brouillon local, `useGuessDraft`), mais seul le detenteur du
-tour valide : « Valider » reste grise pour les autres et le « ok » du clavier dit que ce n'est pas leur tour (`canSubmit`,
-`onNotYourTurn`). Au-dessus, le pays tape s'affiche en cases (composant partage `TypedAnswer`, comme Indices) : le brouillon
-du detenteur sur son appareil, ce qu'il tape en direct (`typing`, ecrit par lui seul) sur les autres. Le bouton « Valider »
-reste grise tant que le champ est vide.
-
-- **Plan d'indices** : 4 categories (`silhouette`, `neighbors`, `cities` hors capitale, `capital`, toutes actives, champ
-  `ContourSettings.hintCategories` conserve) donnent `buildHintPlan(categories, country)` (`helpers/hintPlan.ts`), la liste
-  ordonnee des etapes (`silhouette1-3`, `neighborShapes`, `neighborFlagFirst` (UN drapeau : le 1er voisin dans l'ordre des donnees, fixe pour tous les appareils), `neighborFlags` (tous, dont celui-la), `neighborCodes`, `neighborNames`, `cityPositions`,
-  `cityNames`, `capitalPosition`, `capitalName`, puis toujours `reveal`) ; une etape que le pays ne peut pas offrir est
-  omise. Le **choix** du joueur est l'etat de la room `hintPicks` (groupes pris depuis le debut de la manche ; `hintsRevealed`
-  en est la longueur, pour le bareme) ; `orderHintPlan(plan, picks)` range le plan dans cet ordre pour que
-  `buildHintLabels`/`boardShapeFor`/`contourGuessPoints` lisent « les N premieres etapes ». `ContourHintList` (dumb) affiche
-  une carte par groupe (`silhouette`, `neighbors`, `cities` = villes + capitale, puis `reveal` une fois le reste sorti).
-  Bareme : 500 × (1 − 0,85 × hints / (N − 1)) arrondi pour hints < N, 0 a N.
-- **Donnees** (tout dans `countries/{ISO}`, une manche = UNE lecture, `useRoundData` precharge la suivante) : `ring`
-  (contour, polyline), `difficulty`, `centerLabel`, `n`, `capital`, `cities` (precalculees, au plus `MAX_CITY_HINTS` = 5 hors
-  capitale, un nom sans traduction), `neighbors` (`{code, fr, en, ring?, x?, y?}` : `ring` = decor et decoupage
-  cote/frontiere, `x`/`y` = voisin place en indice ; deux roles independants). `roundCountryFromDoc` construit
-  `ContourRoundCountry` ; la reponse se verifie sur ses noms ; la silhouette et ses voisins sont dessines depuis ces seuls
-  documents. Les listes `cities`/`capital` sont editables a la main dans Firestore sans toucher aux lieux Boussole.
-- **Difficulte** : meme enum que les autres jeux, groupes par `countries.difficulty`, modifiable dans l'admin sur la carte du
-  pays (`applyContourDifficultyChange` renumerote). Repartition voulue : France et Espagne `easy` (2 pays), Europe
-  `intermediate` (33), reste du monde `hard` (118) ; ne pas la « reequilibrer » sans demande.
-- **Positions en fraction du plateau** : `ContourNeighbor.x/y` et `ContourCountry.centerLabel` sont des fractions 0-1 du
-  canvas, pas des lon/lat ; jeu et apercu admin utilisent `boardDimensionsFor(country.points, ...)` (meme ratio), et
-  `BOARD_PADDING_RATIO`/`HINT_STACK_GAP_RATIO` sont des fractions de `min(width, height)`.
-- **Silhouette progressive** (`helpers/simplify.ts`, niveaux 0-3 puis anneau complet) : Visvalingam-Whyatt avec aire × facteur
-  aleatoire seede, niveaux emboites, calcule a la volee par (pays, graine) (`roundGeometry`). La graine est tiree par l'hote
-  (`simplifySeed`) et derivee par manche (`roundSimplifySeed`) pour que tous voient la meme forme ; le cadrage reste celui de
-  l'anneau complet.
-- **Voisins en jeu** (`neighborShapes`) : jamais remplis ; la frontiere commune est le trait fin du pays et le reste du
-  contour des voisins est en pointille (`neighborBorders`, `neighborRuns` de `computeBorders`). Tant que le trait n'est pas
-  l'anneau complet, seule la silhouette est dessinee (`boardShapeFor`). `ContourBoard` sait encore remplir des voisins
-  (`neighborOutlines`) : seul l'apercu admin s'en sert.
-- **Frontieres** (`helpers/borders.ts`) : deduites par egalite exacte d'arete entre `points` (anneau principal seulement :
-  une frontiere portee par un autre polygone n'est pas detectee). **Ne jamais retoucher le `ring` d'un seul pays** : les
-  sommets partages avec les voisins ne coincideraient plus (si un contour change, propager les copies, voir le skill
-  `firestore-data`). Les contours viennent d'une seule topologie mondiale simplifiee une fois ; ils ne se regenerent pas.
-- **Quadrants** (`helpers/quadrants.ts`, `ContourQuadrantMask`) : le plateau (le rectangle du pays, `boardDimensionsFor`) est coupe en 2 × 2 cases egales
-  (0 haut-gauche, 1 haut-droite, 2 bas-gauche, 3 bas-droite) et **tout est cache par un masque opaque sauf une case** ; ce que les indices
-  revelent (silhouette, voisins, villes, capitale, drapeaux, noms) n'est donc visible que dans les cases ouvertes (le masque est pose par-dessus,
-  `ContourFullBleedScreen` `boardOverlay`). La case de depart est tiree par la graine de la manche (`roundSimplifySeed`) parmi les cases que
-  le contour traverse (`occupiedQuadrants`, calcule dans un cadre de reference fixe : meme resultat sur tous les appareils, rien a stocker). Le
-  joueur dont c'est le tour peut toucher une case cachee pour l'ouvrir pour tout le monde : **ouvrir une case compte comme UN INDICE et passe la
-  main** (comme un indice choisi dans la liste, pas de penalite a part). C'est un pick `'quadrant'` (`QUADRANT_PICK`) ajoute a `hintPicks` : il
-  fait monter `hintsRevealed` (= `hintPicks.length`, donc le bareme et la regle « une proposition par tour » le voient) mais ne fait sortir
-  AUCUNE etape du plan (`orderHintPlan` l'ignore ; `stepsOutOf`/`quadrantPicksOf` separent les deux ; les etapes a l'ecran =
-  `hintsRevealed` moins les ouvertures de case, `stepsRevealed` du hook). Points : `contourPoints(stepsOut, quadrantPicks, planLength)` lit
-  `stepsOut + quadrantPicks` sur le bareme normal, mais seul le pays revele (`stepsOut >= planLength`) donne 0 : ouvrir des cases ne descend
-  jamais sous la derniere etape avant la revelation. Une case ne s'ouvre plus une fois le pays revele (`canOpenQuadrant`, rien a y gagner) ; le
-  masque d'une case ouvrable affiche la perte reelle (`quadrantCost` = points actuels moins points avec un indice de plus, « −NN pts »).
-  Etat de room : `quadrantsRevealed: number[]` (QUELLES cases sont ouvertes en plus de celle de depart, dans l'ordre ; remis a `[]` a chaque
-  manche) ecrit avec `hintPicks`, `hintsRevealed` et `turnUid` en UN seul `updateDoc` (`revealContourRoomQuadrant`) ; tous ces champs sont deja
-  dans la liste `turnFields` de Silhouette dans `firestore.rules`. A la fin de la manche les masques disparaissent. L'apercu admin (`ContourEditor`) ne masque rien : `ContourQuadrantGrid` (SVG) y trace seulement les
-  deux lignes de coupe, le cadre, les numeros 0-3 et la case de depart (graine de l'apercu), a partir du meme `quadrantGridLines`/`quadrantRects`. Un **drapeau voisin** revele (`flagRects`, pur) dont le centre tombe dans une case cachee est marque PAR-DESSUS le masque par un rectangle couleur accent (opacite 0,5) de meme boite que le drapeau (prop `flagBoxes`, `markersInHiddenQuadrants`) : les joueurs savent qu'il y a quelque chose.
-- **Ecran** : `OnlineContourGameScreen` n'utilise pas `Screen` mais `ContourFullBleedScreen` (la silhouette occupe tout l'ecran
-  mesure, header/footer flottent par-dessus). Barre de reponse : `ContourGuessBar`.
-- **Admin** : un bouton « Silhouette » sur la carte pays deplie `ContourEditor` (voisins et point drapeau/nom glissables,
-  chaque deplacement/suppression ecrit directement `countries/{ISO}`, « supprimer un voisin » ne retire que son role
-  d'indice) ; la carte porte aussi le choix de difficulte.
 
 ## Erreurs de jeu
 
@@ -250,14 +178,14 @@ Dans Reglages, la section « Mode dev » a un champ « dev » : taper `supermato
 hydrate dans `_layout.tsx` ; `useDevMode` dit s'il vaut exactement le secret). Un appareil en mode dev recoit, **une fois par
 manche**, l'overlay `DifficultyFeedbackOverlay` « Le lieu X etait-il… Facile / Moyen / Difficile » (`useDevFeedback`, dans `helpers`)
 **une fois l'hote passe a la manche suivante** (ou devant le classement final pour la derniere) : jamais par-dessus le
-reveal/verdict lui-meme, et il porte sur le lieu/pays de la manche PRECEDENTE (le hook retient `{ roundIndex, cible }` tant que la
+reveal/verdict lui-meme, et il porte sur le lieu de la manche PRECEDENTE (le hook retient `{ roundIndex, cible }` tant que la
 manche est finie ; si deux manches passent sans reponse seule la derniere est posee ; le compteur de manche qui recule = nouvelle
 partie, tout est oublie) ; un tap a cote ferme sans rien ecrire, un des trois
-boutons ecrit un document de `devFeedback` (`sendDevFeedback` : jeu, `targetType` lieu|pays, `targetKey` = cle du lieu (`Place.key`,
-l'id du document, repli sur le nom pour une vieille room) ou ISO du pays, nom, difficulte actuelle, difficulte proposee, `devCode`,
+boutons ecrit un document de `devFeedback` (`sendDevFeedback` : jeu, `targetType` toujours `place`, `targetKey` = cle du lieu (`Place.key`,
+l'id du document, repli sur le nom pour une vieille room), nom, difficulte actuelle, difficulte proposee, `devCode`,
 `uid`, `at`). Chaque appareil decide seul (rien dans la room), la question ne bloque jamais le jeu (un tap a cote suffit) et disparait au rejeu. Une ecriture ratee est seulement loggee (`kind: 'background'`). Les regles n'acceptent la creation qu'avec le code dev
 et des champs exacts ; seuls les admins lisent et suppriment. La page admin « Avis difficulte » (`/admin/feedback`) les met en
-texte (une directive par lieu/pays dont les joueurs veulent changer la difficulte, majorite des votes, egalite = les deux, puis
+texte (une directive par lieu dont les joueurs veulent changer la difficulte, majorite des votes, egalite = les deux, puis
 les « deja corrects ») dans une zone en lecture seule, avec « Copier » et « Nettoyer » (confirmation dans la page, supprime
 tout par lots de 500). Hors journal et `dataVersion`, comme `errors`.
 
@@ -265,17 +193,23 @@ tout par lots de 500). Hors journal et `dataVersion`, comme `errors`.
 
 - **`Screen`** accepte `header`/`footer` rendus hors du `ScrollView`. Piege : un `ScrollView` horizontal dans un `header`
   s'etire en hauteur sur react-native-web sans `style={{ flexGrow: 0, flexShrink: 0 }}` explicite (voir `PlayerTabs.tsx`).
-- **`PlayerTabs`** (Indices, Silhouette) est purement informatif (statut seulement, a qui la main).
+- **`PlayerTabs`** (Indices) est purement informatif (statut seulement, a qui la main).
 - **Theme** : `night` (bleu nuit + ambre) et `day` (sable + bleu), fond uni, choix persiste (`ThemeProvider`, cle
   `azimuthquiz:theme`). `useThemedStyles(createStyles)` est le pattern standard. Police unique `FONT_FAMILY` ; un composant
   SVG lit `typography.<token>.fontFamily` et la passe explicitement a `<SvgText>`.
 - **Admin** (`admin/`, app Vite deployee sous `/azimuth-quiz/admin/`) : une page statique par onglet (`/admin/places`,
   `countries`, `globe`, `jobs`, `wordplay`, `errors`, `feedback` ; `/admin/` = lieux), declaree dans `admin/src/pageList.ts` ; l'admin lit les
   donnees dans une copie locale (IndexedDB) tenue a jour par le journal, voir le skill `firestore-data`.
-- **Page Monde** (`/admin/globe`, `admin/src/views/GlobeView/`) : le monde en 3D avec three.js (`three` est une dependance de l'admin, son propre chunk Vite), fond etoile et rien d'autre dans le ciel. Tous les pays qui ont un contour (`countries/{ISO}.ring`, traits colores par difficulte Silhouette) et tous les lieux (points colores par categorie Compass, **ronds** pour les villes `cities`/`citiesFr`, **etoiles** pour les capitales, **carres** pour le reste), lus dans la copie locale comme les listes. **Niveau de detail selon la distance de la camera** (constantes de `constants.ts`) : sans inertie (`enableDamping` faux), les capitales n'apparaissent que sous `CAPITALS_MAX_DISTANCE`, les autres lieux sous `POINTS_MAX_DISTANCE` (au-dela un lieu n'est ni dessine ni cliquable), les noms de **pays** (`setCountryNames`, au centre de leur contour `centerOf`, en francais, en plus gros et gras, de `COUNTRY_LABELS_MAX_DISTANCE` jusqu'a `COUNTRY_LABELS_MIN_DISTANCE` : ils passent avant les villes quand on zoome puis leur laissent la place de tres pres, et gagnent leur place sur les noms de villes) et les noms de lieux (HTML par-dessus le canvas, au plus `MAX_LABELS`, capitales d'abord puis les plus proches du centre, sans chevauchement : `selectLabels`) sous `LABELS_MAX_DISTANCE`. Un clic ouvre dans un panneau lateral **la meme carte que les listes** (`PlacesView/PlaceCard` + `usePlaceEditing`, `CountriesView/CountryCard` + `useCountryEditing` : extraits des listes, qui s'en servent aussi, donc les ecritures passent par les memes `api/*`, journal et `dataVersion` inclus) ; le globe suit les modifications. Le rendu est mince (`GlobeScene.ts` possede les objets three.js, `GlobeCanvas.tsx` le pointeur), la logique est pure dans `helpers.ts` (lon/lat <-> vecteur, point dans un contour qui passe la ligne de date, lieu le plus proche a l'ecran, recherche) ; un lieu gagne sur le pays derriere lui. Les tests Vitest remplacent `three` (jsdom n'a pas de WebGL).
+- **Page Pays** (`/admin/countries`, `admin/src/views/CountriesView/`) : un pays par carte (ISO, nom fr/en, devise, symbole,
+  indicatif, **drapeau** : chaque couleur avec son hex et son %, ajout/retrait d'une couleur, `FlagEditor`), recherche, continent, tri,
+  pagination. Une modification passe par `saveCountry` -> `applyCountryChange` (`admin/src/data.ts`) : le document `countries/{ISO}`
+  et la copie `places.country` de chaque lieu du pays sont ecrits dans le meme lot (plan pur : `data/firestore/denormalize.ts`),
+  avec le journal et la version des donnees. Le document stocke est le point de depart de l'ecriture : les champs de l'ancien jeu
+  Silhouette qu'il porte encore (contour, voisins, difficulte...) sont reecrits tels quels, jamais lus ni effaces.
+- **Page Monde** (`/admin/globe`, `admin/src/views/GlobeView/`) : le monde en 3D avec three.js (`three` est une dependance de l'admin, son propre chunk Vite), fond etoile et rien d'autre dans le ciel. Tous les lieux (points colores par categorie Compass, **ronds** pour les villes `cities`/`citiesFr`, **etoiles** pour les capitales, **carres** pour le reste), lus dans la copie locale comme la liste. **Niveau de detail selon la distance de la camera** (constantes de `constants.ts`) : sans inertie (`enableDamping` faux), les capitales n'apparaissent que sous `CAPITALS_MAX_DISTANCE`, les autres lieux sous `POINTS_MAX_DISTANCE` (au-dela un lieu n'est ni dessine ni cliquable) et les noms de lieux (HTML par-dessus le canvas, au plus `MAX_LABELS`, capitales d'abord puis les plus proches du centre, sans chevauchement : `selectLabels`) sous `LABELS_MAX_DISTANCE`. Un clic ouvre dans un panneau lateral **la meme carte que la liste** (`PlacesView/PlaceCard` + `usePlaceEditing`, donc les ecritures passent par les memes `api/*`, journal et `dataVersion` inclus) ; le globe suit les modifications. Le rendu est mince (`GlobeScene.ts` possede les objets three.js, `GlobeCanvas.tsx` le pointeur), la logique est pure dans `helpers.ts` (lon/lat <-> vecteur, lieu le plus proche a l'ecran, recherche par nom ou pays). Les tests Vitest remplacent `three` (jsdom n'a pas de WebGL).
 - **Storybook** : stories colocalisees (`src/**/<Name>.stories.tsx`, config dans `admin/.storybook`, `npm run stories`),
   code reel affiche via `source(code)` + `<Story>.source.md` (skill personnel `storybook-story`, hors depot). Menu : `Common`, `Compass`, `Clues`,
-  `Silhouette`, `Setup`, `UI` (ordre dans `admin/.storybook/preview.tsx` : y ajouter toute nouvelle section). La barre
+  `Setup`, `UI` (ordre dans `admin/.storybook/preview.tsx` : y ajouter toute nouvelle section). La barre
   d'outils propose theme et langue. Un composant dumb a sa story, pas les containers smart.
 
 ## Build, deploiement, qualite

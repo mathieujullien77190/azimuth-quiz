@@ -1,24 +1,13 @@
-import {
-  BOARD_PADDING_RATIO,
-  boardDimensionsFor,
-  createProjector,
-  projectPoints,
-} from '@/games/contour/components/ContourBoard';
 import { DEFAULT_ORIGIN, PLAYER_COLORS } from '@/data';
 import { DEFAULT_DISTANCE_KM, MAX_SURFACE_DISTANCE_KM } from '@/games/compass/constants';
 import type {
   CluePlace,
-  ContourCountry,
-  ContourRoundCountry,
   Guess,
   Place,
   Player,
   PlayerResult,
-  Point2D,
   RoundRecord,
 } from '@/types';
-
-import { projectRound, roundGeometry } from '@/games/contour/helpers/roundBoard';
 
 import { bearingDeg, distanceKm, normalizeBearing } from './geo';
 import { applyBestBonus, scoreRound } from '@/games/compass/helpers/scoring';
@@ -195,98 +184,6 @@ export const SAMPLE_PLAYERS: Player[] = [
   { name: 'Léo', color: PLAYER_COLORS[2] },
 ];
 
-/** Rough outlines of France and two countries it shares edges with (the same vertices, so the border
- * split has something to cut): enough to draw a board, not geography. */
-const ring = (points: [number, number][]): [number, number][] => [...points, points[0]];
-
-const FRANCE: ContourCountry = {
-  code: 'FR',
-  points: ring([
-    [2.5, 51.1],
-    [4.2, 49.9],
-    [6.2, 49.5],
-    [8.2, 48.9],
-    [7.6, 47.6],
-    [6.0, 46.2],
-    [7.0, 45.9],
-    [7.6, 44.1],
-    [6.9, 43.6],
-    [3.1, 43.1],
-    [3.0, 42.4],
-    [1.7, 42.5],
-    [-0.7, 43.3],
-    [-1.8, 43.4],
-    [-1.2, 46.0],
-    [-4.5, 48.0],
-    [-1.6, 48.7],
-    [1.5, 50.1],
-  ]),
-  neighbors: [
-    { type: 'country', code: 'ES', x: 0.3, y: 0.95 },
-    { type: 'country', code: 'BE', x: 0.62, y: 0.05 },
-    { type: 'country', code: 'DE', x: 0.95, y: 0.25 },
-    { type: 'country', code: 'IT', x: 0.9, y: 0.75 },
-  ],
-  centerLabel: { x: 0.5, y: 0.5 },
-  difficulty: 'easy',
-};
-
-/** Contours the sample board is fit against: France and, around it, Spain and Belgium. */
-export const FIXTURE_CONTOURS: ContourCountry[] = [
-  FRANCE,
-  {
-    code: 'ES',
-    points: ring([
-      [-1.8, 43.4],
-      [-0.7, 43.3],
-      [1.7, 42.5],
-      [3.0, 42.4],
-      [3.2, 41.8],
-      [0.8, 40.5],
-      [-1.0, 37.0],
-      [-6.0, 36.5],
-      [-9.0, 38.0],
-      [-8.6, 42.0],
-    ]),
-    neighbors: [],
-    centerLabel: { x: 0.5, y: 0.5 },
-    difficulty: 'easy',
-  },
-  {
-    code: 'BE',
-    points: ring([
-      [2.5, 51.1],
-      [3.4, 51.4],
-      [5.8, 51.0],
-      [6.2, 49.5],
-      [4.2, 49.9],
-    ]),
-    neighbors: [],
-    centerLabel: { x: 0.5, y: 0.5 },
-    difficulty: 'intermediate',
-  },
-];
-
-const NAMES: Record<string, { fr: string; en: string }> = {
-  FR: { fr: 'France', en: 'France' },
-  ES: { fr: 'Espagne', en: 'Spain' },
-  BE: { fr: 'Belgique', en: 'Belgium' },
-  DE: { fr: 'Allemagne', en: 'Germany' },
-  IT: { fr: 'Italie', en: 'Italy' },
-};
-
-export const SAMPLE_CONTOUR_COUNTRY: ContourRoundCountry = {
-  ...FRANCE,
-  ...NAMES.FR,
-  neighbors: FRANCE.neighbors.map((neighbor) => ({ ...neighbor, ...NAMES[neighbor.code] })),
-  capital: { name: 'Paris', longitude: 2.3522, latitude: 48.8566 },
-  cities: [
-    { name: 'Lyon', longitude: 4.8357, latitude: 45.764 },
-    { name: 'Marseille', longitude: 5.3698, latitude: 43.2965 },
-    { name: 'Bordeaux', longitude: -0.5792, latitude: 44.8378 },
-  ],
-};
-
 const ORIGIN = DEFAULT_ORIGIN.coordinates;
 const TRUE_BEARING = bearingDeg(ORIGIN, SAMPLE_PLACE_REVEALED.coordinates);
 const TRUE_DISTANCE_KM = distanceKm(ORIGIN, SAMPLE_PLACE_REVEALED.coordinates);
@@ -320,49 +217,3 @@ export const SAMPLE_DISTANCE_KM = DEFAULT_DISTANCE_KM;
  * ClueCard's `bearing`/`distance` clues. */
 export const SAMPLE_CLUE_BEARING = bearingDeg(ORIGIN, SAMPLE_CLUE_PLACE.coordinates);
 export const SAMPLE_CLUE_DISTANCE_KM = distanceKm(ORIGIN, SAMPLE_CLUE_PLACE.coordinates);
-
-// --- ContourBoard (Silhouette) ---
-// Same fit/projector math the real game (ContourGameScreen's `projectRound`) and the admin's
-// ContourEditor preview both use — see `boardDimensionsFor`'s own doc comment: it's what keeps a
-// neighbor's curated `x`/`y` fraction landing at the same relative spot everywhere.
-
-const CONTOUR_BOARD_MAX_WIDTH = 420;
-const CONTOUR_BOARD_MAX_HEIGHT = 320;
-
-export const SAMPLE_CONTOUR_BOARD_SIZE = boardDimensionsFor(
-  SAMPLE_CONTOUR_COUNTRY.points,
-  CONTOUR_BOARD_MAX_WIDTH,
-  CONTOUR_BOARD_MAX_HEIGHT,
-);
-
-const contourProject = createProjector(
-  SAMPLE_CONTOUR_COUNTRY.points,
-  SAMPLE_CONTOUR_BOARD_SIZE,
-  Math.min(SAMPLE_CONTOUR_BOARD_SIZE.width, SAMPLE_CONTOUR_BOARD_SIZE.height) * BOARD_PADDING_RATIO,
-);
-
-export const SAMPLE_CONTOUR_OUTLINE: Point2D[] = projectPoints(SAMPLE_CONTOUR_COUNTRY.points, contourProject);
-
-/** France fit to the same box, with the countries touching it (`neighborOutlines`) and its outline cut
- * into coast and shared borders (`coastlines`/`borders`): what the game passes to `ContourBoard`. */
-export const SAMPLE_CONTOUR_BOARD = projectRound(
-  SAMPLE_CONTOUR_COUNTRY,
-  CONTOUR_BOARD_MAX_WIDTH,
-  CONTOUR_BOARD_MAX_HEIGHT,
-  roundGeometry(SAMPLE_CONTOUR_COUNTRY, 0, FIXTURE_CONTOURS),
-);
-
-/** Every curated neighbor for France, already projected to board pixels (tier-1/tier-3 hints). */
-export const SAMPLE_CONTOUR_NEIGHBORS = SAMPLE_CONTOUR_COUNTRY.neighbors.map((neighbor) => ({
-  neighbor,
-  position: {
-    x: neighbor.x * SAMPLE_CONTOUR_BOARD_SIZE.width,
-    y: neighbor.y * SAMPLE_CONTOUR_BOARD_SIZE.height,
-  } satisfies Point2D,
-}));
-
-/** The target country's own flag/name anchor (tier-3/4 hint — see `ContourCountry.centerLabel`). */
-export const SAMPLE_CONTOUR_CENTER_POSITION: Point2D = {
-  x: SAMPLE_CONTOUR_COUNTRY.centerLabel.x * SAMPLE_CONTOUR_BOARD_SIZE.width,
-  y: SAMPLE_CONTOUR_COUNTRY.centerLabel.y * SAMPLE_CONTOUR_BOARD_SIZE.height,
-};

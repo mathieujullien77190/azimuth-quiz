@@ -1,4 +1,3 @@
-import { countryName } from './data';
 import { CATEGORIES } from '@/games/compass/constants';
 import type { Category, Difficulty, CluePositionInCountry } from '@/types';
 
@@ -55,5 +54,3 @@ export const POSITION_LABELS: Record<CluePositionInCountry, string> = {
   se: 'Sud-Est',
   sw: 'Sud-Ouest',
 };
-
-export const countryFor = (code: string): string => countryName(code);

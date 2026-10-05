@@ -1,8 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
-
-vi.mock('../../constants', () => ({
-  countryFor: (code: string) => ({ FR: 'France', IT: 'Italie' })[code] ?? code,
-}));
+import { describe, expect, it } from 'vitest';
 
 import type { PlaceRow } from '../../api/places';
 import { CLUE_FIELD_BY_KEY, filterRows, fmtCoord } from './helpers';
@@ -12,6 +8,7 @@ const row = (over: Partial<PlaceRow> & { category?: string; difficulty?: string;
     key: 'k',
     name: 'Paris',
     code: 'FR',
+    country: 'France',
     coordinates: { latitude: 0, longitude: 0 },
     compass: over.category ? { category: over.category, difficulty: over.difficulty ?? 'easy' } : null,
     clues: over.cluesDifficulty ? { difficulty: over.cluesDifficulty } : null,
@@ -58,15 +55,15 @@ describe('filterRows', () => {
 
   it('searches by name, country name or code, ignoring case and spaces around', () => {
     const paris = row({ name: 'Paris', code: 'FR' });
-    const rome = row({ name: 'Rome', code: 'IT' });
+    const rome = row({ name: 'Rome', code: 'IT', country: 'Italie' });
     const rows = [paris, rome];
     expect(filterRows(rows, '  PAR ', ALL_CATEGORIES, ALL_DIFFICULTIES)).toEqual([paris]);
     expect(filterRows(rows, 'it', ALL_CATEGORIES, ALL_DIFFICULTIES)).toContain(rome);
     expect(filterRows(rows, 'zzzz', ALL_CATEGORIES, ALL_DIFFICULTIES)).toEqual([]);
   });
 
-  it('matches the country name through its code', () => {
-    const rows = [row({ name: 'Rome', code: 'IT' })];
+  it('matches the country name', () => {
+    const rows = [row({ name: 'Rome', code: 'IT', country: 'Italie' })];
     expect(filterRows(rows, 'itali', ALL_CATEGORIES, ALL_DIFFICULTIES)).toEqual(rows);
   });
 });

@@ -8,8 +8,7 @@ import type { TypedAnswerProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * An answer drawn as boxed letters, the way Clues shows it while it is typed (and Silhouette's country name now does
- * too) — dumb: it only draws the groups it is given.
+ * An answer drawn as boxed letters, the way Clues shows it while it is typed — dumb: it only draws the groups it is given.
  */
 export const TypedAnswer = ({ groups }: TypedAnswerProps) => {
   const styles = useThemedStyles(createStyles);

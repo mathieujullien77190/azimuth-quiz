@@ -22,29 +22,23 @@ import {
   CLUES_NUMBERING,
   cluesCategory,
   COMPASS_NUMBERING,
-  planContourDifficultyChange,
   planRegroup,
 } from '@/data/firestore/numbering';
-import { contourFromDoc, hasSilhouette } from '@/data/firestore/read';
 import {
   CLUES_COUNTS_DOC,
   COLLECTIONS,
   COMPASS_COUNTS_DOC,
-  CONTOUR_COUNTS_DOC,
   DATA_VERSION_DOC,
   JOURNAL_COLLECTION,
   type CluesCountsDoc,
   type CompassCounts,
   type CompassCountsDoc,
-  type ContourCountsDoc,
   type CountryDoc,
   type JobDoc,
   type JournalChange,
   type JournalDoc,
   type PlaceDoc,
 } from '@/data/firestore/types';
-import type { ContourCountry, Difficulty } from '@/types';
-
 import { db } from './firebase';
 import { readSnapshot, writeSnapshot } from './snapshotStore';
 
@@ -57,6 +51,7 @@ import { readSnapshot, writeSnapshot } from './snapshotStore';
  */
 type Cache = {
   places: Record<string, PlaceDoc>;
+  /** Read tolerantly: documents still carry fields of the removed Silhouette, which are neither read nor dropped. */
   countries: Record<string, CountryDoc>;
   jobs: Record<string, JobDoc>;
   /** `meta/compassCounts`: size of every Compass group, see `numbering.ts`. */
@@ -69,7 +64,6 @@ type Cache = {
 };
 
 let cache: Cache | null = null;
-let contoursMemo: ContourCountry[] | null = null;
 
 const readCollection = async <T>(name: string): Promise<Record<string, T>> => {
   const { docs } = await getDocs(collection(db, name));
@@ -126,7 +120,6 @@ const syncData = async (): Promise<void> => {
   cache = await fetchAll();
   syncedAt = Date.now();
   journalAt = newest;
-  contoursMemo = null;
   await writeSnapshot({ cache, syncedAt, journalAt } satisfies Snapshot);
 };
 
@@ -204,7 +197,6 @@ export const startJournalSync = (): (() => void) =>
           const changes = collapseJournal(foreign.map((entry) => (entry.data() as JournalDoc).changes));
           if (changes.length > MAX_INCREMENTAL) await syncData();
           else await applyChanges(cache, changes);
-          contoursMemo = null;
           notifyRevision();
         }
         if (times.length > 0) journalAt = Math.max(journalAt ?? 0, ...times.map((at) => at.toMillis()));
@@ -225,35 +217,24 @@ const assign = <T>(record: Record<string, T>, id: string, value: T | undefined):
 export const loadData = async (): Promise<void> => {
   const snapshot = await readSnapshot<Snapshot>();
   if (snapshot) {
-    // A copy saved before the silhouettes moved into the countries still carries the old `contours` key: dropped.
+    // A copy saved before the silhouettes moved into the countries still carries the old `contours` key: dropped. One
+    // saved while the countries were out of the admin has no `countries`: one full read.
     const current: Cache & { contours?: unknown } = { ...snapshot.cache };
     delete current.contours;
     cache = current;
     syncedAt = snapshot.syncedAt;
     journalAt = snapshot.journalAt ?? null;
-    contoursMemo = null;
     // A copy older than the journal has no position in it: one full read, then the journal takes over.
-    if (journalAt === null) await syncData();
+    if (journalAt === null || !current.countries) await syncData();
     return;
   }
   await syncData();
 };
 
-/** A country's French name from the loaded data (its code when unknown). */
-export const countryName = (code: string): string => data().countries[code]?.fr ?? code;
-
 /** The loaded data — `AuthGate` renders nothing that reads it before `loadData` resolved. */
 export const data = (): Cache => {
   if (!cache) throw new Error('Données non chargées');
   return cache;
-};
-
-/** Every country's silhouette, decoded once (invalidated by any country write). */
-export const contours = (): ContourCountry[] => {
-  contoursMemo ??= Object.entries(data().countries).flatMap(([code, country]) =>
-    hasSilhouette(country) ? [contourFromDoc(code, country)] : [],
-  );
-  return contoursMemo;
 };
 
 /** Writes one document (`null`: deletes it) through the same path as every other write: data version and journal included. */
@@ -266,14 +247,6 @@ const putDoc = (collectionName: keyof typeof COLLECTIONS, id: string, value: obj
 export const putPlace = async (key: string, value: PlaceDoc): Promise<void> => {
   await putDoc('places', key, value);
   data().places[key] = value;
-  persist();
-};
-
-/** Rewrites `countries/{code}` (a neighbor moved, the label anchor moved...). */
-export const putCountry = async (code: string, value: CountryDoc): Promise<void> => {
-  await putDoc('countries', code, value);
-  data().countries[code] = value;
-  contoursMemo = null;
   persist();
 };
 
@@ -315,12 +288,12 @@ const commitInBatches = async (
 // --- Copies kept in sync with their source --------------------------------------------------------------------
 
 /**
- * Writes `next` as `countries/{code}` and rewrites, in the same run of batches, every copy of it: the
- * country of each of its places and the names in the other countries that cite it as a neighbour (see
- * `planCountryChange`).
+ * Writes `next` as `countries/{code}` and rewrites, in the same run of batches, every copy of it: the `country` of each of
+ * its places (see `planCountryChange`). `next` starts from the stored document, so the fields this admin does not own
+ * (what Silhouette left on it) are written back untouched.
  */
 export const applyCountryChange = async (code: string, next: CountryDoc): Promise<void> => {
-  const plan = planCountryChange(code, next, data().places, data().countries);
+  const plan = planCountryChange(code, next, data().places);
   await commitInBatches(
     [
       (batch) => batch.set(doc(db, COLLECTIONS.countries, code), next),
@@ -329,60 +302,14 @@ export const applyCountryChange = async (code: string, next: CountryDoc): Promis
           (batch: WriteBatch) =>
             batch.update(doc(db, COLLECTIONS.places, key), { country: place.country }),
       ),
-      ...Object.entries(plan.countries).map(
-        ([otherCode, other]) =>
-          (batch: WriteBatch) =>
-            batch.set(doc(db, COLLECTIONS.countries, otherCode), other),
-      ),
     ],
     [
       { c: 'countries', id: code, op: 'set' },
       ...Object.keys(plan.places).map((id) => ({ c: 'places' as const, id, op: 'set' as const })),
-      ...Object.keys(plan.countries).map((id) => ({ c: 'countries' as const, id, op: 'set' as const })),
     ],
   );
   data().countries[code] = next;
   Object.assign(data().places, plan.places);
-  Object.assign(data().countries, plan.countries);
-  contoursMemo = null;
-  persist();
-};
-
-/**
- * Changes the Silhouette difficulty of country `code` and keeps the numbering of the difficulty groups dense in the same
- * run (see `planContourDifficultyChange`): the country's own `n`, the country that takes the number it frees, and
- * `meta/contourCounts`. The game draws its countries from those numbers, so a difficulty written alone would leave a hole.
- */
-export const applyContourDifficultyChange = async (code: string, difficulty: Difficulty): Promise<void> => {
-  const current = data().countries[code];
-  if (!current || current.difficulty === difficulty) return;
-  const stored = await readMeta<ContourCountsDoc>(CONTOUR_COUNTS_DOC);
-  const plan = planContourDifficultyChange(data().countries, stored?.counts ?? {}, code, difficulty);
-  const next: CountryDoc = { ...current, difficulty, n: plan.n };
-  await commitInBatches(
-    [
-      (batch) => batch.set(doc(db, COLLECTIONS.countries, code), next),
-      ...Object.entries(plan.moved).map(
-        ([otherCode, n]) =>
-          (batch: WriteBatch) =>
-            batch.update(doc(db, COLLECTIONS.countries, otherCode), { n }),
-      ),
-      (batch) =>
-        batch.set(doc(db, CONTOUR_COUNTS_DOC.collection, CONTOUR_COUNTS_DOC.id), {
-          counts: plan.counts,
-          ...(stored?.shuffled && { shuffled: true as const }),
-        } satisfies ContourCountsDoc),
-    ],
-    [
-      { c: 'countries', id: code, op: 'set' },
-      ...Object.keys(plan.moved).map((id) => ({ c: 'countries' as const, id, op: 'set' as const })),
-      { c: 'meta', id: CONTOUR_COUNTS_DOC.id, op: 'set' },
-    ],
-  );
-  data().countries[code] = next;
-  for (const [otherCode, n] of Object.entries(plan.moved))
-    data().countries[otherCode] = { ...data().countries[otherCode], n };
-  contoursMemo = null;
   persist();
 };
 

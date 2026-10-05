@@ -1,6 +1,6 @@
 import type { Category, ClueCategory, Difficulty } from '@/types';
 
-import type { CompassCounts, ContourCounts, PlaceDoc } from './types';
+import type { CompassCounts, PlaceDoc } from './types';
 
 /**
  * Places are numbered inside their group, 1..size, dense — twice: Compass places by (`compass.category` x
@@ -147,45 +147,4 @@ export const slotAt = (pool: (Group & { size: number })[], position: number): Sl
     offset -= size;
   }
   throw new Error(`Position ${position} is outside the pool`);
-};
-
-export type ContourRegroup = {
-  /** The country's own number in its new group. */
-  n: number;
-  /** The other country whose number changes: the last one of the group the country left takes its freed number. */
-  moved: Record<string, number>;
-  counts: ContourCounts;
-};
-
-/**
- * Silhouette's numbering (`countries/{code}.n`, one group per difficulty) kept dense when a country changes difficulty:
- * it leaves its old group (the last-numbered country of that group takes the freed number, the group shrinks by one) and
- * joins the new one at the end (`size + 1`). Same idea as `planRegroup`, for a numbering with a single level.
- */
-export const planContourDifficultyChange = (
-  countries: Record<string, { difficulty?: Difficulty; n?: number }>,
-  counts: ContourCounts,
-  code: string,
-  difficulty: Difficulty,
-): ContourRegroup => {
-  const previous = countries[code];
-  const from = previous?.difficulty;
-  if (from === difficulty) return { n: previous.n ?? 0, moved: {}, counts };
-
-  const next: ContourCounts = { ...counts };
-  const moved: Record<string, number> = {};
-  if (from !== undefined) {
-    const size = counts[from] ?? 0;
-    if (previous.n !== undefined && previous.n !== size) {
-      const last = Object.entries(countries).find(
-        ([otherCode, other]) => otherCode !== code && other.difficulty === from && other.n === size,
-      );
-      if (last) moved[last[0]] = previous.n;
-    }
-    if (size > 1) next[from] = size - 1;
-    else delete next[from];
-  }
-  const n = (next[difficulty] ?? 0) + 1;
-  next[difficulty] = n;
-  return { n, moved, counts: next };
 };

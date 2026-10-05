@@ -3,15 +3,13 @@ import type {
   ClueCategory,
   ClueFlagColorId,
   CluePositionInCountry,
-  ContourCenterLabel,
   Difficulty,
 } from '@/types';
 
 /**
  * Firestore shape of the game data (the only copy: the games read it, the admin edits it). One document per entity, never
- * a big blob (1 MB cap per doc). Firestore refuses nested arrays and `undefined`, hence: contour
- * `points` are flat (`[lon, lat, lon, lat, ...]`), flag colors are objects, and an absent optional
- * field is simply omitted.
+ * a big blob (1 MB cap per doc). Firestore refuses nested arrays and `undefined`, hence: flag colors are objects, and an
+ * absent optional field is simply omitted.
  */
 
 export const COLLECTIONS = {
@@ -85,17 +83,11 @@ export type PlaceDoc = {
 export type FlagColorDoc = { id: ClueFlagColorId; hex: string; percent: number };
 
 /**
- * A neighbour of a silhouette, in the country's own document (`CountryDoc.neighbors`), names copied in so the
- * game never looks a country up. Two independent roles, told apart by what the entry carries:
- * - `ring` (the neighbour's outline as an encoded polyline, copied as is so the shared edges stay exact): the
- *   country shares a land border, the board draws it as a backdrop and splits the outline into coast/border;
- * - `x`/`y` (a fraction of the board, see `ContourNeighbor`): the neighbour is a hint placed on the board.
- * A country can be a backdrop without being a hint and the other way round.
+ * `countries/{ISO code}`: the country data Indices shows (name, flag colours, currency, phone code), edited in the admin
+ * and copied into each of its places (`PlaceDoc.country`, see `denormalize.ts`). Documents written when Silhouette still
+ * existed carry more fields (outline, neighbours, difficulty...): they are not part of this type, the admin never reads
+ * them and never removes them.
  */
-export type CountryNeighborDoc = { code: string; fr: string; en: string; ring?: string; x?: number; y?: number };
-
-/** `countries/{ISO code}`: the country's data, plus everything one Silhouette round needs when it has a silhouette
- * (`ring`, `difficulty`, `centerLabel`, `neighbors`, `n`, and the capital and cities offered as hints). */
 export type CountryDoc = {
   fr: string;
   en: string;
@@ -103,17 +95,6 @@ export type CountryDoc = {
   currency?: string;
   currencySymbol?: string;
   phoneCode?: string;
-  /** ISO codes of the land neighbors, sorted, absent for an island. */
-  borders?: string[];
-  /** Own outline as an encoded polyline (`polyline.ts`): present only on a country with a silhouette. */
-  ring?: string;
-  difficulty?: Difficulty;
-  centerLabel?: ContourCenterLabel;
-  neighbors?: CountryNeighborDoc[];
-  capital?: ContourPlaceDoc;
-  cities?: ContourPlaceDoc[];
-  /** Position 1..size inside the country's difficulty group, only on a country with a silhouette. */
-  n?: number;
 };
 
 /** `personalityJobs/{code}`. */
@@ -136,17 +117,6 @@ export const COMPASS_COUNTS_DOC = { collection: COLLECTIONS.meta, id: 'compassCo
 export type CluesCountsDoc = { counts: CompassCounts; shuffled?: true };
 
 export const CLUES_COUNTS_DOC = { collection: COLLECTIONS.meta, id: 'cluesCounts' } as const;
-
-/** A place offered as a hint on the Silhouette board: where it is and what it is called. */
-export type ContourPlaceDoc = { name: string; lon: number; lat: number };
-
-/** Size of every silhouette difficulty group. */
-export type ContourCounts = Partial<Record<Difficulty, number>>;
-
-/** `meta/contourCounts`. */
-export type ContourCountsDoc = { counts: ContourCounts; shuffled?: true };
-
-export const CONTOUR_COUNTS_DOC = { collection: COLLECTIONS.meta, id: 'contourCounts' } as const;
 
 /** `journal/{auto id}`: one entry per admin write, next to the `at` server timestamp (see `journal.ts`). */
 export const JOURNAL_COLLECTION = 'journal';

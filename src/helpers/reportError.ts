@@ -75,7 +75,7 @@ export const reportError = (action: string, error: unknown, { kind = 'game', roo
     .catch(() => {});
 };
 
-/** `.catch(reporting('silhouette.revealHint', { room }))`: the handler that replaces the silent `.catch(() => {})`. */
+/** `.catch(reporting('clues.revealHint', { room }))`: the handler that replaces the silent `.catch(() => {})`. */
 export const reporting =
   (action: string, options?: ReportOptions) =>
   (error: unknown): void =>

@@ -1,5 +1,4 @@
 import type { PlaceRow } from '../../api/places';
-import { countryFor } from '../../constants';
 import type { Field } from './types';
 
 export const fmtCoord = (value: number, positive: string, negative: string): string =>
@@ -11,8 +10,7 @@ export const filterRows = (rows: PlaceRow[], query: string, categories: Set<stri
     if (row.compass && !categories.has(row.compass.category)) return false;
     const difficulty = row.compass?.difficulty ?? row.clues?.difficulty;
     if (difficulty && !difficulties.has(difficulty)) return false;
-    const country_ = countryFor(row.code);
-    if (q && !row.name.toLowerCase().includes(q) && !country_.toLowerCase().includes(q) && !row.code.toLowerCase().includes(q)) return false;
+    if (q && !row.name.toLowerCase().includes(q) && !row.country.toLowerCase().includes(q) && !row.code.toLowerCase().includes(q)) return false;
     return true;
   });
 };

@@ -8,7 +8,6 @@ import StartupSplash from '@/components/StartupSplash';
 import ThemeProvider from '@/components/ThemeProvider';
 import { preloadCluesCounts } from '@/games/clues/helpers/clueCounts';
 import { preloadCompassCounts } from '@/games/compass/helpers/compassCounts';
-import { preloadContourCounts } from '@/games/contour/helpers/contourCounts';
 import { disableTextSelection, polyfillFlagEmoji } from '@/helpers';
 import { writeErrorRecord } from '@/helpers/errorSink';
 import { setErrorReporter } from '@/helpers/reportError';
@@ -41,7 +40,6 @@ const RootLayout = () => {
   // Compass group sizes (`meta/compassCounts`): read now so a game finds them already loaded.
   useEffect(preloadCompassCounts, []);
   useEffect(preloadCluesCounts, []);
-  useEffect(preloadContourCounts, []);
   // Failed writes are recorded in the `errors` collection (see `helpers/reportError.ts`).
   useEffect(() => {
     setErrorReporter(writeErrorRecord);

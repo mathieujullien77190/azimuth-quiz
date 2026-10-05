@@ -1,7 +1,7 @@
 import { reporting } from './reportError';
 import { useEffect, useRef } from 'react';
 
-/** The slice of a turn-based room's game state the host's scoring needs (Clues, Silhouette). */
+/** The slice of a turn-based room's game state the host's scoring needs (Clues). */
 type TurnScoringState = {
   roundIndex: number;
   verdict: 'correct' | 'giveUp' | null;

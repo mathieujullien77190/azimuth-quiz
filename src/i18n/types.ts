@@ -1,4 +1,3 @@
-import type { HintGroup, HintStep } from '@/games/contour/helpers/hintPlan';
 import type { Category, Difficulty, ClueId } from '@/types';
 
 export type Language = 'fr' | 'en';
@@ -18,7 +17,7 @@ export type Translations = {
     /** Name shown as the starting point when the device's position is used. */
     yourPosition: string;
     pts: string;
-    /** Shared "nobody found it" wording (Clues' give-up, Contour's hint-tier-4 confirm) — see
+    /** Shared "nobody found it" wording (Clues' give-up) — see
      * `components/ui/NoOneFoundText`, which picks between these two depending on player count. */
     noOneFound: string;
     /** Solo play only: names the one player instead of the generic "nobody" (there's no one else
@@ -41,7 +40,6 @@ export type Translations = {
     games: {
       compass: HomeGameCopy;
       clues: HomeGameCopy;
-      contour: HomeGameCopy;
     };
   };
   setup: {
@@ -173,7 +171,6 @@ export type Translations = {
   /** The dev mode's difficulty question, asked after a round to a device that has the dev code. */
   devFeedback: {
     placeQuestion: (name: string) => string;
-    countryQuestion: (name: string) => string;
     /** Accessibility label of the backdrop: tapping it closes the question without answering. */
     dismiss: string;
   };
@@ -223,46 +220,8 @@ export type Translations = {
     isCapitalNo: string;
     populationUnit: string;
   };
-  contourSetup: {
-    screenTitle: string;
-    start: string;
-    playersSection: { title: string; hint: string };
-    playerNameAccessibility: (index: number) => string;
-    difficultyTitle: string;
-    difficultyHint: string;
-  };
   /** The startup splash screen: the loading label. */
   splash: {
     loading: string;
-  };
-  contourGame: {
-    /** The hidden cells of the board (see `ContourQuadrantMask`): the label of the one that can be opened (`cell` is
-     * 1 to 4) and what opening it costs (`points` already formatted). */
-    quadrantLabel: (cell: number) => string;
-    quadrantCost: (points: string) => string;
-    /** Online only: the round's country could not be read; a tap tries again. */
-    loadFailed: string;
-    /** Shown in the country-identity slot during the 'guess' phase, in place of the (not yet
-     * known) country name/flag. */
-    guessPrompt: string;
-    /** The hint list under the country: a title per group (the outline, the neighbors, the cities) and a label
-     * per hint step; the turn-holder taps the next step of the group they want (see `ContourHintList`). */
-    hintGroups: Record<HintGroup, string>;
-    hintSteps: Record<HintStep, string>;
-    /** Online only: the notice shown when somebody taps a hint or the answer field out of their turn. */
-    notYourTurn: (name: string) => string;
-    /** Online only: round result when someone found the country ("Zoé scores 375 points!"). */
-    found: (name: string, points: string) => string;
-    /** Online only: what a correct guess would earn right now, dropping with each hint. */
-    /** The label of the country field, left of the row above it. */
-    guessLabel: string;
-    /** What a right answer is worth right now, right of that row ("(pour 450 points)"). */
-    guessPlaceholder: string;
-    /** A wrong guess, naming who it got attributed to — doesn't end anything, shown until the
-     * next attempt. */
-    wrongGuess: (name: string, points: string) => string;
-    /** Moves on from a give-up (tier 4 confirmed) to the final reveal — single shared button, not
-     * per-player. */
-    continueLabel: string;
   };
 };

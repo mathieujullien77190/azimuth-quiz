@@ -42,14 +42,6 @@ export const HomeScreen = () => {
           tagline={t.home.games.clues.tagline}
           title={t.home.games.clues.title}
         />
-        <GameCard
-          ctaLabel={t.home.games.contour.cta}
-          icon={GAME_ICONS.contour}
-          maxPlayers={10}
-          onPress={() => router.push('/contour-setup')}
-          tagline={t.home.games.contour.tagline}
-          title={t.home.games.contour.title}
-        />
       </View>
     </Screen>
   );

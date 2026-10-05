@@ -5,16 +5,14 @@ import type { CountryDoc } from '@/data/firestore/types';
 const h = vi.hoisted(() => ({
   state: { countries: {} as Record<string, unknown> },
   applyCountryChange: undefined as unknown as (code: string, doc: unknown) => Promise<void>,
-  applyContourDifficultyChange: undefined as unknown as (code: string, difficulty: string) => Promise<void>,
 }));
 
 vi.mock('../data', () => ({
   data: () => h.state,
   applyCountryChange: (code: string, doc: unknown) => h.applyCountryChange(code, doc),
-  applyContourDifficultyChange: (code: string, difficulty: string) => h.applyContourDifficultyChange(code, difficulty),
 }));
 
-import { fetchCountries, saveContourDifficulty, saveCountry, type CountryRecord } from './countries';
+import { fetchCountries, saveCountry, type CountryRecord } from './countries';
 
 const full: CountryDoc = {
   fr: 'France',
@@ -23,12 +21,10 @@ const full: CountryDoc = {
   currency: 'euro',
   currencySymbol: '€',
   phoneCode: '+33',
-  borders: ['ES'],
-  ring: 'abc',
-  difficulty: 'easy',
-  centerLabel: { x: 0.5, y: 0.5 },
-  neighbors: [],
 };
+
+/** What a document written when Silhouette still existed carries on top of the country data. */
+const withSilhouetteLeftovers = { ...full, borders: ['ES'], ring: 'abc', difficulty: 'easy', n: 3, neighbors: [] };
 
 const recordOf = (overrides: Partial<CountryRecord> = {}): CountryRecord => ({
   code: 'FR',
@@ -38,15 +34,12 @@ const recordOf = (overrides: Partial<CountryRecord> = {}): CountryRecord => ({
   currency: null,
   currencySymbol: null,
   phoneCode: null,
-  neighbors: [],
-  difficulty: null,
   ...overrides,
 });
 
 beforeEach(() => {
   h.state.countries = {};
   h.applyCountryChange = vi.fn(async () => {});
-  h.applyContourDifficultyChange = vi.fn(async () => {});
 });
 
 describe('fetchCountries', () => {
@@ -62,16 +55,22 @@ describe('fetchCountries', () => {
         currency: 'euro',
         currencySymbol: '€',
         phoneCode: '+33',
-        neighbors: ['ES'],
-        difficulty: 'easy',
       },
     ]);
   });
 
-  it('uses null and an empty list for what a country does not have', async () => {
+  it('uses null for what a country does not have', async () => {
     h.state.countries = { MC: { fr: 'Monaco', en: 'Monaco' } };
 
     expect(await fetchCountries()).toEqual([recordOf({ code: 'MC', fr: 'Monaco', en: 'Monaco' })]);
+  });
+
+  it('does not read what Silhouette left on a document', async () => {
+    h.state.countries = { FR: withSilhouetteLeftovers };
+
+    expect(Object.keys((await fetchCountries())[0]).sort()).toEqual(
+      ['code', 'currency', 'currencySymbol', 'en', 'flag', 'fr', 'phoneCode'],
+    );
   });
 });
 
@@ -108,6 +107,14 @@ describe('saveCountry', () => {
     expect(h.applyCountryChange).toHaveBeenCalledWith('FR', full);
   });
 
+  it('writes back, untouched, whatever else the stored document carries (Silhouette left fields on it)', async () => {
+    h.state.countries = { FR: { ...withSilhouetteLeftovers } };
+
+    await saveCountry(recordOf(), { fr: 'La France' });
+
+    expect(h.applyCountryChange).toHaveBeenCalledWith('FR', { ...withSilhouetteLeftovers, fr: 'La France' });
+  });
+
   it('removes emptied optional fields and an empty flag', async () => {
     h.state.countries = { FR: { ...full } };
 
@@ -126,14 +133,5 @@ describe('saveCountry', () => {
     await saveCountry(recordOf(), { flag: null });
 
     expect((h.applyCountryChange as ReturnType<typeof vi.fn>).mock.calls[0][1]).not.toHaveProperty('flag');
-  });
-});
-
-describe('saveContourDifficulty', () => {
-  it('delegates to applyContourDifficultyChange and returns the record with the new difficulty', async () => {
-    const saved = await saveContourDifficulty(recordOf({ difficulty: 'easy' }), 'hard');
-
-    expect(h.applyContourDifficultyChange).toHaveBeenCalledWith('FR', 'hard');
-    expect(saved.difficulty).toBe('hard');
   });
 });

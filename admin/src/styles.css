@@ -659,249 +659,6 @@ td.muted {
   cursor: default;
 }
 
-.flag-editor {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.flag-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.flag-color-select {
-  width: 90px;
-  flex: 0 0 auto;
-}
-
-.flag-hex-input {
-  width: 90px;
-  flex: 0 0 auto;
-  font-variant-numeric: tabular-nums;
-}
-
-.flag-swatch {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-  flex: 0 0 auto;
-}
-
-.flag-percent-input {
-  width: 56px;
-  flex: 0 0 auto;
-}
-
-.flag-percent-sign {
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-.flag-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 4px;
-}
-
-.contour-main-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.contour-board-wrap {
-  position: relative;
-  margin: 8px 0 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-/* Same drag look as a neighbor marker, dashed ring added so it reads as distinct (there's always
-   exactly one flag + one name, never deletable). */
-.contour-center-label .contour-neighbor-icon {
-  outline: 1.5px dashed var(--accent);
-  outline-offset: 4px;
-  border-radius: 50%;
-}
-
-.contour-svg {
-  display: block;
-}
-
-/* The cities and the capital the game offers as hints: a dot (a star for the capital), its name just below. */
-.contour-place-dot,
-.contour-place-star {
-  fill: var(--text);
-  text-anchor: middle;
-  dominant-baseline: central;
-}
-
-.contour-place-dot {
-  font-size: 11px;
-}
-
-.contour-place-star {
-  font-size: 18px;
-}
-
-.contour-place-name {
-  fill: var(--text);
-  font-size: 11px;
-  font-weight: 800;
-  text-anchor: middle;
-  dominant-baseline: hanging;
-  paint-order: stroke;
-  stroke: var(--surface);
-  stroke-width: 3px;
-}
-
-.contour-outline {
-  fill: none;
-  stroke: var(--text-muted);
-  stroke-width: 2;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-
-/* "Afficher les voisins": the neighbors are a discreet backdrop, the country itself (silhouette) stays
-   the raised shape, and a shared border is one thin line stroked by the country's own side. */
-.contour-neighbor-shape {
-  fill: var(--border);
-  fill-opacity: 0.45;
-  stroke: none;
-}
-
-.contour-silhouette {
-  fill: var(--surface-high);
-  stroke: none;
-}
-
-.contour-border {
-  fill: none;
-  stroke: var(--text-muted);
-  stroke-width: 2;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-
-/* The neighbors in the preview, as in the game: only their own lines, dashed, same width as the rest. */
-.contour-neighbor-line {
-  fill: none;
-  stroke: var(--text-muted);
-  stroke-width: 2;
-  stroke-dasharray: 4 4;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-
-.precision-panel {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin: 8px 0;
-}
-
-.contour-vertex {
-  fill: var(--accent);
-  stroke: none;
-}
-
-.neighbors-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 10px 0 4px;
-}
-
-.neighbor-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--text);
-  background: var(--surface-high);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 4px 10px;
-}
-
-/* Zero-size anchor at the neighbor's own point, not a visual box: `positionFor`'s pixel already
-   sits here via inline `left`/`top`. Icon and name (below) are its only visible children, each
-   centering itself on this same point independently — this div just supplies the shared origin,
-   the drag hit-target (mousedown bubbles up from either child), and the delete button's anchor. */
-.contour-neighbor {
-  position: absolute;
-  cursor: grab;
-  user-select: none;
-  touch-action: none;
-}
-
-.contour-neighbor:active,
-.contour-neighbor.dragging {
-  cursor: grabbing;
-  z-index: 5;
-}
-
-/* Not `pointer-events: none` — the parent anchor has no width/height of its own (its children are
-   `position: absolute`, out of flow), so these spans are the actual clickable/draggable surface;
-   a mousedown on either bubbles up to the parent's own `onMouseDown` (drag) same as before. Name
-   stacks just below the icon (not centered on the same point) — same tier-1-icon-then-tier-2-
-   name-below layout as the real game (see ContourBoard.tsx's `hintLabels` and
-   `HINT_STACK_GAP_RATIO`), shown here always (both at once) since this is a static preview, not a
-   tiered reveal. */
-.contour-neighbor-icon,
-.contour-neighbor-name {
-  position: absolute;
-  left: 0;
-  top: 0;
-  white-space: nowrap;
-}
-
-.contour-neighbor-icon {
-  font-size: 18px;
-  line-height: 1;
-  transform: translate(-50%, -50%);
-}
-
-.contour-neighbor-name {
-  font-size: 10.5px;
-  color: var(--text-muted);
-  text-shadow:
-    0 0 3px var(--surface),
-    0 0 3px var(--surface);
-  transform: translate(-50%, 6px);
-}
-
-.contour-neighbor.dragging .contour-neighbor-icon,
-.contour-neighbor.dragging .contour-neighbor-name {
-  filter: drop-shadow(0 0 2px var(--accent));
-}
-
-/* Offset from the shared point rather than the old badge's corner: icon/name now overlap right on
-   top of it, so the delete button sits a little further out to stay clear of both. */
-.contour-neighbor-delete {
-  position: absolute;
-  top: -16px;
-  right: -16px;
-}
-
-.contour-neighbor-delete .delete-x {
-  width: 18px;
-  height: 18px;
-  font-size: 12px;
-  background: var(--surface);
-}
-
 .empty {
   padding: 40px 16px;
   text-align: center;
@@ -1075,16 +832,6 @@ footer {
   color: var(--muted);
 }
 
-/* A country's name: bigger and bolder than a city's, centred on the country rather than hung off a dot. */
-.globe-country-name {
-  transform: translate(-50%, -50%);
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
 .globe-label {
   position: absolute;
   z-index: 5;
@@ -1131,31 +878,58 @@ footer {
   resize: vertical;
 }
 
-/* The 2 x 2 division of the game's quadrants over the Silhouette preview (`ContourQuadrantGrid`): lines only, nothing
-   hidden. */
-.contour-grid-line {
-  fill: none;
-  stroke: var(--text);
-  stroke-opacity: 0.35;
-  stroke-width: 1;
-}
-.contour-grid-start {
-  fill: var(--accent);
-  fill-opacity: 0.12;
-}
-.contour-grid-number {
-  fill: var(--text);
-  fill-opacity: 0.6;
-  font-size: 11px;
-  dominant-baseline: hanging;
-}
-.contour-grid-legend {
-  fill: var(--accent);
-  font-size: 10px;
-  text-anchor: middle;
-}
 
 /* The errors page: space between the "Par action" block and the "Détail" block. */
 .errors-card + .errors-card {
   margin-top: 20px;
+}
+
+/* The flag editor of the Countries page: the colour id, its hex, a preview of that colour right next to the hex, its share. */
+.flag-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.flag-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.flag-color-select {
+  width: 90px;
+  flex: 0 0 auto;
+}
+
+.flag-hex-input {
+  width: 90px;
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.flag-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+
+.flag-percent-input {
+  width: 56px;
+  flex: 0 0 auto;
+}
+
+.flag-percent-sign {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.flag-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
 }

@@ -18,8 +18,8 @@ export const COLOR_TOKENS: ColorToken[] = [
     name: 'colors.surfaceHigh',
     get: (theme) => theme.colors.surfaceHigh,
     description: {
-      fr: 'Champs, pied de page du jeu, silhouette du pays',
-      en: 'Fields, the game footer, the country silhouette',
+      fr: 'Champs, pied de page du jeu',
+      en: 'Fields, the game footer',
     },
   },
   {

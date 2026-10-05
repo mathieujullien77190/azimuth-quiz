@@ -221,24 +221,7 @@ describe('createGlobeScene', () => {
   });
 });
 
-describe('countries, places and layers', () => {
-  const groups = [
-    { color: 0xff0000, positions: [0, 0, 1, 0, 1, 0] },
-    { color: 0x00ff00, positions: [1, 0, 0, 0, 0, 1] },
-  ];
-
-  it('draws one object of lines per group, and hands the old ones back when the groups change', () => {
-    scene.setCountries(groups);
-    const first = added().slice(3);
-    expect(first).toHaveLength(2);
-    scene.setCountries([groups[0]]);
-    expect(sceneOf().remove).toHaveBeenCalledTimes(2);
-    for (const object of first) {
-      expect((object.geometry as InstanceType<typeof mocks.FakeGeometry>).dispose).toHaveBeenCalled();
-      expect((object.material as InstanceType<typeof mocks.FakeMaterial>).dispose).toHaveBeenCalled();
-    }
-  });
-
+describe('places', () => {
   it('draws the places as one object of dots per shape, with a colour each', () => {
     scene.setPlaces(buffersOf([0, 0, 1], [1, 0, 0], [0, 1, 0]));
     const [round, star, square] = added().slice(-3);
@@ -268,26 +251,6 @@ describe('countries, places and layers', () => {
     const dots = added().slice(-3);
     expect(dots.every((entry) => !('map' in (entry.material as InstanceType<typeof mocks.FakeMaterial>).options))).toBe(true);
     expect(mocks.textures).toHaveLength(0);
-  });
-
-  it('hides and shows the countries and the places, new objects included', () => {
-    mocks.cameras[0].position.set(0, 0, 2);
-    scene.setCountries(groups);
-    scene.setPlaces(buffersOf([0, 0, 1]));
-    const [countryA, countryB, dots] = added().slice(3);
-    scene.setLayers({ countries: false, places: false });
-    expect([countryA.visible, countryB.visible, dots.visible]).toEqual([false, false, false]);
-    scene.setLayers({ countries: true, places: true });
-    expect([countryA.visible, countryB.visible, dots.visible]).toEqual([true, true, true]);
-    scene.setLayers({ countries: false, places: false });
-    scene.setCountries([groups[0]]);
-    scene.setPlaces(buffersOf([0, 0, 1]));
-    expect(added().slice(-2).map((object) => object.visible)).toEqual([false, false]);
-  });
-
-  it('can hide the layers before any place was drawn', () => {
-    scene.setLayers({ countries: false, places: true });
-    expect(added()).toHaveLength(3);
   });
 });
 
@@ -325,16 +288,6 @@ describe('level of detail', () => {
     expect(shown(dots)).toEqual([false, false, false]);
   });
 
-  it('keeps them hidden while the places layer is off, however close the camera is', () => {
-    const dots = draw();
-    mocks.cameras[0].position.set(0, 0, 2);
-    scene.setLayers({ countries: true, places: false });
-    tick(0);
-    expect(shown(dots)).toEqual([false, false, false]);
-    scene.setLayers({ countries: true, places: true });
-    expect(shown(dots)).toEqual([true, true, true]);
-  });
-
   it('does not pick a place whose dots are not drawn at this distance', () => {
     scene.setPlaces(buffersOf([0, 0, 1.006]));
     mocks.cameras[0].position.set(0, 0, 3);
@@ -343,60 +296,6 @@ describe('level of detail', () => {
     expect(scene.pick(110, 70).place).toBeNull();
     mocks.cameras[0].position.set(0, 0, 2.2);
     expect(scene.pick(110, 70).place).toBe(0);
-  });
-});
-
-describe('country names', () => {
-  const listener = vi.fn();
-  const sources = [
-    { name: 'France', lon: 0, lat: 0 },
-    { name: 'Japon', lon: 0, lat: 0 },
-  ];
-  beforeEach(() => {
-    listener.mockClear();
-    scene.resize(200, 100);
-    scene.setCountryNames(sources, listener);
-    mocks.cameras[0].position.set(0, 0, 3.2);
-    mocks.project = () => new mocks.FakeVector3(0, 0, 0);
-  });
-
-  it('are given from far away, once while nothing moves, and withdrawn when close up or out of range', () => {
-    tick(0);
-    expect(listener).toHaveBeenCalledTimes(1);
-    // Both sit on the same spot: the first keeps its place, the second would touch it.
-    expect(listener).toHaveBeenLastCalledWith([{ index: 0, x: 100, y: 50 }]);
-    tick(16);
-    expect(listener).toHaveBeenCalledTimes(1);
-    mocks.cameras[0].position.set(0, 0, 1.3);
-    tick(32);
-    expect(listener).toHaveBeenLastCalledWith([]);
-    mocks.cameras[0].position.set(0, 0, 3.2);
-    tick(48);
-    mocks.cameras[0].position.set(0, 0, 7);
-    tick(64);
-    expect(listener).toHaveBeenLastCalledWith([]);
-  });
-
-  it('are none while the countries layer is off', () => {
-    scene.setLayers({ countries: false, places: true });
-    tick(0);
-    expect(listener).not.toHaveBeenCalled();
-  });
-
-  it('win their room over the city names', () => {
-    const cityListener = vi.fn();
-    scene.setPlaces(buffersOf([0, 0, 1.006]));
-    scene.setLabels(['Paris'], cityListener);
-    mocks.cameras[0].position.set(0, 0, 2);
-    tick(0);
-    // The city sits on the very spot of the country name: only the country name is written.
-    expect(listener).toHaveBeenLastCalledWith([{ index: 0, x: 100, y: 50 }]);
-    expect(cityListener).not.toHaveBeenCalled();
-  });
-
-  it('cost nothing when nobody listens', () => {
-    scene.setCountryNames([], undefined as never);
-    expect(() => tick(0)).not.toThrow();
   });
 });
 
@@ -444,13 +343,6 @@ describe('names', () => {
     expect(close).toBeGreaterThan(far);
   });
 
-  it('are none while the places layer is off', () => {
-    mocks.cameras[0].position.set(0, 0, 1.8);
-    scene.setLayers({ countries: true, places: false });
-    tick(0);
-    expect(listener).not.toHaveBeenCalled();
-  });
-
   it('cost nothing when nobody listens', () => {
     scene.setLabels([], undefined as never);
     mocks.cameras[0].position.set(0, 0, 1.8);
@@ -459,7 +351,7 @@ describe('names', () => {
 });
 
 describe('pick', () => {
-  it('finds the nearest visible place under the pointer and the point of the globe behind it', () => {
+  it('finds the nearest visible place under the pointer', () => {
     // Two places: one right under the pointer (client 110, 70 = canvas 100, 50 = the middle), one far away.
     scene.setPlaces(buffersOf([0, 0, 1.006, 0, 1, 0]));
     mocks.cameras[0].position.set(0, 0, 2.2);
@@ -469,16 +361,13 @@ describe('pick', () => {
     expect(picked.place).toBe(0);
     expect(picked.x).toBe(100);
     expect(picked.y).toBe(50);
-    expect(picked.lon).toBeCloseTo(0, 6);
-    expect(picked.lat).toBeCloseTo(0, 6);
   });
 
-  it('does not pick a place on the far side of the globe, and finds no point when the ray misses it', () => {
+  it('does not pick a place on the far side of the globe', () => {
     scene.setPlaces(buffersOf([0, 0, -1.006]));
     mocks.cameras[0].position.set(0, 0, 2.2);
     mocks.project = () => new mocks.FakeVector3(0, 0, 0);
-    mocks.unproject = () => new mocks.FakeVector3(5, 0, 3);
-    expect(scene.pick(110, 70)).toEqual({ place: null, lon: null, lat: null, x: 100, y: 50 });
+    expect(scene.pick(110, 70)).toEqual({ place: null, x: 100, y: 50 });
   });
 
   it('works before any place was drawn', () => {
@@ -528,7 +417,6 @@ describe('resize and dispose', () => {
   });
 
   it('stops the loop and hands everything back to the graphics card', () => {
-    scene.setCountries([{ color: 1, positions: [0, 0, 1, 0, 1, 0] }]);
     scene.setPlaces(buffersOf([0, 0, 1]));
     scene.setMarks({ segments: [0, 0, 1, 0, 1, 0], point: [0, 0, 1] }, null);
     scene.dispose();

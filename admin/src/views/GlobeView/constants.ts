@@ -5,8 +5,6 @@ export const GLOBE_RADIUS = 1;
 /** Everything drawn on the ground is pushed out a hair, in this order, so each layer wins its pixels over the one
  * below. */
 export const LAND_ALTITUDE = 1.001;
-export const COUNTRY_ALTITUDE = 1.002;
-export const HIGHLIGHT_ALTITUDE = 1.004;
 export const PLACE_ALTITUDE = 1.006;
 
 /** How far the camera starts from the middle, and how close / far the wheel lets it go. */
@@ -24,7 +22,7 @@ export const MAX_DISTANCE = 8;
 export const CAMERA_FOV = 45;
 /** The view the globe opens on (and goes back to with the reset button). */
 export const HOME_VIEW = { lon: 10, lat: 25 };
-/** How close the camera gets when flying to a country or a place, and how long the flight takes. */
+/** How close the camera gets when flying to a place, and how long the flight takes. */
 export const FLY_DISTANCE = 2;
 export const FLY_MS = 900;
 
@@ -56,24 +54,15 @@ export const MARK_SIZE = 13;
 export const CAPITALS_MAX_DISTANCE = 3.6;
 export const POINTS_MAX_DISTANCE = 2.6;
 export const LABELS_MAX_DISTANCE = 2.4;
-/** The most names shown at once, the least gap (px) kept between two of them, and the size a name is reckoned to take
- * (px per letter, line height, and the room the dot itself takes on its left). */
-/** The names allowed at once: MAX_LABELS at LABELS_MAX_DISTANCE, growing to MAX_LABELS_CLOSE at MIN_DISTANCE. */
+/** The names allowed at once: MAX_LABELS at LABELS_MAX_DISTANCE, growing to MAX_LABELS_CLOSE at MIN_DISTANCE; the least
+ * gap (px) kept between two of them, and the size a name is reckoned to take (px per letter, line height, and the room
+ * the dot itself takes on its left). */
 export const MAX_LABELS = 40;
 export const MAX_LABELS_CLOSE = 120;
 export const LABEL_GAP_PX = 4;
 export const LABEL_CHAR_PX = 7;
 export const LABEL_HEIGHT_PX = 16;
 export const LABEL_OFFSET_PX = 10;
-
-/** The country names: drawn from further away than the city names (so they come first when zooming in), then they
- * give way to the cities once the camera is closer than COUNTRY_LABELS_MIN_DISTANCE (a country is then bigger than the
- * screen anyway). Bigger and bolder than the city names, and they win their room over them. */
-export const COUNTRY_LABELS_MAX_DISTANCE = 4.6;
-export const COUNTRY_LABELS_MIN_DISTANCE = 1.7;
-export const MAX_COUNTRY_LABELS = 30;
-export const COUNTRY_LABEL_CHAR_PX = 9;
-export const COUNTRY_LABEL_HEIGHT_PX = 20;
 
 /** A place is picked when the pointer is this close (px) to it, and a press is a click when it moved less than this. */
 export const PICK_RADIUS_PX = 12;
