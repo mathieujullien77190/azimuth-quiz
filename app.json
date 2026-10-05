@@ -3,7 +3,7 @@
     "name": "Azimuth Quiz",
     "slug": "azimuth-quiz",
     "scheme": "azimuthquiz",
-    "version": "2.66.0",
+    "version": "2.66.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -52,9 +52,9 @@
     "description": "Devine la direction et la distance d’un lieu du monde (villes, montagnes, monuments, sites naturels). Seul ou jusqu’à 6 joueurs sur le même téléphone.",
     "extra": {
       "codename": {
-        "emoji": "🐼",
-        "name": "giant-panda",
-        "wiki": "https://en.wikipedia.org/wiki/Giant_panda"
+        "emoji": "🐿️",
+        "name": "red-squirrel",
+        "wiki": "https://en.wikipedia.org/wiki/Red_squirrel"
       },
       "router": {},
       "eas": {
