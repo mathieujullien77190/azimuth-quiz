@@ -65,6 +65,12 @@ h1 .dim {
   font-weight: 700;
 }
 
+/* The animal's name in the version of the header: a link to its English Wikipedia article. */
+h1 .version-link {
+  color: inherit;
+  text-decoration: underline;
+}
+
 .tabs {
   display: flex;
   gap: 8px;

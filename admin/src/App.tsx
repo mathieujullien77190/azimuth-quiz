@@ -1,9 +1,7 @@
 import { polyfillCountryFlagEmojis } from 'country-flag-emoji-polyfill';
 import { Fragment, lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react';
 
-import appConfig from '../../app.json';
-import { versionLabel } from '@/helpers/version';
-
+import { AppVersion } from './components/AppVersion';
 import { AuthGate } from './components/AuthGate';
 import { dataRevision, startJournalSync, subscribeRevision } from './data';
 import { hrefOf, PAGES, pageFromPath, type PageId } from './pages';
@@ -51,7 +49,7 @@ const AdminApp = () => {
           <h1>
             Admin{' '}
             <span className="dim">
-              — Azimuth Quiz {versionLabel(appConfig.expo.version, appConfig.expo.extra.codename)}
+              — Azimuth Quiz <AppVersion />
             </span>
           </h1>
           <div className="tabs">
