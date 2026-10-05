@@ -18,7 +18,8 @@ const props = {
   visible: true,
   tagline: 'Pas de GPS, que de l’instinct.',
   loadingLabel: 'Chargement…',
-  versionLabel: 'v2.64.1 - 🦥 - brown-throated-sloth',
+  version: '2.65.0',
+  codename: { emoji: '🐦', name: 'great-tit', wiki: 'https://en.wikipedia.org/wiki/Great_tit' },
   fillMs: 5000,
   random: () => 0.5,
 };
@@ -35,12 +36,12 @@ describe('SplashScreen', () => {
     expect(getByText('AZIMUTH QUIZ')).toBeTruthy();
     expect(getByText('Pas de GPS, que de l’instinct.')).toBeTruthy();
     expect(getByText('Chargement…')).toBeTruthy();
-    expect(getByText('v2.64.1 - 🦥 - brown-throated-sloth')).toBeTruthy();
+    expect(getByText('v2.65.0 - 🐦 - great-tit')).toBeTruthy();
   });
 
   it('shows the whole version line: not cut, free to wrap, centred', async () => {
     const { getByText } = await render(themed('night'));
-    const version = getByText('v2.64.1 - 🦥 - brown-throated-sloth');
+    const version = getByText('v2.65.0 - 🐦 - great-tit');
     expect(version.props.numberOfLines).toBeUndefined();
     expect(version.props.ellipsizeMode).toBeUndefined();
     expect(StyleSheet.flatten(version.props.style).textAlign).toBe('center');

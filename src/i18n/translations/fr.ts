@@ -161,7 +161,7 @@ export const fr: Translations = {
     languageTitle: 'Langue',
     languageOptions: { fr: 'Français', en: 'English' },
     appearanceTitle: 'Apparence',
-    appearanceOptions: { night: '🌙 Nuit', day: '☀️ Jour' },
+    appearanceOptions: { night: '🌔 Nuit', day: '☀️ Jour' },
     aboutTitle: 'À propos',
     author: 'Par Matou.',
     claudeMention:

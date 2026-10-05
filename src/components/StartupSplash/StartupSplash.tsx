@@ -7,7 +7,6 @@ import { useLanguage, useTranslation } from '@/i18n';
 import { useDevCode, usePlayerName, useSettings } from '@/settings';
 import { useThemeSettings } from '@/themes';
 
-import { versionLabel } from '@/helpers/version';
 import { BOOT_BACKGROUND, SPLASH_CODENAME, SPLASH_VERSION_NUMBER } from './constants';
 
 /**
@@ -37,7 +36,8 @@ export const StartupSplash = () => {
       fillMs={SPLASH_MIN_MS}
       tagline={t.app.tagline}
       loadingLabel={t.splash.loading}
-      versionLabel={versionLabel(SPLASH_VERSION_NUMBER, SPLASH_CODENAME)}
+      version={SPLASH_VERSION_NUMBER}
+      codename={SPLASH_CODENAME}
       visible={visible}
     />
   );

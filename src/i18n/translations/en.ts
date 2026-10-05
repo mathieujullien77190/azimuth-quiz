@@ -158,7 +158,7 @@ export const en: Translations = {
     languageTitle: 'Language',
     languageOptions: { fr: 'Français', en: 'English' },
     appearanceTitle: 'Appearance',
-    appearanceOptions: { night: '🌙 Night', day: '☀️ Day' },
+    appearanceOptions: { night: '🌔 Night', day: '☀️ Day' },
     aboutTitle: 'About',
     author: 'By Matou.',
     claudeMention: 'Made for drinks with friends: no ads, no tracking, just you and a stubborn compass.',

@@ -12,6 +12,9 @@ import {
   CAPTION_GLOBE,
   GLOBE_MARGIN,
   LABEL_OFFSET,
+  DAY_LAND_COLOR,
+  DAY_SEA_COLOR,
+  LAND_FILL_OPACITY,
   MIN_ZOOM,
   ORBIT_MS,
   ORBIT_RATIO,
@@ -83,17 +86,33 @@ export const Globe3D = ({
   const radius = baseRadius * zoom;
 
   const sceneColors = useMemo(
-    () => ({
-      // The sea is the ball's own colour; the continents are painted over it in the colour of their own coast (a
-      // map's way of telling land from sea), with that coast drawn as a line on top.
-      globe: compass.faceInner,
-      land: colors.textMuted,
-      fill: colors.textMuted,
-      guide: colors.textMuted,
-      origin: colors.text,
-      pole: colors.text,
-    }),
-    [compass.faceInner, colors.textMuted, colors.text],
+    () =>
+      isDark
+        ? {
+            // By night the sea is the ball's own colour; the continents are painted over it in the colour of their own
+            // coast (a map's way of telling land from sea), with that coast drawn as a line on top.
+            globe: compass.faceInner,
+            land: colors.textMuted,
+            fill: colors.textMuted,
+            fillOpacity: LAND_FILL_OPACITY,
+            flat: false,
+            guide: colors.textMuted,
+            origin: colors.text,
+            pole: colors.text,
+          }
+        : {
+            // By day the sea is the sand of the app's background, on a white backdrop so the ball shows, and the
+            // continents are a light blue, in full, with the accent blue for their coast.
+            globe: DAY_SEA_COLOR,
+            land: colors.accent,
+            fill: DAY_LAND_COLOR,
+            fillOpacity: 1,
+            flat: true,
+            guide: colors.textMuted,
+            origin: colors.text,
+            pole: colors.text,
+          },
+    [isDark, compass.faceInner, colors.accent, colors.textMuted, colors.text],
   );
   const view = useMemo(
     () =>
@@ -126,7 +145,8 @@ export const Globe3D = ({
     center,
     halfExtent: size / (2 * radius),
     markScale: 1 / zoom,
-    background: backgroundColor ?? colors.background,
+    // The backdrop of the drawing: the screen's own background by night, white by day (the sea is the sand colour).
+    background: backgroundColor ?? (isDark ? colors.background : colors.surface),
   });
 
   // One finger turns the globe (the surface follows the finger), two fingers zoom.

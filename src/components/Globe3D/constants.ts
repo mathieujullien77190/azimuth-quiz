@@ -77,3 +77,8 @@ export const ORBIT_RATIO = 1.12;
 /** One full turn round the Earth, and how often the satellite is moved while it flies. */
 export const ORBIT_MS = 24000;
 export const ORBIT_TICK_MS = 50;
+/** The sea by day: the sand of the app's own day background (#F3EEE3), against a white backdrop (the globe's `background`
+ * is the day theme's `surface`, white), which is what makes the ball stand out. */
+export const DAY_SEA_COLOR = '#F3EEE3';
+/** The continents by day: a lighter blue than the accent's (#5B88B4), whose own blue then draws their coast. */
+export const DAY_LAND_COLOR = '#B5CCE4';

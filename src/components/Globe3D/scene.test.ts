@@ -25,6 +25,8 @@ const COLORS = {
   globe: '#0B1220',
   land: '#93A0BC',
   fill: '#4ADE80',
+  fillOpacity: 0.5,
+  flat: false,
   guide: '#93A0BC',
   origin: '#F3F6FC',
   pole: '#F3F6FC',
@@ -74,6 +76,15 @@ describe('buildGlobeScene', () => {
     expect(dot.position.x).toBeCloseTo(x, 6);
     expect(dot.position.y).toBeCloseTo(y, 6);
     expect(dot.position.z).toBeCloseTo(z, 6);
+  });
+
+  it('draws the sea and the continents with no light on them when flat (by day), so they keep exactly their colours', () => {
+    const { scene } = build({ land: true, colors: { ...COLORS, flat: true, fillOpacity: 1 } });
+    const all = meshes(scene);
+    const sea = all.find((mesh) => mesh.geometry.type === 'SphereGeometry' && (mesh.material as MeshBasicMaterial).color.getHexString() === '0b1220')!;
+    expect(sea.material).toBeInstanceOf(MeshBasicMaterial);
+    const painted = all.find((mesh) => (mesh.material as MeshBasicMaterial).map != null)!;
+    expect(painted.material).toBeInstanceOf(MeshBasicMaterial);
   });
 
   it('paints the continents in, from a picture of the world that falls on the world', () => {

@@ -45,4 +45,38 @@ describe('createRenderer', () => {
     createRenderer(context({ canvas }));
     expect(optionsOf().canvas).toBe(canvas);
   });
+
+  it('hides the WebGL 1 class while the renderer is built, then puts it back (expo-gl contexts answer to it)', () => {
+    class WebGL1 {}
+    const scope = globalThis as { WebGLRenderingContext?: unknown };
+    scope.WebGLRenderingContext = WebGL1;
+    let seenDuring: unknown = 'not read';
+    jest.mocked(WebGLRenderer).mockImplementationOnce((() => {
+      seenDuring = scope.WebGLRenderingContext;
+      return { setSize: jest.fn() };
+    }) as never);
+    createRenderer(context());
+    expect(seenDuring).toBeUndefined();
+    expect(scope.WebGLRenderingContext).toBe(WebGL1);
+    delete scope.WebGLRenderingContext;
+  });
+
+  it('leaves no WebGL 1 class behind when there was none', () => {
+    const scope = globalThis as { WebGLRenderingContext?: unknown };
+    delete scope.WebGLRenderingContext;
+    createRenderer(context());
+    expect('WebGLRenderingContext' in scope).toBe(false);
+  });
+
+  it('puts the class back even when building the renderer fails', () => {
+    class WebGL1 {}
+    const scope = globalThis as { WebGLRenderingContext?: unknown };
+    scope.WebGLRenderingContext = WebGL1;
+    jest.mocked(WebGLRenderer).mockImplementationOnce((() => {
+      throw new Error('boom');
+    }) as never);
+    expect(() => createRenderer(context())).toThrow('boom');
+    expect(scope.WebGLRenderingContext).toBe(WebGL1);
+    delete scope.WebGLRenderingContext;
+  });
 });

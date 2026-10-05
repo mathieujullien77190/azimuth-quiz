@@ -33,7 +33,6 @@ import {
   AMBIENT_LIGHT,
   DOT_SEGMENTS,
   LAND_FILL_ALTITUDE,
-  LAND_FILL_OPACITY,
   LAND_FILL_SEGMENTS,
   GUIDE_ALTITUDE,
   GUIDE_DASH,
@@ -119,7 +118,7 @@ const landMask = (): Texture => {
  * grid of its own too, so that each of its corners knows where it is on the map (`uv`) — the ball's own corners are
  * laid out by three.js in another order, and the point here is to be sure a coast falls on its coast.
  */
-const landFill = (color: string): Mesh => {
+const landFill = (color: string, opacity: number, flat: boolean): Mesh => {
   const columns = LAND_FILL_SEGMENTS;
   const rows = LAND_FILL_SEGMENTS / 2;
   const positions: number[] = [];
@@ -145,17 +144,15 @@ const landFill = (color: string): Mesh => {
   geometry.setAttribute('uv', new Float32BufferAttribute(uvs, 2));
   geometry.setIndex(corners);
   geometry.computeVertexNormals();
-  return new Mesh(
-    geometry,
-    new MeshLambertMaterial({
-      color,
-      map: landMask(),
-      transparent: true,
-      opacity: LAND_FILL_OPACITY,
-      // The sea below it is opaque anyway, and the coastline above must not be cut out by a see-through shell.
-      depthWrite: false,
-    }),
-  );
+  const paint = {
+    color,
+    map: landMask(),
+    transparent: true,
+    opacity,
+    // The sea below it is opaque anyway, and the coastline above must not be cut out by a see-through shell.
+    depthWrite: false,
+  };
+  return new Mesh(geometry, flat ? new MeshBasicMaterial(paint) : new MeshLambertMaterial(paint));
 };
 
 /** A line (open or closed) through places, drawn at `altitude` above the ball. */
@@ -242,7 +239,7 @@ export const buildGlobeScene = ({ origin, marks, land, equator, greenwich, north
   scene.add(
     new Mesh(
       new SphereGeometry(1, SPHERE_SEGMENTS, SPHERE_SEGMENTS / 2),
-      new MeshLambertMaterial({ color: colors.globe }),
+      colors.flat ? new MeshBasicMaterial({ color: colors.globe }) : new MeshLambertMaterial({ color: colors.globe }),
     ),
   );
   scene.add(new AmbientLight(0xffffff, AMBIENT_LIGHT));
@@ -252,7 +249,7 @@ export const buildGlobeScene = ({ origin, marks, land, equator, greenwich, north
   if (land) {
     // The continents painted in, then their coast drawn over it: the colour comes from a picture of the world, the
     // sharp edge from the outline itself.
-    scene.add(landFill(colors.fill));
+    scene.add(landFill(colors.fill, colors.fillOpacity, colors.flat));
     // Every coast in one object: 800 coastlines of their own would be 800 draws for the graphics card, and the world
     // can be as detailed as the asset is without that changing.
     const geometry = new BufferGeometry();

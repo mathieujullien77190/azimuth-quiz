@@ -6,6 +6,7 @@ import Svg, { Circle, G, Line, Polygon, Text as SvgText } from 'react-native-svg
 import { useTheme, useThemedStyles } from '@/themes';
 
 import AppTitle from '../AppTitle';
+import VersionLine from '../VersionLine';
 
 import {
   BLINK_MIN_OPACITY,
@@ -30,7 +31,7 @@ import { createStyles } from './styles';
  * theme of the player (night or day) through the theme tokens. While `visible` it just plays; once it turns false it
  * fades out and removes itself, so whoever mounts it only has to say when it is wanted.
  */
-export const SplashScreen = ({ visible, tagline, loadingLabel, versionLabel, fillMs, random }: SplashScreenProps) => {
+export const SplashScreen = ({ visible, tagline, loadingLabel, version, codename, fillMs, random }: SplashScreenProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors, compass, isDark, typography } = useTheme();
   // State rather than refs: the values are read while rendering (the interpolations below).
@@ -201,7 +202,7 @@ export const SplashScreen = ({ visible, tagline, loadingLabel, versionLabel, fil
               </Animated.Text>
               <Text style={styles.loading}>{`${percent}%`}</Text>
             </View>
-            <Text style={styles.version}>{versionLabel}</Text>
+            <VersionLine codename={codename} style={styles.version} version={version} />
           </View>
         </View>
       </SafeAreaView>

@@ -10,7 +10,7 @@ import Button from '../ui/Button';
 import Chip from '../ui/Chip';
 import Screen from '../ui/Screen';
 import Section from '../ui/Section';
-import { versionLabel } from '@/helpers/version';
+import VersionLine from '../VersionLine';
 import { APP_CODENAME, APP_VERSION_NUMBER } from './constants';
 import type { SettingsScreenProps } from './types';
 
@@ -85,7 +85,7 @@ export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
         <View style={styles.about}>
           <Text style={styles.aboutLine}>{t.settings.author}</Text>
           <Text style={styles.aboutLine}>{t.settings.claudeMention}</Text>
-          <Text style={styles.version}>{versionLabel(APP_VERSION_NUMBER, APP_CODENAME)}</Text>
+          <VersionLine codename={APP_CODENAME} style={styles.version} version={APP_VERSION_NUMBER} />
         </View>
       </Section>
 

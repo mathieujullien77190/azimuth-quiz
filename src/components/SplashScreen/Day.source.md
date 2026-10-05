@@ -7,7 +7,8 @@ import SplashScreen from '@/components/SplashScreen';
   fillMs={5000}
   tagline={t.app.tagline}
   loadingLabel={t.splash.loading}
-  versionLabel="v2.64.1 - 🦥 - brown-throated-sloth"
+  codename={{ emoji: '🐦', name: 'great-tit', wiki: 'https://en.wikipedia.org/wiki/Great_tit' }}
+  version="2.65.0"
   visible={visible}
 />
 ```

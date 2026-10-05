@@ -30,7 +30,8 @@ const args = {
   visible: true,
   tagline: 'Pas de GPS, que de l’instinct.',
   loadingLabel: 'Chargement…',
-  versionLabel: 'v2.64.1 - 🦥 - brown-throated-sloth',
+  version: '2.65.0',
+  codename: { emoji: '🐦', name: 'great-tit', wiki: 'https://en.wikipedia.org/wiki/Great_tit' },
   fillMs: 5000,
 };
 

@@ -42,6 +42,11 @@ export type GlobeColors = {
   land: string;
   /** The continents, painted inside those lines — another colour than the sea, or there would be no telling them apart. */
   fill: string;
+  /** How strongly the continents are painted (0-1): by night a veil over the dark sea, by day the full colour. */
+  fillOpacity: number;
+  /** Drawn with no light on it (by day): the sea and the continents come out in exactly the colours given, where a lit
+   * ball would shade them darker on the side the lamp does not reach. */
+  flat: boolean;
   guide: string;
   origin: string;
   pole: string;

@@ -81,10 +81,13 @@ chose (`git diff --stat` : exactement ces 3 fichiers, 2 lignes de `package-lock.
 précédente ni d'une version déjà publiée : `git log -p -S"codename" -- app.json` donne les anciens ; les premiers noms,
 courts, étaient arcticTern, flamingo, greenTurtle, humpbackWhale, redFox, snowyOwl, beaver, hedgehog, otter, penguin,
 koala, sloth : un nouvel animal ne reprend aucune de ces espèces) et l'écrire dans `app.json` → `expo.extra.codename`
-sous la forme `{ "emoji": "🦥", "name": "brown-throated-sloth" }` : `emoji` = l'emoji de l'animal, plus un second
+sous la forme `{ "emoji": "🦥", "name": "brown-throated-sloth", "wiki": "https://en.wikipedia.org/wiki/Brown-throated_sloth" }` : `emoji` = l'emoji de l'animal, plus un second
 si l'animal en a un qui le précise (le harfang des neiges : `🦉❄️`), et `name` = le **nom complet de l'espèce, toujours en
 anglais** (quelle que soit la langue de l'appli), pas le nom court, en **kebab-case ASCII** (minuscules, accents retirés,
 espaces et apostrophes → `-`) : mésange charbonnière → `"great-tit"` ; paresseux à gorge brune → `"brown-throated-sloth"`.
+Et `wiki` = l'**URL de l'article Wikipédia anglais de l'espèce** (`https://en.wikipedia.org/wiki/Great_tit` pour le
+great-tit : vérifier qu'elle répond et correspond au titre de l'article) : à renseigner à chaque nouvelle version, c'est le
+lien du nom d'animal partout où la version s'affiche (`VersionLine`, `AppVersion` de l'admin).
 C'est ce que montrent l'écran Réglages (« v2.64.1 🦥 brown-throated-sloth »), l'écran de démarrage
 (« v2.64.1 - 🦥 - brown-throated-sloth ») et l'en-tête de l'admin (`versionLabel` de
 `src/helpers/version.ts`). Le dire à l'utilisateur dans le compte rendu

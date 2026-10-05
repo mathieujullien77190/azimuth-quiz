@@ -1,3 +1,5 @@
+import type { Codename } from '@/helpers/version';
+
 export type SplashScreenProps = {
   /** True while the splash is wanted; once false it fades out and takes itself off the screen. */
   visible: boolean;
@@ -5,8 +7,10 @@ export type SplashScreenProps = {
   tagline: string;
   /** "Chargement…". */
   loadingLabel: string;
-  /** The version line at the bottom, "v2.64.1 - 🦥 - brown-throated-sloth". */
-  versionLabel: string;
+  /** The version line at the bottom, "v2.65.0 - 🐦 - great-tit" (`VersionLine`: the animal's name links to its Wikipedia
+   * article). */
+  version: string;
+  codename: Codename | undefined;
   /** The splash's minimum time (ms): the loading bar's schedule is built to end right then, on a value under 100 %
    * that stays until the splash is released. */
   fillMs: number;

@@ -82,7 +82,7 @@ describe('SettingsScreen', () => {
 
   it('shows Night selected by default and switches theme on press', async () => {
     const { getByRole, setThemeId } = await renderSettings('fr', 'night');
-    expect(getByRole('button', { name: '🌙 Nuit' }).props.accessibilityState.selected).toBe(true);
+    expect(getByRole('button', { name: '🌔 Nuit' }).props.accessibilityState.selected).toBe(true);
     await fireEvent.press(getByRole('button', { name: '☀️ Jour' }));
     expect(setThemeId).toHaveBeenCalledWith('day');
   });

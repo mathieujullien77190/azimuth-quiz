@@ -53,7 +53,8 @@
     "extra": {
       "codename": {
         "emoji": "🐦",
-        "name": "great-tit"
+        "name": "great-tit",
+        "wiki": "https://en.wikipedia.org/wiki/Great_tit"
       },
       "router": {},
       "eas": {

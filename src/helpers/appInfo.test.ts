@@ -9,6 +9,10 @@ describe('appInfo', () => {
     expect(APP_CODENAME).toEqual(appConfig.expo.extra.codename);
   });
 
+  it('links the animal to its English Wikipedia article', () => {
+    expect(APP_CODENAME?.wiki).toMatch(/^https:\/\/en\.wikipedia\.org\/wiki\/\S+$/);
+  });
+
   it('always has an animal, so the label is more than the number', () => {
     expect(versionLabel(APP_VERSION_NUMBER, APP_CODENAME)).toMatch(/^v\d+\.\d+\.\d+ - \S+ - [a-z-]+$/);
   });
