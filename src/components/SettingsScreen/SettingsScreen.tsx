@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 import { clearAppData } from '@/helpers';
 import { useLanguage, useTranslation, type Language } from '@/i18n';
-import { useSettings } from '@/settings';
+import { useDevCode, useSettings } from '@/settings';
 import { useThemedStyles, useThemeSettings } from '@/themes';
 import type { ThemeId } from '@/types';
 
@@ -20,6 +20,8 @@ export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const { language, setLanguage, resetLanguage } = useLanguage();
   const { themeId, setThemeId, resetThemeId } = useThemeSettings();
   const { resetSettings } = useSettings();
+  const devCode = useDevCode((state) => state.devCode);
+  const setDevCode = useDevCode((state) => state.setDevCode);
   const t = useTranslation();
   const [dataCleared, setDataCleared] = useState(false);
 
@@ -85,6 +87,18 @@ export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
           <Text style={styles.version}>{APP_VERSION}</Text>
         </View>
       </Section>
+
+      <View style={styles.devRow}>
+        <Text style={styles.aboutLine}>{t.settings.devLabel}</Text>
+        <TextInput
+          accessibilityLabel={t.settings.devTitle}
+          autoCapitalize="none"
+          autoCorrect={false}
+          onChangeText={setDevCode}
+          style={[styles.input, styles.devInput]}
+          value={devCode}
+        />
+      </View>
 
       <Button label={t.setup.back} onPress={onBack} variant="ghost" />
     </Screen>

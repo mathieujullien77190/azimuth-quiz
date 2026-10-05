@@ -18,12 +18,14 @@ const DEFAULT_GAME_STATE: ContourRoomGameState = {
   roundIndex: 0,
   hintsRevealed: 0,
   hintPicks: [],
+  quadrantsRevealed: [],
   turnUid: null,
   typing: null,
   verdict: null,
   roundWinnerUid: null,
   wrongGuessUid: null,
   wrongGuessSeq: 0,
+  wrongGuessHints: null,
   totalScores: {},
 };
 

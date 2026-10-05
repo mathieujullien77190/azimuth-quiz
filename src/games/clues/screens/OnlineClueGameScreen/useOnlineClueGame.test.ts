@@ -12,11 +12,15 @@ import {
 } from '@/games/clues/helpers/room';
 import type { ClueRoomGameState } from '@/games/clues/helpers/room';
 import { useClueRoomStore } from '@/games/clues/store/roomStore';
+import { DEV_CODE } from '@/data';
+import { sendDevFeedback } from '@/helpers/devFeedback';
+import { useDevCode } from '@/settings';
 import type { ClueId } from '@/types';
 
 import { useOnlineClueGame } from './useOnlineClueGame';
 
 jest.mock('expo-router', () => ({ useRouter: () => ({ dismissTo: jest.fn() }) }));
+jest.mock('@/helpers/devFeedback', () => ({ sendDevFeedback: jest.fn(() => Promise.resolve()) }));
 jest.mock('@/games/clues/helpers/room', () => ({
   applyClueRoomScore: jest.fn(() => Promise.resolve()),
   deleteRoom: jest.fn(() => Promise.resolve()),
@@ -53,6 +57,7 @@ const gameState = (overrides: Partial<ClueRoomGameState> = {}): ClueRoomGameStat
   roundWinnerUid: null,
   wrongGuessUid: null,
   wrongGuessSeq: 0,
+  wrongGuessHints: null,
   totalScores: {},
   typing: null,
   ...overrides,
@@ -81,6 +86,7 @@ const setGame = (overrides: Partial<ClueRoomGameState>) =>
 beforeEach(() => {
   jest.clearAllMocks();
   useClueRoomStore.setState(INITIAL_STATE, true);
+  useDevCode.setState({ devCode: '' });
 });
 
 describe('useOnlineClueGame — the round', () => {
@@ -319,7 +325,7 @@ describe('useOnlineClueGame — guessing', () => {
     const { result } = await setup({ gameState: gameState({ wrongGuessSeq: 2 }) });
     await act(async () => result.current.setGuessText('Rome'));
     await act(async () => result.current.submitGuess());
-    expect(reportClueRoomWrong).toHaveBeenCalledWith('tabofuna', 'host', 3);
+    expect(reportClueRoomWrong).toHaveBeenCalledWith('tabofuna', 'host', 3, 0);
     expect(result.current.guessText).toBe('');
   });
 
@@ -329,6 +335,32 @@ describe('useOnlineClueGame — guessing', () => {
     await act(async () => result.current.setGuessText('Rome'));
     await act(async () => result.current.submitGuess());
     expect(reportClueRoomWrong).toHaveBeenCalledTimes(1);
+  });
+
+  it('allows one guess per turn: after a miss only a new clue gives the turn back its guess', async () => {
+    const { result } = await setup();
+    expect(result.current.guessedThisTurn).toBe(false);
+    await act(async () => result.current.setGuessText('Rome'));
+    await act(async () => result.current.submitGuess());
+    // Locked at once, before the room's update comes back: a second tap cannot send a second guess.
+    expect(result.current.guessedThisTurn).toBe(true);
+    await act(async () => result.current.setGuessText('Madrid'));
+    await act(async () => result.current.submitGuess());
+    expect(reportClueRoomWrong).toHaveBeenCalledTimes(1);
+    // The room confirms the miss: still locked while no clue is revealed.
+    await setGame({ wrongGuessUid: 'host', wrongGuessSeq: 1, wrongGuessHints: 0 });
+    expect(result.current.guessedThisTurn).toBe(true);
+    // A clue is revealed (the turn passes, then comes back to the same player): a fresh turn, a fresh guess.
+    await setGame({ wrongGuessUid: 'host', wrongGuessSeq: 1, wrongGuessHints: 0, revealedClueIds: ['population'] });
+    expect(result.current.guessedThisTurn).toBe(false);
+  });
+
+  it('locks from the shared state alone, only for the turn-holder', async () => {
+    const holder = await setup({ gameState: gameState({ wrongGuessUid: 'host', wrongGuessHints: 0 }) });
+    expect(holder.result.current.guessedThisTurn).toBe(true);
+    await holder.unmount();
+    const spectator = await setup({ localUid: 'guest', gameState: gameState({ wrongGuessUid: 'host', wrongGuessHints: 0 }) });
+    expect(spectator.result.current.guessedThisTurn).toBe(false);
   });
 
   it('is only for the turn-holder, once the place is known', async () => {
@@ -451,5 +483,51 @@ describe('useOnlineClueGame — a turn-holder who left (host only)', () => {
     jest.mocked(passRoomTurn).mockRejectedValueOnce(new Error('offline'));
     await setup({ gameState: gameState({ turnUid: 'ghost' }) });
     expect(passRoomTurn).toHaveBeenCalledWith('tabofuna', 'host');
+  });
+});
+
+describe('useOnlineClueGame — the dev mode difficulty question', () => {
+  const LYON = { name: 'Lyon', key: 'lyo', difficulty: 'intermediate', coordinates: { latitude: 45.76, longitude: 4.83 } } as never;
+  const NICE = { name: 'Nice', key: 'nic', difficulty: 'easy', coordinates: { latitude: 43.7, longitude: 7.26 } } as never;
+  const places = [LYON, NICE];
+
+  it('does not ask over the verdict, asks about the previous place once the host moved on, and writes the answer', async () => {
+    useDevCode.setState({ devCode: DEV_CODE });
+    const { result } = await setup({ gameState: gameState({ places, verdict: 'giveUp' }) });
+    expect(result.current.devFeedback.question).toBeNull();
+
+    await setGame({ places, roundIndex: 1, verdict: null });
+    expect(result.current.devFeedback.question).toBe('Le lieu Lyon était-il…');
+    await act(async () => result.current.devFeedback.choose('easy'));
+    expect(sendDevFeedback).toHaveBeenCalledWith({
+      game: 'clues',
+      targetType: 'place',
+      targetKey: 'lyo',
+      name: 'Lyon',
+      currentDifficulty: 'intermediate',
+      suggestedDifficulty: 'easy',
+    });
+    expect(result.current.devFeedback.question).toBeNull();
+  });
+
+  it('asks about the last round on the final standings, even if the verdict is still there', async () => {
+    useDevCode.setState({ devCode: DEV_CODE });
+    const { result } = await setup({ gameState: gameState({ places, roundIndex: 1, verdict: 'giveUp' }) });
+    await setGame({ places, roundIndex: 2, verdict: 'giveUp', screen: 'end' });
+    expect(result.current.devFeedback.question).toBe('Le lieu Nice était-il…');
+  });
+
+  it('asks nothing while the round is played, without the dev code, or without a place', async () => {
+    useDevCode.setState({ devCode: DEV_CODE });
+    expect((await setup({ gameState: gameState({ places }) })).result.current.devFeedback.question).toBeNull();
+
+    useDevCode.setState({ devCode: '' });
+    const off = await setup({ gameState: gameState({ places, verdict: 'giveUp' }) });
+    await setGame({ places, roundIndex: 1, verdict: null });
+    expect(off.result.current.devFeedback.question).toBeNull();
+
+    useDevCode.setState({ devCode: DEV_CODE });
+    const none = await setup({ gameState: gameState({ places: [], verdict: 'giveUp' }) });
+    expect(none.result.current.devFeedback.question).toBeNull();
   });
 });

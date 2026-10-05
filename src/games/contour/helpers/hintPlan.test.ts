@@ -4,12 +4,16 @@ import type { ContourHintCategory, ContourRoundCountry } from '@/types';
 import {
   buildHintPlan,
   contourGuessPoints,
+  contourPoints,
   hintGroupOf,
   hintGroupsView,
   normalizeHintCategories,
   orderHintPlan,
+  quadrantPicksOf,
+  QUADRANT_PICK,
   revealedSteps,
   silhouetteLevel,
+  stepsOutOf,
   type HintStep,
 } from './hintPlan';
 
@@ -48,6 +52,7 @@ describe('buildHintPlan', () => {
       'silhouette2',
       'silhouette3',
       'neighborShapes',
+      'neighborFlagFirst',
       'neighborFlags',
       'neighborCodes',
       'neighborNames',
@@ -131,9 +136,39 @@ describe('contourGuessPoints', () => {
   });
 });
 
+describe('contourPoints', () => {
+  it('reads a cell opening as one more hint on the same scale', () => {
+    expect(contourPoints(0, 0, 8)).toBe(contourGuessPoints(0, 8));
+    expect(contourPoints(1, 1, 8)).toBe(contourGuessPoints(2, 8));
+    expect(contourPoints(0, 3, 8)).toBe(contourGuessPoints(3, 8));
+  });
+
+  it('never takes a cell opening below the last step before the reveal: only the country itself gives 0', () => {
+    expect(contourPoints(2, 9, 8)).toBe(contourGuessPoints(7, 8));
+    expect(contourPoints(7, 5, 8)).toBe(75);
+    expect(contourPoints(8, 0, 8)).toBe(0);
+    expect(contourPoints(8, 2, 8)).toBe(0);
+  });
+
+  it('is full points for a plan that is only the reveal, whatever the cells', () => {
+    expect(contourPoints(0, 2, 1)).toBe(MAX_CONTOUR_POINTS);
+  });
+});
+
+describe('the picks that open a cell', () => {
+  it('count as hints but reveal no step', () => {
+    const picks = ['silhouette', QUADRANT_PICK, 'cities', QUADRANT_PICK] as const;
+    expect(stepsOutOf(picks)).toBe(2);
+    expect(quadrantPicksOf(picks)).toBe(2);
+    expect(stepsOutOf([])).toBe(0);
+    expect(quadrantPicksOf([])).toBe(0);
+  });
+});
+
 describe('hintGroupOf', () => {
   it('puts the capital with the cities, and the country on its own', () => {
     expect(hintGroupOf('silhouette2')).toBe('silhouette');
+    expect(hintGroupOf('neighborFlagFirst')).toBe('neighbors');
     expect(hintGroupOf('neighborFlags')).toBe('neighbors');
     expect(hintGroupOf('capitalName')).toBe('cities');
     expect(hintGroupOf('reveal')).toBe('reveal');
@@ -154,6 +189,17 @@ describe('orderHintPlan', () => {
       'neighborFlags',
       'silhouette1',
       'silhouette2',
+      'reveal',
+    ]);
+  });
+
+  it('ignores the picks that opened a cell: they bring no step forward', () => {
+    expect(orderHintPlan(plan, [QUADRANT_PICK, 'cities', QUADRANT_PICK])).toEqual([
+      'cityPositions',
+      'silhouette1',
+      'silhouette2',
+      'neighborShapes',
+      'neighborFlags',
       'reveal',
     ]);
   });

@@ -1,4 +1,4 @@
-import { boardDimensionsFor, createProjector, polylinePath, projectPoints } from './helpers';
+import { boardDimensionsFor, createProjector, flagRect, polylinePath, projectPoints } from './helpers';
 
 describe('createProjector', () => {
   it('centers a square ring within the available square, padding respected', () => {
@@ -116,5 +116,14 @@ describe('polylinePath', () => {
         { x: 2, y: 2 },
       ]),
     ).toBe('M 0 0 L 1 1 L 2 2');
+  });
+});
+
+describe('flagRect', () => {
+  it('is the box of a flag label: centred on its x, sitting on its baseline', () => {
+    const rect = flagRect({ x: 100, y: 50 });
+    expect(rect.x + rect.width / 2).toBeCloseTo(100);
+    expect(rect.y + rect.height).toBeCloseTo(50);
+    expect(rect.width).toBeGreaterThan(rect.height);
   });
 });

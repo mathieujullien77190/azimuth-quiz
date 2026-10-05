@@ -1,6 +1,7 @@
 import { useTransientFlag } from '@/helpers/useTransientFlag';
 import { useTranslation } from '@/i18n';
 
+import DifficultyFeedbackOverlay from '@/components/DifficultyFeedbackOverlay';
 import FinalStandings from '@/components/FinalStandings';
 import NoticeOverlay from '@/components/NoticeOverlay';
 import RoomDeletedScreen from '@/components/RoomDeletedScreen';
@@ -42,17 +43,24 @@ export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps
     // The score is a countdown you win (see `remainingScore`): the HIGHEST total wins, same as the
     // local game's own `finished` screen.
     return (
-      <FinalStandings
-        entries={onlinePlayers.map((player) => ({
-          name: player.name,
-          total: gameState.totalScores[player.uid] ?? 0,
-          color: player.color,
-        }))}
-        localName={onlinePlayers.find((player) => player.uid === localUid)?.name ?? ''}
-        onQuit={game.handleQuit}
-        onReplay={game.handleReplay}
-        title={t.endScreen.title}
-      />
+      <>
+        <FinalStandings
+          entries={onlinePlayers.map((player) => ({
+            name: player.name,
+            total: gameState.totalScores[player.uid] ?? 0,
+            color: player.color,
+          }))}
+          localName={onlinePlayers.find((player) => player.uid === localUid)?.name ?? ''}
+          onQuit={game.handleQuit}
+          onReplay={game.handleReplay}
+          title={t.endScreen.title}
+        />
+        <DifficultyFeedbackOverlay
+          onChoose={game.devFeedback.choose}
+          onDismiss={game.devFeedback.dismiss}
+          question={game.devFeedback.question}
+        />
+      </>
     );
   }
 
@@ -71,42 +79,50 @@ export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps
   const isLastRound = gameState.roundIndex + 1 >= gameState.places.length;
 
   return (
-    <OnlineClueGameScreenView
-      onReact={game.reactions.canReact ? game.reactions.send : undefined}
-      reaction={game.reactions.reaction}
-      bearingDeg={game.bearing}
-      difficulty={roomSettings.difficulty}
-      distanceKm={game.distance}
-      origin={game.origin}
-      guessText={game.guessText}
-      name={myName}
-      points={gameState.totalScores[localUid] ?? 0}
-      roomCode={code}
-      isHost={isHost}
-      isLastRound={isLastRound}
-      iWon={gameState.roundWinnerUid !== null && gameState.roundWinnerUid === localUid}
-      isMyTurn={game.isMyTurn}
-      wrongGuesserName={game.wrongGuesserName}
-      onChangeGuessText={game.setGuessText}
-      onGiveUp={game.giveUp}
-      onNextRound={game.goToNextRound}
-      notice={notYourTurn.visible ? t.cluesGame.notYourTurn(turnPlayerName) : null}
-      onDismissNotice={notYourTurn.hide}
-      typedByActivePlayer={game.typedByActivePlayer}
-      onPickClue={game.isMyTurn ? game.pickClue : notYourTurn.show}
-      onQuit={game.handleQuit}
-      onSubmitGuess={game.submitGuess}
-      place={place}
-      players={roundPlayers}
-      remaining={game.remaining}
-      revealedClueIds={gameState.revealedClueIds}
-      roundNumber={gameState.roundIndex + 1}
-      skeletonGroups={game.skeletonGroups}
-      skeletonLengthKnown={game.skeletonLengthKnown}
-      totalRounds={gameState.places.length}
-      turnIndex={turnIndex}
-      verdict={gameState.verdict ?? undefined}
-      winnerName={winnerName}
-    />
+    <>
+      <OnlineClueGameScreenView
+        onReact={game.reactions.canReact ? game.reactions.send : undefined}
+        reaction={game.reactions.reaction}
+        bearingDeg={game.bearing}
+        difficulty={roomSettings.difficulty}
+        distanceKm={game.distance}
+        origin={game.origin}
+        guessText={game.guessText}
+        name={myName}
+        points={gameState.totalScores[localUid] ?? 0}
+        roomCode={code}
+        isHost={isHost}
+        isLastRound={isLastRound}
+        iWon={gameState.roundWinnerUid !== null && gameState.roundWinnerUid === localUid}
+        guessedThisTurn={game.guessedThisTurn}
+        isMyTurn={game.isMyTurn}
+        wrongGuesserName={game.wrongGuesserName}
+        onChangeGuessText={game.setGuessText}
+        onGiveUp={game.giveUp}
+        onNextRound={game.goToNextRound}
+        notice={notYourTurn.visible ? t.cluesGame.notYourTurn(turnPlayerName) : null}
+        onDismissNotice={notYourTurn.hide}
+        typedByActivePlayer={game.typedByActivePlayer}
+        onPickClue={game.isMyTurn ? game.pickClue : notYourTurn.show}
+        onQuit={game.handleQuit}
+        onSubmitGuess={game.submitGuess}
+        place={place}
+        players={roundPlayers}
+        remaining={game.remaining}
+        revealedClueIds={gameState.revealedClueIds}
+        roundNumber={gameState.roundIndex + 1}
+        skeletonGroups={game.skeletonGroups}
+        skeletonLengthKnown={game.skeletonLengthKnown}
+        totalRounds={gameState.places.length}
+        turnIndex={turnIndex}
+        verdict={gameState.verdict ?? undefined}
+        winnerName={winnerName}
+      />
+      <DifficultyFeedbackOverlay
+        onChoose={game.devFeedback.choose}
+        onDismiss={game.devFeedback.dismiss}
+        question={game.devFeedback.question}
+      />
+    </>
   );
 };

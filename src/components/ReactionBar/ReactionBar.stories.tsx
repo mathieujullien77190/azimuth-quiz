@@ -24,7 +24,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** One small round button floating at the bottom-right corner, just above the footer it is a child of (here, the bottom
- * of the frame); a tap pops a column of emojis open upward from it, against the right edge (44 px touch targets). A tap on an emoji calls back with it and closes the column, the round button closes it too. */
+ * of the frame); a tap shows a column of emojis upward from it, against the right edge (44 px touch targets). A tap on an emoji calls back with it and leaves the column open, only the round button closes it. */
 export const Default: Story = {
   parameters: source(defaultCode),
   args: { emojis: REACTION_EMOJIS, labelFor: (emoji: string) => `Envoyer ${emoji}`, onPick: fn(), toggleLabel: 'Réactions' },

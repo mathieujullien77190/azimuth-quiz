@@ -22,6 +22,7 @@ const DEFAULT_GAME_STATE: ClueRoomGameState = {
   roundWinnerUid: null,
   wrongGuessUid: null,
   wrongGuessSeq: 0,
+  wrongGuessHints: null,
   totalScores: {},
   typing: null,
 };

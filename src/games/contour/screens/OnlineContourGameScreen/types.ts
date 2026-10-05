@@ -31,7 +31,17 @@ export type OnlineContourGameScreenViewProps = {
   plan: HintStep[];
   /** The list under the country (`hintGroupsView`): what is out and what each group offers next. */
   hintGroups: HintGroupView[];
+  /** How many steps of `plan` are on the board (the picks that are not a cell opening). */
   hintsRevealed: number;
+  /** The cells of the board still hidden (0-3, see `ContourQuadrantMask`): only one is open at first. Empty once the round
+   * is over (the whole country shows). */
+  hiddenQuadrants: number[];
+  /** The turn-holder tapped a hidden cell to open it (a hint: costs points and passes the turn). */
+  onRevealQuadrant: (cell: number) => void;
+  /** A cell can still be opened: not once the country itself is revealed. */
+  canOpenQuadrant: boolean;
+  /** The points one more hint (a cell opening) takes off a correct guess, shown on the cells the turn-holder may open. */
+  quadrantCost: number;
   /** Seed of this round's random simplification of the outline, the same on every device. */
   simplifySeed: number;
   /** What a correct guess earns right now (drops one tier per hint, 0 once the name is out). */
@@ -42,6 +52,8 @@ export type OnlineContourGameScreenViewProps = {
   /** Index into `players` of whoever holds the turn. */
   turnIndex: number;
   isMyTurn: boolean;
+  /** The turn-holder already guessed this turn: "Valider" is off, a hint is the only move left (`turnGuess.ts`). */
+  guessedThisTurn: boolean;
 
   /** Set once the round is over: everything on the board is then shown, whatever the tier. */
   verdict?: 'correct' | 'giveUp';

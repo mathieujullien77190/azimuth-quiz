@@ -1,5 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
+import { DEV_CODE } from '@/data';
 import { MAX_CONTOUR_POINTS } from '@/games/contour/constants';
 import { loadRoundData } from '@/games/contour/helpers/firestoreContours';
 import { contourGuessPoints } from '@/games/contour/helpers/hintPlan';
@@ -11,15 +12,20 @@ import {
   reportContourRoomCorrect,
   reportContourRoomWrong,
   revealContourRoomHint,
+  revealContourRoomQuadrant,
   setContourRoomTyping,
 } from '@/games/contour/helpers/room';
 import type { ContourRoomGameState } from '@/games/contour/helpers/room';
+import { startQuadrant } from '@/games/contour/helpers/quadrants';
 import { roundSimplifySeed } from '@/games/contour/helpers/simplify';
 import { useContourRoomStore } from '@/games/contour/store/roomStore';
+import { sendDevFeedback } from '@/helpers/devFeedback';
+import { useDevCode } from '@/settings';
 
 import { useOnlineContourGame } from './useOnlineContourGame';
 
 jest.mock('expo-router', () => ({ useRouter: () => ({ dismissTo: jest.fn() }) }));
+jest.mock('@/helpers/devFeedback', () => ({ sendDevFeedback: jest.fn(() => Promise.resolve()) }));
 jest.mock('@/games/contour/helpers/room', () => ({
   applyContourRoomScore: jest.fn(() => Promise.resolve()),
   deleteRoom: jest.fn(() => Promise.resolve()),
@@ -31,6 +37,7 @@ jest.mock('@/games/contour/helpers/room', () => ({
   reportContourRoomCorrect: jest.fn(() => Promise.resolve()),
   reportContourRoomWrong: jest.fn(() => Promise.resolve()),
   revealContourRoomHint: jest.fn(() => Promise.resolve()),
+  revealContourRoomQuadrant: jest.fn(() => Promise.resolve()),
   setContourRoomTyping: jest.fn(() => Promise.resolve()),
   subscribeToRoomGame: jest.fn(),
   subscribeToRoomPlayers: jest.fn(),
@@ -76,12 +83,14 @@ const gameState = (overrides: Partial<ContourRoomGameState> = {}): ContourRoomGa
   roundIndex: 0,
   hintsRevealed: 0,
   hintPicks: [],
+  quadrantsRevealed: [],
   typing: null,
   turnUid: 'host',
   verdict: null,
   roundWinnerUid: null,
   wrongGuessUid: null,
   wrongGuessSeq: 0,
+  wrongGuessHints: null,
   totalScores: {},
   ...overrides,
 });
@@ -112,6 +121,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   jest.mocked(loadRoundData).mockImplementation(async (code) => roundData(code));
   useContourRoomStore.setState(INITIAL_STATE, true);
+  useDevCode.setState({ devCode: '' });
 });
 
 describe('useOnlineContourGame — the round', () => {
@@ -164,16 +174,16 @@ describe('useOnlineContourGame — the round', () => {
   });
 
   it('drops the points at stake with every hint, down to 0 once the country is revealed', async () => {
-    // A room without `hintCategories` (an old one) plays every category: 12 steps for France.
+    // A room without `hintCategories` (an old one) plays every category: 13 steps for France.
     const { result } = await setup();
-    expect(result.current.plan).toHaveLength(12);
+    expect(result.current.plan).toHaveLength(13);
     expect(result.current.pointsAtStake).toBe(MAX_CONTOUR_POINTS);
     await act(async () => useContourRoomStore.setState({ gameState: gameState({ hintsRevealed: 2 }) }));
-    expect(result.current.pointsAtStake).toBe(contourGuessPoints(2, 12));
-    await act(async () => useContourRoomStore.setState({ gameState: gameState({ hintsRevealed: 11 }) }));
-    expect(result.current.pointsAtStake).toBe(contourGuessPoints(11, 12));
-    expect(result.current.pointsAtStake).toBeGreaterThan(0);
+    expect(result.current.pointsAtStake).toBe(contourGuessPoints(2, 13));
     await act(async () => useContourRoomStore.setState({ gameState: gameState({ hintsRevealed: 12 }) }));
+    expect(result.current.pointsAtStake).toBe(contourGuessPoints(12, 13));
+    expect(result.current.pointsAtStake).toBeGreaterThan(0);
+    await act(async () => useContourRoomStore.setState({ gameState: gameState({ hintsRevealed: 13 }) }));
     expect(result.current.pointsAtStake).toBe(0);
   });
 });
@@ -233,6 +243,111 @@ describe('useOnlineContourGame — the draft guess', () => {
   });
 });
 
+describe('useOnlineContourGame — the cells of the board', () => {
+  /** The cell open at the start of the first round, as every device works it out. */
+  const opening = async () => {
+    const { result } = await setup();
+    return { result, start: startQuadrant(result.current.country!, roundSimplifySeed(3, 0, 'FR')) };
+  };
+
+  it('hides every cell but the starting one', async () => {
+    const { result, start } = await opening();
+    expect(result.current.hiddenQuadrants).toHaveLength(3);
+    expect(result.current.hiddenQuadrants).not.toContain(start);
+  });
+
+  it('hides nothing while the round has not loaded', async () => {
+    const { result } = await setup({ gameState: gameState({ countryCodes: [] }) }, false);
+    expect(result.current.hiddenQuadrants).toEqual([]);
+  });
+
+  it('reads each cell opened as a hint for the points at stake, with no plan step out', async () => {
+    const { result, start } = await opening();
+    const [first, second] = result.current.hiddenQuadrants;
+    const planLength = result.current.plan.length;
+    expect(result.current.pointsAtStake).toBe(MAX_CONTOUR_POINTS);
+    await act(async () =>
+      useContourRoomStore.setState({
+        gameState: gameState({ hintsRevealed: 1, hintPicks: ['quadrant'], quadrantsRevealed: [first] }),
+      }),
+    );
+    expect(result.current.pointsAtStake).toBe(contourGuessPoints(1, planLength));
+    expect(result.current.stepsRevealed).toBe(0);
+    expect(result.current.hiddenQuadrants).not.toContain(first);
+    await act(async () =>
+      useContourRoomStore.setState({
+        gameState: gameState({
+          hintsRevealed: 2,
+          hintPicks: ['quadrant', 'quadrant'],
+          quadrantsRevealed: [first, second],
+        }),
+      }),
+    );
+    expect(result.current.pointsAtStake).toBe(contourGuessPoints(2, planLength));
+    expect(result.current.hiddenQuadrants).not.toContain(start);
+  });
+
+  it('tells what one more cell would cost: the points that one more hint takes off', async () => {
+    const { result } = await opening();
+    const planLength = result.current.plan.length;
+    expect(result.current.quadrantCost).toBe(contourGuessPoints(0, planLength) - contourGuessPoints(1, planLength));
+  });
+
+  it('opens a hidden cell for everybody as a hint: added to the picks and the cells, and the turn passes', async () => {
+    const { result } = await opening();
+    const [first, second] = result.current.hiddenQuadrants;
+    await act(async () => result.current.revealQuadrant(first));
+    expect(revealContourRoomQuadrant).toHaveBeenCalledWith('tabofuna', ['quadrant'], [first], 'guest');
+    await act(async () =>
+      useContourRoomStore.setState({
+        gameState: gameState({ hintsRevealed: 1, hintPicks: ['quadrant'], quadrantsRevealed: [first] }),
+      }),
+    );
+    await act(async () => result.current.revealQuadrant(second));
+    expect(revealContourRoomQuadrant).toHaveBeenLastCalledWith(
+      'tabofuna',
+      ['quadrant', 'quadrant'],
+      [first, second],
+      'guest',
+    );
+  });
+
+  it('keeps the plan steps already out when a cell is opened after them', async () => {
+    const { result } = await setup({ gameState: gameState({ hintsRevealed: 1, hintPicks: ['silhouette'] }) });
+    const [cell] = result.current.hiddenQuadrants;
+    await act(async () => result.current.revealQuadrant(cell));
+    expect(revealContourRoomQuadrant).toHaveBeenCalledWith('tabofuna', ['silhouette', 'quadrant'], [cell], 'guest');
+    expect(result.current.stepsRevealed).toBe(1);
+  });
+
+  it('cannot open a cell once the country itself is out, and says so', async () => {
+    const first = await setup();
+    const picks = Array(first.result.current.plan.length).fill('silhouette') as ContourRoomGameState['hintPicks'];
+    const { result } = await setup({ gameState: gameState({ hintsRevealed: picks.length, hintPicks: picks }) });
+    expect(result.current.canOpenQuadrant).toBe(false);
+    await act(async () => result.current.revealQuadrant(result.current.hiddenQuadrants[0]));
+    expect(revealContourRoomQuadrant).not.toHaveBeenCalled();
+  });
+
+  it('cannot open a cell with nobody to hand the turn to', async () => {
+    const { result } = await setup({ players: {} });
+    await act(async () => result.current.revealQuadrant(result.current.hiddenQuadrants[0]));
+    expect(revealContourRoomQuadrant).not.toHaveBeenCalled();
+  });
+
+  it('opens nothing for a player who does not hold the turn, a cell already open, or once the round is over', async () => {
+    const { result, start } = await opening();
+    await act(async () => result.current.revealQuadrant(start));
+    expect(revealContourRoomQuadrant).not.toHaveBeenCalled();
+
+    const watching = await setup({ gameState: gameState({ turnUid: 'guest' }) });
+    await act(async () => watching.result.current.revealQuadrant(watching.result.current.hiddenQuadrants[0]));
+    const over = await setup({ gameState: gameState({ verdict: 'giveUp' }) });
+    await act(async () => over.result.current.revealQuadrant(over.result.current.hiddenQuadrants[0]));
+    expect(revealContourRoomQuadrant).not.toHaveBeenCalled();
+  });
+});
+
 describe('useOnlineContourGame — revealing a hint', () => {
   it('reveals the next step of the group picked and hands the turn to the next player', async () => {
     const { result } = await setup({ gameState: gameState({ hintsRevealed: 1, hintPicks: ['silhouette'] }) });
@@ -251,7 +366,7 @@ describe('useOnlineContourGame — revealing a hint', () => {
     const { result } = await setup({ gameState: gameState({ hintsRevealed: 5, hintPicks: picks }) });
     expect(result.current.plan.slice(3, 5)).toEqual(['neighborShapes', 'cityPositions']);
     const neighbors = result.current.hintGroups.find((entry) => entry.group === 'neighbors');
-    expect(neighbors?.next).toBe('neighborFlags');
+    expect(neighbors?.next).toBe('neighborFlagFirst');
   });
 
   it('wraps around to the first player after the last one', async () => {
@@ -276,13 +391,13 @@ describe('useOnlineContourGame — revealing a hint', () => {
   it('does nothing for a group with no step left, and keeps the country for the end', async () => {
     const picks: ContourRoomGameState['hintPicks'] = [
       ...Array(3).fill('silhouette'),
-      ...Array(4).fill('neighbors'),
+      ...Array(5).fill('neighbors'),
       ...Array(4).fill('cities'),
     ];
     const early = await setup();
     await act(async () => early.result.current.revealHint('reveal'));
     await early.unmount();
-    const allOut = await setup({ gameState: gameState({ hintsRevealed: 11, hintPicks: picks }) });
+    const allOut = await setup({ gameState: gameState({ hintsRevealed: 12, hintPicks: picks }) });
     await act(async () => allOut.result.current.revealHint('silhouette'));
     expect(revealContourRoomHint).not.toHaveBeenCalled();
     await act(async () => allOut.result.current.revealHint('reveal'));
@@ -392,9 +507,34 @@ describe('useOnlineContourGame — guessing', () => {
     const { result } = await setup({ gameState: gameState({ wrongGuessSeq: 2 }) });
     await act(async () => result.current.setGuessText('Espagne'));
     await act(async () => result.current.submitGuess());
-    expect(reportContourRoomWrong).toHaveBeenCalledWith('tabofuna', 'host', 3);
+    expect(reportContourRoomWrong).toHaveBeenCalledWith('tabofuna', 'host', 3, 0);
     expect(result.current.guessText).toBe('');
     expect(result.current.lastWrong).toBe('Zoé');
+  });
+
+  it('allows one guess per turn: after a miss only a new hint gives the turn back its guess', async () => {
+    const { result } = await setup();
+    expect(result.current.guessedThisTurn).toBe(false);
+    await act(async () => result.current.setGuessText('Espagne'));
+    await act(async () => result.current.submitGuess());
+    expect(result.current.guessedThisTurn).toBe(true);
+    await act(async () => result.current.setGuessText('Italie'));
+    await act(async () => result.current.submitGuess());
+    expect(reportContourRoomWrong).toHaveBeenCalledTimes(1);
+    await act(async () => useContourRoomStore.setState({ gameState: gameState({ wrongGuessUid: 'host', wrongGuessSeq: 1, wrongGuessHints: 0 }) }));
+    expect(result.current.guessedThisTurn).toBe(true);
+    await act(async () =>
+      useContourRoomStore.setState({ gameState: gameState({ wrongGuessUid: 'host', wrongGuessSeq: 1, wrongGuessHints: 0, hintsRevealed: 1 }) }),
+    );
+    expect(result.current.guessedThisTurn).toBe(false);
+  });
+
+  it('locks from the shared state alone, only for the turn-holder', async () => {
+    const holder = await setup({ gameState: gameState({ wrongGuessUid: 'host', wrongGuessHints: 0 }) });
+    expect(holder.result.current.guessedThisTurn).toBe(true);
+    await holder.unmount();
+    const spectator = await setup({ localUid: 'guest', gameState: gameState({ wrongGuessUid: 'host', wrongGuessHints: 0 }) });
+    expect(spectator.result.current.guessedThisTurn).toBe(false);
   });
 
   it('names nobody when this device is not in the players list', async () => {
@@ -478,7 +618,7 @@ describe('useOnlineContourGame — host duties', () => {
     );
     expect(applyContourRoomScore).toHaveBeenCalledWith('tabofuna', {
       host: 5,
-      guest: contourGuessPoints(1, 12),
+      guest: contourGuessPoints(1, 13),
     });
   });
 
@@ -486,5 +626,51 @@ describe('useOnlineContourGame — host duties', () => {
     jest.mocked(passRoomTurn).mockRejectedValueOnce(new Error('offline'));
     await setup({ gameState: gameState({ turnUid: 'ghost' }) });
     expect(passRoomTurn).toHaveBeenCalledWith('tabofuna', 'host');
+  });
+});
+
+describe('useOnlineContourGame — the dev mode difficulty question', () => {
+  const setGame = (overrides: Partial<ContourRoomGameState>) =>
+    act(async () => useContourRoomStore.setState({ gameState: gameState(overrides) }));
+
+  it('does not ask over the verdict, asks about the previous country once the host moved on, and writes the answer', async () => {
+    useDevCode.setState({ devCode: DEV_CODE });
+    const { result } = await setup({ gameState: gameState({ verdict: 'giveUp' }) });
+    expect(result.current.devFeedback.question).toBeNull();
+
+    await setGame({ roundIndex: 1, verdict: null });
+    expect(result.current.devFeedback.question).toBe('Le pays France était-il…');
+    await act(async () => result.current.devFeedback.choose('hard'));
+    expect(sendDevFeedback).toHaveBeenCalledWith({
+      game: 'silhouette',
+      targetType: 'country',
+      targetKey: 'FR',
+      name: 'France',
+      currentDifficulty: 'easy',
+      suggestedDifficulty: 'hard',
+    });
+    expect(result.current.devFeedback.question).toBeNull();
+  });
+
+  it('asks about the last country on the final standings, even if the verdict is still there', async () => {
+    useDevCode.setState({ devCode: DEV_CODE });
+    const { result } = await setup({ gameState: gameState({ roundIndex: 1, verdict: 'giveUp' }) });
+    await setGame({ roundIndex: 2, verdict: 'giveUp', screen: 'end' });
+    expect(result.current.devFeedback.question).toMatch(/^Le pays /);
+  });
+
+  it('asks nothing while the round is played, or without the dev code', async () => {
+    useDevCode.setState({ devCode: DEV_CODE });
+    expect((await setup()).result.current.devFeedback.question).toBeNull();
+    useDevCode.setState({ devCode: '' });
+    const off = await setup({ gameState: gameState({ verdict: 'giveUp' }) });
+    await setGame({ roundIndex: 1, verdict: null });
+    expect(off.result.current.devFeedback.question).toBeNull();
+  });
+
+  it('asks nothing while the round country is not loaded', async () => {
+    useDevCode.setState({ devCode: DEV_CODE });
+    const { result } = await setup({ gameState: gameState({ verdict: 'giveUp', countryCodes: [] }) }, false);
+    expect(result.current.devFeedback.question).toBeNull();
   });
 });

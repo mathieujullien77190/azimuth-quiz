@@ -19,6 +19,9 @@ export type ContourFullBleedScreenProps = {
   onBoardAreaLayout: (event: LayoutChangeEvent) => void;
   onOverlayTopLayout: (event: LayoutChangeEvent) => void;
   onOverlayBottomLayout: (event: LayoutChangeEvent) => void;
+  /** Drawn over the board, in its exact rectangle and above everything on it (the hidden cells of Silhouette's quadrants,
+   * see `ContourQuadrantMask`). */
+  boardOverlay?: ReactNode;
   /** Floats over the top of the board (a `GameHeader`). */
   header: ReactNode;
   /** Floats over the bottom of the board (the answer input, or the round result) — pass a

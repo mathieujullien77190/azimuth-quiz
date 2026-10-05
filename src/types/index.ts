@@ -28,6 +28,9 @@ export type GeoPlace = {
 export type Place = Omit<GeoPlace, 'country'> & {
   /** ISO 3166-1 alpha-2 country code (source of the flag). */
   code: string;
+  /** The place's id in Firestore (`places/{key}`): lets the dev mode's difficulty opinions point at the document. Absent
+   * on a place written by an older version of the game. */
+  key?: string;
   /** The country's names, copied into the place document (no lookup at runtime): shown under the place's name
    * when the game option is on. */
   country?: { fr: string; en: string };

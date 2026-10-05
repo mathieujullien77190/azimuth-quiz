@@ -52,7 +52,12 @@ const guessingArgs = (_texts: Translations, _args: Record<string, unknown>, lang
   hintsRevealed: 8,
   footer: (
     <GameFooter>
-      <ContourGuessBar guessText="" onChangeGuessText={fn()} onSubmit={fn()} />
+      <ContourGuessBar
+        guessText=""
+        label={translations.fr.contourGame.guessLabel}
+        onChangeGuessText={fn()}
+        onSubmit={fn()}
+      />
     </GameFooter>
   ),
 });

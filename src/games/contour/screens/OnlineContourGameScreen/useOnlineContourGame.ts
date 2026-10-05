@@ -1,5 +1,5 @@
 import { reporting } from '@/helpers/reportError';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { CONTOUR_WRONG_GUESS_PENALTY } from '@/games/contour/constants';
 import {
@@ -15,23 +15,29 @@ import {
   reportContourRoomCorrect,
   reportContourRoomWrong,
   revealContourRoomHint,
+  revealContourRoomQuadrant,
   setContourRoomTyping,
 } from '@/games/contour/helpers/room';
 import { normalizeContourGuess, roundCountryName } from '@/games/contour/helpers/contourCountry';
 import {
   buildHintPlan,
-  contourGuessPoints,
+  contourPoints,
   hintGroupsView,
   normalizeHintCategories,
   orderHintPlan,
+  QUADRANT_PICK,
+  quadrantPicksOf,
   type HintGroup,
 } from '@/games/contour/helpers/hintPlan';
+import { hiddenQuadrants, startQuadrant } from '@/games/contour/helpers/quadrants';
 import { roundSimplifySeed } from '@/games/contour/helpers/simplify';
 import { useRoundData } from '@/games/contour/helpers/useRoundData';
 import type { ContourCountry } from '@/types';
 import { useContourRoomStore } from '@/games/contour/store/roomStore';
 import { nextPlayerUid, playersForRound } from '@/helpers/roomPlayers';
 import { useDebouncedValue } from '@/helpers/useDebouncedValue';
+import { hasGuessedThisTurn } from '@/helpers/turnGuess';
+import { useDevFeedback } from '@/helpers/useDevFeedback';
 import { useGuessDraft } from '@/helpers/useGuessDraft';
 import { useHostTurnRecovery } from '@/helpers/useHostTurnRecovery';
 import { useHostTurnScoring } from '@/helpers/useHostTurnScoring';
@@ -75,10 +81,22 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
     () => (country === undefined ? [] : buildHintPlan(normalizeHintCategories(roomCategories), country)),
     [country, roomCategories],
   );
+  // Every pick is a hint (`hintsRevealed` = the picks), but only the ones that are not a cell opening bring a plan step out.
   const { hintsRevealed, hintPicks } = gameState;
+  const quadrantPicks = quadrantPicksOf(hintPicks);
+  const stepsRevealed = Math.max(0, hintsRevealed - quadrantPicks);
   const plan = useMemo(() => orderHintPlan(basePlan, hintPicks), [basePlan, hintPicks]);
-  const hintGroups = useMemo(() => hintGroupsView(plan, hintsRevealed), [plan, hintsRevealed]);
+  const hintGroups = useMemo(() => hintGroupsView(plan, stepsRevealed), [plan, stepsRevealed]);
   const isMyTurn = localUid !== null && localUid === gameState.turnUid;
+  // One guess per turn: once the turn-holder has missed, the only thing left to him is to reveal a hint (which passes the
+  // hand). Shared state (`wrongGuessHints`, see `turnGuess.ts`) says so on every device; the local guard covers the gap
+  // before the room's update comes back, so a double tap cannot send a second guess.
+  const hintsOut = hintsRevealed;
+  const [guessGuard, setGuessGuard] = useState<{ round: number; hints: number } | null>(null);
+  const guessedThisTurn =
+    isMyTurn &&
+    (hasGuessedThisTurn(gameState, hintsOut) ||
+      (guessGuard !== null && guessGuard.round === gameState.roundIndex && guessGuard.hints === hintsOut));
   // Who plays in which order this round: arrival order rotated by the round number, so that each
   // player in turn opens a round (`playersForRound`). What the tabs show, too.
   const roundPlayers = playersForRound(onlinePlayers, gameState.roundIndex);
@@ -105,8 +123,21 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
       ? gameState.typing.text
       : '';
 
-  /** What a correct guess earns right now: drops with each hint, 0 once the country is revealed. */
-  const pointsAtStake = contourGuessPoints(hintsRevealed, plan.length);
+  // The board starts with a single open cell, picked from the round's seed (the same on every device); every other one the
+  // turn-holder opens is a hint (`quadrantsRevealed`, the cells opened since): one off the points, and the turn passes.
+  const { quadrantsRevealed } = gameState;
+  const openingQuadrant = useMemo(
+    () => (country === undefined ? null : startQuadrant(country, simplifySeed)),
+    [country, simplifySeed],
+  );
+  const hiddenCells = openingQuadrant === null ? [] : hiddenQuadrants(openingQuadrant, quadrantsRevealed);
+
+  /** What a correct guess earns right now: drops with each hint (a cell opening included), 0 once the country is revealed. */
+  const pointsAtStake = contourPoints(stepsRevealed, quadrantPicks, plan.length);
+  // A cell can be opened while the country itself is not out yet (afterwards there is nothing left to gain from it), and
+  // what it would cost is shown on the cell: the points lost to one more hint.
+  const canOpenQuadrant = stepsRevealed < plan.length;
+  const quadrantCost = pointsAtStake - contourPoints(stepsRevealed, quadrantPicks + 1, plan.length);
 
   // Host-only: the turn-holder only ever self-reports a find/miss, this is the only thing that
   // writes `totalScores` (see `room.ts`'s own comment on `applyContourRoomScore`).
@@ -129,14 +160,25 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
     revealContourRoomHint(code, [...hintPicks, group], next).catch(reporting('silhouette.revealHint', { room: code }));
   };
 
+  /** Opens one more cell of the board (the turn-holder only, while the round is on): everybody sees it, it counts as a hint
+   * (the round pays less) and the turn passes, exactly like a hint picked in the list. */
+  const revealQuadrant = (cell: number) => {
+    const next = nextPlayerUid(onlinePlayers, localUid);
+    if (!isMyTurn || next === undefined || gameState.verdict !== null || !canOpenQuadrant || !hiddenCells.includes(cell)) return;
+    revealContourRoomQuadrant(code, [...hintPicks, QUADRANT_PICK], [...quadrantsRevealed, cell], next).catch(
+      reporting('silhouette.revealQuadrant', { room: code }),
+    );
+  };
+
   const submitGuess = () => {
-    if (!isMyTurn || localUid === null || country === undefined) return;
+    if (!isMyTurn || guessedThisTurn || localUid === null || country === undefined) return;
     const correct = normalizeContourGuess(guessText) === normalizeContourGuess(roundCountryName(country, language));
     if (correct) {
       reportContourRoomCorrect(code, localUid).catch(reporting('silhouette.reportCorrect', { room: code }));
       return;
     }
-    reportContourRoomWrong(code, localUid, gameState.wrongGuessSeq + 1).catch(reporting('silhouette.reportWrong', { room: code }));
+    setGuessGuard({ round: gameState.roundIndex, hints: hintsOut });
+    reportContourRoomWrong(code, localUid, gameState.wrongGuessSeq + 1, hintsOut).catch(reporting('silhouette.reportWrong', { room: code }));
     setLastWrong(onlinePlayers.find((player) => player.uid === localUid)?.name ?? '');
     setGuessText('');
   };
@@ -156,6 +198,18 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
     nextContourRoomRound(code, nextRoundIndex, gameState.countryCodes.length, firstTurnUid).catch(reporting('silhouette.nextRound', { room: code }));
   };
 
+  // Dev mode: once the host has moved on from a round (or the game is over), a device with the dev code is asked how hard that round's country was.
+  const devFeedback = useDevFeedback({
+    game: 'silhouette',
+    roundIndex: gameState.roundIndex,
+    roundOver: gameState.verdict !== null,
+    gameOver: gameState.screen === 'end',
+    target:
+      country === undefined
+        ? undefined
+        : { targetType: 'country', targetKey: country.code, name: country.fr, difficulty: country.difficulty },
+  });
+
   return {
     localUid,
     connectionLost,
@@ -171,19 +225,26 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
     retryRound,
     plan,
     hintGroups,
+    stepsRevealed,
     simplifySeed,
     isMyTurn,
+    guessedThisTurn,
     pointsAtStake,
     guessText,
     setGuessText,
     typedByActivePlayer,
     lastWrong,
     revealHint,
+    hiddenQuadrants: hiddenCells,
+    canOpenQuadrant,
+    quadrantCost,
+    revealQuadrant,
     submitGuess,
     giveUp,
     goToNextRound,
     handleQuit,
     handleReplay,
     reactions,
+    devFeedback,
   };
 };

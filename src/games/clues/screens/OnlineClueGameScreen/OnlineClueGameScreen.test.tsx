@@ -32,6 +32,7 @@ const gameState = (overrides: Partial<ClueRoomGameState> = {}): ClueRoomGameStat
   roundWinnerUid: null,
   wrongGuessUid: null,
   wrongGuessSeq: 0,
+  wrongGuessHints: null,
   totalScores: { zoe: 12, max: 5 },
   typing: null,
   ...overrides,
@@ -52,6 +53,7 @@ const setGame = (overrides: Record<string, unknown> = {}) => {
     bearing: 90,
     distance: 1000,
     isMyTurn: true,
+    guessedThisTurn: false,
     typedByActivePlayer: '',
     skeletonGroups: [],
     skeletonLengthKnown: false,
@@ -65,6 +67,7 @@ const setGame = (overrides: Record<string, unknown> = {}) => {
     goToNextRound: jest.fn(),
     handleQuit: jest.fn(),
     reactions: { reaction: null, send: jest.fn(), canReact: false },
+    devFeedback: { question: null, choose: jest.fn(), dismiss: jest.fn() },
     ...overrides,
   };
 };
@@ -149,6 +152,27 @@ describe('OnlineClueGameScreen — the turn-holder', () => {
     await fireEvent.press(getByText(t.cluesGame.submitGuess));
     await fireEvent(getByDisplayValue('Par'), 'submitEditing');
     expect((mockGame.submitGuess as jest.Mock).mock.calls).toHaveLength(2);
+  });
+
+  it('after a guess in this turn: the field and Valider are gone, only the move left (a clue) is said', async () => {
+    setGame({ guessText: 'Rome', guessedThisTurn: true });
+    const { getByText, queryByRole, queryByPlaceholderText } = await renderScreen();
+    expect(getByText(t.game.alreadyGuessed)).toBeTruthy();
+    expect(queryByPlaceholderText(t.cluesGame.guessPlaceholder)).toBeNull();
+    expect(queryByRole('button', { name: t.cluesGame.submitGuess })).toBeNull();
+  });
+
+  it('after a guess, the host can still give up', async () => {
+    setGame({ guessedThisTurn: true, isHost: true });
+    const { getByText } = await renderScreen();
+    await fireEvent.press(getByText(t.cluesGame.giveUp));
+    expect(mockGame.giveUp).toHaveBeenCalledTimes(1);
+  });
+
+  it('says nothing about it before the guess', async () => {
+    setGame({ guessText: 'Par' });
+    const { queryByText } = await renderScreen();
+    expect(queryByText(t.game.alreadyGuessed)).toBeNull();
   });
 
   it('forwards typing', async () => {
@@ -358,5 +382,33 @@ describe('OnlineClueGameScreen — emoji reactions', () => {
     const { getByText } = await renderScreen();
     expect(getByText('👏')).toBeTruthy();
     expect(getByText('Lou')).toBeTruthy();
+  });
+});
+
+describe('OnlineClueGameScreen — dev mode difficulty question', () => {
+  it('asks it over the screen, and reports the answer tapped or the dismissal', async () => {
+    const choose = jest.fn();
+    const dismiss = jest.fn();
+    setGame({ devFeedback: { question: 'Le lieu Paris était-il…', choose, dismiss } });
+    const { getByText, getByLabelText } = await renderScreen();
+    expect(getByText('Le lieu Paris était-il…')).toBeTruthy();
+    await fireEvent.press(getByText(/Difficile/));
+    expect(choose).toHaveBeenCalledWith('hard');
+    await fireEvent.press(getByLabelText('Fermer sans répondre'));
+    expect(dismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('asks it over the final standings too (the last round is asked about there), and reports the answer', async () => {
+    const choose = jest.fn();
+    setGame({ gameState: gameState({ screen: 'end', totalScores: { zoe: 30 } }), devFeedback: { question: 'Le lieu Rome était-il…', choose, dismiss: jest.fn() } });
+    const { getByText } = await renderScreen();
+    expect(getByText('Le lieu Rome était-il…')).toBeTruthy();
+    await fireEvent.press(getByText(/Facile/));
+    expect(choose).toHaveBeenCalledWith('easy');
+  });
+
+  it('asks nothing when the game has no question', async () => {
+    const { queryByText } = await renderScreen();
+    expect(queryByText(/était-il/)).toBeNull();
   });
 });

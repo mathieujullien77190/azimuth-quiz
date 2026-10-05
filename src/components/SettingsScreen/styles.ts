@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 import { fontSize, spacing } from '@/data';
 import type { Theme } from '@/types';
 
-export const createStyles = ({ colors, typography }: Theme) =>
+export const createStyles = ({ colors, radius, typography }: Theme) =>
   StyleSheet.create({
     title: {
       ...typography.display,
@@ -22,6 +22,26 @@ export const createStyles = ({ colors, typography }: Theme) =>
       ...typography.body,
       color: colors.textMuted,
       fontSize: fontSize.body,
+    },
+    input: {
+      ...typography.heading,
+      minHeight: 44,
+      paddingHorizontal: spacing.md,
+      borderRadius: radius.md,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      backgroundColor: colors.surfaceHigh,
+      color: colors.text,
+      fontSize: fontSize.body,
+    },
+    // The dev code, under the about section: just the word "code" and its field, nothing to explain it.
+    devRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    devInput: {
+      flex: 1,
     },
     version: {
       ...typography.label,

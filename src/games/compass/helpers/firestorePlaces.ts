@@ -37,7 +37,7 @@ export const fetchRandomPlaces = async (settings: GameSettings, language: Langua
     categories,
     tiers: storedTiers(difficulty, language),
     rounds,
-    toItem: (data) => compassFromDoc(data as PlaceDoc & { compass: NonNullable<PlaceDoc['compass']> }),
+    toItem: (data, id) => compassFromDoc(data as PlaceDoc & { compass: NonNullable<PlaceDoc['compass']> }, id),
     keep: (place) => effectiveDifficulty(place, language) === difficulty,
   });
 };

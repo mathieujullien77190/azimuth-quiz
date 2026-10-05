@@ -14,7 +14,8 @@ import { decodeRing } from './polyline';
 import type { CompassDoc, CountryDoc, CountryNeighborDoc, ContourPlaceDoc, PlaceDoc } from './types';
 
 /** `Place` (Compass) from its document. */
-export const compassFromDoc = (doc: PlaceDoc & { compass: CompassDoc }): Place => ({
+export const compassFromDoc = (doc: PlaceDoc & { compass: CompassDoc }, key?: string): Place => ({
+  ...(key !== undefined && { key }),
   name: doc.name,
   code: doc.code,
   category: doc.compass.category,

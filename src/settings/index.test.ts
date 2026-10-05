@@ -1,18 +1,36 @@
 import { DEFAULT_CLUE_SETTINGS } from '@/games/clues/constants';
 import { DEFAULT_CONTOUR_SETTINGS } from '@/games/contour/constants';
 import { DEFAULT_SETTINGS } from '@/games/compass/constants';
-import { loadPlayerName, loadSettings, savePlayerName, saveSettings } from '@/helpers';
+import { loadDevCode, loadPlayerName, loadSettings, saveDevCode, savePlayerName, saveSettings } from '@/helpers';
 
-import { hydratePlayerName, hydrateSettings, useClueSettings, useContourSettings, usePlayerName, useSettings } from '.';
+import { act, renderHook } from '@testing-library/react-native';
+
+import { DEV_CODE } from '@/data';
+
+import {
+  hydrateDevCode,
+  hydratePlayerName,
+  hydrateSettings,
+  useClueSettings,
+  useContourSettings,
+  useDevCode,
+  useDevMode,
+  usePlayerName,
+  useSettings,
+} from '.';
 
 jest.mock('@/helpers', () => ({
   ...jest.requireActual('@/helpers'),
+  loadDevCode: jest.fn(),
   loadPlayerName: jest.fn(),
   loadSettings: jest.fn(),
+  saveDevCode: jest.fn(),
   savePlayerName: jest.fn(),
   saveSettings: jest.fn(),
 }));
 
+const mockedLoadDevCode = loadDevCode as jest.Mock;
+const mockedSaveDevCode = saveDevCode as jest.Mock;
 const mockedLoadPlayerName = loadPlayerName as jest.Mock;
 const mockedLoadSettings = loadSettings as jest.Mock;
 const mockedSavePlayerName = savePlayerName as jest.Mock;
@@ -21,11 +39,13 @@ const mockedSaveSettings = saveSettings as jest.Mock;
 beforeEach(() => {
   jest.clearAllMocks();
   mockedLoadPlayerName.mockResolvedValue(null);
+  mockedLoadDevCode.mockResolvedValue(null);
   mockedLoadSettings.mockResolvedValue(DEFAULT_SETTINGS);
   useSettings.setState({ settings: DEFAULT_SETTINGS, ready: false });
   useClueSettings.setState({ settings: DEFAULT_CLUE_SETTINGS });
   useContourSettings.setState({ settings: DEFAULT_CONTOUR_SETTINGS });
   usePlayerName.setState({ playerName: '', ready: false });
+  useDevCode.setState({ devCode: '', ready: false });
 });
 
 describe('useSettings (Zustand store)', () => {
@@ -138,5 +158,44 @@ describe('usePlayerName (Zustand store)', () => {
 
     expect(usePlayerName.getState().playerName).toBe('Max');
     expect(mockedSavePlayerName).toHaveBeenCalledWith('Max');
+  });
+});
+
+describe('useDevCode (Zustand store)', () => {
+  it('starts empty and not ready, then exposes the saved code once hydrated', async () => {
+    expect(useDevCode.getState()).toMatchObject({ devCode: '', ready: false });
+    mockedLoadDevCode.mockResolvedValue('abc');
+
+    hydrateDevCode();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(useDevCode.getState()).toMatchObject({ devCode: 'abc', ready: true });
+  });
+
+  it('falls back to an empty code when nothing was saved', async () => {
+    hydrateDevCode();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(useDevCode.getState()).toMatchObject({ devCode: '', ready: true });
+  });
+
+  it('setDevCode updates and persists it', () => {
+    useDevCode.getState().setDevCode('abc');
+
+    expect(useDevCode.getState().devCode).toBe('abc');
+    expect(mockedSaveDevCode).toHaveBeenCalledWith('abc');
+  });
+
+  it('turns the dev mode on only for exactly the secret code (spaces around it ignored)', async () => {
+    const { result } = await renderHook(() => useDevMode());
+    expect(result.current).toBe(false);
+
+    await act(async () => useDevCode.getState().setDevCode('supermatou2'));
+    expect(result.current).toBe(false);
+
+    await act(async () => useDevCode.getState().setDevCode(`  ${DEV_CODE} `));
+    expect(result.current).toBe(true);
   });
 });

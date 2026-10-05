@@ -26,6 +26,13 @@ export const PLAYER_NAME_STORAGE_KEY = 'azimuthquiz:player-name';
 /** The room code this device hosted last, offered again for its next room (see `createRoom`). */
 /** The room this device joined last, offered as a one-tap "join" shortcut on the setup screen. */
 export const LAST_JOINED_ROOM_STORAGE_KEY = 'azimuthquiz:last-joined-room';
+/** The dev code typed in the settings (see `useDevCode`): saved as typed, only `DEV_CODE` turns the dev mode on. */
+export const DEV_CODE_STORAGE_KEY = 'azimuthquiz:dev-code';
+/** The secret that turns the dev mode on (the difficulty feedback of `useDevFeedback`). Also written in
+ * `firestore.rules`, the real gate of the `devFeedback` collection: change both together. */
+export const DEV_CODE = 'supermatou';
+/** Where the dev mode's difficulty opinions go (read by the admin's "Avis difficulté" page, outside the journal). */
+export const DEV_FEEDBACK_COLLECTION = 'devFeedback';
 export const ROOM_CODE_STORAGE_KEY = 'azimuthquiz:room-code';
 
 // --- Game options (shared by all 3 games) ---
@@ -84,3 +91,6 @@ export const REACTION_EMOJIS = ['🤔', '🥰', '😡', '😱', '😭', '🤞', 
 /** How long a received reaction stays on screen, and the least time between two reactions from the same device. */
 export const REACTION_DISPLAY_MS = 2500;
 export const REACTION_COOLDOWN_MS = 1000;
+/** Reactions one player may send in a game: past it the reactions button is hidden on that device (the game screen's
+ * hook starts over with each game). */
+export const REACTIONS_PER_GAME = 20;

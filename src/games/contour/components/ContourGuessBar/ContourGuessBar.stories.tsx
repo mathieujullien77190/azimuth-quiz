@@ -10,6 +10,8 @@ import { ContourGuessBar } from './ContourGuessBar';
 import emptyCode from './Empty.source.md?raw';
 import type { ContourGuessBarProps } from './types';
 import afterAMissCode from './AfterAMiss.source.md?raw';
+import notYourTurnCode from './NotYourTurn.source.md?raw';
+import alreadyGuessedCode from './AlreadyGuessed.source.md?raw';
 
 /** Named (capitalized) so eslint's rules-of-hooks recognizes it as a component and allows the
  * `useState` below — an inline arrow assigned to a story's `render` doesn't qualify. Only the text
@@ -29,7 +31,12 @@ const meta = {
       </div>
     ),
   ],
-  args: { guessText: '', onChangeGuessText: fn(), onSubmit: fn() },
+  args: {
+    label: translations.fr.contourGame.guessLabel,
+    guessText: '',
+    onChangeGuessText: fn(),
+    onSubmit: fn(),
+  },
   render: InteractiveDemo,
 } satisfies Meta<typeof ContourGuessBar>;
 
@@ -39,11 +46,37 @@ type Story = StoryObj<typeof meta>;
 
 export const Empty: Story = {
   parameters: source(emptyCode),
+  decorators: [
+    localizedArgs((t) => ({ label: t.contourGame.guessLabel })),
+  ],
+};
+
+/** Not the turn-holder: the field is open to type a country, but "Valider" stays greyed out. */
+export const NotYourTurn: Story = {
+  parameters: source(notYourTurnCode),
+  args: { guessText: 'Espagn', canSubmit: false },
 };
 
 /** The turn-holder guessed wrong: the penalty banner sits above the input, which stays open. */
 export const AfterAMiss: Story = {
   parameters: source(afterAMissCode),
-  decorators: [localizedArgs((t) => ({ wrongText: t.contourGame.wrongGuess('Zoé') }))],
-  args: { guessText: 'Espagn', wrongText: translations.fr.contourGame.wrongGuess('Zoé') },
+  decorators: [
+    localizedArgs((t) => ({
+      label: t.contourGame.guessLabel,
+      wrongText: t.contourGame.wrongGuess('Zoé', '5'),
+    })),
+  ],
+  args: { guessText: 'Espagn', wrongText: translations.fr.contourGame.wrongGuess('Zoé', '5') },
+};
+
+/** One guess per turn: the turn-holder already missed, so the field and "Valider" are hidden and only the line says what is left to do. */
+export const AlreadyGuessed: Story = {
+  parameters: source(alreadyGuessedCode),
+  decorators: [
+    localizedArgs((t) => ({
+      label: t.contourGame.guessLabel,
+      lockedText: t.game.alreadyGuessed,
+    })),
+  ],
+  args: { guessText: 'Espagn', canSubmit: false, lockedText: translations.fr.game.alreadyGuessed },
 };

@@ -4,7 +4,7 @@ import type { ContourSettings } from '@/types';
 
 import { createRoomApi } from '@/helpers/roomBase';
 
-import type { HintGroup } from './hintPlan';
+import type { HintPick } from './hintPlan';
 
 // Not re-exported from `helpers/index.ts`'s barrel: `firebase/firestore` is ESM-only and crashes
 // Jest the moment anything requires it transitively (see `helpers/firebase.ts`'s own note).
@@ -70,19 +70,37 @@ export const startContourRoomGame = (
     roundIndex: 0,
     hintsRevealed: 0,
     hintPicks: [],
+    quadrantsRevealed: [],
     turnUid: firstTurnUid,
     verdict: null,
     roundWinnerUid: null,
     wrongGuessUid: null,
     wrongGuessSeq: 0,
+    wrongGuessHints: null,
     totalScores: {},
     typing: null,
   });
 
 /** Turn-holder-only (security rules check `request.auth.uid == resource.data.turnUid`): reveals the hint
  * the player picked (`picks` = every group picked so far this round, in order; see `orderHintPlan`) and passes the turn. */
-export const revealContourRoomHint = (code: string, picks: HintGroup[], nextTurnUid: string): Promise<void> =>
+export const revealContourRoomHint = (code: string, picks: HintPick[], nextTurnUid: string): Promise<void> =>
   updateDoc(roomRef(code), { hintPicks: picks, hintsRevealed: picks.length, turnUid: nextTurnUid });
+
+/** Turn-holder-only: opens one more cell of the board. It counts as a hint and passes the turn, like `revealContourRoomHint`:
+ * `picks` = every pick so far this round with the cell opening (`QUADRANT_PICK`) added, `quadrants` = every cell opened so
+ * far beyond the starting one (see `helpers/quadrants.ts`) — all in ONE write, so no device sees one without the other. */
+export const revealContourRoomQuadrant = (
+  code: string,
+  picks: HintPick[],
+  quadrants: number[],
+  nextTurnUid: string,
+): Promise<void> =>
+  updateDoc(roomRef(code), {
+    hintPicks: picks,
+    hintsRevealed: picks.length,
+    quadrantsRevealed: quadrants,
+    turnUid: nextTurnUid,
+  });
 
 /** Turn-holder-only: mirrors the answer being typed, so the other players can watch it live (same as Clues'
  * `setClueRoomTyping`). */
@@ -106,8 +124,8 @@ export const giveUpContourRoom = (code: string): Promise<void> =>
 /** Turn-holder-only: self-reports a wrong guess (the round stays open). `seq` must be strictly
  * greater than the room's current `wrongGuessSeq` (the caller's own `gameState.wrongGuessSeq + 1`)
  * so the host can tell repeated wrong guesses by the same player apart from a no-op resend. */
-export const reportContourRoomWrong = (code: string, uid: string, seq: number): Promise<void> =>
-  updateDoc(roomRef(code), { wrongGuessUid: uid, wrongGuessSeq: seq });
+export const reportContourRoomWrong = (code: string, uid: string, seq: number, hintsRevealed: number): Promise<void> =>
+  updateDoc(roomRef(code), { wrongGuessUid: uid, wrongGuessSeq: seq, wrongGuessHints: hintsRevealed });
 
 /** Host-only: writes the updated running totals once it's observed `verdict === 'correct'` (a
  * find) or `wrongGuessSeq` advancing (a miss) — the only thing that ever writes `totalScores`. */
@@ -127,9 +145,12 @@ export const nextContourRoomRound = (
     roundIndex,
     hintsRevealed: 0,
     hintPicks: [],
+    quadrantsRevealed: [],
     turnUid: firstTurnUid,
     verdict: null,
     roundWinnerUid: null,
+    // A new round starts with no guess made: the "one guess per turn" rule reads this (see `turnGuess.ts`).
+    wrongGuessHints: null,
     typing: null,
   });
 
@@ -140,10 +161,14 @@ export type ContourRoomGameState = {
    * room that has none: the silhouettes then just come out the same for everyone). */
   simplifySeed: number;
   roundIndex: number;
-  /** How many steps of the round hint plan are revealed (0 to its length, the last step reveals the country), see `buildHintPlan`/`contourGuessPoints`. */
+  /** How many hints are out this round: every pick counts, a cell opening included (`hintPicks.length`). The plan steps
+   * on the board are the picks that are not cell openings (`stepsOutOf`); see `buildHintPlan`/`contourPoints`. */
   hintsRevealed: number;
-  /** The groups picked so far this round, in order (see `orderHintPlan`): `hintsRevealed` of them. */
-  hintPicks: HintGroup[];
+  /** The picks so far this round, in order (see `orderHintPlan`): `hintsRevealed` of them. A pick is a group of the hint
+   * list, or the opening of a cell of the board (`QUADRANT_PICK`: a hint for the points, no plan step). */
+  hintPicks: HintPick[];
+  /** The cells of the board opened this round beyond the starting one, in order (0-3, see `helpers/quadrants.ts`). */
+  quadrantsRevealed: number[];
   turnUid: string | null;
   /** The turn-holder's in-progress answer text, live (see `setContourRoomTyping`): `null` outside any typing. */
   typing: { uid: string; text: string } | null;
@@ -153,6 +178,9 @@ export type ContourRoomGameState = {
    * so the host's scoring effect can tell a new miss apart from the same snapshot re-delivered. */
   wrongGuessUid: string | null;
   wrongGuessSeq: number;
+  /** How many clues/hints were out at that wrong guess: the turn-holder cannot guess again until one more is revealed
+   * (`turnGuess.ts`). Reset to null at every round start; null (or missing, in an older room) = no restriction. */
+  wrongGuessHints: number | null;
   totalScores: Record<string, number>;
 };
 
@@ -168,13 +196,15 @@ export const subscribeToRoomGame = (code: string, onUpdate: (state: ContourRoomG
       simplifySeed: (data?.simplifySeed as number | undefined) ?? 0,
       roundIndex: (data?.roundIndex as number | undefined) ?? 0,
       hintsRevealed: (data?.hintsRevealed as number | undefined) ?? 0,
-      hintPicks: (data?.hintPicks as HintGroup[] | undefined) ?? [],
+      hintPicks: (data?.hintPicks as HintPick[] | undefined) ?? [],
+      quadrantsRevealed: (data?.quadrantsRevealed as number[] | undefined) ?? [],
       turnUid: (data?.turnUid as string | undefined) ?? null,
       typing: (data?.typing as ContourRoomGameState['typing'] | undefined) ?? null,
       verdict: (data?.verdict as ContourRoomGameState['verdict'] | undefined) ?? null,
       roundWinnerUid: (data?.roundWinnerUid as string | undefined) ?? null,
       wrongGuessUid: (data?.wrongGuessUid as string | undefined) ?? null,
       wrongGuessSeq: (data?.wrongGuessSeq as number | undefined) ?? 0,
+      wrongGuessHints: (data?.wrongGuessHints as number | undefined) ?? null,
       totalScores: (data?.totalScores as Record<string, number> | undefined) ?? {},
     });
   });

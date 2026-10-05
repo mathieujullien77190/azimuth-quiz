@@ -8,7 +8,9 @@ import {
   HINT_STACK_GAP_RATIO,
   boardDimensionsFor,
   createProjector,
+  flagRect,
   projectPoints,
+  type BoardRect,
   type ContourBoardHintLabel,
 } from '../components/ContourBoard';
 import { computeBorders, type CountryBorders } from './borders';
@@ -147,8 +149,27 @@ export const boardShapeFor = (board: RoundBoard, plan: readonly HintStep[], hint
   };
 };
 
+/** Which neighbors show their flag once the steps in `out` are revealed: none, the first one in the country's data order
+ * (`neighborFlagFirst`, a fixed pick so every device draws the same one), or all of them (`neighborFlags`, which keeps that
+ * first one in place). */
+const shownFlagIndexes = (out: ReadonlySet<HintStep>, board: Pick<RoundBoard, 'neighborHints'>): ReadonlySet<number> =>
+  new Set(
+    out.has('neighborFlags')
+      ? board.neighborHints.map((_, index) => index)
+      : out.has('neighborFlagFirst') && board.neighborHints.length > 0
+        ? [0]
+        : [],
+  );
+
+/** The boxes of the neighbor flags out after `hintsRevealed` steps of `plan`, in board pixels: what the quadrant masks
+ * mark when a flag lies behind a hidden cell (`markersInHiddenQuadrants`). */
+export const flagRects = (board: RoundBoard, plan: readonly HintStep[], hintsRevealed: number): BoardRect[] => {
+  const shown = shownFlagIndexes(revealedSteps(plan, hintsRevealed), board);
+  return board.neighborHints.flatMap(({ position }, index) => (shown.has(index) ? [flagRect(position)] : []));
+};
+
 /** The labels of the steps out after `hintsRevealed` steps of `plan`, all drawn straight on the
- * board. Neighbors: every flag at its own curated spot, then each country code and, one step later, its full name, stacked just below its icon
+ * board. Neighbors: one flag, then every flag at its own curated spot, then each country code and, one step later, its full name, stacked just below its icon
  * (both stay up so the icon keeps reading as "this is what that name refers to"). Cities and capital:
  * a marker at the place's position, then its name stacked below. `reveal`: the country's own flag at
  * its curated spot with its name below (effectively the answer). */
@@ -162,8 +183,8 @@ export const buildHintLabels = (
   const stackGap = Math.min(board.width, board.height) * HINT_STACK_GAP_RATIO;
   const below = (position: Point2D): Point2D => ({ x: position.x, y: position.y + stackGap });
 
-  const neighborLabels = board.neighborHints.flatMap(({ neighbor, position }) => [
-    ...(out.has('neighborFlags') ? [{ position, icon: true, text: neighborIcon(neighbor) }] : []),
+  const neighborLabels = board.neighborHints.flatMap(({ neighbor, position }, index) => [
+    ...(shownFlagIndexes(out, board).has(index) ? [{ position, icon: true, text: neighborIcon(neighbor) }] : []),
     // Under the flag: first the country code ("IT"), then — the next step — the full name in its place.
     ...(out.has('neighborNames')
       ? [{ position: below(position), text: neighborName(neighbor, language) }]

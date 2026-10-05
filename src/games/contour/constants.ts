@@ -22,7 +22,8 @@ export const MAX_CITY_HINTS = 5;
 
 // Flat penalty deducted from whichever player is attributed a wrong country guess (see
 // ContourGameScreen's post-"Valider" attribution step) — same amount regardless of hint tier.
-export const CONTOUR_WRONG_GUESS_PENALTY = 50;
+export const CONTOUR_WRONG_GUESS_PENALTY = 5;
+
 
 export const DEFAULT_CONTOUR_SETTINGS: ContourSettings = {
   playerName: '',

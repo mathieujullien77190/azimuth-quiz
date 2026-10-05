@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 
-import { REACTION_COOLDOWN_MS } from '@/data';
+import { REACTION_COOLDOWN_MS, REACTIONS_PER_GAME } from '@/data';
 
 import type { RoomPlayers, RoomReaction } from './roomBase';
 import { reporting } from './reportError';
@@ -13,7 +13,8 @@ export type ShownReaction = { emoji: string; name: string | null; seq: number };
  * included) once this screen is open — the overlay lets each one run its own course, so this keeps no timer — and
  * `send` puts one of the footer's emojis to everybody. A reaction already in the room when the screen opens is an old
  * one and is not shown; two sends from this device are at least `REACTION_COOLDOWN_MS` apart, so a held finger cannot
- * flood the room; and `canReact` is false alone in the room (nobody to send to), where the bar stays hidden.
+ * flood the room; a player sends at most `REACTIONS_PER_GAME` in a game; and `canReact` is false alone in the room (nobody
+ * to send to) or once that many were sent, where the bar stays hidden.
  */
 export const useRoomReactions = (
   reaction: RoomReaction | null,
@@ -32,10 +33,13 @@ export const useRoomReactions = (
   }
 
   const lastSentAt = useRef(0);
+  // Counted on this device, for the life of the game screen: a new game opens a new screen, so it starts over.
+  const [sent, setSent] = useState(0);
   const send = (emoji: string) => {
     const now = Date.now();
-    if (now - lastSentAt.current < REACTION_COOLDOWN_MS) return;
+    if (sent >= REACTIONS_PER_GAME || now - lastSentAt.current < REACTION_COOLDOWN_MS) return;
     lastSentAt.current = now;
+    setSent((count) => count + 1);
     sendReaction(code, emoji).catch(reporting('room.reaction', { kind: 'background', room: code }));
   };
 
@@ -45,6 +49,6 @@ export const useRoomReactions = (
         ? null
         : ({ emoji: latest.emoji, name: players[latest.uid]?.name ?? null, seq: latest.seq } satisfies ShownReaction),
     send,
-    canReact: Object.keys(players).length > 1,
+    canReact: Object.keys(players).length > 1 && sent < REACTIONS_PER_GAME,
   };
 };

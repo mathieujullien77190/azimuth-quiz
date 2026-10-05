@@ -2,14 +2,14 @@ import { fireEvent, render } from '@testing-library/react-native';
 
 import { clearAppData } from '@/helpers';
 import { useLanguage } from '@/i18n';
-import { useSettings } from '@/settings';
+import { useDevCode, useSettings } from '@/settings';
 import { useThemeSettings } from '@/themes';
 import type { ThemeId } from '@/types';
 
 import SettingsScreen from '.';
 import { APP_VERSION } from './constants';
 
-jest.mock('@/helpers', () => ({ clearAppData: jest.fn() }));
+jest.mock('@/helpers', () => ({ clearAppData: jest.fn(), saveDevCode: jest.fn() }));
 jest.mock('@/i18n', () => {
   const actual = jest.requireActual('@/i18n');
   return { ...actual, useLanguage: jest.fn() };
@@ -102,6 +102,13 @@ describe('SettingsScreen', () => {
     await fireEvent.press(getByText('Vider les données'));
     const button = getByRole('button', { name: 'Données effacées.' });
     expect(button.props.accessibilityState.disabled).toBe(true);
+  });
+
+  it('has a dev code field that only saves what is typed', async () => {
+    useDevCode.setState({ devCode: '' });
+    const { getByLabelText } = await renderSettings();
+    await fireEvent.changeText(getByLabelText('Mode dev'), 'supermatou');
+    expect(useDevCode.getState().devCode).toBe('supermatou');
   });
 
   it('calls onBack when pressed', async () => {

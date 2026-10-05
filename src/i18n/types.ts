@@ -107,6 +107,8 @@ export type Translations = {
     quit: string;
     round: string;
     validate: string;
+    /** Turn-based games: shown to the turn-holder who already guessed this turn (the only move left is a hint). */
+    alreadyGuessed: string;
     next: string;
     last: string;
     roundOver: string;
@@ -167,6 +169,13 @@ export type Translations = {
     /** Connector word between two tied names ("et" / "and"). */
     and: string;
   };
+  /** The dev mode's difficulty question, asked after a round to a device that has the dev code. */
+  devFeedback: {
+    placeQuestion: (name: string) => string;
+    countryQuestion: (name: string) => string;
+    /** Accessibility label of the backdrop: tapping it closes the question without answering. */
+    dismiss: string;
+  };
   settings: {
     title: string;
     languageTitle: string;
@@ -176,6 +185,8 @@ export type Translations = {
     aboutTitle: string;
     author: string;
     claudeMention: string;
+    devTitle: string;
+    devLabel: string;
     dataTitle: string;
     /** Explains precisely what local storage contains, right before the button that clears it. */
     dataHint: string;
@@ -220,6 +231,10 @@ export type Translations = {
     difficultyHint: string;
   };
   contourGame: {
+    /** The hidden cells of the board (see `ContourQuadrantMask`): the label of the one that can be opened (`cell` is
+     * 1 to 4) and what opening it costs (`points` already formatted). */
+    quadrantLabel: (cell: number) => string;
+    quadrantCost: (points: string) => string;
     /** Online only: the round's country could not be read; a tap tries again. */
     loadFailed: string;
     /** Shown in the country-identity slot during the 'guess' phase, in place of the (not yet
@@ -234,11 +249,13 @@ export type Translations = {
     /** Online only: round result when someone found the country ("Zoé scores 375 points!"). */
     found: (name: string, points: string) => string;
     /** Online only: what a correct guess would earn right now, dropping with each hint. */
-    pointsAtStake: (points: string) => string;
+    /** The label of the country field, left of the row above it. */
+    guessLabel: string;
+    /** What a right answer is worth right now, right of that row ("(pour 450 points)"). */
     guessPlaceholder: string;
     /** A wrong guess, naming who it got attributed to — doesn't end anything, shown until the
      * next attempt. */
-    wrongGuess: (name: string) => string;
+    wrongGuess: (name: string, points: string) => string;
     /** Moves on from a give-up (tier 4 confirmed) to the final reveal — single shared button, not
      * per-player. */
     continueLabel: string;

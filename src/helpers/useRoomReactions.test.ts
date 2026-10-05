@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import { REACTION_COOLDOWN_MS } from '@/data';
+import { REACTION_COOLDOWN_MS, REACTIONS_PER_GAME } from '@/data';
 
 import { setErrorReporter, resetErrorThrottle } from './reportError';
 import type { RoomPlayers, RoomReaction } from './roomBase';
@@ -99,5 +99,20 @@ describe('useRoomReactions — alone in the room', () => {
     expect(alone.result.current.canReact).toBe(false);
     const together = await setup({ reaction: null });
     expect(together.result.current.canReact).toBe(true);
+  });
+});
+
+describe('useRoomReactions — the limit per game', () => {
+  it('lets a player send REACTIONS_PER_GAME reactions, then hides the button and sends no more', async () => {
+    const { result, sendReaction } = await setup({ reaction: null });
+    for (let index = 0; index < REACTIONS_PER_GAME; index += 1) {
+      expect(result.current.canReact).toBe(true);
+      await act(async () => result.current.send('👍'));
+      await act(async () => jest.advanceTimersByTime(REACTION_COOLDOWN_MS));
+    }
+    expect(sendReaction).toHaveBeenCalledTimes(REACTIONS_PER_GAME);
+    expect(result.current.canReact).toBe(false);
+    await act(async () => result.current.send('👍'));
+    expect(sendReaction).toHaveBeenCalledTimes(REACTIONS_PER_GAME);
   });
 });

@@ -21,3 +21,7 @@ export const HINT_ICON_FONT_SIZE = 22;
  * between a revealed hint's icon and its name stacked just below — used both for a neighbor
  * (icon alone at tier 1, icon+name at tier 2) and the target country's own flag/name (tier 3/4). */
 export const HINT_STACK_GAP_RATIO = 0.045;
+/** The footprint of a flag emoji drawn at `HINT_ICON_FONT_SIZE` (a little wider than tall, sitting on its baseline): what
+ * the quadrant masks mark when a flag lies behind a hidden cell. */
+export const FLAG_WIDTH = HINT_ICON_FONT_SIZE * 1.3;
+export const FLAG_HEIGHT = HINT_ICON_FONT_SIZE * 0.9;

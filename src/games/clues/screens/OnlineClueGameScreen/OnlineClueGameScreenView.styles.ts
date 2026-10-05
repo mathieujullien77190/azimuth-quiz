@@ -10,7 +10,7 @@ export const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
     pointsAtStake: {
       ...typography.body,
       color: colors.text,
-      fontSize: fontSize.caption + 1,
+      fontSize: fontSize.subtitle,
       textAlign: 'center',
     },
     actions: {
@@ -19,36 +19,12 @@ export const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
     buzzRow: {
       gap: spacing.sm,
     },
-    skeletonRow: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
-      alignItems: 'flex-end',
-      gap: spacing.xl,
-      marginBottom: spacing.md,
-    },
-    skeletonWord: {
-      flexDirection: 'row',
-      gap: spacing.xs,
-    },
-    skeletonSlot: {
-      width: 18,
-      height: 26,
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      borderBottomWidth: 2,
-      borderBottomColor: colors.accent,
-    },
-    skeletonHyphen: {
-      width: 12,
-      height: 26,
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-    },
-    skeletonLetter: {
-      ...typography.display,
-      color: colors.accent,
-      fontSize: fontSize.subtitle,
+    // The turn-holder who already guessed: what is left to him.
+    guessedNote: {
+      ...typography.body,
+      color: colors.textMuted,
+      fontSize: fontSize.caption + 1,
+      textAlign: 'center',
     },
     guessInput: {
       ...typography.heading,
@@ -71,6 +47,7 @@ export const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
     },
     resultWrong: {
       color: colors.danger,
+      fontSize: fontSize.subtitle,
     },
     revealAnswer: {
       ...typography.heading,

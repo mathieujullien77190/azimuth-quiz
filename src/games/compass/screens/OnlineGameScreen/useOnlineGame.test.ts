@@ -3,13 +3,17 @@ import { act, renderHook } from '@testing-library/react-native';
 import { finishRoomRound, nextRoomRound, removeRoomPlayer, submitRoomGuess } from '@/games/compass/helpers/room';
 import type { RoomGameState } from '@/games/compass/helpers/room';
 import { useRoomStore } from '@/games/compass/store/roomStore';
+import { DEV_CODE } from '@/data';
 import { scoreRound } from '@/helpers';
+import { sendDevFeedback } from '@/helpers/devFeedback';
+import { useDevCode } from '@/settings';
 import type { Place } from '@/types';
 
 import { DEFAULT_BEARING } from './constants';
 import { useOnlineGame } from './useOnlineGame';
 
 jest.mock('expo-router', () => ({ useRouter: () => ({ dismissTo: jest.fn() }) }));
+jest.mock('@/helpers/devFeedback', () => ({ sendDevFeedback: jest.fn(() => Promise.resolve()) }));
 jest.mock('@/games/compass/helpers/room', () => ({
   deleteRoom: jest.fn(() => Promise.resolve()),
   finishRoomRound: jest.fn(() => Promise.resolve()),
@@ -67,6 +71,7 @@ const setup = async (state: Partial<ReturnType<typeof useRoomStore.getState>> = 
 beforeEach(() => {
   jest.clearAllMocks();
   useRoomStore.setState(INITIAL_STATE, true);
+  useDevCode.setState({ devCode: '' });
 });
 
 describe('useOnlineGame — the draft answer', () => {
@@ -264,5 +269,62 @@ describe('useOnlineGame — scoring the round (host only)', () => {
   it('does nothing with nobody in the room', async () => {
     await setup({ players: {}, gameState: gameState() });
     expect(finishRoomRound).not.toHaveBeenCalled();
+  });
+});
+
+describe('useOnlineGame — the dev mode difficulty question', () => {
+  const LYON = { ...PARIS, name: 'Lyon' };
+  const places = [{ ...PARIS, key: 'par' }, LYON];
+  const nextRound = (overrides: Partial<RoomGameState> = {}) =>
+    act(async () => setRoom({ gameState: gameState({ screen: 'game', roundIndex: 1, places, ...overrides }) }));
+
+  it('does not ask over the reveal, asks about the previous place once the host moved on, and writes the answer against its key', async () => {
+    useDevCode.setState({ devCode: DEV_CODE });
+    const { result } = await setup({ gameState: gameState({ screen: 'reveal', places }) });
+    expect(result.current.devFeedback.question).toBeNull();
+
+    await nextRound();
+    expect(result.current.devFeedback.question).toBe('Le lieu Paris était-il…');
+    await act(async () => result.current.devFeedback.choose('hard'));
+    expect(sendDevFeedback).toHaveBeenCalledWith({
+      game: 'compass',
+      targetType: 'place',
+      targetKey: 'par',
+      name: 'Paris',
+      currentDifficulty: 'easy',
+      suggestedDifficulty: 'hard',
+    });
+    expect(result.current.devFeedback.question).toBeNull();
+  });
+
+  it('asks about the last round on the end screen, once', async () => {
+    useDevCode.setState({ devCode: DEV_CODE });
+    const { result } = await setup({ gameState: gameState({ screen: 'reveal', roundIndex: 1, places }) });
+    await act(async () => setRoom({ gameState: gameState({ screen: 'end', roundIndex: 2, places }) }));
+    expect(result.current.devFeedback.question).toBe('Le lieu Lyon était-il…');
+    await act(async () => result.current.devFeedback.dismiss());
+    expect(result.current.devFeedback.question).toBeNull();
+  });
+
+  it('falls back on the name for a place written without its key', async () => {
+    useDevCode.setState({ devCode: DEV_CODE });
+    const { result } = await setup({ gameState: gameState({ screen: 'reveal', places: [PARIS, LYON] }) });
+    await nextRound({ places: [PARIS, LYON] });
+    await act(async () => result.current.devFeedback.choose('easy'));
+    expect(jest.mocked(sendDevFeedback).mock.calls[0][0].targetKey).toBe('Paris');
+  });
+
+  it('asks nothing while the round is played, without the dev code, or while there is no place', async () => {
+    useDevCode.setState({ devCode: DEV_CODE });
+    expect((await setup()).result.current.devFeedback.question).toBeNull();
+
+    useDevCode.setState({ devCode: '' });
+    const off = await setup({ gameState: gameState({ screen: 'reveal', places }) });
+    await nextRound();
+    expect(off.result.current.devFeedback.question).toBeNull();
+
+    useDevCode.setState({ devCode: DEV_CODE });
+    const none = await setup({ gameState: gameState({ screen: 'reveal', places: [] }) });
+    expect(none.result.current.devFeedback.question).toBeNull();
   });
 });

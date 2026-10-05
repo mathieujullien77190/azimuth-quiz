@@ -3,6 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { bearingDeg, distanceKm, nameSkeleton } from '@/helpers';
 import { useDebouncedValue } from '@/helpers/useDebouncedValue';
+import { hasGuessedThisTurn } from '@/helpers/turnGuess';
+import { useDevFeedback } from '@/helpers/useDevFeedback';
 import { nextPlayerUid, playersForRound } from '@/helpers/roomPlayers';
 import { useGuessDraft } from '@/helpers/useGuessDraft';
 import { useHostTurnRecovery } from '@/helpers/useHostTurnRecovery';
@@ -41,6 +43,15 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
 
   const place = gameState.places[gameState.roundIndex];
   const isMyTurn = localUid !== null && localUid === gameState.turnUid;
+  // One guess per turn: once the turn-holder has missed, the only thing left to him is to reveal a hint (which passes the
+  // hand). Shared state (`wrongGuessHints`, see `turnGuess.ts`) says so on every device; the local guard covers the gap
+  // before the room's update comes back, so a double tap cannot send a second guess.
+  const hintsOut = gameState.revealedClueIds.length;
+  const [guessGuard, setGuessGuard] = useState<{ round: number; hints: number } | null>(null);
+  const guessedThisTurn =
+    isMyTurn &&
+    (hasGuessedThisTurn(gameState, hintsOut) ||
+      (guessGuard !== null && guessGuard.round === gameState.roundIndex && guessGuard.hints === hintsOut));
   // Who plays in which order this round: arrival order rotated by the round number, so that each
   // player in turn opens a round (`playersForRound`). What the tabs show, too.
   const roundPlayers = playersForRound(onlinePlayers, gameState.roundIndex);
@@ -136,13 +147,14 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
   };
 
   const submitGuess = () => {
-    if (!isMyTurn || localUid === null || place === undefined) return;
+    if (!isMyTurn || guessedThisTurn || localUid === null || place === undefined) return;
     const correct = normalizePlaceGuess(guessText) === normalizePlaceGuess(place.name);
     if (correct) {
       reportClueRoomCorrect(code, localUid).catch(reporting('clues.reportCorrect', { room: code }));
       return;
     }
-    reportClueRoomWrong(code, localUid, gameState.wrongGuessSeq + 1).catch(
+    setGuessGuard({ round: gameState.roundIndex, hints: hintsOut });
+    reportClueRoomWrong(code, localUid, gameState.wrongGuessSeq + 1, hintsOut).catch(
       reporting('clues.reportWrong', { room: code }),
     );
     setGuessText('');
@@ -171,6 +183,18 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     ).catch(reporting('clues.nextRound', { room: code }));
   };
 
+  // Dev mode: once the host has moved on from a round (or the game is over), a device with the dev code is asked how hard that round's place was.
+  const devFeedback = useDevFeedback({
+    game: 'clues',
+    roundIndex: gameState.roundIndex,
+    roundOver: gameState.verdict !== null,
+    gameOver: gameState.screen === 'end',
+    target:
+      place === undefined
+        ? undefined
+        : { targetType: 'place', targetKey: place.key, name: place.name, difficulty: place.difficulty },
+  });
+
   return {
     localUid,
     players,
@@ -186,6 +210,7 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     distance,
     origin: gameState.origin?.coordinates,
     isMyTurn,
+    guessedThisTurn,
     typedByActivePlayer,
     skeletonGroups,
     skeletonLengthKnown,
@@ -200,5 +225,6 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     handleQuit,
     handleReplay,
     reactions,
+    devFeedback,
   };
 };

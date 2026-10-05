@@ -70,4 +70,25 @@ export const createStyles = ({ colors, isDark, typography }: Theme) =>
       paddingTop: spacing.xs,
       paddingBottom: spacing.xs,
     },
+    // With a detail: one row, the question on the left, the detail pinned to the right edge.
+    questionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.xs,
+    },
+    questionLeft: {
+      ...typography.heading,
+      color: colors.text,
+      fontSize: fontSize.subtitle,
+      flexShrink: 1,
+    },
+    questionDetail: {
+      ...typography.heading,
+      color: colors.accent,
+      fontSize: fontSize.body + 2,
+    },
   });

@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLocales } from 'expo-localization';
 
-import { LANGUAGE_STORAGE_KEY, PLAYER_NAME_STORAGE_KEY, THEME_STORAGE_KEY } from '@/data';
+import { DEV_CODE_STORAGE_KEY, LANGUAGE_STORAGE_KEY, PLAYER_NAME_STORAGE_KEY, THEME_STORAGE_KEY } from '@/data';
 import { BEST_SCORE_STORAGE_KEY, SETTINGS_STORAGE_KEY } from '@/games/compass/constants';
 import type { Language } from '@/i18n';
 import type { GameSettings, ThemeId } from '@/types';
@@ -71,6 +71,22 @@ export const saveThemeId = async (themeId: ThemeId): Promise<void> => {
 
 /** Last name typed in any game's setup — `null` until one has been (see `useSetupRoom`'s prefill,
  * the only reader/writer of this key). */
+export const loadDevCode = async (): Promise<string | null> => {
+  try {
+    return await AsyncStorage.getItem(DEV_CODE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+};
+
+export const saveDevCode = async (code: string): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(DEV_CODE_STORAGE_KEY, code);
+  } catch {
+    // Not saved: typed again next time, not critical.
+  }
+};
+
 export const loadPlayerName = async (): Promise<string | null> => {
   try {
     return await AsyncStorage.getItem(PLAYER_NAME_STORAGE_KEY);
@@ -101,6 +117,7 @@ export const clearAppData = async (): Promise<void> => {
       LANGUAGE_STORAGE_KEY,
       THEME_STORAGE_KEY,
       PLAYER_NAME_STORAGE_KEY,
+      DEV_CODE_STORAGE_KEY,
     ]);
   } catch {
     // Nothing to do: at worst the old data sticks around, not critical.

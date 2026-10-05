@@ -1,9 +1,10 @@
 import { create } from 'zustand';
 
+import { DEV_CODE } from '@/data';
 import { DEFAULT_CLUE_SETTINGS } from '@/games/clues/constants';
 import { DEFAULT_CONTOUR_SETTINGS } from '@/games/contour/constants';
 import { DEFAULT_SETTINGS } from '@/games/compass/constants';
-import { loadPlayerName, loadSettings, savePlayerName, saveSettings } from '@/helpers';
+import { loadDevCode, loadPlayerName, loadSettings, saveDevCode, savePlayerName, saveSettings } from '@/helpers';
 import type { ClueSettings, ContourSettings, GameSettings } from '@/types';
 
 export type SettingsContextValue = {
@@ -93,3 +94,30 @@ export const usePlayerName = create<PlayerNameContextValue>()((set) => ({
 export const hydratePlayerName = (): void => {
   loadPlayerName().then((name) => usePlayerName.setState({ playerName: name ?? '', ready: true }));
 };
+
+export type DevCodeContextValue = {
+  /** What was typed in the settings' "dev" field, as typed. */
+  devCode: string;
+  /** False until the saved code has been read (see `hydrateDevCode`). */
+  ready: boolean;
+  setDevCode: (code: string) => void;
+};
+
+/** The dev code typed in the settings. Typing it does nothing by itself: it is only saved here, and the games read it
+ * through `useDevMode` (the difficulty feedback of `useDevFeedback`). Persisted on every change. */
+export const useDevCode = create<DevCodeContextValue>()((set) => ({
+  devCode: '',
+  ready: false,
+  setDevCode: (code) => {
+    set({ devCode: code });
+    saveDevCode(code);
+  },
+}));
+
+/** Reads the saved dev code once and flips `ready` — called once from the root layout, like `hydratePlayerName`. */
+export const hydrateDevCode = (): void => {
+  loadDevCode().then((code) => useDevCode.setState({ devCode: code ?? '', ready: true }));
+};
+
+/** Whether this device has the dev mode on: the saved code is exactly `DEV_CODE` (spaces around it ignored). */
+export const useDevMode = (): boolean => useDevCode((state) => state.devCode.trim() === DEV_CODE);

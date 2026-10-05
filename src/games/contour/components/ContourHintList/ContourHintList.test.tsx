@@ -4,7 +4,7 @@ import { hintGroupsView, type HintStep } from '@/games/contour/helpers/hintPlan'
 
 import ContourHintList from '.';
 
-const PLAN: HintStep[] = ['silhouette1', 'silhouette2', 'silhouette3', 'neighborShapes', 'neighborFlags', 'reveal'];
+const PLAN: HintStep[] = ['silhouette1', 'silhouette2', 'silhouette3', 'neighborShapes', 'neighborFlagFirst', 'neighborFlags', 'reveal'];
 
 describe('ContourHintList', () => {
   it('shows each group with how many steps are out and only its next step as a button', async () => {
@@ -12,8 +12,8 @@ describe('ContourHintList', () => {
     const { getByText, getByRole, queryByRole } = await render(<ContourHintList groups={groups} onPick={jest.fn()} />);
 
     expect(getByText('Contour 3/3')).toBeTruthy();
-    expect(getByText('Voisins 1/2')).toBeTruthy();
-    expect(getByRole('button', { name: 'Drapeaux' })).toBeTruthy();
+    expect(getByText('Voisins 1/3')).toBeTruthy();
+    expect(getByRole('button', { name: 'Un drapeau' })).toBeTruthy();
     expect(queryByRole('button', { name: 'Formes' })).toBeNull();
     expect(queryByRole('button', { name: 'Plus net' })).toBeNull();
   });
@@ -38,7 +38,7 @@ describe('ContourHintList', () => {
 
   it('ticks a group with nothing left, and offers the country as a card of its own', async () => {
     const { getByText, getAllByText } = await render(
-      <ContourHintList groups={hintGroupsView(PLAN, 5)} onPick={jest.fn()} />,
+      <ContourHintList groups={hintGroupsView(PLAN, 6)} onPick={jest.fn()} />,
     );
 
     expect(getAllByText('✓')).toHaveLength(2);

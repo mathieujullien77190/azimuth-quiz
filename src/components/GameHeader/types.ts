@@ -21,4 +21,6 @@ export type GameHeaderProps = {
   location?: string;
   /** The round's question, centered at the bottom of the header ("Quel est ce pays ?"). */
   question?: string;
+  /** Shown on the right of the question's row, the question itself moving to the left (Silhouette: "182 pts"). Only shown with `question`. */
+  questionDetail?: string;
 };

@@ -1,25 +1,18 @@
 import { StyleSheet } from 'react-native';
-import { fontSize, spacing } from '@/data';
+import { spacing } from '@/data';
 import type { Theme } from '@/types';
+
+import { FOUND_BANNER_FONT_SIZE } from '@/components/ui/NoOneFoundText/styles';
 
 export const createStyles = ({ colors, typography }: Theme) =>
   StyleSheet.create({
     footer: {
       gap: spacing.sm + 2,
     },
-    pointsAtStake: {
-      ...typography.body,
-      color: colors.textMuted,
-      fontSize: fontSize.caption + 1,
-      textAlign: 'center',
-    },
-    pointsAtStakeValue: {
-      color: colors.text,
-    },
     banner: {
       ...typography.heading,
       color: colors.success,
-      fontSize: fontSize.caption + 1,
+      fontSize: FOUND_BANNER_FONT_SIZE,
       textAlign: 'center',
     },
   });

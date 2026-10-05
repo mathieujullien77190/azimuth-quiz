@@ -84,6 +84,7 @@ export const startClueRoomGame = (
     roundWinnerUid: null,
     wrongGuessUid: null,
     wrongGuessSeq: 0,
+    wrongGuessHints: null,
     totalScores: {},
     typing: null,
   });
@@ -116,11 +117,11 @@ export const giveUpClueRoom = (code: string): Promise<void> =>
 /** Turn-holder-only: self-reports a wrong guess (the round stays open — see the local game's own
  * `settle`) — same self-report-only-the-event pattern as `reportClueRoomCorrect`: the penalty
  * itself is never written here, only the host's scoring effect ever touches `totalScores`.
- * `seq` must be strictly greater than the room's current `wrongGuessSeq` (the caller's own
+ * `hintsRevealed` is how many clues/hints are out right now (the "one guess per turn" rule). `seq` must be strictly greater than the room's current `wrongGuessSeq` (the caller's own
  * `gameState.wrongGuessSeq + 1`) so the host can tell repeated wrong guesses by the same player
  * apart from a no-op resend. */
-export const reportClueRoomWrong = (code: string, uid: string, seq: number): Promise<void> =>
-  updateDoc(roomRef(code), { wrongGuessUid: uid, wrongGuessSeq: seq });
+export const reportClueRoomWrong = (code: string, uid: string, seq: number, hintsRevealed: number): Promise<void> =>
+  updateDoc(roomRef(code), { wrongGuessUid: uid, wrongGuessSeq: seq, wrongGuessHints: hintsRevealed });
 
 /** Host-only: writes the updated running totals once it's observed `verdict === 'correct'` (a
  * find) or `wrongGuessSeq` advancing (a miss) — see `useOnlineClueGame`'s scoring effect — the
@@ -144,6 +145,8 @@ export const nextClueRoomRound = (
     turnUid: firstTurnUid,
     verdict: null,
     roundWinnerUid: null,
+    // A new round starts with no guess made: the "one guess per turn" rule reads this (see `turnGuess.ts`).
+    wrongGuessHints: null,
     typing: null,
   });
 
@@ -161,6 +164,9 @@ export type ClueRoomGameState = {
    * from the same snapshot re-delivered. */
   wrongGuessUid: string | null;
   wrongGuessSeq: number;
+  /** How many clues/hints were out at that wrong guess: the turn-holder cannot guess again until one more is revealed
+   * (`turnGuess.ts`). Reset to null at every round start; null (or missing, in an older room) = no restriction. */
+  wrongGuessHints: number | null;
   totalScores: Record<string, number>;
   /** The turn-holder's in-progress answer text, live (see `setClueRoomTyping`) — `null` outside any
    * write yet (a fresh room, or once cleared). Only trust it when `uid` still matches the room's own
@@ -186,6 +192,7 @@ export const subscribeToRoomGame = (code: string, onUpdate: (state: ClueRoomGame
       roundWinnerUid: (data?.roundWinnerUid as string | undefined) ?? null,
       wrongGuessUid: (data?.wrongGuessUid as string | undefined) ?? null,
       wrongGuessSeq: (data?.wrongGuessSeq as number | undefined) ?? 0,
+      wrongGuessHints: (data?.wrongGuessHints as number | undefined) ?? null,
       totalScores: (data?.totalScores as Record<string, number> | undefined) ?? {},
       typing: (data?.typing as ClueRoomGameState['typing'] | undefined) ?? null,
     });

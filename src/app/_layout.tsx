@@ -11,7 +11,7 @@ import { preloadContourCounts } from '@/games/contour/helpers/contourCounts';
 import { disableTextSelection, polyfillFlagEmoji } from '@/helpers';
 import { writeErrorRecord } from '@/helpers/errorSink';
 import { setErrorReporter } from '@/helpers/reportError';
-import { hydratePlayerName, hydrateSettings } from '@/settings';
+import { hydrateDevCode, hydratePlayerName, hydrateSettings } from '@/settings';
 import { useTheme } from '@/themes';
 
 const ThemedShell = () => {
@@ -36,6 +36,7 @@ const RootLayout = () => {
   useEffect(polyfillFlagEmoji, []);
   useEffect(hydrateSettings, []);
   useEffect(hydratePlayerName, []);
+  useEffect(hydrateDevCode, []);
   // Compass group sizes (`meta/compassCounts`): read now so a game finds them already loaded.
   useEffect(preloadCompassCounts, []);
   useEffect(preloadCluesCounts, []);

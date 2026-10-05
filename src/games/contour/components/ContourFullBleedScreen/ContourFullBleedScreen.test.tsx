@@ -1,5 +1,5 @@
-import { render } from '@testing-library/react-native';
-import { Text } from 'react-native';
+import { act, render } from '@testing-library/react-native';
+import { Keyboard, Text } from 'react-native';
 
 import { buildHintPlan } from '@/games/contour/helpers/hintPlan';
 import type { RoundBoard } from '@/games/contour/helpers/roundBoard';
@@ -67,11 +67,43 @@ const baseProps = {
 };
 
 describe('ContourFullBleedScreen', () => {
+  it('lifts the footer above the keyboard', async () => {
+    let show: ((event: { endCoordinates: { height: number } }) => void) | undefined;
+    jest.spyOn(Keyboard, 'addListener').mockImplementation(((name: string, listener: never) => {
+      if (name === 'keyboardDidShow') show = listener;
+      return { remove: jest.fn() };
+    }) as never);
+    const { toJSON } = await render(<ContourFullBleedScreen {...baseProps} />);
+    const bottomOf = () => {
+      let found: unknown;
+      const walk = (node: unknown) => {
+        if (node === null || typeof node !== 'object') return;
+        if (Array.isArray(node)) return node.forEach(walk);
+        const { props, children } = node as { props?: { onLayout?: unknown; style?: unknown }; children?: unknown };
+        if (props?.onLayout === baseProps.onOverlayBottomLayout) found = props.style;
+        walk(children);
+      };
+      walk(toJSON());
+      return JSON.stringify(found);
+    };
+    expect(bottomOf()).toContain('"bottom":0');
+    await act(async () => show?.({ endCoordinates: { height: 280 } }));
+    expect(bottomOf()).toContain('"bottom":280');
+    jest.restoreAllMocks();
+  });
+
   it('draws the board with its hints, under the floating header and footer', async () => {
     const { getByText, toJSON } = await render(<ContourFullBleedScreen {...baseProps} />);
     expect(JSON.stringify(toJSON())).toContain('France');
     expect(getByText('Header')).toBeTruthy();
     expect(getByText('Footer')).toBeTruthy();
+  });
+
+  it('draws the board overlay over the board, when there is one', async () => {
+    const { getByText, queryByText, rerender } = await render(<ContourFullBleedScreen {...baseProps} />);
+    expect(queryByText('Overlay')).toBeNull();
+    await rerender(<ContourFullBleedScreen {...baseProps} boardOverlay={<Text>Overlay</Text>} />);
+    expect(getByText('Overlay')).toBeTruthy();
   });
 
   it('draws the full ring once the silhouette hints are out', async () => {

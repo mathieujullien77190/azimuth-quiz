@@ -42,7 +42,8 @@
           "locationWhenInUsePermission": "Azimuth Quiz utilise ta position comme point de départ des distances, et l’orientation du téléphone pour que la boussole pointe vers le vrai nord."
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      "expo-navigation-bar"
     ],
     "experiments": {
       "typedRoutes": true,

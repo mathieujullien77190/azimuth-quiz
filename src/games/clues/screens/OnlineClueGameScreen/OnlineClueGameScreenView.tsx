@@ -9,11 +9,11 @@ import NoticeOverlay from '@/components/NoticeOverlay';
 import NoOneFoundText from '@/components/ui/NoOneFoundText';
 import GameFooter from '@/components/GameFooter';
 import ReactionOverlay from '@/components/ReactionOverlay';
+import TypedAnswer from '@/components/TypedAnswer';
 import GameHeader from '@/components/GameHeader';
 import Screen from '@/components/ui/Screen';
 import { WRONG_ANSWER_PENALTY } from '@/games/clues/constants';
 import { skeletonLetterCount, overlayTypedLetters, typedSkeleton } from '@/games/clues/helpers/clueGame';
-import { HYPHEN_SLOT } from '@/games/clues/helpers/clueSkeleton';
 import type { OnlineClueGameScreenViewProps } from './types';
 
 import { createStyles } from './OnlineClueGameScreenView.styles';
@@ -43,6 +43,7 @@ export const OnlineClueGameScreenView = ({
   players,
   turnIndex,
   isMyTurn,
+  guessedThisTurn,
   remaining,
   verdict,
   winnerName,
@@ -87,22 +88,7 @@ export const OnlineClueGameScreenView = ({
             {!roundOver && (
               <Text style={styles.pointsAtStake}>{t.cluesGame.pointsAtStake(formatNumber(remaining))}</Text>
             )}
-            {!roundOver && displayGroups.length > 0 && (
-              <View style={styles.skeletonRow}>
-                {displayGroups.map((group, groupIndex) => (
-                  <View key={groupIndex} style={styles.skeletonWord}>
-                    {group.map((letter, letterIndex) => (
-                      <View
-                        key={letterIndex}
-                        style={letter === HYPHEN_SLOT ? styles.skeletonHyphen : styles.skeletonSlot}
-                      >
-                        {letter !== null && <Text style={styles.skeletonLetter}>{letter}</Text>}
-                      </View>
-                    ))}
-                  </View>
-                ))}
-              </View>
-            )}
+            {!roundOver && <TypedAnswer groups={displayGroups} />}
             {/* Whoever just missed, live and shown to everyone in the room (not just them) — see
                 `wrongGuesserName`'s own comment in the hook for why it clears itself. */}
             {!roundOver && wrongGuesserName !== null && (
@@ -136,29 +122,40 @@ export const OnlineClueGameScreenView = ({
               </View>
             ) : isMyTurn ? (
               <View style={styles.buzzRow}>
-                <TextInput
-                  autoCapitalize="words"
-                  onChangeText={(next) => {
-                    if (
-                      skeletonLengthKnown &&
-                      [...next.replace(/[^\p{L}]/gu, '')].length > skeletonLetterCount(skeletonGroups)
-                    )
-                      return;
-                    onChangeGuessText(next);
-                  }}
-                  onSubmitEditing={onSubmitGuess}
-                  placeholder={t.cluesGame.guessPlaceholder}
-                  placeholderTextColor={colors.textMuted}
-                  returnKeyType="done"
-                  style={styles.guessInput}
-                  value={guessText}
-                />
-                {guessText.trim().length > 0 ? (
-                  <Button label={t.cluesGame.submitGuess} onPress={onSubmitGuess} />
+                {guessedThisTurn ? (
+                  // Already guessed this turn: the field and "Valider" are gone, a hint is the only move left (the host
+                  // can still cut the round short).
+                  <>
+                    <Text style={styles.guessedNote}>{t.game.alreadyGuessed}</Text>
+                    {isHost && <Button label={t.cluesGame.giveUp} onPress={onGiveUp} variant="ghost" />}
+                  </>
                 ) : (
-                  // Giving up is a host call (below), not the turn-holder's own — even when it's
-                  // the host's own turn, it goes through the very same button, not a duplicate.
-                  isHost && <Button label={t.cluesGame.giveUp} onPress={onGiveUp} variant="ghost" />
+                  <>
+                    <TextInput
+                      autoCapitalize="words"
+                      onChangeText={(next) => {
+                        if (
+                          skeletonLengthKnown &&
+                          [...next.replace(/[^\p{L}]/gu, '')].length > skeletonLetterCount(skeletonGroups)
+                        )
+                          return;
+                        onChangeGuessText(next);
+                      }}
+                      onSubmitEditing={onSubmitGuess}
+                      placeholder={t.cluesGame.guessPlaceholder}
+                      placeholderTextColor={colors.textMuted}
+                      returnKeyType="done"
+                      style={styles.guessInput}
+                      value={guessText}
+                    />
+                    {guessText.trim().length > 0 ? (
+                      <Button label={t.cluesGame.submitGuess} onPress={onSubmitGuess} />
+                    ) : (
+                      // Giving up is a host call (below), not the turn-holder's own — even when it's
+                      // the host's own turn, it goes through the very same button, not a duplicate.
+                      isHost && <Button label={t.cluesGame.giveUp} onPress={onGiveUp} variant="ghost" />
+                    )}
+                  </>
                 )}
               </View>
             ) : (

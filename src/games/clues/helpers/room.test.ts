@@ -65,6 +65,7 @@ describe('game writes', () => {
       roundWinnerUid: null,
       wrongGuessUid: null,
       wrongGuessSeq: 0,
+      wrongGuessHints: null,
       totalScores: {},
       typing: null,
     });
@@ -95,9 +96,9 @@ describe('game writes', () => {
     expect(updateDoc).toHaveBeenCalledWith(REF, { verdict: 'giveUp' });
   });
 
-  it('reportClueRoomWrong reports the miss with its sequence number', async () => {
-    await reportClueRoomWrong('tabofuna', 'zoe', 3);
-    expect(updateDoc).toHaveBeenCalledWith(REF, { wrongGuessUid: 'zoe', wrongGuessSeq: 3 });
+  it('reportClueRoomWrong reports the miss with its sequence number and the hints out at that moment', async () => {
+    await reportClueRoomWrong('tabofuna', 'zoe', 3, 4);
+    expect(updateDoc).toHaveBeenCalledWith(REF, { wrongGuessUid: 'zoe', wrongGuessSeq: 3, wrongGuessHints: 4 });
   });
 
   it('applyClueRoomScore writes the running totals', async () => {
@@ -114,6 +115,7 @@ describe('game writes', () => {
       turnUid: 'zoe',
       verdict: null,
       roundWinnerUid: null,
+      wrongGuessHints: null,
       typing: null,
     });
   });
@@ -146,6 +148,7 @@ describe('subscribeToRoomGame', () => {
       roundWinnerUid: 'zoe',
       wrongGuessUid: 'max',
       wrongGuessSeq: 2,
+      wrongGuessHints: 3,
       totalScores: { zoe: 5 },
       typing: { uid: 'zoe', text: 'Pari' },
     };
@@ -170,6 +173,7 @@ describe('subscribeToRoomGame', () => {
       roundWinnerUid: null,
       wrongGuessUid: null,
       wrongGuessSeq: 0,
+      wrongGuessHints: null,
       totalScores: {},
       typing: null,
     });

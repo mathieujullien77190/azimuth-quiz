@@ -57,9 +57,14 @@ describe('compassFromDoc', () => {
     });
   });
 
+  it('carries the place key when it is given', () => {
+    expect(compassFromDoc({ ...paris, compass: paris.compass! }, 'par')).toHaveProperty('key', 'par');
+  });
+
   it('leaves out what the document does not have', () => {
     const bare = compassFromDoc({ ...paris, country: undefined, compass: { category: 'cities' } });
 
+    expect(bare).not.toHaveProperty('key');
     expect(bare).not.toHaveProperty('country');
     expect(bare).not.toHaveProperty('description');
     expect(bare).not.toHaveProperty('wikiFr');

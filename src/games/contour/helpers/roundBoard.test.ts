@@ -3,7 +3,7 @@ import { flagEmoji } from '@/helpers/flagEmoji';
 import type { ContourCountry, ContourRoundCountry } from '@/types';
 
 import { buildHintPlan, type HintStep } from './hintPlan';
-import { boardShapeFor, buildHintLabels, projectRound, roundGeometry } from './roundBoard';
+import { boardShapeFor, buildHintLabels, flagRects, projectRound, roundGeometry } from './roundBoard';
 
 // A 2:1 rectangle at the equator, so `boardDimensionsFor` keeps a predictable aspect ratio.
 const country: ContourRoundCountry = {
@@ -106,8 +106,8 @@ const places = {
 };
 // The same country with a capital and two cities in its document.
 const placed: ContourRoundCountry = { ...country, ...places };
-// Steps of the full plan of `country`, by index: 1-3 silhouette, 4 shapes, 5 flags, 6 names, 7-8 cities,
-// 9-10 capital, 11 reveal.
+// Steps of the full plan of `country`, by index: 1-3 silhouette, 4 shapes, 5 one flag, 6 all flags, 7 codes, 8 names,
+// 9-10 cities, 11-12 capital, 13 reveal.
 const fullPlan = buildHintPlan(ALL, placed);
 
 describe('projectRound places', () => {
@@ -141,15 +141,16 @@ describe('buildHintLabels', () => {
     for (const hints of [0, 1, 2, 3, 4]) expect(labels(hints)).toEqual([]);
   });
 
-  it('shows the neighbors flags at their curated spots', () => {
-    expect(labels(5)).toEqual([
+  it('shows one neighbor flag first (the first in the data), then every flag, at their curated spots', () => {
+    expect(labels(5)).toEqual([{ position: board.neighborHints[0].position, icon: true, text: flagEmoji('ES') }]);
+    expect(labels(6)).toEqual([
       { position: board.neighborHints[0].position, icon: true, text: flagEmoji('ES') },
       { position: board.neighborHints[1].position, icon: true, text: flagEmoji('DE') },
     ]);
   });
 
   it('puts the neighbors country code under their flag first', () => {
-    const codes = labels(6).filter((label) => !label.icon);
+    const codes = labels(7).filter((label) => !label.icon);
     expect(codes).toEqual([
       { position: { x: board.neighborHints[0].position.x, y: board.neighborHints[0].position.y + gap }, text: 'ES' },
       { position: { x: board.neighborHints[1].position.x, y: board.neighborHints[1].position.y + gap }, text: 'DE' },
@@ -157,7 +158,7 @@ describe('buildHintLabels', () => {
   });
 
   it('replaces the code with the full name, under their flag, in the requested language', () => {
-    const fr = labels(7);
+    const fr = labels(8);
     expect(fr).toHaveLength(4);
     expect(fr.some((label) => label.text === 'ES')).toBe(false);
     const espagne = fr.find((label) => label.text === 'Espagne');
@@ -165,33 +166,33 @@ describe('buildHintLabels', () => {
       x: board.neighborHints[0].position.x,
       y: board.neighborHints[0].position.y + gap,
     });
-    expect(labels(7, fullPlan, 'en').some((label) => label.text === 'Spain')).toBe(true);
+    expect(labels(8, fullPlan, 'en').some((label) => label.text === 'Spain')).toBe(true);
   });
 
   it('puts the cities as dots, then their names under them', () => {
-    const dots = labels(8).filter((label) => label.text === '●');
+    const dots = labels(9).filter((label) => label.text === '●');
     expect(dots.map((label) => label.position)).toEqual(board.cityMarks.map((mark) => mark.position));
-    const names = labels(9).filter((label) => label.text.startsWith('Ville'));
+    const names = labels(10).filter((label) => label.text.startsWith('Ville'));
     expect(names).toEqual([
       { position: { x: board.cityMarks[0].position.x, y: board.cityMarks[0].position.y + gap }, text: 'Ville A' },
       { position: { x: board.cityMarks[1].position.x, y: board.cityMarks[1].position.y + gap }, text: 'Ville B' },
     ]);
-    expect(labels(8).some((label) => label.text === 'Ville A')).toBe(false);
+    expect(labels(9).some((label) => label.text === 'Ville A')).toBe(false);
   });
 
   it('puts the capital as a star (an icon), then its name under it', () => {
-    const star = labels(10).find((label) => label.text === '⭐');
+    const star = labels(11).find((label) => label.text === '⭐');
     expect(star).toEqual({ position: board.capitalMark!.position, icon: true, text: '⭐' });
-    expect(labels(10).some((label) => label.text === 'Capitale')).toBe(false);
-    expect(labels(11).find((label) => label.text === 'Capitale')?.position).toEqual({
+    expect(labels(11).some((label) => label.text === 'Capitale')).toBe(false);
+    expect(labels(12).find((label) => label.text === 'Capitale')?.position).toEqual({
       x: board.capitalMark!.position.x,
       y: board.capitalMark!.position.y + gap,
     });
   });
 
   it('puts the country flag and name at its curated spot on the reveal step only', () => {
-    expect(labels(11).some((label) => label.text === 'France')).toBe(false);
-    const all = labels(12);
+    expect(labels(12).some((label) => label.text === 'France')).toBe(false);
+    const all = labels(13);
     expect(all).toContainEqual({ position: board.centerPosition, icon: true, text: flagEmoji('FR') });
     expect(all).toContainEqual({
       position: { x: board.centerPosition.x, y: board.centerPosition.y + gap },
@@ -221,6 +222,28 @@ describe('buildHintLabels', () => {
       flagEmoji('FR'),
       'France',
     ]);
+  });
+});
+
+describe('flagRects', () => {
+  const board = projectRound(placed, 400, 400);
+
+  it('has no box before any flag is out', () => {
+    expect(flagRects(board, fullPlan, 4)).toEqual([]);
+  });
+
+  it('has the box of the first neighbor flag only, then of every flag, where the labels are drawn', () => {
+    const first = flagRects(board, fullPlan, 5);
+    expect(first).toHaveLength(1);
+    expect(first[0].x + first[0].width / 2).toBeCloseTo(board.neighborHints[0].position.x);
+    expect(first[0].y + first[0].height).toBeCloseTo(board.neighborHints[0].position.y);
+    expect(flagRects(board, fullPlan, 6)).toHaveLength(2);
+  });
+
+  it('has none for a country without neighbors', () => {
+    const bare = projectRound({ ...country, neighbors: [] }, 400, 400);
+    const plan: HintStep[] = ['neighborFlagFirst', 'neighborFlags'];
+    expect(flagRects(bare, plan, 2)).toEqual([]);
   });
 });
 

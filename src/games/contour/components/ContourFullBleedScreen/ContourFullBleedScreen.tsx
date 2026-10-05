@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useKeyboardHeight } from '@/helpers/useKeyboardHeight';
 import { useThemedStyles } from '@/themes';
 
 import { boardShapeFor } from '@/games/contour/helpers/roundBoard';
@@ -25,11 +26,15 @@ export const ContourFullBleedScreen = ({
   onBoardAreaLayout,
   onOverlayTopLayout,
   onOverlayBottomLayout,
+  boardOverlay,
   header,
   footer,
   children,
 }: ContourFullBleedScreenProps) => {
   const styles = useThemedStyles(createStyles);
+  // The footer floats from the bottom of the screen: it is lifted by hand above the keyboard, so the answer being typed
+  // and its button stay in sight.
+  const keyboardHeight = useKeyboardHeight();
 
   return (
     <SafeAreaView style={styles.fullBleedSafeArea}>
@@ -42,6 +47,7 @@ export const ContourFullBleedScreen = ({
             key={roundKey}
             width={board.width}
           />
+          {boardOverlay}
         </View>
       </View>
 
@@ -49,7 +55,7 @@ export const ContourFullBleedScreen = ({
         {header}
       </View>
 
-      <View onLayout={onOverlayBottomLayout} style={styles.overlayBottom}>
+      <View onLayout={onOverlayBottomLayout} style={[styles.overlayBottom, { bottom: keyboardHeight }]}>
         {footer}
       </View>
 

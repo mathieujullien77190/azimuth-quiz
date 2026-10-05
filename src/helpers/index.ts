@@ -6,10 +6,12 @@ export { resolveOrigin } from './location';
 export { applyBestBonus, scoreRound } from '../games/compass/helpers/scoring';
 export {
   clearAppData,
+  loadDevCode,
   loadLanguage,
   loadPlayerName,
   loadSettings,
   loadThemeId,
+  saveDevCode,
   saveLanguage,
   savePlayerName,
   saveSettings,

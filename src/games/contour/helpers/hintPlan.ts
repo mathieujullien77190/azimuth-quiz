@@ -11,6 +11,7 @@ export type HintStep =
   | 'silhouette2'
   | 'silhouette3'
   | 'neighborShapes'
+  | 'neighborFlagFirst'
   | 'neighborFlags'
   | 'neighborCodes'
   | 'neighborNames'
@@ -22,7 +23,7 @@ export type HintStep =
 
 const STEPS_BY_CATEGORY: Record<ContourHintCategory, HintStep[]> = {
   silhouette: ['silhouette1', 'silhouette2', 'silhouette3'],
-  neighbors: ['neighborShapes', 'neighborFlags', 'neighborCodes', 'neighborNames'],
+  neighbors: ['neighborShapes', 'neighborFlagFirst', 'neighborFlags', 'neighborCodes', 'neighborNames'],
   cities: ['cityPositions', 'cityNames'],
   capital: ['capitalPosition', 'capitalName'],
 };
@@ -63,6 +64,15 @@ export const buildHintPlan = (categories: readonly ContourHintCategory[], countr
  * final `reveal` of the country: each pick reveals the NEXT step of the group it is made in. */
 export type HintGroup = 'silhouette' | 'neighbors' | 'cities' | 'reveal';
 
+/** What a pick of the round can be: a group of the hint list, or the opening of a hidden cell of the board — a cell counts as
+ * a hint (it takes one off the points and passes the turn) but reveals no step of the plan. */
+export const QUADRANT_PICK = 'quadrant';
+export type HintPick = HintGroup | typeof QUADRANT_PICK;
+
+/** How many plan steps the picks brought out (the cell openings reveal none), and how many picks were cell openings. */
+export const stepsOutOf = (picks: readonly HintPick[]): number => picks.filter((pick) => pick !== QUADRANT_PICK).length;
+export const quadrantPicksOf = (picks: readonly HintPick[]): number => picks.length - stepsOutOf(picks);
+
 /** The groups in the order the hint list shows them. */
 export const HINT_GROUP_ORDER: readonly HintGroup[] = ['silhouette', 'neighbors', 'cities', 'reveal'];
 
@@ -71,6 +81,7 @@ const GROUP_OF: Record<HintStep, HintGroup> = {
   silhouette2: 'silhouette',
   silhouette3: 'silhouette',
   neighborShapes: 'neighbors',
+  neighborFlagFirst: 'neighbors',
   neighborFlags: 'neighbors',
   neighborCodes: 'neighbors',
   neighborNames: 'neighbors',
@@ -88,9 +99,9 @@ export const hintGroupOf = (step: HintStep): HintGroup => GROUP_OF[step];
  * `plan` re-ordered by what the players picked: each pick (a group, in the order they were made) brings forward
  * the next step of that group not out yet, so the first `picks.length` steps of the result are the ones revealed
  * (`hintsRevealed` = `picks.length`) and everything downstream (labels, shape, points) keeps reading "the first N
- * steps". A group with no step left is ignored; the steps nobody picked follow in the plan's own order.
+ * steps". A group with no step left is ignored; the steps nobody picked follow in the plan's own order. A cell opening (`QUADRANT_PICK`) matches no group: it is ignored.
  */
-export const orderHintPlan = (plan: readonly HintStep[], picks: readonly HintGroup[]): HintStep[] => {
+export const orderHintPlan = (plan: readonly HintStep[], picks: readonly HintPick[]): HintStep[] => {
   const remaining = [...plan];
   const ordered: HintStep[] = [];
   for (const group of picks) {
@@ -141,3 +152,11 @@ export const contourGuessPoints = (hintsRevealed: number, planLength: number): n
   if (planLength === 1) return MAX_CONTOUR_POINTS;
   return Math.round(MAX_CONTOUR_POINTS * (1 - (CONTOUR_HINT_POINTS_DROP * hintsRevealed) / (planLength - 1)));
 };
+
+/**
+ * What a correct guess earns with `stepsOut` plan steps out and `quadrantPicks` cells opened: a cell is one more hint
+ * for the points, so the scale reads `stepsOut + quadrantPicks` — but only the country itself being revealed
+ * (`stepsOut >= planLength`) takes it to 0: opening cells never brings it below the last step before the reveal.
+ */
+export const contourPoints = (stepsOut: number, quadrantPicks: number, planLength: number): number =>
+  stepsOut >= planLength ? 0 : contourGuessPoints(Math.min(stepsOut + quadrantPicks, planLength - 1), planLength);

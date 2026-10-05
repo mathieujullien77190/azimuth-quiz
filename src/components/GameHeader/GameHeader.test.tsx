@@ -80,4 +80,14 @@ describe('GameHeader', () => {
     const { getByText } = await render(<GameHeader {...baseProps} question="Quel est ce pays ?" />);
     expect(getByText('Quel est ce pays ?')).toBeTruthy();
   });
+
+  it('shows the detail on the right of the question row, and only with a question', async () => {
+    const withQuestion = await render(
+      <GameHeader {...baseProps} question="Quel est ce pays ?" questionDetail="182 pts" />,
+    );
+    expect(withQuestion.getByText('182 pts')).toBeTruthy();
+    expect(withQuestion.getByText('Quel est ce pays ?')).toBeTruthy();
+    const withoutQuestion = await render(<GameHeader {...baseProps} questionDetail="182 pts" />);
+    expect(withoutQuestion.queryByText('182 pts')).toBeNull();
+  });
 });

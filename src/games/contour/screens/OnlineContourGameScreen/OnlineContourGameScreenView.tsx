@@ -5,6 +5,8 @@ import { useLanguage, useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 
 import GameFooter from '@/components/GameFooter';
+import TypedAnswer from '@/components/TypedAnswer';
+import { typedSkeleton } from '@/components/TypedAnswer/helpers';
 import ReactionOverlay from '@/components/ReactionOverlay';
 import GameHeader from '@/components/GameHeader';
 import Button from '@/components/ui/Button';
@@ -13,7 +15,9 @@ import NoticeOverlay from '@/components/NoticeOverlay';
 import ContourFullBleedScreen from '../../components/ContourFullBleedScreen';
 import ContourGuessBar from '../../components/ContourGuessBar';
 import ContourHintList from '../../components/ContourHintList';
-import { buildHintLabels } from '../../helpers/roundBoard';
+import ContourQuadrantMask from '../../components/ContourQuadrantMask';
+import { CONTOUR_WRONG_GUESS_PENALTY } from '../../constants';
+import { buildHintLabels, flagRects } from '../../helpers/roundBoard';
 import { useRoundBoard } from '../../helpers/useRoundBoard';
 import type { OnlineContourGameScreenViewProps } from './types';
 
@@ -39,11 +43,16 @@ export const OnlineContourGameScreenView = ({
   plan,
   hintGroups,
   hintsRevealed,
+  hiddenQuadrants,
+  onRevealQuadrant,
+  canOpenQuadrant,
+  quadrantCost,
   simplifySeed,
   pointsAtStake,
   players,
   turnIndex,
   isMyTurn,
+  guessedThisTurn,
   verdict,
   winnerName,
   lastWrong,
@@ -75,53 +84,51 @@ export const OnlineContourGameScreenView = ({
   const shownHints = roundOver ? plan.length : hintsRevealed;
   const hintLabels = buildHintLabels(board, plan, shownHints, language);
 
-  // "At stake: 450 points": the number in the main text color, the sentence stays muted.
-  const stakeValue = formatNumber(pointsAtStake);
-  const [stakeBefore, stakeAfter] = t.contourGame.pointsAtStake(stakeValue).split(stakeValue);
-  const stakeLine = (
-    <Text style={styles.pointsAtStake}>
-      {stakeBefore}
-      <Text style={styles.pointsAtStakeValue}>{stakeValue}</Text>
-      {stakeAfter}
-    </Text>
-  );
+  // The country as it is typed, boxed like Indices does, where the points at stake used to be: the turn-holder's own
+  // draft on his device, what he is typing live (`typing`) on every other one — whose own draft stays in their field.
+  const typedLine = <TypedAnswer groups={typedSkeleton(isMyTurn ? guessText : typedByActivePlayer)} />;
+  const stakeLabel = `${formatNumber(pointsAtStake)} ${t.common.pts}`;
 
   const footer = roundOver ? (
     <View style={styles.footer}>
       {verdict === 'correct' ? (
         <Text style={styles.banner}>{t.contourGame.found(winnerName ?? '', formatNumber(pointsAtStake))}</Text>
       ) : (
-        <NoOneFoundText players={players.map((player) => player.name)} />
+        <NoOneFoundText large players={players.map((player) => player.name)} />
       )}
       {isHost && <Button label={isLastRound ? t.game.last : t.contourGame.continueLabel} onPress={onNextRound} />}
     </View>
   ) : !isMyTurn ? (
     <View style={styles.footer}>
       {/* Every hint is out: nothing is at stake any more, say it to the players waiting for the turn-holder. */}
-      {hintsRevealed >= plan.length ? <NoOneFoundText players={players.map((player) => player.name)} /> : stakeLine}
+      {hintsRevealed >= plan.length ? <NoOneFoundText large players={players.map((player) => player.name)} /> : typedLine}
       <ContourHintList disabled groups={hintGroups} onPick={onRevealHint} />
       <ContourGuessBar
-        guessText={typedByActivePlayer}
+        canSubmit={false}
+        guessText={guessText}
+        label={t.contourGame.guessLabel}
         onChangeGuessText={onChangeGuessText}
-        onReadOnlyPress={onNotYourTurn}
+        onNotYourTurn={onNotYourTurn}
         onSubmit={onSubmitGuess}
-        readOnly
       />
     </View>
   ) : hintsRevealed >= plan.length ? (
     <View style={styles.footer}>
-      <NoOneFoundText players={players.map((player) => player.name)} />
+      <NoOneFoundText large players={players.map((player) => player.name)} />
       <Button label={t.contourGame.continueLabel} onPress={onGiveUp} />
     </View>
   ) : (
     <View style={styles.footer}>
-      {stakeLine}
+      {typedLine}
       <ContourHintList groups={hintGroups} onPick={onRevealHint} />
       <ContourGuessBar
+        canSubmit={!guessedThisTurn}
         guessText={guessText}
+        label={t.contourGame.guessLabel}
+        lockedText={guessedThisTurn ? t.game.alreadyGuessed : null}
         onChangeGuessText={onChangeGuessText}
         onSubmit={onSubmitGuess}
-        wrongText={lastWrong !== null ? t.contourGame.wrongGuess(lastWrong) : null}
+        wrongText={lastWrong !== null ? t.contourGame.wrongGuess(lastWrong, formatNumber(CONTOUR_WRONG_GUESS_PENALTY)) : null}
       />
     </View>
   );
@@ -130,6 +137,21 @@ export const OnlineContourGameScreenView = ({
     <>
       <ContourFullBleedScreen
         board={board}
+        boardOverlay={
+          // A finished round shows the whole country.
+          roundOver ? undefined : (
+            <ContourQuadrantMask
+              canReveal={isMyTurn && canOpenQuadrant}
+              costLabel={t.contourGame.quadrantCost(formatNumber(quadrantCost))}
+              flagBoxes={flagRects(board, plan, shownHints)}
+              height={board.height}
+              hidden={hiddenQuadrants}
+              labelFor={(index) => t.contourGame.quadrantLabel(index + 1)}
+              onReveal={onRevealQuadrant}
+              width={board.width}
+            />
+          )
+        }
         footer={<GameFooter onReact={onReact}>{footer}</GameFooter>}
         header={
           <GameHeader
@@ -140,6 +162,7 @@ export const OnlineContourGameScreenView = ({
             players={players}
             points={points}
             question={roundOver ? undefined : t.contourGame.guessPrompt}
+            questionDetail={roundOver ? undefined : stakeLabel}
             roundNumber={roundNumber}
             totalRounds={totalRounds}
             turnIndex={roundOver ? -1 : turnIndex}

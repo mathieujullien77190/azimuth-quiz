@@ -206,7 +206,9 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     setStartFailed(false);
     if (connectedRoomCode !== null) {
       setStarting(true);
-      await run(connectedRoomCode).catch(() => {
+      await run(connectedRoomCode).catch((error) => {
+        // The notice only says the start failed; the cause (places not found, a refused write, no network...) is logged.
+        reporting('setup.startGame', { kind: 'background', room: connectedRoomCode })(error);
         setStarting(false);
         setStartFailed(true);
       });
@@ -261,7 +263,8 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     const run = pendingRunRef.current;
     if (run === null || connectedRoomCode === null || localUid === null || !(localUid in players)) return;
     pendingRunRef.current = null;
-    run(connectedRoomCode).catch(() => {
+    run(connectedRoomCode).catch((error) => {
+      reporting('setup.startGame', { kind: 'background', room: connectedRoomCode })(error);
       setStarting(false);
       setStartFailed(true);
     });

@@ -15,7 +15,7 @@ import { createStyles } from './styles';
 /**
  * The in-round header shared by every game — dumb. Top row: the quit cross and the room code on the
  * left, this device's name and points on the right. Then "Manche 3 / 10 · difficulty" (`RoundCounter`, `DifficultyBadge`) aligned left, the
- * players' tabs when `players` is given, and the round's `question` centered at the bottom.
+ * players' tabs when `players` is given, and the round's `question` centered at the bottom — or, with a `questionDetail`, the question on the left and the detail on the right of one row.
  */
 export const GameHeader = ({
   onQuit,
@@ -29,6 +29,7 @@ export const GameHeader = ({
   turnIndex = -1,
   location,
   question,
+  questionDetail,
 }: GameHeaderProps) => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
@@ -58,7 +59,16 @@ export const GameHeader = ({
           players={players}
         />
       )}
-      {question !== undefined && <Text style={styles.question}>{question}</Text>}
+      {question !== undefined &&
+        (questionDetail === undefined ? (
+          <Text style={styles.question}>{question}</Text>
+        ) : (
+          // With a detail (Silhouette's points at stake) the question moves to the left and the detail to the right.
+          <View style={styles.questionRow}>
+            <Text style={styles.questionLeft}>{question}</Text>
+            <Text style={styles.questionDetail}>{questionDetail}</Text>
+          </View>
+        ))}
     </View>
   );
 };

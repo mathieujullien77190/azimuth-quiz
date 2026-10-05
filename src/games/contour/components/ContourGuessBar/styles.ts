@@ -10,8 +10,24 @@ export const createStyles = ({ colors, typography }: Theme) =>
     wrongText: {
       ...typography.heading,
       textAlign: 'center',
-      fontSize: fontSize.caption + 1,
+      fontSize: fontSize.subtitle,
       color: colors.danger,
+    },
+    lockedText: {
+      ...typography.body,
+      textAlign: 'center',
+      fontSize: fontSize.caption + 1,
+      color: colors.textMuted,
+    },
+    labelRow: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      gap: spacing.sm,
+    },
+    label: {
+      ...typography.heading,
+      color: colors.text,
+      fontSize: fontSize.caption + 1,
     },
     inputRow: {
       flexDirection: 'row',

@@ -107,6 +107,7 @@ export const fr: Translations = {
     quit: 'Quitter',
     round: 'Manche',
     validate: 'Valider',
+    alreadyGuessed: 'Tu as déjà proposé : dévoile un indice pour passer la main.',
     next: 'Manche suivante',
     last: 'Voir le score',
     roundOver: 'Manche terminée',
@@ -150,6 +151,11 @@ export const fr: Translations = {
     tie: (names) => `Égalité : ${names}`,
     and: 'et',
   },
+  devFeedback: {
+    placeQuestion: (name) => `Le lieu ${name} était-il…`,
+    countryQuestion: (name) => `Le pays ${name} était-il…`,
+    dismiss: 'Fermer sans répondre',
+  },
   settings: {
     title: 'Réglages',
     languageTitle: 'Langue',
@@ -160,6 +166,8 @@ export const fr: Translations = {
     author: 'Par Matou.',
     claudeMention:
       'Fait pour l’apéro entre potes : pas de pub, pas de tracking, juste vous et une boussole récalcitrante.',
+    devTitle: 'Mode dev',
+    devLabel: 'code',
     dataTitle: 'Données',
     dataHint:
       'Quelques données sauvegardées sur votre appareil pour améliorer l’expérience utilisateur, telles que les réglages. Rien n’est envoyé ailleurs. Ce bouton les efface.',
@@ -226,6 +234,8 @@ export const fr: Translations = {
     difficultyHint: 'Détermine dans quelle réserve de pays la manche pioche.',
   },
   contourGame: {
+    quadrantLabel: (cell) => `Dévoiler le carré ${cell}`,
+    quadrantCost: (points) => `−${points} pts`,
     notYourTurn: (name) => `C’est au tour de ${name} : tu peux seulement regarder… ou faire semblant de réfléchir 🤔`,
     loadFailed: 'Impossible de charger le pays. Vérifie ta connexion puis touche l’écran pour réessayer.',
     guessPrompt: 'Quel est ce pays ?',
@@ -235,7 +245,8 @@ export const fr: Translations = {
       silhouette2: 'Détaillé',
       silhouette3: 'Complet',
       neighborShapes: 'Formes',
-      neighborFlags: 'Drapeaux',
+      neighborFlagFirst: 'Un drapeau',
+      neighborFlags: 'Tous les drapeaux',
       neighborCodes: 'Codes pays',
       neighborNames: 'Noms',
       cityPositions: 'Positions',
@@ -245,9 +256,9 @@ export const fr: Translations = {
       reveal: 'Révéler le pays',
     },
     found: (name, points) => `${name} marque ${points} points !`,
-    pointsAtStake: (points) => `En jeu : ${points} points`,
+    guessLabel: 'Pays',
     guessPlaceholder: 'Nom du pays…',
-    wrongGuess: (name) => `${name} perd 50 points.`,
+    wrongGuess: (name, points) => `${name} se trompe et perd ${points} points.`,
     continueLabel: 'Continuer',
   },
 };

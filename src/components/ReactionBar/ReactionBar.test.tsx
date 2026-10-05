@@ -15,19 +15,21 @@ describe('ReactionBar', () => {
     EMOJIS.forEach((emoji) => expect(queryByLabelText(`Envoyer ${emoji}`)).toBeNull());
   });
 
-  it('pops the column of emojis open, each with its own accessibility label', async () => {
+  it('shows the column of emojis, each with its own accessibility label', async () => {
     const { getByLabelText } = await renderBar();
     await fireEvent.press(getByLabelText('Réactions'));
     EMOJIS.forEach((emoji) => expect(getByLabelText(`Envoyer ${emoji}`)).toBeTruthy());
   });
 
-  it('sends the emoji that was tapped and closes the column', async () => {
+  it('sends the emoji that was tapped and leaves the column open for the next one', async () => {
     const onPick = jest.fn();
     const { getByLabelText, queryByLabelText } = await renderBar(onPick);
     await fireEvent.press(getByLabelText('Réactions'));
     await fireEvent.press(getByLabelText('Envoyer 🤞'));
     expect(onPick).toHaveBeenCalledWith('🤞');
-    expect(queryByLabelText('Envoyer 🤞')).toBeNull();
+    expect(queryByLabelText('Envoyer 🤞')).toBeTruthy();
+    await fireEvent.press(getByLabelText('Envoyer 👍'));
+    expect(onPick).toHaveBeenLastCalledWith('👍');
   });
 
   it('closes the column with the round button again, sending nothing', async () => {

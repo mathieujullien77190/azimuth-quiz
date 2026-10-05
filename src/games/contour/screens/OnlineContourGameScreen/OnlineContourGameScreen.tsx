@@ -1,6 +1,7 @@
 import { useTransientFlag } from '@/helpers/useTransientFlag';
 import { useTranslation } from '@/i18n';
 
+import DifficultyFeedbackOverlay from '@/components/DifficultyFeedbackOverlay';
 import FinalStandings from '@/components/FinalStandings';
 import NoticeOverlay from '@/components/NoticeOverlay';
 import RoomDeletedScreen from '@/components/RoomDeletedScreen';
@@ -40,17 +41,24 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
   // there is no round left to load — reading that as "not ready yet" showed the loading splash instead.
   if (gameState.screen === 'end') {
     return (
-      <FinalStandings
-        entries={onlinePlayers.map((player) => ({
-          name: player.name,
-          total: gameState.totalScores[player.uid] ?? 0,
-          color: player.color,
-        }))}
-        localName={onlinePlayers.find((player) => player.uid === localUid)?.name ?? ''}
-        onQuit={game.handleQuit}
-        onReplay={game.handleReplay}
-        title={t.endScreen.title}
-      />
+      <>
+        <FinalStandings
+          entries={onlinePlayers.map((player) => ({
+            name: player.name,
+            total: gameState.totalScores[player.uid] ?? 0,
+            color: player.color,
+          }))}
+          localName={onlinePlayers.find((player) => player.uid === localUid)?.name ?? ''}
+          onQuit={game.handleQuit}
+          onReplay={game.handleReplay}
+          title={t.endScreen.title}
+        />
+        <DifficultyFeedbackOverlay
+          onChoose={game.devFeedback.choose}
+          onDismiss={game.devFeedback.dismiss}
+          question={game.devFeedback.question}
+        />
+      </>
     );
   }
 
@@ -70,41 +78,53 @@ export const OnlineContourGameScreen = ({ code, onQuit }: OnlineContourGameScree
       : undefined;
 
   return (
-    <OnlineContourGameScreenView
-      onReact={game.reactions.canReact ? game.reactions.send : undefined}
-      reaction={game.reactions.reaction}
-      country={country}
-      neighborCountries={game.neighborCountries}
-      difficulty={roomSettings.difficulty}
-      guessText={game.guessText}
-      name={myName}
-      points={gameState.totalScores[localUid] ?? 0}
-      hintGroups={game.hintGroups}
-      hintsRevealed={gameState.hintsRevealed}
-      plan={game.plan}
-      simplifySeed={game.simplifySeed}
-      isHost={isHost}
-      isLastRound={gameState.roundIndex + 1 >= gameState.countryCodes.length}
-      isMyTurn={game.isMyTurn}
-      lastWrong={game.lastWrong}
-      typedByActivePlayer={game.typedByActivePlayer}
-      notice={notYourTurn.visible ? t.contourGame.notYourTurn(roundPlayers[turnIndex]?.name ?? '') : null}
-      onDismissNotice={notYourTurn.hide}
-      onNotYourTurn={notYourTurn.show}
-      onChangeGuessText={game.setGuessText}
-      onGiveUp={game.giveUp}
-      onNextRound={game.goToNextRound}
-      onQuit={game.handleQuit}
-      onRevealHint={game.isMyTurn ? game.revealHint : notYourTurn.show}
-      onSubmitGuess={game.submitGuess}
-      players={roundPlayers}
-      pointsAtStake={game.pointsAtStake}
-      roomCode={code}
-      roundNumber={gameState.roundIndex + 1}
-      totalRounds={gameState.countryCodes.length}
-      turnIndex={turnIndex}
-      verdict={gameState.verdict ?? undefined}
-      winnerName={winnerName}
-    />
+    <>
+      <OnlineContourGameScreenView
+        onReact={game.reactions.canReact ? game.reactions.send : undefined}
+        reaction={game.reactions.reaction}
+        country={country}
+        neighborCountries={game.neighborCountries}
+        difficulty={roomSettings.difficulty}
+        guessText={game.guessText}
+        name={myName}
+        points={gameState.totalScores[localUid] ?? 0}
+        hintGroups={game.hintGroups}
+        hintsRevealed={game.stepsRevealed}
+        hiddenQuadrants={game.hiddenQuadrants}
+        canOpenQuadrant={game.canOpenQuadrant}
+        quadrantCost={game.quadrantCost}
+        onRevealQuadrant={game.revealQuadrant}
+        plan={game.plan}
+        simplifySeed={game.simplifySeed}
+        isHost={isHost}
+        isLastRound={gameState.roundIndex + 1 >= gameState.countryCodes.length}
+        guessedThisTurn={game.guessedThisTurn}
+        isMyTurn={game.isMyTurn}
+        lastWrong={game.lastWrong}
+        typedByActivePlayer={game.typedByActivePlayer}
+        notice={notYourTurn.visible ? t.contourGame.notYourTurn(roundPlayers[turnIndex]?.name ?? '') : null}
+        onDismissNotice={notYourTurn.hide}
+        onNotYourTurn={notYourTurn.show}
+        onChangeGuessText={game.setGuessText}
+        onGiveUp={game.giveUp}
+        onNextRound={game.goToNextRound}
+        onQuit={game.handleQuit}
+        onRevealHint={game.isMyTurn ? game.revealHint : notYourTurn.show}
+        onSubmitGuess={game.submitGuess}
+        players={roundPlayers}
+        pointsAtStake={game.pointsAtStake}
+        roomCode={code}
+        roundNumber={gameState.roundIndex + 1}
+        totalRounds={gameState.countryCodes.length}
+        turnIndex={turnIndex}
+        verdict={gameState.verdict ?? undefined}
+        winnerName={winnerName}
+      />
+      <DifficultyFeedbackOverlay
+        onChoose={game.devFeedback.choose}
+        onDismiss={game.devFeedback.dismiss}
+        question={game.devFeedback.question}
+      />
+    </>
   );
 };

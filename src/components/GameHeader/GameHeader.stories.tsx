@@ -62,3 +62,17 @@ export const WithQuestion: Story = {
   parameters: source(withQuestionCode),
   args: { difficulty: 'easy', points: 500, question: 'Quel est ce pays ?', roundNumber: 1, totalRounds: 5 },
 };
+
+/** With a `questionDetail` right after the question, same line — Silhouette's "182 pts" on the right, the question on the left. */
+export const WithQuestionDetail: Story = {
+  name: 'With a question and its detail',
+  parameters: source(withQuestionCode),
+  args: {
+    difficulty: 'easy',
+    points: 500,
+    question: 'Quel est ce pays ?',
+    questionDetail: '182 pts',
+    roundNumber: 1,
+    totalRounds: 5,
+  },
+};

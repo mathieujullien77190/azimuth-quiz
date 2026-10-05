@@ -15,6 +15,7 @@ const PLAN: HintStep[] = [
   'silhouette2',
   'neighborShapes',
   'silhouette3',
+  'neighborFlagFirst',
   'neighborFlags',
   'neighborCodes',
   'neighborNames',

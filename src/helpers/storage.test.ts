@@ -1,16 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLocales } from 'expo-localization';
 
-import { LANGUAGE_STORAGE_KEY, PLAYER_NAME_STORAGE_KEY, THEME_STORAGE_KEY } from '@/data';
+import { DEV_CODE_STORAGE_KEY, LANGUAGE_STORAGE_KEY, PLAYER_NAME_STORAGE_KEY, THEME_STORAGE_KEY } from '@/data';
 import { BEST_SCORE_STORAGE_KEY, SETTINGS_STORAGE_KEY } from '@/games/compass/constants';
 
 import {
   clearAppData,
   loadLanguage,
+  loadDevCode,
   loadPlayerName,
   loadSettings,
   loadThemeId,
   saveLanguage,
+  saveDevCode,
   savePlayerName,
   saveSettings,
   saveThemeId,
@@ -142,6 +144,21 @@ describe('loadPlayerName / savePlayerName', () => {
   });
 });
 
+describe('loadDevCode / saveDevCode', () => {
+  it('gives null when nothing was saved, then what was', async () => {
+    expect(await loadDevCode()).toBeNull();
+    await saveDevCode('supermatou');
+    expect(await loadDevCode()).toBe('supermatou');
+  });
+
+  it('tolerates storage failures', async () => {
+    (AsyncStorage.getItem as jest.Mock).mockRejectedValueOnce(new Error('boom'));
+    expect(await loadDevCode()).toBeNull();
+    (AsyncStorage.setItem as jest.Mock).mockRejectedValueOnce(new Error('boom'));
+    await expect(saveDevCode('x')).resolves.toBeUndefined();
+  });
+});
+
 describe('clearAppData', () => {
   it('removes every known storage key', async () => {
     await AsyncStorage.setItem(BEST_SCORE_STORAGE_KEY, '1');
@@ -149,6 +166,7 @@ describe('clearAppData', () => {
     await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, 'en');
     await AsyncStorage.setItem(THEME_STORAGE_KEY, 'day');
     await AsyncStorage.setItem(PLAYER_NAME_STORAGE_KEY, 'Zoé');
+    await AsyncStorage.setItem(DEV_CODE_STORAGE_KEY, 'supermatou');
 
     await clearAppData();
 
@@ -157,6 +175,7 @@ describe('clearAppData', () => {
     expect(await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY)).toBeNull();
     expect(await AsyncStorage.getItem(THEME_STORAGE_KEY)).toBeNull();
     expect(await AsyncStorage.getItem(PLAYER_NAME_STORAGE_KEY)).toBeNull();
+    expect(await AsyncStorage.getItem(DEV_CODE_STORAGE_KEY)).toBeNull();
   });
 
   it('tolerates a failure clearing storage', async () => {

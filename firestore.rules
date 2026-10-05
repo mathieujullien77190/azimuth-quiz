@@ -62,6 +62,8 @@ service cloud.firestore {
     //   c'est celui qui sortait qui autorise le passage de main, pas celui qui entre), modifier les
     //   champs de progression de la manche listés dans `turnFields` (voir helpers/room.ts de chaque
     //   jeu). `settings`, `screen` et `totalScores` restent réservés à l'hôte ;
+    //   Une proposition par tour : `wrongGuessHints` (le nombre d'indices au moment de l'erreur) fait que le joueur ne peut
+    //   plus proposer avant d'avoir dévoilé un indice (voir src/helpers/turnGuess.ts) ;
     // - envoyer une réaction emoji (`reaction`, voir `reactionOk`), seule ou avec ce qui précède.
     function turnBasedPlayer(turnFields) {
       return request.auth != null
@@ -169,6 +171,34 @@ service cloud.firestore {
         && quotaIncreased('global_' + dayKey());
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // Avis de difficulté du mode dev (`helpers/devFeedback.ts`, `useDevFeedback`) : un appareil dont le réglage « dev »
+    // contient le code secret est interrogé après chaque manche (« ce lieu était-il facile, moyen, difficile ? ») et écrit
+    // un avis ici. La règle est la vraie barrière : un avis n'est accepté qu'avec le code dev (le même que `DEV_CODE` dans
+    // src/data) dans le document. Un appareil connecté peut AJOUTER un avis, jamais le lire, le modifier ni le supprimer ;
+    // seuls les admins le lisent (page « Avis difficulté » de l'admin, qui le met en texte pour une IA et le nettoie).
+    // Rien de tout ça ne passe par le journal de l'admin (`journal`) ni par `meta/dataVersion`.
+    // ---------------------------------------------------------------------------------------------
+    match /devFeedback/{id} {
+      allow read, delete: if isAdmin();
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['devCode', 'game', 'targetType', 'targetKey', 'name', 'currentDifficulty',
+          'suggestedDifficulty', 'at', 'uid'])
+        && request.resource.data.keys().hasAll(['devCode', 'game', 'targetType', 'targetKey', 'name', 'currentDifficulty',
+          'suggestedDifficulty', 'at', 'uid'])
+        && request.resource.data.devCode == 'supermatou'
+        && request.resource.data.game in ['compass', 'clues', 'silhouette']
+        && request.resource.data.targetType in ['place', 'country']
+        && (request.resource.data.game == 'silhouette') == (request.resource.data.targetType == 'country')
+        && request.resource.data.targetKey is string && request.resource.data.targetKey.size() > 0
+        && request.resource.data.targetKey.size() <= 80
+        && request.resource.data.name is string && request.resource.data.name.size() <= 80
+        && request.resource.data.currentDifficulty in ['easy', 'intermediate', 'hard']
+        && request.resource.data.suggestedDifficulty in ['easy', 'intermediate', 'hard']
+        && request.resource.data.at == request.time
+        && request.resource.data.uid == request.auth.uid;
+    }
+
     match /rooms/{code} {
       // N'importe qui peut lire une room (c'est ainsi qu'on vérifie un code avant de la rejoindre).
       allow read: if true;
@@ -188,10 +218,10 @@ service cloud.firestore {
           || (resource.data.game == 'compass' && compassPlayer())
           || (resource.data.game == 'clues'
             && turnBasedPlayer(['players', 'revealedClueIds', 'turnUid', 'verdict', 'roundWinnerUid',
-              'wrongGuessUid', 'wrongGuessSeq', 'typing']))
+              'wrongGuessUid', 'wrongGuessSeq', 'wrongGuessHints', 'typing']))
           || (resource.data.game == 'silhouette'
-            && turnBasedPlayer(['players', 'hintsRevealed', 'hintPicks', 'typing', 'turnUid', 'verdict', 'roundWinnerUid',
-              'wrongGuessUid', 'wrongGuessSeq'])));
+            && turnBasedPlayer(['players', 'hintsRevealed', 'hintPicks', 'quadrantsRevealed', 'typing', 'turnUid', 'verdict', 'roundWinnerUid',
+              'wrongGuessUid', 'wrongGuessSeq', 'wrongGuessHints'])));
 
       // Seul l'hôte supprime sa room : à la fermeture de la partie, et avant d'en créer une nouvelle
       // (`deletePreviousRoomsByHost`, qui efface toutes ses anciennes rooms, quel que soit le jeu). Supprimer une room

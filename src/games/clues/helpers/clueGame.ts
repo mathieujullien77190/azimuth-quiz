@@ -104,15 +104,6 @@ export const overlayTypedLetters = (groups: NameSkeletonSlot[][], typed: string)
   );
 };
 
-/** Turns raw typed text into the very same box-group shape a real name skeleton has (one group
- * per space-separated word, a hyphen as its own `HYPHEN_SLOT`) — used before the real shape is
- * known at all (the "letter" clue's 1st click or none yet), so what's being typed still reads as
- * boxed letters rather than a plain line, the same way it will once the shape is known. Never has
- * a blank slot: every character actually typed gets one, nothing more. */
-export const typedSkeleton = (text: string): NameSkeletonSlot[][] =>
-  text.trim() === ''
-    ? []
-    : text
-        .trim()
-        .split(/\s+/)
-        .map((word) => [...word].map((char): NameSkeletonSlot => (char === '-' ? HYPHEN_SLOT : char.toUpperCase())));
+/** Turns raw typed text into the box-group shape of a name skeleton (see the shared implementation): used before the real
+ * shape is known at all, so what's being typed still reads as boxed letters. */
+export { typedSkeleton } from '@/components/TypedAnswer/helpers';

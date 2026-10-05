@@ -48,7 +48,7 @@ const installDb = (groups: Record<string, Fake[]>, countsOverride?: CompassCount
       expect(filters.find((entry) => entry.field === 'n')!.op).toBe('in');
       return (value('n') as number[]).map((n) => {
         const place = groups[`${category}|${difficulty}`][n - 1];
-        return { data: (): PlaceDoc => ({ ...place, difficulty, n, compass: { category } }) };
+        return { id: `${category}${difficulty}${n}`, data: (): PlaceDoc => ({ ...place, difficulty, n, compass: { category } }) };
       });
     });
     // Firestore caps the values of one query's `or`/`in` at 30 in total.
@@ -111,6 +111,8 @@ describe('fetchRandomPlaces', () => {
     const places = await fetchRandomPlaces(settings, 'fr');
 
     expect(places).toHaveLength(3);
+    // Each place knows its document id (the dev mode's difficulty opinions point at it).
+    expect(places.every((place) => typeof place.key === 'string' && place.key.length > 0)).toBe(true);
     expect(new Set(names(places)).size).toBe(3);
     expect(names(places).every((name) => name.startsWith('C') || name.startsWith('K'))).toBe(true);
     // Several groups, yet a single query (an `or` of one clause per group) brings every document back.

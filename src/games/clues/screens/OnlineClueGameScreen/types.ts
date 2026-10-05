@@ -35,6 +35,8 @@ export type OnlineClueGameScreenViewProps = {
   /** Index into `players` of whoever holds the turn. */
   turnIndex: number;
   isMyTurn: boolean;
+  /** The turn-holder already guessed this turn: "Valider" is off, a hint is the only move left (`turnGuess.ts`). */
+  guessedThisTurn: boolean;
   /** The turn-holder's in-progress answer text, live — empty when there is nothing to show (this
    * device's own turn, the round is over, or nothing has been typed yet). */
   typedByActivePlayer: string;

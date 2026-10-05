@@ -35,6 +35,17 @@ describe('Screen', () => {
     expect(onScroll).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps header, body and footer together in one keyboard-avoiding view, the overlay outside of it', async () => {
+    const { getByText } = await render(
+      <Screen footer={<Text>Footer</Text>} header={<Text>Header</Text>} overlay={<Text>Overlay</Text>}>
+        <Text>Body</Text>
+      </Screen>,
+    );
+    const avoiding = getByText('Header').parent;
+    expect(getByText('Footer').parent).toBe(avoiding);
+    expect(getByText('Overlay').parent).not.toBe(avoiding);
+  });
+
   it('draws an overlay over everything when given one', async () => {
     const { getByText } = await render(
       <Screen overlay={<Text>Overlay</Text>}>

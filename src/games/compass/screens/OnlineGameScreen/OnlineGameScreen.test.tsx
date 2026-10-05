@@ -83,6 +83,7 @@ const setGame = (overrides: Record<string, unknown> = {}) => {
     myIndex: 0,
     handleQuit: jest.fn(),
     reactions: { reaction: null, send: jest.fn(), canReact: false },
+    devFeedback: { question: null, choose: jest.fn(), dismiss: jest.fn() },
     submit: jest.fn(),
     kickPlayer: jest.fn(),
     goToNextRound: jest.fn(),
@@ -359,5 +360,33 @@ describe('OnlineGameScreen — emoji reactions', () => {
     const { getByText } = await renderScreen();
     expect(getByText('👏')).toBeTruthy();
     expect(getByText('Lou')).toBeTruthy();
+  });
+});
+
+describe('OnlineGameScreen — dev mode difficulty question', () => {
+  it('asks it over the screen, and reports the answer tapped or the dismissal', async () => {
+    const choose = jest.fn();
+    const dismiss = jest.fn();
+    setGame({ devFeedback: { question: 'Le lieu Paris était-il…', choose, dismiss } });
+    const { getByText, getByLabelText } = await renderScreen();
+    expect(getByText('Le lieu Paris était-il…')).toBeTruthy();
+    await fireEvent.press(getByText(/Difficile/));
+    expect(choose).toHaveBeenCalledWith('hard');
+    await fireEvent.press(getByLabelText('Fermer sans répondre'));
+    expect(dismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('asks it over the final standings too (the last round is asked about there), and reports the answer', async () => {
+    const choose = jest.fn();
+    setGame({ gameState: gameState({ screen: 'end' }), records: [record], devFeedback: { question: 'Le lieu Rome était-il…', choose, dismiss: jest.fn() } });
+    const { getByText } = await renderScreen();
+    expect(getByText('Le lieu Rome était-il…')).toBeTruthy();
+    await fireEvent.press(getByText(/Facile/));
+    expect(choose).toHaveBeenCalledWith('easy');
+  });
+
+  it('asks nothing when the game has no question', async () => {
+    const { queryByText } = await renderScreen();
+    expect(queryByText(/était-il/)).toBeNull();
   });
 });

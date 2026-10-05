@@ -32,7 +32,7 @@ export const WithButton: Story = {
 };
 
 /** In a room with other players, a small round button floats just above the footer, at its right corner (out of its
- * flow: the footer's own buttons keep their whole width). It pops a column of emojis upward against the right edge, and a
+ * flow: the footer's own buttons keep their whole width). It shows a column of emojis upward against the right edge, and a
  * tap on one sends it to everyone (see `useRoomReactions`). Alone in the room `onReact` is left out and so is the button. */
 export const WithReactions: Story = {
   parameters: source(withReactionsCode),

@@ -11,6 +11,7 @@ import { useTheme } from '@/themes';
 import type { EarthMark } from '@/components/EarthSection';
 import type { RoundRecord } from '@/types';
 import EndScreen from '../EndScreen';
+import DifficultyFeedbackOverlay from '@/components/DifficultyFeedbackOverlay';
 import NoticeOverlay from '@/components/NoticeOverlay';
 import RoomDeletedScreen from '@/components/RoomDeletedScreen';
 import { REVEAL_OPACITY } from './constants';
@@ -88,14 +89,21 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
     const end = frozenEnd ?? { players: onlinePlayers, records: game.records, totals };
     const endLocalName = end.players.find((player) => player.uid === localUid)?.name ?? '';
     return (
-      <EndScreen
-        localName={endLocalName}
-        onQuit={game.handleQuit}
-        onReplay={game.handleReplay}
-        players={end.players}
-        records={end.records}
-        totals={end.totals}
-      />
+      <>
+        <EndScreen
+          localName={endLocalName}
+          onQuit={game.handleQuit}
+          onReplay={game.handleReplay}
+          players={end.players}
+          records={end.records}
+          totals={end.totals}
+        />
+        <DifficultyFeedbackOverlay
+          onChoose={game.devFeedback.choose}
+          onDismiss={game.devFeedback.dismiss}
+          question={game.devFeedback.question}
+        />
+      </>
     );
   }
 
@@ -215,6 +223,11 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
         truthBearing={truthBearing}
       />
       <NoticeOverlay message={travelNotice} onDismiss={dismissTravelNotice} />
+      <DifficultyFeedbackOverlay
+        onChoose={game.devFeedback.choose}
+        onDismiss={game.devFeedback.dismiss}
+        question={game.devFeedback.question}
+      />
     </>
   );
 };

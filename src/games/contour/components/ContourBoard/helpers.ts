@@ -1,5 +1,7 @@
 import type { Point2D } from '@/types';
 
+import { FLAG_HEIGHT, FLAG_WIDTH } from './constants';
+
 type LonLat = readonly [number, number];
 
 const toRadians = (degrees: number): number => (degrees * Math.PI) / 180;
@@ -89,3 +91,15 @@ export const polylinePath = (points: readonly Point2D[]): string =>
         .slice(1)
         .map((point) => `L ${point.x} ${point.y}`)
         .join(' ');
+
+/** A rectangle on the board, in pixels. */
+export type BoardRect = { x: number; y: number; width: number; height: number };
+
+/** The footprint of a flag label drawn at `position` (`textAnchor` middle, baseline at `position.y`, see
+ * `ContourBoard`): its box, so something can be drawn exactly over it. */
+export const flagRect = (position: Point2D): BoardRect => ({
+  x: position.x - FLAG_WIDTH / 2,
+  y: position.y - FLAG_HEIGHT,
+  width: FLAG_WIDTH,
+  height: FLAG_HEIGHT,
+});

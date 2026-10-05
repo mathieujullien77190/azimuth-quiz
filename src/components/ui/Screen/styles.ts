@@ -8,6 +8,9 @@ export const createStyles = ({ colors, isDark }: Theme) =>
       flex: 1,
       backgroundColor: colors.background,
     },
+    keyboardAvoiding: {
+      flex: 1,
+    },
     scroll: {
       flex: 1,
     },

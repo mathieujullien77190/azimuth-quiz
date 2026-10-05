@@ -10,6 +10,7 @@ import {
   reportContourRoomCorrect,
   reportContourRoomWrong,
   revealContourRoomHint,
+  revealContourRoomQuadrant,
   setContourRoomTyping,
   startContourRoomGame,
   subscribeToRoomGame,
@@ -70,12 +71,14 @@ describe('game writes', () => {
       roundIndex: 0,
       hintsRevealed: 0,
       hintPicks: [],
+      quadrantsRevealed: [],
       typing: null,
       turnUid: 'zoe',
       verdict: null,
       roundWinnerUid: null,
       wrongGuessUid: null,
       wrongGuessSeq: 0,
+      wrongGuessHints: null,
       totalScores: {},
     });
   });
@@ -85,6 +88,16 @@ describe('game writes', () => {
     expect(updateDoc).toHaveBeenCalledWith(REF, {
       hintPicks: ['silhouette', 'neighbors'],
       hintsRevealed: 2,
+      turnUid: 'max',
+    });
+  });
+
+  it('revealContourRoomQuadrant is a hint: it writes the picks with the cell opening, their count, the cells and the next turn at once', async () => {
+    await revealContourRoomQuadrant('tabofuna', ['silhouette', 'quadrant'], [2], 'max');
+    expect(updateDoc).toHaveBeenCalledWith(REF, {
+      hintPicks: ['silhouette', 'quadrant'],
+      hintsRevealed: 2,
+      quadrantsRevealed: [2],
       turnUid: 'max',
     });
   });
@@ -104,9 +117,9 @@ describe('game writes', () => {
     expect(updateDoc).toHaveBeenCalledWith(REF, { verdict: 'giveUp' });
   });
 
-  it('reportContourRoomWrong reports the miss with its sequence number', async () => {
-    await reportContourRoomWrong('tabofuna', 'zoe', 3);
-    expect(updateDoc).toHaveBeenCalledWith(REF, { wrongGuessUid: 'zoe', wrongGuessSeq: 3 });
+  it('reportContourRoomWrong reports the miss with its sequence number and the hints out at that moment', async () => {
+    await reportContourRoomWrong('tabofuna', 'zoe', 3, 4);
+    expect(updateDoc).toHaveBeenCalledWith(REF, { wrongGuessUid: 'zoe', wrongGuessSeq: 3, wrongGuessHints: 4 });
   });
 
   it('applyContourRoomScore writes the running totals', async () => {
@@ -121,10 +134,12 @@ describe('game writes', () => {
       roundIndex: 2,
       hintsRevealed: 0,
       hintPicks: [],
+      quadrantsRevealed: [],
       typing: null,
       turnUid: 'zoe',
       verdict: null,
       roundWinnerUid: null,
+      wrongGuessHints: null,
     });
   });
 
@@ -152,12 +167,14 @@ describe('subscribeToRoomGame', () => {
       roundIndex: 1,
       hintsRevealed: 3,
       hintPicks: ['silhouette', 'neighbors', 'cities'],
+      quadrantsRevealed: [2, 0],
       typing: { uid: 'zoe', text: 'Fra' },
       turnUid: 'zoe',
       verdict: 'giveUp',
       roundWinnerUid: 'zoe',
       wrongGuessUid: 'max',
       wrongGuessSeq: 2,
+      wrongGuessHints: 3,
       totalScores: { zoe: 5 },
     };
     emit(true, state);
@@ -177,12 +194,14 @@ describe('subscribeToRoomGame', () => {
       roundIndex: 0,
       hintsRevealed: 0,
       hintPicks: [],
+      quadrantsRevealed: [],
       typing: null,
       turnUid: null,
       verdict: null,
       roundWinnerUid: null,
       wrongGuessUid: null,
       wrongGuessSeq: 0,
+      wrongGuessHints: null,
       totalScores: {},
     });
   });
