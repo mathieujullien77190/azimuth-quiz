@@ -53,9 +53,9 @@ const soloPlayers: Player[] = [{ name: 'Zoé', color: '#EF4444' }];
 const multiRecord: RoundRecord = {
   place,
   results: [
-    // Zoé: aimed farthest from the place -> ranked second despite player order.
+    // Zoé: fewer points on the round -> ranked second despite player order.
     { guess: { bearing: 80, distanceKm: 950 }, score: { ...scoreFixture, total: 500, targetGapKm: 300 } },
-    // Max: aimed closest to the place -> ranked first.
+    // Max: the most points of the round -> ranked first.
     {
       guess: { bearing: 95, distanceKm: 1010 },
       score: { ...scoreFixture, total: 900, distanceBonus: 100, targetGapKm: 40 },
@@ -164,7 +164,7 @@ describe('RoundResult — score bonus colouring', () => {
 });
 
 describe('RoundResult — multiplayer', () => {
-  it('ranks players by how close they aimed to the place, best first, and shows both names/dots', async () => {
+  it('ranks players by their points on the round, best first, and shows both names/dots', async () => {
     const { getAllByText } = await render(
       <RoundResult players={multiPlayers} record={multiRecord} totals={[500, 900]} />,
     );

@@ -134,7 +134,7 @@ export const en: Translations = {
     scoringInfoLabel: 'How points are calculated',
     scoringInfoBefore: 'Heading (',
     rhumbLineLabel: 'rhumb line',
-    scoringInfoAfter: ') and distance each earn up to 500 points, based on how close your guess was.\n\n+100 bonus points on each category for whoever aimed closest to the place (multiplayer only).\n\n+100 extra bonus points for a heading nailed to the exact degree.\n\n+100 more points for a perfect.',
+    scoringInfoAfter: ') and distance each earn up to 500 points, based on how close your guess was.\n\n+100 bonus points on each category for whoever is the closest on it: the smallest heading error, the smallest distance error (multiplayer only).\n\n+100 extra bonus points for a heading nailed to the exact degree.\n\n+100 more points for a perfect.',
     rhumbLineUrl: 'https://en.wikipedia.org/wiki/Rhumb_line',
     perfect: 'PERFECT',
   },

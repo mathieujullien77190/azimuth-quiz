@@ -56,23 +56,24 @@ export const scoreRound = (origin: Coordinates, place: Place, guess: Guess): Rou
 };
 
 /**
- * Bonus for the winner of the round: the player(s) whose guessed point (heading + distance) is
- * closest to the true place (ties included) get 1/5 of each category's max. Only makes sense with
- * several players — solo, `results` has a single element and no one can stand out, so no bonus.
- * Compares the gap to the place, not the points: those are capped at 0 as soon as you're out of
- * tolerance, so two players both out of tolerance would otherwise be tied.
+ * Bonus for the best of the round, on each category separately: 1/5 of the category's max for the player(s) with the
+ * smallest heading error (`directionBonus`) and for the player(s) with the smallest distance error
+ * (`distanceBonus`), ties included. Only makes sense with several players — solo, `results` has a single element
+ * and no one can stand out, so no bonus. Compares the raw errors (`directionError`/`distanceError`), not the points:
+ * those are capped at 0 as soon as you're out of tolerance, so two players both out of tolerance would otherwise be
+ * tied and both "the closest".
  */
 export const applyBestBonus = (results: PlayerResult[]): PlayerResult[] => {
   if (results.length < 2) return results;
 
   const directionBonus = Math.round(MAX_DIRECTION_POINTS * BEST_BONUS_RATIO);
   const distanceBonus = Math.round(MAX_DISTANCE_POINTS * BEST_BONUS_RATIO);
-  const bestGap = Math.min(...results.map((result) => result.score.targetGapKm));
+  const bestDirectionError = Math.min(...results.map((result) => result.score.directionError));
+  const bestDistanceError = Math.min(...results.map((result) => result.score.distanceError));
 
   return results.map((result) => {
-    const isWinner = result.score.targetGapKm === bestGap;
-    const earnedDirectionBonus = isWinner ? directionBonus : 0;
-    const earnedDistanceBonus = isWinner ? distanceBonus : 0;
+    const earnedDirectionBonus = result.score.directionError === bestDirectionError ? directionBonus : 0;
+    const earnedDistanceBonus = result.score.distanceError === bestDistanceError ? distanceBonus : 0;
     return {
       ...result,
       score: {

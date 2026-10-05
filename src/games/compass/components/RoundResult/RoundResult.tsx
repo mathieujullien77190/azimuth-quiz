@@ -34,7 +34,7 @@ export const RoundResult = ({ record, players, totals, answered, localIndex, onK
       (entry): entry is { result: (typeof record.results)[number]; player: Player; index: number } =>
         entry.player !== undefined,
     );
-  // Players are ranked by how close their guessed point is to the place (best first) — unless
+  // Players are ranked by points on the round (best first) — unless
   // pending: there's no official score yet to rank by, so this device's own entry goes first
   // instead (easiest to find while everyone else trickles in), the rest kept in their given
   // (arrival) order.
@@ -42,7 +42,7 @@ export const RoundResult = ({ record, players, totals, answered, localIndex, onK
     ? localIndex === undefined
       ? entries
       : [...entries.filter((e) => e.index === localIndex), ...entries.filter((e) => e.index !== localIndex)]
-    : entries.sort((a, b) => a.result.score.targetGapKm - b.result.score.targetGapKm);
+    : entries.sort((a, b) => b.result.score.total - a.result.score.total);
 
   return (
     <Card style={styles.card}>

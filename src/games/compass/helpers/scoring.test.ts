@@ -121,19 +121,26 @@ describe('applyBestBonus', () => {
     expect(applyBestBonus(results)).toEqual(results);
   });
 
-  it('gives both bonuses to whoever aimed closest to the place, not to the best on one axis', () => {
-    // Right distance but opposite heading: lands far from the place.
-    const oppositeRightDistance = makeResult(180, 0, 2000);
-    // Slightly off on both axes, but close to the place.
-    const nearMiss = makeResult(5, 50, 30);
-    const [a, b] = applyBestBonus([oppositeRightDistance, nearMiss]);
-    expect(a.score.directionBonus).toBe(0);
+  it('gives each bonus to whoever has the smallest error on that axis, independently', () => {
+    const betterHeading = makeResult(5, 50);
+    const betterDistance = makeResult(20, 10);
+    const [a, b] = applyBestBonus([betterHeading, betterDistance]);
+    expect(a.score.directionBonus).toBeGreaterThan(0);
     expect(a.score.distanceBonus).toBe(0);
-    expect(b.score.directionBonus).toBeGreaterThan(0);
+    expect(b.score.directionBonus).toBe(0);
     expect(b.score.distanceBonus).toBeGreaterThan(0);
   });
 
-  it('gives the bonus to every player tied for closest', () => {
+  it('is not about the gap to the place: the smallest heading error gets the heading bonus even if the aimed point is far', () => {
+    const exactHeadingFar = makeResult(0, 400, 3000);
+    const nearButOffHeading = makeResult(12, 20, 20);
+    const [a, b] = applyBestBonus([exactHeadingFar, nearButOffHeading]);
+    expect(a.score.directionBonus).toBeGreaterThan(0);
+    expect(b.score.directionBonus).toBe(0);
+    expect(b.score.distanceBonus).toBeGreaterThan(0);
+  });
+
+  it('gives the bonus to every player tied for the smallest error', () => {
     const tiedA = makeResult(10, 10, 40);
     const tiedB = makeResult(10, 10, 40);
     const [a, b] = applyBestBonus([tiedA, tiedB]);
