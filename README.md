@@ -26,7 +26,7 @@ npm install
 npx expo start        # menu Expo (web / iOS / Android)
 npx expo start --web  # directement le web
 npm run admin         # l'admin des données
-npm run storybook     # les composants
+npm run stories     # les composants
 ```
 
 ```bash

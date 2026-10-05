@@ -50,7 +50,7 @@
     "test": "jest",
     "test:coverage": "jest --coverage",
     "admin": "node scripts/admin.mjs",
-    "storybook": "node scripts/storybook.mjs"
+    "stories": "node scripts/storybook.mjs"
   },
   "private": true,
   "jest": {
