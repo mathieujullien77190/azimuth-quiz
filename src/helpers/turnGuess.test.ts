@@ -1,4 +1,4 @@
-import { hasGuessedThisTurn } from './turnGuess';
+import { hasGuessedThisTurn, missIsFresh } from './turnGuess';
 
 const state = { turnUid: 'zoe', wrongGuessUid: 'zoe', wrongGuessHints: 3 };
 
@@ -19,5 +19,19 @@ describe('hasGuessedThisTurn', () => {
 
   it('is false while nobody has the turn', () => {
     expect(hasGuessedThisTurn({ turnUid: null, wrongGuessUid: null, wrongGuessHints: null }, 0)).toBe(false);
+  });
+});
+
+describe('missIsFresh', () => {
+  it('is true while the hints out are still the ones of the miss', () => {
+    expect(missIsFresh(3, 3)).toBe(true);
+  });
+
+  it('is false as soon as a hint was revealed after the miss', () => {
+    expect(missIsFresh(3, 4)).toBe(false);
+  });
+
+  it('keeps the older behaviour (true) when no miss was written with a hints count', () => {
+    expect(missIsFresh(null, 5)).toBe(true);
   });
 });

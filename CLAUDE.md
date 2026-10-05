@@ -157,7 +157,7 @@ tire** : le document `places/{cle}` porte les copies (`country`, `personality.jo
   `wrongGuessUid`/`wrongGuessSeq`, remis a `null` a chaque debut de manche, absent = pas de restriction) donne
   `hasGuessedThisTurn` (`helpers/turnGuess.ts`), qui retombe a faux des qu'un indice sort. le champ de reponse et « Valider » disparaissent
   (le brouillon est garde pour son prochain tour) et seule la ligne `t.game.alreadyGuessed` reste (l'hote garde « Je ne sais
-  pas » dans Indices) ; un verrou local couvre l'instant avant le retour de la room. Le champ est dans la liste
+  pas » dans Indices) ; un verrou local couvre l'instant avant le retour de la room. Le message de l'erreur (« X se trompe… ») disparait chez tout le monde des qu'un indice (ou, dans Silhouette, l'ouverture d'une case) sort apres elle : `missIsFresh(wrongGuessHints, indicesSortis)`, meme en solo ou le tour revient au meme joueur. Le champ est dans la liste
   `turnFields` des regles des deux jeux.
 - **« Je ne sais pas »** : reserve a l'hote (`giveUp`), meme hors de son tour, via `isHost()` des regles.
 

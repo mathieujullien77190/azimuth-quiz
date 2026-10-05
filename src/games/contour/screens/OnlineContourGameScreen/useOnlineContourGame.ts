@@ -36,7 +36,7 @@ import type { ContourCountry } from '@/types';
 import { useContourRoomStore } from '@/games/contour/store/roomStore';
 import { nextPlayerUid, playersForRound } from '@/helpers/roomPlayers';
 import { useDebouncedValue } from '@/helpers/useDebouncedValue';
-import { hasGuessedThisTurn } from '@/helpers/turnGuess';
+import { hasGuessedThisTurn, missIsFresh } from '@/helpers/turnGuess';
 import { useDevFeedback } from '@/helpers/useDevFeedback';
 import { useGuessDraft } from '@/helpers/useGuessDraft';
 import { useHostTurnRecovery } from '@/helpers/useHostTurnRecovery';
@@ -102,7 +102,16 @@ export const useOnlineContourGame = (code: string, onQuit: () => void) => {
   const roundPlayers = playersForRound(onlinePlayers, gameState.roundIndex);
 
   // This device's own in-progress guess text, and the "you got it wrong" banner.
-  const { guessText, setGuessText, lastWrong, setLastWrong } = useGuessDraft(gameState.roundIndex, gameState.turnUid);
+  const { guessText, setGuessText, lastWrong: lastWrongText, setLastWrong } = useGuessDraft(gameState.roundIndex, gameState.turnUid);
+  // The banner goes away as soon as a hint (or a cell opening) is revealed after the miss — even when the turn comes back to
+  // the same player (solo), where the draft's own reset on a turn change would not fire. The local guard covers the gap before
+  // the room's `wrongGuessHints` for this very miss comes back.
+  const lastWrong =
+    lastWrongText !== null &&
+    ((guessGuard !== null && guessGuard.round === gameState.roundIndex && guessGuard.hints === hintsOut) ||
+      missIsFresh(gameState.wrongGuessHints, hintsOut))
+      ? lastWrongText
+      : null;
 
   // Mirrors this device's own guess text to the room, ~500ms after it stops changing, so the other players can watch the
   // turn-holder type it live (`typing` in `ContourRoomGameState`, same as Clues). Solo (nobody else could see it) and

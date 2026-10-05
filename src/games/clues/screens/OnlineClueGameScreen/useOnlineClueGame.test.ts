@@ -394,6 +394,14 @@ describe('useOnlineClueGame — who missed, shown to everyone', () => {
     expect(result.current.wrongGuesserName).toBeNull();
   });
 
+  it('clears itself as soon as a clue is revealed after the miss, even when the same player still holds the turn (solo)', async () => {
+    const { result } = await setup();
+    await setGame({ wrongGuessUid: 'host', wrongGuessSeq: 1, wrongGuessHints: 0 });
+    expect(result.current.wrongGuesserName).toBe('Zoé');
+    await setGame({ wrongGuessUid: 'host', wrongGuessSeq: 1, wrongGuessHints: 0, revealedClueIds: ['population'] });
+    expect(result.current.wrongGuesserName).toBeNull();
+  });
+
   it('does not carry a miss over into a new round, even if the same player is first again', async () => {
     // wrongGuessSeq is never reset between rounds (the host's own scoring relies on that, see
     // useHostTurnScoring) — the baseline captured at this round's start is what tells the two apart.

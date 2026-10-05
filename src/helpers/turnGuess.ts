@@ -15,3 +15,12 @@ type TurnGuessState = {
  */
 export const hasGuessedThisTurn = ({ turnUid, wrongGuessUid, wrongGuessHints }: TurnGuessState, hintsRevealed: number): boolean =>
   turnUid !== null && wrongGuessUid === turnUid && wrongGuessHints !== null && wrongGuessHints === hintsRevealed;
+
+/**
+ * Whether a miss is still worth announcing ("X se trompe — perd N points."): only until a hint is revealed after it, which
+ * passes the hand and ends the miss's turn, so the message goes away on every device at that moment. `wrongGuessHints` is
+ * the number of hints that were out when the miss was written; null (no miss this round, or a room made before the rule
+ * existed) keeps the older behaviour, where only the turn and round guards clear the message.
+ */
+export const missIsFresh = (wrongGuessHints: number | null, hintsRevealed: number): boolean =>
+  wrongGuessHints === null || wrongGuessHints === hintsRevealed;

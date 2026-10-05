@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { bearingDeg, distanceKm, nameSkeleton } from '@/helpers';
 import { useDebouncedValue } from '@/helpers/useDebouncedValue';
-import { hasGuessedThisTurn } from '@/helpers/turnGuess';
+import { hasGuessedThisTurn, missIsFresh } from '@/helpers/turnGuess';
 import { useDevFeedback } from '@/helpers/useDevFeedback';
 import { nextPlayerUid, playersForRound } from '@/helpers/roomPlayers';
 import { useGuessDraft } from '@/helpers/useGuessDraft';
@@ -76,7 +76,9 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
   const wrongGuesserName =
     gameState.wrongGuessUid !== null &&
     gameState.wrongGuessUid === gameState.turnUid &&
-    gameState.wrongGuessSeq > wrongSeqAtRoundStart
+    gameState.wrongGuessSeq > wrongSeqAtRoundStart &&
+    // Gone as soon as a hint is revealed after the miss, on every device (`wrongGuessHints`, see `turnGuess.ts`).
+    missIsFresh(gameState.wrongGuessHints, hintsOut)
       ? (onlinePlayers.find((player) => player.uid === gameState.wrongGuessUid)?.name ?? null)
       : null;
 

@@ -529,6 +529,21 @@ describe('useOnlineContourGame — guessing', () => {
     expect(result.current.guessedThisTurn).toBe(false);
   });
 
+  it('clears the banner as soon as a hint is revealed after the miss, even when the same player holds the turn again (solo)', async () => {
+    const { result } = await setup();
+    await act(async () => result.current.setGuessText('Espagne'));
+    await act(async () => result.current.submitGuess());
+    expect(result.current.lastWrong).toBe('Zoé');
+    // The room reflects the miss: still shown while the hints out are the ones of the miss.
+    await act(async () => useContourRoomStore.setState({ gameState: gameState({ wrongGuessUid: 'host', wrongGuessSeq: 1, wrongGuessHints: 0 }) }));
+    expect(result.current.lastWrong).toBe('Zoé');
+    // A hint (or a cell opening, which counts as one) comes out: the banner goes, whoever has the turn.
+    await act(async () =>
+      useContourRoomStore.setState({ gameState: gameState({ wrongGuessUid: 'host', wrongGuessSeq: 1, wrongGuessHints: 0, hintsRevealed: 1 }) }),
+    );
+    expect(result.current.lastWrong).toBeNull();
+  });
+
   it('locks from the shared state alone, only for the turn-holder', async () => {
     const holder = await setup({ gameState: gameState({ wrongGuessUid: 'host', wrongGuessHints: 0 }) });
     expect(holder.result.current.guessedThisTurn).toBe(true);
