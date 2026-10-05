@@ -13,7 +13,7 @@ describe('HomeScreen — content', () => {
   it('shows the title, tagline, and all three game cards', async () => {
     const { getByText, getAllByText } = await render(<HomeScreen />);
     expect(getByText('AZIMUTH QUIZ')).toBeTruthy();
-    expect(getByText('Choisis ton jeu de géographie')).toBeTruthy();
+    expect(getByText('Pas de GPS, que de l’instinct.')).toBeTruthy();
     expect(getByText('Boussole')).toBeTruthy();
     expect(getByText('Indices')).toBeTruthy();
     expect(getByText('Silhouette')).toBeTruthy();

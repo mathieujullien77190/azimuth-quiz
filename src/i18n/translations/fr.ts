@@ -11,8 +11,8 @@ export const fr: Translations = {
   cardinals: ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'],
   compassWestLabel: 'O',
   compassAccessibilityLabel: 'Boussole',
+  app: { tagline: 'Pas de GPS, que de l’instinct.' },
   home: {
-    tagline: 'Choisis ton jeu de géographie',
     settingsButtonLabel: 'Réglages',
     playersRange: (max) => `1 à ${max} joueurs`,
     games: {
@@ -167,7 +167,7 @@ export const fr: Translations = {
     claudeMention:
       'Fait pour l’apéro entre potes : pas de pub, pas de tracking, juste vous et une boussole récalcitrante.',
     devTitle: 'Mode dev',
-    devLabel: 'code',
+    devLabel: 'dev code',
     dataTitle: 'Données',
     dataHint:
       'Quelques données sauvegardées sur votre appareil pour améliorer l’expérience utilisateur, telles que les réglages. Rien n’est envoyé ailleurs. Ce bouton les efface.',
@@ -232,6 +232,9 @@ export const fr: Translations = {
     playerNameAccessibility: (index) => `Nom du joueur ${index}`,
     difficultyTitle: 'Difficulté',
     difficultyHint: 'Détermine dans quelle réserve de pays la manche pioche.',
+  },
+  splash: {
+    loading: 'Chargement…',
   },
   contourGame: {
     quadrantLabel: (cell) => `Dévoiler le carré ${cell}`,

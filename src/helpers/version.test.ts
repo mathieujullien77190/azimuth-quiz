@@ -1,11 +1,13 @@
-import { versionLabel } from './version';
+import { versionLabel, type Codename } from './version';
+
+const owl: Codename = { emoji: '🦉❄️', name: 'snowy-owl' };
 
 describe('versionLabel', () => {
-  it('adds the animal of the version, its emoji then its name', () => {
-    expect(versionLabel('2.55.3', { emoji: '🦉❄️', name: 'snowyOwl' })).toBe('v2.55.3 🦉❄️ snowyOwl');
+  it('reads "v<version> - <emoji> - <name>": the animal of the version, its emoji then its English name', () => {
+    expect(versionLabel('2.64.1', owl)).toBe('v2.64.1 - 🦉❄️ - snowy-owl');
   });
 
   it('is just the number for a version without a codename', () => {
-    expect(versionLabel('2.55.3')).toBe('v2.55.3');
+    expect(versionLabel('2.64.1', undefined)).toBe('v2.64.1');
   });
 });

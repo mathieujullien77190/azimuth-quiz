@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 
 import ErrorNoticeHost from '@/components/ErrorNoticeHost';
 import LanguageProvider from '@/components/LanguageProvider';
+import StartupSplash from '@/components/StartupSplash';
 import ThemeProvider from '@/components/ThemeProvider';
 import { preloadCluesCounts } from '@/games/clues/helpers/clueCounts';
 import { preloadCompassCounts } from '@/games/compass/helpers/compassCounts';
@@ -52,6 +53,7 @@ const RootLayout = () => {
       <LanguageProvider>
         <ThemedShell />
         <ErrorNoticeHost />
+        <StartupSplash />
       </LanguageProvider>
     </ThemeProvider>
   );

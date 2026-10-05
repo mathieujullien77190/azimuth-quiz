@@ -78,12 +78,17 @@ puis mettre la même valeur dans `app.json` (`expo.version`) à la main. Vérifi
 chose (`git diff --stat` : exactement ces 3 fichiers, 2 lignes de `package-lock.json`).
 
 **Chaque version porte le nom d'un animal** : à chaque montée, choisir un **nouvel animal** (jamais celui de la version
-précédente ni d'une version déjà publiée, `git log -p -S"codename" -- app.json` donne les anciens) et l'écrire dans
-`app.json` → `expo.extra.codename` : `emoji` = l'emoji de l'animal, plus un second si l'animal en a un qui le précise
-(le harfang des neiges : `🦉❄️`), et `name` = son **nom en anglais en camelCase, sans espace** (`snowyOwl`, `redFox`).
-C'est ce que montrent l'écran Réglages et l'en-tête de l'admin : « v2.55.3 🦉❄️ snowyOwl » (nombre, emoji, lettres ;
-`versionLabel` de `src/helpers/version.ts`). Le dire à l'utilisateur dans le compte rendu (« 2.56.0, le redFox 🦊 »). Le nom
-d'animal ne va ni dans `package.json` ni dans `package-lock.json`.
+précédente ni d'une version déjà publiée : `git log -p -S"codename" -- app.json` donne les anciens ; les premiers noms,
+courts, étaient arcticTern, flamingo, greenTurtle, humpbackWhale, redFox, snowyOwl, beaver, hedgehog, otter, penguin,
+koala, sloth : un nouvel animal ne reprend aucune de ces espèces) et l'écrire dans `app.json` → `expo.extra.codename`
+sous la forme `{ "emoji": "🦥", "name": "brown-throated-sloth" }` : `emoji` = l'emoji de l'animal, plus un second
+si l'animal en a un qui le précise (le harfang des neiges : `🦉❄️`), et `name` = le **nom complet de l'espèce, toujours en
+anglais** (quelle que soit la langue de l'appli), pas le nom court, en **kebab-case ASCII** (minuscules, accents retirés,
+espaces et apostrophes → `-`) : mésange charbonnière → `"great-tit"` ; paresseux à gorge brune → `"brown-throated-sloth"`.
+C'est ce que montrent l'écran Réglages (« v2.64.1 🦥 brown-throated-sloth »), l'écran de démarrage
+(« v2.64.1 - 🦥 - brown-throated-sloth ») et l'en-tête de l'admin (`versionLabel` de
+`src/helpers/version.ts`). Le dire à l'utilisateur dans le compte rendu
+(« 2.65.0, le great-tit 🐦 »). Le nom d'animal ne va ni dans `package.json` ni dans `package-lock.json`.
 
 ## Android (Play Console) : à garder en tête au moment de livrer
 

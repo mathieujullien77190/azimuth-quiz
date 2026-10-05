@@ -47,5 +47,7 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       ...typography.label,
       color: colors.textMuted,
       fontSize: fontSize.caption,
+      // The label style is upper case: the version line reads as the splash's does, "v2.64.1 - 🦥 - brown-throated-sloth".
+      textTransform: 'none',
     },
   });

@@ -11,8 +11,8 @@ export const en: Translations = {
   cardinals: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
   compassWestLabel: 'W',
   compassAccessibilityLabel: 'Compass',
+  app: { tagline: 'No GPS, just instinct.' },
   home: {
-    tagline: 'Choose your geography game',
     playersRange: (max) => `1 to ${max} players`,
     settingsButtonLabel: 'Settings',
     games: {
@@ -163,7 +163,7 @@ export const en: Translations = {
     author: 'By Matou.',
     claudeMention: 'Made for drinks with friends: no ads, no tracking, just you and a stubborn compass.',
     devTitle: 'Dev mode',
-    devLabel: 'code',
+    devLabel: 'dev code',
     dataTitle: 'Data',
     dataHint:
       'A few pieces of data saved on your device to improve the experience, such as your settings. Nothing is sent anywhere else. This button erases them.',
@@ -228,6 +228,9 @@ export const en: Translations = {
     playerNameAccessibility: (index) => `Player ${index} name`,
     difficultyTitle: 'Difficulty',
     difficultyHint: 'Sets which pool of countries the round draws from.',
+  },
+  splash: {
+    loading: 'Loading…',
   },
   contourGame: {
     quadrantLabel: (cell) => `Reveal square ${cell}`,

@@ -94,3 +94,8 @@ export const REACTION_COOLDOWN_MS = 1000;
 /** Reactions one player may send in a game: past it the reactions button is hidden on that device (the game screen's
  * hook starts over with each game). */
 export const REACTIONS_PER_GAME = 20;
+
+/** The startup splash screen stays at least this long (ms) even when nothing is left to load, and is dropped after the
+ * longer cap so a hydration that never ends cannot keep the app hidden for ever. */
+export const SPLASH_MIN_MS = 5000;
+export const SPLASH_MAX_MS = 15000;

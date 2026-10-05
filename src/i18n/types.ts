@@ -32,8 +32,9 @@ export type Translations = {
   /** Single letter for west on the compass dial ("O" in French, "W" in English). */
   compassWestLabel: string;
   compassAccessibilityLabel: string;
+  /** The tagline under the app's title, on the home screen and on the startup splash (`AppTitle`). */
+  app: { tagline: string };
   home: {
-    tagline: string;
     settingsButtonLabel: string;
     /** Player-count line of a game card ("1 à 10 joueurs"). */
     playersRange: (max: number) => string;
@@ -229,6 +230,10 @@ export type Translations = {
     playerNameAccessibility: (index: number) => string;
     difficultyTitle: string;
     difficultyHint: string;
+  };
+  /** The startup splash screen: the loading label. */
+  splash: {
+    loading: string;
   };
   contourGame: {
     /** The hidden cells of the board (see `ContourQuadrantMask`): the label of the one that can be opened (`cell` is

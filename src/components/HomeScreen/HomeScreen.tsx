@@ -1,13 +1,13 @@
 import { useRouter } from 'expo-router';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { GAME_ICONS } from '@/data';
 import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 
+import AppTitle from '../AppTitle';
 import GameCard from '../GameCard';
 import MascotButton from '../MascotButton';
 import Screen from '../ui/Screen';
-import { APP_TITLE } from './constants';
 
 import { createStyles } from './styles';
 
@@ -18,14 +18,12 @@ export const HomeScreen = () => {
 
   return (
     <Screen>
-      <View style={styles.header}>
+      <AppTitle tagline={t.app.tagline}>
         {/* The mascot (UFO by night, helicopter by day — see MascotButton) is the settings button, fixed at the top right. */}
         <View style={styles.mascotButton}>
           <MascotButton accessibilityLabel={t.home.settingsButtonLabel} onPress={() => router.push('/settings')} />
         </View>
-        <Text style={styles.title}>{APP_TITLE}</Text>
-        <Text style={styles.tagline}>{t.home.tagline}</Text>
-      </View>
+      </AppTitle>
 
       <View style={styles.games}>
         <GameCard

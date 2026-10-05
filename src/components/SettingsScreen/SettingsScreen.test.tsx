@@ -7,7 +7,8 @@ import { useThemeSettings } from '@/themes';
 import type { ThemeId } from '@/types';
 
 import SettingsScreen from '.';
-import { APP_VERSION } from './constants';
+import { versionLabel } from '@/helpers/version';
+import { APP_CODENAME, APP_VERSION_NUMBER } from './constants';
 
 jest.mock('@/helpers', () => ({ clearAppData: jest.fn(), saveDevCode: jest.fn() }));
 jest.mock('@/i18n', () => {
@@ -59,7 +60,12 @@ describe('SettingsScreen', () => {
     const { getByText } = await renderSettings();
     expect(getByText('Réglages')).toBeTruthy();
     expect(getByText('Par Matou.')).toBeTruthy();
-    expect(getByText(APP_VERSION)).toBeTruthy();
+    expect(getByText(versionLabel(APP_VERSION_NUMBER, APP_CODENAME))).toBeTruthy();
+  });
+
+  it('shows the English name of the animal of the version whatever the language', async () => {
+    const { getByText } = await renderSettings('en');
+    expect(getByText(versionLabel(APP_VERSION_NUMBER, APP_CODENAME))).toBeTruthy();
   });
 
   it('shows French selected by default and switches language on press', async () => {
