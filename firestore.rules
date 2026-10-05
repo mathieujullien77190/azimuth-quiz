@@ -219,7 +219,7 @@ service cloud.firestore {
           || (resource.data.game == 'compass' && compassPlayer())
           || (resource.data.game == 'clues'
             && turnBasedPlayer(['players', 'revealedClueIds', 'turnUid', 'verdict', 'roundWinnerUid',
-              'wrongGuessUid', 'wrongGuessSeq', 'wrongGuessHints', 'typing']));
+              'wrongGuessUid', 'wrongGuessSeq', 'wrongGuessHints', 'typing'])));
 
       // Seul l'hôte supprime sa room : à la fermeture de la partie, et avant d'en créer une nouvelle
       // (`deletePreviousRoomsByHost`, qui efface toutes ses anciennes rooms, quel que soit le jeu). Supprimer une room
