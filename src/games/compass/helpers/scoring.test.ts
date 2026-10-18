@@ -121,9 +121,9 @@ describe('applyBestBonus', () => {
     expect(applyBestBonus(results)).toEqual(results);
   });
 
-  it('gives each bonus to whoever has the smallest error on that axis, independently', () => {
-    const betterHeading = makeResult(5, 50);
-    const betterDistance = makeResult(20, 10);
+  it('gives the heading bonus to the smallest heading error and the distance bonus to the smallest gap, independently', () => {
+    const betterHeading = makeResult(5, 50, 300);
+    const betterDistance = makeResult(20, 10, 100);
     const [a, b] = applyBestBonus([betterHeading, betterDistance]);
     expect(a.score.directionBonus).toBeGreaterThan(0);
     expect(a.score.distanceBonus).toBe(0);
@@ -131,9 +131,9 @@ describe('applyBestBonus', () => {
     expect(b.score.distanceBonus).toBeGreaterThan(0);
   });
 
-  it('is not about the gap to the place: the smallest heading error gets the heading bonus even if the aimed point is far', () => {
+  it('gives the distance bonus to the aimed point closest to the place, whatever its distance error', () => {
     const exactHeadingFar = makeResult(0, 400, 3000);
-    const nearButOffHeading = makeResult(12, 20, 20);
+    const nearButOffHeading = makeResult(12, 900, 20);
     const [a, b] = applyBestBonus([exactHeadingFar, nearButOffHeading]);
     expect(a.score.directionBonus).toBeGreaterThan(0);
     expect(b.score.directionBonus).toBe(0);
