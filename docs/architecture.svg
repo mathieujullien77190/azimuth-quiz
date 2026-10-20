@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" width="1000" height="560" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+  <title>Architecture d'Azimuth Quiz</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#1f2a37"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="560" fill="#ffffff"/>
+
+  <!-- Appli Expo -->
+  <rect x="20" y="20" width="450" height="520" rx="14" fill="#f3f7fb" stroke="#9db3c8" stroke-width="1.5"/>
+  <text x="40" y="48" font-size="15" font-weight="700" fill="#1f2a37">Appli Expo (src/) : web, iOS, Android</text>
+
+  <rect x="50" y="68" width="390" height="70" rx="10" fill="#ffffff" stroke="#1f2a37" stroke-width="1.5"/>
+  <text x="245" y="96" font-size="15" font-weight="700" text-anchor="middle" fill="#1f2a37">Écrans (Expo Router, app/)</text>
+  <text x="245" y="118" font-size="12.5" text-anchor="middle" fill="#5b6b7c">accueil · setup · parties en ligne · réglages</text>
+
+  <rect x="50" y="158" width="390" height="70" rx="10" fill="#ffffff" stroke="#1f2a37" stroke-width="1.5"/>
+  <text x="245" y="186" font-size="15" font-weight="700" text-anchor="middle" fill="#1f2a37">games/compass · games/clues</text>
+  <text x="245" y="208" font-size="12.5" text-anchor="middle" fill="#5b6b7c">screens · components · helpers (room.ts)</text>
+
+  <rect x="50" y="248" width="390" height="86" rx="10" fill="#fff7ec" stroke="#b5651d" stroke-width="1.5"/>
+  <text x="245" y="276" font-size="15" font-weight="700" text-anchor="middle" fill="#1f2a37">Stores Zustand</text>
+  <text x="245" y="298" font-size="12.5" text-anchor="middle" fill="#5b6b7c">createRoomStore (générique) → roomStore par jeu</text>
+  <text x="245" y="318" font-size="12.5" text-anchor="middle" fill="#5b6b7c">état de la room, joueurs, hôte, réactions</text>
+
+  <rect x="50" y="354" width="390" height="70" rx="10" fill="#ffffff" stroke="#1f2a37" stroke-width="1.5"/>
+  <text x="245" y="382" font-size="15" font-weight="700" text-anchor="middle" fill="#1f2a37">data/firestore + helpers</text>
+  <text x="245" y="404" font-size="12.5" text-anchor="middle" fill="#5b6b7c">lecture des documents · firebase.ts · roomCode</text>
+
+  <rect x="50" y="444" width="390" height="70" rx="10" fill="#ffffff" stroke="#1f2a37" stroke-width="1.5"/>
+  <text x="245" y="472" font-size="15" font-weight="700" text-anchor="middle" fill="#1f2a37">components / ui / i18n / themes</text>
+  <text x="245" y="494" font-size="12.5" text-anchor="middle" fill="#5b6b7c">partagés par les jeux et par l'admin</text>
+
+  <g stroke="#1f2a37" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
+    <path d="M245 138 V158"/>
+    <path d="M245 228 V248"/>
+    <path d="M245 334 V354"/>
+  </g>
+
+  <!-- Admin -->
+  <rect x="520" y="20" width="460" height="190" rx="14" fill="#f3f7fb" stroke="#9db3c8" stroke-width="1.5"/>
+  <text x="540" y="48" font-size="15" font-weight="700" fill="#1f2a37">Admin (admin/, React + Vite)</text>
+  <rect x="550" y="68" width="400" height="56" rx="10" fill="#ffffff" stroke="#1f2a37" stroke-width="1.5"/>
+  <text x="750" y="92" font-size="14" font-weight="700" text-anchor="middle" fill="#1f2a37">views/ (une page par onglet)</text>
+  <text x="750" y="112" font-size="12.5" text-anchor="middle" fill="#5b6b7c">Places · Countries · Jobs · Wordplay · Globe...</text>
+  <rect x="550" y="136" width="400" height="56" rx="10" fill="#ffffff" stroke="#1f2a37" stroke-width="1.5"/>
+  <text x="750" y="160" font-size="14" font-weight="700" text-anchor="middle" fill="#1f2a37">api/ + data.ts + firebase.ts</text>
+  <text x="750" y="180" font-size="12.5" text-anchor="middle" fill="#5b6b7c">écritures Firestore, snapshotStore</text>
+
+  <!-- Firebase -->
+  <rect x="520" y="250" width="460" height="150" rx="14" fill="#f3f7fb" stroke="#9db3c8" stroke-width="1.5"/>
+  <text x="540" y="278" font-size="15" font-weight="700" fill="#1f2a37">Firebase (pas de serveur propre)</text>
+  <rect x="550" y="298" width="190" height="80" rx="10" fill="#fdf0f0" stroke="#b04a4a" stroke-width="1.5"/>
+  <text x="645" y="326" font-size="14" font-weight="700" text-anchor="middle" fill="#1f2a37">Auth</text>
+  <text x="645" y="348" font-size="11.5" text-anchor="middle" fill="#5b6b7c">anonyme · Google (admin)</text>
+  <rect x="760" y="298" width="190" height="80" rx="10" fill="#eaf5ea" stroke="#4a8a4a" stroke-width="1.5"/>
+  <text x="855" y="326" font-size="14" font-weight="700" text-anchor="middle" fill="#1f2a37">Firestore</text>
+  <text x="855" y="348" font-size="11.5" text-anchor="middle" fill="#5b6b7c">firestore.rules, index</text>
+
+  <!-- Build -->
+  <rect x="520" y="440" width="460" height="100" rx="14" fill="#fff7ec" stroke="#b5651d" stroke-width="1.5"/>
+  <text x="540" y="468" font-size="15" font-weight="700" fill="#1f2a37">Build et déploiement</text>
+  <text x="540" y="492" font-size="12.5" fill="#5b6b7c">push master → GitHub Actions : Jest, expo export (web),</text>
+  <text x="540" y="512" font-size="12.5" fill="#5b6b7c">build admin, Storybook → GitHub Pages · EAS pour iOS / Android</text>
+
+  <!-- Flèches -->
+  <g stroke="#1f2a37" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
+    <path d="M440 389 H520"/>
+    <path d="M750 192 V250"/>
+    <path d="M520 100 H495 V479 H440"/>
+  </g>
+  <g font-size="11.5" fill="#1f2a37">
+    <text x="445" y="381">SDK Firebase</text>
+    <text x="760" y="226">lecture / écriture</text>
+  </g>
+</svg>

@@ -48,6 +48,12 @@ dupliquées, elles se modifient par l'admin ou en suivant le skill `.claude/skil
 Un push sur `master` publie le jeu web, l'admin (`/admin/`) et Storybook sur GitHub Pages
 (`.github/workflows/deploy-pages.yml`). Règles et index Firestore ne sont pas déployés par ce push.
 
+## Architecture
+
+![Schéma d'architecture : écrans, jeux, stores Zustand, couche données, admin, Firebase et déploiement](docs/architecture.svg)
+
+Pas de serveur propre : l'appli Expo (écrans, jeux Boussole et Indices, stores Zustand par room, couche `data/firestore`) et l'admin Vite, qui réutilise `components` et `data/firestore`, parlent directement à Firebase (Auth et Firestore, règles dans `firestore.rules`). Un push sur `master` construit le web, l'admin et Storybook vers GitHub Pages.
+
 ## Stack et structure
 
 Expo (SDK 57) + Expo Router, React Native + react-native-web, TypeScript, Zustand, Firebase (Firestore + auth
