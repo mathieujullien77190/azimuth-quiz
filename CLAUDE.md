@@ -135,7 +135,7 @@ plus de 30 jours, pas de TTL : exige la facturation Firebase).
     carres = reste), niveau de detail selon la distance camera (constantes de `constants.ts`), clic = la meme carte que la liste
     (`PlacesView/PlaceCard` + `usePlaceEditing`). `GlobeScene.ts` possede three.js, logique pure dans `helpers.ts`. Vitest remplace `three`.
 - **Storybook** : stories colocalisees (`src/**/<Name>.stories.tsx`, config `admin/.storybook`, `npm run stories`), code reel via
-  `source(code)` + `<Story>.source.md` (skill personnel `storybook-story`). Menu (comme le rangement de `components/`) : `Home`, `Game`, `Geo`, `Setup`, `UI`
+  `source(code)` + `doc/<Story>.source.md` (sous-dossier `doc/` du composant ; skill personnel `storybook-story`). Menu (comme le rangement de `components/`) : `Home`, `Game`, `Geo`, `Setup`, `UI`
   (ordre dans `admin/.storybook/preview.tsx` : y ajouter toute nouvelle section). Un composant dumb a sa story, pas les containers. Le chrome de Storybook a un theme classique clair/sombre (`admin/.storybook/manager.ts`, suit le bouton « Theme ») ; le theme du jeu (night/day) ne sert qu'aux composants de la preview.
 
 ## Build, deploiement, qualite

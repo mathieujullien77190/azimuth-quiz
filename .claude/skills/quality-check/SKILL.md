@@ -91,7 +91,7 @@ Critère : le build se termine par "Storybook build completed successfully". Le 
 
 - chaque composant dumb a un `*.stories.tsx` ; le `title` commence par une racine du `storySort`
   (`admin/.storybook/preview.tsx` : Home, Game, Geo, Setup, UI) — une nouvelle racine s'y ajoute ;
-- **`source()` sur chaque story, jamais sur le `meta`** ; le snippet vit dans un `<Story>.source.md` importé en
+- **`source()` sur chaque story, jamais sur le `meta`** ; le snippet vit dans `doc/<Story>.source.md` (sous-dossier `doc/` du composant), importé en
   `?raw`, commence par un bloc ```` ```tsx ````, est écrit du point de vue du *consommateur* (imports `@/…`) et
   n'est pas orphelin ;
 - les stories ne sont pas des vitrines de props : un cas d'usage par story.

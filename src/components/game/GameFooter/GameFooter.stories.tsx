@@ -5,8 +5,8 @@ import Button from '@/components/ui/Button';
 import { source } from '~sb/source';
 
 import { GameFooter } from './GameFooter';
-import withButtonCode from './WithButton.source.md?raw';
-import withReactionsCode from './WithReactions.source.md?raw';
+import withButtonCode from './doc/WithButton.source.md?raw';
+import withReactionsCode from './doc/WithReactions.source.md?raw';
 
 const meta = {
   title: 'Game/GameFooter',

@@ -4,7 +4,7 @@ import { SAMPLE_PLAYERS, SAMPLE_ROUND_RECORD, SAMPLE_TOTALS } from '@/helpers/st
 
 import { RoundResult } from './RoundResult';
 import { source } from '~sb/source';
-import surfaceModeCode from './SurfaceMode.source.md?raw';
+import surfaceModeCode from './doc/SurfaceMode.source.md?raw';
 
 const meta = {
   title: 'Game/RoundResult',

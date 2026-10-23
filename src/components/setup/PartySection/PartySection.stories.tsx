@@ -10,11 +10,11 @@ import { localizedArgs } from '~sb/localized';
 import { PartySection } from './PartySection';
 import type { PartySectionPlayer, PartySectionProps } from './types';
 import { source } from '~sb/source';
-import soloCode from './Solo.source.md?raw';
-import hostingCode from './Hosting.source.md?raw';
-import generatingCodeCode from './GeneratingCode.source.md?raw';
-import joinedCode from './Joined.source.md?raw';
-import nameTakenCode from './NameTaken.source.md?raw';
+import soloCode from './doc/Solo.source.md?raw';
+import hostingCode from './doc/Hosting.source.md?raw';
+import generatingCodeCode from './doc/GeneratingCode.source.md?raw';
+import joinedCode from './doc/Joined.source.md?raw';
+import nameTakenCode from './doc/NameTaken.source.md?raw';
 
 const t = translations.fr;
 

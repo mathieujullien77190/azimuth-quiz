@@ -4,8 +4,8 @@ import { SAMPLE_PLAYERS } from '@/helpers/storyFixtures';
 import { source } from '~sb/source';
 
 import { Globe3D } from './Globe3D';
-import parisNewYorkCode from './ParisNewYork.source.md?raw';
-import tokyoSydneyCode from './TokyoSydney.source.md?raw';
+import parisNewYorkCode from './doc/ParisNewYork.source.md?raw';
+import tokyoSydneyCode from './doc/TokyoSydney.source.md?raw';
 
 const meta = {
   title: 'Geo/Globe3D',

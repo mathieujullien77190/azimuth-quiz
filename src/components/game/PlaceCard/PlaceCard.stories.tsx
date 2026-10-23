@@ -6,9 +6,9 @@ import type { Place } from '@/types';
 
 import { PlaceCard } from './PlaceCard';
 import { source } from '~sb/source';
-import guessingCode from './Guessing.source.md?raw';
-import longNameCode from './LongName.source.md?raw';
-import revealedCode from './Revealed.source.md?raw';
+import guessingCode from './doc/Guessing.source.md?raw';
+import longNameCode from './doc/LongName.source.md?raw';
+import revealedCode from './doc/Revealed.source.md?raw';
 
 /** Nom long : il s'affiche en entier, sur plusieurs lignes, sans points de suspension. */
 const LONG_NAME_PLACE: Place = {

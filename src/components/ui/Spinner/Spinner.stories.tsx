@@ -3,9 +3,9 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { PLAYER_COLORS } from '@/data';
 import { source } from '~sb/source';
 
-import largeLightCode from './LargeLight.source.md?raw';
-import playerColorCode from './PlayerColor.source.md?raw';
-import smallAccentCode from './SmallAccent.source.md?raw';
+import largeLightCode from './doc/LargeLight.source.md?raw';
+import playerColorCode from './doc/PlayerColor.source.md?raw';
+import smallAccentCode from './doc/SmallAccent.source.md?raw';
 import { Spinner } from './Spinner';
 
 const meta = {

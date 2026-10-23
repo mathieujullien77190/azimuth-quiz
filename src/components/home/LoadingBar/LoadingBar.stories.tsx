@@ -5,8 +5,8 @@ import { ThemeSettingsContext } from '@/themes';
 import { source } from '~sb/source';
 
 import { LoadingBar } from './LoadingBar';
-import dayCode from './Day.source.md?raw';
-import nightCode from './Night.source.md?raw';
+import dayCode from './doc/Day.source.md?raw';
+import nightCode from './doc/Night.source.md?raw';
 
 const meta = {
   title: 'Home/LoadingBar',

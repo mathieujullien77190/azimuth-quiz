@@ -9,8 +9,8 @@ import { translations } from '@/i18n/translations';
 import { localizedArgs } from '~sb/localized';
 import { source } from '~sb/source';
 
-import distanceCode from './Distance.source.md?raw';
-import percentageCode from './Percentage.source.md?raw';
+import distanceCode from './doc/Distance.source.md?raw';
+import percentageCode from './doc/Percentage.source.md?raw';
 import { SliderTrack } from './SliderTrack';
 import type { SliderTrackProps } from './types';
 

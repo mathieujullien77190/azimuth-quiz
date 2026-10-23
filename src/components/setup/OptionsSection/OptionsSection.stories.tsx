@@ -9,8 +9,8 @@ import { localizedArgs } from '~sb/localized';
 import { OptionsSection } from './OptionsSection';
 import type { OptionsSectionProps } from './types';
 import { source } from '~sb/source';
-import withGpsCode from './WithGps.source.md?raw';
-import readOnlyCode from './ReadOnly.source.md?raw';
+import withGpsCode from './doc/WithGps.source.md?raw';
+import readOnlyCode from './doc/ReadOnly.source.md?raw';
 
 const t = translations.fr;
 

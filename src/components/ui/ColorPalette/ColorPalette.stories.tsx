@@ -5,9 +5,9 @@ import { THEMES, ThemeSettingsContext } from '@/themes';
 import type { ThemeId } from '@/types';
 
 import { ColorPalette } from './ColorPalette';
-import dayCode from './Day.source.md?raw';
-import defaultCode from './Default.source.md?raw';
-import nightCode from './Night.source.md?raw';
+import dayCode from './doc/Day.source.md?raw';
+import defaultCode from './doc/Default.source.md?raw';
+import nightCode from './doc/Night.source.md?raw';
 
 /** Rend la story dans un seul theme, sur le fond de ce theme, quel que soit celui de la barre d'outils. */
 const pinnedTo = (themeId: ThemeId): Decorator => {

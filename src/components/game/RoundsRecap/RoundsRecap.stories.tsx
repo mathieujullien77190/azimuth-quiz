@@ -5,7 +5,7 @@ import { translations } from '@/i18n/translations';
 import { localizedArgs } from '~sb/localized';
 import { source } from '~sb/source';
 
-import defaultCode from './Default.source.md?raw';
+import defaultCode from './doc/Default.source.md?raw';
 import { RoundsRecap } from './RoundsRecap';
 
 /** Textes du recap, dans la langue de la barre d'outils. */

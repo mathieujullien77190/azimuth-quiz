@@ -6,7 +6,7 @@ import Card from '../Card';
 
 import { Screen } from './Screen';
 import { source } from '~sb/source';
-import headerAndFooterCode from './HeaderAndFooter.source.md?raw';
+import headerAndFooterCode from './doc/HeaderAndFooter.source.md?raw';
 
 const meta = {
   title: 'UI/Screen',

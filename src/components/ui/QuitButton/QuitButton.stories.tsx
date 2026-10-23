@@ -3,8 +3,8 @@ import { fn } from 'storybook/test';
 
 import { source } from '~sb/source';
 
-import accentCode from './Accent.source.md?raw';
-import baseCode from './Base.source.md?raw';
+import accentCode from './doc/Accent.source.md?raw';
+import baseCode from './doc/Base.source.md?raw';
 import { QuitButton } from './QuitButton';
 
 const meta = {

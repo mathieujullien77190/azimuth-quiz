@@ -7,7 +7,7 @@ import { source } from '~sb/source';
 
 import { ReactionOverlay } from './ReactionOverlay';
 import type { ReactionOverlayProps } from './types';
-import defaultCode from './Default.source.md?raw';
+import defaultCode from './doc/Default.source.md?raw';
 
 const EMOJIS = ['🤔', '🥰', '😡', '😱'];
 

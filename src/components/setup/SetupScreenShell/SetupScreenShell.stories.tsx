@@ -10,10 +10,10 @@ import { translations } from '@/i18n/translations';
 import { localizedArgs } from '~sb/localized';
 import { source } from '~sb/source';
 
-import joinerCode from './Joiner.source.md?raw';
+import joinerCode from './doc/Joiner.source.md?raw';
 import { SetupScreenShell } from './SetupScreenShell';
-import soloCode from './Solo.source.md?raw';
-import startingCode from './Starting.source.md?raw';
+import soloCode from './doc/Solo.source.md?raw';
+import startingCode from './doc/Starting.source.md?raw';
 
 const t = translations.fr;
 

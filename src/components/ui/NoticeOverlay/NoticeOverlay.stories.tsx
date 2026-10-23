@@ -8,8 +8,8 @@ import Button from '@/components/ui/Button';
 import { NoticeOverlay } from './NoticeOverlay';
 import type { NoticeOverlayProps } from './types';
 import { source } from '~sb/source';
-import defaultCode from './Default.source.md?raw';
-import loadingCode from './Loading.source.md?raw';
+import defaultCode from './doc/Default.source.md?raw';
+import loadingCode from './doc/Loading.source.md?raw';
 
 /**
  * Nomme (majuscule) pour que rules-of-hooks d'eslint accepte le `useState`. Simule l'ecran sous l'overlay,

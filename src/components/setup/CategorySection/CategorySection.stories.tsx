@@ -11,8 +11,8 @@ import type { Category } from '@/types';
 import { CategorySection } from './CategorySection';
 import type { CategorySectionProps } from './types';
 import { source } from '~sb/source';
-import compassCode from './Compass.source.md?raw';
-import readOnlyCode from './ReadOnly.source.md?raw';
+import compassCode from './doc/Compass.source.md?raw';
+import readOnlyCode from './doc/ReadOnly.source.md?raw';
 
 const t = translations.fr;
 

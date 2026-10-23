@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { Card } from './Card';
 import { source } from '~sb/source';
-import defaultCode from './Default.source.md?raw';
+import defaultCode from './doc/Default.source.md?raw';
 
 const meta = {
   title: 'UI/Card',

@@ -10,8 +10,8 @@ import type { Difficulty } from '@/types';
 import { DifficultySection } from './DifficultySection';
 import type { DifficultySectionProps } from './types';
 import { source } from '~sb/source';
-import singleSelectCode from './SingleSelect.source.md?raw';
-import readOnlyCode from './ReadOnly.source.md?raw';
+import singleSelectCode from './doc/SingleSelect.source.md?raw';
+import readOnlyCode from './doc/ReadOnly.source.md?raw';
 
 /** Nomme (majuscule) pour que rules-of-hooks d'eslint accepte le `useState`. */
 const SingleSelectDemo = (args: DifficultySectionProps) => {

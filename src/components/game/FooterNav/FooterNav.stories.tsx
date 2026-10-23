@@ -4,9 +4,9 @@ import { fn } from 'storybook/test';
 import { source } from '~sb/source';
 
 import { FooterNav } from './FooterNav';
-import onDistanceCode from './OnDistance.source.md?raw';
-import onHeadingCode from './OnHeading.source.md?raw';
-import validateDisabledCode from './ValidateDisabled.source.md?raw';
+import onDistanceCode from './doc/OnDistance.source.md?raw';
+import onHeadingCode from './doc/OnHeading.source.md?raw';
+import validateDisabledCode from './doc/ValidateDisabled.source.md?raw';
 
 const meta = {
   title: 'Game/FooterNav',

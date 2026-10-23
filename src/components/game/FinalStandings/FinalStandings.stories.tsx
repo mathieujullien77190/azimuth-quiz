@@ -6,10 +6,10 @@ import { localizedArgs } from '~sb/localized';
 import { source } from '~sb/source';
 
 import { FinalStandings } from './FinalStandings';
-import multiplayerCode from './Multiplayer.source.md?raw';
-import fourPlayersCode from './FourPlayers.source.md?raw';
-import soloCode from './Solo.source.md?raw';
-import tieCode from './Tie.source.md?raw';
+import multiplayerCode from './doc/Multiplayer.source.md?raw';
+import fourPlayersCode from './doc/FourPlayers.source.md?raw';
+import soloCode from './doc/Solo.source.md?raw';
+import tieCode from './doc/Tie.source.md?raw';
 
 const textArgs = (t: Translations) => ({ title: t.endScreen.title });
 

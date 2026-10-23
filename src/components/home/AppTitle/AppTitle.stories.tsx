@@ -4,7 +4,7 @@ import { translations } from '@/i18n/translations';
 import { source } from '~sb/source';
 
 import { AppTitle } from './AppTitle';
-import defaultCode from './Default.source.md?raw';
+import defaultCode from './doc/Default.source.md?raw';
 
 const meta = {
   title: 'Home/AppTitle',

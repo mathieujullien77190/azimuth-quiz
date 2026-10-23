@@ -7,8 +7,8 @@ import { SAMPLE_PLAYERS } from '@/helpers/storyFixtures';
 import { Compass } from './Compass';
 import type { CompassProps } from './types';
 import { source } from '~sb/source';
-import guessingCode from './Guessing.source.md?raw';
-import revealedCode from './Revealed.source.md?raw';
+import guessingCode from './doc/Guessing.source.md?raw';
+import revealedCode from './doc/Revealed.source.md?raw';
 
 /** Nomme (majuscule) pour que la regle des hooks autorise le `useState`. */
 const InteractiveDemo = (args: CompassProps) => {

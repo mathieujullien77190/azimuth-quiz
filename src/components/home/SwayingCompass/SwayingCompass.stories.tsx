@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { source } from '~sb/source';
 
 import { SwayingCompass } from './SwayingCompass';
-import defaultCode from './Default.source.md?raw';
+import defaultCode from './doc/Default.source.md?raw';
 
 const meta = {
   title: 'Home/SwayingCompass',

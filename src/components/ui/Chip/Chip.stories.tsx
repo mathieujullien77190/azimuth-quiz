@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { Chip } from './Chip';
 import { source } from '~sb/source';
-import selectedCode from './Selected.source.md?raw';
-import unselectedCode from './Unselected.source.md?raw';
+import selectedCode from './doc/Selected.source.md?raw';
+import unselectedCode from './doc/Unselected.source.md?raw';
 
 const meta = {
   title: 'UI/Chip',

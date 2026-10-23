@@ -5,7 +5,7 @@ import { REACTION_EMOJIS } from '@/data';
 import { source } from '~sb/source';
 
 import { ReactionBar } from './ReactionBar';
-import defaultCode from './Default.source.md?raw';
+import defaultCode from './doc/Default.source.md?raw';
 
 const meta = {
   title: 'Game/ReactionBar',

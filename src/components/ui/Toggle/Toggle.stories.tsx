@@ -5,8 +5,8 @@ import { fn } from 'storybook/test';
 import { Toggle } from './Toggle';
 import type { ToggleProps } from './types';
 import { source } from '~sb/source';
-import defaultCode from './Default.source.md?raw';
-import disabledCode from './Disabled.source.md?raw';
+import defaultCode from './doc/Default.source.md?raw';
+import disabledCode from './doc/Disabled.source.md?raw';
 
 /**
  * Nomme (majuscule) pour que rules-of-hooks d'eslint accepte le `useState`. `Toggle` est controle par son

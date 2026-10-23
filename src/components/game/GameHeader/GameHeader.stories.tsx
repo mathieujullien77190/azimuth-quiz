@@ -4,8 +4,8 @@ import { fn } from 'storybook/test';
 import { source } from '~sb/source';
 
 import { GameHeader } from './GameHeader';
-import plainCode from './Plain.source.md?raw';
-import withLocationCode from './WithLocation.source.md?raw';
+import plainCode from './doc/Plain.source.md?raw';
+import withLocationCode from './doc/WithLocation.source.md?raw';
 
 const meta = {
   title: 'Game/GameHeader',

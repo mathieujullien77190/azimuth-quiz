@@ -157,8 +157,13 @@ for (const file of storyFiles) {
   seenMd.add(dir);
   const stories = fs.readdirSync(dir).filter((f) => f.endsWith('.stories.tsx'));
   const texts = stories.map((f) => read(path.join(dir, f))).join('\n');
+  const docDir = path.join(dir, 'doc');
+  const docs = fs.existsSync(docDir) ? fs.readdirSync(docDir) : [];
+  for (const md of docs.filter((f) => f.endsWith('.source.md'))) {
+    if (!texts.includes('./doc/' + md)) problem(rel(path.join(docDir, md)), 'not imported by any story');
+  }
   for (const md of fs.readdirSync(dir).filter((f) => f.endsWith('.source.md'))) {
-    if (!texts.includes(md)) problem(rel(path.join(dir, md)), 'not imported by any story');
+    problem(rel(path.join(dir, md)), '.source.md must live in the doc/ sub-folder');
   }
 }
 

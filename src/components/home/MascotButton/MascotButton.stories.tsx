@@ -4,8 +4,8 @@ import { ThemeSettingsContext } from '@/themes';
 
 import { MascotButton } from './MascotButton';
 import { source } from '~sb/source';
-import nightCode from './Night.source.md?raw';
-import dayCode from './Day.source.md?raw';
+import nightCode from './doc/Night.source.md?raw';
+import dayCode from './doc/Day.source.md?raw';
 
 const meta = {
   title: 'Home/MascotButton',

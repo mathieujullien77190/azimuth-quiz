@@ -4,9 +4,9 @@ import { SAMPLE_PLAYERS } from '@/helpers/storyFixtures';
 
 import { EarthSection } from './EarthSection';
 import { source } from '~sb/source';
-import surfaceCode from './Surface.source.md?raw';
-import withGlobeCode from './WithGlobe.source.md?raw';
-import withZoomControlsCode from './WithZoomControls.source.md?raw';
+import surfaceCode from './doc/Surface.source.md?raw';
+import withGlobeCode from './doc/WithGlobe.source.md?raw';
+import withZoomControlsCode from './doc/WithZoomControls.source.md?raw';
 
 const meta = {
   title: 'Geo/EarthSection',
