@@ -1,7 +1,7 @@
 import { useSetupRoom, type SetupRoomAdapter } from '@/components/setup/useSetupRoom';
 import { ROOM_PLAYER_COLORS } from '@/data';
 import { resolveOrigin } from '@/helpers';
-import { fetchRandomPlaces } from '@/games/compass/helpers/firestorePlaces';
+import { fetchRandomPlaces } from '@/games/compass/firebase/places';
 import { separateRepeats } from '@/games/compass/helpers/originForRound';
 import {
   ROOM_MAX_PLAYERS,
@@ -17,8 +17,8 @@ import {
   startRoomGame,
   updateRoomPlayerColors,
   updateRoomSettings,
-} from '@/games/compass/helpers/room';
-import { useRoomStore } from '@/games/compass/store/roomStore';
+} from '@/games/compass/firebase/room';
+import { useRoomStore } from '@/store/compassRoomStore';
 import { useLanguage, useTranslation } from '@/i18n';
 import type { GameSettings } from '@/types';
 

@@ -5,8 +5,8 @@ export type SetupScreenProps = {
   onBack: () => void;
 };
 
-/** Pure rendering, no hooks with side effects (no `@/settings`, `@/games/compass/helpers/room`,
- * `@/games/compass/store/roomStore`) — every value here is already resolved, every callback already
+/** Pure rendering, no hooks with side effects (no `@/settings`, `@/games/compass/firebase/room`,
+ * `@/store/compassRoomStore`) — every value here is already resolved, every callback already
  * decides its own business logic (e.g. the readOnly-while-joined gate) before this component
  * ever sees it. */
 export type SetupScreenViewProps = {

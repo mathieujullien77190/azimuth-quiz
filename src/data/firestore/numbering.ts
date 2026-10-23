@@ -7,7 +7,7 @@ import type { CompassCounts, PlaceDoc } from './types';
  * `difficulty`, stored in `PlaceDoc.n`) and Clues places by (`clues.category` x `difficulty`, stored in
  * `clues.n`). The game reads the group sizes (`meta/compassCounts`, `meta/cluesCounts`), draws random
  * positions over the selected groups and asks Firestore for `n in [...]` — see
- * `games/compass/helpers/firestorePlaces.ts`. Everything here is pure: the seed, the admin (numbering
+ * `games/compass/firebase/places.ts`. Everything here is pure: the seed, the admin (numbering
  * screens, edits) and the game share it. The two numberings differ only by the `Numbering` they use.
  */
 

@@ -10,8 +10,8 @@ import SetupScreenShell from '@/components/setup/SetupScreenShell';
 import type { ClueSetupScreenViewProps } from './types';
 
 /**
- * Pur rendu : aucun hook a effet de bord (pas de `@/settings`, `@/games/clues/helpers/room`,
- * `@/games/clues/store/roomStore`) — `ClueSetupScreen` (smart) resout tout en amont, meme
+ * Pur rendu : aucun hook a effet de bord (pas de `@/settings`, `@/games/clues/firebase/room`,
+ * `@/store/cluesRoomStore`) — `ClueSetupScreen` (smart) resout tout en amont, meme
  * decoupage que Compass' propre `SetupScreen`/`SetupScreenView`. Le bloc commun aux jeux (titre,
  * partie solo/hote/invite, boutons) est dans `SetupScreenShell`, seules les sections propres a
  * Clues sont ici.

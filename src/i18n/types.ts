@@ -58,7 +58,7 @@ export type Translations = {
     roundsTitle: string;
     /** No player list/count picker any more — play solo (the default), host a room (a code gets
      * generated) or join one (type in a code someone else generated) instead. See
-     * `helpers/room.ts`. Joining shows every other setup section read-only: the host's settings
+     * `firebase/room.ts`. Joining shows every other setup section read-only: the host's settings
      * apply, a joiner doesn't configure anything (see `readOnlyNotice`). */
     online: {
       solo: string;

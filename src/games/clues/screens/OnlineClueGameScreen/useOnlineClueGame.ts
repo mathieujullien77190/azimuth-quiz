@@ -24,10 +24,10 @@ import {
   reportClueRoomCorrect,
   reportClueRoomWrong,
   setClueRoomTyping,
-} from '@/games/clues/helpers/room';
+} from '@/games/clues/firebase/room';
 import { WRONG_ANSWER_PENALTY } from '@/games/clues/constants';
 import { normalizePlaceGuess, remainingScore } from '@/games/clues/helpers/clueGame';
-import { useClueRoomStore } from '@/games/clues/store/roomStore';
+import { useClueRoomStore } from '@/store/cluesRoomStore';
 import type { ClueId } from '@/types';
 
 /**

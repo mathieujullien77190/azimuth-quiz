@@ -1,6 +1,6 @@
 import type { Difficulty } from '@/types';
 
-/** One opinion of the `devFeedback` collection (written by the game in dev mode, see `src/helpers/devFeedback.ts`). */
+/** One opinion of the `devFeedback` collection (written by the game in dev mode, see `src/firebase/devFeedback.ts`). */
 export type FeedbackRow = {
   id: string;
   game: 'compass' | 'clues';

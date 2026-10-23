@@ -36,7 +36,7 @@ jobs:
       - name: Export web build (static, base path /azimuth-quiz)
         run: npx expo export --platform web
         env:
-          # Inlined at build time (see src/helpers/firebase.ts) — without these the exported
+          # Inlined at build time (see src/firebase/client.ts) — without these the exported
           # bundle ships `undefined` for every Firebase config value, and online multiplayer
           # fails at startup with "auth/invalid-api-key". Not secret in the security sense (they
           # ship in the client bundle either way, access is gated by Firestore rules), but still

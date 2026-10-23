@@ -4,7 +4,7 @@ import { useTranslation } from '@/i18n';
 import { useDevMode } from '@/settings';
 import type { Difficulty } from '@/types';
 
-import { sendDevFeedback, type DevFeedback } from './devFeedback';
+import { sendDevFeedback, type DevFeedback } from '../firebase/devFeedback';
 import { reporting } from './reportError';
 
 /** What a round is about, for the question: the place or the country, as the game knows it. */

@@ -15,8 +15,8 @@ import {
   restartRoom,
   sendReaction,
   submitRoomGuess,
-} from '@/games/compass/helpers/room';
-import { useRoomStore } from '@/games/compass/store/roomStore';
+} from '@/games/compass/firebase/room';
+import { useRoomStore } from '@/store/compassRoomStore';
 import type { RoundRecord, RoundScore } from '@/types';
 
 import { DEFAULT_BEARING } from './constants';

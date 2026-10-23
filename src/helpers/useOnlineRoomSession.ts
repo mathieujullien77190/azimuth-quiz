@@ -2,7 +2,7 @@ import { reporting } from './reportError';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef } from 'react';
 
-import type { RoomStoreHook } from './createRoomStore';
+import type { RoomStoreHook } from '../store';
 import { onlinePlayersFrom } from './roomPlayers';
 import { useHostPruneLeavers } from './useHostPruneLeavers';
 import { useRoomReactions } from './useRoomReactions';

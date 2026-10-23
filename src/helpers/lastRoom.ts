@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { LAST_JOINED_ROOM_STORAGE_KEY } from '@/data';
 
-// Kept out of `helpers/roomCode.ts` (and of the barrel): it needs nothing but AsyncStorage, which keeps it free of the
+// Kept out of `firebase/roomCode.ts` (and of the barrel): it needs nothing but AsyncStorage, which keeps it free of the
 // Firebase imports that file drags in.
 
 /** The code of the room this device joined last (a joiner's "previous game"), if it kept one. */

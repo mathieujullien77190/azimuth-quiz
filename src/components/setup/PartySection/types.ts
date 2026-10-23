@@ -1,4 +1,4 @@
-import type { RoomPlayers } from '@/games/compass/helpers/room';
+import type { RoomPlayers } from '@/games/compass/firebase/room';
 
 // A type-only import from `room.ts` is erased at compile time, so it never actually pulls in
 // `firebase/firestore` at runtime — safe for this dumb component to use for this shape alone,

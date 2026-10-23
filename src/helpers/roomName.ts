@@ -1,4 +1,4 @@
-import type { RoomPlayers } from './roomBase';
+import type { RoomPlayers } from '../firebase/roomApi';
 
 // Kept out of `roomBase.ts` (which imports `firebase/firestore`, and so can't be required by a Jest
 // test or a pure screen hook): this is only about names and errors.

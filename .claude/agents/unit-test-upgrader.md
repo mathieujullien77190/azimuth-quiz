@@ -15,7 +15,7 @@ ou un code impossible à tester tel quel, tu le signales dans ton rapport au lie
    scripts `test` / `test:coverage`).
 2. Lance `npx jest` : note les tests en échec. Puis `npx jest --coverage` : liste les fichiers sous le
    seuil, du moins couvert au plus couvert.
-3. Lis 2 ou 3 tests voisins du fichier visé (`*.test.ts(x)` colocalisés) : ils fixent le style, pas ce
+3. Lis 2 ou 3 tests voisins du fichier visé (`__tests__/*.test.ts(x)`) : ils fixent le style, pas ce
    fichier. Réutilise leurs mocks et leurs helpers plutôt que d'en réinventer.
 
 ## Ordre de travail
@@ -30,7 +30,7 @@ ou un code impossible à tester tel quel, tu le signales dans ton rapport au lie
 
 ## Conventions du projet
 
-- Tests colocalisés : `Foo.test.tsx` / `helpers.test.ts` à côté du fichier testé. Alias `@/` → `src/`.
+- Tests dans un dossier `__tests__/` à côté du fichier testé : `__tests__/Foo.test.tsx` (imports relatifs `../Foo`). Alias `@/` → `src/`.
 - RNTL est utilisé en **asynchrone** : `await render(...)`, `await renderHook(...)`,
   `await act(async () => ...)`, `await fireEvent.press(...)`.
 - `firebase/firestore` plante Jest à l'import : `room.ts`, `roomBase.ts` et les stores de room se

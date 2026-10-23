@@ -4,238 +4,212 @@
 
 Deux jeux de geographie, **toujours en ligne** (une room par partie, meme seul), jusqu'a 10 joueurs et 20 manches :
 
-| Nom affiche | Dossier de code | Principe |
+| Nom affiche | Dossier | Principe |
 |---|---|---|
-| Boussole | `compass` | un lieu s'affiche, chacun vise son cap et estime la distance depuis un point de depart |
-| Indices | `clues` | un lieu cache, on devoile des indices a tour de role et on devine son nom |
+| Boussole | `compass` | un lieu s'affiche, chacun vise un cap et estime la distance depuis un point de depart |
+| Indices | `clues` | un lieu cache, indices devoiles a tour de role, on devine son nom |
 
-Le nom de code et le nom affiche different volontairement (les traductions restent dans `fr.ts`). Web statique sur GitHub
-Pages (`https://mathieujullien77190.github.io/azimuth-quiz/`) en plus des builds natifs. Repo `mathieujullien77190/azimuth-quiz`,
-un seul contributeur, commits directs sur `master`.
+Nom de code et nom affiche different volontairement (traductions dans `fr.ts`). Web statique sur GitHub Pages
+(`https://mathieujullien77190.github.io/azimuth-quiz/`) + builds natifs. Repo `mathieujullien77190/azimuth-quiz`, un seul
+contributeur, commits directs sur `master`.
 
 ## Structure
 
-Convention du skill personnel `react-structure` (hors depot) : chaque composant est un dossier `index.ts` + `<Name>.tsx` (export nomme) +
-`helpers.ts` + `constants.ts` + `types.ts` + `styles.ts` (le seul `createStyles`, jamais de logique dedans). Dans un dossier
-`screens/<Screen>/` qui contient le container ET sa vue (`OnlineGameScreen.tsx` + `OnlineGameScreenView.tsx`), chacun a son
-fichier de styles nomme d'apres lui (`OnlineGameScreenView.styles.ts`). Alias `@/` → `src/`. Identifiants de code en anglais.
+Convention du skill personnel `react-structure` (hors depot) : un composant = un dossier `index.ts` + `<Name>.tsx` (export nomme) +
+`helpers.ts` + `constants.ts` + `types.ts` + `styles.ts` (seul `createStyles`, aucune logique). Dans `screens/<Screen>/`
+(container ET vue), chaque fichier a son style nomme d'apres lui (`OnlineGameScreenView.styles.ts`). Alias `@/` → `src/`.
+Identifiants de code en anglais.
 
 ```
 src/
   app/          # Expo Router : _layout (providers + Stack), routes = re-exports minces
-  components/   # ce qui n'est pas propre a un jeu : ui/ (Button, Card, Chip, Screen...), HomeScreen, SettingsScreen,
-                # Compass, EarthSection, PlayerTabs, RoundCounter, DifficultyBadge, GameHeader/GameFooter, setup/...
-  data/         # valeurs partagees par 2+ jeux (score/geo, options, palette joueurs), theme.ts, et data/firestore/
-                # (types des documents, lecteurs read.ts, numbering.ts, denormalizeClues.ts, journal.ts)
-  games/<jeu>/  # screens/ (dossiers `*Screen`, rendus par une route), components/, helpers/, store/, constants.ts
-  helpers/      # commun aux 2 jeux (geo, format, storage, location, random, firebase, settings, roomBase,
-                # createRoomStore, useOnlineRoomSession, groupedDraw...). Le barrel `index.ts` re-exporte aussi
-                # les helpers par jeu ; seuls les fichiers qui importent `firebase/firestore` (room.ts, roomBase.ts,
-                # roomStore.ts, firestorePlaces.ts...) restent HORS barrel (Jest plante a l'import) : import direct.
-  settings/     # GameSettings, ClueSettings en stores Zustand (singletons) ; `usePlayerName`
+  components/   # hors jeu : ui/, HomeScreen, SettingsScreen, Compass, EarthSection, PlayerTabs, GameHeader/GameFooter, setup/...
+  data/         # valeurs partagees (score/geo, options, palette), theme.ts, data/firestore/ (types, read.ts, numbering.ts, journal.ts...)
+  games/<jeu>/  # screens/, components/, helpers/, firebase/ (room.ts, places.ts), constants.ts
+  firebase/     # TOUT ce qui touche Firebase/Firestore : client.ts (app, db, auth), roomApi.ts (createRoomApi), roomCode.ts, errorSink.ts, devFeedback.ts, groupCounts.ts, groupedDraw.ts
+  store/        # stores Zustand de room : createRoomStore.ts (etat), actions.ts (actions), types.ts + compassRoomStore.ts, cluesRoomStore.ts
+  helpers/      # commun aux 2 jeux, sans Firebase (geo, storage, useOnlineRoomSession...)
+  settings/     # GameSettings, ClueSettings (stores Zustand singletons), usePlayerName
   themes/       # night.ts, day.ts, fonts.ts, ThemeContext
-  types/        # types de domaine partages
-admin/          # outil interne (app Vite a part), importe des fichiers de `src/` via le meme alias `@/`
+  types/
+admin/          # outil interne (app Vite a part), importe `src/` via le meme alias `@/`
 ```
 
-Apres tout renommage ou deplacement dans `src/`, verifier l'admin : `(cd admin && npx tsc --noEmit -p . && npm run build)`.
+Les dossiers `firebase/` (`src/firebase/`, `games/<jeu>/firebase/`) importent `firebase/firestore` et restent HORS de tout barrel (Jest plante a l'import) : import direct. Les stores par jeu (`store/*RoomStore.ts`) en dependent aussi (via `room.ts`).
+
+Apres tout renommage/deplacement dans `src/` : `(cd admin && npx tsc --noEmit -p . && npm run build)`.
 
 ### Smart / dumb
-`SetupScreen` et `OnlineGameScreen` (Boussole) suivent le meme decoupage : un hook colocalise (`useOnlineRoom.ts`,
-`useOnlineGame.ts`) porte l'etat, les effets et les actions deja resolues ; le container (`*Screen.tsx`) appelle le hook,
-calcule les libelles qui ont besoin de `useTranslation`/`useTheme`, garde les early-returns d'ecran entier (chargement,
-fin, notice « room supprimee ») ; la vue `*View.tsx` ne fait que du rendu : jamais d'effet ni de store metier, seulement
-des primitives UI, des constantes et des callbacks deja decides (`readOnly`, kick... se decident dans le container).
-`useTranslation`, `useTheme`, `useThemedStyles` et `useWindowDimensions` restent permis dans la vue. Les tests rendent le
-container.
+`SetupScreen` et `OnlineGameScreen` : un hook colocalise (`useOnlineRoom.ts`, `useOnlineGame.ts`) porte etat, effets et actions ;
+le container (`*Screen.tsx`) appelle le hook, calcule les libelles (`useTranslation`/`useTheme`) et garde les early-returns d'ecran
+entier ; la vue (`*View.tsx`) ne fait que du rendu (jamais d'effet ni de store metier ; `readOnly`, kick... decides dans le
+container). `useTranslation`, `useTheme`, `useThemedStyles`, `useWindowDimensions` permis dans la vue. Les tests rendent le container.
 
 ### Nom du joueur
-Un seul nom pour les 2 jeux : `usePlayerName` (store persiste, hydrate dans `_layout.tsx`). Chaque jeu garde un
-`playerName` dans ses reglages comme miroir (requis par `useSetupRoom`), qui ne part jamais dans la room ; `onChangeName`
-ecrit dans les deux, et un effet a usage unique reconcilie au premier montage (le nom Compass deja sauve alimente le store
-partage).
+Un seul nom : `usePlayerName` (store persiste, hydrate dans `_layout.tsx`). Chaque jeu garde un `playerName` miroir dans ses
+reglages (requis par `useSetupRoom`, jamais envoye dans la room) ; `onChangeName` ecrit dans les deux.
 
-## Parties en ligne (couche commune)
+## Parties en ligne
 
-Une seule collection `rooms`, un champ `game` (`'compass' | 'clues'`) fixe a la creation et immuable ; il dit
-quelles regles de `firestore.rules` s'appliquent. Un code d'un autre jeu est refuse a la jonction.
+Collection `rooms`, champ `game` (`'compass' | 'clues'`) immuable : il choisit les regles de `firestore.rules`. Un code d'un autre
+jeu est refuse a la jonction.
 
-- **Firestore** : `helpers/roomBase.ts` (`createRoomApi(game)` : creer/rejoindre/quitter, presence, couleurs, reglages) ;
-  chaque `games/<jeu>/helpers/room.ts` le lie a sa collection et ajoute l'etat de manche. Indices utilise la
-  fonction de regles `turnBasedPlayer` : **tout champ qu'un joueur non hote ecrit doit etre dans sa liste de champs** dans
-  `firestore.rules` (sinon l'ecriture est refusee et l'action « revient »).
-- **Store** : `helpers/createRoomStore.ts` (connexion, joueurs, hote, reglages, `gameState`).
-- **Setup** : `components/setup/useSetupRoom` (host/join, presence, couleurs, kick, notices, navigation) +
-  `SetupScreenShell`/`PartySection`/`CategorySection`/`DifficultySection`/`RoundsSection`/`OptionsSection`.
-- **Ecran de jeu** : `useOnlineRoomSession` (etat, hote, joueurs dans l'ordre d'arrivee, redirection « room supprimee »,
-  `handleQuit`) ; pour les jeux a tour de role `useHostTurnScoring` (l'hote seul ecrit `totalScores`), `useHostTurnRecovery`
-  (l'hote passe la main si le joueur actif est parti), `useGuessDraft`, `nextPlayerUid`, `useTransientFlag`. **L'ordre des
-  joueurs tourne d'une manche a l'autre** (Indices) : `playersForRound(onlinePlayers, roundIndex)` =
-  l'ordre d'arrivee decale du numero de manche, donc la manche 1 commence par le 1er arrive, la manche 2 par le 2e, etc.
-  (rien de plus dans Firestore : chaque appareil le deduit de `roundIndex`). C'est le meme anneau dans le meme sens, seul le
-  point d'entree change : `nextPlayerUid` reste sur l'ordre d'arrivee. Les hooks exposent `roundPlayers` (les onglets
-  `PlayerTabs` et `turnIndex` suivent cet ordre) ; `useHostTurnRecovery` rend la main au 1er de la manche. Composants :
-  `GameHeader`/`GameFooter`, `NoticeOverlay`, `RoomDeletedScreen`, `FinalStandings`.
-- **Pas de partie locale** : jouer seul = heberger une room *cachee* (`hostedSilently` dans `useSetupRoom`), donc il faut du
-  reseau. `startOnlineGame(run)` couvre les deux cas ; ce que `run` lit dans la room est lu *dans* `run`.
-- **Un joueur part** (quitte, expulse, coupure) : l'hote efface aussi ses donnees de manche (`useHostPruneLeavers`,
+- **Firestore** : `firebase/roomApi.ts` (`createRoomApi(game)`) ; chaque `games/<jeu>/firebase/room.ts` le lie et ajoute l'etat de
+  manche. **Tout champ qu'un joueur non hote ecrit doit figurer dans sa liste de champs** de `firestore.rules`
+  (`turnBasedPlayer`, `compassPlayer`), sinon l'ecriture est refusee et l'action « revient ».
+- **Store** : `store/` (`createRoomStore.ts` = etat, `actions.ts` = connect/disconnect/drapeaux, un store par jeu : `compassRoomStore.ts`, `cluesRoomStore.ts`). **Setup** : `components/setup/useSetupRoom` + sections `*Section`.
+- **Ecran de jeu** : `useOnlineRoomSession` ; jeux a tour de role : `useHostTurnScoring` (l'hote seul ecrit `totalScores`),
+  `useHostTurnRecovery`, `useGuessDraft`, `nextPlayerUid`, `useTransientFlag`. **L'ordre des joueurs tourne par manche**
+  (Indices) : `playersForRound(onlinePlayers, roundIndex)` = ordre d'arrivee decale du numero de manche, deduit par chaque
+  appareil. Les hooks exposent `roundPlayers` (`PlayerTabs`, `turnIndex`) ; `nextPlayerUid` reste sur l'ordre d'arrivee.
+- **Pas de partie locale** : seul = room *cachee* (`hostedSilently`), donc reseau requis. `startOnlineGame(run)` couvre les deux cas.
+- **Un joueur part** (quitte, expulse, coupure) : l'hote efface ses donnees de manche (`useHostPruneLeavers`,
   `pruneRoomPlayerData`) ; s'il revient, c'est un nouveau joueur.
-- **Coupure reseau** (`useRoomPresence`, monte une fois par `useSetupRoom`) : en partie a plusieurs, heartbeat
-  `players.{uid}.lastSeen` toutes les 30 s ; qui perd la connexion quitte la partie (soi-meme apres 90 s sans ecriture
-  acquittee, un joiner que l'hote ne voit plus est retire, l'hote perdu fait quitter les joiners).
-- **Rejouer** (bouton de `FinalStandings`, a cote de « Quitter ») : l'hote remet la room au salon (`restartRoom` = `screen: 'options'`, rien d'autre ; chaque `startRoomGame` reecrit toute la manche) et `useOnlineRoomSession` fait reculer l'ecran de jeu de chaque appareil (`onQuit` = `router.back()`, jamais quand le store est deconnecte) vers l'ecran de preparation reste monte dessous, qui montre tous les joueurs et repousse le jeu quand l'hote relance. Un joiner qui clique « Rejouer » retourne seulement au salon.
-- **Reactions** : un petit bouton rond 😀 flottant juste AU-DESSUS du `GameFooter`, dans son coin bas droit (`ReactionBar`, enfant du footer en `position: absolute; bottom: '100%'` : hors de son flux, les boutons du footer gardent toute leur largeur ; `onReact`, absent seul dans la room) affiche vers le haut une colonne des emojis (sans animation : elle apparait et disparait d'un coup) (`REACTION_EMOJIS`) contre le bord droit de l'ecran ; un tap sur un emoji l'envoie et la colonne RESTE ouverte (plusieurs d'affilee) : seul le bouton la referme. Il ecrit le champ unique `reaction` de la room `{ uid, emoji, seq }` (`sendReaction` de `roomBase`, `useRoomReactions` : delai de 1 s entre deux envois, une reaction deja presente a l'ouverture de l'ecran est ignoree). Tous les appareils (l'envoyeur aussi) la voient dans `ReactionOverlay` : une bulle qui monte du bas (au-dessus du footer) vers le haut en 2,5 s, avec le nom de l'envoyeur dessous, une par `seq` (elles se chevauchent). Regles : `reactionOk` (uid = soi, emoji <= 8 caracteres, `seq` entier), accepte seul ou avec les champs deja permis aux non-hotes (`compassPlayer`, `turnBasedPlayer`) ; **a deployer avec les regles**.
-- **L'hote quitte** : `handleQuit` supprime la room ; les joiners gardent la manche sous la notice « l'hote a quitte »
-  puis retournent a l'accueil (clic ou 2 s). L'ecran de jeu rend `null` une fois deconnecte.
+- **Coupure reseau** (`useRoomPresence`) : heartbeat `players.{uid}.lastSeen` toutes les 30 s ; qui perd la connexion quitte
+  (soi-meme apres 90 s sans ecriture acquittee, un joiner invisible est retire, l'hote perdu fait quitter les joiners).
+- **Rejouer** (`FinalStandings`) : l'hote fait `restartRoom` (`screen: 'options'`, rien d'autre) ; `useOnlineRoomSession` fait
+  reculer chaque appareil (`router.back()`, jamais si le store est deconnecte) vers l'ecran de preparation reste monte dessous.
+- **Reactions** : `ReactionBar` (bouton 😀 en `position: absolute; bottom: '100%'` dans `GameFooter`, colonne d'emojis
+  `REACTION_EMOJIS` qui reste ouverte jusqu'au clic du bouton) ecrit le champ unique `reaction` `{ uid, emoji, seq }`
+  (`sendReaction`, `useRoomReactions` : 1 s entre deux envois, reaction presente a l'ouverture ignoree) ; `ReactionOverlay` l'affiche
+  chez tous (bulle montante 2,5 s + nom). Regle `reactionOk` (uid = soi, emoji <= 8 car., `seq` entier) : **a deployer avec les regles**.
+- **L'hote quitte** : `handleQuit` supprime la room ; les joiners voient « l'hote a quitte » puis retournent a l'accueil (clic ou 2 s).
 
 ## Donnees Firestore
 
-Firestore est la **seule source** des donnees (lieux, devinettes, metiers) : aucun JSON embarque,
-**aucun repli** si Firestore echoue. Les donnees sont **dupliquees expres** (un document par lieu porte tout ce
-dont une manche a besoin) et numerotees pour le tirage. **Pour toute modification de donnees (copies a propager,
-numerotation, compteurs, `dataVersion`, journal de l'admin), suivre le skill `firestore-data`** ; l'admin
-(`admin/src/data.ts`) sait deja le faire pour la plupart des cas.
+Firestore est la **seule source** (lieux, devinettes, metiers) : aucun JSON embarque, **aucun repli** si Firestore echoue. Donnees
+**dupliquees expres** (un document par lieu porte tout ce dont une manche a besoin) et numerotees. **Toute modification de donnees
+(copies, numerotation, compteurs, `dataVersion`, journal) : suivre le skill `firestore-data`** ; l'admin (`admin/src/data.ts`) le fait deja.
 
-Collections : `places/{cle}` (cle = code de 3 lettres, permanent, opaque), `countries/{ISO}` (nom, drapeau, devise, indicatif : l'admin les edite et les recopie dans chaque lieu du pays, `places.country`, via `applyCountryChange` ; le jeu ne les lit pas ; les documents portent encore les champs de l'ancien jeu Silhouette, que l'admin ne lit ni n'efface), `personalityJobs/{code}`,
-`meta/*` (`compassCounts`, `cluesCounts`, `dataVersion`), `journal/*` (admin seulement), `devFeedback/*` (avis de difficulte du mode dev, hors journal), `rooms/*`.
-Le jeu ne lit que `places`, `meta` et `rooms`. Types dans `data/firestore/types.ts`.
+Collections : `places/{cle}` (3 lettres, permanente), `countries/{ISO}` (edites dans l'admin, recopies dans `places.country` via
+`applyCountryChange` ; le jeu ne les lit pas ; portent encore les champs de l'ancien jeu Silhouette, non lus ni effaces),
+`personalityJobs/{code}`, `meta/*` (`compassCounts`, `cluesCounts`, `dataVersion`), `journal/*` (admin), `devFeedback/*`, `errors`,
+`rooms/*`. Le jeu ne lit que `places`, `meta`, `rooms`. Types : `data/firestore/types.ts`.
 
-**Tirage des manches** (Boussole et Indices ont le meme moteur : `helpers/groupedDraw.ts` +
-`groupCursors.ts`/`groupCounts.ts`) : l'hote tire seul. Chaque groupe (Boussole : `compass.category` × `difficulty` ;
-Indices : `clues.category` × `difficulty`) est numerote `n` = 1..taille (dense, ordre melange
-par hash de la cle, `numbering.ts`), les tailles sont dans `meta/*Counts` (lues une fois par lancement), et l'appareil garde
-**un curseur par groupe** (AsyncStorage) : une partie prend les numeros suivants et avance le curseur, en bouclant, donc un
-groupe est parcouru en entier avant qu'un element revienne. Plusieurs categories : repartition la plus egale possible
-(`splitEvenly`). Lecture : UNE requete `or` par tranche de 30 numeros. L'anglais releve d'un cran les lieux francais
-(`effectiveDifficulty`) et refiltre. Echec (Firestore ou moins d'elements que de manches) : la fonction de tirage rejette,
-`useSetupRoom` remet `starting` a faux, la room reste au salon et la notice `startFailedNotice` s'affiche (le bouton relance) ;
-les curseurs ne bougent pas. Index composites dans `firestore.indexes.json` (a deployer a part).
+**Tirage** (`firebase/groupedDraw.ts` + `firebase/groupCounts.ts` + `helpers/groupCursors.ts`, commun aux 2 jeux) : l'hote tire seul. Groupe =
+`category` × `difficulty`, numerote 1..taille (`numbering.ts`), tailles dans `meta/*Counts`, **un curseur par groupe** par appareil
+(AsyncStorage, boucle). Plusieurs categories : `splitEvenly`. Lecture : UNE requete `or` par tranche de 30 numeros. L'anglais releve
+d'un cran les lieux francais (`effectiveDifficulty`). Echec (Firestore ou trop peu d'elements) : le tirage rejette, `starting`
+retombe a faux, notice `startFailedNotice`, curseurs inchanges. Index dans `firestore.indexes.json`.
 
-Les **regles** (`firestore.rules`) et les **index** se deploient a part (`npx firebase-tools deploy --only
-firestore:rules --project azimuth-quiz`) : un push ne les deploie pas.
+**Regles et index se deploient a part** : `npx firebase-tools deploy --only firestore:rules --project azimuth-quiz` (un push ne
+les deploie pas).
 
 ## Boussole
 
-On choisit un cap et on estime la distance **de surface** (`Guess` = `bearing` + `distanceKm`) ; il n'y a plus de mode ligne
-droite. Cap et distance sont **loxodromiques** (`helpers/geo.ts`, un seul cap tenu tout le long, celui d'une boussole), pas
-orthodromiques : la distance est donc celle de cette route, un peu plus longue que le plus court chemin (jusqu'a ~21 180 km,
-d'ou `MAX_SURFACE_DISTANCE_KM` = 22 000). Les 2 jeux partagent ces helpers (Indices donne les memes cap/distance en indices).
-Score (`games/compass/helpers/scoring.ts`) : courbe logarithmique sur l'ecart de distance et ecart angulaire 2D,
-500 points max pour la direction et 500 pour la distance. Lieux tires par `fetchRandomPlaces`
-(`games/compass/helpers/firestorePlaces.ts`, hors barrel). `EarthSection` dessine la Terre de profil (le joueur en haut,
-cap = gauche/ouest ou droite/est) ; son zoom est continu (`fitZoom` sur les marques actuelles, jusqu'a `MAX_ZOOM`). Quand
-l'appelant donne `origin` (le point de depart, Boussole le fait, seulement a la solution), la vue `Globe3D` est celle montree d'abord, avec un bouton « 2D » (puis « 3D ») pour passer de l'une a l'autre : une vraie boule **three.js** sur une surface OpenGL (`expo-gl`), qu'on tourne au doigt, qu'on zoome a deux doigts (ou avec les boutons +/−, jusqu'a `MAX_ZOOM` = 14) et qu'on remet dans sa position de depart, nord en haut, avec le bouton « N » (`zoomedBy`, `fingersOf`, `dragCenter`, prop `controls`, vraie quand `draggable`). Les gestes se mesurent sur la **position absolue** des doigts, jamais sur le cumul d'un geste (`Fingers`) : sinon un nouveau geste repartait avec le cumul du precedent, et le dernier `move` que le web envoie apres le lache ramenait la boule a son point de depart. Le geste reste au globe (`onShouldBlockNativeResponder`, `touchAction: 'none'` sur le web) : la page ne defile pas sous le doigt qui tourne la boule ; decor `globeLand.ts` (contours Natural Earth **50 m** sans l'Antarctique : un asset decoratif, pas une donnee de jeu, regenere par `node scripts/globe-land.mjs` depuis `world-atlas` — `--dry` donne le poids de chaque tolerance ; 791 cotes, 20 092 points, 250 Ko) trace **en un seul `LineSegments`** sur la sphere (une seule passe pour la carte graphique, donc la finesse de l'asset ne coute rien en dessins ; la soupe de segments est calculee au premier globe avec terres, puis gardee). Les **continents sont colories** : le meme script rasterise l'interieur des contours en un masque terre/mer equirectangulaire 2048 x 1024 (`globeMask.ts`, RLE en base 36, 34 Ko, lignes du sud vers le nord comme un `DataTexture`), que `landFill` pose en image sur une coque a part juste au-dessus de la mer (grille et `uv` calcules a la main pour que la cote tombe sur la cote ; `colors.textMuted` (la couleur de la cote) a `LAND_FILL_OPACITY` — une couleur differente de la mer, qui est la boule elle-meme — et le trait de cote net par-dessus. **Piege des altitudes** : une sphere en facettes creuse sous son propre rayon au milieu de chaque facette (`1 - cos(180 / segments)`), donc la coque peinte doit depasser ce creux (`LAND_FILL_SEGMENTS` fin + `LAND_FILL_ALTITUDE`) sinon la mer la cache, et le trait de cote doit a son tour depasser le sommet de la coque, sinon la peinture cache le trait ; un test verifie que le ventre des facettes reste au-dessus de la mer), chaque reponse est son trajet a cap constant en tube (`rhumbDestination`/`routePoints` ; un cap tenu ne depasse jamais un pole, il s'y enroule) et ce qui passe derriere la boule est cache par la boule elle-meme (plus aucun decoupage a la main) ; **la vraie reponse a son trajet aussi** (en jaune, `colors.truth`), en plus de son point entoure — c'est le chemin qu'il fallait vraiment prendre. Les trajets sont construits a part (`buildRoutes`, un `Group` que le rendu ajoute a la scene) car l'epaisseur d'un tube ne se change pas en le mettant a l'echelle : le zoom les reconstruit (`ROUTE_THICKNESS / zoom`), eux seuls, pour qu'ils gardent leur largeur a l'ecran. A tout zoom. Au depart la boule montre le cote de la Terre ou sont le depart et les reponses (`centerOn`). Le pole nord (un point blanc avec un « N » a cote, tant qu'il est devant, prop `north`, vrai par defaut) montre l'inclinaison. Un satellite (la nuit seulement, pas d'avion le jour, et seulement sans zoom) tourne autour de la boule **sur l'equateur** (`orbitPoint`, vers l'est, un peu au-dessus du sol, vu par la meme camera que la boule : de profil sur l'equateur il est une ligne, il s'ouvre en ellipse quand on penche la boule) : il passe devant puis derriere, cache par la boule sauf au-dela du bord. Il suivait le grand cercle du trajet : vu depuis un globe centre sur le depart (ou presque, `centerOn`), un cercle qui passe par le point regarde est toujours vu par la tranche, donc il glissait le long d'une ligne droite — quelle que soit l'inclinaison. Cliquable (message). Les libelles (« toi », « N ») et le satellite sont des vues posees par-dessus la surface, placees par la meme projection que la camera (`screenPoint`), pour garder la police de l'app.
+`Guess` = `bearing` + `distanceKm`, distance **de surface**. Cap et distance **loxodromiques** (`helpers/geo.ts`), donc un peu plus
+longs que l'orthodromie (jusqu'a ~21 180 km, `MAX_SURFACE_DISTANCE_KM` = 22 000). Score (`games/compass/helpers/scoring.ts`) :
+courbe logarithmique, 500 pts direction + 500 pts distance. Lieux : `fetchRandomPlaces` (`games/compass/firebase/places.ts`).
 
-**Le globe en detail** (`components/Globe3D/`) : `scene.ts` construit la scene (sphere `MeshLambertMaterial` couleur `compass.faceInner`, lumiere ambiante + une lampe accrochee a la camera, cotes en `LineLoop`, equateur/Greenwich en pointille, tubes et pastilles des reponses) ; les pastilles (depart, reponses, anneau, pole) sont rendues dans `screenSized` et **remises a leur taille d'ecran** quand on zoome (`markScale` = 1 / zoom), sinon elles finiraient par cacher la carte qu'on zoomait pour lire ; `useGlobeRenderer.ts` dessine **a la demande, pas en boucle** (une image a l'arrivee de la surface, puis une par changement : tourner, zoomer, changer de reponse ou de theme) et cree une camera orthographique par image, nord en haut ; `renderer.ts` (isole pour que les tests remplacent la carte graphique) branche `WebGLRenderer` sur le contexte d'`expo-gl`, avec un faux canvas sur mobile (pas de DOM) et le vrai sur le web. Une surface OpenGL n'est pas transparente partout : la prop `backgroundColor` peint ce qui entoure la boule (Indices passe la couleur de sa carte). `three` est **ESM seulement**, donc le `transformIgnorePatterns` de Jest (dans `package.json`) l'autorise explicitement a etre transpile — la liste y est recopiee de `jest-expo` ; si le preset change de liste a une montee de SDK, la recopier.
+**Globe3D** (`components/Globe3D/`) : vraie boule **three.js** sur surface `expo-gl`, montree d'abord quand l'appelant donne
+`origin` (bouton 2D/3D), rotation au doigt, zoom a deux doigts ou +/− (`MAX_ZOOM` = 14), bouton « N » pour recentrer.
+- Gestes mesures sur la **position absolue** des doigts (`Fingers`), jamais sur le cumul d'un geste ; le geste reste au globe
+  (`onShouldBlockNativeResponder`, `touchAction: 'none'`).
+- `scene.ts` construit la scene ; `useGlobeRenderer.ts` dessine **a la demande** (pas en boucle), camera orthographique, nord en
+  haut ; `renderer.ts` (isole pour les tests) branche `WebGLRenderer` sur `expo-gl` (faux canvas sur mobile). La prop
+  `backgroundColor` peint ce qui entoure la boule.
+- Decor : `globeLand.ts` (Natural Earth 50 m sans Antarctique, en un seul `LineSegments`) et `globeMask.ts` (masque terre/mer
+  2048x1024, RLE base 36), tous deux generes par `node scripts/globe-land.mjs` (`--dry` donne les poids). `landFill` pose le masque
+  sur une coque a part. **Piege des altitudes** : une sphere a facettes creuse sous son rayon (`1 - cos(180 / segments)`), donc la
+  coque (`LAND_FILL_SEGMENTS`, `LAND_FILL_ALTITUDE`) doit depasser ce creux, et le trait de cote doit depasser la coque ; un test le verifie.
+- Chaque reponse = trajet a cap constant en tube (`rhumbDestination`/`routePoints`), la vraie reponse aussi (jaune, `colors.truth`).
+  `buildRoutes` reconstruit les tubes au zoom (`ROUTE_THICKNESS / zoom`) ; les pastilles se remettent a taille d'ecran (`markScale`).
+- Pole nord (`north`), satellite de nuit sur l'**equateur** (`orbitPoint` ; sur le grand cercle du trajet il glissait en ligne
+  droite), libelles/satellite en vues par-dessus la surface (`screenPoint`).
+- `three` est **ESM seulement** : `transformIgnorePatterns` de Jest (`package.json`) l'autorise, liste recopiee de `jest-expo` ; la
+  recopier si le preset change a une montee de SDK.
 
-**Mode voyage** (`travel`, reglage de la room, hote seulement, defaut faux ; une room d'avant l'option n'a pas le champ = faux) : le premier tour part du point de depart habituel (GPS ou coordonnees), chaque tour suivant part du **lieu du tour precedent**. Le depart d'un tour se lit en UN seul endroit, `originForRound(gameState, travel)` (`games/compass/helpers/originForRound.ts`) : notation de l'hote (`useOnlineGame`), cap/distance vrais et globe/Terre de `OnlineGameScreen` ; `travelFromPlace` donne le lieu ou l'on se trouve, dit **dans le header** (`GameHeader`, prop `location`, en blanc : « Vous etes a X », des le tour 2) et **dans un overlay** a l'ouverture de chaque tour (`useTravelNotice`, `NoticeOverlay` : une fois par tour, cle sur `roundIndex`, disparait seul apres `TRAVEL_NOTICE_MS` = 3 s ou au clic, jamais au tour 1, hors mode voyage, au chargement ni sur le classement final). Au lancement, `separateRepeats` evite deux fois le meme lieu de suite (distance 0). Aucun champ de plus a ecrire pour un joueur non hote : `travel` voyage avec les reglages.
+**Mode voyage** (`travel`, reglage hote, defaut faux, absent = faux) : tour 1 depuis le depart habituel, ensuite depuis le **lieu du
+tour precedent**. Depart lu en UN seul endroit : `originForRound(gameState, travel)`. `travelFromPlace` alimente `GameHeader`
+(`location`) et l'overlay `useTravelNotice` (une fois par tour, 3 s ou clic, jamais au tour 1). `separateRepeats` evite deux fois le
+meme lieu de suite. Aucun champ de plus pour un non-hote.
 
 ## Indices
 
-Lieux tires par `fetchClueRoundPlaces` (`firestoreCluePlaces.ts`, hors barrel), groupes par `clues.category`
-(`capital` / `citiesFr` / `cities`, derivee de la categorie Compass par `cluesCategory`). **Une manche ne lit que le lieu
-tire** : le document `places/{cle}` porte les copies (`country`, `personality.job`, `wordplay`,
-`clues.category`) et `cluesFromDoc` construit le `CluePlace` depuis ce seul document.
+Lieux : `fetchClueRoundPlaces` (`games/clues/firebase/places.ts`), groupes par `clues.category` (`capital`/`citiesFr`/`cities`,
+`cluesCategory`). **Une manche ne lit que le lieu tire** : `cluesFromDoc` construit le `CluePlace` depuis le seul document.
 
-- **Quels indices** : `cluesFor(place)` filtre `CLUE_ORDER` pour ce lieu. Une ville `citiesFr` perd 5 indices qui ne varient
-  pas en France (heure locale, capitale ou non, couleurs du drapeau, devise, indicatif). `personality` et `wordplay`
-  ne sont offerts que si le lieu les a cures.
-  `ClueGrid` boucle sur `cluesFor`, et `vowelsUnlocked` attend que tous les indices offerts soient pioches.
-- **Globe 3D** (`globe`, 2 clics, carte pleine largeur) : `Globe3D` avec le point de depart (`gameState.origin`, passe en prop `origin` jusqu'a `ClueCard`) et le lieu entoure ; 1er clic = boule nue + equateur + meridien de Greenwich (props `equator`/`greenwich`, `land={false}`), 2e clic = les terres s'ajoutent. Ici la boule ne tourne pas (`draggable={false}`, donc pas de boutons non plus) : les clics appartiennent a la carte d'indice, et `backgroundColor` prend la couleur de la carte.
+- **Quels indices** : `cluesFor(place)` filtre `CLUE_ORDER`. `citiesFr` perd 5 indices (heure locale, capitale, couleurs du
+  drapeau, devise, indicatif). `personality` et `wordplay` seulement si le lieu les a. `vowelsUnlocked` attend que tous les indices offerts soient pioches.
+- **Globe 3D** (`globe`, 2 clics) : `Globe3D` avec `gameState.origin` ; 1er clic = boule nue + equateur + Greenwich (`land={false}`),
+  2e = terres. Pas de rotation (`draggable={false}`) ; `backgroundColor` = couleur de la carte.
 - **Score** : `maxScoreForRound`/`remainingScore(revealedClueIds, place)` suivent la liste reellement offerte.
-- **Personnalite** : nom + metier optionnel, uniquement des faits Wikipedia, `places.personality` (curation admin).
-- **Jeu de mots** : une phrase revelee en un clic ; `difficulty` (informative, point colore dans l'en-tete, visible aussi
-  carte verrouillee) ne conditionne jamais l'indice. `wordplayFor(place)` rend `null` si la phrase est vide.
-- **Saisie en direct** : le detenteur du tour ecrit `typing` (texte debounce 500 ms, jamais en solo ni hors de son tour) ; les
-  autres le voient en cases, en MAJUSCULE (`previewText`, `typedSkeleton`), seulement si `typing.uid === turnUid`.
-- **Qui s'est trompe** : `wrongGuesserName` derive de `wrongGuessUid`/`wrongGuessSeq` (jamais remis a zero entre manches ;
-  le score de l'hote s'appuie sur leur progression), garde par `turnUid` et une graine de manche.
-- **Une proposition par tour** (Indices) : apres une erreur, le detenteur du tour ne peut plus proposer avant
-  d'avoir devoile un indice (ce qui passe la main) ; `wrongGuessHints` (nombre d'indices au moment de l'erreur, ecrit avec
-  `wrongGuessUid`/`wrongGuessSeq`, remis a `null` a chaque debut de manche, absent = pas de restriction) donne
-  `hasGuessedThisTurn` (`helpers/turnGuess.ts`), qui retombe a faux des qu'un indice sort. le champ de reponse et « Valider » disparaissent
-  (le brouillon est garde pour son prochain tour) et seule la ligne `t.game.alreadyGuessed` reste (l'hote garde « Je ne sais
-  pas » dans Indices) ; un verrou local couvre l'instant avant le retour de la room. Le message de l'erreur (« X se trompe… ») disparait chez tout le monde des qu'un indice sort apres elle : `missIsFresh(wrongGuessHints, indicesSortis)`, meme en solo ou le tour revient au meme joueur. Le champ est dans la liste
-  `turnFields` des regles des deux jeux.
-- **« Je ne sais pas »** : reserve a l'hote (`giveUp`), meme hors de son tour, via `isHost()` des regles.
+- **Personnalite** : nom + metier optionnel, faits Wikipedia, `places.personality`. **Jeu de mots** : `difficulty` informative
+  seulement ; `wordplayFor(place)` rend `null` si vide.
+- **Saisie en direct** : le detenteur du tour ecrit `typing` (debounce 500 ms, jamais en solo ni hors tour) ; les autres le voient
+  en cases MAJUSCULES, seulement si `typing.uid === turnUid`.
+- **Qui s'est trompe** : `wrongGuesserName` derive de `wrongGuessUid`/`wrongGuessSeq` (jamais remis a zero entre manches).
+- **Une proposition par tour** : apres une erreur, plus de proposition avant qu'un indice sorte. `wrongGuessHints` (ecrit avec
+  `wrongGuessUid`/`wrongGuessSeq`, `null` a chaque debut de manche) donne `hasGuessedThisTurn` (`helpers/turnGuess.ts`) ; champ
+  de reponse et « Valider » disparaissent (brouillon garde), reste `t.game.alreadyGuessed` ; verrou local avant le retour de la
+  room. Le message d'erreur disparait des qu'un indice sort : `missIsFresh`. Le champ est dans `turnFields` des regles des 2 jeux.
+- **« Je ne sais pas »** : hote seul (`giveUp`), meme hors tour, via `isHost()` des regles.
 
 ## Erreurs de jeu
 
-Une ecriture Firestore qui echoue ne doit plus etre avalee : on met `.catch(reporting('jeu.action', { room }))`
-(`helpers/reportError.ts`), jamais `.catch(() => {})`. `reportError` log en console, previent le joueur quand c'etait
-une de ses actions (`kind: 'game'`, notice `ErrorNoticeHost`) et enregistre l'erreur dans la collection `errors`
-(`helpers/errorSink.ts`, installe dans `app/_layout.tsx`) ; `kind: 'background'` (presence, saisie en direct, nettoyage)
-n'affiche rien (`console.debug` : en dev, un `console.error` s'affiche en toast rouge). Une meme erreur n'est enregistree qu'une fois par 10 s (jeu) ou 60 s (fond), avec un compteur de
-repetitions. Les regles n'acceptent une erreur que dans le meme lot que deux compteurs du jour (`errorQuota`) : 30 par
-appareil et 1000 au total par jour ; ni `errors` ni `errorQuota` ne passent par le journal ni par `dataVersion`. Elles se
-lisent dans la page « Erreurs » de l'admin (nouvelles erreurs en direct, nettoyage des plus de 30 jours : pas de TTL, il
-exige la facturation Firebase).
+Une ecriture Firestore qui echoue ne s'avale pas : `.catch(reporting('jeu.action', { room }))` (`helpers/reportError.ts`), jamais
+`.catch(() => {})`. `kind: 'game'` prevent le joueur (`ErrorNoticeHost`) ; `kind: 'background'` (presence, saisie, nettoyage) ne
+fait que `console.debug` (en dev, `console.error` = toast rouge). Toutes vont dans la collection `errors` (`firebase/errorSink.ts`,
+installe dans `_layout.tsx`), dedupliquees (10 s jeu, 60 s fond). Les regles exigent le meme lot que deux compteurs du jour
+(`errorQuota` : 30 par appareil, 1000 au total). Hors journal et `dataVersion`. Lues dans la page admin « Erreurs » (nettoyage des
+plus de 30 jours, pas de TTL : exige la facturation Firebase).
 
 ## Mode dev : avis de difficulte
 
-Dans Reglages, la section « Mode dev » a un champ « dev » : taper `supermatou` (`DEV_CODE` dans `data/index.ts`, aussi dans
-`firestore.rules`, la vraie barriere) n'active rien par lui-meme, le code est seulement garde (`useDevCode`, AsyncStorage,
-hydrate dans `_layout.tsx` ; `useDevMode` dit s'il vaut exactement le secret). Un appareil en mode dev recoit, **une fois par
-manche**, l'overlay `DifficultyFeedbackOverlay` « Le lieu X etait-il… Facile / Moyen / Difficile » (`useDevFeedback`, dans `helpers`)
-**une fois l'hote passe a la manche suivante** (ou devant le classement final pour la derniere) : jamais par-dessus le
-reveal/verdict lui-meme, et il porte sur le lieu de la manche PRECEDENTE (le hook retient `{ roundIndex, cible }` tant que la
-manche est finie ; si deux manches passent sans reponse seule la derniere est posee ; le compteur de manche qui recule = nouvelle
-partie, tout est oublie) ; un tap a cote ferme sans rien ecrire, un des trois
-boutons ecrit un document de `devFeedback` (`sendDevFeedback` : jeu, `targetType` toujours `place`, `targetKey` = cle du lieu (`Place.key`,
-l'id du document, repli sur le nom pour une vieille room), nom, difficulte actuelle, difficulte proposee, `devCode`,
-`uid`, `at`). Chaque appareil decide seul (rien dans la room), la question ne bloque jamais le jeu (un tap a cote suffit) et disparait au rejeu. Une ecriture ratee est seulement loggee (`kind: 'background'`). Les regles n'acceptent la creation qu'avec le code dev
-et des champs exacts ; seuls les admins lisent et suppriment. La page admin « Avis difficulte » (`/admin/feedback`) les met en
-texte (une directive par lieu dont les joueurs veulent changer la difficulte, majorite des votes, egalite = les deux, puis
-les « deja corrects ») dans une zone en lecture seule, avec « Copier » et « Nettoyer » (confirmation dans la page, supprime
-tout par lots de 500). Hors journal et `dataVersion`, comme `errors`.
+Reglages > « Mode dev » : taper `supermatou` (`DEV_CODE` dans `data/index.ts` et `firestore.rules`, la vraie barriere) garde
+seulement le code (`useDevCode`, hydrate dans `_layout.tsx` ; `useDevMode` = vaut exactement le secret). Un appareil en mode dev
+recoit, **une fois par manche**, `DifficultyFeedbackOverlay` (Facile / Moyen / Difficile) **apres le passage de l'hote a la manche
+suivante** (ou devant le classement final), sur le lieu de la manche PRECEDENTE (`useDevFeedback`). Un tap a cote ferme sans
+ecrire ; un bouton ecrit un document `devFeedback` (`sendDevFeedback`). Chaque appareil decide seul, jamais bloquant ; echec =
+log `background`. Regles : creation avec le code dev et champs exacts, lecture/suppression admins. Page admin `/admin/feedback` :
+directives par lieu (majorite, egalite = les deux), « Copier », « Nettoyer ». Hors journal et `dataVersion`.
 
 ## Ecrans et UI
 
-- **`Screen`** accepte `header`/`footer` rendus hors du `ScrollView`. Piege : un `ScrollView` horizontal dans un `header`
-  s'etire en hauteur sur react-native-web sans `style={{ flexGrow: 0, flexShrink: 0 }}` explicite (voir `PlayerTabs.tsx`).
-- **`PlayerTabs`** (Indices) est purement informatif (statut seulement, a qui la main).
-- **Theme** : `night` (bleu nuit + ambre) et `day` (sable + bleu), fond uni, choix persiste (`ThemeProvider`, cle
-  `azimuthquiz:theme`). `useThemedStyles(createStyles)` est le pattern standard. Police unique `FONT_FAMILY` ; un composant
-  SVG lit `typography.<token>.fontFamily` et la passe explicitement a `<SvgText>`.
-- **Admin** (`admin/`, app Vite deployee sous `/azimuth-quiz/admin/`) : une page statique par onglet (`/admin/places`,
-  `countries`, `globe`, `jobs`, `wordplay`, `errors`, `feedback` ; `/admin/` = lieux), declaree dans `admin/src/pageList.ts` ; l'admin lit les
-  donnees dans une copie locale (IndexedDB) tenue a jour par le journal, voir le skill `firestore-data`.
-- **Page Pays** (`/admin/countries`, `admin/src/views/CountriesView/`) : un pays par carte (ISO, nom fr/en, devise, symbole,
-  indicatif, **drapeau** : chaque couleur avec son hex et son %, ajout/retrait d'une couleur, `FlagEditor`), recherche, continent, tri,
-  pagination. Une modification passe par `saveCountry` -> `applyCountryChange` (`admin/src/data.ts`) : le document `countries/{ISO}`
-  et la copie `places.country` de chaque lieu du pays sont ecrits dans le meme lot (plan pur : `data/firestore/denormalize.ts`),
-  avec le journal et la version des donnees. Le document stocke est le point de depart de l'ecriture : les champs de l'ancien jeu
-  Silhouette qu'il porte encore (contour, voisins, difficulte...) sont reecrits tels quels, jamais lus ni effaces.
-- **Page Monde** (`/admin/globe`, `admin/src/views/GlobeView/`) : le monde en 3D avec three.js (`three` est une dependance de l'admin, son propre chunk Vite), fond etoile et rien d'autre dans le ciel. Tous les lieux (points colores par categorie Compass, **ronds** pour les villes `cities`/`citiesFr`, **etoiles** pour les capitales, **carres** pour le reste), lus dans la copie locale comme la liste. **Niveau de detail selon la distance de la camera** (constantes de `constants.ts`) : sans inertie (`enableDamping` faux), les capitales n'apparaissent que sous `CAPITALS_MAX_DISTANCE`, les autres lieux sous `POINTS_MAX_DISTANCE` (au-dela un lieu n'est ni dessine ni cliquable) et les noms de lieux (HTML par-dessus le canvas, au plus `MAX_LABELS`, capitales d'abord puis les plus proches du centre, sans chevauchement : `selectLabels`) sous `LABELS_MAX_DISTANCE`. Un clic ouvre dans un panneau lateral **la meme carte que la liste** (`PlacesView/PlaceCard` + `usePlaceEditing`, donc les ecritures passent par les memes `api/*`, journal et `dataVersion` inclus) ; le globe suit les modifications. Le rendu est mince (`GlobeScene.ts` possede les objets three.js, `GlobeCanvas.tsx` le pointeur), la logique est pure dans `helpers.ts` (lon/lat <-> vecteur, lieu le plus proche a l'ecran, recherche par nom ou pays). Les tests Vitest remplacent `three` (jsdom n'a pas de WebGL).
-- **Storybook** : stories colocalisees (`src/**/<Name>.stories.tsx`, config dans `admin/.storybook`, `npm run stories`),
-  code reel affiche via `source(code)` + `<Story>.source.md` (skill personnel `storybook-story`, hors depot). Menu : `Common`, `Compass`, `Clues`,
-  `Setup`, `UI` (ordre dans `admin/.storybook/preview.tsx` : y ajouter toute nouvelle section). La barre
-  d'outils propose theme et langue. Un composant dumb a sa story, pas les containers smart.
+- **`Screen`** : `header`/`footer` hors du `ScrollView`. Piege : un `ScrollView` horizontal dans un `header` s'etire sur
+  react-native-web sans `style={{ flexGrow: 0, flexShrink: 0 }}` (voir `PlayerTabs.tsx`).
+- **Theme** : `night` et `day`, fond uni, persiste (`ThemeProvider`, cle `azimuthquiz:theme`). `useThemedStyles(createStyles)` est
+  le pattern. Police unique `FONT_FAMILY` ; un composant SVG lit `typography.<token>.fontFamily` et la passe a `<SvgText>`.
+- **Admin** (`admin/`, Vite, `/azimuth-quiz/admin/`) : une page statique par onglet (`places`, `countries`, `globe`, `jobs`,
+  `wordplay`, `errors`, `feedback`), declaree dans `admin/src/pageList.ts` ; lit une copie locale (IndexedDB) tenue par le journal
+  (skill `firestore-data`).
+  - **Pays** : `saveCountry` -> `applyCountryChange` ecrit `countries/{ISO}` et la copie `places.country` de chaque lieu dans le
+    meme lot (plan pur `data/firestore/denormalize.ts`), avec journal et version. Les champs Silhouette sont reecrits tels quels.
+  - **Monde** (`GlobeView/`) : three.js (chunk Vite propre), lieux lus dans la copie locale (ronds = villes, etoiles = capitales,
+    carres = reste), niveau de detail selon la distance camera (constantes de `constants.ts`), clic = la meme carte que la liste
+    (`PlacesView/PlaceCard` + `usePlaceEditing`). `GlobeScene.ts` possede three.js, logique pure dans `helpers.ts`. Vitest remplace `three`.
+- **Storybook** : stories colocalisees (`src/**/<Name>.stories.tsx`, config `admin/.storybook`, `npm run stories`), code reel via
+  `source(code)` + `<Story>.source.md` (skill personnel `storybook-story`). Menu : `Common`, `Compass`, `Clues`, `Setup`, `UI`
+  (ordre dans `admin/.storybook/preview.tsx` : y ajouter toute nouvelle section). Un composant dumb a sa story, pas les containers.
 
 ## Build, deploiement, qualite
 
-- **Web / GitHub Pages** : `app.json` `web.output: "static"` + `experiments.baseUrl: "/azimuth-quiz"` ; `@expo/metro-runtime`
-  est requis. `.github/workflows/deploy-pages.yml` exporte le jeu, l'admin (`dist/admin/`) et Storybook et les publie a chaque
-  push sur `master` (Pages en source « GitHub Actions »).
-- **Ecran de demarrage** : `StartupSplash` (racine de `_layout.tsx`, dans les providers) affiche `SplashScreen` (boussole dont l'aiguille oscille de -38 a +52 deg, barre de chargement REALISTE qui avance par a-coups avec des blocages (`buildProgressSteps` dans `SplashScreen/helpers.ts` : sauts rapides, passage lent, plateaux dont un long vers les deux tiers puis une rafale et une derniere hesitation, legerement aleatoire a chaque lancement, des mots-cles `{ at, to, easeMs }` qui finissent EXACTEMENT a `SPLASH_MIN_MS` sur 96-97,5 % ; la barre ne touche jamais 100 % avant que le splash soit libere : elle se complete pendant le fondu ; pourcentage affiche a cote de « Chargement… »), le bloc titre partage `AppTitle` ("AZIMUTH QUIZ" + `t.app.tagline` « Pas de GPS, que de l'instinct. », le MEME composant que l'accueil, pose dans la meme zone de securite avec le meme padding qu'un `Screen` : le titre ne bouge pas quand le splash laisse place a l'accueil), ligne de version ENTIERE, jamais coupee (peut passer sur 2 lignes) `v2.64.1 - 🦥 - brown-throated-sloth` via `versionLabel`) au moins `SPLASH_MIN_MS` = 5 s meme si tout est charge, jusqu'a ce que theme, langue, reglages, nom et code dev soient lus (`useSplashGate`), et au plus `SPLASH_MAX_MS` = 15 s ; theme nuit ou jour selon le theme sauvegarde (fond `BOOT_BACKGROUND` tant qu'il n'est pas lu : pas de flash du mauvais theme). Le fond du splash natif est `expo.backgroundColor` (#0B1220, pas de module splash a ajouter).
-- **Version** : `app.json` `expo.version` + un animal par version (`expo.extra.codename` = `{ emoji, name, wiki }`, `wiki` = l'URL de l'article Wikipedia ANGLAIS de l'espece, lien du nom partout ou la version s'affiche (`VersionLine`, `AppVersion` de l'admin, a renseigner a chaque version), `name` = le NOM COMPLET de l'espece en ANGLAIS, en kebab-case ASCII, toujours en anglais quelle que soit la langue de l'appli, ex. 🦥 brown-throated-sloth, mesange charbonniere = great-tit ; affiche partout pareil, `v2.64.1 - 🦥 - brown-throated-sloth`, par l'ecran de demarrage, Reglages (A propos) et l'admin, via `versionParts` / `versionLabel`, sans langue) ; le skill `push` en choisit un nouveau a chaque montee, jamais un deja pris.
-- **Android** : package `com.azimuthquiz.app` (definitif), `versionCode` incremente par EAS dans `app.json` a chaque build (a commiter), variables `EXPO_PUBLIC_FIREBASE_*` declarees dans l'environnement EAS `production` (sans elles l'app plante au demarrage) ; details dans le skill `push`.
-- **Modules natifs** : `expo-gl` (la surface OpenGL du globe three.js) est autolinke, sans config plugin, mais c'est du **natif** : un build EAS neuf est necessaire, un `eas update` (OTA) ne suffit pas. `three` est une dependance JS pure (ESM seulement, voir la note Jest dans Boussole). `expo-gl` est aussi declare dans `admin/vite.shared.ts` (`dedupe` + `optimizeDeps`) pour que Storybook dessine le vrai globe dans le navigateur.
-- **Skills du projet** (dans le depot, `.claude/skills/`) : `quality-check` (couverture 100 %, structure, Storybook, code
-  mort : rapporte sans corriger), `push` (verifier, versionner, committer, pousser), `firestore-data` (modifier les donnees
-  Firestore). Les skills `react-structure`, `storybook-story` et `commit-push` sont des skills **personnels** (dossier
-  utilisateur `~/.claude/skills/`, hors depot) : le projet s'y refere mais ne les contient pas.
-- **Tests** : le jeu avec Jest (`npx jest --coverage`, seuil **100 %**, ignore `admin/`) et l'admin avec **Vitest**
-  (`cd admin && npm run test:coverage`, seuil **100 %** sur `admin/src`, jsdom + Testing Library ; `main.tsx` seul est exclu).
-  Pas de `/* istanbul ignore */` : un morceau inatteignable se supprime ou se reecrit plutot que de se contourner.
-- **Avant de pousser** : `npx tsc --noEmit`, `npx expo lint`, `npx jest --coverage` et `npm run test:coverage` dans `admin/`
-  (les deux a **100 %**), build de l'admin si du code partage a bouge. Ne jamais committer sans demande.
+- **Web** : `app.json` `web.output: "static"` + `experiments.baseUrl: "/azimuth-quiz"` ; `@expo/metro-runtime` requis.
+  `.github/workflows/deploy-pages.yml` publie jeu, admin (`dist/admin/`) et Storybook a chaque push sur `master`.
+- **Splash** : `StartupSplash` (racine de `_layout.tsx`) affiche `SplashScreen` au moins `SPLASH_MIN_MS` = 5 s, jusqu'a ce que
+  theme, langue, reglages, nom et code dev soient lus (`useSplashGate`), au plus `SPLASH_MAX_MS` = 15 s. Barre de chargement
+  simulee (`buildProgressSteps`, finit EXACTEMENT a `SPLASH_MIN_MS` sur 96-97,5 %, complete pendant le fondu). `AppTitle` partage
+  avec l'accueil (le titre ne bouge pas a la transition). Ligne de version entiere, jamais coupee. Fond `BOOT_BACKGROUND` tant que
+  le theme n'est pas lu ; fond natif = `expo.backgroundColor` (#0B1220).
+- **Version** : `app.json` `expo.version` + un animal par version (`expo.extra.codename` = `{ emoji, name, wiki }` ; `wiki` = article
+  Wikipedia ANGLAIS de l'espece, a renseigner a chaque version ; `name` = nom complet de l'espece en ANGLAIS, kebab-case ASCII, ex.
+  🦥 brown-throated-sloth). Affichage `v2.64.1 - 🦥 - brown-throated-sloth` via `versionParts`/`versionLabel`. Le skill `push` en
+  choisit un nouveau a chaque montee, jamais un deja pris.
+- **Android** : package `com.azimuthquiz.app` (definitif), `versionCode` incremente par EAS dans `app.json` (a commiter),
+  `EXPO_PUBLIC_FIREBASE_*` dans l'environnement EAS `production` (sans elles l'app plante) ; details dans le skill `push`.
+- **Natif** : `expo-gl` (globe) est autolinke mais **natif** : build EAS neuf necessaire, un `eas update` (OTA) ne suffit pas.
+  Declare aussi dans `admin/vite.shared.ts` (`dedupe` + `optimizeDeps`) pour Storybook.
+- **Skills du projet** (`.claude/skills/`) : `quality-check` (rapporte sans corriger), `push`, `firestore-data`. Skills
+  **personnels** hors depot (`~/.claude/skills/`) : `react-structure`, `storybook-story`, `commit-push`.
+- **Tests** : toujours dans un dossier `__tests__/` a cote du fichier teste (`Foo/__tests__/Foo.test.tsx`). Jest (`npx jest --coverage`, seuil **100 %**, ignore `admin/`) et Vitest dans l'admin (`cd admin && npm run
+  test:coverage`, seuil **100 %** sur `admin/src`, `main.tsx` exclu). Pas de `/* istanbul ignore */` : supprimer ou reecrire le code inatteignable.
+- **Avant de pousser** : `npx tsc --noEmit`, `npx expo lint`, `npx jest --coverage`, `npm run test:coverage` dans `admin/`, build
+  de l'admin si du code partage a bouge. Ne jamais committer sans demande.
 
 ## Etat connu
 
-- `npx expo lint` : 15 erreurs, toutes `react-hooks/refs` ou `react-hooks/set-state-in-effect`, dans `Compass.tsx`, `Globe3D.tsx`,
-  `useHeading.ts`, `EarthSection.tsx` et `SliderTrack.tsx`. Elles viennent d'idiomes voulus (un ref mis a jour a chaque rendu
-  pour rester lisible depuis le `PanResponder`, `Animated.Value` lu au rendu pour l'orbite) : pas des erreurs a corriger une
-  par une.
-- Le jeu garde chaque document Firestore lu en memoire pour la session (pas de cache disque, pas d'invalidation) : une donnee
-  modifiee n'apparait qu'apres rechargement.
+- `npx expo lint` : 15 erreurs `react-hooks/refs` / `set-state-in-effect` dans `Compass.tsx`, `Globe3D.tsx`, `useHeading.ts`,
+  `EarthSection.tsx`, `SliderTrack.tsx` : idiomes voulus (ref mis a jour a chaque rendu pour le `PanResponder`, `Animated.Value` lu
+  au rendu), a ne pas corriger une par une.
+- Chaque document Firestore lu reste en memoire pour la session (pas de cache disque ni d'invalidation) : une donnee modifiee
+  n'apparait qu'apres rechargement.

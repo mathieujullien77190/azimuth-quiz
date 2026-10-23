@@ -45,7 +45,7 @@ test qui manque, ou du code inatteignable a supprimer, jamais un commentaire d'e
     `await act(async () => ...)`, `await fireEvent.press(...)`, `await rerender(...)`, `await unmount()`.
   - Deux hooks montés dans un même test se re-rendent hors `act` quand le store change : `await unmount()` le
     premier avant de monter le second.
-  - `firebase/firestore` plante Jest : on mocke `@/games/<jeu>/helpers/room` (ou `@/helpers/roomBase`), on ne
+  - `firebase/firestore` plante Jest : on mocke `@/games/<jeu>/firebase/room` (ou `@/firebase/roomApi`), on ne
     l'importe jamais en vrai. Les stores de room se testent en posant l'état avec `store.setState(...)`.
   - Timers : `jest.useFakeTimers()` en `beforeEach`, `jest.useRealTimers()` en `afterEach`.
   - Les hex de deux thèmes peuvent coïncider : préfère `getAllByText(...)` quand une valeur peut apparaître deux fois.

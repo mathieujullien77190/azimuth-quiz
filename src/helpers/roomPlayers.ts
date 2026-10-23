@@ -1,6 +1,6 @@
 import { ROOM_PLAYER_COLORS } from '@/data';
 
-import type { RoomPlayer, RoomPlayers } from './roomBase';
+import type { RoomPlayer, RoomPlayers } from '../firebase/roomApi';
 
 // Type-only import of `roomBase`: erased at compile time, so this stays free of `firebase/firestore`
 // at runtime (see `roomBase.ts`'s own note) — safe for any screen or test to import.

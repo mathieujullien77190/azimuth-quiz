@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 
 import { REACTION_COOLDOWN_MS, REACTIONS_PER_GAME } from '@/data';
 
-import type { RoomPlayers, RoomReaction } from './roomBase';
+import type { RoomPlayers, RoomReaction } from '../firebase/roomApi';
 import { reporting } from './reportError';
 
 /** What the screen shows for a received reaction: the emoji and, under it, who sent it (null if they are gone). */

@@ -10,8 +10,8 @@ import SetupScreenShell from '@/components/setup/SetupScreenShell';
 import type { SetupScreenViewProps } from './types';
 
 /**
- * Pur rendu : aucun hook a effet de bord (pas de `@/settings`, `@/games/compass/helpers/room`,
- * `@/games/compass/store/roomStore`) — `SetupScreen` (smart) resout tout en amont, ce composant ne fait que
+ * Pur rendu : aucun hook a effet de bord (pas de `@/settings`, `@/games/compass/firebase/room`,
+ * `@/store/compassRoomStore`) — `SetupScreen` (smart) resout tout en amont, ce composant ne fait que
  * lire des valeurs deja pretes et appeler des callbacks deja decides. Le bloc commun aux jeux
  * (titre, partie solo/hote/invite, boutons) est dans `SetupScreenShell`, seules les sections
  * propres a Compass sont ici.

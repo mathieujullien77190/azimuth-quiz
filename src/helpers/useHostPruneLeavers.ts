@@ -1,7 +1,7 @@
 import { reporting } from './reportError';
 import { useEffect } from 'react';
 
-import type { RoomPlayers } from './roomBase';
+import type { RoomPlayers } from '../firebase/roomApi';
 
 /** The per-player maps a game keeps in its round state (each game has some of them, none has all). */
 const PLAYER_KEYED_FIELDS = ['guesses', 'scores', 'totalScores'] as const;

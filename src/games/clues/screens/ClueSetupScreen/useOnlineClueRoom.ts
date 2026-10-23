@@ -16,9 +16,9 @@ import {
   startClueRoomGame,
   updateRoomPlayerColors,
   updateRoomSettings,
-} from '@/games/clues/helpers/room';
-import { fetchClueRoundPlaces } from '@/games/clues/helpers/firestoreCluePlaces';
-import { useClueRoomStore } from '@/games/clues/store/roomStore';
+} from '@/games/clues/firebase/room';
+import { fetchClueRoundPlaces } from '@/games/clues/firebase/places';
+import { useClueRoomStore } from '@/store/cluesRoomStore';
 import { useLanguage, useTranslation } from '@/i18n';
 import type { ClueSettings } from '@/types';
 

@@ -1,5 +1,5 @@
 import type { PartySectionProps } from '@/components/setup/PartySection';
-import type { RoomPlayers } from '@/helpers/roomBase';
+import type { RoomPlayers } from '@/firebase/roomApi';
 
 /** The slice of a game's own room store (`useRoomStore`/`useClueRoomStore`) the setup flow needs —
  * both stores expose these fields, only their `gameState` shape differs beyond `screen`. */
@@ -25,7 +25,7 @@ export type SetupRoomStore<R> = {
 };
 
 /** Everything game-specific about "an online room" — each game has its own Firestore collection and
- * store (see `games/<game>/helpers/room.ts`), the setup flow on top of them is identical. `S` is the
+ * store (see `games/<game>/firebase/room.ts`), the setup flow on top of them is identical. `S` is the
  * game's full settings, `R` what the room shares with joiners (everything except `playerName`). */
 export type SetupRoomAdapter<S, R> = {
   store: SetupRoomStore<R>;

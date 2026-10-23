@@ -1,7 +1,7 @@
 import { reporting } from './reportError';
 import { useEffect, useRef } from 'react';
 
-import type { RoomPlayers } from './roomBase';
+import type { RoomPlayers } from '../firebase/roomApi';
 
 // Deliberately slow and cheap: every heartbeat is a Firestore write that every connected player then
 // reads too (N players => N reads per write), so this dominates the room's traffic. 30s beats with a

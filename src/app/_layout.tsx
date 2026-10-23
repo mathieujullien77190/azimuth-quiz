@@ -9,7 +9,7 @@ import ThemeProvider from '@/components/ThemeProvider';
 import { preloadCluesCounts } from '@/games/clues/helpers/clueCounts';
 import { preloadCompassCounts } from '@/games/compass/helpers/compassCounts';
 import { disableTextSelection, polyfillFlagEmoji } from '@/helpers';
-import { writeErrorRecord } from '@/helpers/errorSink';
+import { writeErrorRecord } from '@/firebase/errorSink';
 import { setErrorReporter } from '@/helpers/reportError';
 import { hydrateDevCode, hydratePlayerName, hydrateSettings } from '@/settings';
 import { useTheme } from '@/themes';
