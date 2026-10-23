@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS } from '@/games/compass/constants';
+import { DEFAULT_SETTINGS } from '@/games/constants';
 import { loadPlayerName, loadSettings, savePlayerName, saveSettings } from '@/helpers';
 
 import {

@@ -6,7 +6,7 @@ import {
   subscribeToRoomGame,
   subscribeToRoomPlayers,
   subscribeToRoomSettings,
-} from '../games/compass/firebase/room';
+} from '../games/firebase/room';
 
 // Hors du barrel de `helpers/index.ts` : importe `firebase/firestore`, qui fait planter Jest.
 

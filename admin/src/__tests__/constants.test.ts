@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { CATEGORIES } from '@/games/compass/constants';
+import { CATEGORIES } from '@/games/constants';
 
 import {
   CATEGORY_COLORS,

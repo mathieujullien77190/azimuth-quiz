@@ -2,11 +2,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLocales } from 'expo-localization';
 
 import { LANGUAGE_STORAGE_KEY, PLAYER_NAME_STORAGE_KEY, THEME_STORAGE_KEY } from '@/data';
-import { BEST_SCORE_STORAGE_KEY, SETTINGS_STORAGE_KEY } from '@/games/compass/constants';
+import { BEST_SCORE_STORAGE_KEY, SETTINGS_STORAGE_KEY } from '@/games/constants';
 import type { Language } from '@/i18n';
 import type { GameSettings, ThemeId } from '@/types';
 
-import { clearCompassCursors } from '@/games/compass/helpers/compassCursors';
+import { clearCompassCursors } from '@/games/helpers/compassCursors';
 
 import { sanitizeSettings } from './settings';
 

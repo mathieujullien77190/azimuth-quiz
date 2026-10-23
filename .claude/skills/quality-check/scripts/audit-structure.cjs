@@ -12,8 +12,8 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const ROOTS = [
   'src/components',
-  'src/games/compass/components',
-  'src/games/compass/screens',
+  'src/games/components',
+  'src/games/screens',
 ];
 
 /**

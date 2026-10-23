@@ -1,5 +1,5 @@
 import { DEFAULT_ORIGIN, PLAYER_COLORS } from '@/data';
-import { DEFAULT_DISTANCE_KM, MAX_SURFACE_DISTANCE_KM } from '@/games/compass/constants';
+import { DEFAULT_DISTANCE_KM, MAX_SURFACE_DISTANCE_KM } from '@/games/constants';
 import type {
   Guess,
   Place,
@@ -9,7 +9,7 @@ import type {
 } from '@/types';
 
 import { bearingDeg, distanceKm, normalizeBearing } from './geo';
-import { applyBestBonus, scoreRound } from '@/games/compass/helpers/scoring';
+import { applyBestBonus, scoreRound } from '@/games/helpers/scoring';
 
 // Donnees d'exemple pour les `.stories.tsx` et les tests : petites, ecrites a la main (les vraies donnees sont dans
 // Firestore). Ici et pas dans `admin/`, qui depend de `src/` et non l'inverse.

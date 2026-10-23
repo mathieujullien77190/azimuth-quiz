@@ -1,6 +1,6 @@
 ```tsx
 import CategorySection from '@/components/setup/CategorySection';
-import { CATEGORIES } from '@/games/compass/constants';
+import { CATEGORIES } from '@/games/constants';
 
 <CategorySection
   categories={CATEGORIES}

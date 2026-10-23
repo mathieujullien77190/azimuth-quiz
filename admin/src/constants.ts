@@ -1,4 +1,4 @@
-import { CATEGORIES } from '@/games/compass/constants';
+import { CATEGORIES } from '@/games/constants';
 import type { Category, Difficulty } from '@/types';
 
 export const CATEGORY_ORDER: Category[] = ['cities', 'capital', 'citiesFr', 'mountains', 'landmarks', 'nature', 'kids'];

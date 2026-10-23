@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 
-import { DISTANCE_MARKS_KM } from '@/games/compass/constants';
+import { DISTANCE_MARKS_KM } from '@/games/constants';
 import { formatDistance, kmToRatio, ratioToKm } from '@/helpers';
 import { SAMPLE_DISTANCE_KM, SAMPLE_MAX_SURFACE_KM } from '@/helpers/storyFixtures';
 import { translations } from '@/i18n/translations';

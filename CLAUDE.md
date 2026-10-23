@@ -88,8 +88,8 @@ les deploie pas).
 ## Boussole
 
 `Guess` = `bearing` + `distanceKm`, distance **de surface**. Cap et distance **loxodromiques** (`helpers/geo.ts`), donc un peu plus
-longs que l'orthodromie (jusqu'a ~21 180 km, `MAX_SURFACE_DISTANCE_KM` = 22 000). Score (`games/compass/helpers/scoring.ts`) :
-courbe logarithmique, 500 pts direction + 500 pts distance. Lieux : `fetchRandomPlaces` (`games/compass/firebase/places.ts`).
+longs que l'orthodromie (jusqu'a ~21 180 km, `MAX_SURFACE_DISTANCE_KM` = 22 000). Score (`games/helpers/scoring.ts`) :
+courbe logarithmique, 500 pts direction + 500 pts distance. Lieux : `fetchRandomPlaces` (`games/firebase/places.ts`).
 
 **Globe3D** (`components/Globe3D/`) : vraie boule **three.js** sur surface `expo-gl`, montree d'abord quand l'appelant donne
 `origin` (bouton 2D/3D), rotation au doigt, zoom a deux doigts ou +/− (`MAX_ZOOM` = 14), bouton « N » pour recentrer.

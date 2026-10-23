@@ -6,7 +6,7 @@ import ErrorNoticeHost from '@/components/ErrorNoticeHost';
 import LanguageProvider from '@/components/LanguageProvider';
 import StartupSplash from '@/components/StartupSplash';
 import ThemeProvider from '@/components/ThemeProvider';
-import { preloadCompassCounts } from '@/games/compass/helpers/compassCounts';
+import { preloadCompassCounts } from '@/games/helpers/compassCounts';
 import { disableTextSelection, polyfillFlagEmoji } from '@/helpers';
 import { writeErrorRecord } from '@/firebase/errorSink';
 import { setErrorReporter } from '@/helpers/reportError';
