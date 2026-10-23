@@ -11,7 +11,7 @@ import {
 import type { Coordinates, Guess, Place, PlayerResult } from '@/types';
 
 import { bearingDeg, distanceKm, rhumbDestination } from '@/helpers/geo';
-import { applyBestBonus, distanceStepKm, roundDistance, scoreRound } from '../scoring';
+import { applyBestBonus, distanceStepKm, maxRoundScore, maxScore, roundDistance, scoreRound } from '../scoring';
 
 const origin: Coordinates = { latitude: 48.8566, longitude: 2.3522 };
 const place: Place = {
@@ -316,5 +316,14 @@ describe('a better guess never scores less', () => {
         }
       }
     }
+  });
+});
+
+describe('maxScore', () => {
+  it('counts the exact bonuses alone, and the best-of-round bonuses too with several players', () => {
+    expect(maxRoundScore(1)).toBe(1200);
+    expect(maxRoundScore(3)).toBe(1400);
+    expect(maxScore(5, 1)).toBe(6000);
+    expect(maxScore(5, 2)).toBe(7000);
   });
 });

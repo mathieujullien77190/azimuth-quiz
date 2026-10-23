@@ -108,3 +108,16 @@ export const applyBestBonus = (results: PlayerResult[]): PlayerResult[] => {
     };
   });
 };
+
+/**
+ * Score maximum d'une manche : les deux axes a fond plus les deux bonus d'exactitude, et a plusieurs les deux
+ * bonus du meilleur de la manche (un seul joueur ne les touche jamais).
+ */
+export const maxRoundScore = (playerCount: number): number => {
+  const exact = MAX_DIRECTION_POINTS + MAX_DISTANCE_POINTS + EXACT_DIRECTION_BONUS + EXACT_DISTANCE_BONUS;
+  if (playerCount < 2) return exact;
+  return exact + Math.round(MAX_DIRECTION_POINTS * BEST_BONUS_RATIO) + Math.round(MAX_DISTANCE_POINTS * BEST_BONUS_RATIO);
+};
+
+/** Score maximum d'une partie de `rounds` manches. */
+export const maxScore = (rounds: number, playerCount: number): number => rounds * maxRoundScore(playerCount);

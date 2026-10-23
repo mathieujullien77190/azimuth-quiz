@@ -38,6 +38,7 @@ export const Default: Story = {
   parameters: source(defaultCode),
   args: {
     localName: 'Zoé',
+    maxScore: 2800,
     entries: [
       { name: 'Zoé', total: 1450, color: '#EF4444' },
       { name: 'Max', total: 1210, color: '#3B82F6' },

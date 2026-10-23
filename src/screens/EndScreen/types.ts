@@ -17,6 +17,8 @@ export type EndScreenViewProps = {
   title: string;
   entries: StandingEntry[];
   localName: string;
+  /** Score maximum possible de la partie. */
+  maxScore: number;
   recapTitle: string;
   /** Intitule des colonnes du recap (direction, distance). */
   columns: string[];

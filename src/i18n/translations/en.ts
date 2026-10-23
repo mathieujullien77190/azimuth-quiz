@@ -124,6 +124,7 @@ export const en: Translations = {
     youWin: 'You win!',
     tie: (names) => `Tie: ${names}`,
     and: 'and',
+    maxScore: (max) => `Maximum possible score: ${max} pts`,
   },
   settings: {
     title: 'Settings',

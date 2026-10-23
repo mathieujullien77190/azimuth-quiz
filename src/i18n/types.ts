@@ -134,6 +134,8 @@ export type Translations = {
     winner: (name: string) => string;
     /** Comme `winner`, pour le joueur local (`FinalStandings`, `localName`). */
     youWin: string;
+    /** Score maximum possible de la partie, `max` deja formate. */
+    maxScore: (max: string) => string;
     tie: (names: string) => string;
     /** Mot de liaison entre deux noms a egalite ("et" / "and"). */
     and: string;

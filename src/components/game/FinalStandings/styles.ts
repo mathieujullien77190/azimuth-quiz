@@ -17,6 +17,12 @@ export const createStyles = ({ colors, typography }: Theme) =>
       fontSize: fontSize.caption + 1,
       textAlign: 'center',
     },
+    maxScore: {
+      ...typography.body,
+      color: colors.textMuted,
+      fontSize: fontSize.caption,
+      textAlign: 'center',
+    },
     row: {
       flexDirection: 'row',
       alignItems: 'center',

@@ -17,7 +17,7 @@ import { createStyles } from './styles';
  * Classement de fin de partie commun aux jeux (dumb) : titre, vainqueur (ou egalite) en banniere des qu'il y a
  * plusieurs joueurs, scores classes (medailles au podium), `children` propres au jeu, puis rejouer / quitter.
  */
-export const FinalStandings = ({ title, entries, localName, children, onReplay, onQuit }: FinalStandingsProps) => {
+export const FinalStandings = ({ title, entries, localName, maxScore, children, onReplay, onQuit }: FinalStandingsProps) => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
 
@@ -51,6 +51,8 @@ export const FinalStandings = ({ title, entries, localName, children, onReplay, 
           </View>
         ))}
       </Card>
+
+      {maxScore !== undefined && <Text style={styles.maxScore}>{t.endScreen.maxScore(formatNumber(maxScore))}</Text>}
 
       {children}
 

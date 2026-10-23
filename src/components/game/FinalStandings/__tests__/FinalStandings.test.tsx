@@ -49,6 +49,16 @@ describe('FinalStandings — the scores', () => {
     expect(getByText('Zoé')).toBeTruthy();
   });
 
+  it('shows the maximum possible score when given, nothing otherwise', async () => {
+    const entries = [{ name: 'Zoé', total: 250 }];
+    const { getByText, queryByText, rerender } = await render(
+      <FinalStandings {...baseProps} entries={entries} maxScore={2800} />,
+    );
+    expect(getByText(/Score maximum possible/)).toBeTruthy();
+    await rerender(<FinalStandings {...baseProps} entries={entries} />);
+    expect(queryByText(/Score maximum possible/)).toBeNull();
+  });
+
   it('shows a dot in the player color when there is one', async () => {
     const { toJSON } = await render(
       <FinalStandings {...baseProps} entries={[{ name: 'Zoé', total: 250, color: '#EF4444' }]} />,

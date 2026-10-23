@@ -9,6 +9,7 @@ import { EndScreenView } from '@/screens/EndScreen/EndScreenView';
     { name: 'Max', total: 1210, color: '#3B82F6' },
   ]}
   localName="Zoé"
+  maxScore={2800}
   onQuit={onQuit}
   onReplay={onReplay}
   recapTitle={t.endScreen.recapTitle}

@@ -1,3 +1,4 @@
+import { maxScore } from '@/helpers/scoring';
 import { useTranslation } from '@/i18n';
 
 import { EndScreenView } from './EndScreenView';
@@ -17,6 +18,7 @@ export const EndScreen = ({ players, records, totals, localName, onReplay, onQui
       columns={[t.roundResult.direction, t.roundResult.distance]}
       entries={players.map((player, index) => ({ name: player.name, total: totals[index] ?? 0, color: player.color }))}
       localName={localName}
+      maxScore={maxScore(records.length, players.length)}
       onQuit={onQuit}
       onReplay={onReplay}
       recapTitle={t.endScreen.recapTitle}

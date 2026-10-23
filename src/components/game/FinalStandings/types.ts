@@ -15,6 +15,8 @@ export type FinalStandingsProps = {
   /** Nom du joueur de cet appareil (unique dans une room) : la banniere dit "Vous gagnez !" au lieu de le nommer.
    * Omis (ex. exemple sans nom dans Storybook) : nomme toujours le vainqueur. */
   localName?: string;
+  /** Score maximum possible de la partie, affiche sous les scores. Omis : rien. */
+  maxScore?: number;
   /** Ce que le jeu ajoute sous les scores (carte de rang et recap manche par manche de Boussole...). */
   children?: ReactNode;
   /** "Rejouer" : retour au salon avec tous les joueurs restes dans la room. */

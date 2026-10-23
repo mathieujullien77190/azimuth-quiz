@@ -57,6 +57,20 @@ describe('EndScreen — alone', () => {
     expect(queryByText(/gagne/)).toBeNull();
   });
 
+  it('shows the maximum possible score, without the best-of-round bonuses when alone', async () => {
+    const { getByText } = await render(
+      <EndScreen
+        localName=""
+        onQuit={jest.fn()}
+        onReplay={jest.fn()}
+        players={[alice]}
+        records={records}
+        totals={[900]}
+      />,
+    );
+    expect(getByText(`Score maximum possible : ${formatNumber(1200)} pts`)).toBeTruthy();
+  });
+
   it('defaults the score to 0 when totals is empty', async () => {
     const { getByText } = await render(
       <EndScreen

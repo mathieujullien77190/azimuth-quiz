@@ -8,13 +8,14 @@ export const EndScreenView = ({
   title,
   entries,
   localName,
+  maxScore,
   recapTitle,
   columns,
   rows,
   onReplay,
   onQuit,
 }: EndScreenViewProps) => (
-  <FinalStandings entries={entries} localName={localName} onQuit={onQuit} onReplay={onReplay} title={title}>
+  <FinalStandings entries={entries} localName={localName} maxScore={maxScore} onQuit={onQuit} onReplay={onReplay} title={title}>
     <RoundsRecap columns={columns} rows={rows} title={recapTitle} />
   </FinalStandings>
 );
