@@ -94,7 +94,7 @@
   <rect x="950" y="382" width="200" height="132" rx="10" fill="#eaf5ea" stroke="#4a8a4a" stroke-width="1.5"/>
   <text x="1050" y="410" font-size="14" font-weight="700" text-anchor="middle" fill="#1f2a37">Firestore</text>
   <text x="1050" y="432" font-size="12" text-anchor="middle" fill="#5b6b7c">rooms · places · meta</text>
-  <text x="1050" y="450" font-size="12" text-anchor="middle" fill="#5b6b7c">countries · journal · errors</text>
+  <text x="1050" y="450" font-size="12" text-anchor="middle" fill="#5b6b7c">journal · errors</text>
   <text x="1050" y="476" font-size="12" text-anchor="middle" fill="#5b6b7c">firestore.rules (barrière)</text>
   <text x="1050" y="494" font-size="12" text-anchor="middle" fill="#5b6b7c">firestore.indexes.json</text>
 
