@@ -47,7 +47,11 @@ Un push sur `master` publie le jeu web, l'admin (`/admin/`) et Storybook sur Git
 
 ## Architecture
 
-![Schéma d'architecture : écrans, composants, store Zustand, couche firebase, admin, Firebase et déploiement](docs/architecture.svg)
+![Schéma d'architecture : qui appelle qui, de l'appli à Firebase et au déploiement](docs/architecture.svg)
+
+![Structure des fichiers : à quoi sert chaque dossier](docs/structure.svg)
+
+![Flux Firestore : une partie de bout en bout](docs/firestore-flows.svg)
 
 Pas de serveur propre : l'appli Expo (écrans, composants, store Zustand de la room, couche `firebase/`) et l'admin Vite, qui réutilise `src/firebase` (types et lecture des documents), parlent directement à Firebase (Auth et Firestore, règles dans `firestore.rules`). Un push sur `master` construit le web, l'admin et Storybook vers GitHub Pages.
 
