@@ -57,8 +57,7 @@ export const PartySection = ({
               onChangeText={onChangeName}
               placeholder={soloPlaceholder}
               placeholderTextColor={colors.textMuted}
-              pointerEvents={nameEditable ? 'auto' : 'none'}
-              style={styles.input}
+              style={[styles.input, { pointerEvents: nameEditable ? 'auto' : 'none' }]}
               value={soloName}
             />
             <View style={[styles.initials, { borderColor: soloColor }]}>
@@ -79,15 +78,14 @@ export const PartySection = ({
               <View style={styles.inputWrap}>
                 <TextInput
                   editable={false}
-                  pointerEvents="none"
-                  style={[styles.input, isHost && styles.inputWithRemove]}
+                  style={[styles.input, isHost && styles.inputWithRemove, { pointerEvents: 'none' }]}
                   value={displayName}
                 />
                 <View style={[styles.initials, { borderColor: color }]}>
                   <Text style={[styles.initialsText, { color }]}>{initials(player.name)}</Text>
                 </View>
                 {isHost && (
-                  <View pointerEvents="box-none" style={styles.removeButton}>
+                  <View style={styles.removeButton}>
                     <MiniButton
                       accessibilityLabel={t.setup.online.removePlayer(player.name)}
                       label={t.setup.online.kick}

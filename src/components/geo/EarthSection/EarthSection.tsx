@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, Text, View } from 'react-native';
 import Svg, { Circle, Defs, G, Path, RadialGradient, Stop, Text as SvgText } from 'react-native-svg';
 
+import { USE_NATIVE_DRIVER } from '@/helpers';
+
 import Globe3D from '@/components/geo/Globe3D';
 import { useTheme, useThemedStyles } from '@/themes';
 
@@ -75,7 +77,7 @@ export const EarthSection = ({ size, origin, marks, zoomControls = false }: Eart
         duration: SATELLITE_ORBIT_MS,
         easing: Easing.linear,
         toValue: 1,
-        useNativeDriver: true,
+        useNativeDriver: USE_NATIVE_DRIVER,
       }).start(({ finished }) => {
         if (finished && !cancelled) spin();
       });
@@ -203,7 +205,6 @@ export const EarthSection = ({ size, origin, marks, zoomControls = false }: Eart
             {showQuip && (
               // Contre-rotation par rapport au parent pour rester lisible quel que soit l'angle d'orbite.
               <Animated.View
-                pointerEvents="none"
                 style={[
                   styles.quipWrap,
                   {

@@ -6,10 +6,12 @@ import type { Theme } from '@/types';
 export const createStyles = ({ colors, typography }: Theme) =>
   StyleSheet.create({
     overlay: {
+      pointerEvents: 'none',
       ...StyleSheet.absoluteFill,
     },
     // Une bulle : posee en bas au milieu de l'overlay, puis portee vers le haut par son propre transform.
     bubble: {
+      pointerEvents: 'none',
       position: 'absolute',
       left: 0,
       right: 0,

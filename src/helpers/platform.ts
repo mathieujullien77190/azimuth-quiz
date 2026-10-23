@@ -7,6 +7,9 @@ import type { Origin } from '@/types';
 
 const STYLE_ID = 'azimuthquiz-no-select';
 
+/** Le pilote natif des animations n'existe pas sur le web (react-native-web) : y demander `useNativeDriver` journalise un avertissement. */
+export const USE_NATIVE_DRIVER = Platform.OS !== 'web';
+
 /** Sur le web, glisser sur la boussole ou les curseurs selectionne du texte : desactive sauf dans les champs. Sans effet sur mobile. */
 export const disableTextSelection = (): void => {
   if (Platform.OS !== 'web' || typeof document === 'undefined' || document.getElementById(STYLE_ID) !== null) return;

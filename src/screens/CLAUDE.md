@@ -16,11 +16,12 @@ le nom de son fichier (`OnlineGameScreenView.styles.ts`). Les tests rendent le c
 ## Accueil et demarrage (`HomeScreen`)
 
 L'accueil est aussi l'ecran de demarrage. Il montre `AppTitle`, `SwayingCompass` (`HOME_COMPASS_SIZE`) et, dans un pied de hauteur
-fixe (`HOME_FOOTER_HEIGHT`), la `LoadingBar` (barre simulee `buildProgressSteps`, finit a `SPLASH_MIN_MS` = 5 s sur 96-97,5 %, se
-complete puis s'efface) qui laisse la place aux boutons « Jouer » et « Rejoindre » ; `/setup?join=1` ouvre directement la saisie du
-code. La mascotte (reglages) est toujours en haut. `StartupSplash` (racine de `_layout.tsx`) attend que theme, langue, reglages et
-nom soient lus (`useSplashGate`, plafond `SPLASH_MAX_MS` = 15 s) et ecrit `useStartup().loading` ; tant que le theme est inconnu il
-ne peint que `BOOT_BACKGROUND` (pas de flash du mauvais theme). Fond natif = `expo.backgroundColor` (#0B1220).
+fixe (`HOME_FOOTER_HEIGHT`), soit la `LoadingBar` (barre simulee `buildProgressSteps`, finit a `SPLASH_MIN_MS` = 5 s sur 96-97,5 %), soit,
+une fois l'app prete, les boutons « Jouer » et « Rejoindre » : un simple `if`, sans fondu ; `/setup?join=1` ouvre directement la saisie
+du code. La mascotte (reglages) est toujours en haut. L'etat du chargement est **local au container** : l'accueil reste monte toute
+la session, il attend que theme, langue, reglages et nom soient lus (`useSplashGate`, au moins `SPLASH_MIN_MS`, au plus
+`SPLASH_MAX_MS` = 15 s). Tant que le theme est inconnu, il ne peint que `BOOT_BACKGROUND` (pas de flash du mauvais theme). Fond natif =
+`expo.backgroundColor` (#0B1220).
 
 ## Preparation de partie (`SetupScreen`)
 

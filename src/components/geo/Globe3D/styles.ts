@@ -62,6 +62,7 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
     },
     // Au-dessus du satellite, centre sur lui.
     quipWrap: {
+      pointerEvents: 'none',
       position: 'absolute',
       left: -56,
       bottom: 24,

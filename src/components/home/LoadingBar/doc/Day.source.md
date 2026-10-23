@@ -6,7 +6,6 @@ import LoadingBar from '@/components/home/LoadingBar';
 <LoadingBar
   codename={{ emoji: '🐦', name: 'great-tit', wiki: 'https://en.wikipedia.org/wiki/Great_tit' }}
   fillMs={5000}
-  loading={loading}
   loadingLabel={t.splash.loading}
   version="2.65.0"
 />

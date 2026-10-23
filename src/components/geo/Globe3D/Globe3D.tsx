@@ -205,7 +205,7 @@ export const Globe3D = ({ size, origin, marks }: Globe3DProps) => {
             <Text style={styles.satelliteEmoji}>{SATELLITE_EMOJI}</Text>
           </Pressable>
           {showQuip && (
-            <View pointerEvents="none" style={styles.quipWrap}>
+            <View style={styles.quipWrap}>
               <View style={styles.quipBubble}>
                 <Text style={styles.quipText}>{SATELLITE_QUIP}</Text>
               </View>

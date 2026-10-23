@@ -35,7 +35,9 @@ describe('buildProgressSteps', () => {
 
   it.each(SEEDS)('has stalls: at least three plateaus of 100 ms or more (seed %i)', (seed) => {
     const steps = buildProgressSteps(MIN_MS, seeded(seed));
-    const gaps = steps.map((step, index) => step.at - (index === 0 ? 0 : steps[index - 1].at + steps[index - 1].easeMs));
+    const gaps = steps.map(
+      (step, index) => step.at - (index === 0 ? 0 : steps[index - 1].at + steps[index - 1].easeMs),
+    );
     expect(gaps.filter((gap) => gap >= 100).length).toBeGreaterThanOrEqual(3);
   });
 

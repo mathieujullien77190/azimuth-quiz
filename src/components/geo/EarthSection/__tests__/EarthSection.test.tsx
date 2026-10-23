@@ -2,6 +2,7 @@ import { act, fireEvent, render } from '@testing-library/react-native';
 import { Animated } from 'react-native';
 
 import { EARTH_RADIUS_KM } from '@/data';
+import { USE_NATIVE_DRIVER } from '@/helpers';
 import { ThemeSettingsContext } from '@/themes';
 
 import { CAPTION_GLOBE, RESET_HINT, ZOOM_IN_HINT } from '@/components/geo/Globe3D/constants';
@@ -147,7 +148,7 @@ describe('EarthSection — satellite', () => {
     expect(getByText('🛰️')).toBeTruthy();
     expect(timingSpy).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ duration: SATELLITE_ORBIT_MS, toValue: 1, useNativeDriver: true }),
+      expect.objectContaining({ duration: SATELLITE_ORBIT_MS, toValue: 1, useNativeDriver: USE_NATIVE_DRIVER }),
     );
     expect(startMock).toHaveBeenCalledTimes(1);
 

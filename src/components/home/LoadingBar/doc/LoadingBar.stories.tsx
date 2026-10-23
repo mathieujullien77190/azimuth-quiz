@@ -27,7 +27,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const args = {
-  loading: true,
   loadingLabel: 'Chargement…',
   version: '2.65.0',
   codename: { emoji: '🐦', name: 'great-tit', wiki: 'https://en.wikipedia.org/wiki/Great_tit' },

@@ -26,11 +26,11 @@ type Story = StoryObj<typeof meta>;
 /** L'app est prete : « Jouer » et « Rejoindre » au pied de la boussole. */
 export const Ready: Story = {
   parameters: source(readyCode),
-  args: { loading: false, showsBar: false },
+  args: { loading: false },
 };
 
 /** Demarrage : la barre de chargement tient la place des boutons. */
 export const Loading: Story = {
   parameters: source(loadingCode),
-  args: { loading: true, showsBar: true },
+  args: { loading: true },
 };

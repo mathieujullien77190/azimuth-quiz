@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Animated, Easing, View } from 'react-native';
 import Svg, { Circle, G, Line, Polygon, Text as SvgText } from 'react-native-svg';
 
+import { USE_NATIVE_DRIVER } from '@/helpers';
+
 import { useTheme } from '@/themes';
 
 import { DIAL_CENTER, MAX_ANGLE_DEG } from './constants';
@@ -37,13 +39,13 @@ export const SwayingCompass = ({ size, random = Math.random }: SwayingCompassPro
         toValue: plan.swayTo,
         duration: plan.swayMs,
         easing: Easing.linear,
-        useNativeDriver: true,
+        useNativeDriver: USE_NATIVE_DRIVER,
       }),
       Animated.timing(turn, {
         toValue: plan.turnDeg,
         duration: plan.spinMs,
         easing: Easing.inOut(Easing.cubic),
-        useNativeDriver: true,
+        useNativeDriver: USE_NATIVE_DRIVER,
       }),
     ]);
     animation.start(({ finished }) => {

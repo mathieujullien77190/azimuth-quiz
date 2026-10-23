@@ -1,7 +1,6 @@
 import { act, render } from '@testing-library/react-native';
 import { StyleSheet } from 'react-native';
 
-import { FADE_OUT_MS } from '../constants';
 import { buildProgressSteps } from '../helpers';
 import { ThemeSettingsContext } from '@/themes';
 
@@ -11,7 +10,6 @@ beforeEach(() => jest.useFakeTimers());
 afterEach(() => jest.useRealTimers());
 
 const props = {
-  loading: true,
   loadingLabel: 'Chargement…',
   version: '2.65.0',
   codename: { emoji: '🐦', name: 'great-tit', wiki: 'https://en.wikipedia.org/wiki/Great_tit' },
@@ -40,14 +38,11 @@ describe('LoadingBar', () => {
     expect(StyleSheet.flatten(version.props.style).textAlign).toBe('center');
   });
 
-  it('ne capte aucun appui : les boutons de l\'accueil restent utilisables dessous', async () => {
-    const view = await render(<LoadingBar {...props} />);
-    expect((view.toJSON() as unknown as { props: { pointerEvents: string } }).props.pointerEvents).toBe('none');
-  });
-
   it('se dessine aussi avec le theme de jour', async () => {
     const { getByText } = await render(
-      <ThemeSettingsContext.Provider value={{ themeId: 'day', ready: true, setThemeId: jest.fn(), resetThemeId: jest.fn() }}>
+      <ThemeSettingsContext.Provider
+        value={{ themeId: 'day', ready: true, setThemeId: jest.fn(), resetThemeId: jest.fn() }}
+      >
         <LoadingBar {...props} />
       </ThemeSettingsContext.Provider>,
     );
@@ -71,7 +66,7 @@ describe('LoadingBar', () => {
     expect(percentOf(view)).toBe(landed);
   });
 
-  it('avance et n\'atteint jamais 100 % avant d\'etre liberee', async () => {
+  it("avance et n'atteint jamais 100 % avant d'etre liberee", async () => {
     const view = await render(<LoadingBar {...props} />);
     let previous = 0;
     for (let step = 0; step < 50; step += 1) {
@@ -88,16 +83,7 @@ describe('LoadingBar', () => {
     expect(percentOf(view)).toBe(previous);
   });
 
-  it('une fois liberee, se complete pendant le fondu puis se retire', async () => {
-    const view = await render(<LoadingBar {...props} />);
-    await act(async () => jest.advanceTimersByTime(5000));
-    expect(percentOf(view)).toBeLessThan(100);
-    await view.rerender(<LoadingBar {...props} loading={false} />);
-    await act(async () => jest.advanceTimersByTime(FADE_OUT_MS + 50));
-    expect(view.queryByText('Chargement…')).toBeNull();
-  });
-
-  it('tire ses sauts de Math.random quand aucun aleatoire n\'est donne', async () => {
+  it("tire ses sauts de Math.random quand aucun aleatoire n'est donne", async () => {
     const view = await render(<LoadingBar {...props} random={undefined} />);
     expect(view.getByText('0%')).toBeTruthy();
   });

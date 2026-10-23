@@ -16,7 +16,7 @@ import { createStyles } from './HomeScreenView.styles';
 import type { HomeScreenViewProps } from './types';
 
 /** Pur rendu de l'accueil : titre, boussole, puis au pied la barre de chargement ou les boutons. */
-export const HomeScreenView = ({ loading, showsBar, onSettings, onPlay, onJoin }: HomeScreenViewProps) => {
+export const HomeScreenView = ({ loading, onSettings, onPlay, onJoin }: HomeScreenViewProps) => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
 
@@ -33,20 +33,18 @@ export const HomeScreenView = ({ loading, showsBar, onSettings, onPlay, onJoin }
         <SwayingCompass size={HOME_COMPASS_SIZE} />
 
         <View style={styles.footer}>
-          {!loading && (
+          {loading ? (
+            <LoadingBar
+              codename={APP_CODENAME}
+              fillMs={SPLASH_MIN_MS}
+              loadingLabel={t.splash.loading}
+              version={APP_VERSION_NUMBER}
+            />
+          ) : (
             <>
               <Button label={t.home.play} onPress={onPlay} />
               <Button label={t.home.join} onPress={onJoin} variant="ghost" />
             </>
-          )}
-          {showsBar && (
-            <LoadingBar
-              codename={APP_CODENAME}
-              fillMs={SPLASH_MIN_MS}
-              loading={loading}
-              loadingLabel={t.splash.loading}
-              version={APP_VERSION_NUMBER}
-            />
           )}
         </View>
       </View>

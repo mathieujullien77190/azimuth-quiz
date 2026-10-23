@@ -41,8 +41,7 @@ const CustomOriginInputs = ({ latitude, longitude, onChange, disabled }: CustomO
           keyboardType="numbers-and-punctuation"
           onChangeText={onLatChange}
           placeholderTextColor={colors.textMuted}
-          pointerEvents={disabled ? 'none' : 'auto'}
-          style={styles.coordInput}
+          style={[styles.coordInput, { pointerEvents: disabled ? 'none' : 'auto' }]}
           value={latText}
         />
       </View>
@@ -53,8 +52,7 @@ const CustomOriginInputs = ({ latitude, longitude, onChange, disabled }: CustomO
           keyboardType="numbers-and-punctuation"
           onChangeText={onLonChange}
           placeholderTextColor={colors.textMuted}
-          pointerEvents={disabled ? 'none' : 'auto'}
-          style={styles.coordInput}
+          style={[styles.coordInput, { pointerEvents: disabled ? 'none' : 'auto' }]}
           value={lonText}
         />
       </View>

@@ -1,4 +1,5 @@
 import { act, fireEvent, render } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 
 import { RISE_MS } from '../constants';
 import ReactionOverlay from '..';
@@ -31,7 +32,7 @@ describe('ReactionOverlay', () => {
     let node = getByText('🔥').parent;
     const flags: unknown[] = [];
     while (node) {
-      flags.push(node.props.pointerEvents);
+      flags.push(StyleSheet.flatten(node.props.style)?.pointerEvents);
       node = node.parent;
     }
     expect(flags).toContain('none');

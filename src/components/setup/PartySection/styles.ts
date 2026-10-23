@@ -56,6 +56,7 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
     },
     // A gauche de `initials` (meme positionnement absolu a droite), dans la meme boite de champ.
     removeButton: {
+      pointerEvents: 'box-none',
       position: 'absolute',
       right: spacing.xs + 2 + 28 + spacing.sm,
       top: 0,

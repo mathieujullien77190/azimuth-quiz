@@ -14,4 +14,4 @@ export {
   saveThemeId,
   systemLanguage,
 } from './storage';
-export { disableTextSelection, polyfillFlagEmoji } from './platform';
+export { disableTextSelection, polyfillFlagEmoji, USE_NATIVE_DRIVER } from './platform';

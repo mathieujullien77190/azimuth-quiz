@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 
 import ErrorNoticeHost from '@/components/providers/ErrorNoticeHost';
 import LanguageProvider from '@/components/providers/LanguageProvider';
-import StartupSplash from '@/components/providers/StartupSplash';
 import ThemeProvider from '@/components/providers/ThemeProvider';
 import { preloadCounts } from '@/firebase/groupCounts';
 import { disableTextSelection, polyfillFlagEmoji } from '@/helpers';
@@ -48,7 +47,6 @@ const RootLayout = () => {
       <LanguageProvider>
         <ThemedShell />
         <ErrorNoticeHost />
-        <StartupSplash />
       </LanguageProvider>
     </ThemeProvider>
   );

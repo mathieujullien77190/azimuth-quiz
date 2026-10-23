@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { Animated, Easing, Text, View } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 
+import { USE_NATIVE_DRIVER } from '@/helpers';
+
 import { useThemedStyles } from '@/themes';
 
 import { BOTTOM_OFFSET, FADE_IN_END, FADE_OUT_START, RISE_MS } from './constants';
@@ -23,7 +25,12 @@ const ReactionBubble = ({ reaction, travel, onDone }: ReactionBubbleProps) => {
   const { seq } = reaction;
 
   useEffect(() => {
-    Animated.timing(progress, { duration: RISE_MS, easing: Easing.linear, toValue: 1, useNativeDriver: true }).start();
+    Animated.timing(progress, {
+      duration: RISE_MS,
+      easing: Easing.linear,
+      toValue: 1,
+      useNativeDriver: USE_NATIVE_DRIVER,
+    }).start();
     const timeout = setTimeout(() => onDone(seq), RISE_MS);
     return () => {
       clearTimeout(timeout);
@@ -33,7 +40,6 @@ const ReactionBubble = ({ reaction, travel, onDone }: ReactionBubbleProps) => {
 
   return (
     <Animated.View
-      pointerEvents="none"
       style={[
         styles.bubble,
         {
@@ -65,7 +71,7 @@ const ReactionBubble = ({ reaction, travel, onDone }: ReactionBubbleProps) => {
 /**
  * Reactions recues de la room, sur tout l'ecran : chaque nouvelle `reaction` (distinguee par `seq`) est une bulle
  * qui monte du bas (au-dessus du footer) puis disparait. Plusieurs d'affilee ne se remplacent pas. Ne capte jamais
- * le toucher (`pointerEvents="none"`) : le jeu reste jouable dessous.
+ * le toucher (`pointerEvents: 'none'` dans le style) : le jeu reste jouable dessous.
  */
 export const ReactionOverlay = ({ reaction }: ReactionOverlayProps) => {
   const styles = useThemedStyles(createStyles);
@@ -86,14 +92,9 @@ export const ReactionOverlay = ({ reaction }: ReactionOverlayProps) => {
   const travel = Math.max(height - BOTTOM_OFFSET, 0);
 
   return (
-    <View onLayout={onLayout} pointerEvents="none" style={styles.overlay}>
+    <View onLayout={onLayout} style={styles.overlay}>
       {bubbles.map((bubble) => (
-        <ReactionBubble
-          key={bubble.seq}
-          onDone={removeBubble}
-          reaction={bubble}
-          travel={travel}
-        />
+        <ReactionBubble key={bubble.seq} onDone={removeBubble} reaction={bubble} travel={travel} />
       ))}
     </View>
   );

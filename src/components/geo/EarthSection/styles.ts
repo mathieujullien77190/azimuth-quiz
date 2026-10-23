@@ -91,6 +91,7 @@ export const createStyles = ({ colors, typography }: Theme) =>
     },
     // Contre-rotation par rapport a l'orbite (voir satelliteAngle) pour rester lisible quel que soit l'angle.
     quipWrap: {
+      pointerEvents: 'none',
       position: 'absolute',
       left: 14,
       top: -14,

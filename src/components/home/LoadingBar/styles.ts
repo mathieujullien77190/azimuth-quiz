@@ -5,9 +5,9 @@ import type { Theme } from '@/types';
 
 export const createStyles = ({ colors, isDark, typography }: Theme) =>
   StyleSheet.create({
-    // Pose sur le pied de l'accueil (a la place de ses boutons) : meme hauteur, contenu colle en bas.
+    // Tient la place des boutons de l'accueil : contenu colle en bas du pied.
     footer: {
-      ...StyleSheet.absoluteFill,
+      alignSelf: 'stretch',
       alignItems: 'center',
       justifyContent: 'flex-end',
       gap: spacing.md,

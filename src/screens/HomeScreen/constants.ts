@@ -3,3 +3,6 @@
  * pas choisir nuit/jour avant de connaitre le theme.
  */
 export const BOOT_BACKGROUND = '#0B1220';
+
+/** Plein ecran de la couleur de demarrage. */
+export const BOOT_STYLE = { flex: 1, backgroundColor: BOOT_BACKGROUND };

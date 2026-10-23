@@ -1,8 +1,6 @@
 /** Le libelle « chargement » respire entre ces opacites, un sens en `BLINK_MS`. */
 export const BLINK_MIN_OPACITY = 0.35;
 export const BLINK_MS = 700;
-/** Duree du fondu de sortie une fois l'app prete (ms). */
-export const FADE_OUT_MS = 250;
 /**
  * Forme de la barre (`buildProgressSteps`) : depart et duree de chaque keyframe en parts du temps minimum, et
  * cible (pourcent). Sauts rapides (`ease` court), passages lents (`ease` long) et blocages (ecarts entre

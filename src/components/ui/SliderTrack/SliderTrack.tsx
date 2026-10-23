@@ -54,7 +54,7 @@ export const SliderTrack = ({ label, valueText, caption, ratio, marks, onRatioCh
         style={styles.touchArea}
         {...panResponder.panHandlers}
       >
-        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}>
           <View style={styles.track} />
           <View style={[styles.fill, { width: center }]} />
           {marks.map((mark) => (

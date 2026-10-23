@@ -1,14 +1,12 @@
 import type { Codename } from '@/helpers/appInfo';
 
 export type LoadingBarProps = {
-  /** Vrai tant que le chargement dure ; une fois faux, la barre se complete, s'efface et se retire. */
-  loading: boolean;
   /** "Chargement…". */
   loadingLabel: string;
   /** Ligne de version en bas, « v2.65.0 - 🐦 - great-tit » (`VersionLine` : le nom de l'animal renvoie a Wikipedia). */
   version: string;
   codename: Codename | undefined;
-  /** Temps minimum du chargement (ms) : le calendrier de la barre finit alors, sous 100 %, jusqu'a la liberation. */
+  /** Temps minimum du chargement (ms) : le calendrier de la barre finit alors, sous 100 %. */
   fillMs: number;
   /** Source des blocages et sauts (`Math.random` par defaut) : un test passe la sienne pour un rendu fixe. */
   random?: () => number;

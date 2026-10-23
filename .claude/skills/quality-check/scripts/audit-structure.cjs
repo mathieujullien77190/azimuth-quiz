@@ -32,7 +32,6 @@ const NO_STORY_OK = {
   useSetupRoom: 'hook, not a component',
   HelicopterButton: 'shown through MascotButton',
   UfoButton: 'shown through MascotButton',
-  StartupSplash: 'gate mounted once at the root, paints only the boot colour',
   GearIcon: 'shown through MascotButton',
 };
 

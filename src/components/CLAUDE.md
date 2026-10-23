@@ -6,7 +6,7 @@ Composants reutilisables, ranges par role. Un composant = un dossier `index.ts` 
 | Dossier | Contenu |
 |---|---|
 | `ui/` | primitives : Button, Card, Chip, MiniButton, QuitButton, Screen, Section, SliderTrack, Spinner, Toggle, DifficultyBadge, RoundCounter, VersionLine, NoticeOverlay, ColorPalette |
-| `providers/` | ThemeProvider, LanguageProvider, StartupSplash (chargement de depart), ErrorNoticeHost |
+| `providers/` | ThemeProvider, LanguageProvider, ErrorNoticeHost |
 | `home/` | AppTitle, LoadingBar, SwayingCompass, MascotButton (+ GearIcon, UfoButton, HelicopterButton) |
 | `geo/` | Compass (cadran qu'on regle), Globe3D, EarthSection |
 | `game/` | GameHeader, GameFooter, FooterNav, PlaceCard, RoundResult, RoundsRecap, FinalStandings, ReactionBar, ReactionOverlay |

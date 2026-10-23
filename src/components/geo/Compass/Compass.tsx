@@ -11,6 +11,8 @@ import type { CompassNeedle, CompassProps } from './types';
 // Reference stable : sinon la memoisation du cadran casse a chaque rendu.
 const NO_NEEDLES: CompassNeedle[] = [];
 
+const NO_TOUCH: ViewStyle = { pointerEvents: 'none' };
+
 export const Compass = ({ size, needles = NO_NEEDLES, truthBearing = null, onChange }: CompassProps) => {
   const t = useTranslation();
   const interactive = onChange !== undefined;
@@ -54,7 +56,7 @@ export const Compass = ({ size, needles = NO_NEEDLES, truthBearing = null, onCha
       ]}
       {...(interactive ? panResponder.panHandlers : {})}
     >
-      <View pointerEvents="none">
+      <View style={NO_TOUCH}>
         <CompassDial needles={needles} size={size} truthBearing={truthBearing} />
       </View>
     </View>
