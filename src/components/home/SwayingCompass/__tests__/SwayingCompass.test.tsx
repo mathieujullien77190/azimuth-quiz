@@ -1,9 +1,10 @@
-import { act, fireEvent, render } from '@testing-library/react-native';
-import { Animated, StyleSheet } from 'react-native';
+import { act, render } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 
 import { ThemeSettingsContext } from '@/themes';
 
 import SwayingCompass from '..';
+import { SWAY_TOTAL_MS } from '../constants';
 
 beforeEach(() => jest.useFakeTimers());
 afterEach(() => jest.useRealTimers());
@@ -26,34 +27,21 @@ describe('SwayingCompass', () => {
     expect(toJSON()).not.toBeNull();
   });
 
-  it("oscille puis s'arrete au bout d'une minute", async () => {
-    const { unmount } = await render(<SwayingCompass size={200} />);
-    await act(async () => jest.advanceTimersByTime(61000));
+  it('enchaine plusieurs cycles balancier + tours sans erreur, puis se demonte', async () => {
+    const random = jest.fn(() => 0.5);
+    const { unmount } = await render(<SwayingCompass random={random} size={200} />);
+    // Premier cycle (de 5,5 a 14,5 sens + tours), puis au moins un cycle suivant.
+    await act(async () => jest.advanceTimersByTime(SWAY_TOTAL_MS));
+    await act(async () => jest.advanceTimersByTime(SWAY_TOTAL_MS));
+    expect(random.mock.calls.length).toBeGreaterThanOrEqual(6);
     await unmount();
   });
 
-  describe('appui', () => {
-    // Avec le pilote natif, `stopAnimation` rend la valeur de facon asynchrone: les tests la fournissent.
-    const stopAt = (value: number) =>
-      jest.spyOn(Animated.Value.prototype, 'stopAnimation').mockImplementation(function (callback) {
-        callback?.(value);
-      });
-    afterEach(() => jest.restoreAllMocks());
-
-    it("repart avec de l'elan dans le sens ou va l'aiguille, en plein balancement", async () => {
-      stopAt(0.02);
-      const { getByLabelText, unmount } = await render(<SwayingCompass size={200} />);
-      await fireEvent.press(getByLabelText('Boussole'));
-      await act(async () => jest.advanceTimersByTime(1000));
-      await unmount();
-    });
-
-    it("repart aussi quand l'aiguille est presque calmee", async () => {
-      stopAt(0.95);
-      const { getByLabelText, unmount } = await render(<SwayingCompass size={200} />);
-      await fireEvent.press(getByLabelText('Boussole'));
-      await act(async () => jest.advanceTimersByTime(1000));
-      await unmount();
-    });
+  it("tire son aleatoire de Math.random quand aucun n'est donne", async () => {
+    const spy = jest.spyOn(Math, 'random');
+    const { unmount } = await render(<SwayingCompass size={200} />);
+    expect(spy).toHaveBeenCalled();
+    await unmount();
+    spy.mockRestore();
   });
 });
