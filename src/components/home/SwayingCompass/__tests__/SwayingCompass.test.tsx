@@ -24,9 +24,9 @@ describe('SwayingCompass', () => {
     expect(toJSON()).not.toBeNull();
   });
 
-  it("oscille sans fin puis s'arrete au demontage", async () => {
+  it("oscille puis s'arrete au bout d'une minute", async () => {
     const { unmount } = await render(<SwayingCompass size={200} />);
-    await act(async () => jest.advanceTimersByTime(8000));
+    await act(async () => jest.advanceTimersByTime(61000));
     await unmount();
   });
 });

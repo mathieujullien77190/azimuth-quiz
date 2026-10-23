@@ -4,13 +4,14 @@ import Svg, { Circle, G, Line, Polygon, Text as SvgText } from 'react-native-svg
 
 import { useTheme } from '@/themes';
 
-import { DIAL_CENTER, NEEDLE_FROM_DEG, NEEDLE_TO_DEG, SWAY_MS } from './constants';
+import { DIAL_CENTER, SWAY_MS } from './constants';
+import { swayAngles } from './helpers';
 import type { SwayingCompassProps } from './types';
 
 import { createStyles } from './styles';
 
 /**
- * Cadran de boussole dont l'aiguille oscille sans fin entre deux caps (decor de l'accueil).
+ * Cadran de boussole dont l'aiguille oscille de moins en moins autour du nord, puis s'immobilise au bout d'une minute (decor de l'accueil).
  */
 export const SwayingCompass = ({ size }: SwayingCompassProps) => {
   const { colors, compass, isDark, typography } = useTheme();
@@ -18,9 +19,12 @@ export const SwayingCompass = ({ size }: SwayingCompassProps) => {
   const [sway] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
-    const leg = (toValue: number) =>
-      Animated.timing(sway, { toValue, duration: SWAY_MS, easing: Easing.inOut(Easing.ease), useNativeDriver: true });
-    const swing = Animated.loop(Animated.sequence([leg(1), leg(0)]));
+    // `sway` est l'angle de l'aiguille en degres ; chaque sens est un aller doux vers le cap suivant.
+    const swing = Animated.sequence(
+      swayAngles().map((toValue) =>
+        Animated.timing(sway, { toValue, duration: SWAY_MS, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ),
+    );
     swing.start();
     return () => swing.stop();
   }, [sway]);
@@ -73,10 +77,7 @@ export const SwayingCompass = ({ size }: SwayingCompassProps) => {
           {
             transform: [
               {
-                rotate: sway.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [`${NEEDLE_FROM_DEG}deg`, `${NEEDLE_TO_DEG}deg`],
-                }),
+                rotate: sway.interpolate({ inputRange: [-180, 180], outputRange: ['-180deg', '180deg'] }),
               },
             ],
           },

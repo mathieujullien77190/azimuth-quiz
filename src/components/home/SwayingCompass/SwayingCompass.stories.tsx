@@ -15,7 +15,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Boussole de l'accueil : l'aiguille oscille sans fin entre deux caps. Suit le theme et la taille demandee. */
+/** Boussole de l'accueil : l'aiguille oscille de moins en moins, puis s'immobilise au nord apres une minute. Suit le theme et la taille demandee. */
 export const Default: Story = {
   parameters: source(defaultCode),
 };
