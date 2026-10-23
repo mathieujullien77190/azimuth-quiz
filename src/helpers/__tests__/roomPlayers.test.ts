@@ -1,4 +1,4 @@
-import type { RoomPlayers } from '../../firebase/roomApi';
+import type { RoomPlayers } from '../../firebase/room';
 import { freePlaceholder, isNameTaken, isNameTakenError, nameTakenError, onlinePlayersFrom } from '../roomPlayers';
 
 describe('onlinePlayersFrom', () => {

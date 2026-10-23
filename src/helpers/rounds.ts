@@ -1,4 +1,5 @@
-import type { Coordinates, Origin, Place } from '@/types';
+import type { Language } from '@/i18n';
+import type { Coordinates, Difficulty, Origin, Place } from '@/types';
 
 /** Ce dont depend le depart : point de depart de la room, lieux tires, manche jouee. */
 type RoundOrigin = { origin: Origin | null; places: Place[]; roundIndex: number };
@@ -32,4 +33,16 @@ export const separateRepeats = (places: Place[]): Place[] => {
     if (other !== -1) [result[index], result[other]] = [result[other], result[index]];
   }
   return result;
+};
+
+const DIFFICULTY_ORDER: Difficulty[] = ['easy', 'intermediate', 'hard'];
+
+/**
+ * Un lieu francais est "chez soi" pour un francophone : releve d'un cran de difficulte en anglais (plafond
+ * 'hard'). Inchange en francais et pour les autres pays.
+ */
+export const effectiveDifficulty = (place: Pick<Place, 'code' | 'difficulty'>, language: Language): Difficulty => {
+  if (language !== 'en' || place.code !== 'FR') return place.difficulty;
+  const index = DIFFICULTY_ORDER.indexOf(place.difficulty);
+  return DIFFICULTY_ORDER[Math.min(index + 1, DIFFICULTY_ORDER.length - 1)];
 };

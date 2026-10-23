@@ -4,8 +4,8 @@ import type { Counts, PlaceDoc } from '@/firebase/types';
 import { DEFAULT_SETTINGS } from '@/data/game';
 import type { Category, Difficulty, GameSettings } from '@/types';
 
-import { clearCounts } from '../../helpers/counts';
-import { clearCursors, loadCursors, saveCursors } from '../../helpers/cursors';
+import { clearCounts } from '../groupCounts';
+import { clearCursors, loadCursors, saveCursors } from '../../helpers/groupCursors';
 import { fetchRandomPlaces } from '../places';
 
 type Filter = { field: string; op: string; value: unknown };

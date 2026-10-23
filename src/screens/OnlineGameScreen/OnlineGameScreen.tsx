@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import { PLAYER_COLORS } from '@/data';
 import { MAX_SURFACE_DISTANCE_KM } from '@/data/game';
-import { originForRound, travelFromPlace } from '@/helpers/originForRound';
+import { originForRound, travelFromPlace } from '@/helpers/rounds';
 import { bearingDeg, distanceKm as computeDistanceKm } from '@/helpers';
 import type { OnlinePlayer } from '@/helpers/roomPlayers';
 import { useTranslation } from '@/i18n';

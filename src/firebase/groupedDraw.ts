@@ -5,7 +5,7 @@ import { COLLECTIONS, type Counts, type PlaceDoc } from '@/firebase/types';
 import type { Category, Difficulty } from '@/types';
 
 import { db } from './client';
-import type { GroupCursors } from '../helpers/groupCursors';
+import type { Cursors } from '../helpers/groupCursors';
 import { shuffle, splitEvenly } from '../helpers/utils';
 
 // Hors du barrel de `helpers/index.ts` : `firebase/firestore` est ESM seul et fait planter Jest.
@@ -59,8 +59,8 @@ export type GroupedDrawOptions<T> = {
   categoryField: string;
   numberField: string;
   counts: Counts;
-  cursors: GroupCursors;
-  saveCursors: (moved: GroupCursors) => void;
+  cursors: Cursors;
+  saveCursors: (moved: Cursors) => void;
   categories: Category[];
   /** Difficultes stockees lues : `[difficulty]`, plus celle du dessous si refiltrage. */
   tiers: Difficulty[];

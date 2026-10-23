@@ -33,7 +33,7 @@ export const DEFAULT_DISTANCE_KM = 1000;
 // --- Storage ---
 export const BEST_SCORE_STORAGE_KEY = 'azimuthquiz:best-score';
 export const SETTINGS_STORAGE_KEY = 'azimuthquiz:settings';
-/** Position de l'appareil dans chaque groupe de lieux (voir `helpers/cursors.ts`). */
+/** Position de l'appareil dans chaque groupe de lieux (voir `helpers/groupCursors.ts`). */
 export const CURSORS_STORAGE_KEY = 'azimuthquiz:compass-cursors';
 
 // Libelle/description : voir translations.setup.categories (meme id).

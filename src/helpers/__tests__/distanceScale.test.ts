@@ -1,6 +1,6 @@
 import { MIN_DISTANCE_KM } from '@/data/game';
 
-import { kmToRatio, ratioToKm } from '../distanceScale';
+import { kmToRatio, ratioToKm } from '../scoring';
 
 describe('ratioToKm', () => {
   it('returns MIN_DISTANCE_KM at ratio 0', () => {

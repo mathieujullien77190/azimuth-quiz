@@ -1,6 +1,6 @@
 import { getDoc } from 'firebase/firestore';
 
-import { clearCounts, loadCounts, preloadCounts } from '../counts';
+import { clearCounts, loadCounts, preloadCounts } from '../groupCounts';
 
 jest.mock('firebase/firestore', () => ({ doc: jest.fn(() => 'countsRef'), getDoc: jest.fn() }));
 jest.mock('@/firebase/client', () => ({ db: {} }));
@@ -13,7 +13,7 @@ beforeEach(() => {
   clearCounts();
 });
 
-describe('counts', () => {
+describe('groupCounts', () => {
   it('reads the document once and shares it', async () => {
     jest.mocked(getDoc).mockResolvedValue({ data: () => ({ counts }) } as never);
 

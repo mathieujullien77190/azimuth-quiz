@@ -1,6 +1,5 @@
-import type { RoomGameState, RoomSettings } from '@/firebase/room';
+import type { RoomGameState, RoomSettings , RoomPlayers, RoomReaction } from '@/firebase/room';
 import { subscribeToRoomGame, subscribeToRoomPlayers, subscribeToRoomSettings } from '@/firebase/room';
-import type { RoomPlayers, RoomReaction } from '@/firebase/roomApi';
 
 import { useRoomStore } from '../roomStore';
 

@@ -4,10 +4,10 @@ import { CURSORS_STORAGE_KEY } from '@/data/game';
 
 // Le module cache dans des variables : chaque test en a une copie neuve.
 const freshModule = () => {
-  let mod!: typeof import('../cursors');
+  let mod!: typeof import('../groupCursors');
   jest.isolateModules(() => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.isolateModules exige un require synchrone, pas un import() dynamique
-    mod = require('../cursors');
+    mod = require('../groupCursors');
   });
   return mod;
 };
@@ -18,7 +18,7 @@ beforeEach(async () => {
   await AsyncStorage.clear();
 });
 
-describe('cursors', () => {
+describe('groupCursors', () => {
   it('starts with no cursor', async () => {
     const { loadCursors } = freshModule();
 

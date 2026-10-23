@@ -2,7 +2,7 @@ import { reporting } from '@/helpers/errors';
 import { useEffect, useMemo, useState } from 'react';
 
 import type { Counts } from '@/firebase/types';
-import { loadCounts } from '@/helpers/counts';
+import { loadCounts } from '@/firebase/groupCounts';
 import { useSettings } from '@/settings';
 
 import { selectDifficultyFilter, toggleCategoryFilter } from './helpers';

@@ -46,7 +46,7 @@ export const NAME_PLACEHOLDERS = [
 // Teintes espacees d'environ 50 deg, loin de l'ambre/jaune de l'accent et de la couleur « verite » (rien entre 3 et 85 deg).
 export const PLAYER_COLORS = ['#EF4444', '#16A34A', '#0891B2', '#2563EB', '#9333EA', '#DB2777'] as const;
 
-/** `PLAYER_COLORS` etendues a `ROOM_MAX_PLAYERS` (firebase/roomApi.ts), toujours hors de la bande ambre/jaune. */
+/** `PLAYER_COLORS` etendues a `ROOM_MAX_PLAYERS` (firebase/room.ts), toujours hors de la bande ambre/jaune. */
 export const ROOM_PLAYER_COLORS = [...PLAYER_COLORS, '#0D9488', '#4F46E5', '#C026D3', '#E11D48'] as const;
 
 /** Emoji de chaque jeu (carte d'accueil et en-tete de preparation). */

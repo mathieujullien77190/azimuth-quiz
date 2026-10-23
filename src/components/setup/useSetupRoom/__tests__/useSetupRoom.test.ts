@@ -7,7 +7,7 @@ import { useRoomStore } from '@/store/roomStore';
 import { loadLastJoinedRoom } from '@/helpers/storage';
 import { resetErrorThrottle, setErrorReporter } from '@/helpers/errors';
 import { nameTakenError } from '@/helpers/roomPlayers';
-import type { RoomPlayers } from '@/firebase/roomApi';
+import type { RoomPlayers } from '@/firebase/room';
 import { usePlayerName } from '@/settings';
 
 import type { SetupRoomAdapter } from '../types';

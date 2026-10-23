@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, fireEvent, render, waitFor, within } from '@testing-library/react-native';
 
 import { DEFAULT_SETTINGS } from '@/data/game';
-import { loadCounts } from '@/helpers/counts';
+import { loadCounts } from '@/firebase/groupCounts';
 import {
   createRoom,
   joinRoomPresence,
@@ -24,10 +24,10 @@ jest.mock('@/settings', () => {
   return { ...actual, useSettings: jest.fn() };
 });
 // `firebase/room.ts` charge `firebase/firestore` (ESM seul, plante Jest) : mocke, ces tests visent l'UI.
-// Meme raison : `firestorePlaces.ts` importe `firebase/firestore`.
+// Meme raison : `firebase/places.ts` importe `firebase/firestore`.
 jest.mock('@/firebase/places', () => ({ fetchRandomPlaces: jest.fn() }));
 // Les tailles de groupes viennent aussi de Firestore.
-jest.mock('@/helpers/counts', () => ({ loadCounts: jest.fn() }));
+jest.mock('@/firebase/groupCounts', () => ({ loadCounts: jest.fn() }));
 jest.mock('@/firebase/room', () => ({
   ROOM_MAX_PLAYERS: 10,
   createRoom: jest.fn(),

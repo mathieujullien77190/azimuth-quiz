@@ -2,7 +2,7 @@ import { reporting } from '@/helpers/errors';
 import { useEffect, useRef, useState } from 'react';
 
 import { DEFAULT_DISTANCE_KM } from '@/data/game';
-import { originForRound } from '@/helpers/originForRound';
+import { originForRound } from '@/helpers/rounds';
 import { applyBestBonus, scoreRound } from '@/helpers';
 import { useOnlineRoomSession } from '@/helpers/roomHooks';
 import {

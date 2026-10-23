@@ -1,38 +1,34 @@
-import { reporting } from '../helpers/errors';
 import { doc, getDoc } from 'firebase/firestore';
 
-import type { Counts } from '@/firebase/types';
+import { COUNTS_DOC, type Counts } from '@/firebase/types';
+import { reporting } from '@/helpers/errors';
 
 import { db } from './client';
 
 // Hors du barrel de `helpers/index.ts` : `firebase/firestore` est ESM seul et fait planter Jest.
 
+let loading: Promise<Counts> | null = null;
+
 /**
- * Charge les tailles de groupes (`meta/compassCounts`) : lues une fois et partagees,
+ * Tailles des groupes de lieux (`meta/compassCounts`, voir `fetchRandomPlaces`) : lues une fois et partagees,
  * un echec n'est pas garde. Elles ne changent que si l'admin edite les lieux : relues au lancement suivant.
  */
-export const createGroupCounts = <C = Counts>(source: { collection: string; id: string }) => {
-  let loading: Promise<C> | null = null;
-
-  const load = (): Promise<C> => {
-    loading ??= getDoc(doc(db, source.collection, source.id))
-      .then((snapshot) => ((snapshot.data() ?? { counts: {} }) as { counts: C }).counts)
-      .catch((error: unknown) => {
-        loading = null;
-        throw error;
-      });
-    return loading;
-  };
-
-  return {
-    load,
-    /** Lance la lecture sans l'attendre (lancement) ; un echec est silencieux, le demarrage relit. */
-    preload: (): void => {
-      load().catch(reporting('draw.preloadCounts', { kind: 'background' }));
-    },
-    /** Oublie la lecture partagee. */
-    clear: (): void => {
+export const loadCounts = (): Promise<Counts> => {
+  loading ??= getDoc(doc(db, COUNTS_DOC.collection, COUNTS_DOC.id))
+    .then((snapshot) => ((snapshot.data() ?? { counts: {} }) as { counts: Counts }).counts)
+    .catch((error: unknown) => {
       loading = null;
-    },
-  };
+      throw error;
+    });
+  return loading;
+};
+
+/** Lance la lecture sans l'attendre (lancement) ; un echec est silencieux, le demarrage relit. */
+export const preloadCounts = (): void => {
+  loadCounts().catch(reporting('draw.preloadCounts', { kind: 'background' }));
+};
+
+/** Oublie la lecture partagee. */
+export const clearCounts = (): void => {
+  loading = null;
 };

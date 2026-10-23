@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { REACTION_COOLDOWN_MS, REACTIONS_PER_GAME } from '@/data';
 import { useRoomStore } from '@/store/roomStore';
 
-import type { RoomPlayers, RoomReaction } from '../firebase/roomApi';
+import type { RoomPlayers, RoomReaction } from '../firebase/room';
 import { reporting } from './errors';
 import { onlinePlayersFrom } from './roomPlayers';
 

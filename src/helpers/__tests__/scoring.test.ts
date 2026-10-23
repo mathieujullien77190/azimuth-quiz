@@ -7,9 +7,8 @@ import {
 } from '@/data/game';
 import type { Coordinates, Guess, Place, PlayerResult } from '@/types';
 
-import { roundDistance } from '../distanceScale';
 import { bearingDeg, distanceKm, rhumbDestination } from '@/helpers/geo';
-import { applyBestBonus, scoreRound } from '../scoring';
+import { applyBestBonus, roundDistance, scoreRound } from '../scoring';
 
 const origin: Coordinates = { latitude: 48.8566, longitude: 2.3522 };
 const place: Place = {

@@ -21,9 +21,9 @@ src/
   components/   # ui/ (primitives : Button, Card, Chip, Screen...), providers/ (Theme, Language, StartupSplash, ErrorNoticeHost), home/ (AppTitle, LoadingBar, SwayingCompass, MascotButton), geo/ (Compass, Globe3D, EarthSection), game/ (GameHeader/GameFooter, FooterNav, PlaceCard, RoundResult, RoundsRecap, FinalStandings, Reaction*), setup/ (preparation de partie)
   screens/      # un dossier par ecran : HomeScreen, SettingsScreen, SetupScreen, OnlineGameScreen, EndScreen, RoomDeletedScreen (container + vue pour les ecrans de jeu)
   data/         # valeurs partagees (score/geo, options, palette), game.ts (categories, reglages par defaut), theme.ts
-  firebase/     # TOUT ce qui touche Firebase/Firestore : client.ts, roomApi.ts, room.ts, places.ts, roomCode.ts, errorSink.ts, groupCounts.ts, groupedDraw.ts + types des documents (types.ts), read.ts, numbering.ts, journal.ts (partages avec l'admin)
+  firebase/     # TOUT ce qui touche Firebase/Firestore : client.ts, room.ts, places.ts, roomCode.ts, errorSink.ts, groupCounts.ts, groupedDraw.ts + types des documents (types.ts), read.ts, numbering.ts, journal.ts (partages avec l'admin)
   store/        # UN seul store Zustand concret, `useRoomStore` (roomStore.ts : etat + actions connect/disconnect/drapeaux), types dans types.ts
-  helpers/      # sans Firebase, regroupes par theme : geo, utils (format, random, splitEvenly), platform (web, drapeaux, goBack, position), storage (AsyncStorage : reglages, langue, theme, nom, derniere room), errors (reportError + notice), appInfo (version), hooks, roomPlayers (+ noms), roomHooks (session, presence, reactions, purge), groupCursors
+  helpers/      # sans Firebase, regroupes par theme : geo, utils (format, random, splitEvenly), platform (web, drapeaux, goBack, position), storage (AsyncStorage : reglages, langue, theme, nom, derniere room), errors (reportError + notice), appInfo (version), hooks, roomPlayers (+ noms), roomHooks (session, presence, reactions, purge), groupCursors (curseurs de tirage), scoring (score + echelle de distance), rounds (depart de manche, mode voyage, difficulte effective)
   settings/     # GameSettings (store Zustand singleton), usePlayerName
   themes/       # night.ts, day.ts, fonts.ts, ThemeContext
   types/
@@ -48,8 +48,8 @@ reglages (requis par `useSetupRoom`, jamais envoye dans la room) ; `onChangeName
 
 Collection `rooms`, champ `game` (`'compass'`) immuable, fixe a la creation. Un code d'un autre jeu est refuse a la jonction.
 
-- **Firestore** : `firebase/roomApi.ts` (`createRoomApi(game)`) ; chaque `firebase/room.ts` le lie et ajoute l'etat de
-  manche. **Tout champ qu'un joueur non hote ecrit doit figurer dans sa liste de champs** de `firestore.rules`
+- **Firestore** : `firebase/room.ts` (creer/rejoindre/quitter, presence, couleurs, reglages, puis l'etat de
+  manche ; le champ `game` ecrit vaut `'compass'`). **Tout champ qu'un joueur non hote ecrit doit figurer dans sa liste de champs** de `firestore.rules`
   (`compassPlayer`), sinon l'ecriture est refusee et l'action « revient ».
 - **Store** : `store/roomStore.ts` = `useRoomStore`, store unique de la room (pas de fabrique ni de generiques) ; `useSetupRoom` et les hooks de `helpers/roomHooks.ts` l'importent directement (les tests le remplissent par `setState` et mockent `@/firebase/room`). **Setup** : `components/setup/useSetupRoom` + sections `*Section`.
 - **Ecran de jeu** : `useOnlineRoomSession` (etat, hote, joueurs dans l'ordre d'arrivee, redirection « room supprimee », `handleQuit`), `useGuessDraft`.

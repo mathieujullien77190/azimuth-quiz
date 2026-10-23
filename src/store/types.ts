@@ -1,5 +1,4 @@
-import type { RoomPlayers, RoomReaction } from '@/firebase/roomApi';
-import type { RoomGameState, RoomSettings } from '@/firebase/room';
+import type { RoomPlayers, RoomReaction , RoomGameState, RoomSettings } from '@/firebase/room';
 
 // Imports de type seul : effaces a la compilation, ce fichier ne tire pas `firebase/firestore` a l'execution.
 

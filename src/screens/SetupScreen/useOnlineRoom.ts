@@ -2,7 +2,7 @@ import { useSetupRoom, type SetupRoomAdapter } from '@/components/setup/useSetup
 import { ROOM_PLAYER_COLORS } from '@/data';
 import { resolveOrigin } from '@/helpers';
 import { fetchRandomPlaces } from '@/firebase/places';
-import { separateRepeats } from '@/helpers/originForRound';
+import { separateRepeats } from '@/helpers/rounds';
 import {
   ROOM_MAX_PLAYERS,
   type RoomSettings,
