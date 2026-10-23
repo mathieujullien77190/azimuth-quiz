@@ -5,13 +5,13 @@ import { useThemedStyles } from '@/themes';
 
 import Compass from '@/components/geo/Compass';
 import EarthSection from '@/components/geo/EarthSection';
-import FooterNav from '../../components/game/FooterNav';
+import FooterNav from '@/components/game/FooterNav';
 import GameFooter from '@/components/game/GameFooter';
 import ReactionOverlay from '@/components/game/ReactionOverlay';
 import GameHeader from '@/components/game/GameHeader';
 import { compassSizeFor, distanceSliderMarks, earthSizeFor } from './helpers';
-import PlaceCard from '../../components/game/PlaceCard';
-import RoundResult from '../../components/game/RoundResult';
+import PlaceCard from '@/components/game/PlaceCard';
+import RoundResult from '@/components/game/RoundResult';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Screen from '@/components/ui/Screen';

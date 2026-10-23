@@ -5,7 +5,7 @@ import { DEFAULT_SETTINGS } from '@/data/game';
 import type { Category, Difficulty, GameSettings } from '@/types';
 
 import { clearCounts } from '../groupCounts';
-import { clearCursors, loadCursors, saveCursors } from '../../helpers/groupCursors';
+import { clearCursors, loadCursors, saveCursors } from '@/helpers/groupCursors';
 import { fetchRandomPlaces } from '../places';
 
 type Filter = { field: string; op: string; value: unknown };

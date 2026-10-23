@@ -6,11 +6,11 @@ import { useSettings } from '@/settings';
 import { useThemedStyles, useThemeSettings } from '@/themes';
 import type { ThemeId } from '@/types';
 
-import Button from '../../components/ui/Button';
-import Chip from '../../components/ui/Chip';
-import Screen from '../../components/ui/Screen';
-import Section from '../../components/ui/Section';
-import VersionLine from '../../components/ui/VersionLine';
+import Button from '@/components/ui/Button';
+import Chip from '@/components/ui/Chip';
+import Screen from '@/components/ui/Screen';
+import Section from '@/components/ui/Section';
+import VersionLine from '@/components/ui/VersionLine';
 import { APP_CODENAME, APP_VERSION_NUMBER } from './constants';
 import type { SettingsScreenProps } from './types';
 

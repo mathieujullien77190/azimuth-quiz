@@ -103,7 +103,9 @@ for (const { dir, name, files } of folders) {
   const tests = fs.existsSync(testsDir) ? fs.readdirSync(testsDir) : [];
   if (!skipComponent && !tests.some((f) => /\.test\.tsx?$/.test(f))) problem(where, 'no test in __tests__/');
 
-  const stories = files.filter((f) => f.endsWith('.stories.tsx'));
+  const docFolder = path.join(dir, 'doc');
+  const stories = (fs.existsSync(docFolder) ? fs.readdirSync(docFolder) : []).filter((f) => f.endsWith('.stories.tsx'));
+  if (files.some((f) => f.endsWith('.stories.tsx'))) problem(where, 'a story must live in the doc/ sub-folder');
   if (stories.length === 0 && !NO_STORY_OK[name]) {
     problem(where, 'no story (a dumb component needs one; if it is a smart container, add it to NO_STORY_OK)');
   }
@@ -152,18 +154,13 @@ for (const file of storyFiles) {
 // ---- .source.md nobody imports
 const seenMd = new Set();
 for (const file of storyFiles) {
-  const dir = path.dirname(file);
-  if (seenMd.has(dir)) continue;
-  seenMd.add(dir);
-  const stories = fs.readdirSync(dir).filter((f) => f.endsWith('.stories.tsx'));
-  const texts = stories.map((f) => read(path.join(dir, f))).join('\n');
-  const docDir = path.join(dir, 'doc');
-  const docs = fs.existsSync(docDir) ? fs.readdirSync(docDir) : [];
-  for (const md of docs.filter((f) => f.endsWith('.source.md'))) {
-    if (!texts.includes('./doc/' + md)) problem(rel(path.join(docDir, md)), 'not imported by any story');
-  }
-  for (const md of fs.readdirSync(dir).filter((f) => f.endsWith('.source.md'))) {
-    problem(rel(path.join(dir, md)), '.source.md must live in the doc/ sub-folder');
+  const docDir = path.dirname(file);
+  if (seenMd.has(docDir)) continue;
+  seenMd.add(docDir);
+  const stories = fs.readdirSync(docDir).filter((f) => f.endsWith('.stories.tsx'));
+  const texts = stories.map((f) => read(path.join(docDir, f))).join('\n');
+  for (const md of fs.readdirSync(docDir).filter((f) => f.endsWith('.source.md'))) {
+    if (!texts.includes('./' + md)) problem(rel(path.join(docDir, md)), 'not imported by any story');
   }
 }
 

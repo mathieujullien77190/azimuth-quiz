@@ -4,7 +4,7 @@ import { REACTION_COOLDOWN_MS, REACTIONS_PER_GAME } from '@/data';
 import { useRoomStore } from '@/store/roomStore';
 import type { RoomStoreState } from '@/store/types';
 
-import type { RoomPlayers, RoomReaction } from '../../firebase/room';
+import type { RoomPlayers, RoomReaction } from '@/firebase/room';
 import { resetErrorThrottle, setErrorReporter } from '../errors';
 import { useHostPruneLeavers, useOnlineRoomSession, useRoomPresence, useRoomReactions } from '../roomHooks';
 

@@ -8,12 +8,12 @@ import { useStartup } from '@/store/startupStore';
 import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 
-import AppTitle from '../../components/home/AppTitle';
-import LoadingBar from '../../components/home/LoadingBar';
-import MascotButton from '../../components/home/MascotButton';
-import SwayingCompass from '../../components/home/SwayingCompass';
-import Button from '../../components/ui/Button';
-import Screen from '../../components/ui/Screen';
+import AppTitle from '@/components/home/AppTitle';
+import LoadingBar from '@/components/home/LoadingBar';
+import MascotButton from '@/components/home/MascotButton';
+import SwayingCompass from '@/components/home/SwayingCompass';
+import Button from '@/components/ui/Button';
+import Screen from '@/components/ui/Screen';
 
 import { createStyles } from './styles';
 

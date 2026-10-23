@@ -1,5 +1,5 @@
 import { dayKey, writeErrorRecord } from '../errorSink';
-import type { ErrorRecord } from '../../helpers/errors';
+import type { ErrorRecord } from '@/helpers/errors';
 
 const mockBatch = { set: jest.fn(), commit: jest.fn(() => Promise.resolve()) };
 const mockAuth: { currentUser: { uid: string } | null } = { currentUser: { uid: 'zoe' } };

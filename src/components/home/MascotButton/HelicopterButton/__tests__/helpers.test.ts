@@ -1,6 +1,6 @@
 import { BLINK_PERIOD_MS, BOB_AMPLITUDE, BOB_PERIOD_MS, ROTOR_PERIOD_MS } from '../constants';
 import { helicopterIdleFrame } from '../helpers';
-import { gearAngleDeg } from '../../GearIcon';
+import { gearAngleDeg } from '@/components/home/MascotButton/GearIcon';
 
 describe('helicopterIdleFrame', () => {
   it('is at rest (bobY 0) at elapsed 0, rotor at 0deg, blink mid-alternation', () => {

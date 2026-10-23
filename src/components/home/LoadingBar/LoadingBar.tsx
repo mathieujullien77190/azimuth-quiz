@@ -3,7 +3,7 @@ import { Animated, Easing, Text, View } from 'react-native';
 
 import { useThemedStyles } from '@/themes';
 
-import VersionLine from '../../ui/VersionLine';
+import VersionLine from '@/components/ui/VersionLine';
 
 import { BLINK_MIN_OPACITY, BLINK_MS, FADE_OUT_MS } from './constants';
 import { buildProgressSteps } from './helpers';
