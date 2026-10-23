@@ -51,8 +51,12 @@ export const scoreRound = (origin: Coordinates, place: Place, guess: Guess): Rou
   const trueSurfaceDistanceKm = distanceKm(origin, place.coordinates);
 
   const directionError = angleDifference(guess.bearing, trueBearing);
-  const directionPoints = Math.round(MAX_DIRECTION_POINTS * curve(1 - directionError / DIRECTION_TOLERANCE_DEG));
-  const directionExactBonus = Math.round(directionError) === 0 ? EXACT_DIRECTION_BONUS : 0;
+  // Cap exact au degre pres : points pleins (sinon 0,4 degre d'ecart afficherait 499 + 100 au lieu de 600).
+  const directionExact = Math.round(directionError) === 0;
+  const directionPoints = directionExact
+    ? MAX_DIRECTION_POINTS
+    : Math.round(MAX_DIRECTION_POINTS * curve(1 - directionError / DIRECTION_TOLERANCE_DEG));
+  const directionExactBonus = directionExact ? EXACT_DIRECTION_BONUS : 0;
 
   const targetGapKm = distanceKm(rhumbDestination(origin, guess.bearing, guess.distanceKm), place.coordinates);
   const distancePoints = Math.round(MAX_DISTANCE_POINTS * curve(1 - targetGapKm / DISTANCE_TOLERANCE_KM));

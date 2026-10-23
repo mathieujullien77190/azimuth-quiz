@@ -78,6 +78,12 @@ describe('scoreRound', () => {
     expect(pointsAt(180)).toBe(0);
   });
 
+  it('gives the full heading points when the heading is exact to the degree, even 0.4 degree off', () => {
+    const score = scoreRound(origin, place, { bearing: (trueBearing + 0.4) % 360, distanceKm: trueSurfaceKm });
+    expect(score.directionPoints).toBe(MAX_DIRECTION_POINTS);
+    expect(score.directionExactBonus).toBe(EXACT_DIRECTION_BONUS);
+  });
+
   it('does not award the exact-heading bonus for a guess off by even half a degree', () => {
     const guess: Guess = { bearing: (trueBearing + 0.6) % 360, distanceKm: trueSurfaceKm };
     const score = scoreRound(origin, place, guess);
