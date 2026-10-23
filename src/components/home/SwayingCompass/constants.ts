@@ -7,7 +7,5 @@ export const SWAY_LEGS = 24;
 export const SWAY_TOTAL_MS = SWAY_MS * SWAY_LEGS;
 /** Points calcules par sens pour la courbe (interpolee lineairement entre deux points : assez fin pour etre fluide). */
 export const SWAY_SAMPLES_PER_LEG = 12;
-/** Apres un appui, l'ecart de l'aiguille au moment de l'appui s'efface en ce temps (ms) : pas de saut. */
-export const SETTLE_MS = 800;
 /** Centre du cadran, dans les unites 300 x 300 du SVG. */
 export const DIAL_CENTER = 150;
