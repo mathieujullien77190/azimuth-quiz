@@ -40,6 +40,12 @@ describe('isNameTaken', () => {
     expect(isNameTaken('MAX', PLAYERS, 'joiner')).toBe(true);
   });
 
+  it('does not block anyone because of an entry that has no name yet (only a colour or a heartbeat)', () => {
+    const nameless = { ...PLAYERS, host: { color: '#fff' } } as unknown as RoomPlayers;
+    expect(isNameTaken('Léa', nameless, 'joiner')).toBe(false);
+    expect(isNameTaken('Max', nameless, 'joiner')).toBe(true);
+  });
+
   it('is false for a free name', () => {
     expect(isNameTaken('Léa', PLAYERS, 'joiner')).toBe(false);
     expect(isNameTaken('Zoé2', PLAYERS, 'joiner')).toBe(false);

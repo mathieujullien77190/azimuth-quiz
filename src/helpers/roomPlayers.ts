@@ -40,10 +40,14 @@ export const isNameTakenError = (error: unknown): boolean =>
 
 const normalized = (name: string): string => name.trim().toLowerCase();
 
-/** Un autre joueur a-t-il deja ce nom (casse et espaces autour ignores) ? `uid` = soi, jamais compte. */
+/**
+ * Un autre joueur a-t-il deja ce nom (casse et espaces autour ignores) ? `uid` = soi, jamais compte. Une entree sans nom
+ * (l'hote n'a ecrit que sa couleur ou son heartbeat) n'a pas encore de nom a prendre: elle ne bloque personne.
+ */
 export const isNameTaken = (name: string, players: RoomPlayers, uid: string): boolean =>
   Object.entries(players).some(
-    ([otherUid, player]) => otherUid !== uid && normalized(player.name) === normalized(name),
+    ([otherUid, player]) =>
+      otherUid !== uid && player.name !== undefined && normalized(player.name) === normalized(name),
   );
 
 /** Premier de `placeholders` libre, pour qui n'a pas tape de nom (`uid` = soi, ignore) ; le premier si tous pris. */
