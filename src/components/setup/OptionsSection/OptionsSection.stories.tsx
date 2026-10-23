@@ -4,11 +4,11 @@ import { fn } from 'storybook/test';
 
 import type { Translations } from '@/i18n';
 import { translations } from '@/i18n/translations';
-import { localizedArgs } from '@/storybook/localized';
+import { localizedArgs } from '~sb/localized';
 
 import { OptionsSection } from './OptionsSection';
 import type { OptionsSectionProps } from './types';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 import withGpsCode from './WithGps.source.md?raw';
 import readOnlyCode from './ReadOnly.source.md?raw';
 

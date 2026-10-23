@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 
 import { GameHeader } from './GameHeader';
 import plainCode from './Plain.source.md?raw';

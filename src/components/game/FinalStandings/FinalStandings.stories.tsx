@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import type { Translations } from '@/i18n';
 import { translations } from '@/i18n/translations';
-import { localizedArgs } from '@/storybook/localized';
-import { source } from '@/storybook/source';
+import { localizedArgs } from '~sb/localized';
+import { source } from '~sb/source';
 
 import { FinalStandings } from './FinalStandings';
 import multiplayerCode from './Multiplayer.source.md?raw';

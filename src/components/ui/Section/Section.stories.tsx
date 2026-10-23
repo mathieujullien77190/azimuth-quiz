@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { Section } from './Section';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 import defaultCode from './Default.source.md?raw';
 
 const meta = {

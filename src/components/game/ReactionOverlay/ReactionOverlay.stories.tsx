@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import Button from '@/components/ui/Button';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 
 import { ReactionOverlay } from './ReactionOverlay';
 import type { ReactionOverlayProps } from './types';

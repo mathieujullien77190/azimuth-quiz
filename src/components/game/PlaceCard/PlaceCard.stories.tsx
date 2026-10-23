@@ -5,7 +5,7 @@ import { SAMPLE_PLACE_REVEALED } from '@/helpers/storyFixtures';
 import type { Place } from '@/types';
 
 import { PlaceCard } from './PlaceCard';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 import guessingCode from './Guessing.source.md?raw';
 import longNameCode from './LongName.source.md?raw';
 import revealedCode from './Revealed.source.md?raw';

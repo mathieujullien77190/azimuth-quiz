@@ -5,11 +5,11 @@ import { fn } from 'storybook/test';
 import { PLAYER_COLORS } from '@/data';
 import type { Translations } from '@/i18n';
 import { translations } from '@/i18n/translations';
-import { localizedArgs } from '@/storybook/localized';
+import { localizedArgs } from '~sb/localized';
 
 import { PartySection } from './PartySection';
 import type { PartySectionPlayer, PartySectionProps } from './types';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 import soloCode from './Solo.source.md?raw';
 import hostingCode from './Hosting.source.md?raw';
 import generatingCodeCode from './GeneratingCode.source.md?raw';

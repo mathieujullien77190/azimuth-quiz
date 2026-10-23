@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 
 import Button from '@/components/ui/Button';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 
 import { GameFooter } from './GameFooter';
 import withButtonCode from './WithButton.source.md?raw';

@@ -6,7 +6,7 @@ import { SAMPLE_PLAYERS } from '@/helpers/storyFixtures';
 
 import { Compass } from './Compass';
 import type { CompassProps } from './types';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 import guessingCode from './Guessing.source.md?raw';
 import revealedCode from './Revealed.source.md?raw';
 

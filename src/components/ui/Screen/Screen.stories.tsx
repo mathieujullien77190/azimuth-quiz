@@ -5,7 +5,7 @@ import Button from '../Button';
 import Card from '../Card';
 
 import { Screen } from './Screen';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 import headerAndFooterCode from './HeaderAndFooter.source.md?raw';
 
 const meta = {

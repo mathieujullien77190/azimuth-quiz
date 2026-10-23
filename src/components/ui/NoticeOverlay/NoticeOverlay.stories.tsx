@@ -7,7 +7,7 @@ import Button from '@/components/ui/Button';
 
 import { NoticeOverlay } from './NoticeOverlay';
 import type { NoticeOverlayProps } from './types';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 import defaultCode from './Default.source.md?raw';
 import loadingCode from './Loading.source.md?raw';
 

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { PLAYER_COLORS } from '@/data';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 
 import largeLightCode from './LargeLight.source.md?raw';
 import playerColorCode from './PlayerColor.source.md?raw';

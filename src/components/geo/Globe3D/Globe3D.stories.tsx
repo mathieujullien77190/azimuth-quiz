@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { SAMPLE_PLAYERS } from '@/helpers/storyFixtures';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 
 import { Globe3D } from './Globe3D';
 import parisNewYorkCode from './ParisNewYork.source.md?raw';

@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { SAMPLE_PLAYERS, SAMPLE_ROUND_RECORD, SAMPLE_TOTALS } from '@/helpers/storyFixtures';
 
 import { RoundResult } from './RoundResult';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 import surfaceModeCode from './SurfaceMode.source.md?raw';
 
 const meta = {

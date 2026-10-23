@@ -73,8 +73,7 @@
       "!src/**/types.ts",
       "!src/app/**",
       "!src/**/*.stories.tsx",
-      "!src/helpers/storyFixtures.ts",
-      "!src/storybook/**"
+      "!src/helpers/storyFixtures.ts"
     ],
     "coverageThreshold": {
       "global": {

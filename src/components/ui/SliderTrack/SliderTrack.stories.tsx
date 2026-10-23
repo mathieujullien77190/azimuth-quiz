@@ -6,8 +6,8 @@ import { DISTANCE_MARKS_KM } from '@/data/game';
 import { formatDistance, kmToRatio, ratioToKm } from '@/helpers';
 import { SAMPLE_DISTANCE_KM, SAMPLE_MAX_SURFACE_KM } from '@/helpers/storyFixtures';
 import { translations } from '@/i18n/translations';
-import { localizedArgs } from '@/storybook/localized';
-import { source } from '@/storybook/source';
+import { localizedArgs } from '~sb/localized';
+import { source } from '~sb/source';
 
 import distanceCode from './Distance.source.md?raw';
 import percentageCode from './Percentage.source.md?raw';

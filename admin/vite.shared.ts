@@ -46,7 +46,11 @@ export const optimizeDepsInclude = [
 ];
 
 export const sharedResolve = {
-  alias: { '@': path.resolve(rootDir, '../src'), 'react-native': 'react-native-web' },
+  alias: {
+    '@': path.resolve(rootDir, '../src'),
+    '~sb': path.resolve(rootDir, '.storybook/utils'),
+    'react-native': 'react-native-web',
+  },
   extensions: WEB_FIRST_EXTENSIONS,
   // `@/components/**` (src/ racine, resolu vers le node_modules racine) et les fichiers de l'admin (resolus vers
   // `admin/node_modules/*`) auraient chacun leur PROPRE copie de chaque paquet ci-dessous. Deux copies d'un meme

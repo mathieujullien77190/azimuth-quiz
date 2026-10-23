@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 
 import accentCode from './Accent.source.md?raw';
 import baseCode from './Base.source.md?raw';

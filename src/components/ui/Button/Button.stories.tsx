@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { Button } from './Button';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 import primaryCode from './Primary.source.md?raw';
 import ghostCode from './Ghost.source.md?raw';
 import disabledCode from './Disabled.source.md?raw';

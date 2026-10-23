@@ -4,7 +4,7 @@ import { fn } from 'storybook/test';
 
 import { Toggle } from './Toggle';
 import type { ToggleProps } from './types';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 import defaultCode from './Default.source.md?raw';
 import disabledCode from './Disabled.source.md?raw';
 

@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ThemeSettingsContext } from '@/themes';
 
 import { MascotButton } from './MascotButton';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 import nightCode from './Night.source.md?raw';
 import dayCode from './Day.source.md?raw';
 

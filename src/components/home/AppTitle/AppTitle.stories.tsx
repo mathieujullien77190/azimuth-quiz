@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { translations } from '@/i18n/translations';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 
 import { AppTitle } from './AppTitle';
 import defaultCode from './Default.source.md?raw';

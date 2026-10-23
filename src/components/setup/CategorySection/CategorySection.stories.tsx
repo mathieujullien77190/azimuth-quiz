@@ -5,12 +5,12 @@ import { fn } from 'storybook/test';
 import { CATEGORIES } from '@/data/game';
 import type { Translations } from '@/i18n';
 import { translations } from '@/i18n/translations';
-import { localizedArgs } from '@/storybook/localized';
+import { localizedArgs } from '~sb/localized';
 import type { Category } from '@/types';
 
 import { CategorySection } from './CategorySection';
 import type { CategorySectionProps } from './types';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 import compassCode from './Compass.source.md?raw';
 import readOnlyCode from './ReadOnly.source.md?raw';
 

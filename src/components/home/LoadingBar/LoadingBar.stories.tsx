@@ -2,7 +2,7 @@ import { View } from 'react-native';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { ThemeSettingsContext } from '@/themes';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 
 import { LoadingBar } from './LoadingBar';
 import dayCode from './Day.source.md?raw';

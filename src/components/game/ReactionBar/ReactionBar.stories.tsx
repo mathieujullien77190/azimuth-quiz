@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 
 import { REACTION_EMOJIS } from '@/data';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 
 import { ReactionBar } from './ReactionBar';
 import defaultCode from './Default.source.md?raw';

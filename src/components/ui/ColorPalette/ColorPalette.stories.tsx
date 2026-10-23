@@ -1,6 +1,6 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 import { THEMES, ThemeSettingsContext } from '@/themes';
 import type { ThemeId } from '@/types';
 

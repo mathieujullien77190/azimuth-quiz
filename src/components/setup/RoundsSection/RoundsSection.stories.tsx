@@ -4,7 +4,7 @@ import { fn } from 'storybook/test';
 
 import { RoundsSection } from './RoundsSection';
 import type { RoundsSectionProps } from './types';
-import { source } from '@/storybook/source';
+import { source } from '~sb/source';
 import defaultCode from './Default.source.md?raw';
 import readOnlyCode from './ReadOnly.source.md?raw';
 

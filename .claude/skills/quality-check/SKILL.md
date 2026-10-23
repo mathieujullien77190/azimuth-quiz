@@ -36,7 +36,7 @@ test qui manque, ou du code inatteignable a supprimer, jamais un commentaire d'e
 
 - Critère : tous les tests passent ET `coverage-gaps.cjs` répond "Nothing uncovered" (le `coverageThreshold` de
   `package.json` fait aussi échouer jest sous 100 %). Les fichiers `*.stories.tsx`, `storyFixtures.ts` et
-  `src/storybook/**` sont exclus du calcul (`collectCoverageFrom`) — ne les ajoute pas au périmètre.
+  `admin/.storybook/utils/**` sont exclus du calcul (`collectCoverageFrom`) — ne les ajoute pas au périmètre.
 - Le script liste, par fichier, les statements / branches / fonctions non couverts avec leur ligne. Un trou =
   un cas de test qui manque, **pas** un `/* istanbul ignore */`. Un `??` ou un paramètre par défaut jamais
   atteint est souvent du code superflu : supprime-le plutôt que de le tester.
@@ -99,7 +99,7 @@ Critère : le build se termine par "Storybook build completed successfully". Le 
 À relire à la main (le build ne le voit pas) :
 
 - **thème et langue** : la barre d'outils fournit Night/Day et fr/en. Un `args` qui porte du texte doit passer par
-  `localizedArgs(build)` (`@/storybook/localized`) avec le même `build` pour `args` et le décorateur, sinon il reste
+  `localizedArgs(build)` (`~sb/localized`) avec le même `build` pour `args` et le décorateur, sinon il reste
   en français quand on passe en anglais ;
 - un état interactif (Toggle, SliderTrack, sections de setup) utilise un composant `render` nommé (majuscule, pour
   la règle des hooks) qui garde la valeur, et **la valeur affichée est dérivée de l'état** (pas d'arg figé) ;
