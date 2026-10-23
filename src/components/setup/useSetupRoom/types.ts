@@ -11,7 +11,8 @@ export type SetupRoomAdapter<S, R> = {
   maxPlayers: number;
   roomSettingsFrom: (settings: S) => R;
   isValidRoomCode: (code: string) => boolean;
-  createRoom: (settings: R) => Promise<string>;
+  /** `renew` : l'hote rappuie sur « Creer », il veut un autre code que celui retenu. */
+  createRoom: (settings: R, renew?: boolean) => Promise<string>;
   roomExists: (code: string) => Promise<boolean>;
   updateRoomSettings: (code: string, settings: R) => Promise<void>;
   joinRoomPresence: (code: string, name: string) => Promise<string>;

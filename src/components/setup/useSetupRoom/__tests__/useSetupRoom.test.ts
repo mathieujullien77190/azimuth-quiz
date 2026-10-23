@@ -154,11 +154,24 @@ describe('useSetupRoom — hosting', () => {
     const ctx = await setup();
     await hostRoom(ctx);
 
-    expect(ctx.adapter.createRoom).toHaveBeenCalledWith({ rounds: 5 });
+    expect(ctx.adapter.createRoom).toHaveBeenCalledWith({ rounds: 5 }, false);
     expect(ctx.result.current.party.roomCode).toBe('tabofuna');
     expect(ctx.result.current.connectedRoomCode).toBe('tabofuna');
     expect(ctx.store.getState().code).toBe('tabofuna');
     expect(ctx.adapter.updateRoomSettings).toHaveBeenCalledWith('tabofuna', { rounds: 5 });
+  });
+
+  it('keeps the remembered code on the first Create, and asks for a new one when Create is pressed again', async () => {
+    const createRoom = jest.fn().mockResolvedValueOnce('tabofuna').mockResolvedValueOnce('kilobani');
+    const ctx = await setup({ createRoom });
+    await hostRoom(ctx);
+    expect(createRoom).toHaveBeenLastCalledWith({ rounds: 5 }, false);
+    expect(ctx.result.current.party.roomCode).toBe('tabofuna');
+
+    await hostRoom(ctx);
+    expect(createRoom).toHaveBeenLastCalledWith({ rounds: 5 }, true);
+    expect(ctx.result.current.party.roomCode).toBe('kilobani');
+    expect(ctx.result.current.connectedRoomCode).toBe('kilobani');
   });
 
   it('registers this device in the room, and the host can still change its name', async () => {

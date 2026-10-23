@@ -4,16 +4,16 @@ Tout ce qui touche Firebase / Firestore. Le dossier importe `firebase/firestore`
 l'import) : on importe toujours le fichier directement. `constants.ts`, `types.ts`, `read.ts`, `numbering.ts` et `journal.ts` sont purs et aussi
 utilises par l'admin.
 
-| Fichier | Role |
-|---|---|
-| `constants.ts` | constantes du dossier (collections, documents, rooms, code de room, tirage, erreurs), pures, aussi utilisees par l'admin |
-| `client.ts` | app Firebase, `db`, `auth` (variables `EXPO_PUBLIC_FIREBASE_*`) |
-| `room.ts` | creer / rejoindre / quitter une room, presence, couleurs, reglages, etat de manche, reactions |
-| `places.ts` | `fetchRandomPlaces` : tire les lieux d'une partie |
-| `groupedDraw.ts`, `groupCounts.ts` | moteur de tirage par groupes et tailles des groupes (`meta/compassCounts`) |
-| `roomCode.ts` | code de room (4 syllabes consonne+voyelle), authentification anonyme |
-| `errorSink.ts` | enregistre les erreurs dans la collection `errors` |
-| `types.ts`, `read.ts`, `numbering.ts`, `journal.ts` | types des documents, lecteurs, numerotation, journal de l'admin |
+| Fichier                                             | Role                                                                                                                     |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `constants.ts`                                      | constantes du dossier (collections, documents, rooms, code de room, tirage, erreurs), pures, aussi utilisees par l'admin |
+| `client.ts`                                         | app Firebase, `db`, `auth` (variables `EXPO_PUBLIC_FIREBASE_*`)                                                          |
+| `room.ts`                                           | creer / rejoindre / quitter une room, presence, couleurs, reglages, etat de manche, reactions                            |
+| `places.ts`                                         | `fetchRandomPlaces` : tire les lieux d'une partie                                                                        |
+| `groupedDraw.ts`, `groupCounts.ts`                  | moteur de tirage par groupes et tailles des groupes (`meta/compassCounts`)                                               |
+| `roomCode.ts`                                       | code de room (4 syllabes consonne+voyelle), authentification anonyme                                                     |
+| `errorSink.ts`                                      | enregistre les erreurs dans la collection `errors`                                                                       |
+| `types.ts`, `read.ts`, `numbering.ts`, `journal.ts` | types des documents, lecteurs, numerotation, journal de l'admin                                                          |
 
 ## Donnees
 

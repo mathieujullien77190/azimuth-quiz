@@ -103,6 +103,15 @@ describe('createRoom', () => {
     expect(generateRoomCode).not.toHaveBeenCalled();
   });
 
+  it('ignores the remembered code and draws a new one when the host presses Create again (renew)', async () => {
+    jest.mocked(loadMyRoomCode).mockResolvedValue('bagubaku');
+    jest.mocked(generateRoomCode).mockReturnValue('kilobani');
+    jest.mocked(getDoc).mockResolvedValue(snapshot(undefined) as never);
+    await expect(createRoom(settings, true)).resolves.toBe('kilobani');
+    expect(loadMyRoomCode).not.toHaveBeenCalled();
+    expect(saveMyRoomCode).toHaveBeenCalledWith('kilobani');
+  });
+
   it('draws a fresh code when the remembered one is taken by someone else', async () => {
     jest.mocked(loadMyRoomCode).mockResolvedValue('bagubaku');
     jest.mocked(generateRoomCode).mockReturnValue('tabofuna');

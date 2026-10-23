@@ -93,9 +93,11 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
       setHostedSilently(false);
       return;
     }
+    // Deja hote et rappuye sur « Creer » : un autre code, sinon le dernier code de l'hote est reutilise.
+    const renew = onlineChoice === 'host';
     setOnlineChoice('host');
     setRoomCode(null);
-    adapter.createRoom(adapter.roomSettingsFrom(settings)).then(setRoomCode);
+    adapter.createRoom(adapter.roomSettingsFrom(settings), renew).then(setRoomCode);
   };
 
   const chooseJoin = () => {

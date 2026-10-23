@@ -53,12 +53,13 @@ const deletePreviousRoomsByHost = async (hostUid: string): Promise<void> => {
   await Promise.all(snapshot.docs.map((roomDoc) => deleteDoc(roomDoc.ref)));
 };
 
-/** Cree une room sous le dernier code de l'hote s'il est libre, sinon un code neuf (retente si collision).
- * Vide d'abord ses anciennes rooms (`deletePreviousRoomsByHost`) ; renvoie le code retenu. */
-export const createRoom = async (settings: RoomSettings): Promise<string> => {
+/** Cree une room sous le dernier code de l'hote s'il est libre, sinon un code neuf (retente si collision). `renew`
+ * (l'hote appuie de nouveau sur « Creer ») ignore le code retenu et en tire un neuf. Vide d'abord ses anciennes rooms
+ * (`deletePreviousRoomsByHost`) ; renvoie le code retenu. */
+export const createRoom = async (settings: RoomSettings, renew = false): Promise<string> => {
   const hostUid = await getLocalUid();
   await deletePreviousRoomsByHost(hostUid);
-  let remembered = await loadMyRoomCode();
+  let remembered = renew ? null : await loadMyRoomCode();
   for (;;) {
     const code = remembered ?? generateRoomCode();
     remembered = null;
