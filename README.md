@@ -47,17 +47,31 @@ Un push sur `master` publie le jeu web, l'admin (`/admin/`) et Storybook sur Git
 
 ## Architecture
 
+Pas de serveur propre : l'appli Expo et l'admin Vite parlent directement à Firebase (Auth et Firestore, règles dans
+`firestore.rules`). Un push sur `master` construit le web, l'admin et Storybook vers GitHub Pages.
+
+### Qui appelle qui
+
+Les couches de l'appli (routes, écrans, composants, hooks, store, helpers, `firebase/`), l'admin, Firebase et le déploiement.
+
 ![Schéma d'architecture : qui appelle qui, de l'appli à Firebase et au déploiement](docs/architecture.svg)
+
+### Structure des fichiers
+
+À quoi sert chaque dossier, et ce que contient un composant.
 
 ![Structure des fichiers : à quoi sert chaque dossier](docs/structure.svg)
 
-![Flux Firestore : une partie de bout en bout](docs/firestore-flows.svg)
+### Flux Firestore
 
-Pas de serveur propre : l'appli Expo (écrans, composants, store Zustand de la room, couche `firebase/`) et l'admin Vite, qui réutilise `src/firebase` (types et lecture des documents), parlent directement à Firebase (Auth et Firestore, règles dans `firestore.rules`). Un push sur `master` construit le web, l'admin et Storybook vers GitHub Pages.
+Une partie de bout en bout : créer et rejoindre, lancer, une manche, présence et départs, erreurs. Bleu = l'hôte, orange = les
+autres joueurs ; une barre par collection.
+
+![Flux Firestore : une partie de bout en bout](docs/firestore-flows.svg)
 
 ## Stack et structure
 
 Expo (SDK 57) + Expo Router, React Native + react-native-web, TypeScript, Zustand, Firebase (Firestore + auth
 anonyme), Jest + Testing Library, Storybook. Un composant = un dossier (`index.ts`, `<Nom>.tsx`, `helpers.ts`,
-`constants.ts`, `types.ts`, `styles.ts`), alias `@/` → `src/`. L'architecture, les jeux et les pièges connus sont
+`constants.ts`, `types.ts`, `styles.ts`), alias `@/` → `src/`. L'architecture, le jeu et les pièges connus sont
 dans [`CLAUDE.md`](CLAUDE.md).
