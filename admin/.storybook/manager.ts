@@ -1,39 +1,14 @@
 import { GLOBALS_UPDATED, SET_CONFIG, SET_GLOBALS } from 'storybook/internal/core-events';
 import { addons } from 'storybook/manager-api';
-import { create } from 'storybook/theming/create';
+import { create } from 'storybook/theming';
 
-// Chrome de Storybook : bundle a part des previews, donc pas d'alias `@/` (themes importes en relatif, sans
-// react-native).
-import { day } from '../../src/themes/day';
-import { FONT_FAMILY } from '../../src/themes/fonts';
-import { night } from '../../src/themes/night';
-import type { Theme } from '../../src/types';
-
-/** Theme Storybook tire d'un theme de l'app, pour que le chrome suive la preview. */
-const storybookTheme = (theme: Theme) =>
-  create({
-    base: theme.isDark ? 'dark' : 'light',
-    brandTitle: 'Azimuth Quiz Storybook',
-    fontBase: FONT_FAMILY,
-    colorPrimary: theme.colors.accent,
-    colorSecondary: theme.colors.accent,
-    appBg: theme.colors.background,
-    appContentBg: theme.colors.surface,
-    appPreviewBg: theme.colors.background,
-    appBorderColor: theme.colors.border,
-    textColor: theme.colors.text,
-    textInverseColor: theme.colors.onAccent,
-    barBg: theme.colors.surface,
-    barTextColor: theme.colors.textMuted,
-    barSelectedColor: theme.colors.accent,
-    inputBg: theme.colors.surfaceHigh,
-    inputBorder: theme.colors.border,
-    inputTextColor: theme.colors.text,
-  });
-
-const THEMES = { night: storybookTheme(night), day: storybookTheme(day) };
-
-// Nuit tant que la barre d'outils n'a rien dit.
+// Chrome de Storybook : theme classique (clair/sombre), independant du theme du jeu. Le theme du jeu ne sert qu'aux
+// composants dans la preview (voir `preview.tsx`).
+const THEMES = {
+  night: create({ base: 'dark', brandTitle: 'Azimuth Quiz Storybook' }),
+  day: create({ base: 'light', brandTitle: 'Azimuth Quiz Storybook' }),
+};
+// Sombre tant que la barre d outils n a rien dit.
 addons.setConfig({ theme: THEMES.night });
 
 /** Suit le choix `theme` de la barre d'outils (voir `globalTypes` de `preview.tsx`). */
