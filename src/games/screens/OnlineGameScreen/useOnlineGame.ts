@@ -15,7 +15,7 @@ import {
   sendReaction,
   submitRoomGuess,
 } from '@/games/firebase/room';
-import { useRoomStore } from '@/store/compassRoomStore';
+import { useRoomStore } from '@/store/roomStore';
 import type { RoundRecord, RoundScore } from '@/types';
 
 import { DEFAULT_BEARING } from './constants';
@@ -95,7 +95,7 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
       scores[uid] = results[index].score;
       totalScores[uid] = (gameState.totalScores[uid] ?? 0) + results[index].score.total;
     });
-    finishRoomRound(code, scores, totalScores).catch(reporting('compass.finishRound', { kind: 'background', room: code }));
+    finishRoomRound(code, scores, totalScores).catch(reporting('game.finishRound', { kind: 'background', room: code }));
   }, [isHost, gameState, roomSettings?.travel, onlinePlayers, place, code]);
 
   // Indexe par uid, pas par position dans `records` : l'hote l'ecrit dans la room apres chaque manche, donc
@@ -106,18 +106,18 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
   const submit = async () => {
     if (localUid === null) return;
     const guess = { bearing, distanceKm };
-    await submitRoomGuess(code, localUid, guess).catch(reporting('compass.submitGuess', { room: code }));
+    await submitRoomGuess(code, localUid, guess).catch(reporting('game.submitGuess', { room: code }));
   };
 
   // Hote seul : expulse un joueur en cours de partie, jamais soi-meme (voir `handleQuit`).
   const kickPlayer = isHost
     ? (index: number) => {
         const uid = onlinePlayers[index]?.uid;
-        if (uid !== undefined && uid !== localUid) removeRoomPlayer(code, uid).catch(reporting('compass.kickPlayer', { room: code }));
+        if (uid !== undefined && uid !== localUid) removeRoomPlayer(code, uid).catch(reporting('game.kickPlayer', { room: code }));
       }
     : undefined;
 
-  const goToNextRound = () => nextRoomRound(code, gameState.roundIndex + 1, gameState.places.length).catch(reporting('compass.nextRound', { room: code }));
+  const goToNextRound = () => nextRoomRound(code, gameState.roundIndex + 1, gameState.places.length).catch(reporting('game.nextRound', { room: code }));
 
   return {
     localUid,

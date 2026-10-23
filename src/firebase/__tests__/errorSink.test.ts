@@ -29,7 +29,7 @@ jest.mock('expo-constants', () => ({
 }));
 
 const record: ErrorRecord = {
-  action: 'compass.submitGuess',
+  action: 'game.submitGuess',
   code: 'permission-denied',
   message: 'no',
   room: 'abc',

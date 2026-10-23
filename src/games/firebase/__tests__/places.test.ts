@@ -1,11 +1,11 @@
 import { getDoc, getDocs } from 'firebase/firestore';
 
-import type { CompassCounts, PlaceDoc } from '@/data/firestore/types';
+import type { Counts, PlaceDoc } from '@/data/firestore/types';
 import { DEFAULT_SETTINGS } from '@/games/constants';
 import type { Category, Difficulty, GameSettings } from '@/types';
 
-import { clearCompassCounts } from '../../helpers/compassCounts';
-import { clearCompassCursors, loadCompassCursors, saveCompassCursors } from '../../helpers/compassCursors';
+import { clearCounts } from '../../helpers/counts';
+import { clearCursors, loadCursors, saveCursors } from '../../helpers/cursors';
 import { fetchRandomPlaces } from '../places';
 
 type Filter = { field: string; op: string; value: unknown };
@@ -32,8 +32,8 @@ jest.mock('@/firebase/client', () => ({ db: {} }));
 type Fake = { name: string; code: string; latitude: number; longitude: number };
 
 /** Fausse collection `places` : `groups['cities|easy'][n - 1]` est le lieu numero `n` du groupe. */
-const installDb = (groups: Record<string, Fake[]>, countsOverride?: CompassCounts | null) => {
-  const counts: CompassCounts = {};
+const installDb = (groups: Record<string, Fake[]>, countsOverride?: Counts | null) => {
+  const counts: Counts = {};
   for (const [id, places] of Object.entries(groups)) {
     const [category, difficulty] = id.split('|') as [Category, Difficulty];
     counts[category] = { ...counts[category], [difficulty]: places.length };
@@ -89,8 +89,8 @@ beforeEach(() => {
   jest.clearAllMocks();
   // Le tirage loggue ce que Firestore renvoie : on garde la sortie des tests propre.
   jest.spyOn(console, 'log').mockImplementation(() => {});
-  clearCompassCursors();
-  clearCompassCounts();
+  clearCursors();
+  clearCounts();
 });
 
 afterEach(() => {
@@ -106,7 +106,7 @@ describe('fetchRandomPlaces', () => {
       'nature|easy': far(50, 'N'),
       'cities|hard': far(50, 'H'),
     });
-    saveCompassCursors({ 'cities|easy': 0, 'capital|easy': 0 });
+    saveCursors({ 'cities|easy': 0, 'capital|easy': 0 });
 
     const places = await fetchRandomPlaces(settings, 'fr');
 
@@ -129,17 +129,17 @@ describe('fetchRandomPlaces', () => {
     useRandom(0.5);
     // Depart aleatoire : floor(0.5 x 10) = position 5 -> 6e, 7e et 8e lieux.
     expect(names(await fetchRandomPlaces(game, 'fr')).sort()).toEqual(['C5', 'C6', 'C7']);
-    expect(await loadCompassCursors()).toEqual({ 'cities|easy': 8 });
+    expect(await loadCursors()).toEqual({ 'cities|easy': 8 });
     randomSpy?.mockRestore();
 
     // Partie suivante : les lieux suivants, en bouclant (9e, 10e, puis 1er).
     expect(names(await fetchRandomPlaces(game, 'fr')).sort()).toEqual(['C0', 'C8', 'C9']);
-    expect(await loadCompassCursors()).toEqual({ 'cities|easy': 1 });
+    expect(await loadCursors()).toEqual({ 'cities|easy': 1 });
   });
 
   it('goes through a whole group before any place comes back', async () => {
     installDb({ 'cities|easy': far(4, 'C') });
-    saveCompassCursors({ 'cities|easy': 0 });
+    saveCursors({ 'cities|easy': 0 });
     const game = { ...settings, categories: ['cities' as Category], rounds: 2 };
 
     const first = names(await fetchRandomPlaces(game, 'fr'));
@@ -153,29 +153,29 @@ describe('fetchRandomPlaces', () => {
 
   it('keeps working with a cursor that is past the end of a group that shrank', async () => {
     installDb({ 'cities|easy': far(10, 'C') });
-    saveCompassCursors({ 'cities|easy': 25 });
+    saveCursors({ 'cities|easy': 25 });
 
     const places = await fetchRandomPlaces({ ...settings, categories: ['cities'] }, 'fr');
 
     expect(names(places).sort()).toEqual(['C5', 'C6', 'C7']);
-    expect(await loadCompassCursors()).toEqual({ 'cities|easy': 8 });
+    expect(await loadCursors()).toEqual({ 'cities|easy': 8 });
   });
 
   it('splits the rounds over the groups at random, weighted by size, each group from its own cursor', async () => {
     installDb({ 'cities|easy': far(10, 'C'), 'capital|easy': far(10, 'K') });
-    saveCompassCursors({ 'cities|easy': 0, 'capital|easy': 5 });
+    saveCursors({ 'cities|easy': 0, 'capital|easy': 5 });
 
     // 0.1 x 20 tombe dans le 1er groupe, 0.9 x 20 dans le 2e : ils alternent.
     useRandom(0.1, 0.9);
     const places = await fetchRandomPlaces({ ...settings, rounds: 4 }, 'fr');
 
     expect(names(places).sort()).toEqual(['C0', 'C1', 'K5', 'K6']);
-    expect(await loadCompassCursors()).toEqual({ 'cities|easy': 2, 'capital|easy': 7 });
+    expect(await loadCursors()).toEqual({ 'cities|easy': 2, 'capital|easy': 7 });
   });
 
   it('splits a long read into queries of 30 numbers (Firestore caps an `or` at 30 values)', async () => {
     installDb({ 'cities|easy': far(200, 'C') });
-    saveCompassCursors({ 'cities|easy': 0 });
+    saveCursors({ 'cities|easy': 0 });
 
     const places = await fetchRandomPlaces({ ...settings, categories: ['cities'], rounds: 32 }, 'fr');
 
@@ -205,7 +205,7 @@ describe('fetchRandomPlaces', () => {
       // Les 3 lieux francais viennent en dernier : le 1er passage (24 lieux) les rate.
       'cities|easy': [...far(37, 'E'), ...far(3, 'FR', 'FR')],
     });
-    saveCompassCursors({ 'cities|intermediate': 0, 'cities|easy': 0 });
+    saveCursors({ 'cities|intermediate': 0, 'cities|easy': 0 });
 
     // Random 0 prend toujours le 1er groupe non epuise : les 5 intermediaires, puis les faciles.
     useRandom(0);
@@ -218,7 +218,7 @@ describe('fetchRandomPlaces', () => {
     expect(getDocs).toHaveBeenCalledTimes(2);
     // Tout lieu pris compte comme parcouru, aussi ceux lus puis ecartes : les deux groupes ont fait un
     // tour.
-    expect(await loadCompassCursors()).toEqual({ 'cities|intermediate': 0, 'cities|easy': 0 });
+    expect(await loadCursors()).toEqual({ 'cities|intermediate': 0, 'cities|easy': 0 });
   });
 
   it('rejects when fewer than the requested rounds exist in the selected groups', async () => {
@@ -241,7 +241,7 @@ describe('fetchRandomPlaces', () => {
     await expect(
       fetchRandomPlaces({ ...settings, categories: ['cities'], difficulty: 'intermediate' }, 'en'),
     ).rejects.toThrow('Not enough places');
-    expect(await loadCompassCursors()).toEqual({});
+    expect(await loadCursors()).toEqual({});
   });
 
   it('rejects when Firestore fails', async () => {

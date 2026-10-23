@@ -2,7 +2,7 @@ import type { Place } from '@/types';
 
 import type { CompassDoc, PlaceDoc } from './types';
 
-export const compassFromDoc = (doc: PlaceDoc & { compass: CompassDoc }, key?: string): Place => ({
+export const placeFromDoc = (doc: PlaceDoc & { compass: CompassDoc }, key?: string): Place => ({
   ...(key !== undefined && { key }),
   name: doc.name,
   code: doc.code,

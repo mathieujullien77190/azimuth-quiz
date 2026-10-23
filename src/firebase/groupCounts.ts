@@ -1,7 +1,7 @@
 import { reporting } from '../helpers/reportError';
 import { doc, getDoc } from 'firebase/firestore';
 
-import type { CompassCounts } from '@/data/firestore/types';
+import type { Counts } from '@/data/firestore/types';
 
 import { db } from './client';
 
@@ -11,7 +11,7 @@ import { db } from './client';
  * Charge les tailles de groupes (`meta/compassCounts`) : lues une fois et partagees,
  * un echec n'est pas garde. Elles ne changent que si l'admin edite les lieux : relues au lancement suivant.
  */
-export const createGroupCounts = <C = CompassCounts>(source: { collection: string; id: string }) => {
+export const createGroupCounts = <C = Counts>(source: { collection: string; id: string }) => {
   let loading: Promise<C> | null = null;
 
   const load = (): Promise<C> => {

@@ -6,7 +6,7 @@ import ErrorNoticeHost from '@/components/ErrorNoticeHost';
 import LanguageProvider from '@/components/LanguageProvider';
 import StartupSplash from '@/components/StartupSplash';
 import ThemeProvider from '@/components/ThemeProvider';
-import { preloadCompassCounts } from '@/games/helpers/compassCounts';
+import { preloadCounts } from '@/games/helpers/counts';
 import { disableTextSelection, polyfillFlagEmoji } from '@/helpers';
 import { writeErrorRecord } from '@/firebase/errorSink';
 import { setErrorReporter } from '@/helpers/reportError';
@@ -36,7 +36,7 @@ const RootLayout = () => {
   useEffect(hydrateSettings, []);
   useEffect(hydratePlayerName, []);
   // Tailles des groupes (`meta/*Counts`) lues des maintenant : un jeu les trouve deja chargees.
-  useEffect(preloadCompassCounts, []);
+  useEffect(preloadCounts, []);
   // Les ecritures en echec vont dans la collection `errors` (voir `helpers/reportError.ts`).
   useEffect(() => {
     setErrorReporter(writeErrorRecord);

@@ -21,7 +21,7 @@ const LONG_NAME_PLACE: Place = {
 };
 
 const meta = {
-  title: 'Compass/PlaceCard',
+  title: 'Common/PlaceCard',
   component: PlaceCard,
 } satisfies Meta<typeof PlaceCard>;
 

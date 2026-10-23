@@ -14,7 +14,7 @@ const room = useSetupRoom(adapter, settings, updateSettings);
   party={room.party}
   startDisabled={available === 0}
   startLabel={t.setup.start}
-  icon={GAME_ICONS.compass}
+  icon={GAME_ICON}
   title={t.home.games.compass.title}
 >
   <DifficultySection {...difficultyProps} />

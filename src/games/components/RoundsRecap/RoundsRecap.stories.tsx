@@ -15,7 +15,7 @@ const textArgs = (t: Translations) => ({
 });
 
 const meta = {
-  title: 'Compass/RoundsRecap',
+  title: 'Common/RoundsRecap',
   component: RoundsRecap,
   args: textArgs(translations.fr),
   decorators: [

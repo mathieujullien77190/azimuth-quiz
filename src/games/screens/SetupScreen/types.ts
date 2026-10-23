@@ -9,7 +9,7 @@ export type SetupScreenProps = {
 
 /**
  * Rendu pur, aucun hook a effet (pas de `@/settings`, `@/games/firebase/room`,
- * `@/store/compassRoomStore`) : valeurs et callbacks deja resolus (ex. garde readOnly en joiner).
+ * `@/store/roomStore`) : valeurs et callbacks deja resolus (ex. garde readOnly en joiner).
  */
 export type SetupScreenViewProps = {
   settings: GameSettings;

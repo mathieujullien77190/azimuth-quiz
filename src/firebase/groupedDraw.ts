@@ -1,7 +1,7 @@
 import { and, collection, getDocs, or, query, where } from 'firebase/firestore';
 
 import type { Group, Numbering, Slot } from '@/data/firestore/numbering';
-import { COLLECTIONS, type CompassCounts, type PlaceDoc } from '@/data/firestore/types';
+import { COLLECTIONS, type Counts, type PlaceDoc } from '@/data/firestore/types';
 import type { Category, Difficulty } from '@/types';
 
 import { db } from './client';
@@ -59,7 +59,7 @@ export type GroupedDrawOptions<T> = {
   numbering: Numbering;
   categoryField: string;
   numberField: string;
-  counts: CompassCounts;
+  counts: Counts;
   cursors: GroupCursors;
   saveCursors: (moved: GroupCursors) => void;
   categories: Category[];

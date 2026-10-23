@@ -6,7 +6,7 @@ import { BEST_SCORE_STORAGE_KEY, SETTINGS_STORAGE_KEY } from '@/games/constants'
 import type { Language } from '@/i18n';
 import type { GameSettings, ThemeId } from '@/types';
 
-import { clearCompassCursors } from '@/games/helpers/compassCursors';
+import { clearCursors } from '@/games/helpers/cursors';
 
 import { sanitizeSettings } from './settings';
 
@@ -84,10 +84,10 @@ export const savePlayerName = async (name: string): Promise<void> => {
   }
 };
 
-/** Efface tout ce que l'app sauve sur l'appareil : reglages Compass, langue, theme, nom partage, curseurs de lieux,
+/** Efface tout ce que l'app sauve sur l'appareil : reglages du jeu, langue, theme, nom partage, curseurs de lieux,
  * ancien "meilleur score". */
 export const clearAppData = async (): Promise<void> => {
-  clearCompassCursors();
+  clearCursors();
   try {
     await AsyncStorage.multiRemove([
       BEST_SCORE_STORAGE_KEY,

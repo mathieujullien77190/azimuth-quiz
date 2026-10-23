@@ -1,13 +1,13 @@
-import { COMPASS_NUMBERING } from '@/data/firestore/numbering';
-import { compassFromDoc } from '@/data/firestore/read';
+import { NUMBERING } from '@/data/firestore/numbering';
+import { placeFromDoc } from '@/data/firestore/read';
 import type { PlaceDoc } from '@/data/firestore/types';
 import type { Language } from '@/i18n';
 import type { GameSettings, Place } from '@/types';
 
 import { drawFromGroups, storedTiers } from '@/firebase/groupedDraw';
 
-import { loadCompassCounts } from '../helpers/compassCounts';
-import { loadCompassCursors, saveCompassCursors } from '../helpers/compassCursors';
+import { loadCounts } from '../helpers/counts';
+import { loadCursors, saveCursors } from '../helpers/cursors';
 import { effectiveDifficulty } from '../helpers/places';
 
 // Hors barrel de `helpers/index.ts` comme `room.ts` : `firebase/firestore` est ESM seul et plante Jest.
@@ -21,19 +21,19 @@ import { effectiveDifficulty } from '../helpers/places';
  */
 export const fetchRandomPlaces = async (settings: GameSettings, language: Language): Promise<Place[]> => {
   const { categories, difficulty, rounds } = settings;
-  const cursors = await loadCompassCursors();
-  const counts = await loadCompassCounts();
+  const cursors = await loadCursors();
+  const counts = await loadCounts();
   return drawFromGroups<Place>({
-    numbering: COMPASS_NUMBERING,
+    numbering: NUMBERING,
     categoryField: 'compass.category',
     numberField: 'n',
     counts,
     cursors,
-    saveCursors: saveCompassCursors,
+    saveCursors: saveCursors,
     categories,
     tiers: storedTiers(difficulty, language),
     rounds,
-    toItem: (data, id) => compassFromDoc(data as PlaceDoc & { compass: NonNullable<PlaceDoc['compass']> }, id),
+    toItem: (data, id) => placeFromDoc(data as PlaceDoc & { compass: NonNullable<PlaceDoc['compass']> }, id),
     keep: (place) => effectiveDifficulty(place, language) === difficulty,
   });
 };

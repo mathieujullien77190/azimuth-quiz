@@ -2,9 +2,9 @@
 
 # Azimuth Quiz
 
-Un seul jeu, **Boussole** (`compass`), **toujours en ligne** (une room par partie, meme seul), jusqu'a 10 joueurs et 20 manches : un lieu s'affiche, chacun vise un cap et estime la distance depuis un point de depart.
+Jeu de geographie, **Boussole**, **toujours en ligne** (une room par partie, meme seul), jusqu'a 10 joueurs et 20 manches : un lieu s'affiche, chacun vise un cap et estime la distance depuis un point de depart.
 
-Nom de code (`compass`) et nom affiche (Boussole) different volontairement (traductions dans `fr.ts`). Web statique sur GitHub Pages
+Le nom affiche (Boussole) vit dans `fr.ts` ; `compass` ne reste que comme nom de donnee Firestore (`places.compass`, `meta/compassCounts`, `game: 'compass'`) et pour le composant dessine. Web statique sur GitHub Pages
 (`https://mathieujullien77190.github.io/azimuth-quiz/`) + builds natifs. Repo `mathieujullien77190/azimuth-quiz`, un seul
 contributeur, commits directs sur `master`.
 
@@ -20,9 +20,9 @@ src/
   app/          # Expo Router : _layout (providers + Stack), routes = re-exports minces
   components/   # hors jeu : ui/, HomeScreen, SettingsScreen, Compass, EarthSection, GameHeader/GameFooter, setup/...
   data/         # valeurs partagees (score/geo, options, palette), theme.ts, data/firestore/ (types, read.ts, numbering.ts, journal.ts...)
-  games/<jeu>/  # screens/, components/, helpers/, firebase/ (room.ts, places.ts), constants.ts
+  games/        # screens/, components/, helpers/, firebase/ (room.ts, places.ts), constants.ts
   firebase/     # TOUT ce qui touche Firebase/Firestore : client.ts (app, db, auth), roomApi.ts (createRoomApi), roomCode.ts, errorSink.ts, groupCounts.ts, groupedDraw.ts
-  store/        # stores Zustand de room : createRoomStore.ts (etat), actions.ts (actions), types.ts + compassRoomStore.ts
+  store/        # stores Zustand de room : createRoomStore.ts (etat), actions.ts (actions), types.ts + roomStore.ts
   helpers/      # sans Firebase (geo, storage, useOnlineRoomSession...)
   settings/     # GameSettings (store Zustand singleton), usePlayerName
   themes/       # night.ts, day.ts, fonts.ts, ThemeContext
@@ -30,7 +30,7 @@ src/
 admin/          # outil interne (app Vite a part), importe `src/` via le meme alias `@/`
 ```
 
-Les dossiers `firebase/` (`src/firebase/`, `games/<jeu>/firebase/`) importent `firebase/firestore` et restent HORS de tout barrel (Jest plante a l'import) : import direct. Les stores par jeu (`store/*RoomStore.ts`) en dependent aussi (via `room.ts`).
+Les dossiers `firebase/` (`src/firebase/`, `games/firebase/`) importent `firebase/firestore` et restent HORS de tout barrel (Jest plante a l'import) : import direct. Le store de la room (`store/roomStore.ts`) en dependent aussi (via `room.ts`).
 
 Apres tout renommage/deplacement dans `src/` : `(cd admin && npx tsc --noEmit -p . && npm run build)`.
 
@@ -48,10 +48,10 @@ reglages (requis par `useSetupRoom`, jamais envoye dans la room) ; `onChangeName
 
 Collection `rooms`, champ `game` (`'compass'`) immuable, fixe a la creation. Un code d'un autre jeu est refuse a la jonction.
 
-- **Firestore** : `firebase/roomApi.ts` (`createRoomApi(game)`) ; chaque `games/<jeu>/firebase/room.ts` le lie et ajoute l'etat de
+- **Firestore** : `firebase/roomApi.ts` (`createRoomApi(game)`) ; chaque `games/firebase/room.ts` le lie et ajoute l'etat de
   manche. **Tout champ qu'un joueur non hote ecrit doit figurer dans sa liste de champs** de `firestore.rules`
   (`compassPlayer`), sinon l'ecriture est refusee et l'action « revient ».
-- **Store** : `store/` (`createRoomStore.ts` = etat, `actions.ts` = connect/disconnect/drapeaux, store de Boussole : `compassRoomStore.ts`). **Setup** : `components/setup/useSetupRoom` + sections `*Section`.
+- **Store** : `store/` (`createRoomStore.ts` = etat, `actions.ts` = connect/disconnect/drapeaux, store de la room : `roomStore.ts`). **Setup** : `components/setup/useSetupRoom` + sections `*Section`.
 - **Ecran de jeu** : `useOnlineRoomSession` (etat, hote, joueurs dans l'ordre d'arrivee, redirection « room supprimee », `handleQuit`), `useGuessDraft`.
 - **Pas de partie locale** : seul = room *cachee* (`hostedSilently`), donc reseau requis. `startOnlineGame(run)` couvre les deux cas.
 - **Un joueur part** (quitte, expulse, coupure) : l'hote efface ses donnees de manche (`useHostPruneLeavers`,
@@ -76,7 +76,7 @@ Collections : `places/{cle}` (3 lettres, permanente), `countries/{ISO}` (laisse 
 `meta/*` (`compassCounts`, `dataVersion`), `journal/*` (admin), `errors`,
 `rooms/*`. Le jeu ne lit que `places`, `meta`, `rooms`. Types : `data/firestore/types.ts`. Restes de l'ancien mode Indices toujours en base mais ignores du code : champs `clues`/`personality`/`wordplay` des lieux, `personalityJobs`, `meta/cluesCounts`, `devFeedback`.
 
-**Tirage** (`firebase/groupedDraw.ts` + `firebase/groupCounts.ts` + `helpers/groupCursors.ts`, pour Boussole) : l'hote tire seul. Groupe =
+**Tirage** (`firebase/groupedDraw.ts` + `firebase/groupCounts.ts` + `helpers/groupCursors.ts`) : l'hote tire seul. Groupe =
 `category` × `difficulty`, numerote 1..taille (`numbering.ts`), tailles dans `meta/*Counts`, **un curseur par groupe** par appareil
 (AsyncStorage, boucle). Plusieurs categories : `splitEvenly`. Lecture : UNE requete `or` par tranche de 30 numeros. L'anglais releve
 d'un cran les lieux francais (`effectiveDifficulty`). Echec (Firestore ou trop peu d'elements) : le tirage rejette, `starting`
@@ -135,7 +135,7 @@ plus de 30 jours, pas de TTL : exige la facturation Firebase).
     carres = reste), niveau de detail selon la distance camera (constantes de `constants.ts`), clic = la meme carte que la liste
     (`PlacesView/PlaceCard` + `usePlaceEditing`). `GlobeScene.ts` possede three.js, logique pure dans `helpers.ts`. Vitest remplace `three`.
 - **Storybook** : stories colocalisees (`src/**/<Name>.stories.tsx`, config `admin/.storybook`, `npm run stories`), code reel via
-  `source(code)` + `<Story>.source.md` (skill personnel `storybook-story`). Menu : `Common`, `Compass`, `Setup`, `UI`
+  `source(code)` + `<Story>.source.md` (skill personnel `storybook-story`). Menu : `Common`, `Setup`, `UI`
   (ordre dans `admin/.storybook/preview.tsx` : y ajouter toute nouvelle section). Un composant dumb a sa story, pas les containers. Le chrome de Storybook a un theme classique clair/sombre (`admin/.storybook/manager.ts`, suit le bouton « Theme ») ; le theme du jeu (night/day) ne sert qu'aux composants de la preview.
 
 ## Build, deploiement, qualite

@@ -70,7 +70,7 @@ export const reportError = (action: string, error: unknown, { kind = 'game', roo
     .catch(() => {});
 };
 
-/** `.catch(reporting('compass.submitGuess', { room }))` : remplace le `.catch(() => {})` silencieux. */
+/** `.catch(reporting('game.submitGuess', { room }))` : remplace le `.catch(() => {})` silencieux. */
 export const reporting =
   (action: string, options?: ReportOptions) =>
   (error: unknown): void =>

@@ -1,4 +1,4 @@
-import { compassFromDoc } from '@/data/firestore/read';
+import { placeFromDoc } from '@/data/firestore/read';
 import type { PlaceDoc } from '@/data/firestore/types';
 import type { Difficulty, Place } from '@/types';
 
@@ -17,7 +17,7 @@ export type PlaceRow = {
 
 type CompassDocOf = PlaceDoc & { compass: NonNullable<PlaceDoc['compass']> };
 
-const compassOf = (doc: PlaceDoc): Place | null => (doc.compass ? compassFromDoc(doc as CompassDocOf) : null);
+const compassOf = (doc: PlaceDoc): Place | null => (doc.compass ? placeFromDoc(doc as CompassDocOf) : null);
 
 const rowOf = (key: string, doc: PlaceDoc): PlaceRow => ({
   key,

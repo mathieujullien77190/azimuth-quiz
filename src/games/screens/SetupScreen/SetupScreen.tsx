@@ -1,8 +1,8 @@
 import { reporting } from '@/helpers/reportError';
 import { useEffect, useMemo, useState } from 'react';
 
-import type { CompassCounts } from '@/data/firestore/types';
-import { loadCompassCounts } from '@/games/helpers/compassCounts';
+import type { Counts } from '@/data/firestore/types';
+import { loadCounts } from '@/games/helpers/counts';
 import { useSettings } from '@/settings';
 
 import { selectDifficultyFilter, toggleCategoryFilter } from './helpers';
@@ -19,11 +19,11 @@ export const SetupScreen = ({ onBack, startInJoin = false }: SetupScreenProps) =
   const room = useOnlineRoom(settings, updateSettings, startInJoin);
   // Tailles des groupes (`meta/compassCounts`) : combien de lieux offrent les categories choisies a cette
   // difficulte ; `null` tant qu'absentes, sans retenir le bouton.
-  const [counts, setCounts] = useState<CompassCounts | null>(null);
+  const [counts, setCounts] = useState<Counts | null>(null);
   useEffect(() => {
-    loadCompassCounts()
+    loadCounts()
       .then(setCounts)
-      .catch(reporting('compass.loadCounts', { kind: 'background' }));
+      .catch(reporting('game.loadCounts', { kind: 'background' }));
   }, []);
   const available = useMemo(
     () =>

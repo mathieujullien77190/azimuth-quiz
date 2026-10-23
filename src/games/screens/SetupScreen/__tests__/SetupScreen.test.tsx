@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, fireEvent, render, waitFor, within } from '@testing-library/react-native';
 
 import { DEFAULT_SETTINGS } from '@/games/constants';
-import { loadCompassCounts } from '@/games/helpers/compassCounts';
+import { loadCounts } from '@/games/helpers/counts';
 import {
   createRoom,
   joinRoomPresence,
@@ -13,7 +13,7 @@ import {
   updateRoomPlayerColors,
   updateRoomSettings,
 } from '@/games/firebase/room';
-import { useRoomStore } from '@/store/compassRoomStore';
+import { useRoomStore } from '@/store/roomStore';
 import { useSettings } from '@/settings';
 import type { GameSettings } from '@/types';
 
@@ -27,7 +27,7 @@ jest.mock('@/settings', () => {
 // Meme raison : `firestorePlaces.ts` importe `firebase/firestore`.
 jest.mock('@/games/firebase/places', () => ({ fetchRandomPlaces: jest.fn() }));
 // Les tailles de groupes viennent aussi de Firestore.
-jest.mock('@/games/helpers/compassCounts', () => ({ loadCompassCounts: jest.fn() }));
+jest.mock('@/games/helpers/counts', () => ({ loadCounts: jest.fn() }));
 jest.mock('@/games/firebase/room', () => ({
   ROOM_MAX_PLAYERS: 10,
   createRoom: jest.fn(),
@@ -65,7 +65,7 @@ const initialRoomState = useRoomStore.getState();
 beforeEach(() => {
   AsyncStorage.clear();
   useRoomStore.setState(initialRoomState, true);
-  jest.mocked(loadCompassCounts).mockResolvedValue({
+  jest.mocked(loadCounts).mockResolvedValue({
     cities: { intermediate: 30, hard: 5 },
     capital: { intermediate: 12 },
   });
@@ -515,7 +515,7 @@ describe('SetupScreen — start/back', () => {
   });
 
   it('shows no count, and does not block the start, while the group sizes cannot be read', async () => {
-    jest.mocked(loadCompassCounts).mockRejectedValue(new Error('offline'));
+    jest.mocked(loadCounts).mockRejectedValue(new Error('offline'));
     const { getByRole, queryByText } = await renderSetup();
     expect(queryByText(/lieux possibles/)).toBeNull();
     expect(getByRole('button', { name: 'Lancer la partie' }).props.accessibilityState.disabled).not.toBe(true);

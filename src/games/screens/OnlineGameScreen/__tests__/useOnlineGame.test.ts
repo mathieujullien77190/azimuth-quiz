@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react-native';
 
 import { finishRoomRound, nextRoomRound, removeRoomPlayer, submitRoomGuess } from '@/games/firebase/room';
 import type { RoomGameState } from '@/games/firebase/room';
-import { useRoomStore } from '@/store/compassRoomStore';
+import { useRoomStore } from '@/store/roomStore';
 import { scoreRound } from '@/helpers';
 import type { Place } from '@/types';
 

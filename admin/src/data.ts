@@ -15,14 +15,14 @@ import {
 } from 'firebase/firestore';
 
 import { collapseJournal } from '@/data/firestore/journal';
-import { COMPASS_NUMBERING, planRegroup } from '@/data/firestore/numbering';
+import { NUMBERING, planRegroup } from '@/data/firestore/numbering';
 import {
   COLLECTIONS,
-  COMPASS_COUNTS_DOC,
+  COUNTS_DOC,
   DATA_VERSION_DOC,
   JOURNAL_COLLECTION,
-  type CompassCounts,
-  type CompassCountsDoc,
+  type Counts,
+  type CountsDoc,
   type JournalChange,
   type JournalDoc,
   type PlaceDoc,
@@ -38,7 +38,7 @@ import { readSnapshot, writeSnapshot } from './snapshotStore';
 type Cache = {
   places: Record<string, PlaceDoc>;
   /** `meta/compassCounts` : taille de chaque groupe Boussole (voir `numbering.ts`). */
-  compassCounts: CompassCounts;
+  compassCounts: Counts;
   /** `meta/compassCounts.shuffled` : garde tel quel quand la numerotation est maintenue (voir `applyPlaceChange`). */
   compassShuffled: boolean;
 };
@@ -56,7 +56,7 @@ const readMeta = async <T>({ collection: name, id }: { collection: string; id: s
 const fetchAll = async (): Promise<Cache> => {
   const [places, compass] = await Promise.all([
     readCollection<PlaceDoc>(COLLECTIONS.places),
-    readMeta<CompassCountsDoc>(COMPASS_COUNTS_DOC),
+    readMeta<CountsDoc>(COUNTS_DOC),
   ]);
   return {
     places,
@@ -142,9 +142,9 @@ const applyChanges = async (current: Cache, changes: JournalChange[]): Promise<v
         const snapshot = op === 'delete' ? null : await getDoc(doc(db, COLLECTIONS[c], id));
         const value = snapshot?.exists() ? snapshot.data() : undefined;
         if (c === 'places') assign(current.places, id, value as PlaceDoc | undefined);
-        else if (id === COMPASS_COUNTS_DOC.id) {
-          current.compassCounts = (value as CompassCountsDoc | undefined)?.counts ?? {};
-          current.compassShuffled = (value as CompassCountsDoc | undefined)?.shuffled === true;
+        else if (id === COUNTS_DOC.id) {
+          current.compassCounts = (value as CountsDoc | undefined)?.counts ?? {};
+          current.compassShuffled = (value as CountsDoc | undefined)?.shuffled === true;
         }
       }),
   );
@@ -219,7 +219,7 @@ const versionBump = { version: increment(1), updatedAt: Date.now() };
 export const applyPlaceChange = async (key: string, next: PlaceDoc | null): Promise<void> => {
   const { places, compassCounts } = data();
   const written: PlaceDoc | null = next && { ...next };
-  const compass = planRegroup(places, compassCounts, key, written, COMPASS_NUMBERING);
+  const compass = planRegroup(places, compassCounts, key, written, NUMBERING);
   if (written) {
     if (compass.n === null) delete written.n;
     else written.n = compass.n;
@@ -228,15 +228,15 @@ export const applyPlaceChange = async (key: string, next: PlaceDoc | null): Prom
   if (written) batch.set(doc(db, COLLECTIONS.places, key), written);
   else batch.delete(doc(db, COLLECTIONS.places, key));
   for (const [otherKey, n] of Object.entries(compass.moved)) batch.update(doc(db, COLLECTIONS.places, otherKey), { n });
-  batch.set(doc(db, COMPASS_COUNTS_DOC.collection, COMPASS_COUNTS_DOC.id), {
+  batch.set(doc(db, COUNTS_DOC.collection, COUNTS_DOC.id), {
     counts: compass.counts,
     ...(data().compassShuffled && { shuffled: true as const }),
-  } satisfies CompassCountsDoc);
+  } satisfies CountsDoc);
   batch.set(doc(db, DATA_VERSION_DOC.collection, DATA_VERSION_DOC.id), versionBump, { merge: true });
   const changes: JournalChange[] = [
     { c: 'places', id: key, op: written ? 'set' : 'delete' },
     ...Object.keys(compass.moved).map((id) => ({ c: 'places' as const, id, op: 'set' as const })),
-    { c: 'meta', id: COMPASS_COUNTS_DOC.id, op: 'set' },
+    { c: 'meta', id: COUNTS_DOC.id, op: 'set' },
   ];
   batch.set(newEntryRef(), { at: serverTimestamp(), changes });
   await batch.commit();

@@ -7,7 +7,7 @@ import { source } from '@/storybook/source';
 import surfaceModeCode from './SurfaceMode.source.md?raw';
 
 const meta = {
-  title: 'Compass/RoundResult',
+  title: 'Common/RoundResult',
   component: RoundResult,
   decorators: [
     (Story) => (

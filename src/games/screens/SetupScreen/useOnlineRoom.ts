@@ -18,7 +18,7 @@ import {
   updateRoomPlayerColors,
   updateRoomSettings,
 } from '@/games/firebase/room';
-import { useRoomStore } from '@/store/compassRoomStore';
+import { useRoomStore } from '@/store/roomStore';
 import { useLanguage, useTranslation } from '@/i18n';
 import type { GameSettings } from '@/types';
 

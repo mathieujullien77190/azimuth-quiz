@@ -19,7 +19,7 @@ jest.mock('@/games/firebase/room', () => ({
   ROOM_MAX_PLAYERS: 10,
   startRoomGame: jest.fn(() => Promise.resolve()),
 }));
-jest.mock('@/store/compassRoomStore', () => ({ useRoomStore: {} }));
+jest.mock('@/store/roomStore', () => ({ useRoomStore: {} }));
 
 const DEVICE_ORIGIN = { name: 'Ici', coordinates: { latitude: 1, longitude: 2 }, isDevicePosition: true };
 const PLACES = [{ name: 'Rome' }];

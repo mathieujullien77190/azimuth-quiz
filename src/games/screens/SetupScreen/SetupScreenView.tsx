@@ -1,5 +1,5 @@
 import { CATEGORIES } from '@/games/constants';
-import { GAME_ICONS } from '@/data';
+import { GAME_ICON } from '@/data';
 import { useTranslation } from '@/i18n';
 
 import CategorySection from '@/components/setup/CategorySection';
@@ -11,7 +11,7 @@ import type { SetupScreenViewProps } from './types';
 
 /**
  * Pur rendu : aucun hook a effet de bord (pas de `@/settings`, `@/games/firebase/room`,
- * `@/store/compassRoomStore`) — `SetupScreen` (smart) resout tout en amont, ce composant ne fait que
+ * `@/store/roomStore`) — `SetupScreen` (smart) resout tout en amont, ce composant ne fait que
  * lire des valeurs deja pretes et appeler des callbacks deja decides. Le bloc commun aux jeux
  * (titre, partie solo/hote/invite, boutons) est dans `SetupScreenShell`, seules les sections
  * propres a Compass sont ici.
@@ -50,7 +50,7 @@ export const SetupScreenView = ({
       party={party}
       startDisabled={startDisabled}
       startLabel={t.setup.start}
-      icon={GAME_ICONS.compass}
+      icon={GAME_ICON}
       title={t.home.gameTitle}
     >
       <CategorySection

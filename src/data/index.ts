@@ -50,7 +50,7 @@ export const PLAYER_COLORS = ['#EF4444', '#16A34A', '#0891B2', '#2563EB', '#9333
 export const ROOM_PLAYER_COLORS = [...PLAYER_COLORS, '#0D9488', '#4F46E5', '#C026D3', '#E11D48'] as const;
 
 /** Emoji de chaque jeu (carte d'accueil et en-tete de preparation). */
-export const GAME_ICONS = { compass: '🧭' } as const;
+export const GAME_ICON = '🧭';
 
 // Libelle/description : voir translations.setup.difficulties (meme id).
 export const DIFFICULTIES: { id: Difficulty; emoji: string }[] = [

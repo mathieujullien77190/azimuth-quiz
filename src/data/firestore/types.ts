@@ -34,12 +34,12 @@ export type PlaceDoc = {
 export type DataVersionDoc = { version: number; updatedAt: number };
 
 /** Taille de chaque groupe Boussole, `counts[categorie][difficulte]` ; un groupe vide est absent. */
-export type CompassCounts = Partial<Record<Category, Partial<Record<Difficulty, number>>>>;
+export type Counts = Partial<Record<Category, Partial<Record<Difficulty, number>>>>;
 
 /** `meta/compassCounts`, lu par l'hote au lancement. `shuffled` : les `n` suivent `shuffleRank` (sinon l'admin propose de melanger) ; le jeu l'ignore. */
-export type CompassCountsDoc = { counts: CompassCounts; shuffled?: true };
+export type CountsDoc = { counts: Counts; shuffled?: true };
 
-export const COMPASS_COUNTS_DOC = { collection: COLLECTIONS.meta, id: 'compassCounts' } as const;
+export const COUNTS_DOC = { collection: COLLECTIONS.meta, id: 'compassCounts' } as const;
 
 /** `journal/{id auto}` : une entree par ecriture de l'admin, avec l'horodatage serveur `at`. */
 export const JOURNAL_COLLECTION = 'journal';

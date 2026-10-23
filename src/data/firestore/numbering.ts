@@ -1,6 +1,6 @@
 import type { Category, Difficulty } from '@/types';
 
-import type { CompassCounts, PlaceDoc } from './types';
+import type { Counts, PlaceDoc } from './types';
 
 /**
  * Numerotation dense 1..taille par groupe, (`PlaceDoc.n`), ce
@@ -15,17 +15,17 @@ export type Numbering = {
   numberOf: (place: PlaceDoc) => number | undefined;
 };
 
-export const COMPASS_NUMBERING: Numbering = {
+export const NUMBERING: Numbering = {
   groupOf: (place) => (place?.compass ? { category: place.compass.category, difficulty: place.difficulty } : null),
   numberOf: (place) => place.n,
 };
 
 const groupId = ({ category, difficulty }: Group): string => `${category}|${difficulty}`;
 
-const sizeOf = (counts: CompassCounts, { category, difficulty }: Group): number => counts[category]?.[difficulty] ?? 0;
+const sizeOf = (counts: Counts, { category, difficulty }: Group): number => counts[category]?.[difficulty] ?? 0;
 
-const withSize = (counts: CompassCounts, { category, difficulty }: Group, size: number): CompassCounts => {
-  const next: CompassCounts = { ...counts, [category]: { ...counts[category] } };
+const withSize = (counts: Counts, { category, difficulty }: Group, size: number): Counts => {
+  const next: Counts = { ...counts, [category]: { ...counts[category] } };
   if (size > 0) next[category]![difficulty] = size;
   else delete next[category]![difficulty];
   if (Object.keys(next[category]!).length === 0) delete next[category];
@@ -50,8 +50,8 @@ export const shuffleRank = (key: string): number => {
 /** Numerote les lieux de `entries` qui ont un groupe, dans l'ordre de `shuffleRank`. */
 export const computeNumbering = (
   entries: [string, PlaceDoc][],
-  { numbering = COMPASS_NUMBERING }: { numbering?: Numbering } = {},
-): { numbers: Record<string, number>; counts: CompassCounts } => {
+  { numbering = NUMBERING }: { numbering?: Numbering } = {},
+): { numbers: Record<string, number>; counts: Counts } => {
   const groups = new Map<string, { group: Group; keys: [string, PlaceDoc][] }>();
   for (const entry of entries) {
     const group = numbering.groupOf(entry[1]);
@@ -61,7 +61,7 @@ export const computeNumbering = (
     groups.get(id)!.keys.push(entry);
   }
   const numbers: Record<string, number> = {};
-  let counts: CompassCounts = {};
+  let counts: Counts = {};
   for (const { group, keys } of groups.values()) {
     [...keys].sort(([a], [b]) => shuffleRank(a) - shuffleRank(b)).forEach(([key], index) => (numbers[key] = index + 1));
     counts = withSize(counts, group, keys.length);
@@ -74,16 +74,16 @@ export type Regroup = {
   n: number | null;
   /** Autres lieux renumerotes : le dernier du groupe quitte prend le numero libere. */
   moved: Record<string, number>;
-  counts: CompassCounts;
+  counts: Counts;
 };
 
 /** Garde la numerotation dense quand `places[key]` devient `next` (`null` = supprime). Rien ne bouge si le groupe est le meme. */
 export const planRegroup = (
   places: Record<string, PlaceDoc>,
-  counts: CompassCounts,
+  counts: Counts,
   key: string,
   next: PlaceDoc | null,
-  numbering: Numbering = COMPASS_NUMBERING,
+  numbering: Numbering = NUMBERING,
 ): Regroup => {
   const previous = places[key];
   const from = numbering.groupOf(previous);

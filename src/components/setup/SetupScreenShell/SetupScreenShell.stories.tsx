@@ -4,7 +4,7 @@ import { fn } from 'storybook/test';
 import DifficultySection from '@/components/setup/DifficultySection';
 import RoundsSection from '@/components/setup/RoundsSection';
 import type { SetupPartyProps } from '@/components/setup/useSetupRoom';
-import { GAME_ICONS, PLAYER_COLORS } from '@/data';
+import { GAME_ICON, PLAYER_COLORS } from '@/data';
 import type { Translations } from '@/i18n';
 import { translations } from '@/i18n/translations';
 import { localizedArgs } from '@/storybook/localized';
@@ -79,7 +79,7 @@ const meta = {
     overlayMessage: null,
     party,
     startDisabled: false,
-    icon: GAME_ICONS.compass,
+    icon: GAME_ICON,
   },
 } satisfies Meta<typeof SetupScreenShell>;
 
