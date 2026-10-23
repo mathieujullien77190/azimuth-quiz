@@ -110,6 +110,12 @@ describe('rhumbDestination', () => {
     const point = rhumbDestination(paris, 10, 20000);
     expect(point.latitude).toBeCloseTo(90, 6);
   });
+
+  it('gives a usable longitude at the pole, so the distance from there to a place is a real number', () => {
+    const south = rhumbDestination(paris, 170, 22000);
+    expect(Number.isFinite(south.longitude)).toBe(true);
+    expect(Number.isFinite(distanceKm(south, { latitude: 35.6762, longitude: 139.6503 }))).toBe(true);
+  });
 });
 
 describe('normalizeBearing', () => {

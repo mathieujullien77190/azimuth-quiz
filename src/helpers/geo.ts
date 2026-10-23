@@ -10,6 +10,9 @@ const toDegrees = (radians: number): number => (radians * 180) / Math.PI;
  */
 const stretchedLatitude = (latitude: number): number => Math.log(Math.tan(latitude / 2 + Math.PI / 4));
 
+/** Latitude maximale (radians) d'un point d'arrivee: un cran avant le pole, ou la latitude etiree est infinie (longitude NaN). */
+const POLE_LIMIT = Math.PI / 2 - 1e-9;
+
 /** Sous cet ecart de latitudes etirees, la route est plein est/ouest (meme parallele). */
 const SAME_PARALLEL_EPSILON = 1e-12;
 
@@ -46,8 +49,8 @@ export const rhumbDestination = (origin: Coordinates, bearing: number, km: numbe
   const angular = km / EARTH_RADIUS_KM;
   const theta = toRadians(bearing);
   const lat1 = toRadians(origin.latitude);
-  // Un cap tenu ne depasse jamais un pole (la route s'y enroule) : on borne la latitude.
-  const lat2 = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, lat1 + angular * Math.cos(theta)));
+  // Un cap tenu ne depasse jamais un pole (la route s'y enroule) : on borne la latitude juste avant lui.
+  const lat2 = Math.max(-POLE_LIMIT, Math.min(POLE_LIMIT, lat1 + angular * Math.cos(theta)));
   const dLat = lat2 - lat1;
   const q = stretchRatio(lat1, dLat, stretchedLatitude(lat2) - stretchedLatitude(lat1));
   const lon2 = toRadians(origin.longitude) + (angular * Math.sin(theta)) / q;

@@ -9,7 +9,6 @@ const score = (total: number): RoundScore => ({
   trueBearing: 0,
   trueSurfaceDistanceKm: 0,
   directionError: 0,
-  distanceError: 0,
   directionPoints: 0,
   distancePoints: 0,
   directionBonus: 0,

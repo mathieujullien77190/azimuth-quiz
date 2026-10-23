@@ -52,7 +52,6 @@ export type RoundScore = {
   /** Ecart angulaire sur le plan. */
   directionError: number;
   /** |ln(estime / vraie distance)| : erreur brute pour departager le bonus "plus proche" (`applyBestBonus`), non plafonnee contrairement a `distancePoints`. */
-  distanceError: number;
   directionPoints: number;
   distancePoints: number;
   /** Bonus (1/5 du max de la categorie) du ou des joueurs les plus proches, par categorie. Toujours 0 en solo. */

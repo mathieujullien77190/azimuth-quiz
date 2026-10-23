@@ -14,7 +14,6 @@ const result = (directionPoints: number, distancePoints: number): PlayerResult =
     trueBearing: 0,
     trueSurfaceDistanceKm: 0,
     directionError: 0,
-    distanceError: 0,
     directionPoints,
     distancePoints,
     directionBonus: 0,

@@ -32,7 +32,6 @@ const score: RoundScore = {
   trueBearing: 60,
   trueSurfaceDistanceKm: 880,
   directionError: 10,
-  distanceError: 0.1,
   directionPoints: 400,
   distancePoints: 350,
   directionBonus: 100,

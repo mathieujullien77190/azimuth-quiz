@@ -8,14 +8,14 @@ export const MAX_DISTANCE_POINTS = 500;
 export const BEST_BONUS_RATIO = 0.2;
 // Bonus du cap exact (au degre pres), en plus de MAX_DIRECTION_POINTS.
 export const EXACT_DIRECTION_BONUS = 100;
-// Bonus de la distance exacte (au pas atteignable par le curseur, voir `roundDistance`), en plus de
-// MAX_DISTANCE_POINTS.
+// Bonus de la distance exacte (point devine a moins d'un demi-pas de curseur du vrai lieu, voir `distanceStepKm`), en
+// plus de MAX_DISTANCE_POINTS.
 export const EXACT_DISTANCE_BONUS = 100;
 
-// Direction : 0 point a partir de cet ecart (degres).
-export const DIRECTION_TOLERANCE_DEG = 90;
-// Distance : 0 point quand l'estimation est a ce facteur pres (trop grande ou trop petite).
-export const DISTANCE_TOLERANCE_RATIO = 4;
+// Direction : le pire ecart de cap possible (degres) donne 0 point, 0 d'ecart donne le maximum.
+export const DIRECTION_TOLERANCE_DEG = 180;
+// Distance : le pire ecart entre le point devine et le vrai lieu (km, environ la moitie de la circonference) donne 0 point.
+export const DISTANCE_TOLERANCE_KM = 20000;
 // Courbe de decroissance (>1 = plus raide pres de la bonne reponse).
 export const SCORE_CURVE_EXPONENT = 1.5;
 

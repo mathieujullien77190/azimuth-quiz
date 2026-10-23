@@ -89,7 +89,7 @@ les deploie pas).
 
 `Guess` = `bearing` + `distanceKm`, distance **de surface**. Cap et distance **loxodromiques** (`helpers/geo.ts`), donc un peu plus
 longs que l'orthodromie (jusqu'a ~21 180 km, `MAX_SURFACE_DISTANCE_KM` = 22 000). Score (`helpers/scoring.ts`) :
-courbe logarithmique, 500 pts direction + 500 pts distance. Lieux : `fetchRandomPlaces` (`firebase/places.ts`).
+deux axes de 500 pts (courbe , plus l'ecart est petit plus il y a de points) : le cap (0 pt au pire ecart possible, 180 deg) et la distance, jugee par l'ecart entre le point devine et le vrai lieu (, 0 pt a  = 20 000 km). Bonus inchanges : +100 par axe quand c'est exact, +1/5 du max au meilleur de la manche (, plus petit ecart de cap / plus petit ).  verifie en propriete que le plus petit ecart gagne et gagne le plus de points. Lieux : `fetchRandomPlaces` (`firebase/places.ts`).
 
 **Globe3D** (`components/geo/Globe3D/`) : vraie boule **three.js** sur surface `expo-gl`, montree d'abord quand l'appelant donne
 `origin` (bouton 2D/3D), rotation au doigt, zoom a deux doigts ou +/− (`MAX_ZOOM` = 14), bouton « N » pour recentrer.

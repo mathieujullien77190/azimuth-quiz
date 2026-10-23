@@ -1,12 +1,11 @@
 import {
   BEST_BONUS_RATIO,
   DIRECTION_TOLERANCE_DEG,
-  DISTANCE_TOLERANCE_RATIO,
+  DISTANCE_TOLERANCE_KM,
   EXACT_DIRECTION_BONUS,
   EXACT_DISTANCE_BONUS,
   MAX_DIRECTION_POINTS,
   MAX_DISTANCE_POINTS,
-  MAX_SURFACE_DISTANCE_KM,
   MIN_DISTANCE_KM,
   SCORE_CURVE_EXPONENT,
 } from '@/data/game';
@@ -16,12 +15,12 @@ import { angleDifference, bearingDeg, distanceKm, rhumbDestination } from '@/hel
 
 const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
 
-/**
- * Arrondit a un pas lisible (plus grand pour les grandes distances) ; c'est aussi la precision atteignable
- * par le curseur, reprise par `scoreRound` pour la reponse exacte.
- */
+/** Pas du curseur de distance autour de `km` (plus grand pour les grandes distances). */
+export const distanceStepKm = (km: number): number => (km < 100 ? 5 : km < 1000 ? 10 : km < 10000 ? 50 : 100);
+
+/** Arrondit a un pas lisible (`distanceStepKm`) ; c'est aussi la precision atteignable par le curseur. */
 export const roundDistance = (km: number, maxKm: number): number => {
-  const step = km < 100 ? 5 : km < 1000 ? 10 : km < 10000 ? 50 : 100;
+  const step = distanceStepKm(km);
   return Math.min(maxKm, Math.max(MIN_DISTANCE_KM, Math.round(km / step) * step));
 };
 
@@ -43,8 +42,9 @@ export const kmToRatio = (km: number, maxKm: number): number =>
 const curve = (ratio: number): number => Math.max(0, Math.min(1, ratio)) ** SCORE_CURVE_EXPONENT;
 
 /**
- * Note une reponse. Cap et distance sont deux axes independants, plafonnes a MAX_DIRECTION_POINTS /
- * MAX_DISTANCE_POINTS.
+ * Note une reponse sur deux axes plafonnes a MAX_DIRECTION_POINTS / MAX_DISTANCE_POINTS : le cap (ecart de cap, 0 point
+ * au pire possible, 180 degres) et la distance, jugee par l'ecart entre le point devine et le vrai lieu (`targetGapKm`,
+ * 0 point au pire possible). Dans les deux cas, plus l'ecart est petit, plus il y a de points.
  */
 export const scoreRound = (origin: Coordinates, place: Place, guess: Guess): RoundScore => {
   const trueBearing = bearingDeg(origin, place.coordinates);
@@ -54,27 +54,22 @@ export const scoreRound = (origin: Coordinates, place: Place, guess: Guess): Rou
   const directionPoints = Math.round(MAX_DIRECTION_POINTS * curve(1 - directionError / DIRECTION_TOLERANCE_DEG));
   const directionExactBonus = Math.round(directionError) === 0 ? EXACT_DIRECTION_BONUS : 0;
 
-  const distanceError = Math.abs(Math.log(guess.distanceKm / trueSurfaceDistanceKm));
-  const distancePoints = Math.round(
-    MAX_DISTANCE_POINTS * curve(1 - distanceError / Math.log(DISTANCE_TOLERANCE_RATIO)),
-  );
-  // Bonus exact a la precision du curseur : plus la distance est grande, plus le pas est grossier (voir
-  // `roundDistance`), donc "exact" = pas atteignable le plus proche.
-  const distanceExactBonus =
-    roundDistance(trueSurfaceDistanceKm, MAX_SURFACE_DISTANCE_KM) === guess.distanceKm ? EXACT_DISTANCE_BONUS : 0;
+  const targetGapKm = distanceKm(rhumbDestination(origin, guess.bearing, guess.distanceKm), place.coordinates);
+  const distancePoints = Math.round(MAX_DISTANCE_POINTS * curve(1 - targetGapKm / DISTANCE_TOLERANCE_KM));
+  // Bonus exact: le point devine tombe a moins d'un demi-pas du curseur du vrai lieu (cap et distance justes).
+  const distanceExactBonus = targetGapKm <= distanceStepKm(trueSurfaceDistanceKm) / 2 ? EXACT_DISTANCE_BONUS : 0;
 
   return {
     trueBearing,
     trueSurfaceDistanceKm,
     directionError,
-    distanceError,
     directionPoints,
     distancePoints,
     directionBonus: 0,
     distanceBonus: 0,
     directionExactBonus,
     distanceExactBonus,
-    targetGapKm: distanceKm(rhumbDestination(origin, guess.bearing, guess.distanceKm), place.coordinates),
+    targetGapKm,
     total: directionPoints + distancePoints + directionExactBonus + distanceExactBonus,
   };
 };
