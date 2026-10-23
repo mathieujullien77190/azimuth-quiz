@@ -40,6 +40,8 @@ ne peint que `BOOT_BACKGROUND` (pas de flash du mauvais theme). Fond natif = `ex
 `useOnlineRoomSession` (`helpers/roomHooks.ts`) donne l'etat de la room, l'hote, les joueurs dans l'ordre d'arrivee, la redirection
 « room supprimee » et `handleQuit` ; `useGuessDraft` garde le brouillon de reponse.
 
+**Manche suivante** : quand l'hote passe a la manche suivante (`nextRoomRound`), son appareil suit la room ; les autres joueurs restent sur le resultat qu'ils regardent (la revelation est gardee en local dans `useOnlineGame`) et passent quand ils appuient sur le bouton (`canContinue`, `advance`). Un joueur sans revelation gardee (arrive en retard, rechargement) suit la room.
+
 **Mode voyage** (`travel`, reglage hote, defaut faux ; absent = faux) : le tour 1 part du depart habituel, chaque tour suivant part du
 **lieu du tour precedent**. Le depart se lit en UN seul endroit : `originForRound(gameState, travel)` (`helpers/rounds.ts`).
 `travelFromPlace` alimente `GameHeader` (`location`) et l'overlay `useTravelNotice` (une fois par tour, 3 s ou clic, jamais au tour 1).

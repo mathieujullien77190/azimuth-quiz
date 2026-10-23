@@ -179,7 +179,8 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
         onGoToCap={goToCap}
         onGoToDistance={goToDistance}
         onKick={game.kickPlayer}
-        onNextRound={game.goToNextRound}
+        canContinue={game.canContinue}
+        onNextRound={isHost ? game.goToNextRound : game.advance}
         onQuit={game.handleQuit}
         onScroll={handleScroll}
         onSetBearing={game.setBearing}

@@ -61,6 +61,7 @@ export const OnlineGameScreenView = ({
   confirmed,
   isHost,
   isLastRound,
+  canContinue,
   onNextRound,
   reaction,
   onReact,
@@ -69,10 +70,12 @@ export const OnlineGameScreenView = ({
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
 
-  // Rien a montrer a un non-hote une fois la manche confirmee : il attend le "manche suivante" de l'hote.
+  // Un non-hote attend que l'hote passe a la manche suivante, puis son propre bouton (`canContinue`) lui laisse la main.
   const footerContent = record ? (
     confirmed ? (
-      isHost && <Button label={isLastRound ? t.game.last : t.game.next} onPress={onNextRound ?? (() => {})} />
+      (isHost || canContinue) && (
+        <Button label={isLastRound ? t.game.last : t.game.next} onPress={onNextRound ?? (() => {})} />
+      )
     ) : (
       <Text style={styles.waiting}>{t.game.waitingForOthers}</Text>
     )
@@ -113,15 +116,11 @@ export const OnlineGameScreenView = ({
 
       <View style={styles.compass}>
         {record ? (
-          <Compass
-            needles={extraNeedles ?? []}
-            size={compassSizeFor(width)}
-            truthBearing={truthBearing}
-          />
+          <Compass needles={extraNeedles ?? []} size={compassSizeFor(width)} truthBearing={truthBearing} />
         ) : (
           <>
             <Compass
-                needles={[{ bearing, color: compassColor }]}
+              needles={[{ bearing, color: compassColor }]}
               onChange={onSetBearing}
               size={compassSizeFor(width)}
             />

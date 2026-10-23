@@ -226,7 +226,9 @@ describe('useOnlineGame — scoring the round (host only)', () => {
     const expected = scoreRound(ROME.coordinates, PARIS, answered.host);
     expect(scores.host.trueSurfaceDistanceKm).toBe(expected.trueSurfaceDistanceKm);
     expect(scores.host.trueBearing).toBe(expected.trueBearing);
-    expect(scores.host.trueSurfaceDistanceKm).not.toBe(scoreRound(ORIGIN.coordinates, PARIS, answered.host).trueSurfaceDistanceKm);
+    expect(scores.host.trueSurfaceDistanceKm).not.toBe(
+      scoreRound(ORIGIN.coordinates, PARIS, answered.host).trueSurfaceDistanceKm,
+    );
   });
 
   it('scores a round only once', async () => {
@@ -264,5 +266,69 @@ describe('useOnlineGame — scoring the round (host only)', () => {
   it('does nothing with nobody in the room', async () => {
     await setup({ players: {}, gameState: gameState() });
     expect(finishRoomRound).not.toHaveBeenCalled();
+  });
+});
+
+describe('useOnlineGame — a guest stays on the result until they continue', () => {
+  const guess = { bearing: 10, distanceKm: 1000 };
+  const scores = {
+    host: { total: 800 } as never,
+    guest: { total: 600 } as never,
+  };
+  const revealed = gameState({
+    screen: 'reveal',
+    guesses: { host: guess, guest: guess },
+    scores,
+    totalScores: { host: 800, guest: 600 },
+  });
+  const nextRound = gameState({ roundIndex: 1, totalScores: { host: 800, guest: 600 } });
+
+  /** Un invite (cet appareil) qui voit le reveal de la manche 1, puis l'hote passe a la manche 2. */
+  const guestAtReveal = async () => {
+    const hook = await setup({ localUid: 'guest', gameState: revealed });
+    await act(async () => {});
+    return hook;
+  };
+
+  it('does not follow the host to the next round: it keeps showing the result it was looking at', async () => {
+    const { result } = await guestAtReveal();
+    await act(async () => setRoom({ gameState: nextRound }));
+    expect(result.current.canContinue).toBe(true);
+    expect(result.current.gameState.screen).toBe('reveal');
+    expect(result.current.gameState.roundIndex).toBe(0);
+    expect(result.current.gameState.scores).toBe(scores);
+    expect(result.current.totals).toEqual([800, 600]);
+  });
+
+  it('moves to the next round when the guest continues', async () => {
+    const { result } = await guestAtReveal();
+    await act(async () => setRoom({ gameState: nextRound }));
+    await act(async () => result.current.advance());
+    expect(result.current.canContinue).toBe(false);
+    expect(result.current.gameState.roundIndex).toBe(1);
+    expect(result.current.gameState.screen).toBe('game');
+  });
+
+  it('shows the last result before the ranking, then the end of the game on demand', async () => {
+    const { result } = await guestAtReveal();
+    await act(async () => setRoom({ gameState: gameState({ screen: 'end', roundIndex: 2 }) }));
+    expect(result.current.canContinue).toBe(true);
+    expect(result.current.gameState.screen).toBe('reveal');
+    await act(async () => result.current.advance());
+    expect(result.current.gameState.screen).toBe('end');
+  });
+
+  it('never holds the host back: the host follows its own round', async () => {
+    const { result } = await setup({ gameState: revealed });
+    await act(async () => {});
+    await act(async () => setRoom({ gameState: nextRound }));
+    expect(result.current.canContinue).toBe(false);
+    expect(result.current.gameState.roundIndex).toBe(1);
+  });
+
+  it('follows the room when it never saw the result (joined late)', async () => {
+    const { result } = await setup({ localUid: 'guest', gameState: nextRound });
+    expect(result.current.canContinue).toBe(false);
+    expect(result.current.gameState.roundIndex).toBe(1);
   });
 });

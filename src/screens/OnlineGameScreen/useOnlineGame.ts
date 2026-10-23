@@ -17,8 +17,13 @@ import {
 } from '@/firebase/room';
 import type { RoundRecord, RoundScore } from '@/types';
 
+import type { RoomGameState } from '@/firebase/room';
+
 import { DEFAULT_BEARING } from './constants';
 import { buildRoundRecord } from './helpers';
+
+/** Une revelation de manche, telle que la room la portait au moment ou elle s'est affichee. */
+type RevealSnapshot = Pick<RoomGameState, 'guesses' | 'scores' | 'totalScores'>;
 
 /**
  * Logique metier de `OnlineGameScreen` : la session de room est `useOnlineRoomSession` commun ; ici le
@@ -26,8 +31,24 @@ import { buildRoundRecord } from './helpers';
  * calcule les formes pour le JSX, comme `useGame`/`GameScreen.tsx`.
  */
 export const useOnlineGame = (code: string, onQuit: () => void) => {
-  const { localUid, players, connectionLost, connected, roomSettings, gameState, onlinePlayers, isHost, handleQuit, handleReplay, reactions } =
-    useOnlineRoomSession({ deleteRoom, restartRoom, sendReaction, removeRoomPlayer, pruneRoomPlayerData }, code, onQuit);
+  const {
+    localUid,
+    players,
+    connectionLost,
+    connected,
+    roomSettings,
+    gameState,
+    onlinePlayers,
+    isHost,
+    handleQuit,
+    handleReplay,
+    reactions,
+  } = useOnlineRoomSession(
+    { deleteRoom, restartRoom, sendReaction, removeRoomPlayer, pruneRoomPlayerData },
+    code,
+    onQuit,
+  );
+  // Manche en cours dans la room (celle que l'hote fait avancer) ; l'ecran montre `shown`, voir plus bas.
   const place = gameState.places[gameState.roundIndex];
 
   // Reponse en cours de cet appareil, remise a zero a chaque manche. Ajustee au rendu plutot qu'en effet
@@ -56,6 +77,8 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
   // Chaque appareil accumule les manches vues au reveal, dans la forme attendue par
   // `RoundResult`/`EndScreen` : la room ne garde que la manche courante, c'est la seule copie.
   const [records, setRecords] = useState<RoundRecord[]>([]);
+  // Meme revelation gardee en entier (reponses, scores, totaux) : la room la remplace des que l'hote passe a la suite.
+  const [snapshots, setSnapshots] = useState<Record<number, RevealSnapshot>>({});
   const lastRecordedRoundRef = useRef(-1);
   useEffect(() => {
     const scores = gameState.scores;
@@ -63,6 +86,10 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
     if (lastRecordedRoundRef.current === gameState.roundIndex) return;
     lastRecordedRoundRef.current = gameState.roundIndex;
     setRecords((previous) => [...previous, buildRoundRecord(place, onlinePlayers, gameState.guesses, scores)]);
+    setSnapshots((previous) => ({
+      ...previous,
+      [gameState.roundIndex]: { guesses: gameState.guesses, scores, totalScores: gameState.totalScores },
+    }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState.screen, gameState.scores, gameState.roundIndex, gameState.guesses, place]);
 
@@ -99,7 +126,21 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
 
   // Indexe par uid, pas par position dans `records` : l'hote l'ecrit dans la room apres chaque manche, donc
   // il survit a une expulsion qui reordonne `onlinePlayers` ou a un arrivant tardif sans historique.
-  const totals = onlinePlayers.map(({ uid }) => gameState.totalScores[uid] ?? 0);
+  // Manche regardee par cet appareil. L'hote avance avec la room ; un joueur dont l'hote est deja passe a la manche
+  // suivante reste sur le resultat qu'il regarde (revelation gardee en local) et passe quand il appuie sur le bouton.
+  // Sans revelation gardee (arrive en retard, rechargement), il suit la room.
+  const [viewedRound, setViewedRound] = useState(gameState.roundIndex);
+  const viewedSnapshot = snapshots[viewedRound];
+  const behind = !isHost && viewedRound < gameState.roundIndex && viewedSnapshot !== undefined;
+  if (!behind && viewedRound !== gameState.roundIndex) setViewedRound(gameState.roundIndex);
+  const shown: RoomGameState =
+    behind && viewedSnapshot !== undefined
+      ? { ...gameState, ...viewedSnapshot, roundIndex: viewedRound, screen: 'reveal' }
+      : gameState;
+  const shownPlace = shown.places[shown.roundIndex];
+  const advance = () => setViewedRound(gameState.roundIndex);
+
+  const totals = onlinePlayers.map(({ uid }) => shown.totalScores[uid] ?? 0);
   const myIndex = onlinePlayers.findIndex((p) => p.uid === localUid);
 
   const submit = async () => {
@@ -112,11 +153,15 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
   const kickPlayer = isHost
     ? (index: number) => {
         const uid = onlinePlayers[index]?.uid;
-        if (uid !== undefined && uid !== localUid) removeRoomPlayer(code, uid).catch(reporting('game.kickPlayer', { room: code }));
+        if (uid !== undefined && uid !== localUid)
+          removeRoomPlayer(code, uid).catch(reporting('game.kickPlayer', { room: code }));
       }
     : undefined;
 
-  const goToNextRound = () => nextRoomRound(code, gameState.roundIndex + 1, gameState.places.length).catch(reporting('game.nextRound', { room: code }));
+  const goToNextRound = () =>
+    nextRoomRound(code, gameState.roundIndex + 1, gameState.places.length).catch(
+      reporting('game.nextRound', { room: code }),
+    );
 
   return {
     localUid,
@@ -126,8 +171,10 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
     connectionLost,
     connected,
     roomSettings,
-    gameState,
-    place,
+    gameState: shown,
+    place: shownPlace,
+    canContinue: behind,
+    advance,
     bearing,
     distanceKm,
     bearingTouched,

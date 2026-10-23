@@ -17,6 +17,7 @@ import { source } from '~sb/source';
 import { OnlineGameScreenView } from '../OnlineGameScreenView';
 import answeringCode from './Answering.source.md?raw';
 import distancePageCode from './DistancePage.source.md?raw';
+import continueCode from './Continue.source.md?raw';
 import revealedCode from './Revealed.source.md?raw';
 import sentCode from './Sent.source.md?raw';
 
@@ -131,5 +132,21 @@ export const Revealed: Story = {
     location: 'Vous êtes à Paris',
     onNextRound: () => {},
     points: SAMPLE_TOTALS[0],
+  },
+};
+
+/** Invite dont l'hote est deja passe a la manche suivante : il reste sur ce resultat et passe quand il appuie sur le bouton. */
+export const Continue: Story = {
+  parameters: source(continueCode),
+  args: {
+    ...resultArgs,
+    answered: undefined,
+    canContinue: true,
+    confirmed: true,
+    earthMarks: resultMarks(0.8),
+    isHost: false,
+    isLastRound: false,
+    onNextRound: () => {},
+    points: SAMPLE_TOTALS[1],
   },
 };

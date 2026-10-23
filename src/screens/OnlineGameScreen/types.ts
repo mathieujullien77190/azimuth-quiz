@@ -72,6 +72,8 @@ export type OnlineGameScreenViewProps = OnlineHeaderProps & {
   confirmed?: boolean;
   isHost?: boolean;
   isLastRound?: boolean;
+  /** Un non-hote dont l'hote est deja passe a la manche suivante : le bouton lui laisse passer a son rythme. */
+  canContinue?: boolean;
   onNextRound?: () => void;
   /**
    * Reaction emoji a l'ecran, et ce que le tap sur les emojis du pied appelle (undefined seul dans la

@@ -112,6 +112,19 @@ describe('OnlineGameScreenView — the round result', () => {
     expect(queryByText(t.roundResult.direction)).toBeNull();
   });
 
+  it('gives a guest the next-round button only once the host has moved on (canContinue)', async () => {
+    const onNextRound = jest.fn();
+    const waiting = await render(<OnlineGameScreenView {...baseProps} confirmed record={record} />);
+    expect(waiting.queryByText(t.game.next)).toBeNull();
+    await waiting.unmount();
+
+    const { getByText } = await render(
+      <OnlineGameScreenView {...baseProps} canContinue confirmed onNextRound={onNextRound} record={record} />,
+    );
+    await fireEvent.press(getByText(t.game.next));
+    expect(onNextRound).toHaveBeenCalledTimes(1);
+  });
+
   it('keeps working when the host presses "next" with no handler wired', async () => {
     const { getByText } = await render(<OnlineGameScreenView {...baseProps} confirmed isHost record={record} />);
     await fireEvent.press(getByText(t.game.next));
