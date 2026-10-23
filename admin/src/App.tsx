@@ -8,7 +8,6 @@ import { hrefOf, PAGES, pageFromPath, type PageId } from './pages';
 
 // Un chunk par page : son code n'est telecharge qu'a l'ouverture.
 const PlacesView = lazy(() => import('./views/PlacesView').then((m) => ({ default: m.PlacesView })));
-const CountriesView = lazy(() => import('./views/CountriesView').then((m) => ({ default: m.CountriesView })));
 const GlobeView = lazy(() => import('./views/GlobeView').then((m) => ({ default: m.GlobeView })));
 const ErrorsView = lazy(() => import('./views/ErrorsView').then((m) => ({ default: m.ErrorsView })));
 
@@ -84,7 +83,6 @@ const AdminApp = () => {
       <Fragment key={revision}>
         <Suspense fallback={<div className="empty">Chargement…</div>}>
           {tab === 'places' && <PlacesView />}
-          {tab === 'countries' && <CountriesView />}
           {tab === 'globe' && <GlobeView />}
           {tab === 'errors' && <ErrorsView />}
         </Suspense>

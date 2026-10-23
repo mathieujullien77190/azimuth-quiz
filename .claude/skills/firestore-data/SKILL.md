@@ -20,11 +20,10 @@ Projet Firebase : `azimuth-quiz`. Documents : `projects/azimuth-quiz/databases/(
 
 | Source | Copies à garder à jour |
 |---|---|
-| `countries/{ISO}` (nom fr/en, drapeau avec ses couleurs et leurs %, devise, symbole, indicatif) | `places/{cle}.country` de **chaque lieu** du pays (`applyCountryChange`, page « Pays » de l'admin : elle écrit le pays et ses lieux dans un même lot). Les documents `countries` portent encore des champs de l'ancien jeu Silhouette (contour, voisins, difficulté...) : l'admin ne les lit pas et ne les efface jamais |
 | numérotation d'un groupe | `places.n` + `meta/compassCounts` |
 
 À savoir :
-- Pas de tableaux imbriqués ni de `undefined` dans Firestore : drapeaux en objets, champ optionnel absent = omis.
+- Pas de tableaux imbriqués ni de `undefined` dans Firestore : champ optionnel absent = omis.
 
 ## 2. Numérotation et compteurs
 
@@ -87,7 +86,6 @@ Le journal n'est jamais purgé. Il est lisible et inscriptible par les admins un
 
 ## 5. Recettes
 
-- **Nom, drapeau (couleurs et %), devise, symbole, indicatif d'un pays** : page « Pays » de l'admin (`applyCountryChange`) : le pays et tous les `places.country` de ce pays sont réécrits ensemble, journal pour chacun. À la main : refaire les deux, en repartant du document stocké pour garder les champs que l'admin ne gère pas.
 - **Ajouter des lieux** : document complet (identité, `country`, `compass` avec `category`, `n`), compteurs, version, journal.
 - **Supprimer / changer de catégorie ou de difficulté un lieu** : `applyPlaceChange` dans l'admin (il garde la
   numérotation dense dans le même batch).

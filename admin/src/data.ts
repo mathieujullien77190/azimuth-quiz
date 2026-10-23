@@ -12,11 +12,9 @@ import {
   Timestamp,
   where,
   writeBatch,
-  type WriteBatch,
 } from 'firebase/firestore';
 
 import { collapseJournal } from '@/data/firestore/journal';
-import { planCountryChange } from '@/data/firestore/denormalize';
 import { COMPASS_NUMBERING, planRegroup } from '@/data/firestore/numbering';
 import {
   COLLECTIONS,
@@ -25,7 +23,6 @@ import {
   JOURNAL_COLLECTION,
   type CompassCounts,
   type CompassCountsDoc,
-  type CountryDoc,
   type JournalChange,
   type JournalDoc,
   type PlaceDoc,
@@ -40,8 +37,6 @@ import { readSnapshot, writeSnapshot } from './snapshotStore';
  */
 type Cache = {
   places: Record<string, PlaceDoc>;
-  /** Lu avec tolerance : les documents portent encore des champs de Silhouette, ni lus ni retires. */
-  countries: Record<string, CountryDoc>;
   /** `meta/compassCounts` : taille de chaque groupe Boussole (voir `numbering.ts`). */
   compassCounts: CompassCounts;
   /** `meta/compassCounts.shuffled` : garde tel quel quand la numerotation est maintenue (voir `applyPlaceChange`). */
@@ -59,14 +54,12 @@ const readMeta = async <T>({ collection: name, id }: { collection: string; id: s
   (await getDoc(doc(db, name, id))).data() as T | undefined;
 
 const fetchAll = async (): Promise<Cache> => {
-  const [places, countries, compass] = await Promise.all([
+  const [places, compass] = await Promise.all([
     readCollection<PlaceDoc>(COLLECTIONS.places),
-    readCollection<CountryDoc>(COLLECTIONS.countries),
     readMeta<CompassCountsDoc>(COMPASS_COUNTS_DOC),
   ]);
   return {
     places,
-    countries,
     compassCounts: compass?.counts ?? {},
     compassShuffled: compass?.shuffled === true,
   };
@@ -149,7 +142,6 @@ const applyChanges = async (current: Cache, changes: JournalChange[]): Promise<v
         const snapshot = op === 'delete' ? null : await getDoc(doc(db, COLLECTIONS[c], id));
         const value = snapshot?.exists() ? snapshot.data() : undefined;
         if (c === 'places') assign(current.places, id, value as PlaceDoc | undefined);
-        else if (c === 'countries') assign(current.countries, id, value as CountryDoc | undefined);
         else if (id === COMPASS_COUNTS_DOC.id) {
           current.compassCounts = (value as CompassCountsDoc | undefined)?.counts ?? {};
           current.compassShuffled = (value as CompassCountsDoc | undefined)?.shuffled === true;
@@ -195,15 +187,15 @@ const assign = <T>(record: Record<string, T>, id: string, value: T | undefined):
 export const loadData = async (): Promise<void> => {
   const snapshot = await readSnapshot<Snapshot>();
   if (snapshot) {
-    // Une copie d'avant le deplacement des silhouettes dans les pays porte encore la cle `contours` : retiree. Une
-    // copie d'avant `countries` n'en a pas : une lecture complete.
-    const current: Cache & { contours?: unknown } = { ...snapshot.cache };
+    // Une ancienne copie porte encore les cles `contours` et `countries` : retirees.
+    const current: Cache & { contours?: unknown; countries?: unknown } = { ...snapshot.cache };
     delete current.contours;
+    delete current.countries;
     cache = current;
     syncedAt = snapshot.syncedAt;
     journalAt = snapshot.journalAt ?? null;
     // Une copie anterieure au journal n'y a pas de position : une lecture complete, puis le journal prend le relais.
-    if (journalAt === null || !current.countries) await syncData();
+    if (journalAt === null) await syncData();
     return;
   }
   await syncData();
@@ -215,56 +207,7 @@ export const data = (): Cache => {
   return cache;
 };
 
-const BATCH_SIZE = 400;
-
 const versionBump = { version: increment(1), updatedAt: Date.now() };
-
-/**
- * Execute `operations` par lots d'au plus `BATCH_SIZE` (plafond Firestore : 500), chaque lot atomique ; version et
- * entree de journal sont ecrites dans le dernier, donc une entree n'est visible qu'une fois toutes ses donnees.
- */
-const commitInBatches = async (
-  operations: ((batch: WriteBatch) => void)[],
-  changes: JournalChange[],
-): Promise<void> => {
-  for (let start = 0; start < operations.length || start === 0; start += BATCH_SIZE) {
-    const batch = writeBatch(db);
-    const chunk = operations.slice(start, start + BATCH_SIZE);
-    for (const operation of chunk) operation(batch);
-    if (start + BATCH_SIZE >= operations.length) {
-      batch.set(doc(db, DATA_VERSION_DOC.collection, DATA_VERSION_DOC.id), versionBump, { merge: true });
-      batch.set(newEntryRef(), { at: serverTimestamp(), changes } satisfies JournalDoc & { at: unknown });
-    }
-    await batch.commit();
-  }
-};
-
-// --- Copies tenues a jour avec leur source --------------------------------------------------------------------
-
-/**
- * Ecrit `next` en `countries/{code}` et reecrit, dans les memes lots, chaque copie : le `country` de ses lieux (voir
- * `planCountryChange`). `next` part du document stocke, donc les champs que l'admin ne gere pas sont conserves.
- */
-export const applyCountryChange = async (code: string, next: CountryDoc): Promise<void> => {
-  const plan = planCountryChange(code, next, data().places);
-  await commitInBatches(
-    [
-      (batch) => batch.set(doc(db, COLLECTIONS.countries, code), next),
-      ...Object.entries(plan.places).map(
-        ([key, place]) =>
-          (batch: WriteBatch) =>
-            batch.update(doc(db, COLLECTIONS.places, key), { country: place.country }),
-      ),
-    ],
-    [
-      { c: 'countries', id: code, op: 'set' },
-      ...Object.keys(plan.places).map((id) => ({ c: 'places' as const, id, op: 'set' as const })),
-    ],
-  );
-  data().countries[code] = next;
-  Object.assign(data().places, plan.places);
-  persist();
-};
 
 // --- Edition des lieux ----------------------------------------------------------------------------------------------
 

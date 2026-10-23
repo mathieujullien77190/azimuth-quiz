@@ -1,9 +1,7 @@
 import { StyleSheet } from 'react-native';
 
-import { fontSize, spacing } from '@/data';
+import { fontSize, HOME_FOOTER_HEIGHT, spacing } from '@/data';
 import type { Theme } from '@/types';
-
-import { DIAL_SIZE } from './constants';
 
 export const createStyles = ({ colors, isDark, typography }: Theme) =>
   StyleSheet.create({
@@ -26,17 +24,13 @@ export const createStyles = ({ colors, isDark, typography }: Theme) =>
       justifyContent: 'space-around',
       gap: spacing.md,
     },
-    dial: {
-      width: DIAL_SIZE,
-      height: DIAL_SIZE,
-    },
-    needle: {
-      ...StyleSheet.absoluteFill,
-    },
+    // Meme hauteur que le pied de l'accueil (ses boutons) pour que la boussole reste a sa place.
     footer: {
       alignSelf: 'stretch',
       alignItems: 'center',
+      justifyContent: 'flex-end',
       gap: spacing.md,
+      height: HOME_FOOTER_HEIGHT,
     },
     track: {
       alignSelf: 'stretch',

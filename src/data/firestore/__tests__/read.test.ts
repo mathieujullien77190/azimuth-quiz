@@ -10,13 +10,6 @@ const paris: PlaceDoc = {
   country: {
     fr: 'France',
     en: 'France',
-    flag: [
-      { id: 'blue', hex: '#0055A4', percent: 33 },
-      { id: 'white', hex: '#FFFFFF', percent: 34 },
-    ],
-    currency: 'Euro',
-    currencySymbol: '€',
-    phoneCode: '+33',
   },
   compass: { category: 'capital', description: 'Ville lumière.', wikiFr: 'Paris', wikiEn: 'Paris' },
 };

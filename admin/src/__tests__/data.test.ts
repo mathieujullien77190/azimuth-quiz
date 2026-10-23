@@ -1,7 +1,7 @@
 import { Timestamp } from 'firebase/firestore';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { CountryDoc, PlaceDoc } from '@/data/firestore/types';
+import type { PlaceDoc } from '@/data/firestore/types';
 
 type Op = {
   op: 'set' | 'update' | 'delete';
@@ -103,7 +103,6 @@ const place = (overrides: Partial<PlaceDoc> = {}): PlaceDoc => ({
 type CacheShape = Awaited<ReturnType<typeof snapshotCache>>;
 const snapshotCache = async (overrides: Record<string, unknown> = {}) => ({
   places: {} as Record<string, PlaceDoc>,
-  countries: {} as Record<string, CountryDoc>,
   compassCounts: {},
   compassShuffled: false,
   ...overrides,
@@ -164,7 +163,6 @@ describe('data / loadData', () => {
 
   it('does a full sync when there is no stored copy, and stores the result', async () => {
     h.collections.places = { par: place() };
-    h.collections.countries = { FR: { fr: 'France', en: 'France' } };
     h.meta.compassCounts = { counts: { capital: { easy: 1 } }, shuffled: true };
     h.journal = [
       { id: 'a', at: 10 },
@@ -175,7 +173,6 @@ describe('data / loadData', () => {
 
     expect(mod.data()).toEqual({
       places: { par: place() },
-      countries: { FR: { fr: 'France', en: 'France' } },
       compassCounts: { capital: { easy: 1 } },
       compassShuffled: true,
     });
@@ -193,7 +190,7 @@ describe('data / loadData', () => {
     expect(h.writeSnapshot).toHaveBeenCalledWith(expect.objectContaining({ journalAt: 0 }));
   });
 
-  it('reads the stored copy without any Firestore read, dropping the obsolete contours key', async () => {
+  it('reads the stored copy without any Firestore read, dropping the obsolete contours and countries keys', async () => {
     const cache = await snapshotCache({ contours: { old: true }, countries: { FR: { fr: 'France', en: 'France' } }, places: { par: place() } });
     h.snapshot = { cache, syncedAt: 1, journalAt: 100 };
 
@@ -201,20 +198,8 @@ describe('data / loadData', () => {
 
     expect(mod.data().places).toEqual({ par: place() });
     expect(mod.data()).not.toHaveProperty('contours');
-    expect(mod.data().countries).toEqual({ FR: { fr: 'France', en: 'France' } });
+    expect(mod.data()).not.toHaveProperty('countries');
     expect(h.writeSnapshot).not.toHaveBeenCalled();
-  });
-
-  it('does one full read when the stored copy was saved without the countries', async () => {
-    const cache = await snapshotCache({ places: { par: place() } });
-    delete (cache as Partial<typeof cache>).countries;
-    h.snapshot = { cache, syncedAt: 1, journalAt: 100 };
-    h.collections.countries = { FR: { fr: 'France', en: 'France' } };
-
-    await mod.loadData();
-
-    expect(mod.data().countries).toEqual({ FR: { fr: 'France', en: 'France' } });
-    expect(h.writeSnapshot).toHaveBeenCalled();
   });
 
   it('does a full sync when the stored copy has no journal position', async () => {
@@ -312,11 +297,9 @@ describe('data / startJournalSync', () => {
   it('re-reads the documents a foreign entry names and puts them in the local copy', async () => {
     await load({
       places: { par: place({ name: 'old' }), gone: place() },
-      countries: { FR: { fr: 'old', en: 'old' } },
       compassCounts: { cities: { easy: 9 } },
     });
     h.collections.places = { par: place({ name: 'new' }) };
-    h.collections.countries = { FR: { fr: 'France', en: 'France' } };
     h.meta.compassCounts = { counts: { capital: { easy: 1 } }, shuffled: true };
     mod.startJournalSync();
 
@@ -327,7 +310,7 @@ describe('data / startJournalSync', () => {
         changes: [
           { c: 'places', id: 'par', op: 'set' },
           { c: 'places', id: 'gone', op: 'delete' },
-          { c: 'countries', id: 'FR', op: 'set' },
+          { c: 'countries' as never, id: 'FR', op: 'set' },
           { c: 'removedCollection' as never, id: 'pa', op: 'set' },
           { c: 'meta', id: 'compassCounts', op: 'set' },
           { c: 'meta', id: 'dataVersion', op: 'set' },
@@ -338,7 +321,7 @@ describe('data / startJournalSync', () => {
 
     const copy = mod.data();
     expect(copy.places).toEqual({ par: place({ name: 'new' }) });
-    expect(copy.countries.FR).toEqual({ fr: 'France', en: 'France' });
+    expect(copy).not.toHaveProperty('countries');
     expect(copy.compassCounts).toEqual({ capital: { easy: 1 } });
     expect(copy.compassShuffled).toBe(true);
     expect(h.getDocReads).not.toContain('places/gone');
@@ -450,55 +433,6 @@ describe('data / persistence', () => {
 
     expect(h.writeSnapshot).toHaveBeenCalledTimes(1);
     expect(h.writeSnapshot).toHaveBeenCalledWith({ cache: mod.data(), syncedAt: 1, journalAt: 100 });
-  });
-});
-
-describe('data / applyCountryChange', () => {
-  it('writes the country and the copy in its places, in one batch', async () => {
-    await load({
-      places: {
-        par: place({ country: { fr: 'old', en: 'old' } }),
-        rom: place({ name: 'Rome', code: 'IT' }),
-        lyo: place({ name: 'Lyon', country: { fr: 'France', en: 'France' }, code: 'FR' }),
-      },
-      countries: { FR: { fr: 'old', en: 'old' }, IT: { fr: 'Italie', en: 'Italy' } },
-    });
-    const next: CountryDoc = { fr: 'France', en: 'France', currency: 'EUR' };
-
-    await mod.applyCountryChange('FR', next);
-
-    expect(summary()).toEqual([
-      'set countries/FR',
-      'update places/par',
-      'update places/lyo',
-      'set meta/dataVersion',
-      expect.stringMatching(/^set journal\//),
-    ]);
-    expect(lastBatch().ops[0].value).toBe(next);
-    expect(lastBatch().ops[1].value).toEqual({ country: { fr: 'France', en: 'France', currency: 'EUR' } });
-    expectBookkeeping([
-      { c: 'countries', id: 'FR', op: 'set' },
-      { c: 'places', id: 'par', op: 'set' },
-      { c: 'places', id: 'lyo', op: 'set' },
-    ]);
-    const copy = mod.data();
-    expect(copy.countries.FR).toBe(next);
-    expect(copy.places.par.country).toEqual({ fr: 'France', en: 'France', currency: 'EUR' });
-    expect(copy.places.rom.country).toBeUndefined();
-  });
-
-  it('splits more than 400 operations in several batches, the bookkeeping only in the last one', async () => {
-    const places = Object.fromEntries(Array.from({ length: 450 }, (_, index) => [`p${index}`, place()]));
-    await load({ places, countries: { FR: { fr: 'France', en: 'France' } } });
-
-    await mod.applyCountryChange('FR', { fr: 'France', en: 'France', currency: 'EUR' });
-
-    expect(h.batches.map((batch) => batch.ops.length)).toEqual([400, 53]);
-    expect(h.batches.every((batch) => batch.committed)).toBe(true);
-    expect(h.batches[0].ops.some((op) => op.ref.id === 'dataVersion')).toBe(false);
-    expect(h.batches[0].ops.some((op) => op.ref.collection === 'journal')).toBe(false);
-    expect(versionOp(h.batches[1])).toBeDefined();
-    expect((journalEntry(h.batches[1]).value as { changes: unknown[] }).changes).toHaveLength(451);
   });
 });
 

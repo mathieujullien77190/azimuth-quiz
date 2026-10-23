@@ -1,10 +1,3 @@
-/** L'aiguille oscille entre ces deux caps (degres, 0 = nord), un sens en `SWAY_MS`, puis retour. */
-export const NEEDLE_FROM_DEG = -38;
-export const NEEDLE_TO_DEG = 52;
-export const SWAY_MS = 2500;
-/** Taille du cadran (px) et rayon de ses parties, dans les unites 300 x 300 du SVG. */
-export const DIAL_SIZE = 300;
-export const DIAL_CENTER = 150;
 /** Le libelle « chargement » respire entre ces opacites, un sens en `BLINK_MS`. */
 export const BLINK_MIN_OPACITY = 0.35;
 export const BLINK_MS = 700;

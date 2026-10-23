@@ -23,7 +23,6 @@ vi.mock('../data', () => ({
   },
 }));
 vi.mock('../views/PlacesView', () => ({ PlacesView: () => <div>places view</div> }));
-vi.mock('../views/CountriesView', () => ({ CountriesView: () => <div>countries view</div> }));
 vi.mock('../views/GlobeView', () => ({ GlobeView: () => <div>globe view</div> }));
 vi.mock('../views/ErrorsView', () => ({ ErrorsView: () => <div>errors view</div> }));
 
@@ -99,8 +98,8 @@ describe('App', () => {
   it('switches page with the mobile select', async () => {
     render(<App />);
     await screen.findByText('places view');
-    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Page' }), 'countries');
-    expect(await screen.findByText('countries view')).toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Page' }), 'globe');
+    expect(await screen.findByText('globe view')).toBeInTheDocument();
   });
 
   it('follows the back button', async () => {
@@ -131,7 +130,7 @@ describe('App', () => {
   it('shows every page', async () => {
     render(<App />);
     await screen.findByText('places view');
-    for (const view of ['countries', 'errors']) {
+    for (const view of ['globe', 'errors']) {
       await userEvent.click(screen.getByRole('link', { name: labelOf(view) }));
       expect(await screen.findByText(`${view} view`)).toBeInTheDocument();
     }

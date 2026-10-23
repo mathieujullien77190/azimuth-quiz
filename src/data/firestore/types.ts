@@ -1,10 +1,9 @@
-import type { Category, FlagColorId, Difficulty } from '@/types';
+import type { Category, Difficulty } from '@/types';
 
-/** Forme Firestore des donnees. Pas de tableaux imbriques ni de `undefined` : couleurs de drapeau en objets, champ optionnel absent = omis. */
+/** Forme Firestore des donnees. Pas de tableaux imbriques ni de `undefined` : champ optionnel absent = omis. */
 
 export const COLLECTIONS = {
   places: 'places',
-  countries: 'countries',
   meta: 'meta',
 } as const;
 
@@ -13,14 +12,10 @@ export const DATA_VERSION_DOC = { collection: COLLECTIONS.meta, id: 'dataVersion
 
 export type CompassDoc = { category: Category; description?: string; wikiFr?: string; wikiEn?: string };
 
-/** Copie du pays dans CHAQUE lieu (aucune lecture en plus) ; l'admin les reecrit dans le meme lot a l'edition du pays. */
+/** Copie du pays dans CHAQUE lieu (aucune lecture en plus) ; l'admin ne les edite plus. */
 export type CountrySnapshot = {
   fr: string;
   en: string;
-  flag?: FlagColorDoc[];
-  currency?: string;
-  currencySymbol?: string;
-  phoneCode?: string;
 };
 
 /** `places/{key}`, `key` = code permanent a 3 lettres. `compass` seulement si le lieu est dans le jeu. */
@@ -34,21 +29,6 @@ export type PlaceDoc = {
   n?: number;
   country?: CountrySnapshot;
   compass?: CompassDoc;
-};
-
-export type FlagColorDoc = { id: FlagColorId; hex: string; percent: number };
-
-/**
- * `countries/{ISO}`, copie dans chaque lieu (`denormalize.ts`). Les documents de l'ancien jeu Silhouette portent des
- * champs en plus, hors de ce type : l'admin ne les lit ni ne les efface.
- */
-export type CountryDoc = {
-  fr: string;
-  en: string;
-  flag?: FlagColorDoc[];
-  currency?: string;
-  currencySymbol?: string;
-  phoneCode?: string;
 };
 
 export type DataVersionDoc = { version: number; updatedAt: number };
