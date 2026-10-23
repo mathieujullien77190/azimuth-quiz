@@ -403,22 +403,45 @@ describe('useSetupRoom — cleanup that fails', () => {
 
   it.each([
     ['permission-denied', 0],
+    ['not-found', 0],
     ['unavailable', 1],
-  ])('joiner: a %s failure on leaving is recorded %i time(s) (denied = the room is already gone)', async (code, recorded) => {
-    const reporter = jest.fn(() => Promise.resolve());
-    setErrorReporter(reporter);
-    resetErrorThrottle();
-    const ctx = await setup({
-      joinRoomPresence: jest.fn(() => Promise.resolve('max')),
-      removeRoomPlayer: jest.fn(() => Promise.reject(Object.assign(new Error('x'), { code }))),
-    });
-    await joinRoom(ctx);
-    await ctx.emitPlayers({ zoe: player('Host'), max: player('Max') }, 'zoe');
-    await ctx.unmount();
-    await act(async () => {});
-    expect(reporter).toHaveBeenCalledTimes(recorded);
-    setErrorReporter(null);
-  });
+  ])(
+    'a %s failure while registering in the room is recorded %i time(s) (denied / not found = the room is gone)',
+    async (code, recorded) => {
+      const reporter = jest.fn(() => Promise.resolve());
+      setErrorReporter(reporter);
+      resetErrorThrottle();
+      const ctx = await setup({
+        joinRoomPresence: jest.fn(() => Promise.reject(Object.assign(new Error('x'), { code }))),
+      });
+      await joinRoom(ctx);
+      expect(ctx.result.current.party.nameError).toBeNull();
+      expect(reporter).toHaveBeenCalledTimes(recorded);
+      setErrorReporter(null);
+    },
+  );
+
+  it.each([
+    ['permission-denied', 0],
+    ['unavailable', 1],
+  ])(
+    'joiner: a %s failure on leaving is recorded %i time(s) (denied = the room is already gone)',
+    async (code, recorded) => {
+      const reporter = jest.fn(() => Promise.resolve());
+      setErrorReporter(reporter);
+      resetErrorThrottle();
+      const ctx = await setup({
+        joinRoomPresence: jest.fn(() => Promise.resolve('max')),
+        removeRoomPlayer: jest.fn(() => Promise.reject(Object.assign(new Error('x'), { code }))),
+      });
+      await joinRoom(ctx);
+      await ctx.emitPlayers({ zoe: player('Host'), max: player('Max') }, 'zoe');
+      await ctx.unmount();
+      await act(async () => {});
+      expect(reporter).toHaveBeenCalledTimes(recorded);
+      setErrorReporter(null);
+    },
+  );
 });
 
 describe('useSetupRoom — the previous game', () => {
@@ -448,14 +471,14 @@ describe('useSetupRoom — the previous game', () => {
     expect(ctx.result.current.connectedRoomCode).toBe('tabofuna');
   });
 
-  it('says the code is invalid when that room is gone, like any typed code', async () => {
+  it('does not offer the saved code when that room is gone: no "not found" before the player types anything', async () => {
     await AsyncStorage.setItem('azimuthquiz:last-joined-room', 'tabofuna');
     const ctx = await setup({ roomExists: jest.fn(() => Promise.resolve(false)) });
     await flush();
     await act(async () => ctx.result.current.party.onChooseJoin());
     await flush();
-    expect(ctx.result.current.party.joinCode).toBe('tabofuna');
-    expect(ctx.result.current.party.joinStatus).toBe('invalid');
+    expect(ctx.result.current.party.joinCode).toBe('');
+    expect(ctx.result.current.party.joinStatus).toBe('idle');
     expect(ctx.result.current.connectedRoomCode).toBeNull();
   });
 
@@ -487,12 +510,16 @@ describe('useSetupRoom — the previous game', () => {
     expect(malformed.result.current.party.joinCode).toBe('');
   });
 
-  it('ignores the saved code if the screen is left before it is read', async () => {
+  it('ignores the saved code if the screen is left while its room is being checked', async () => {
     await AsyncStorage.setItem('azimuthquiz:last-joined-room', 'tabofuna');
-    const ctx = await setup();
-    await ctx.unmount();
+    let answer: (exists: boolean) => void = () => {};
+    const roomExists = jest.fn(() => new Promise<boolean>((resolve) => (answer = resolve)));
+    const ctx = await setup({ roomExists });
     await flush();
-    expect(ctx.adapter.roomExists).not.toHaveBeenCalled();
+    await ctx.unmount();
+    await act(async () => answer(true));
+    await flush();
+    expect(roomExists).toHaveBeenCalledTimes(1);
   });
 });
 

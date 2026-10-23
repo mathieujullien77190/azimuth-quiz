@@ -69,7 +69,8 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
   // d'hote, et sinon elle reste orpheline dans Firestore (`removeRoomPlayer` plus bas ne retire que la presence de
   // cet appareil : une room sans hote a deja laisse un joiner « se reconnecter » a une room abandonnee).
   const leaveHostedRoom = () => {
-    if (mode === 'host' && roomCode !== null) adapter.deleteRoom(roomCode).catch(reporting('setup.deleteRoom', { kind: 'background', room: roomCode }));
+    if (mode === 'host' && roomCode !== null)
+      adapter.deleteRoom(roomCode).catch(reporting('setup.deleteRoom', { kind: 'background', room: roomCode }));
   };
 
   const resetChoice = useCallback(() => {
@@ -119,17 +120,21 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
   // non geree ferait planter l'ecran.
   useEffect(() => {
     if (mode !== 'host' || roomCode === null) return;
-    adapter.updateRoomSettings(roomCode, adapter.roomSettingsFrom(settings)).catch(reporting('setup.updateSettings', { room: roomCode }));
+    adapter
+      .updateRoomSettings(roomCode, adapter.roomSettingsFrom(settings))
+      .catch(reporting('setup.updateSettings', { room: roomCode }));
   }, [adapter, mode, roomCode, settings]);
 
-  // Derniere room rejointe par cet appareil : « Rejoindre » remplit le code avec (connexion immediate si elle existe
-  // encore, sinon code invalide comme n'importe quel code saisi). Editable.
+  // Derniere room rejointe par cet appareil : « Rejoindre » remplit le code avec (connexion immediate). Proposee seulement si
+  // elle existe encore, sinon un vieux code afficherait « code introuvable » avant meme que le joueur ait tape quoi que ce
+  // soit. Editable.
   const [previousCode, setPreviousCode] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
     loadLastJoinedRoom()
-      .then((code) => {
-        if (!cancelled && code !== null && adapter.isValidRoomCode(code)) setPreviousCode(code);
+      .then(async (code) => {
+        if (code === null || !adapter.isValidRoomCode(code) || !(await adapter.roomExists(code))) return;
+        if (!cancelled) setPreviousCode(code);
       })
       .catch(reporting('setup.previousRoom', { kind: 'background' }));
     return () => {
@@ -250,8 +255,9 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
 
   // Inscrit cet appareil dans la liste des joueurs (hote et joiner) et le renomme quand le nom change. Le
   // renommage attend la fin de la frappe (sinon chaque touche ecrirait un nom a moitie tape). Un nom deja pris est
-  // refuse (`nameTaken`) : le champ se rouvre avec la raison, retaper retente. Tout autre echec (ex. room
-  // supprimee, voir le nettoyage juste dessous) est avale.
+  // refuse (`nameTaken`) : le champ se rouvre avec la raison, retaper retente. Une room disparue (`not-found`,
+  // `permission-denied`, voir le nettoyage juste dessous) est avalee ; tout autre echec est journalise (page Erreurs de
+  // l'admin) pour ne pas laisser un joiner sans explication.
   const [nameTaken, setNameTaken] = useState(false);
   const roomName = useDebouncedValue(soloName, NAME_SYNC_DELAY_MS);
   useEffect(() => {
@@ -262,7 +268,13 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
         useRoomStore.setState({ localUid: uid });
         setNameTaken(false);
       })
-      .catch((error) => setNameTaken(isNameTakenError(error)));
+      .catch((error) => {
+        setNameTaken(isNameTakenError(error));
+        const code = (error as { code?: unknown } | null)?.code;
+        if (!isNameTakenError(error) && code !== 'not-found' && code !== 'permission-denied') {
+          reporting('setup.joinRoom', { kind: 'background', room: connectedRoomCode })(error);
+        }
+      });
   }, [adapter, connectedRoomCode, roomName, soloPlaceholder]);
 
   // Quitte la room *precedente* au changement de room (ou en quittant l'ecran), sinon elle reste listee avec un
@@ -273,7 +285,10 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     if (connectedRoomCode === null || localUid === null) return;
     const isHostOfThisRoom = localUid === hostUid;
     return () => {
-      if (isHostOfThisRoom) adapter.deleteRoom(connectedRoomCode).catch(reporting('setup.deleteRoom', { kind: 'background', room: connectedRoomCode }));
+      if (isHostOfThisRoom)
+        adapter
+          .deleteRoom(connectedRoomCode)
+          .catch(reporting('setup.deleteRoom', { kind: 'background', room: connectedRoomCode }));
       else {
         const report = reporting('setup.leaveRoom', { kind: 'background', room: connectedRoomCode });
         // `permission-denied` ici = room deja disparue (l'hote est parti avant) : rien a quitter, pas une erreur.
@@ -358,7 +373,9 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
       const color = adapter.colors[index % adapter.colors.length];
       if (player.color !== color) colorByUid[uid] = color;
     });
-    adapter.updateRoomPlayerColors(connectedRoomCode, colorByUid).catch(reporting('setup.updateColors', { room: connectedRoomCode }));
+    adapter
+      .updateRoomPlayerColors(connectedRoomCode, colorByUid)
+      .catch(reporting('setup.updateColors', { room: connectedRoomCode }));
   }, [adapter, isHost, connectedRoomCode, players]);
 
   // Les sections en lecture seule reagissent a un tap/toggle, seulement pour expliquer pourquoi rien ne se passe :
@@ -413,7 +430,9 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     isHost,
     onKick: (uid) => {
       if (connectedRoomCode === null) return;
-      adapter.removeRoomPlayer(connectedRoomCode, uid).catch(reporting('setup.kickPlayer', { room: connectedRoomCode }));
+      adapter
+        .removeRoomPlayer(connectedRoomCode, uid)
+        .catch(reporting('setup.kickPlayer', { room: connectedRoomCode }));
     },
     onlineChoice,
     onChooseSolo: chooseSolo,
