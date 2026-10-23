@@ -46,23 +46,6 @@
     <rect x="1085" y="138" width="50" height="690" rx="8"/>
     <rect x="1185" y="138" width="50" height="690" rx="8"/>
   </g>
-  <g font-size="11.5" fill="#1f2a37">
-    <text transform="translate(606 820) rotate(-90)" font-weight="700">rooms/{code} — une par partie</text>
-    <text transform="translate(622 820) rotate(-90)">hostUid · settings · players.{uid} · manche · guesses · scores · reaction</text>
-    <text transform="translate(706 820) rotate(-90)" font-weight="700">places/{clé} — les lieux</text>
-    <text transform="translate(722 820) rotate(-90)">copie du pays, numéro n · lecture publique, écriture admin</text>
-    <text transform="translate(806 820) rotate(-90)" font-weight="700">meta/*</text>
-    <text transform="translate(822 820) rotate(-90)">compassCounts (tailles des groupes) · dataVersion</text>
-    <text transform="translate(906 820) rotate(-90)" font-weight="700">countries/{ISO}</text>
-    <text transform="translate(922 820) rotate(-90)">nom fr/en, recopié dans les lieux · non lu par le jeu</text>
-    <text transform="translate(1006 820) rotate(-90)" font-weight="700">journal/*</text>
-    <text transform="translate(1022 820) rotate(-90)">admin seulement · une entrée par modification de données</text>
-    <text transform="translate(1106 820) rotate(-90)" font-weight="700">errors/*</text>
-    <text transform="translate(1122 820) rotate(-90)">erreurs de jeu · lues dans la page Erreurs de l'admin</text>
-    <text transform="translate(1206 820) rotate(-90)" font-weight="700">errorQuota/*</text>
-    <text transform="translate(1222 820) rotate(-90)">compteurs du jour : 30 par appareil, 1000 au total</text>
-  </g>
-
   <!-- 1 Créer et rejoindre -->
   <text x="24" y="150" font-size="13" font-weight="700" fill="#1f2a37">1 · Créer et rejoindre</text>
   <g font-size="12" fill="#1f2a37">
