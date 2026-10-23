@@ -1,4 +1,4 @@
-import type { RoomPlayers } from '@/games/firebase/room';
+import type { RoomPlayers } from '@/firebase/room';
 
 // Un import de type depuis `room.ts` est efface a la compilation : il ne tire pas `firebase/firestore` a
 // l'execution, donc sans danger pour ce composant dumb (meme astuce que `SetupScreenPlayer` de SetupScreenView).

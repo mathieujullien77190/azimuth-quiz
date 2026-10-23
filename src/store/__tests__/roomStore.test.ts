@@ -1,11 +1,11 @@
-import type { RoomGameState, RoomSettings } from '@/games/firebase/room';
-import { subscribeToRoomGame, subscribeToRoomPlayers, subscribeToRoomSettings } from '@/games/firebase/room';
+import type { RoomGameState, RoomSettings } from '@/firebase/room';
+import { subscribeToRoomGame, subscribeToRoomPlayers, subscribeToRoomSettings } from '@/firebase/room';
 import type { RoomPlayers, RoomReaction } from '@/firebase/roomApi';
 
 import { useRoomStore } from '../roomStore';
 
 // `room.ts` charge `firebase/firestore` (ESM seul, plante Jest) : les abonnements sont des mocks.
-jest.mock('@/games/firebase/room', () => ({
+jest.mock('@/firebase/room', () => ({
   subscribeToRoomPlayers: jest.fn(),
   subscribeToRoomSettings: jest.fn(),
   subscribeToRoomGame: jest.fn(),

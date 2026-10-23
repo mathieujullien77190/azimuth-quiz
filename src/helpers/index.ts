@@ -1,8 +1,8 @@
 export { formatBearing, formatDistance, formatNumber, initials } from './utils';
 export { bearingDeg, distanceKm, normalizeBearing } from './geo';
-export { kmToRatio, ratioToKm } from '../games/helpers/distanceScale';
+export { kmToRatio, ratioToKm } from './distanceScale';
 export { resolveOrigin } from './platform';
-export { applyBestBonus, scoreRound } from '../games/helpers/scoring';
+export { applyBestBonus, scoreRound } from './scoring';
 export {
   clearAppData,
   loadLanguage,

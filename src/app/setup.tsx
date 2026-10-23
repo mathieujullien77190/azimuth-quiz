@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { goBackOrHome } from '@/helpers/platform';
 
-import SetupScreen from '@/games/screens/SetupScreen';
+import SetupScreen from '@/screens/SetupScreen';
 
 const SetupRoute = () => {
   const router = useRouter();

@@ -1,7 +1,7 @@
 import { reporting } from '../helpers/errors';
 import { doc, getDoc } from 'firebase/firestore';
 
-import type { Counts } from '@/data/firestore/types';
+import type { Counts } from '@/firebase/types';
 
 import { db } from './client';
 

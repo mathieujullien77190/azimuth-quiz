@@ -18,10 +18,10 @@ Identifiants de code en anglais.
 ```
 src/
   app/          # Expo Router : _layout (providers + Stack), routes = re-exports minces
-  components/   # ui/ (primitives : Button, Card, Chip, Screen...), providers/ (Theme, Language, StartupSplash, ErrorNoticeHost), home/ (HomeScreen, SettingsScreen, AppTitle, LoadingBar, SwayingCompass, MascotButton), geo/ (Compass, Globe3D, EarthSection), game/ (GameHeader/GameFooter, FinalStandings, Reaction*, RoomDeletedScreen), setup/ (preparation de partie)
-  data/         # valeurs partagees (score/geo, options, palette), theme.ts, data/firestore/ (types, read.ts, numbering.ts, journal.ts...)
-  games/        # screens/, components/, helpers/, firebase/ (room.ts, places.ts), constants.ts
-  firebase/     # TOUT ce qui touche Firebase/Firestore : client.ts (app, db, auth), roomApi.ts (createRoomApi), roomCode.ts, errorSink.ts, groupCounts.ts, groupedDraw.ts
+  components/   # ui/ (primitives : Button, Card, Chip, Screen...), providers/ (Theme, Language, StartupSplash, ErrorNoticeHost), home/ (AppTitle, LoadingBar, SwayingCompass, MascotButton), geo/ (Compass, Globe3D, EarthSection), game/ (GameHeader/GameFooter, FooterNav, PlaceCard, RoundResult, RoundsRecap, FinalStandings, Reaction*), setup/ (preparation de partie)
+  screens/      # un dossier par ecran : HomeScreen, SettingsScreen, SetupScreen, OnlineGameScreen, EndScreen, RoomDeletedScreen (container + vue pour les ecrans de jeu)
+  data/         # valeurs partagees (score/geo, options, palette), game.ts (categories, reglages par defaut), theme.ts
+  firebase/     # TOUT ce qui touche Firebase/Firestore : client.ts, roomApi.ts, room.ts, places.ts, roomCode.ts, errorSink.ts, groupCounts.ts, groupedDraw.ts + types des documents (types.ts), read.ts, numbering.ts, journal.ts (partages avec l'admin)
   store/        # UN seul store Zustand concret, `useRoomStore` (roomStore.ts : etat + actions connect/disconnect/drapeaux), types dans types.ts
   helpers/      # sans Firebase, regroupes par theme : geo, utils (format, random, splitEvenly), platform (web, drapeaux, goBack, position), storage (AsyncStorage : reglages, langue, theme, nom, derniere room), errors (reportError + notice), appInfo (version), hooks, roomPlayers (+ noms), roomHooks (session, presence, reactions, purge), groupCursors
   settings/     # GameSettings (store Zustand singleton), usePlayerName
@@ -30,7 +30,7 @@ src/
 admin/          # outil interne (app Vite a part), importe `src/` via le meme alias `@/`
 ```
 
-Les dossiers `firebase/` (`src/firebase/`, `games/firebase/`) importent `firebase/firestore` et restent HORS de tout barrel (Jest plante a l'import) : import direct. Le store de la room (`store/roomStore.ts`) en dependent aussi (via `room.ts`).
+Le dossier `src/firebase/` importe `firebase/firestore` et reste HORS de tout barrel (Jest plante a l'import) : import direct. Le store de la room (`store/roomStore.ts`) en dependent aussi (via `room.ts`).
 
 Apres tout renommage/deplacement dans `src/` : `(cd admin && npx tsc --noEmit -p . && npm run build)`.
 
@@ -48,10 +48,10 @@ reglages (requis par `useSetupRoom`, jamais envoye dans la room) ; `onChangeName
 
 Collection `rooms`, champ `game` (`'compass'`) immuable, fixe a la creation. Un code d'un autre jeu est refuse a la jonction.
 
-- **Firestore** : `firebase/roomApi.ts` (`createRoomApi(game)`) ; chaque `games/firebase/room.ts` le lie et ajoute l'etat de
+- **Firestore** : `firebase/roomApi.ts` (`createRoomApi(game)`) ; chaque `firebase/room.ts` le lie et ajoute l'etat de
   manche. **Tout champ qu'un joueur non hote ecrit doit figurer dans sa liste de champs** de `firestore.rules`
   (`compassPlayer`), sinon l'ecriture est refusee et l'action « revient ».
-- **Store** : `store/roomStore.ts` = `useRoomStore`, store unique de la room (pas de fabrique ni de generiques) ; `useSetupRoom` et les hooks de `helpers/roomHooks.ts` l'importent directement (les tests le remplissent par `setState` et mockent `@/games/firebase/room`). **Setup** : `components/setup/useSetupRoom` + sections `*Section`.
+- **Store** : `store/roomStore.ts` = `useRoomStore`, store unique de la room (pas de fabrique ni de generiques) ; `useSetupRoom` et les hooks de `helpers/roomHooks.ts` l'importent directement (les tests le remplissent par `setState` et mockent `@/firebase/room`). **Setup** : `components/setup/useSetupRoom` + sections `*Section`.
 - **Ecran de jeu** : `useOnlineRoomSession` (etat, hote, joueurs dans l'ordre d'arrivee, redirection « room supprimee », `handleQuit`), `useGuessDraft`.
 - **Pas de partie locale** : seul = room *cachee* (`hostedSilently`), donc reseau requis. `startOnlineGame(run)` couvre les deux cas.
 - **Un joueur part** (quitte, expulse, coupure) : l'hote efface ses donnees de manche (`useHostPruneLeavers`,
@@ -74,7 +74,7 @@ Firestore est la **seule source** (lieux) : aucun JSON embarque, **aucun repli**
 
 Collections : `places/{cle}` (3 lettres, permanente), `countries/{ISO}` (laisse en base, plus edite par l'admin ni lu par le jeu ; le nom fr/en reste copie dans `places.country`, lu par le jeu),
 `meta/*` (`compassCounts`, `dataVersion`), `journal/*` (admin), `errors`,
-`rooms/*`. Le jeu ne lit que `places`, `meta`, `rooms`. Types : `data/firestore/types.ts`. Restes de l'ancien mode Indices toujours en base mais ignores du code : champs `clues`/`personality`/`wordplay` des lieux, `personalityJobs`, `meta/cluesCounts`, `devFeedback`.
+`rooms/*`. Le jeu ne lit que `places`, `meta`, `rooms`. Types : `firebase/types.ts`. Restes de l'ancien mode Indices toujours en base mais ignores du code : champs `clues`/`personality`/`wordplay` des lieux, `personalityJobs`, `meta/cluesCounts`, `devFeedback`.
 
 **Tirage** (`firebase/groupedDraw.ts` + `firebase/groupCounts.ts` + `helpers/groupCursors.ts`) : l'hote tire seul. Groupe =
 `category` × `difficulty`, numerote 1..taille (`numbering.ts`), tailles dans `meta/*Counts`, **un curseur par groupe** par appareil
@@ -88,8 +88,8 @@ les deploie pas).
 ## Boussole
 
 `Guess` = `bearing` + `distanceKm`, distance **de surface**. Cap et distance **loxodromiques** (`helpers/geo.ts`), donc un peu plus
-longs que l'orthodromie (jusqu'a ~21 180 km, `MAX_SURFACE_DISTANCE_KM` = 22 000). Score (`games/helpers/scoring.ts`) :
-courbe logarithmique, 500 pts direction + 500 pts distance. Lieux : `fetchRandomPlaces` (`games/firebase/places.ts`).
+longs que l'orthodromie (jusqu'a ~21 180 km, `MAX_SURFACE_DISTANCE_KM` = 22 000). Score (`helpers/scoring.ts`) :
+courbe logarithmique, 500 pts direction + 500 pts distance. Lieux : `fetchRandomPlaces` (`firebase/places.ts`).
 
 **Globe3D** (`components/geo/Globe3D/`) : vraie boule **three.js** sur surface `expo-gl`, montree d'abord quand l'appelant donne
 `origin` (bouton 2D/3D), rotation au doigt, zoom a deux doigts ou +/− (`MAX_ZOOM` = 14), bouton « N » pour recentrer.

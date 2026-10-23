@@ -1,6 +1,6 @@
 ```tsx
 import CategorySection from '@/components/setup/CategorySection';
-import { CATEGORIES } from '@/games/constants';
+import { CATEGORIES } from '@/data/game';
 
 <CategorySection
   categories={CATEGORIES}

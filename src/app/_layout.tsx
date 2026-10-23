@@ -6,7 +6,7 @@ import ErrorNoticeHost from '@/components/providers/ErrorNoticeHost';
 import LanguageProvider from '@/components/providers/LanguageProvider';
 import StartupSplash from '@/components/providers/StartupSplash';
 import ThemeProvider from '@/components/providers/ThemeProvider';
-import { preloadCounts } from '@/games/helpers/counts';
+import { preloadCounts } from '@/helpers/counts';
 import { disableTextSelection, polyfillFlagEmoji } from '@/helpers';
 import { writeErrorRecord } from '@/firebase/errorSink';
 import { setErrorReporter } from '@/helpers/errors';

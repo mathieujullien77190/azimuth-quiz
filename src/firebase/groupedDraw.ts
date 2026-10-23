@@ -1,7 +1,7 @@
 import { and, collection, getDocs, or, query, where } from 'firebase/firestore';
 
-import type { Group, Numbering, Slot } from '@/data/firestore/numbering';
-import { COLLECTIONS, type Counts, type PlaceDoc } from '@/data/firestore/types';
+import type { Group, Numbering, Slot } from '@/firebase/numbering';
+import { COLLECTIONS, type Counts, type PlaceDoc } from '@/firebase/types';
 import type { Category, Difficulty } from '@/types';
 
 import { db } from './client';
@@ -72,7 +72,7 @@ export type GroupedDrawOptions<T> = {
 
 /**
  * Tire les lieux d'une partie : Firestore n'a pas de requete "N documents au hasard", donc les lieux sont numerotes
- * 1..taille par groupe (`data/firestore/numbering.ts`) et chaque groupe a un curseur local qui avance en bouclant.
+ * 1..taille par groupe (`firebase/numbering.ts`) et chaque groupe a un curseur local qui avance en bouclant.
  * Une requete `or` par tranche de 30 ; une passe de plus (taille doublee) si des lieux manquent ou sont filtres.
  *
  * Rejette s'il existe moins de `rounds` lieux : curseurs intacts.

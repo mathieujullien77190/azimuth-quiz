@@ -9,7 +9,7 @@ import { resetErrorThrottle, setErrorReporter } from '../errors';
 import { useHostPruneLeavers, useOnlineRoomSession, useRoomPresence, useRoomReactions } from '../roomHooks';
 
 // `room.ts` charge `firebase/firestore` (ESM seul, plante Jest) : le store n'ouvre ici aucun abonnement.
-jest.mock('@/games/firebase/room', () => ({}));
+jest.mock('@/firebase/room', () => ({}));
 const mockDismissTo = jest.fn();
 const mockRouter = { dismissTo: mockDismissTo };
 jest.mock('expo-router', () => ({ useRouter: () => mockRouter }));

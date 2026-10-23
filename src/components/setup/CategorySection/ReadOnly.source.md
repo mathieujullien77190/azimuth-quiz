@@ -1,6 +1,6 @@
 ```tsx
 import CategorySection from '@/components/setup/CategorySection';
-import { CATEGORIES } from '@/games/constants';
+import { CATEGORIES } from '@/data/game';
 
 // A joiner sees the host's choice but can't change it (`disabled`).
 <CategorySection

@@ -17,8 +17,7 @@ const ROOTS = [
   'src/components/geo',
   'src/components/game',
   'src/components/setup',
-  'src/games/components',
-  'src/games/screens',
+  'src/screens',
 ];
 
 /**

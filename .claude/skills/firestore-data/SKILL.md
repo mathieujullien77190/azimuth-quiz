@@ -28,7 +28,7 @@ Projet Firebase : `azimuth-quiz`. Documents : `projects/azimuth-quiz/databases/(
 ## 2. Numérotation et compteurs
 
 - Chaque groupe est numéroté `n` = 1..taille, **dense**, dans l'ordre mélangé d'un hash de la clé (`shuffleRank`,
-  `data/firestore/numbering.ts`). Groupes : Boussole = `compass.category` × `difficulty`.
+  `firebase/numbering.ts`). Groupes : Boussole = `compass.category` × `difficulty`.
 - Le jeu tire au hasard un `n` entre 1 et la taille lue dans `meta/*Counts` : **un compteur trop petit rend des lieux
   inatteignables, trop grand fait chercher des `n` sans document**.
 - **Ajouter** un lieu : `n` = taille + 1 dans le groupe (les deux numérotations), puis les compteurs passent à la nouvelle

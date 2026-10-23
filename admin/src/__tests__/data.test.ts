@@ -1,7 +1,7 @@
 import { Timestamp } from 'firebase/firestore';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { PlaceDoc } from '@/data/firestore/types';
+import type { PlaceDoc } from '@/firebase/types';
 
 type Op = {
   op: 'set' | 'update' | 'delete';

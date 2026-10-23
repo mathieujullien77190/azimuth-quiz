@@ -1,0 +1,93 @@
+import { useState } from 'react';
+import { Text, View } from 'react-native';
+import { clearAppData } from '@/helpers';
+import { useLanguage, useTranslation, type Language } from '@/i18n';
+import { useSettings } from '@/settings';
+import { useThemedStyles, useThemeSettings } from '@/themes';
+import type { ThemeId } from '@/types';
+
+import Button from '../../components/ui/Button';
+import Chip from '../../components/ui/Chip';
+import Screen from '../../components/ui/Screen';
+import Section from '../../components/ui/Section';
+import VersionLine from '../../components/ui/VersionLine';
+import { APP_CODENAME, APP_VERSION_NUMBER } from './constants';
+import type { SettingsScreenProps } from './types';
+
+import { createStyles } from './styles';
+
+export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
+  const styles = useThemedStyles(createStyles);
+  const { language, setLanguage, resetLanguage } = useLanguage();
+  const { themeId, setThemeId, resetThemeId } = useThemeSettings();
+  const { resetSettings } = useSettings();
+  const t = useTranslation();
+  const [dataCleared, setDataCleared] = useState(false);
+
+  const languages: Language[] = ['fr', 'en'];
+  const themeIds: ThemeId[] = ['night', 'day'];
+
+  // Vide le stockage ET remet les contextes en memoire par defaut, sinon l'app garde les anciennes valeurs
+  // (reglages Compass, langue, theme) jusqu'au relancement.
+  const onClearData = () => {
+    clearAppData();
+    resetSettings();
+    resetLanguage();
+    resetThemeId();
+    setDataCleared(true);
+  };
+
+  return (
+    <Screen>
+      <Text style={styles.title}>{t.settings.title}</Text>
+
+      <Section title={t.settings.languageTitle}>
+        <View style={styles.chips}>
+          {languages.map((candidate) => (
+            <Chip
+              key={candidate}
+              label={t.settings.languageOptions[candidate]}
+              onPress={() => setLanguage(candidate)}
+              selected={language === candidate}
+            />
+          ))}
+        </View>
+      </Section>
+
+      <Section title={t.settings.appearanceTitle}>
+        <View style={styles.chips}>
+          {themeIds.map((candidate) => (
+            <Chip
+              key={candidate}
+              label={t.settings.appearanceOptions[candidate]}
+              onPress={() => setThemeId(candidate)}
+              selected={themeId === candidate}
+            />
+          ))}
+        </View>
+      </Section>
+
+      <Section title={t.settings.dataTitle}>
+        <View style={styles.about}>
+          <Text style={styles.aboutLine}>{t.settings.dataHint}</Text>
+          <Button
+            disabled={dataCleared}
+            label={dataCleared ? t.settings.dataCleared : t.settings.clearData}
+            onPress={onClearData}
+            variant="ghost"
+          />
+        </View>
+      </Section>
+
+      <Section title={t.settings.aboutTitle}>
+        <View style={styles.about}>
+          <Text style={styles.aboutLine}>{t.settings.author}</Text>
+          <Text style={styles.aboutLine}>{t.settings.claudeMention}</Text>
+          <VersionLine codename={APP_CODENAME} style={styles.version} version={APP_VERSION_NUMBER} />
+        </View>
+      </Section>
+
+      <Button label={t.setup.back} onPress={onBack} variant="ghost" />
+    </Screen>
+  );
+};

@@ -9,8 +9,8 @@ import {
   ROUND_OPTIONS,
   THEME_STORAGE_KEY,
 } from '@/data';
-import { BEST_SCORE_STORAGE_KEY, CATEGORIES, DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from '@/games/constants';
-import { clearCursors } from '@/games/helpers/cursors';
+import { BEST_SCORE_STORAGE_KEY, CATEGORIES, DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from '@/data/game';
+import { clearCursors } from '@/helpers/cursors';
 import type { Language } from '@/i18n';
 import type { Category, Difficulty, GameSettings, ThemeId } from '@/types';
 

@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLocales } from 'expo-localization';
 
 import { LANGUAGE_STORAGE_KEY, PLAYER_NAME_STORAGE_KEY, THEME_STORAGE_KEY } from '@/data';
-import { BEST_SCORE_STORAGE_KEY, DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from '@/games/constants';
+import { BEST_SCORE_STORAGE_KEY, DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from '@/data/game';
 
 import {
   clearAppData,

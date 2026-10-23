@@ -1,7 +1,7 @@
 import type { PartySectionProps } from '@/components/setup/PartySection';
 
 /**
- * Ce que la room en ligne branche sur Firestore (voir `games/firebase/room.ts`) ; le store de room (`useRoomStore`) est lu directement. `S` = reglages complets du
+ * Ce que la room en ligne branche sur Firestore (voir `firebase/room.ts`) ; le store de room (`useRoomStore`) est lu directement. `S` = reglages complets du
  * jeu, `R` = ce que la room partage avec les joiners (tout sauf `playerName`).
  */
 export type SetupRoomAdapter<S, R> = {

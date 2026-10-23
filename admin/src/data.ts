@@ -14,8 +14,8 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 
-import { collapseJournal } from '@/data/firestore/journal';
-import { NUMBERING, planRegroup } from '@/data/firestore/numbering';
+import { collapseJournal } from '@/firebase/journal';
+import { NUMBERING, planRegroup } from '@/firebase/numbering';
 import {
   COLLECTIONS,
   COUNTS_DOC,
@@ -26,7 +26,7 @@ import {
   type JournalChange,
   type JournalDoc,
   type PlaceDoc,
-} from '@/data/firestore/types';
+} from '@/firebase/types';
 import { db } from './firebase';
 import { readSnapshot, writeSnapshot } from './snapshotStore';
 

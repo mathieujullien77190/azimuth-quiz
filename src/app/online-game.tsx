@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { goBackOrHome } from '@/helpers/platform';
 import { useImmersiveNavigationBar } from '@/helpers/hooks';
 
-import OnlineGameScreen from '@/games/screens/OnlineGameScreen';
+import OnlineGameScreen from '@/screens/OnlineGameScreen';
 
 const OnlineGameRoute = () => {
   useImmersiveNavigationBar();

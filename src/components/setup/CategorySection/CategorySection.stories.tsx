@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 
-import { CATEGORIES } from '@/games/constants';
+import { CATEGORIES } from '@/data/game';
 import type { Translations } from '@/i18n';
 import { translations } from '@/i18n/translations';
 import { localizedArgs } from '@/storybook/localized';

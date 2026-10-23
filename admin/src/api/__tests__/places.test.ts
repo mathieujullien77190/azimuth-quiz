@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { PlaceDoc } from '@/data/firestore/types';
+import type { PlaceDoc } from '@/firebase/types';
 
 const h = vi.hoisted(() => ({
   state: { places: {} as Record<string, unknown> },

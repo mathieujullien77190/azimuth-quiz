@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
-import { subscribeToRoomGame, subscribeToRoomPlayers, subscribeToRoomSettings } from '@/games/firebase/room';
-import type { RoomGameState } from '@/games/firebase/room';
+import { subscribeToRoomGame, subscribeToRoomPlayers, subscribeToRoomSettings } from '@/firebase/room';
+import type { RoomGameState } from '@/firebase/room';
 
 import type { RoomStoreData, RoomStoreState } from './types';
 

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { CATEGORIES } from '@/games/constants';
+import { CATEGORIES } from '@/data/game';
 
 import {
   CATEGORY_COLORS,

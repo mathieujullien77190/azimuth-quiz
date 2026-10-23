@@ -1,5 +1,5 @@
-import { placeFromDoc } from '@/data/firestore/read';
-import type { PlaceDoc } from '@/data/firestore/types';
+import { placeFromDoc } from '@/firebase/read';
+import type { PlaceDoc } from '@/firebase/types';
 import type { Difficulty, Place } from '@/types';
 
 import { applyPlaceChange, data } from '../data';

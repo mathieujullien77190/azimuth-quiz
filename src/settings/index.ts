@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { DEFAULT_SETTINGS } from '@/games/constants';
+import { DEFAULT_SETTINGS } from '@/data/game';
 import { loadPlayerName, loadSettings, savePlayerName, saveSettings } from '@/helpers';
 import type { GameSettings } from '@/types';
 
