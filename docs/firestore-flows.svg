@@ -27,7 +27,7 @@
   <g font-size="14" font-weight="700" text-anchor="middle">
     <rect x="30" y="72" width="230" height="40" rx="10" fill="#e3eefb" stroke="#1f5fa8" stroke-width="2"/><text x="145" y="97" fill="#1f5fa8">Hôte (appareil 1)</text>
     <rect x="285" y="72" width="230" height="40" rx="10" fill="#fdeee3" stroke="#c2571a" stroke-width="2"/><text x="400" y="97" fill="#c2571a">Joueurs 2 à 10</text>
-    <rect x="560" y="72" width="600" height="40" rx="10" fill="#eaf5ea" stroke="#4a8a4a" stroke-width="2"/><text x="860" y="97" fill="#1f2a37">Firestore : une barre par collection</text>
+    <rect x="560" y="72" width="500" height="40" rx="10" fill="#eaf5ea" stroke="#4a8a4a" stroke-width="2"/><text x="810" y="97" fill="#1f2a37">Firestore : une barre par collection</text>
   </g>
   <path d="M145 112 V1000" stroke="#1f5fa8" stroke-width="1" stroke-dasharray="4 5" opacity="0.45"/>
   <path d="M400 112 V1000" stroke="#c2571a" stroke-width="1" stroke-dasharray="4 5" opacity="0.45"/>
@@ -35,7 +35,7 @@
   <!-- Barres des collections -->
   <g font-size="12.5" font-weight="700" text-anchor="middle" fill="#2f6b2f">
     <text x="610" y="130">rooms</text><text x="710" y="130">places</text><text x="810" y="130">meta</text>
-    <text x="910" y="130">journal</text><text x="1010" y="130">errors</text><text x="1110" y="130">errorQuota</text>
+    <text x="910" y="130">journal</text><text x="1010" y="130">errors</text>
   </g>
   <g fill="#eaf5ea" stroke="#4a8a4a">
     <rect x="585" y="138" width="50" height="690" rx="8"/>
@@ -43,7 +43,6 @@
     <rect x="785" y="138" width="50" height="690" rx="8"/>
     <rect x="885" y="138" width="50" height="690" rx="8"/>
     <rect x="985" y="138" width="50" height="757" rx="8"/>
-    <rect x="1085" y="138" width="50" height="757" rx="8"/>
   </g>
   <!-- 1 Créer et rejoindre -->
   <text x="24" y="150" font-size="13" font-weight="700" fill="#1f2a37">1 · Créer et rejoindre</text>
@@ -108,7 +107,7 @@
   <g font-size="12" fill="#1f2a37">
     <path d="M400 876 H985" stroke="#c2571a" stroke-width="1.8" fill="none" marker-end="url(#ap)"/>
     <path d="M145 882 H985" stroke="#1f5fa8" stroke-width="1.8" fill="none" marker-end="url(#ah)"/>
-    <text x="160" y="870">reporting() → errors/{id} + compteurs errorQuota, dans le même lot</text>
+    <text x="160" y="870">reporting() → errors/{id}</text>
   </g>
 
   <!-- Admin -->
@@ -132,6 +131,6 @@
     <text x="46" y="940">• rooms create : tout appareil connecté (auth anonyme), à son nom (hostUid = soi), jamais écraser une room</text>
     <text x="46" y="958">• rooms update : l'hôte, tout · un joueur (compassPlayer) : seulement players.{son uid}, guesses.{son uid}, reaction</text>
     <text x="46" y="976">• rooms delete : l'hôte seul · places, meta : lecture publique, écriture admin (compte Google de la liste)</text>
-    <text x="46" y="994">• journal : admin seulement · errors et errorQuota : création par tout appareil, avec les compteurs du jour</text>
+    <text x="46" y="994">• journal : admin seulement · errors : création par tout appareil, plafonnée par jour</text>
   </g>
 </svg>
