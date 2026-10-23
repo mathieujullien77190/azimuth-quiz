@@ -4,7 +4,7 @@ import {
   MAX_DIRECTION_POINTS,
   MAX_DISTANCE_POINTS,
   MAX_SURFACE_DISTANCE_KM,
-} from '@/games/compass/constants';
+} from '@/games/constants';
 import type { Coordinates, Guess, Place, PlayerResult } from '@/types';
 
 import { roundDistance } from '../distanceScale';
