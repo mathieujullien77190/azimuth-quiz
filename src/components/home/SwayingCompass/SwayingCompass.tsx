@@ -1,33 +1,62 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Animated, Easing, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Animated, Easing, Pressable } from 'react-native';
 import Svg, { Circle, G, Line, Polygon, Text as SvgText } from 'react-native-svg';
 
+import { useTranslation } from '@/i18n';
 import { useTheme } from '@/themes';
 
-import { DIAL_CENTER, SWAY_MS } from './constants';
-import { swayAngles } from './helpers';
+import { DIAL_CENTER, SETTLE_MS, SWAY_TOTAL_MS } from './constants';
+import { angleAt, SWAY_CURVE } from './helpers';
 import type { SwayingCompassProps } from './types';
 
 import { createStyles } from './styles';
 
 /**
- * Cadran de boussole dont l'aiguille oscille de moins en moins autour du nord, puis s'immobilise au bout d'une minute (decor de l'accueil).
+ * Cadran de boussole dont l'aiguille oscille de moins en moins autour du nord (balancier amorti, courbe continue),
+ * puis s'immobilise au bout d'une minute (decor de l'accueil). Un appui lui redonne de l'elan : l'oscillation repart
+ * sans saut, l'ecart au moment de l'appui s'effacant en douceur.
  */
 export const SwayingCompass = ({ size }: SwayingCompassProps) => {
   const { colors, compass, isDark, typography } = useTheme();
+  const t = useTranslation();
   const styles = useMemo(() => createStyles(size), [size]);
-  const [sway] = useState(() => new Animated.Value(0));
+  // `progress` (0..1) suit la courbe amortie ; `offset` (degres) est l'ecart a rattraper apres un appui.
+  const [progress] = useState(() => new Animated.Value(0));
+  const [offset] = useState(() => new Animated.Value(0));
+  const angle = useMemo(() => Animated.add(progress.interpolate(SWAY_CURVE), offset), [progress, offset]);
+
+  const play = useCallback(
+    (from: number) => {
+      progress.setValue(0);
+      offset.setValue(from);
+      Animated.parallel([
+        Animated.timing(progress, {
+          toValue: 1,
+          duration: SWAY_TOTAL_MS,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(offset, {
+          toValue: 0,
+          duration: SETTLE_MS,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    },
+    [progress, offset],
+  );
 
   useEffect(() => {
-    // `sway` est l'angle de l'aiguille en degres ; chaque sens est un aller doux vers le cap suivant.
-    const swing = Animated.sequence(
-      swayAngles().map((toValue) =>
-        Animated.timing(sway, { toValue, duration: SWAY_MS, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-      ),
-    );
-    swing.start();
-    return () => swing.stop();
-  }, [sway]);
+    play(0);
+    return () => {
+      progress.stopAnimation();
+      offset.stopAnimation();
+    };
+  }, [play, progress, offset]);
+
+  const push = () =>
+    progress.stopAnimation((current) => offset.stopAnimation((remaining) => play(angleAt(current) + remaining)));
 
   const north = isDark ? colors.accent : colors.danger;
   const southTip = isDark ? colors.accent : colors.accentDark;
@@ -40,9 +69,21 @@ export const SwayingCompass = ({ size }: SwayingCompassProps) => {
   } as const;
 
   return (
-    <View style={styles.dial}>
+    <Pressable
+      accessibilityLabel={t.compassAccessibilityLabel}
+      accessibilityRole="button"
+      onPress={push}
+      style={styles.dial}
+    >
       <Svg height={size} width={size} viewBox="0 0 300 300">
-        <Circle cx={DIAL_CENTER} cy={DIAL_CENTER} fill={compass.faceInner} r={140} stroke={colors.border} strokeWidth={3} />
+        <Circle
+          cx={DIAL_CENTER}
+          cy={DIAL_CENTER}
+          fill={compass.faceInner}
+          r={140}
+          stroke={colors.border}
+          strokeWidth={3}
+        />
         <Circle
           cx={DIAL_CENTER}
           cy={DIAL_CENTER}
@@ -77,7 +118,7 @@ export const SwayingCompass = ({ size }: SwayingCompassProps) => {
           {
             transform: [
               {
-                rotate: sway.interpolate({ inputRange: [-180, 180], outputRange: ['-180deg', '180deg'] }),
+                rotate: angle.interpolate({ inputRange: [-180, 180], outputRange: ['-180deg', '180deg'] }),
               },
             ],
           },
@@ -86,9 +127,16 @@ export const SwayingCompass = ({ size }: SwayingCompassProps) => {
         <Svg height={size} width={size} viewBox="0 0 300 300">
           <Polygon fill={colors.danger} points="150,34 164,150 136,150" />
           <Polygon fill={southTip} points="150,266 164,150 136,150" />
-          <Circle cx={DIAL_CENTER} cy={DIAL_CENTER} fill={colors.background} r={9} stroke={colors.text} strokeWidth={3} />
+          <Circle
+            cx={DIAL_CENTER}
+            cy={DIAL_CENTER}
+            fill={colors.background}
+            r={9}
+            stroke={colors.text}
+            strokeWidth={3}
+          />
         </Svg>
       </Animated.View>
-    </View>
+    </Pressable>
   );
 };

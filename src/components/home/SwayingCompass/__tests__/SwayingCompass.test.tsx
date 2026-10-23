@@ -1,4 +1,4 @@
-import { act, render } from '@testing-library/react-native';
+import { act, fireEvent, render } from '@testing-library/react-native';
 import { StyleSheet } from 'react-native';
 
 import { ThemeSettingsContext } from '@/themes';
@@ -27,6 +27,23 @@ describe('SwayingCompass', () => {
   it("oscille puis s'arrete au bout d'une minute", async () => {
     const { unmount } = await render(<SwayingCompass size={200} />);
     await act(async () => jest.advanceTimersByTime(61000));
+    await unmount();
+  });
+
+
+  it("repart avec de l'elan quand on appuie dessus, meme apres l'arret", async () => {
+    const { getByLabelText, unmount } = await render(<SwayingCompass size={200} />);
+    await act(async () => jest.advanceTimersByTime(61000));
+    await fireEvent.press(getByLabelText('Boussole'));
+    await act(async () => jest.advanceTimersByTime(61000));
+    await unmount();
+  });
+
+  it('accepte un appui en plein balancement', async () => {
+    const { getByLabelText, unmount } = await render(<SwayingCompass size={200} />);
+    await act(async () => jest.advanceTimersByTime(7000));
+    await fireEvent.press(getByLabelText('Boussole'));
+    await act(async () => jest.advanceTimersByTime(1000));
     await unmount();
   });
 });
