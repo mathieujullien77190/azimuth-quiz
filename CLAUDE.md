@@ -19,7 +19,8 @@ src/
   app/          # Expo Router : _layout (providers + Stack), routes = re-exports minces
   screens/      # un dossier par ecran (Home, Settings, Setup, OnlineGame, End, RoomDeleted)        -> screens/CLAUDE.md
   components/   # ui/ providers/ home/ geo/ game/ setup/ : composants reutilisables                  -> components/CLAUDE.md
-  helpers/      # fonctions et hooks sans Firebase, un fichier par theme                              -> helpers/CLAUDE.md
+  helpers/      # fonctions simples sans Firebase, un fichier par theme                               -> helpers/CLAUDE.md
+  hooks/        # hooks React partages : room.ts (session, presence, reactions, purge), app.ts (debounce, chargement) -> hooks/CLAUDE.md
   firebase/     # TOUT ce qui touche Firebase/Firestore (client, room, lieux, tirage, types, regles)  -> firebase/CLAUDE.md
   store/        # un seul store Zustand, useRoomStore                                                  -> store/CLAUDE.md
   data/         # constantes partagees (index.ts), game.ts (categories, defauts, score), theme.ts
@@ -32,7 +33,8 @@ admin/          # outil interne (app Vite + Storybook), importe `src/` via l'ali
 
 ## Regles transverses
 
-- Alias `@/` → `src/` : tout import qui sort de son dossier d'un cran ou plus passe par `@/` (jamais `../..`). Un composant est un
+- Alias `@/` → `src/` : tout import qui sort de son dossier passe par `@/` (jamais `../` hors tests). Un test ou une story
+  n'utilise `../` que pour atteindre son propre sujet, d'un seul cran, jamais `../..`. Un composant est un
   dossier `index.ts` + `<Name>.tsx` (export nomme) + `helpers.ts` + `constants.ts` + `types.ts` + `styles.ts` (seul `createStyles`).
 - Identifiants de code en anglais ; commentaires de code en francais, sans accents, courts (le pourquoi seulement).
 - Tests dans un dossier `__tests__/` a cote du fichier teste. Jest (`npx jest --coverage`, seuil **100 %**, ignore `admin/`) et

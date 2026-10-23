@@ -174,8 +174,7 @@ export const Globe3D = ({ size, origin, marks }: Globe3DProps) => {
   // Le satellite fait le tour de la boule sur son equateur (devant puis derriere, voir `orbitPoint`), seulement
   // sans zoom : sinon il sortirait du dessin.
   const angle = useOrbitAngle(ORBIT_MS, ORBIT_TICK_MS);
-  const satellite =
-    !isDark || zoom !== MIN_ZOOM ? undefined : orbitPoint(angle, center, cx, cy, radius, ORBIT_RATIO);
+  const satellite = !isDark || zoom !== MIN_ZOOM ? undefined : orbitPoint(angle, center, cx, cy, radius, ORBIT_RATIO);
 
   const start = screenPoint(origin, center, cx, cy, radius);
   const pole = screenPoint(NORTH_POLE, center, cx, cy, radius);

@@ -1,4 +1,4 @@
-import type { Translations } from '../types';
+import type { Translations } from '@/i18n/types';
 
 export const fr: Translations = {
   common: {
@@ -111,7 +111,8 @@ export const fr: Translations = {
     scoringInfoLabel: 'Comment les points sont calculés',
     scoringInfoBefore: 'Cap (',
     rhumbLineLabel: 'loxodromique',
-    scoringInfoAfter: ') et distance rapportent chacun jusqu’à 500 points, selon la précision de l’estimation.\n\n+100 points bonus sur chaque catégorie pour le meilleur sur celle-ci : le plus petit écart de cap, le plus petit écart de distance (à plusieurs seulement).\n\n+100 points bonus supplémentaires pour un cap trouvé pile au degré près.\n\n+100 points encore pour un perfect.',
+    scoringInfoAfter:
+      ') et distance rapportent chacun jusqu’à 500 points, selon la précision de l’estimation.\n\n+100 points bonus sur chaque catégorie pour le meilleur sur celle-ci : le plus petit écart de cap, le plus petit écart de distance (à plusieurs seulement).\n\n+100 points bonus supplémentaires pour un cap trouvé pile au degré près.\n\n+100 points encore pour un perfect.',
     rhumbLineUrl: 'https://fr.wikipedia.org/wiki/Loxodromie',
     perfect: 'PERFECT',
   },

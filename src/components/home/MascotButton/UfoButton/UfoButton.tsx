@@ -4,7 +4,7 @@ import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Polygon, Stop } from 're
 
 import { useTheme } from '@/themes';
 
-import { GearIcon } from '../GearIcon';
+import { GearIcon } from '@/components/home/MascotButton/GearIcon';
 
 import {
   CONE_BOTTOM_RATIO,

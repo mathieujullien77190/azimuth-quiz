@@ -4,9 +4,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { REACTION_COOLDOWN_MS, REACTIONS_PER_GAME } from '@/data';
 import { useRoomStore } from '@/store/roomStore';
 
-import type { RoomPlayers, RoomReaction } from '../firebase/room';
-import { reporting } from './errors';
-import { onlinePlayersFrom } from './roomPlayers';
+import type { RoomPlayers, RoomReaction } from '@/firebase/room';
+import { reporting } from '@/helpers/errors';
+import { onlinePlayersFrom } from '@/helpers/roomPlayers';
 
 /** Maps par joueur de l'etat de manche (chaque jeu en a certaines, aucun toutes). */
 const PLAYER_KEYED_FIELDS = ['guesses', 'scores', 'totalScores'] as const;

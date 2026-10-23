@@ -1,7 +1,7 @@
 import { Text, View } from 'react-native';
 import { useThemedStyles } from '@/themes';
 
-import Card from '../Card';
+import Card from '@/components/ui/Card';
 import type { SectionProps } from './types';
 
 import { createStyles } from './styles';

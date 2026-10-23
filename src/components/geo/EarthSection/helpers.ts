@@ -24,11 +24,8 @@ export const arcPath = (center: Point, radius: number, angle: number, side: Side
 };
 
 /** Point d'arrivee d'une reponse sur le cercle (fin de son arc). */
-export const markEnd = (
-  item: Pick<EarthMark, 'bearing' | 'distanceKm'>,
-  center: Point,
-  radius: number,
-): Point => surfacePoint(center, radius, sideOf(item.bearing) * surfaceAngle(item.distanceKm));
+export const markEnd = (item: Pick<EarthMark, 'bearing' | 'distanceKm'>, center: Point, radius: number): Point =>
+  surfacePoint(center, radius, sideOf(item.bearing) * surfaceAngle(item.distanceKm));
 
 /**
  * Plus grand zoom (parmi ZOOM_STEPS) qui garde tous les points dans la zone visible.

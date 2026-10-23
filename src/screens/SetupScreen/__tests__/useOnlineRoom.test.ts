@@ -16,7 +16,6 @@ jest.mock('@/helpers', () => ({
 }));
 jest.mock('@/firebase/places', () => ({ fetchRandomPlaces: jest.fn() }));
 jest.mock('@/firebase/room', () => ({
-  ROOM_MAX_PLAYERS: 10,
   startRoomGame: jest.fn(() => Promise.resolve()),
 }));
 jest.mock('@/store/roomStore', () => ({ useRoomStore: {} }));

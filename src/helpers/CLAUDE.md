@@ -1,6 +1,6 @@
 # helpers/
 
-Fonctions et hooks **sans Firebase** (ce qui touche Firestore vit dans `firebase/`), un fichier par theme. Le barrel `index.ts`
+Fonctions simples **sans Firebase** (ce qui touche Firestore vit dans `firebase/`), un fichier par theme. Le barrel `index.ts`
 re-exporte `utils`, `platform` et `storage` ; les autres fichiers s'importent directement.
 
 | Fichier | Contenu |
@@ -14,8 +14,6 @@ re-exporte `utils`, `platform` et `storage` ; les autres fichiers s'importent di
 | `groupCursors.ts` | curseurs de tirage par groupe (voir `firebase/CLAUDE.md`) |
 | `errors.ts` | `reportError` / `reporting`, notice d'erreur |
 | `roomPlayers.ts` | joueurs de la room dans l'ordre d'arrivee, noms libres / pris |
-| `roomHooks.ts` | `useOnlineRoomSession`, `useRoomPresence`, `useRoomReactions`, `useHostPruneLeavers` |
-| `hooks.ts` | `useDebouncedValue`, `useSplashGate`, `useImmersiveNavigationBar` |
 | `appInfo.ts` | version et animal de la version (`versionParts`, `versionLabel`) |
 | `storyFixtures.ts` | donnees pour les stories (hors couverture) |
 

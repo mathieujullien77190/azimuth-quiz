@@ -30,5 +30,10 @@ type Story = StoryObj<typeof meta>;
  */
 export const Default: Story = {
   parameters: source(defaultCode),
-  args: { emojis: REACTION_EMOJIS, labelFor: (emoji: string) => `Envoyer ${emoji}`, onPick: fn(), toggleLabel: 'Réactions' },
+  args: {
+    emojis: REACTION_EMOJIS,
+    labelFor: (emoji: string) => `Envoyer ${emoji}`,
+    onPick: fn(),
+    toggleLabel: 'Réactions',
+  },
 };

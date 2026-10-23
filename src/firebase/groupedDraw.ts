@@ -1,20 +1,15 @@
 import { and, collection, getDocs, or, query, where } from 'firebase/firestore';
 
 import type { Group, Numbering, Slot } from '@/firebase/numbering';
-import { COLLECTIONS, type Counts, type PlaceDoc } from '@/firebase/types';
+import { COLLECTIONS, DIFFICULTY_ORDER, DRAW_PER_ROUND_WITH_BUMP, IN_LIMIT } from '@/firebase/constants';
+import type { Counts, PlaceDoc } from '@/firebase/types';
 import type { Category, Difficulty } from '@/types';
 
 import { db } from './client';
-import type { Cursors } from '../helpers/groupCursors';
-import { shuffle, splitEvenly } from '../helpers/utils';
+import type { Cursors } from '@/helpers/groupCursors';
+import { shuffle, splitEvenly } from '@/helpers/utils';
 
 // Hors du barrel de `helpers/index.ts` : `firebase/firestore` est ESM seul et fait planter Jest.
-
-/** Positions tirees par manche quand une difficulte est refiltree ensuite (anglais) : marge de lecture. */
-const DRAW_PER_ROUND_WITH_BUMP = 3;
-
-/** Plafond Firestore des valeurs d'un filtre `in` (et d'une requete `or`). */
-const IN_LIMIT = 30;
 
 const groupKey = ({ category, difficulty }: Pick<Group, 'category' | 'difficulty'>): string =>
   `${category}|${difficulty}`;
@@ -151,8 +146,6 @@ export const drawFromGroups = async <T>(options: GroupedDrawOptions<T>): Promise
       .map(({ item }) => item),
   );
 };
-
-const DIFFICULTY_ORDER: Difficulty[] = ['easy', 'intermediate', 'hard'];
 
 /** Difficultes stockees qui peuvent s'afficher en `difficulty` apres le relevement anglais (un lieu francais monte d'un cran). */
 export const storedTiers = (difficulty: Difficulty, language: 'fr' | 'en'): Difficulty[] => {

@@ -10,7 +10,7 @@ import { useTheme } from '@/themes';
 
 import type { EarthMark } from '@/components/geo/EarthSection';
 import type { RoundRecord } from '@/types';
-import EndScreen from '../EndScreen';
+import EndScreen from '@/screens/EndScreen';
 import NoticeOverlay from '@/components/ui/NoticeOverlay';
 import RoomDeletedScreen from '@/screens/RoomDeletedScreen';
 import { REVEAL_OPACITY } from './constants';

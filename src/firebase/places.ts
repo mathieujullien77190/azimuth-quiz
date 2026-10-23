@@ -7,8 +7,8 @@ import type { GameSettings, Place } from '@/types';
 import { drawFromGroups, storedTiers } from '@/firebase/groupedDraw';
 
 import { loadCounts } from './groupCounts';
-import { loadCursors, saveCursors } from '../helpers/groupCursors';
-import { effectiveDifficulty } from '../helpers/rounds';
+import { loadCursors, saveCursors } from '@/helpers/groupCursors';
+import { effectiveDifficulty } from '@/helpers/rounds';
 
 // Hors barrel de `helpers/index.ts` comme `room.ts` : `firebase/firestore` est ESM seul et plante Jest.
 

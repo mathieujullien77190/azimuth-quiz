@@ -3,17 +3,10 @@ import { signInAnonymously } from 'firebase/auth';
 
 import { ROOM_CODE_STORAGE_KEY } from '@/data';
 import { auth } from '@/firebase/client';
+import { CODE_CONSONANTS, CODE_SYLLABLES, CODE_VOWELS, ROOM_CODE_PATTERN } from '@/firebase/constants';
 
 // Hors du barrel : `firebase/auth` entraine la meme chaine ESM que `firebase/client.ts`.
 // Commun aux rooms de tous les jeux (forme du code, auth anonyme) ; le reste du document room reste duplique par jeu.
-
-// Sans c/h/w/z/g/q/x/j : difficiles a dire a voix haute en francais.
-const CODE_CONSONANTS = 'bdfklmnprstv';
-// Seulement a/i/o : e et u se confondent a l'oral.
-const CODE_VOWELS = 'aio';
-const CODE_SYLLABLES = 4;
-
-const ROOM_CODE_PATTERN = new RegExp(`^([${CODE_CONSONANTS}][${CODE_VOWELS}]){${CODE_SYLLABLES}}$`);
 
 /** Le code a-t-il la forme exacte d'un code genere ? Verifie avant d'interroger Firestore. */
 export const isValidRoomCode = (code: string): boolean => ROOM_CODE_PATTERN.test(code);

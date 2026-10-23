@@ -5,8 +5,8 @@ import { useRoomStore } from '@/store/roomStore';
 import type { RoomStoreState } from '@/store/types';
 
 import type { RoomPlayers, RoomReaction } from '@/firebase/room';
-import { resetErrorThrottle, setErrorReporter } from '../errors';
-import { useHostPruneLeavers, useOnlineRoomSession, useRoomPresence, useRoomReactions } from '../roomHooks';
+import { resetErrorThrottle, setErrorReporter } from '@/helpers/errors';
+import { useHostPruneLeavers, useOnlineRoomSession, useRoomPresence, useRoomReactions } from '../room';
 
 // `room.ts` charge `firebase/firestore` (ESM seul, plante Jest) : le store n'ouvre ici aucun abonnement.
 jest.mock('@/firebase/room', () => ({}));

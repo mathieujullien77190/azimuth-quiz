@@ -9,7 +9,10 @@ type RoundOrigin = { origin: Origin | null; places: Place[]; roundIndex: number 
  * en un seul endroit pour que score, cap/distance vrais, globe et reveal concordent. Null tant que la room
  * n'a pas livre son origine ; `travel` `undefined` (room ancienne) = off.
  */
-export const originForRound = ({ origin, places, roundIndex }: RoundOrigin, travel: boolean | undefined): Coordinates | null => {
+export const originForRound = (
+  { origin, places, roundIndex }: RoundOrigin,
+  travel: boolean | undefined,
+): Coordinates | null => {
   if (origin === null) return null;
   const previous = places[roundIndex - 1];
   return travel === true && previous !== undefined ? previous.coordinates : origin.coordinates;

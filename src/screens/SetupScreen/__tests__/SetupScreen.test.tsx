@@ -29,7 +29,6 @@ jest.mock('@/firebase/places', () => ({ fetchRandomPlaces: jest.fn() }));
 // Les tailles de groupes viennent aussi de Firestore.
 jest.mock('@/firebase/groupCounts', () => ({ loadCounts: jest.fn() }));
 jest.mock('@/firebase/room', () => ({
-  ROOM_MAX_PLAYERS: 10,
   createRoom: jest.fn(),
   deleteRoom: jest.fn(() => Promise.resolve()),
   isValidRoomCode: jest.fn((code: string) => code.length === 8),

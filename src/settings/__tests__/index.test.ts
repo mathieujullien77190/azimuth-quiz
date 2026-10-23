@@ -1,12 +1,7 @@
 import { DEFAULT_SETTINGS } from '@/data/game';
 import { loadPlayerName, loadSettings, savePlayerName, saveSettings } from '@/helpers';
 
-import {
-  hydratePlayerName,
-  hydrateSettings,
-  usePlayerName,
-  useSettings,
-} from '..';
+import { hydratePlayerName, hydrateSettings, usePlayerName, useSettings } from '..';
 
 jest.mock('@/helpers', () => ({
   ...jest.requireActual('@/helpers'),

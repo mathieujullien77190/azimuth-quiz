@@ -1,6 +1,7 @@
 import { doc, getDoc } from 'firebase/firestore';
 
-import { COUNTS_DOC, type Counts } from '@/firebase/types';
+import { COUNTS_DOC } from '@/firebase/constants';
+import type { Counts } from '@/firebase/types';
 import { reporting } from '@/helpers/errors';
 
 import { db } from './client';

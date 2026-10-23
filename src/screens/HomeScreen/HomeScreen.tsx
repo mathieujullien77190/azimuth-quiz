@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 
 import { SPLASH_MAX_MS, SPLASH_MIN_MS } from '@/data';
-import { useSplashGate } from '@/helpers/hooks';
+import { useSplashGate } from '@/hooks/app';
 import { useLanguage } from '@/i18n';
 import { usePlayerName, useSettings } from '@/settings';
 import { useThemeSettings } from '@/themes';

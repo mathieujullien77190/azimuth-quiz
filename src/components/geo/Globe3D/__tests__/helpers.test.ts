@@ -67,7 +67,6 @@ describe('scenePoint', () => {
     expect(Math.hypot(...scenePoint(PARIS))).toBeCloseTo(1, 6);
     expect(Math.hypot(...scenePoint(PARIS, 1.5))).toBeCloseTo(1.5, 6);
   });
-
 });
 
 describe('polylinePositions', () => {
@@ -92,7 +91,12 @@ describe('zoomedBy', () => {
 
 describe('fingerGap', () => {
   it('is how far apart two fingers are', () => {
-    expect(fingerGap([{ pageX: 0, pageY: 0 }, { pageX: 3, pageY: 4 }])).toBe(5);
+    expect(
+      fingerGap([
+        { pageX: 0, pageY: 0 },
+        { pageX: 3, pageY: 4 },
+      ]),
+    ).toBe(5);
   });
 
   it('is nothing with a single finger on the glass', () => {
@@ -188,7 +192,9 @@ describe('orbitPoint', () => {
 
   it('turns with the globe: seen from the north it flies round the ball as a circle', () => {
     const north = { latitude: 90, longitude: 0 };
-    const radii = [0, 90, 180, 270].map((degrees) => Math.hypot(at(degrees, north).x - 100, at(degrees, north).y - 100));
+    const radii = [0, 90, 180, 270].map((degrees) =>
+      Math.hypot(at(degrees, north).x - 100, at(degrees, north).y - 100),
+    );
     radii.forEach((radius) => expect(radius).toBeCloseTo(50 * 1.12, 6));
   });
 

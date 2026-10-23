@@ -22,10 +22,9 @@ import type { GameSettings, Guess, Origin, Place, RoundScore } from '@/types';
 // Hors barrel : `firebase/firestore` est ESM seul et plante Jest (voir `firebase/client.ts`). Cycle de vie de
 // la room (creation, presence, couleurs, reglages) puis ce que Compass joue : chacun repond seul, puis reveal commun.
 
-export { isValidRoomCode } from '@/firebase/roomCode';
+import { ROOM_GAME, ROOM_MAX_PLAYERS, ROOMS_COLLECTION } from '@/firebase/constants';
 
-/** Une room ne tient pas plus de joueurs connectes qu'il n'y a de couleurs. */
-export const ROOM_MAX_PLAYERS = 10;
+export { isValidRoomCode } from '@/firebase/roomCode';
 
 // `color` est attribuee par l'hote seul (`updateRoomPlayerColors`), jamais calculee localement.
 // `lastSeen` est le heartbeat de l'appareil, compare seulement entre snapshots, jamais a une horloge locale.
@@ -34,11 +33,6 @@ export type RoomPlayers = Record<string, RoomPlayer>;
 
 /** Dernier emoji envoye (`sendReaction`) ; `seq` (horloge de l'envoyeur, ms) distingue deux envois, jamais compare a une autre horloge. */
 export type RoomReaction = { uid: string; emoji: string; seq: number };
-
-const ROOMS_COLLECTION = 'rooms';
-
-/** Valeur du champ `game` des rooms, fixee a la creation et immuable. */
-const GAME = 'compass';
 
 /** Ce que la room partage avec les joiners : tous les reglages sauf `playerName` (local). */
 export type RoomSettings = Omit<GameSettings, 'playerName'>;
@@ -71,7 +65,7 @@ export const createRoom = async (settings: RoomSettings): Promise<string> => {
     const ref = roomRef(code);
     if ((await getDoc(ref)).exists()) continue;
 
-    await setDoc(ref, { createdAt: serverTimestamp(), hostUid, game: GAME, settings });
+    await setDoc(ref, { createdAt: serverTimestamp(), hostUid, game: ROOM_GAME, settings });
     await saveMyRoomCode(code);
     return code;
   }
@@ -80,7 +74,7 @@ export const createRoom = async (settings: RoomSettings): Promise<string> => {
 /** Une room de CE jeu existe-t-elle sous ce code ? Le code d'un autre jeu ne compte pas. */
 export const roomExists = async (code: string): Promise<boolean> => {
   const snapshot = await getDoc(roomRef(code));
-  return snapshot.exists() && snapshot.data()?.game === GAME;
+  return snapshot.exists() && snapshot.data()?.game === ROOM_GAME;
 };
 
 /** Envoie les reglages de l'hote aux joiners. */

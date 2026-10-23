@@ -1,11 +1,12 @@
 # firebase/
 
 Tout ce qui touche Firebase / Firestore. Le dossier importe `firebase/firestore` et reste **hors de tout barrel** (Jest plante a
-l'import) : on importe toujours le fichier directement. `types.ts`, `read.ts`, `numbering.ts` et `journal.ts` sont purs et aussi
+l'import) : on importe toujours le fichier directement. `constants.ts`, `types.ts`, `read.ts`, `numbering.ts` et `journal.ts` sont purs et aussi
 utilises par l'admin.
 
 | Fichier | Role |
 |---|---|
+| `constants.ts` | constantes du dossier (collections, documents, rooms, code de room, tirage, erreurs), pures, aussi utilisees par l'admin |
 | `client.ts` | app Firebase, `db`, `auth` (variables `EXPO_PUBLIC_FIREBASE_*`) |
 | `room.ts` | creer / rejoindre / quitter une room, presence, couleurs, reglages, etat de manche, reactions |
 | `places.ts` | `fetchRandomPlaces` : tire les lieux d'une partie |

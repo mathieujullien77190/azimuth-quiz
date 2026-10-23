@@ -1,4 +1,4 @@
-import type { Language, Translations } from '../types';
+import type { Language, Translations } from '@/i18n/types';
 import { en } from './en';
 import { fr } from './fr';
 

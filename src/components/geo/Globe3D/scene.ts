@@ -53,13 +53,7 @@ import {
 } from './constants';
 import { GLOBE_LAND_PATH } from './globeLand';
 import { GLOBE_MASK } from './globeMask';
-import {
-  equatorPoints,
-  parseRings,
-  polylinePositions,
-  routePoints,
-  scenePoint,
-} from './helpers';
+import { equatorPoints, parseRings, polylinePositions, routePoints, scenePoint } from './helpers';
 import type { EarthMark } from '@/components/geo/EarthSection';
 
 import type { GlobeScene, GlobeSceneInput } from './types';
@@ -77,7 +71,10 @@ const worldSegments = (): number[] => {
   parseRings(GLOBE_LAND_PATH).forEach((coastline) => {
     coastline.forEach((point, index) => {
       // Anneau ferme : le dernier point revient au premier.
-      built.push(...scenePoint(point, LAND_ALTITUDE), ...scenePoint(coastline[(index + 1) % coastline.length], LAND_ALTITUDE));
+      built.push(
+        ...scenePoint(point, LAND_ALTITUDE),
+        ...scenePoint(coastline[(index + 1) % coastline.length], LAND_ALTITUDE),
+      );
     });
   });
   landSegments = built;
@@ -165,10 +162,7 @@ const polyline = (points: Coordinates[], altitude: number, material: Material): 
 
 /** Une pastille posee sur la boule en `point`. */
 const dot = (point: Coordinates, radius: number, altitude: number, color: string): Mesh => {
-  const mesh = new Mesh(
-    new SphereGeometry(radius, DOT_SEGMENTS, DOT_SEGMENTS / 2),
-    new MeshBasicMaterial({ color }),
-  );
+  const mesh = new Mesh(new SphereGeometry(radius, DOT_SEGMENTS, DOT_SEGMENTS / 2), new MeshBasicMaterial({ color }));
   mesh.position.set(...scenePoint(point, altitude));
   return mesh;
 };
@@ -195,7 +189,9 @@ const routeTube = (
   thickness: number,
 ): Mesh => {
   const curve = new CatmullRomCurve3(
-    routePoints(origin, bearing, distanceKm, ROUTE_STEPS).map((point) => new Vector3(...scenePoint(point, ROUTE_ALTITUDE))),
+    routePoints(origin, bearing, distanceKm, ROUTE_STEPS).map(
+      (point) => new Vector3(...scenePoint(point, ROUTE_ALTITUDE)),
+    ),
   );
   return new Mesh(
     new TubeGeometry(curve, ROUTE_STEPS, thickness, ROUTE_SIDES, false),

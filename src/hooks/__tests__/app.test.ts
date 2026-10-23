@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react-native';
 import { NavigationBar } from 'expo-navigation-bar';
 import { Platform } from 'react-native';
 
-import { useDebouncedValue, useImmersiveNavigationBar, useSplashGate } from '../hooks';
+import { useDebouncedValue, useImmersiveNavigationBar, useSplashGate } from '../app';
 
 jest.mock('expo-navigation-bar', () => ({ NavigationBar: { setHidden: jest.fn() } }));
 

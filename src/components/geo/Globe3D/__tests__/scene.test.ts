@@ -78,7 +78,11 @@ describe('buildGlobeScene', () => {
   it('draws the sea and the continents with no light on them when flat (by day), so they keep exactly their colours', () => {
     const { scene } = build({ colors: { ...COLORS, flat: true, fillOpacity: 1 } });
     const all = meshes(scene);
-    const sea = all.find((mesh) => mesh.geometry.type === 'SphereGeometry' && (mesh.material as MeshBasicMaterial).color.getHexString() === '0b1220')!;
+    const sea = all.find(
+      (mesh) =>
+        mesh.geometry.type === 'SphereGeometry' &&
+        (mesh.material as MeshBasicMaterial).color.getHexString() === '0b1220',
+    )!;
     expect(sea.material).toBeInstanceOf(MeshBasicMaterial);
     const painted = all.find((mesh) => (mesh.material as MeshBasicMaterial).map != null)!;
     expect(painted.material).toBeInstanceOf(MeshBasicMaterial);
@@ -86,7 +90,10 @@ describe('buildGlobeScene', () => {
 
   it('paints the continents in, from a picture of the world that falls on the world', () => {
     const { scene } = build();
-    const painted = meshes(scene).find((mesh) => (mesh.material as MeshLambertMaterial).map !== null && (mesh.material as MeshLambertMaterial).map !== undefined)!;
+    const painted = meshes(scene).find(
+      (mesh) =>
+        (mesh.material as MeshLambertMaterial).map !== null && (mesh.material as MeshLambertMaterial).map !== undefined,
+    )!;
     const picture = (painted.material as MeshLambertMaterial).map!.image as {
       width: number;
       height: number;
@@ -202,8 +209,6 @@ describe('buildGlobeScene', () => {
     expect(ring.getWorldDirection(ring.position.clone()).length()).toBeCloseTo(1, 6);
   });
 
-
-
   it('hands back the dots and the rings as what must keep its size on screen, and nothing else', () => {
     const { scene, screenSized } = build({ marks: [{ ...ANSWER, isTruth: true }] });
     // Le point de depart, la pastille de la reponse, son anneau et le pole — pas la boule, les terres peintes ni une route.
@@ -236,8 +241,7 @@ describe('buildRoutes', () => {
   it('is as thick as it is told, so the zoom can keep it the same width on screen', () => {
     const thin = buildRoutes(PARIS, [ANSWER], 0.001);
     const thick = buildRoutes(PARIS, [ANSWER], 0.01);
-    const radiusOf = (group: Object3D) =>
-      (meshes(group)[0].geometry as TubeGeometry).parameters.radius;
+    const radiusOf = (group: Object3D) => (meshes(group)[0].geometry as TubeGeometry).parameters.radius;
     expect(radiusOf(thin)).toBe(0.001);
     expect(radiusOf(thick)).toBe(0.01);
   });

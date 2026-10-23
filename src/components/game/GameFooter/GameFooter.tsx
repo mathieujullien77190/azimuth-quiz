@@ -21,12 +21,14 @@ export const GameFooter = ({ children, onReact }: GameFooterProps) => {
 
   return (
     <View style={styles.footer}>
-      {onReact && <ReactionBar
+      {onReact && (
+        <ReactionBar
           emojis={REACTION_EMOJIS}
           labelFor={t.reactions.send}
           onPick={onReact}
           toggleLabel={t.reactions.toggle}
-        />}
+        />
+      )}
       {children}
     </View>
   );

@@ -19,7 +19,7 @@ const mockDismissTo = jest.fn();
 const mockRouter = { push: mockPush, dismissTo: mockDismissTo };
 jest.mock('expo-router', () => ({ useRouter: () => mockRouter }));
 // La detection de coupure a ses propres tests (`useRoomPresence.test.ts`).
-jest.mock('@/helpers/roomHooks', () => ({ useRoomPresence: jest.fn() }));
+jest.mock('@/hooks/room', () => ({ useRoomPresence: jest.fn() }));
 // `room.ts` charge `firebase/firestore` (ESM seul, plante Jest) : les abonnements du store sont des mocks.
 jest.mock('@/firebase/room', () => ({
   subscribeToRoomPlayers: jest.fn(),

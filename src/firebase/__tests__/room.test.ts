@@ -5,8 +5,8 @@ import { generateRoomCode, getLocalUid, loadMyRoomCode, saveMyRoomCode } from '@
 import { DEFAULT_SETTINGS } from '@/data/game';
 import type { Guess, Origin, Place, RoundScore } from '@/types';
 
+import { ROOM_MAX_PLAYERS } from '@/firebase/constants';
 import {
-  ROOM_MAX_PLAYERS,
   createRoom,
   deleteRoom,
   finishRoomRound,

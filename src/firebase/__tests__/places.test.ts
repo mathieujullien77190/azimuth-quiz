@@ -48,7 +48,10 @@ const installDb = (groups: Record<string, Fake[]>, countsOverride?: Counts | nul
       expect(filters.find((entry) => entry.field === 'n')!.op).toBe('in');
       return (value('n') as number[]).map((n) => {
         const place = groups[`${category}|${difficulty}`][n - 1];
-        return { id: `${category}${difficulty}${n}`, data: (): PlaceDoc => ({ ...place, difficulty, n, compass: { category } }) };
+        return {
+          id: `${category}${difficulty}${n}`,
+          data: (): PlaceDoc => ({ ...place, difficulty, n, compass: { category } }),
+        };
       });
     });
     // Firestore plafonne a 30 les valeurs d'un `or`/`in` par requete.

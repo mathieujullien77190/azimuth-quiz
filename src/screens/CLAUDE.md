@@ -38,7 +38,7 @@ la session, il attend que theme, langue, reglages et nom soient lus (`useSplashG
 
 ## Ecran de jeu (`OnlineGameScreen`)
 
-`useOnlineRoomSession` (`helpers/roomHooks.ts`) donne l'etat de la room, l'hote, les joueurs dans l'ordre d'arrivee, la redirection
+`useOnlineRoomSession` (`hooks/room.ts`) donne l'etat de la room, l'hote, les joueurs dans l'ordre d'arrivee, la redirection
 « room supprimee » et `handleQuit` ; `useGuessDraft` garde le brouillon de reponse.
 
 **Manche suivante** : quand l'hote passe a la manche suivante (`nextRoomRound`), son appareil suit la room ; les autres joueurs restent sur le resultat qu'ils regardent (la revelation est gardee en local dans `useOnlineGame`) et passent quand ils appuient sur le bouton (`canContinue`, `advance`). Un joueur sans revelation gardee (arrive en retard, rechargement) suit la room.

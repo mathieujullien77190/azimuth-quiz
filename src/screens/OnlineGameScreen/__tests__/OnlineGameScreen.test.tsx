@@ -113,18 +113,27 @@ describe('OnlineGameScreen — travel mode', () => {
   afterEach(() => jest.useRealTimers());
 
   it('says where the player stands in the header and in a splash, after the first round only', async () => {
-    setGame({ roomSettings: TRAVEL, gameState: gameState({ places: [ROME as never, BERLIN as never], roundIndex: 1 }) });
+    setGame({
+      roomSettings: TRAVEL,
+      gameState: gameState({ places: [ROME as never, BERLIN as never], roundIndex: 1 }),
+    });
     const second = await renderScreen();
     // Le header et le splash disent la meme phrase.
     expect(second.getAllByText(youAreAtRome)).toHaveLength(2);
 
-    setGame({ roomSettings: TRAVEL, gameState: gameState({ places: [ROME as never, BERLIN as never], roundIndex: 0 }) });
+    setGame({
+      roomSettings: TRAVEL,
+      gameState: gameState({ places: [ROME as never, BERLIN as never], roundIndex: 0 }),
+    });
     const first = await renderScreen();
     expect(first.queryByText(/Vous êtes/)).toBeNull();
   });
 
   it('hides the splash after three seconds, keeping the header line', async () => {
-    setGame({ roomSettings: TRAVEL, gameState: gameState({ places: [ROME as never, BERLIN as never], roundIndex: 1 }) });
+    setGame({
+      roomSettings: TRAVEL,
+      gameState: gameState({ places: [ROME as never, BERLIN as never], roundIndex: 1 }),
+    });
     const { getAllByText, getByText } = await renderScreen();
     expect(getAllByText(youAreAtRome)).toHaveLength(2);
     await act(async () => jest.advanceTimersByTime(TRAVEL_NOTICE_MS));
@@ -132,7 +141,10 @@ describe('OnlineGameScreen — travel mode', () => {
   });
 
   it('hides the splash on a tap', async () => {
-    setGame({ roomSettings: TRAVEL, gameState: gameState({ places: [ROME as never, BERLIN as never], roundIndex: 1 }) });
+    setGame({
+      roomSettings: TRAVEL,
+      gameState: gameState({ places: [ROME as never, BERLIN as never], roundIndex: 1 }),
+    });
     const { getAllByText, getByText } = await renderScreen();
     await fireEvent.press(getAllByText(youAreAtRome)[1]);
     expect(getByText(youAreAtRome)).toBeTruthy();

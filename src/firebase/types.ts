@@ -1,14 +1,8 @@
 import type { Category, Difficulty } from '@/types';
 
+import type { COLLECTIONS } from './constants';
+
 /** Forme Firestore des donnees. Pas de tableaux imbriques ni de `undefined` : champ optionnel absent = omis. */
-
-export const COLLECTIONS = {
-  places: 'places',
-  meta: 'meta',
-} as const;
-
-/** Incremente a chaque ecriture, pour qu'un cache cote jeu sache quand relire. */
-export const DATA_VERSION_DOC = { collection: COLLECTIONS.meta, id: 'dataVersion' } as const;
 
 export type CompassDoc = { category: Category; description?: string; wikiFr?: string; wikiEn?: string };
 
@@ -39,11 +33,7 @@ export type Counts = Partial<Record<Category, Partial<Record<Difficulty, number>
 /** `meta/compassCounts`, lu par l'hote au lancement. `shuffled` : les `n` suivent `shuffleRank` (sinon l'admin propose de melanger) ; le jeu l'ignore. */
 export type CountsDoc = { counts: Counts; shuffled?: true };
 
-export const COUNTS_DOC = { collection: COLLECTIONS.meta, id: 'compassCounts' } as const;
-
 /** `journal/{id auto}` : une entree par ecriture de l'admin, avec l'horodatage serveur `at`. */
-export const JOURNAL_COLLECTION = 'journal';
-
 /** Un document touche par une ecriture de l'admin : collection, id, ecrit ou supprime. */
 export type JournalChange = { c: keyof typeof COLLECTIONS; id: string; op: 'set' | 'delete' };
 

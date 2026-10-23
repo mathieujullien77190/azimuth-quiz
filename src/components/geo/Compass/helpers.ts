@@ -1,11 +1,6 @@
 import { normalizeBearing } from '@/helpers';
 
-import {
-  CARDINAL_BEARINGS,
-  TICK_LENGTH_RATIO,
-  TICK_OUTER_RATIO,
-  TICK_STEP_DEG,
-} from './constants';
+import { CARDINAL_BEARINGS, TICK_LENGTH_RATIO, TICK_OUTER_RATIO, TICK_STEP_DEG } from './constants';
 import type { Point, Tick } from './types';
 
 /** N/E/S/O affiches sur le cadran ; seul l'ouest depend de la langue. */

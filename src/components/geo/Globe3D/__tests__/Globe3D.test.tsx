@@ -50,7 +50,14 @@ const finger = (x: number, y: number) =>
 /** Deux doigts, a cet ecartement. */
 const pinch = (gap: number) =>
   ({
-    nativeEvent: { pageX: 0, pageY: 0, touches: [{ pageX: 0, pageY: 0 }, { pageX: 0, pageY: gap }] },
+    nativeEvent: {
+      pageX: 0,
+      pageY: 0,
+      touches: [
+        { pageX: 0, pageY: 0 },
+        { pageX: 0, pageY: gap },
+      ],
+    },
   }) as never;
 /** Nombre de doigts que le geste dit etre sur la vitre ; 0 = move parasite apres le lache. */
 const touching = (count: number) => ({ numberActiveTouches: count }) as never;
@@ -64,7 +71,9 @@ const renderGlobe = async (props: Partial<React.ComponentProps<typeof Globe3D>> 
   const createSpy = jest.spyOn(PanResponder, 'create');
   const screen = await render(<Globe3D marks={[answer]} origin={PARIS} size={240} {...props} />);
   const config =
-    createSpy.mock.calls.length === 0 ? undefined : (createSpy.mock.calls[createSpy.mock.calls.length - 1][0] as PanConfig);
+    createSpy.mock.calls.length === 0
+      ? undefined
+      : (createSpy.mock.calls[createSpy.mock.calls.length - 1][0] as PanConfig);
   createSpy.mockRestore();
   return { ...screen, config: config as PanConfig };
 };

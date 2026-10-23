@@ -20,7 +20,9 @@ describe('wobbleCurve', () => {
 
   it('goes to and fro as many times as asked', () => {
     const { outputRange } = wobbleCurve();
-    const crossings = outputRange.slice(1).filter((value, index) => Math.sign(value) * Math.sign(outputRange[index]) < 0);
+    const crossings = outputRange
+      .slice(1)
+      .filter((value, index) => Math.sign(value) * Math.sign(outputRange[index]) < 0);
     expect(crossings.length).toBeGreaterThanOrEqual(WOBBLE_CYCLES);
   });
 });

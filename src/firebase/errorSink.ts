@@ -3,10 +3,8 @@ import { collection, doc, increment, serverTimestamp, Timestamp, writeBatch } fr
 import { Platform } from 'react-native';
 
 import { auth, db } from './client';
-import type { ErrorRecord } from '../helpers/errors';
-
-/** Une erreur est nettoyable apres 30 jours (`expireAt`). */
-const RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+import { ERROR_QUOTA_COLLECTION, ERROR_RETENTION_MS, ERRORS_COLLECTION } from './constants';
+import type { ErrorRecord } from '@/helpers/errors';
 
 /** Le jour tel que `firestore.rules` le calcule (UTC, sans zero de tete) : id des documents de quota. */
 export const dayKey = (date: Date): string => `${date.getUTCFullYear()}-${date.getUTCMonth() + 1}-${date.getUTCDate()}`;
@@ -21,15 +19,15 @@ export const writeErrorRecord = async (record: ErrorRecord): Promise<void> => {
   const now = new Date();
   const day = dayKey(now);
   const batch = writeBatch(db);
-  batch.set(doc(collection(db, 'errors')), {
+  batch.set(doc(collection(db, ERRORS_COLLECTION)), {
     ...record,
     uid,
     platform: Platform.OS,
     version: Constants.expoConfig?.version ?? 'unknown',
     at: serverTimestamp(),
-    expireAt: Timestamp.fromMillis(now.getTime() + RETENTION_MS),
+    expireAt: Timestamp.fromMillis(now.getTime() + ERROR_RETENTION_MS),
   });
-  batch.set(doc(db, 'errorQuota', `${uid}_${day}`), { count: increment(1) }, { merge: true });
-  batch.set(doc(db, 'errorQuota', `global_${day}`), { count: increment(1) }, { merge: true });
+  batch.set(doc(db, ERROR_QUOTA_COLLECTION, `${uid}_${day}`), { count: increment(1) }, { merge: true });
+  batch.set(doc(db, ERROR_QUOTA_COLLECTION, `global_${day}`), { count: increment(1) }, { merge: true });
   await batch.commit();
 };

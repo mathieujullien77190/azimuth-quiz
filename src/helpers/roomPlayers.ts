@@ -1,6 +1,6 @@
 import { ROOM_PLAYER_COLORS } from '@/data';
 
-import type { RoomPlayer, RoomPlayers } from '../firebase/room';
+import type { RoomPlayer, RoomPlayers } from '@/firebase/room';
 
 // Import de type seul : efface a la compilation, donc sans `firebase/firestore` a l'execution.
 

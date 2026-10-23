@@ -35,11 +35,7 @@ export const parseRings = (path: string): Coordinates[][] =>
 export const scenePoint = (point: Coordinates, altitude = 1): [number, number, number] => {
   const lat = toRadians(point.latitude);
   const lon = toRadians(point.longitude);
-  return [
-    altitude * Math.cos(lat) * Math.sin(lon),
-    altitude * Math.sin(lat),
-    altitude * Math.cos(lat) * Math.cos(lon),
-  ];
+  return [altitude * Math.cos(lat) * Math.sin(lon), altitude * Math.sin(lat), altitude * Math.cos(lat) * Math.cos(lon)];
 };
 
 /** Une ligne de lieux en liste plate de coordonnees de scene, pour un buffer three.js. */
@@ -108,8 +104,7 @@ export const dragCenter = (center: Coordinates, dx: number, dy: number, radius: 
 };
 
 /** Le zoom multiplie par `factor` (un appui sur +, ou l'ecartement de deux doigts), borne aux limites. */
-export const zoomedBy = (zoom: number, factor: number): number =>
-  Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom * factor));
+export const zoomedBy = (zoom: number, factor: number): number => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom * factor));
 
 /** Ecartement de deux doigts, pour zoomer au pincement ; `null` avec moins de deux doigts sur la vitre. */
 export const fingerGap = (touches: { pageX: number; pageY: number }[]): number | null =>

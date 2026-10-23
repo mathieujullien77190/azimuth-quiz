@@ -1,4 +1,4 @@
-import { gearAngleDeg } from '../GearIcon';
+import { gearAngleDeg } from '@/components/home/MascotButton/GearIcon';
 
 import { BLINK_PERIOD_MS, BOB_AMPLITUDE, BOB_PERIOD_MS, ROTOR_PERIOD_MS } from './constants';
 import type { HelicopterIdleFrame } from './types';

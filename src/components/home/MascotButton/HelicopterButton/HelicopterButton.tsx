@@ -4,7 +4,7 @@ import Svg, { Circle, Ellipse, G, Line, Rect } from 'react-native-svg';
 
 import { useTheme } from '@/themes';
 
-import { GearIcon } from '../GearIcon';
+import { GearIcon } from '@/components/home/MascotButton/GearIcon';
 
 import {
   COCKPIT_COLOR,

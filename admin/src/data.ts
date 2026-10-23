@@ -16,11 +16,8 @@ import {
 
 import { collapseJournal } from '@/firebase/journal';
 import { NUMBERING, planRegroup } from '@/firebase/numbering';
+import { COLLECTIONS, COUNTS_DOC, DATA_VERSION_DOC, JOURNAL_COLLECTION } from '@/firebase/constants';
 import {
-  COLLECTIONS,
-  COUNTS_DOC,
-  DATA_VERSION_DOC,
-  JOURNAL_COLLECTION,
   type Counts,
   type CountsDoc,
   type JournalChange,
