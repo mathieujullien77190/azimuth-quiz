@@ -3,7 +3,7 @@
     "name": "Azimuth Quiz",
     "slug": "azimuth-quiz",
     "scheme": "azimuthquiz",
-    "version": "2.69.2",
+    "version": "2.70.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -52,9 +52,9 @@
     "description": "Devine la direction et la distance d’un lieu du monde (villes, montagnes, monuments, sites naturels). Seul ou jusqu’à 6 joueurs sur le même téléphone.",
     "extra": {
       "codename": {
-        "emoji": "🐺",
-        "name": "gray-wolf",
-        "wiki": "https://en.wikipedia.org/wiki/Gray_wolf"
+        "emoji": "🐻‍❄️",
+        "name": "polar-bear",
+        "wiki": "https://en.wikipedia.org/wiki/Polar_bear"
       },
       "router": {},
       "eas": {
