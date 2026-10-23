@@ -102,7 +102,7 @@ describe('EarthSection — 3D globe', () => {
 
   it('leaves the zooming to the globe, and takes it back with the 2D Earth', async () => {
     const { getByLabelText, getByText, queryByLabelText, queryByText } = await render(
-      <EarthSection allowSatellite={false} marks={[farMark]} origin={PARIS} size={240} zoomControls />,
+      <EarthSection marks={[farMark]} origin={PARIS} size={240} zoomControls />,
     );
     // Le globe zoome seul (et se remet au nord), en continu : pas par paliers.
     expect(getByLabelText(ZOOM_IN_HINT)).toBeTruthy();
@@ -131,19 +131,19 @@ describe('EarthSection — satellite', () => {
     timingSpy.mockRestore();
   });
 
-  it('does not show the satellite when allowSatellite is false', async () => {
-    const { queryByText } = await render(<EarthSection allowSatellite={false} marks={[farMark]} size={240} />);
+  it('does not show the satellite without zoom controls', async () => {
+    const { queryByText } = await render(<EarthSection marks={[farMark]} size={240} />);
     expect(queryByText('🛰️')).toBeNull();
     expect(startMock).not.toHaveBeenCalled();
   });
 
-  it('does not show the satellite when zoomed in past scale 1, even if allowed', async () => {
-    const { queryByText } = await render(<EarthSection allowSatellite marks={[nearMark]} size={240} />);
+  it('does not show the satellite when zoomed in past scale 1, even with zoom controls', async () => {
+    const { queryByText } = await render(<EarthSection zoomControls marks={[nearMark]} size={240} />);
     expect(queryByText('🛰️')).toBeNull();
   });
 
-  it('shows the satellite at zoom 1 with allowSatellite, and loops the orbit animation', async () => {
-    const { getByText } = await render(<EarthSection allowSatellite marks={[farMark]} size={240} />);
+  it('shows the satellite at zoom 1 with zoom controls, and loops the orbit animation', async () => {
+    const { getByText } = await render(<EarthSection zoomControls marks={[farMark]} size={240} />);
     expect(getByText('🛰️')).toBeTruthy();
     expect(timingSpy).toHaveBeenCalledWith(
       expect.anything(),
@@ -163,7 +163,7 @@ describe('EarthSection — satellite', () => {
   });
 
   it('stops looping after unmount even if the in-flight animation reports finished', async () => {
-    const { unmount, getByText } = await render(<EarthSection allowSatellite marks={[farMark]} size={240} />);
+    const { unmount, getByText } = await render(<EarthSection zoomControls marks={[farMark]} size={240} />);
     getByText('🛰️');
     const callsBeforeUnmount = startMock.mock.calls.length;
     const onFinished = startMock.mock.calls[callsBeforeUnmount - 1][0] as (result: { finished: boolean }) => void;
@@ -183,7 +183,7 @@ describe('EarthSection — satellite', () => {
           resetThemeId: jest.fn(),
         }}
       >
-        <EarthSection allowSatellite marks={[farMark]} size={240} />
+        <EarthSection zoomControls marks={[farMark]} size={240} />
       </ThemeSettingsContext.Provider>,
     );
     expect(queryByText('🛰️')).toBeNull();
@@ -191,7 +191,7 @@ describe('EarthSection — satellite', () => {
   });
 
   it('toggles the joke bubble on tap and hides it again on a second tap', async () => {
-    const { getByText, queryByText } = await render(<EarthSection allowSatellite marks={[farMark]} size={240} />);
+    const { getByText, queryByText } = await render(<EarthSection zoomControls marks={[farMark]} size={240} />);
     expect(queryByText(SATELLITE_QUIP)).toBeNull();
     await fireEvent.press(getByText('🛰️'));
     expect(getByText(SATELLITE_QUIP)).toBeTruthy();

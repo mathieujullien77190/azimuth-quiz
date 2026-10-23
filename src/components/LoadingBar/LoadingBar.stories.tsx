@@ -4,31 +4,30 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ThemeSettingsContext } from '@/themes';
 import { source } from '@/storybook/source';
 
-import { SplashScreen } from './SplashScreen';
+import { LoadingBar } from './LoadingBar';
 import dayCode from './Day.source.md?raw';
 import nightCode from './Night.source.md?raw';
 
 const meta = {
-  title: 'Common/SplashScreen',
-  component: SplashScreen,
+  title: 'Common/LoadingBar',
+  component: LoadingBar,
   decorators: [
     (Story) => (
-      <div style={{ width: 390, height: 844, position: 'relative', overflow: 'hidden' }}>
+      <div style={{ width: 390, height: 150, position: 'relative', overflow: 'hidden' }}>
         <View style={{ flex: 1 }}>
           <Story />
         </View>
       </div>
     ),
   ],
-} satisfies Meta<typeof SplashScreen>;
+} satisfies Meta<typeof LoadingBar>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
 const args = {
-  visible: true,
-  tagline: 'Pas de GPS, que de l’instinct.',
+  loading: true,
   loadingLabel: 'Chargement…',
   version: '2.65.0',
   codename: { emoji: '🐦', name: 'great-tit', wiki: 'https://en.wikipedia.org/wiki/Great_tit' },
@@ -36,9 +35,8 @@ const args = {
 };
 
 /**
- * Splash de demarrage de nuit : l'aiguille oscille, la barre avance par a-coups et se bloque comme un vrai
- * chargement sur le temps minimum (5 s), le libelle « chargement » respire. Chaque story force le theme pour
- * afficher les deux cote a cote.
+ * Barre de chargement de nuit : elle avance par a-coups et se bloque comme un vrai chargement sur le temps minimum
+ * (5 s), le libelle « chargement » respire. Chaque story force le theme pour afficher les deux cote a cote.
  */
 export const Night: Story = {
   parameters: source(nightCode),
@@ -54,7 +52,7 @@ export const Night: Story = {
   ],
 };
 
-/** Le meme de jour (theme clair sauvegarde) : fond sable, cadran blanc, titre et barre bleus. */
+/** Le meme de jour (theme clair sauvegarde) : fond sable, barre bleue. */
 export const Day: Story = {
   parameters: source(dayCode),
   args,

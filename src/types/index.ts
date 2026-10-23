@@ -129,12 +129,6 @@ export type ThemeTypography = {
   body: TextStyle;
 };
 
-/** Couleurs generiques des drapeaux geres (pays, edites dans l'admin). */
-export type FlagColorId = 'red' | 'blue' | 'white' | 'green' | 'yellow' | 'black';
-
-/** Couleur de drapeau et sa part de surface (%) : tuple `[colorId, hex, percent]` de l'editeur de drapeau de l'admin. */
-export type FlagColorRow = readonly [colorId: FlagColorId, hex: string, percent: number];
-
 /** Les deux themes (voir src/themes) : 'night' par defaut. */
 export type ThemeId = 'night' | 'day';
 

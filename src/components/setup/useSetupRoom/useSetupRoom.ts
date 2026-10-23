@@ -25,6 +25,7 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
   adapter: SetupRoomAdapter<S, R>,
   settings: S,
   updateSettings: (patch: Partial<S>) => void,
+  initialChoice: 'host' | 'join' | null,
 ) => {
   const { store } = adapter;
   const router = useRouter();
@@ -54,7 +55,7 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
 
   // Hote/joiner est un etat d'UI local, pas une preference : on repart de zero a chaque ouverture. Rejoindre
   // montre les sections en lecture seule (reflet de `roomSettings`) au lieu de les masquer.
-  const [onlineChoice, setOnlineChoice] = useState<'host' | 'join' | null>(null);
+  const [onlineChoice, setOnlineChoice] = useState<'host' | 'join' | null>(initialChoice);
   const [hostedSilently, setHostedSilently] = useState(false);
   const mode = hostedSilently ? 'host' : onlineChoice;
   const [roomCode, setRoomCode] = useState<string | null>(null);

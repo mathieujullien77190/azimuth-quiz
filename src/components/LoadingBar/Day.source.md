@@ -1,14 +1,13 @@
 ```tsx
-import SplashScreen from '@/components/SplashScreen';
+import LoadingBar from '@/components/LoadingBar';
 
-// Same component: it follows the saved theme through the theme tokens, so a player on the light theme gets the sand
-// background, the white dial and the blue title with no prop to change.
-<SplashScreen
-  fillMs={5000}
-  tagline={t.app.tagline}
-  loadingLabel={t.splash.loading}
+// Meme composant : il suit le theme sauvegarde par les jetons du theme, un joueur en theme clair a le fond sable et la
+// barre bleue sans rien changer.
+<LoadingBar
   codename={{ emoji: '🐦', name: 'great-tit', wiki: 'https://en.wikipedia.org/wiki/Great_tit' }}
+  fillMs={5000}
+  loading={loading}
+  loadingLabel={t.splash.loading}
   version="2.65.0"
-  visible={visible}
 />
 ```

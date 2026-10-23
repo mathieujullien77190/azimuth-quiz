@@ -75,3 +75,7 @@ export const REACTIONS_PER_GAME = 20;
 /** Le splash dure au moins SPLASH_MIN_MS, et au plus le plafond : une hydratation sans fin ne cache pas l'app. */
 export const SPLASH_MIN_MS = 5000;
 export const SPLASH_MAX_MS = 15000;
+
+/** Boussole et pied de l'accueil, communs au splash et a l'accueil : la boussole ne bouge pas quand l'un laisse place a l'autre. */
+export const HOME_COMPASS_SIZE = 260;
+export const HOME_FOOTER_HEIGHT = 150;

@@ -36,10 +36,6 @@ const build = (overrides: Partial<GlobeSceneInput> = {}) =>
   buildGlobeScene({
     origin: PARIS,
     marks: [],
-    land: false,
-    equator: false,
-    greenwich: false,
-    north: false,
     colors: COLORS,
     ...overrides,
   });
@@ -59,11 +55,12 @@ const lines = (root: Object3D): Line[] => objects(root).filter((object): object 
 const altitudeOf = (mesh: Mesh): number => mesh.position.length();
 
 describe('buildGlobeScene', () => {
-  it('is a bare ball, lit from every side, with the starting point on it', () => {
+  it('is a ball with the world on it, lit from every side, with the starting point and the pole', () => {
     const { scene, headlight } = build();
-    // La boule, et la pastille du point de depart.
-    expect(meshes(scene)).toHaveLength(2);
-    expect(lines(scene)).toHaveLength(0);
+    // La boule, les terres peintes, la pastille du point de depart et celle du pole.
+    expect(meshes(scene)).toHaveLength(4);
+    // Les cotes et l'equateur.
+    expect(lines(scene)).toHaveLength(2);
     // La lampe est rendue a part plutot qu'ajoutee : la camera la porte (voir `useGlobeRenderer`).
     expect(headlight.parent).toBeNull();
     expect(scene.children).toContain(scene.children.find((child) => child.type === 'AmbientLight'));
@@ -79,7 +76,7 @@ describe('buildGlobeScene', () => {
   });
 
   it('draws the sea and the continents with no light on them when flat (by day), so they keep exactly their colours', () => {
-    const { scene } = build({ land: true, colors: { ...COLORS, flat: true, fillOpacity: 1 } });
+    const { scene } = build({ colors: { ...COLORS, flat: true, fillOpacity: 1 } });
     const all = meshes(scene);
     const sea = all.find((mesh) => mesh.geometry.type === 'SphereGeometry' && (mesh.material as MeshBasicMaterial).color.getHexString() === '0b1220')!;
     expect(sea.material).toBeInstanceOf(MeshBasicMaterial);
@@ -88,7 +85,7 @@ describe('buildGlobeScene', () => {
   });
 
   it('paints the continents in, from a picture of the world that falls on the world', () => {
-    const { scene } = build({ land: true });
+    const { scene } = build();
     const painted = meshes(scene).find((mesh) => (mesh.material as MeshLambertMaterial).map !== null && (mesh.material as MeshLambertMaterial).map !== undefined)!;
     const picture = (painted.material as MeshLambertMaterial).map!.image as {
       width: number;
@@ -114,7 +111,7 @@ describe('buildGlobeScene', () => {
   });
 
   it('puts every corner of the painted shell where the map says, all the way round', () => {
-    const { scene } = build({ land: true });
+    const { scene } = build();
     const painted = meshes(scene).find((mesh) => (mesh.material as MeshLambertMaterial).map != null)!;
     const positions = painted.geometry.getAttribute('position');
     const uvs = painted.geometry.getAttribute('uv');
@@ -131,7 +128,7 @@ describe('buildGlobeScene', () => {
   });
 
   it('keeps the painted shell clear of the sea, bellies of its flats included', () => {
-    const { scene } = build({ land: true });
+    const { scene } = build();
     const painted = meshes(scene).find((mesh) => (mesh.material as MeshLambertMaterial).map != null)!;
     const positions = painted.geometry.getAttribute('position');
     const corners = painted.geometry.getIndex()!;
@@ -154,8 +151,8 @@ describe('buildGlobeScene', () => {
   });
 
   it('draws the whole world as one object, above the ball', () => {
-    const { scene } = build({ land: true });
-    const world = lines(scene);
+    const { scene } = build();
+    const world = lines(scene).filter((line) => line.type === 'LineSegments');
     // Un seul objet pour toutes les cotes : un seul dessin pour la carte graphique, quel que soit le detail du contour.
     expect(world).toHaveLength(1);
     expect(world[0].type).toBe('LineSegments');
@@ -167,15 +164,15 @@ describe('buildGlobeScene', () => {
   });
 
   it('works the world out once and keeps it for the next globe', () => {
-    const first = lines(build({ land: true }).scene)[0].geometry.getAttribute('position');
-    const second = lines(build({ land: true }).scene)[0].geometry.getAttribute('position');
+    const first = lines(build().scene)[0].geometry.getAttribute('position');
+    const second = lines(build().scene)[0].geometry.getAttribute('position');
     expect(second.count).toBe(first.count);
   });
 
-  it('draws the equator closed and the Greenwich meridian open, both dashed', () => {
-    const { scene } = build({ equator: true, greenwich: true });
-    const guides = lines(scene);
-    expect(guides.map((line) => line.type)).toEqual(['LineLoop', 'Line']);
+  it('draws the equator closed and dashed', () => {
+    const { scene } = build();
+    const guides = lines(scene).filter((line) => line.type !== 'LineSegments');
+    expect(guides.map((line) => line.type)).toEqual(['LineLoop']);
     expect(guides.every((line) => line.material instanceof LineDashedMaterial)).toBe(true);
     // Les pointilles se mesurent le long de la ligne : sans ses longueurs propres, elle serait pleine.
     expect(guides[0].geometry.getAttribute('lineDistance')).toBeTruthy();
@@ -184,10 +181,10 @@ describe('buildGlobeScene', () => {
   it('gives a guess its end point and the true answer a circled one, the routes being built apart', () => {
     const guess = meshes(build({ marks: [ANSWER] }).scene);
     const truth = meshes(build({ marks: [{ ...ANSWER, isTruth: true }] }).scene);
-    // La boule, le point de depart et le point d'arrivee.
-    expect(guess).toHaveLength(3);
+    // La boule, les terres, le pole, le point de depart et le point d'arrivee.
+    expect(guess).toHaveLength(5);
     // Pareil, plus l'anneau autour de la vraie reponse.
-    expect(truth).toHaveLength(4);
+    expect(truth).toHaveLength(6);
     expect(truth.some((mesh) => mesh.geometry.type === 'TorusGeometry')).toBe(true);
     // Aucune route dans la scene : le zoom en gere l'epaisseur (voir `buildRoutes`).
     expect([...guess, ...truth].some((mesh) => mesh.geometry.type === 'TubeGeometry')).toBe(false);
@@ -208,7 +205,7 @@ describe('buildGlobeScene', () => {
 
 
   it('hands back the dots and the rings as what must keep its size on screen, and nothing else', () => {
-    const { scene, screenSized } = build({ land: true, marks: [{ ...ANSWER, isTruth: true }], north: true });
+    const { scene, screenSized } = build({ marks: [{ ...ANSWER, isTruth: true }] });
     // Le point de depart, la pastille de la reponse, son anneau et le pole — pas la boule, les terres peintes ni une route.
     expect(screenSized).toHaveLength(4);
     expect(screenSized.every((mark) => meshes(scene).includes(mark))).toBe(true);
@@ -218,9 +215,9 @@ describe('buildGlobeScene', () => {
     );
   });
 
-  it('marks the north pole when asked', () => {
-    const marked = meshes(build({ north: true }).scene);
-    expect(marked).toHaveLength(3);
+  it('marks the north pole', () => {
+    const marked = meshes(build().scene);
+    expect(marked).toHaveLength(4);
     expect(marked.some((mesh) => mesh.position.y > 1 && Math.abs(mesh.position.x) < 1e-9)).toBe(true);
   });
 });
@@ -263,7 +260,7 @@ describe('buildRoutes', () => {
 
 describe('disposeScene', () => {
   it('hands back every geometry and material, and empties the scene', () => {
-    const { scene } = build({ land: true, equator: true, marks: [ANSWER] });
+    const { scene } = build({ marks: [ANSWER] });
     const drawn = objects(scene).filter((object): object is Mesh => (object as Partial<Mesh>).geometry !== undefined);
     const geometries = drawn.map((object) => jest.spyOn(object.geometry, 'dispose'));
     const materials = drawn.map((object) => jest.spyOn(object.material as MeshBasicMaterial, 'dispose'));

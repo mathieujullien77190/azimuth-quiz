@@ -8,38 +8,38 @@ describe('OptionsSection', () => {
     { id: 'b', title: 'Option B', value: false, onChange: jest.fn() },
   ];
 
+  const gps = (overrides = {}) => ({
+    title: 'Ma position',
+    description: 'Sinon, un point GPS.',
+    useGps: true,
+    onToggleUseGps: jest.fn(),
+    latitude: 48.85,
+    longitude: 2.35,
+    onChangeCustomOrigin: jest.fn(),
+    ...overrides,
+  });
+
   beforeEach(() => jest.clearAllMocks());
 
   it('lists every option with its description', async () => {
-    const { getByText } = await render(<OptionsSection options={options} title="Options" />);
+    const { getByText } = await render(<OptionsSection gps={gps()} options={options} title="Options" />);
     expect(getByText('Option A')).toBeTruthy();
     expect(getByText('Desc A')).toBeTruthy();
     expect(getByText('Option B')).toBeTruthy();
   });
 
   it('forwards a toggle to its own option', async () => {
-    const { getByLabelText } = await render(<OptionsSection options={options} title="Options" />);
+    const { getByLabelText } = await render(<OptionsSection gps={gps()} options={options} title="Options" />);
     await fireEvent(getByLabelText('Option B'), 'valueChange', true);
     expect(options[1].onChange).toHaveBeenCalledWith(true);
   });
 
   it('flags every toggle as disabled when read-only', async () => {
-    const { getByLabelText } = await render(<OptionsSection disabled options={options} title="Options" />);
+    const { getByLabelText } = await render(<OptionsSection disabled gps={gps()} options={options} title="Options" />);
     expect(getByLabelText('Option A').props.accessibilityState.disabled).toBe(true);
   });
 
   describe('GPS option', () => {
-    const gps = (overrides = {}) => ({
-      title: 'Ma position',
-      description: 'Sinon, un point GPS.',
-      useGps: true,
-      onToggleUseGps: jest.fn(),
-      latitude: 48.85,
-      longitude: 2.35,
-      onChangeCustomOrigin: jest.fn(),
-      ...overrides,
-    });
-
     it('shows the GPS toggle without coordinate fields while GPS is on', async () => {
       const { getByLabelText, queryByText } = await render(<OptionsSection gps={gps()} options={[]} title="Options" />);
       expect(getByLabelText('Ma position').props.value).toBe(true);

@@ -11,26 +11,6 @@ export type Globe3DProps = {
   /** Les memes reponses que la Terre de profil : chacune est sa route a cap constant (loxodromie), la vraie
    * (`isTruth`) seulement son point d'arrivee entoure. */
   marks: EarthMark[];
-  /** Dessine les terres (contour du monde). Sans, le globe est une boule nue que l'equateur et Greenwich peuvent
-   * encore marquer. Vrai par defaut. */
-  land?: boolean;
-  /** Marque le pole nord d'un point et d'un "N" tant qu'il est devant, pour voir l'inclinaison du globe. Vrai par defaut. */
-  north?: boolean;
-  /** Dessine l'equateur (pointille) pour lire ou est la reponse. */
-  equator?: boolean;
-  /** Dessine le meridien de Greenwich (pointille). */
-  greenwich?: boolean;
-  /** Un satellite (la nuit seulement, et sans zoom) fait le tour de la Terre sur son equateur, cliquable pour une
-   * blague. Vrai par defaut. */
-  satellite?: boolean;
-  /** Tourne au doigt et zoome au pincement. Vrai par defaut ; faux garde le globe comme il est apparu. */
-  draggable?: boolean;
-  /** Boutons de zoom et "retour au nord", dans les coins du dessin. Suit `draggable` par defaut : un globe qu'on
-   * ne peut pas tourner n'a rien a remettre. */
-  controls?: boolean;
-  /** Ce qui entoure la boule. Le dessin est une vraie surface OpenGL, pas transparente partout : on la peint de
-   * cette couleur au lieu de laisser voir ce qui est derriere. Par defaut le fond du theme. */
-  backgroundColor?: string;
 };
 
 /** Les couleurs de la scene, prises du theme par le composant. */
@@ -54,10 +34,6 @@ export type GlobeColors = {
 export type GlobeSceneInput = {
   origin: Coordinates;
   marks: EarthMark[];
-  land: boolean;
-  equator: boolean;
-  greenwich: boolean;
-  north: boolean;
   colors: GlobeColors;
 };
 

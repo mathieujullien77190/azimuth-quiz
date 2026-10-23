@@ -37,13 +37,11 @@ const localizedTexts =
     return {
       title: title(texts),
       options,
-      ...(gps && {
-        gps: {
-          ...gps,
-          title: texts.setup.toggles.useGps.label,
-          description: texts.setup.toggles.useGps.description,
-        },
-      }),
+      gps: {
+        ...gps,
+        title: texts.setup.toggles.useGps.label,
+        description: texts.setup.toggles.useGps.description,
+      },
     };
   };
 const compassOptionsTitle = (texts: Translations) => texts.setup.optionsTitle;
@@ -57,32 +55,30 @@ const InteractiveDemo = (args: OptionsSectionProps) => {
     Object.fromEntries(args.options.map((option) => [option.id, option.value])),
   );
   const [gpsValues, setGpsValues] = useState({
-    useGps: args.gps?.useGps ?? false,
-    latitude: args.gps?.latitude ?? 0,
-    longitude: args.gps?.longitude ?? 0,
+    useGps: args.gps.useGps,
+    latitude: args.gps.latitude,
+    longitude: args.gps.longitude,
   });
 
   return (
     <OptionsSection
       {...args}
-      gps={
-        args.gps && {
-          ...args.gps,
-          ...gpsValues,
-          onChangeCustomOrigin: (patch) => {
-            args.gps?.onChangeCustomOrigin(patch);
-            setGpsValues((current) => ({
-              ...current,
-              latitude: patch.customLatitude ?? current.latitude,
-              longitude: patch.customLongitude ?? current.longitude,
-            }));
-          },
-          onToggleUseGps: (value) => {
-            args.gps?.onToggleUseGps(value);
-            setGpsValues((current) => ({ ...current, useGps: value }));
-          },
-        }
-      }
+      gps={{
+        ...args.gps,
+        ...gpsValues,
+        onChangeCustomOrigin: (patch) => {
+          args.gps.onChangeCustomOrigin(patch);
+          setGpsValues((current) => ({
+            ...current,
+            latitude: patch.customLatitude ?? current.latitude,
+            longitude: patch.customLongitude ?? current.longitude,
+          }));
+        },
+        onToggleUseGps: (value) => {
+          args.gps.onToggleUseGps(value);
+          setGpsValues((current) => ({ ...current, useGps: value }));
+        },
+      }}
       options={args.options.map((option) => ({
         ...option,
         onChange: (value) => {

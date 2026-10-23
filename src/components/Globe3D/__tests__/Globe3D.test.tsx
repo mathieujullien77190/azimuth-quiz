@@ -56,7 +56,7 @@ const pinch = (gap: number) =>
 const touching = (count: number) => ({ numberActiveTouches: count }) as never;
 
 /** Nombre de "N" a l'ecran : le label du pole et le bouton "retour au nord" en portent un chacun,
- * donc deux = le pole est la (un seul quand les boutons sont masques). */
+ * donc deux = le pole est la. */
 const northLabels = (queryAllByText: (text: string) => unknown[]) => queryAllByText('N').length;
 
 /** Rend le globe et remet les handlers tactiles qu'il vient de poser. */
@@ -94,10 +94,9 @@ describe('Globe3D', () => {
     expect(renderer.dispose).toHaveBeenCalled();
   });
 
-  it('can be left without a pole, and without answers', async () => {
-    const { queryAllByText, queryByText } = await renderGlobe({ marks: [], north: false });
-    // Il ne reste que le "N" du bouton.
-    expect(northLabels(queryAllByText)).toBe(1);
+  it('can be left without answers', async () => {
+    const { queryAllByText, queryByText } = await renderGlobe({ marks: [] });
+    expect(northLabels(queryAllByText)).toBe(2);
     expect(queryByText(PLAYER_LABEL)).toBeTruthy();
   });
 });
@@ -152,14 +151,6 @@ describe('Globe3D — turning it with a finger', () => {
   it('keeps the gesture to itself, so the page does not scroll under the finger', async () => {
     const { config } = await renderGlobe();
     expect(config.onShouldBlockNativeResponder?.({} as never, {} as never)).toBe(true);
-  });
-
-  it('has no touch handlers at all when it cannot be turned', async () => {
-    const fixed = await render(<Globe3D draggable={false} marks={[]} origin={PARIS} size={240} />);
-    const turnable = await render(<Globe3D marks={[]} origin={PARIS} size={240} />);
-    const handlers = (tree: unknown) => (tree as { props: Record<string, unknown> }).props.onStartShouldSetResponder;
-    expect(handlers(fixed.toJSON())).toBeUndefined();
-    expect(handlers(turnable.toJSON())).toBeDefined();
   });
 });
 
@@ -237,18 +228,6 @@ describe('Globe3D — zooming', () => {
     await fireEvent.press(getByLabelText(RESET_HINT));
     expect(dotScale()).toBeUndefined();
   });
-
-  it('has no buttons when the globe is fixed', async () => {
-    const { queryByLabelText } = await renderGlobe({ draggable: false });
-    expect(queryByLabelText(ZOOM_IN_HINT)).toBeNull();
-    expect(queryByLabelText(RESET_HINT)).toBeNull();
-  });
-
-  it('can be turned without the buttons', async () => {
-    const { queryByLabelText, config } = await renderGlobe({ controls: false });
-    expect(queryByLabelText(ZOOM_IN_HINT)).toBeNull();
-    expect(config).toBeDefined();
-  });
 });
 
 describe('Globe3D — on the web', () => {
@@ -300,11 +279,6 @@ describe('Globe3D — satellite', () => {
     expect(withAnswers.queryByText('🛰️')).toBeTruthy();
     const empty = await renderGlobe({ marks: [] });
     expect(empty.queryByText('🛰️')).toBeTruthy();
-  });
-
-  it('has none when asked not to', async () => {
-    const asked = await renderGlobe({ satellite: false });
-    expect(asked.queryByText('🛰️')).toBeNull();
   });
 
   it('has no satellite, nor plane, by day', async () => {

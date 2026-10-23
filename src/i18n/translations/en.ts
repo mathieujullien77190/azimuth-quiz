@@ -11,15 +11,10 @@ export const en: Translations = {
   compassAccessibilityLabel: 'Compass',
   app: { tagline: 'No GPS, just instinct.' },
   home: {
-    playersRange: (max) => `1 to ${max} players`,
     settingsButtonLabel: 'Settings',
-    games: {
-      compass: {
-        title: 'Compass',
-        tagline: 'A place appears. Aim its heading and estimate its distance from your starting point.',
-        cta: 'Play',
-      },
-    },
+    gameTitle: 'Compass',
+    play: 'Play',
+    join: 'Join',
   },
   setup: {
     back: 'Back',
@@ -96,7 +91,6 @@ export const en: Translations = {
     validate: 'Submit',
     next: 'Next round',
     last: 'See the score',
-    roundOver: 'Round over',
     nextStep: 'Next',
     previousStep: 'Back',
     youAreAt: (name) => `You are in ${name}`,

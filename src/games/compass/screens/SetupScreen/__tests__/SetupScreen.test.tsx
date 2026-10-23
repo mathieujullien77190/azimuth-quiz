@@ -71,13 +71,13 @@ beforeEach(() => {
   });
 });
 
-const renderSetup = async (overrides: Partial<GameSettings> = {}, ready = true) => {
+const renderSetup = async (overrides: Partial<GameSettings> = {}, ready = true, startInJoin = false) => {
   const updateSettings = jest.fn();
   const resetSettings = jest.fn();
   const settings: GameSettings = { ...DEFAULT_SETTINGS, ...overrides };
   mockedUseSettings.mockReturnValue({ settings, ready, updateSettings, resetSettings });
   const onBack = jest.fn();
-  const utils = await render(<SetupScreen onBack={onBack} />);
+  const utils = await render(<SetupScreen onBack={onBack} startInJoin={startInJoin} />);
   return { ...utils, onBack, settings, updateSettings };
 };
 
@@ -101,6 +101,11 @@ describe('SetupScreen — defaults', () => {
 });
 
 describe('SetupScreen — host/join a game', () => {
+  it('startInJoin ouvre directement la saisie du code', async () => {
+    const { getByPlaceholderText } = await renderSetup({}, true, true);
+    expect(getByPlaceholderText('Code de la partie')).toBeTruthy();
+  });
+
   it('creating a game shows the generated code once it resolves, in a readonly input', async () => {
     mockedCreateRoom.mockResolvedValue('tabofuna');
     const { getByText, findByDisplayValue } = await renderSetup();
@@ -109,32 +114,48 @@ describe('SetupScreen — host/join a game', () => {
     expect(codeInput.props.editable).toBe(false);
   });
 
-  it('joining a game keeps every setting section visible but read-only', async () => {
-    const { getByText, getByLabelText } = await renderSetup();
+  /** Passe en mode rejoindre et tape un code valide: les reglages n'apparaissent qu'une fois la partie rejointe. */
+  const joinGame = async (utils: Awaited<ReturnType<typeof renderSetup>>) => {
+    mockedRoomExists.mockResolvedValue(true);
+    await fireEvent.press(utils.getByText('Rejoindre'));
+    fireEvent.changeText(await utils.findByPlaceholderText('Code de la partie'), 'tabofuna');
+    await utils.findByText('Catégories');
+  };
+
+  it('joining a game hides every setting section until a game is joined', async () => {
+    const { getByText, queryByText, getByLabelText } = await renderSetup();
     await fireEvent.press(getByText('Rejoindre'));
-    expect(getByText('Catégories')).toBeTruthy();
-    expect(getByText('Difficulté')).toBeTruthy();
-    expect(getByText('Nombre de manches')).toBeTruthy();
-    expect(getByText('Options')).toBeTruthy();
+    expect(queryByText('Catégories')).toBeNull();
+    expect(queryByText('Difficulté')).toBeNull();
+    expect(queryByText('Nombre de manches')).toBeNull();
+    expect(queryByText('Options')).toBeNull();
     expect(getByLabelText('Nom du joueur 1')).toBeTruthy();
-    const mountainsChip = getByText('Montagnes');
+  });
+
+  it('once a game is joined, the setting sections show up read-only', async () => {
+    const utils = await renderSetup();
+    await joinGame(utils);
+    expect(utils.getByText('Difficulté')).toBeTruthy();
+    expect(utils.getByText('Nombre de manches')).toBeTruthy();
+    expect(utils.getByText('Options')).toBeTruthy();
+    const mountainsChip = utils.getByText('Montagnes');
     expect(mountainsChip.parent?.props.accessibilityState.disabled).toBe(true);
-    expect(getByLabelText('Boussole réelle').props.accessibilityState.disabled).toBe(true);
+    expect(utils.getByLabelText('Boussole réelle').props.accessibilityState.disabled).toBe(true);
   });
 
   it('shows a notice instead of changing anything when a joiner taps a read-only option, then hides it after 2s', async () => {
+    const utils = await renderSetup();
+    await joinGame(utils);
     jest.useFakeTimers();
     try {
-      const { getByText, queryByText, updateSettings } = await renderSetup();
-      await fireEvent.press(getByText('Rejoindre'));
-      updateSettings.mockClear();
+      utils.updateSettings.mockClear();
 
-      await fireEvent.press(getByText('Montagnes'));
-      expect(updateSettings).not.toHaveBeenCalled();
-      expect(getByText('Seul l’hôte peut modifier les options.')).toBeTruthy();
+      await fireEvent.press(utils.getByText('Montagnes'));
+      expect(utils.updateSettings).not.toHaveBeenCalled();
+      expect(utils.getByText('Seul l’hôte peut modifier les options.')).toBeTruthy();
 
       await act(() => jest.advanceTimersByTimeAsync(2000));
-      expect(queryByText('Seul l’hôte peut modifier les options.')).toBeNull();
+      expect(utils.queryByText('Seul l’hôte peut modifier les options.')).toBeNull();
     } finally {
       jest.useRealTimers();
     }

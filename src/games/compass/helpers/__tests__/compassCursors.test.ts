@@ -25,12 +25,6 @@ describe('compassCursors', () => {
     expect(await loadCompassCursors()).toEqual({});
   });
 
-  it('names a group by category and difficulty', () => {
-    const { groupKey } = freshModule();
-
-    expect(groupKey({ category: 'nature', difficulty: 'hard' })).toBe('nature|hard');
-  });
-
   it('moves some groups on, keeps the others, in memory and on the device', async () => {
     const { loadCompassCursors, saveCompassCursors } = freshModule();
     await loadCompassCursors();

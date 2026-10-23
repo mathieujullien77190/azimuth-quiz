@@ -64,7 +64,7 @@ const CustomOriginInputs = ({ latitude, longitude, onChange, disabled }: CustomO
 
 /**
  * Bloc « Options » commun aux setups (dumb) : table d'options on/off (titre, description, valeur, callback),
- * plus l'option GPS (`gps`, avec ses champs d'origine perso) pour les jeux qui ont un point de depart.
+ * plus l'option GPS (`gps`, avec ses champs d'origine perso).
  */
 export const OptionsSection = ({ title, options, gps, disabled = false }: OptionsSectionProps) => (
   <Section title={title}>
@@ -78,25 +78,21 @@ export const OptionsSection = ({ title, options, gps, disabled = false }: Option
         value={option.value}
       />
     ))}
-    {gps && (
-      <>
-        <Toggle
-          description={gps.description}
-          disabled={disabled}
-          label={gps.title}
-          onValueChange={gps.onToggleUseGps}
-          value={gps.useGps}
-        />
-        {!gps.useGps && (
-          <CustomOriginInputs
-            key={gps.ready === false ? 'loading' : 'ready'}
-            disabled={disabled}
-            latitude={gps.latitude}
-            longitude={gps.longitude}
-            onChange={gps.onChangeCustomOrigin}
-          />
-        )}
-      </>
+    <Toggle
+      description={gps.description}
+      disabled={disabled}
+      label={gps.title}
+      onValueChange={gps.onToggleUseGps}
+      value={gps.useGps}
+    />
+    {!gps.useGps && (
+      <CustomOriginInputs
+        key={gps.ready === false ? 'loading' : 'ready'}
+        disabled={disabled}
+        latitude={gps.latitude}
+        longitude={gps.longitude}
+        onChange={gps.onChangeCustomOrigin}
+      />
     )}
   </Section>
 );

@@ -1,7 +1,7 @@
 export const CAPTION_GLOBE = 'Globe 3D';
 /** Points d'une route : lisse a l'oeil meme pour un demi-tour de Terre. */
 export const ROUTE_STEPS = 64;
-/** Degres entre deux points de l'equateur et du meridien de Greenwich (lisse a l'oeil a ce pas). */
+/** Degres entre deux points de l'equateur (lisse a l'oeil a ce pas). */
 export const GUIDE_STEP = 5;
 
 // --- La scene ---
@@ -36,7 +36,7 @@ export const DOT_SEGMENTS = 16;
 /** L'anneau autour de la vraie reponse. */
 export const TRUTH_RING = 0.06;
 export const TRUTH_RING_THICKNESS = 0.009;
-/** Pointilles de l'equateur et du meridien de Greenwich. */
+/** Pointilles de l'equateur. */
 export const GUIDE_DASH = 0.05;
 export const GUIDE_GAP = 0.035;
 /** Lumiere recue par la boule de partout, et de la lampe qui suit la camera (le meme cote prend toujours la

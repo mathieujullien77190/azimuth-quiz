@@ -12,14 +12,9 @@ export const fr: Translations = {
   app: { tagline: 'Pas de GPS, que de l’instinct.' },
   home: {
     settingsButtonLabel: 'Réglages',
-    playersRange: (max) => `1 à ${max} joueurs`,
-    games: {
-      compass: {
-        title: 'Boussole',
-        tagline: 'Un lieu s’affiche. Vise son cap et estime sa distance depuis ta position.',
-        cta: 'Jouer',
-      },
-    },
+    gameTitle: 'Boussole',
+    play: 'Jouer',
+    join: 'Rejoindre',
   },
   setup: {
     back: 'Retour',
@@ -96,7 +91,6 @@ export const fr: Translations = {
     validate: 'Valider',
     next: 'Manche suivante',
     last: 'Voir le score',
-    roundOver: 'Manche terminée',
     nextStep: 'Suivant',
     previousStep: 'Précédent',
     youAreAt: (name) => `Vous êtes à ${name}`,

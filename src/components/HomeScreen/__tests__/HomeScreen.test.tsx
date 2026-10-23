@@ -1,5 +1,6 @@
-import { fireEvent, render } from '@testing-library/react-native';
-import { StyleSheet } from 'react-native';
+import { act, fireEvent, render } from '@testing-library/react-native';
+
+import { useStartup } from '@/helpers/startupStore';
 
 import HomeScreen from '..';
 
@@ -7,36 +8,66 @@ const mockPush = jest.fn();
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }));
 
 beforeEach(() => {
+  jest.useFakeTimers();
   jest.clearAllMocks();
+  useStartup.setState({ loading: false });
 });
+afterEach(() => jest.useRealTimers());
 
-describe('HomeScreen — content', () => {
-  it('shows the title, tagline, and the game card', async () => {
-    const { getByText, getAllByText } = await render(<HomeScreen />);
+describe('HomeScreen — contenu', () => {
+  it('montre le titre et la baseline', async () => {
+    const { getByText } = await render(<HomeScreen />);
     expect(getByText('AZIMUTH QUIZ')).toBeTruthy();
     expect(getByText('Pas de GPS, que de l’instinct.')).toBeTruthy();
-    expect(getByText('Boussole')).toBeTruthy();
-    expect(getAllByText('Jouer')).toHaveLength(1);
   });
 
-  it('puts the card at the bottom of the screen', async () => {
-    const { getByText } = await render(<HomeScreen />);
-    // En remontant depuis la 1re carte, la pile de cartes est le 1er conteneur pousse en fin.
-    let node = getByText('Boussole').parent;
-    while (node && StyleSheet.flatten(node.props.style)?.justifyContent !== 'flex-end') node = node.parent;
-    expect(node).not.toBeNull();
-    expect(StyleSheet.flatten(node!.props.style).justifyContent).toBe('flex-end');
-  });
-
-  it('navigates to /setup when the Boussole card is played', async () => {
-    const { getAllByText } = await render(<HomeScreen />);
-    await fireEvent.press(getAllByText('Jouer')[0]);
-    expect(mockPush).toHaveBeenCalledWith('/setup');
+  it('montre les boutons une fois le chargement termine', async () => {
+    const { getByText, queryByText } = await render(<HomeScreen />);
+    expect(getByText('Jouer')).toBeTruthy();
+    expect(getByText('Rejoindre')).toBeTruthy();
+    expect(queryByText('Chargement…')).toBeNull();
   });
 });
 
-describe('HomeScreen — mascot settings button', () => {
-  it('opens the settings', async () => {
+describe('HomeScreen — demarrage', () => {
+  it('montre la barre de chargement a la place des boutons tant que l\'app charge', async () => {
+    useStartup.setState({ loading: true });
+    const { getByText, queryByText } = await render(<HomeScreen />);
+    expect(getByText('Chargement…')).toBeTruthy();
+    expect(queryByText('Jouer')).toBeNull();
+    expect(queryByText('Rejoindre')).toBeNull();
+  });
+
+  it('laisse la place aux boutons quand le chargement se termine', async () => {
+    useStartup.setState({ loading: true });
+    const { getByText, queryByText } = await render(<HomeScreen />);
+    await act(async () => useStartup.setState({ loading: false }));
+    await act(async () => jest.advanceTimersByTime(400));
+    expect(getByText('Jouer')).toBeTruthy();
+    expect(queryByText('Chargement…')).toBeNull();
+  });
+
+  it('garde le bouton reglages en haut pendant le chargement', async () => {
+    useStartup.setState({ loading: true });
+    const { getByLabelText } = await render(<HomeScreen />);
+    expect(getByLabelText('Réglages')).toBeTruthy();
+  });
+});
+
+describe('HomeScreen — navigation', () => {
+  it('ouvre la preparation avec « Jouer »', async () => {
+    const { getByText } = await render(<HomeScreen />);
+    await fireEvent.press(getByText('Jouer'));
+    expect(mockPush).toHaveBeenCalledWith('/setup');
+  });
+
+  it('ouvre la preparation en mode rejoindre avec « Rejoindre »', async () => {
+    const { getByText } = await render(<HomeScreen />);
+    await fireEvent.press(getByText('Rejoindre'));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/setup', params: { join: '1' } });
+  });
+
+  it('ouvre les reglages avec la mascotte', async () => {
     const { getByLabelText } = await render(<HomeScreen />);
     await fireEvent.press(getByLabelText('Réglages'));
     expect(mockPush).toHaveBeenCalledWith('/settings');

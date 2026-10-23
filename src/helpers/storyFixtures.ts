@@ -15,7 +15,7 @@ import { applyBestBonus, scoreRound } from '@/games/compass/helpers/scoring';
 // Firestore). Ici et pas dans `admin/`, qui depend de `src/` et non l'inverse.
 
 /** Quelques lieux Compass, au format d'un document Firestore. */
-export const FIXTURE_PLACES: Place[] = [
+const FIXTURE_PLACES: Place[] = [
   {
     name: 'Tokyo',
     code: 'JP',

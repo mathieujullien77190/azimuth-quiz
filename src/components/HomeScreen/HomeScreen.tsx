@@ -1,20 +1,34 @@
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { View } from 'react-native';
-import { GAME_ICONS } from '@/data';
+
+import { HOME_COMPASS_SIZE, SPLASH_MIN_MS } from '@/data';
+import { APP_CODENAME, APP_VERSION_NUMBER } from '@/helpers/appInfo';
+import { useStartup } from '@/helpers/startupStore';
 import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 
 import AppTitle from '../AppTitle';
-import GameCard from '../GameCard';
+import LoadingBar from '../LoadingBar';
 import MascotButton from '../MascotButton';
+import SwayingCompass from '../SwayingCompass';
+import Button from '../ui/Button';
 import Screen from '../ui/Screen';
 
 import { createStyles } from './styles';
 
+/**
+ * Accueil, qui est aussi l'ecran de demarrage : titre, boussole dont l'aiguille oscille, puis au pied la barre de
+ * chargement qui laisse la place aux boutons « Jouer » / « Rejoindre » une fois l'app prete. Le bouton reglages
+ * (la mascotte) est toujours en haut.
+ */
 export const HomeScreen = () => {
   const router = useRouter();
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
+  const loading = useStartup((state) => state.loading);
+  // La barre n'existe que si l'accueil s'ouvre pendant le chargement (elle se retire seule apres sa liberation).
+  const [showsBar] = useState(loading);
 
   return (
     <Screen>
@@ -25,15 +39,30 @@ export const HomeScreen = () => {
         </View>
       </AppTitle>
 
-      <View style={styles.games}>
-        <GameCard
-          ctaLabel={t.home.games.compass.cta}
-          icon={GAME_ICONS.compass}
-          maxPlayers={10}
-          onPress={() => router.push('/setup')}
-          tagline={t.home.games.compass.tagline}
-          title={t.home.games.compass.title}
-        />
+      <View style={styles.body}>
+        <SwayingCompass size={HOME_COMPASS_SIZE} />
+
+        <View style={styles.footer}>
+          {!loading && (
+            <>
+              <Button label={t.home.play} onPress={() => router.push('/setup')} />
+              <Button
+                label={t.home.join}
+                onPress={() => router.push({ pathname: '/setup', params: { join: '1' } })}
+                variant="ghost"
+              />
+            </>
+          )}
+          {showsBar && (
+            <LoadingBar
+              codename={APP_CODENAME}
+              fillMs={SPLASH_MIN_MS}
+              loading={loading}
+              loadingLabel={t.splash.loading}
+              version={APP_VERSION_NUMBER}
+            />
+          )}
+        </View>
       </View>
     </Screen>
   );

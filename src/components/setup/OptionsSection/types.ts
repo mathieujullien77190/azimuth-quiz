@@ -25,11 +25,8 @@ export type GpsOption = {
 export type OptionsSectionProps = {
   title: string;
   options: OptionItem[];
-  /**
-   * Option « Utiliser ma position GPS » (+ champs d'origine perso), affichee seulement si fournie : un jeu sans
-   * point de depart peut l'omettre. Rendue apres `options`.
-   */
-  gps?: GpsOption;
+  /** Option « Utiliser ma position GPS » (+ champs d'origine perso), rendue apres `options`. */
+  gps: GpsOption;
   disabled?: boolean;
 };
 

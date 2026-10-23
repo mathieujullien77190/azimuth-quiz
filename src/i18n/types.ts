@@ -2,13 +2,6 @@ import type { Category, Difficulty } from '@/types';
 
 export type Language = 'fr' | 'en';
 
-/** Contenu d'une carte de jeu de l'accueil (`GameCard`). */
-export type HomeGameCopy = {
-  title: string;
-  tagline: string;
-  cta: string;
-};
-
 /** Les 8 points cardinaux dans l'ordre N, NE, E, SE, S, SO, O, NO. */
 export type CardinalLabels = readonly [string, string, string, string, string, string, string, string];
 
@@ -29,11 +22,10 @@ export type Translations = {
   app: { tagline: string };
   home: {
     settingsButtonLabel: string;
-    /** Ligne du nombre de joueurs d'une carte de jeu. */
-    playersRange: (max: number) => string;
-    games: {
-      compass: HomeGameCopy;
-    };
+    /** Nom du jeu, affiche en titre de l'ecran de preparation. */
+    gameTitle: string;
+    play: string;
+    join: string;
   };
   setup: {
     back: string;
@@ -95,7 +87,6 @@ export type Translations = {
     validate: string;
     next: string;
     last: string;
-    roundOver: string;
     /** Va a la section cap pendant la reponse, sans valider. */
     nextStep: string;
     /** Revient a la section distance, sans valider. */

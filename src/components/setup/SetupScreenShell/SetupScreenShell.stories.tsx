@@ -45,7 +45,7 @@ const party: SetupPartyProps = {
 const textArgs = (texts: Translations) => ({
   backLabel: texts.setup.quit,
   startLabel: texts.setup.start,
-  title: texts.home.games.compass.title,
+  title: texts.home.gameTitle,
   children: (
     <>
       <DifficultySection

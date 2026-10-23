@@ -14,7 +14,7 @@ import { createStyles } from './styles';
 
 /**
  * Tout ce que les ecrans de setup ont en commun (dumb) : overlay de notice, icone + titre avec croix a droite,
- * `PartySection` solo/hote/rejoindre, sections du jeu en `children`, puis « Lancer » (masque pour un joiner) et « Retour ».
+ * `PartySection` solo/hote/rejoindre, sections du jeu en `children` (masquees en mode rejoindre tant qu'aucune partie n'est rejointe), puis « Lancer » (masque pour un joiner) et « Retour ».
  */
 export const SetupScreenShell = ({
   title,
@@ -47,7 +47,8 @@ export const SetupScreenShell = ({
 
         <PartySection {...party} hint={t.setup.playersSection.hint} title={t.setup.playersSection.title} />
 
-        {children}
+        {/* Rejoindre: les reglages restent masques tant qu'aucune partie n'est rejointe (ne pas perdre le joueur), puis s'affichent en lecture seule. */}
+        {(party.onlineChoice !== 'join' || party.joinStatus === 'valid') && children}
 
         {party.onlineChoice !== 'join' && <Button disabled={startDisabled} label={startLabel} onPress={onStartPress} />}
         <Button label={backLabel} onPress={onBack} variant="ghost" />

@@ -1,2 +1,2 @@
-export { SplashScreen as default } from './SplashScreen';
-export type { SplashScreenProps } from './types';
+export { LoadingBar as default } from './LoadingBar';
+export type { LoadingBarProps } from './types';

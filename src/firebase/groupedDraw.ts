@@ -17,7 +17,7 @@ const DRAW_PER_ROUND_WITH_BUMP = 3;
 /** Plafond Firestore des valeurs d'un filtre `in` (et d'une requete `or`). */
 const IN_LIMIT = 30;
 
-export const groupKey = ({ category, difficulty }: Pick<Group, 'category' | 'difficulty'>): string =>
+const groupKey = ({ category, difficulty }: Pick<Group, 'category' | 'difficulty'>): string =>
   `${category}|${difficulty}`;
 
 /** Un lieu lu dans Firestore, avec le groupe et le `n` de sa lecture. */

@@ -1,15 +1,14 @@
 ```tsx
-import SplashScreen from '@/components/SplashScreen';
+import LoadingBar from '@/components/LoadingBar';
 
-// Mounted once by `StartupSplash` (root layout), which says when it is wanted: `visible` turns false once the app is
-// ready and the minimum time (5 s) has passed, and the splash fades out and removes itself. The loading bar jumps and
-// stalls like a real loader (`buildProgressSteps`), ends on the minimum time under 100 % and completes on release.
-<SplashScreen
-  fillMs={5000}
-  tagline={t.app.tagline}
-  loadingLabel={t.splash.loading}
+// Posee par l'accueil sur son pied (a la place des boutons) tant que `useStartup().loading` est vrai : `loading` passe
+// a faux quand l'app est prete et le temps minimum (5 s) ecoule, la barre se complete, s'efface et se retire. Elle
+// avance par a-coups et se bloque comme un vrai chargement (`buildProgressSteps`), finit sous 100 % sur le temps minimum.
+<LoadingBar
   codename={{ emoji: '🐦', name: 'great-tit', wiki: 'https://en.wikipedia.org/wiki/Great_tit' }}
+  fillMs={5000}
+  loading={loading}
+  loadingLabel={t.splash.loading}
   version="2.65.0"
-  visible={visible}
 />
 ```

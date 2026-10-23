@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { goBackOrHome } from '@/helpers/goBack';
 
@@ -6,7 +6,9 @@ import SetupScreen from '@/games/compass/screens/SetupScreen';
 
 const SetupRoute = () => {
   const router = useRouter();
-  return <SetupScreen onBack={() => goBackOrHome(router)} />;
+  // `?join=1` (bouton « Rejoindre » de l'accueil) ouvre directement la saisie du code.
+  const { join } = useLocalSearchParams<{ join?: string }>();
+  return <SetupScreen onBack={() => goBackOrHome(router)} startInJoin={join === '1'} />;
 };
 
 export default SetupRoute;

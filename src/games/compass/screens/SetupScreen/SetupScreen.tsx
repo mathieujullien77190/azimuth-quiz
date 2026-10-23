@@ -14,9 +14,9 @@ import { useOnlineRoom } from './useOnlineRoom';
  * Container smart : `useSettings()`/`useOnlineRoom()`, actions deja decidees (readOnly), puis
  * `SetupScreenView` (rendu pur).
  */
-export const SetupScreen = ({ onBack }: SetupScreenProps) => {
+export const SetupScreen = ({ onBack, startInJoin = false }: SetupScreenProps) => {
   const { settings, ready, updateSettings } = useSettings();
-  const room = useOnlineRoom(settings, updateSettings);
+  const room = useOnlineRoom(settings, updateSettings, startInJoin);
   // Tailles des groupes (`meta/compassCounts`) : combien de lieux offrent les categories choisies a cette
   // difficulte ; `null` tant qu'absentes, sans retenir le bouton.
   const [counts, setCounts] = useState<CompassCounts | null>(null);

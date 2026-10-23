@@ -3,6 +3,8 @@ import type { Category, Difficulty, GameSettings } from '@/types';
 
 export type SetupScreenProps = {
   onBack: () => void;
+  /** Ouvre la preparation sur « Rejoindre » plutot que sur la partie en solo. */
+  startInJoin?: boolean;
 };
 
 /**

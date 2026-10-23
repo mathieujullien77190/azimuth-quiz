@@ -51,7 +51,7 @@ export const SetupScreenView = ({
       startDisabled={startDisabled}
       startLabel={t.setup.start}
       icon={GAME_ICONS.compass}
-      title={t.home.games.compass.title}
+      title={t.home.gameTitle}
     >
       <CategorySection
         categories={CATEGORIES}

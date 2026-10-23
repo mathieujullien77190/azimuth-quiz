@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { spacing } from '@/data';
+import { HOME_FOOTER_HEIGHT, spacing } from '@/data';
 import type { Theme } from '@/types';
 
 export const createStyles = (_theme: Theme) =>
@@ -11,11 +11,18 @@ export const createStyles = (_theme: Theme) =>
       top: spacing.sm,
       right: spacing.lg,
     },
-    // Les deux grandes cartes, empilees et poussees en BAS de l'ecran (le bloc titre reste en haut, ou le splash le
-    // dessine aussi) : la hauteur libre est entre eux. Zone de securite basse et padding du Screen comme pour tout ecran.
-    games: {
+    // Sous le titre, comme le splash : la boussole au milieu de la place restante, le pied en bas.
+    body: {
       flexGrow: 1,
+      alignItems: 'center',
+      justifyContent: 'space-around',
+      gap: spacing.md,
+    },
+    // Hauteur fixe: la barre de chargement (posee dessus) et les boutons ont la meme place, la boussole ne bouge pas.
+    footer: {
+      alignSelf: 'stretch',
+      height: HOME_FOOTER_HEIGHT,
       justifyContent: 'flex-end',
-      gap: spacing.lg,
+      gap: spacing.md,
     },
   });

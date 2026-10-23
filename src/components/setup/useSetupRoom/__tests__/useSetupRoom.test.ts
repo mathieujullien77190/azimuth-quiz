@@ -29,7 +29,11 @@ const player = (name: string, color?: string) => ({ name, joinedAt: null, color 
 
 const flush = () => act(async () => {});
 
-const setup = async (overrides: Partial<SetupRoomAdapter<Settings, RoomSettings>> = {}, settings = SETTINGS) => {
+const setup = async (
+  overrides: Partial<SetupRoomAdapter<Settings, RoomSettings>> = {},
+  settings = SETTINGS,
+  initialChoice: 'host' | 'join' | null = null,
+) => {
   let onPlayers!: (players: RoomPlayers, hostUid: string | undefined, exists: boolean) => void;
   let onSettings!: (settings: RoomSettings) => void;
   let onGame!: (state: GameState) => void;
@@ -67,7 +71,7 @@ const setup = async (overrides: Partial<SetupRoomAdapter<Settings, RoomSettings>
   };
   const updateSettings = jest.fn();
   const hook = await renderHook(
-    (props: { settings: Settings }) => useSetupRoom(adapter, props.settings, updateSettings),
+    (props: { settings: Settings }) => useSetupRoom(adapter, props.settings, updateSettings, initialChoice),
     {
       initialProps: { settings },
     },
@@ -107,6 +111,11 @@ beforeEach(() => {
 afterEach(() => jest.useRealTimers());
 
 describe('useSetupRoom — solo', () => {
+  it('peut demarrer directement sur « Rejoindre »', async () => {
+    const ctx = await setup({}, SETTINGS, 'join');
+    expect(ctx.result.current.party.onlineChoice).toBe('join');
+  });
+
   it('starts as solo: editable name, no room, no overlay', async () => {
     const { result } = await setup();
     expect(result.current.party).toMatchObject({

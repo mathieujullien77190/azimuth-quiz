@@ -47,19 +47,7 @@ const NORTH_POLE: Coordinates = { latitude: 90, longitude: 0 };
  * la vue de depart. Les labels ("toi", "N") et le satellite sont des vues posees par-dessus le canvas, placees par la
  * meme projection que la camera (`screenPoint`) pour garder la police de l'app.
  */
-export const Globe3D = ({
-  size,
-  origin,
-  marks,
-  land: showLand = true,
-  north = true,
-  equator = false,
-  greenwich = false,
-  satellite: withSatellite = true,
-  draggable = true,
-  controls = draggable,
-  backgroundColor,
-}: Globe3DProps) => {
+export const Globe3D = ({ size, origin, marks }: Globe3DProps) => {
   const { colors, compass, isDark } = useTheme();
   const styles = useThemedStyles(createStyles);
   const [showQuip, setShowQuip] = useState(false);
@@ -117,14 +105,10 @@ export const Globe3D = ({
       buildGlobeScene({
         origin,
         marks,
-        land: showLand,
-        equator,
-        greenwich,
-        north,
         colors: sceneColors,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `marksKey` stands for `marks`, see above.
-    [origin.latitude, origin.longitude, marksKey, showLand, equator, greenwich, north, sceneColors],
+    [origin.latitude, origin.longitude, marksKey, sceneColors],
   );
   // Les routes sont construites a part de la boule : l'epaisseur d'un tube ne se change pas par mise a l'echelle,
   // donc le zoom les reconstruit (elles seules) pour garder leur largeur a l'ecran, comme les pastilles.
@@ -144,7 +128,7 @@ export const Globe3D = ({
     halfExtent: size / (2 * radius),
     markScale: 1 / zoom,
     // Fond du dessin : le fond de l'ecran la nuit, blanc le jour (la mer est couleur sable).
-    background: backgroundColor ?? (isDark ? colors.background : colors.surface),
+    background: isDark ? colors.background : colors.surface,
   });
 
   // Un doigt tourne le globe (la surface suit le doigt), deux doigts zooment.
@@ -191,7 +175,7 @@ export const Globe3D = ({
   // sans zoom : sinon il sortirait du dessin.
   const angle = useOrbitAngle(ORBIT_MS, ORBIT_TICK_MS);
   const satellite =
-    !withSatellite || !isDark || zoom !== MIN_ZOOM ? undefined : orbitPoint(angle, center, cx, cy, radius, ORBIT_RATIO);
+    !isDark || zoom !== MIN_ZOOM ? undefined : orbitPoint(angle, center, cx, cy, radius, ORBIT_RATIO);
 
   const start = screenPoint(origin, center, cx, cy, radius);
   const pole = screenPoint(NORTH_POLE, center, cx, cy, radius);
@@ -201,7 +185,7 @@ export const Globe3D = ({
       accessibilityLabel={CAPTION_GLOBE}
       // Web : sans ca, le navigateur defile la page sous le doigt qui tourne le globe (`noPageScroll`).
       style={[styles.wrap, { width: size, height: size }, noPageScroll()]}
-      {...(draggable ? pan.panHandlers : {})}
+      {...pan.panHandlers}
     >
       <GLView onContextCreate={onContextCreate} style={{ width: size, height: size }} />
 
@@ -210,7 +194,7 @@ export const Globe3D = ({
           {PLAYER_LABEL}
         </Text>
       )}
-      {north && pole.visible && (
+      {pole.visible && (
         <Text style={[styles.poleLabel, { left: pole.x + LABEL_OFFSET / 2, top: pole.y - LABEL_OFFSET }]}>N</Text>
       )}
 
@@ -230,40 +214,38 @@ export const Globe3D = ({
         </View>
       )}
 
-      {controls && (
-        <View style={styles.controls}>
-          <Pressable
-            accessibilityLabel={ZOOM_IN_HINT}
-            accessibilityRole="button"
-            hitSlop={6}
-            onPress={() => setZoom((current) => zoomedBy(current, ZOOM_STEP))}
-            style={styles.button}
-          >
-            <Text style={styles.buttonLabel}>{ZOOM_IN_LABEL}</Text>
-          </Pressable>
-          <Pressable
-            accessibilityLabel={ZOOM_OUT_HINT}
-            accessibilityRole="button"
-            hitSlop={6}
-            onPress={() => setZoom((current) => zoomedBy(current, 1 / ZOOM_STEP))}
-            style={styles.button}
-          >
-            <Text style={styles.buttonLabel}>{ZOOM_OUT_LABEL}</Text>
-          </Pressable>
-          <Pressable
-            accessibilityLabel={RESET_HINT}
-            accessibilityRole="button"
-            hitSlop={6}
-            onPress={() => {
-              setCenter(home);
-              setZoom(MIN_ZOOM);
-            }}
-            style={styles.button}
-          >
-            <Text style={styles.buttonLabel}>{RESET_LABEL}</Text>
-          </Pressable>
-        </View>
-      )}
+      <View style={styles.controls}>
+        <Pressable
+          accessibilityLabel={ZOOM_IN_HINT}
+          accessibilityRole="button"
+          hitSlop={6}
+          onPress={() => setZoom((current) => zoomedBy(current, ZOOM_STEP))}
+          style={styles.button}
+        >
+          <Text style={styles.buttonLabel}>{ZOOM_IN_LABEL}</Text>
+        </Pressable>
+        <Pressable
+          accessibilityLabel={ZOOM_OUT_HINT}
+          accessibilityRole="button"
+          hitSlop={6}
+          onPress={() => setZoom((current) => zoomedBy(current, 1 / ZOOM_STEP))}
+          style={styles.button}
+        >
+          <Text style={styles.buttonLabel}>{ZOOM_OUT_LABEL}</Text>
+        </Pressable>
+        <Pressable
+          accessibilityLabel={RESET_HINT}
+          accessibilityRole="button"
+          hitSlop={6}
+          onPress={() => {
+            setCenter(home);
+            setZoom(MIN_ZOOM);
+          }}
+          style={styles.button}
+        >
+          <Text style={styles.buttonLabel}>{RESET_LABEL}</Text>
+        </Pressable>
+      </View>
     </View>
   );
 };

@@ -48,7 +48,7 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
 
   // Classement final fige a la 1re arrivee : "Accueil" fait seulement `router.back()`, les abonnements
   // restent ouverts pendant le fondu, et une maj tardive pourrait reordonner une ligne. Capture au rendu
-  // (comme `useGuessDraft`) et non en effet, sans trou ou les valeurs vives flashent.
+  // et non en effet, sans trou ou les valeurs vives flashent.
   const [frozenEnd, setFrozenEnd] = useState<{
     players: OnlinePlayer[];
     records: RoundRecord[];

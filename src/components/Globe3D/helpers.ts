@@ -148,7 +148,3 @@ export const orbitPoint = (
 /** L'equateur, en points tous les `step` degres de longitude. */
 export const equatorPoints = (step: number): Coordinates[] =>
   Array.from({ length: Math.round(360 / step) + 1 }, (_, index) => ({ latitude: 0, longitude: -180 + index * step }));
-
-/** Le meridien de Greenwich (longitude 0), en points tous les `step` degres de latitude, d'un pole a l'autre. */
-export const greenwichPoints = (step: number): Coordinates[] =>
-  Array.from({ length: Math.round(180 / step) + 1 }, (_, index) => ({ latitude: -90 + index * step, longitude: 0 }));

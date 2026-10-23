@@ -6,7 +6,6 @@ import {
   DirectionalLight,
   Float32BufferAttribute,
   Group,
-  Line,
   LineBasicMaterial,
   LineDashedMaterial,
   LineLoop,
@@ -56,7 +55,6 @@ import { GLOBE_LAND_PATH } from './globeLand';
 import { GLOBE_MASK } from './globeMask';
 import {
   equatorPoints,
-  greenwichPoints,
   parseRings,
   polylinePositions,
   routePoints,
@@ -155,11 +153,11 @@ const landFill = (color: string, opacity: number, flat: boolean): Mesh => {
   return new Mesh(geometry, flat ? new MeshBasicMaterial(paint) : new MeshLambertMaterial(paint));
 };
 
-/** Une ligne (ouverte ou fermee) a travers des lieux, a `altitude` au-dessus de la boule. */
-const polyline = (points: Coordinates[], altitude: number, material: Material, closed: boolean): Line => {
+/** Une ligne fermee a travers des lieux, a `altitude` au-dessus de la boule. */
+const polyline = (points: Coordinates[], altitude: number, material: Material): LineLoop => {
   const geometry = new BufferGeometry();
   geometry.setAttribute('position', new Float32BufferAttribute(polylinePositions(points, altitude), 3));
-  const line = closed ? new LineLoop(geometry, material) : new Line(geometry, material);
+  const line = new LineLoop(geometry, material);
   // Les pointilles se mesurent le long de la ligne : elle doit connaitre sa longueur.
   line.computeLineDistances();
   return line;
@@ -230,7 +228,7 @@ export const buildRoutes = (origin: Coordinates, marks: EarthMark[], thickness: 
  * taille d'ecran non zoomee, sinon elles cacheraient la carte qu'on zoome pour lire (`markScale` dans
  * `useGlobeRenderer`).
  */
-export const buildGlobeScene = ({ origin, marks, land, equator, greenwich, north, colors }: GlobeSceneInput): GlobeScene => {
+export const buildGlobeScene = ({ origin, marks, colors }: GlobeSceneInput): GlobeScene => {
   const scene = new Scene();
 
   scene.add(
@@ -243,19 +241,16 @@ export const buildGlobeScene = ({ origin, marks, land, equator, greenwich, north
   const headlight = new DirectionalLight(0xffffff, HEADLIGHT);
   headlight.position.set(...HEADLIGHT_POSITION);
 
-  if (land) {
-    // Les continents peints, puis leur cote par-dessus : la couleur vient d'une image du monde, le trait net du contour.
-    scene.add(landFill(colors.fill, colors.fillOpacity, colors.flat));
-    // Toutes les cotes en un objet : 800 cotes distinctes feraient 800 dessins pour la carte graphique, alors que le
-    // detail de l'asset n'y change rien.
-    const geometry = new BufferGeometry();
-    geometry.setAttribute('position', new Float32BufferAttribute(worldSegments(), 3));
-    scene.add(new LineSegments(geometry, new LineBasicMaterial({ color: colors.land })));
-  }
+  // Les continents peints, puis leur cote par-dessus : la couleur vient d'une image du monde, le trait net du contour.
+  scene.add(landFill(colors.fill, colors.fillOpacity, colors.flat));
+  // Toutes les cotes en un objet : 800 cotes distinctes feraient 800 dessins pour la carte graphique, alors que le
+  // detail de l'asset n'y change rien.
+  const geometry = new BufferGeometry();
+  geometry.setAttribute('position', new Float32BufferAttribute(worldSegments(), 3));
+  scene.add(new LineSegments(geometry, new LineBasicMaterial({ color: colors.land })));
 
-  const guide = () => new LineDashedMaterial({ color: colors.guide, dashSize: GUIDE_DASH, gapSize: GUIDE_GAP });
-  if (equator) scene.add(polyline(equatorPoints(GUIDE_STEP), GUIDE_ALTITUDE, guide(), true));
-  if (greenwich) scene.add(polyline(greenwichPoints(GUIDE_STEP), GUIDE_ALTITUDE, guide(), false));
+  const guide = new LineDashedMaterial({ color: colors.guide, dashSize: GUIDE_DASH, gapSize: GUIDE_GAP });
+  scene.add(polyline(equatorPoints(GUIDE_STEP), GUIDE_ALTITUDE, guide));
 
   // Ce que le zoom ne doit pas gonfler : les pastilles et l'anneau, pas la boule ni les routes.
   const screenSized: Mesh[] = [];
@@ -271,7 +266,7 @@ export const buildGlobeScene = ({ origin, marks, land, equator, greenwich, north
   });
 
   addMark(dot(origin, ORIGIN_DOT, MARK_ALTITUDE, colors.origin));
-  if (north) addMark(dot({ latitude: 90, longitude: 0 }, POLE_DOT, MARK_ALTITUDE, colors.pole));
+  addMark(dot({ latitude: 90, longitude: 0 }, POLE_DOT, MARK_ALTITUDE, colors.pole));
 
   return { scene, headlight, screenSized };
 };

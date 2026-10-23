@@ -1,36 +1,16 @@
 import { StyleSheet } from 'react-native';
 
-import { fontSize, HOME_FOOTER_HEIGHT, spacing } from '@/data';
+import { fontSize, spacing } from '@/data';
 import type { Theme } from '@/types';
 
 export const createStyles = ({ colors, isDark, typography }: Theme) =>
   StyleSheet.create({
-    screen: {
-      ...StyleSheet.absoluteFill,
-      zIndex: 1000,
-      backgroundColor: colors.background,
-    },
-    // Meme padding qu'un `Screen` (zone de securite + contenu), pour que le titre soit exactement a sa position
-    // de l'accueil.
-    layout: {
-      flex: 1,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-    },
-    // Sous le titre : le cadran au milieu de la place restante, le pied en bas.
-    body: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'space-around',
-      gap: spacing.md,
-    },
-    // Meme hauteur que le pied de l'accueil (ses boutons) pour que la boussole reste a sa place.
+    // Pose sur le pied de l'accueil (a la place de ses boutons) : meme hauteur, contenu colle en bas.
     footer: {
-      alignSelf: 'stretch',
+      ...StyleSheet.absoluteFill,
       alignItems: 'center',
       justifyContent: 'flex-end',
       gap: spacing.md,
-      height: HOME_FOOTER_HEIGHT,
     },
     track: {
       alignSelf: 'stretch',

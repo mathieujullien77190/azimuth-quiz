@@ -6,7 +6,6 @@ import {
   dragCenter,
   equatorPoints,
   fingerGap,
-  greenwichPoints,
   orbitPoint,
   parseRings,
   polylinePositions,
@@ -209,13 +208,5 @@ describe('equatorPoints', () => {
     expect(points).toHaveLength(5);
     expect(points.every((point) => point.latitude === 0)).toBe(true);
     expect(points.map((point) => point.longitude)).toEqual([-180, -90, 0, 90, 180]);
-  });
-});
-
-describe('greenwichPoints', () => {
-  it('goes from pole to pole along longitude 0', () => {
-    const points = greenwichPoints(90);
-    expect(points.map((point) => point.latitude)).toEqual([-90, 0, 90]);
-    expect(points.every((point) => point.longitude === 0)).toBe(true);
   });
 });

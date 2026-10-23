@@ -45,10 +45,14 @@ const adapter: SetupRoomAdapter<GameSettings, RoomSettings> = {
  * l'hote tire tous les lieux (`fetchRandomPlaces`, sans repli : l'echec rejette et `useSetupRoom` affiche
  * la notice).
  */
-export const useOnlineRoom = (settings: GameSettings, updateSettings: (patch: Partial<GameSettings>) => void) => {
+export const useOnlineRoom = (
+  settings: GameSettings,
+  updateSettings: (patch: Partial<GameSettings>) => void,
+  startInJoin = false,
+) => {
   const t = useTranslation();
   const { language } = useLanguage();
-  const room = useSetupRoom(adapter, settings, updateSettings);
+  const room = useSetupRoom(adapter, settings, updateSettings, startInJoin ? 'join' : null);
 
   const startOnlineGame = () =>
     room.startOnlineGame(async (code) => {

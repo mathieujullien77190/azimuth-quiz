@@ -33,14 +33,7 @@ import { createStyles } from './styles';
  * de s'en ecarter. Une `key` differente par manche (cote appelant) remet le choix a l'ideal.
  * La vraie reponse (isTruth) n'est qu'un point entoure, sans arc.
  */
-export const EarthSection = ({
-  size,
-  origin,
-  marks,
-  zoomControls = false,
-  allowSatellite = zoomControls,
-  forceSide,
-}: EarthSectionProps) => {
+export const EarthSection = ({ size, origin, marks, zoomControls = false }: EarthSectionProps) => {
   const { colors, compass, isDark, typography } = useTheme();
   const styles = useThemedStyles(createStyles);
   const height = size * HEIGHT_RATIO;
@@ -49,7 +42,7 @@ export const EarthSection = ({
 
   const baseCenter: Point = { x: player.x, y: player.y + baseRadius };
   const offsets = marks.map((item) => {
-    const end = markEnd(item, baseCenter, baseRadius, forceSide);
+    const end = markEnd(item, baseCenter, baseRadius);
     return { x: end.x - player.x, y: end.y - player.y };
   });
   const idealZoom = fitZoom(offsets, size * AVAILABLE_X_RATIO, height - player.y - BOTTOM_MARGIN);
@@ -68,8 +61,8 @@ export const EarthSection = ({
   const canFlip = origin !== undefined;
   const globeOrigin = canFlip && (globe ?? true) ? origin : undefined;
 
-  // Satellite pour le fun : seulement avec `allowSatellite`, a l'echelle reelle (zoom 1).
-  const showSatellite = allowSatellite && zoom === 1 && globeOrigin === undefined && isDark;
+  // Satellite pour le fun : seulement avec les boutons de zoom (revelation), a l'echelle reelle (zoom 1).
+  const showSatellite = zoomControls && zoom === 1 && globeOrigin === undefined && isDark;
   const satelliteAngle = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!showSatellite) return undefined;
@@ -98,9 +91,9 @@ export const EarthSection = ({
   const [showQuip, setShowQuip] = useState(false);
 
   const mark = (item: EarthMark, key: string) => {
-    const side = forceSide ?? sideOf(item.bearing);
+    const side = sideOf(item.bearing);
     const angle = surfaceAngle(item.distanceKm);
-    const end = markEnd(item, center, radius, forceSide);
+    const end = markEnd(item, center, radius);
     const color = item.color;
     const opacity = item.opacity ?? 1;
 
@@ -144,7 +137,7 @@ export const EarthSection = ({
       <View style={styles.svgWrap}>
         {globeOrigin !== undefined ? (
           <View style={[styles.flatWrap, { height }]}>
-            <Globe3D equator marks={marks} origin={globeOrigin} size={Math.min(size, height)} />
+            <Globe3D marks={marks} origin={globeOrigin} size={Math.min(size, height)} />
           </View>
         ) : (
           <Svg accessibilityLabel={CAPTION_SURFACE} height={height} width={size}>

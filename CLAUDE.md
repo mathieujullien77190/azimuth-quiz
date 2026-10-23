@@ -72,8 +72,7 @@ Firestore est la **seule source** (lieux) : aucun JSON embarque, **aucun repli**
 **dupliquees expres** (un document par lieu porte tout ce dont une manche a besoin) et numerotees. **Toute modification de donnees
 (copies, numerotation, compteurs, `dataVersion`, journal) : suivre le skill `firestore-data`** ; l'admin (`admin/src/data.ts`) le fait deja.
 
-Collections : `places/{cle}` (3 lettres, permanente), `countries/{ISO}` (edites dans l'admin, recopies dans `places.country` via
-`applyCountryChange` ; le jeu ne les lit pas ; portent encore les champs de l'ancien jeu Silhouette, non lus ni effaces),
+Collections : `places/{cle}` (3 lettres, permanente), `countries/{ISO}` (laisse en base, plus edite par l'admin ni lu par le jeu ; le nom fr/en reste copie dans `places.country`, lu par le jeu),
 `meta/*` (`compassCounts`, `dataVersion`), `journal/*` (admin), `errors`,
 `rooms/*`. Le jeu ne lit que `places`, `meta`, `rooms`. Types : `data/firestore/types.ts`. Restes de l'ancien mode Indices toujours en base mais ignores du code : champs `clues`/`personality`/`wordplay` des lieux, `personalityJobs`, `meta/cluesCounts`, `devFeedback`.
 
@@ -130,10 +129,8 @@ plus de 30 jours, pas de TTL : exige la facturation Firebase).
   react-native-web sans `style={{ flexGrow: 0, flexShrink: 0 }}` .
 - **Theme** : `night` et `day`, fond uni, persiste (`ThemeProvider`, cle `azimuthquiz:theme`). `useThemedStyles(createStyles)` est
   le pattern. Police unique `FONT_FAMILY` ; un composant SVG lit `typography.<token>.fontFamily` et la passe a `<SvgText>`.
-- **Admin** (`admin/`, Vite, `/azimuth-quiz/admin/`) : une page statique par onglet (`places`, `countries`, `globe`, `errors`), declaree dans `admin/src/pageList.ts` ; lit une copie locale (IndexedDB) tenue par le journal
+- **Admin** (`admin/`, Vite, `/azimuth-quiz/admin/`) : une page statique par onglet (`places`, `globe`, `errors`), declaree dans `admin/src/pageList.ts` ; lit une copie locale (IndexedDB) tenue par le journal
   (skill `firestore-data`).
-  - **Pays** : `saveCountry` -> `applyCountryChange` ecrit `countries/{ISO}` et la copie `places.country` de chaque lieu dans le
-    meme lot (plan pur `data/firestore/denormalize.ts`), avec journal et version. Les champs Silhouette sont reecrits tels quels.
   - **Monde** (`GlobeView/`) : three.js (chunk Vite propre), lieux lus dans la copie locale (ronds = villes, etoiles = capitales,
     carres = reste), niveau de detail selon la distance camera (constantes de `constants.ts`), clic = la meme carte que la liste
     (`PlacesView/PlaceCard` + `usePlaceEditing`). `GlobeScene.ts` possede three.js, logique pure dans `helpers.ts`. Vitest remplace `three`.
@@ -145,11 +142,8 @@ plus de 30 jours, pas de TTL : exige la facturation Firebase).
 
 - **Web** : `app.json` `web.output: "static"` + `experiments.baseUrl: "/azimuth-quiz"` ; `@expo/metro-runtime` requis.
   `.github/workflows/deploy-pages.yml` publie jeu, admin (`dist/admin/`) et Storybook a chaque push sur `master`.
-- **Splash** : `StartupSplash` (racine de `_layout.tsx`) affiche `SplashScreen` au moins `SPLASH_MIN_MS` = 5 s, jusqu'a ce que
-  theme, langue, reglages et nom soient lus (`useSplashGate`), au plus `SPLASH_MAX_MS` = 15 s. Barre de chargement
-  simulee (`buildProgressSteps`, finit EXACTEMENT a `SPLASH_MIN_MS` sur 96-97,5 %, complete pendant le fondu). `AppTitle` partage
-  avec l'accueil (le titre ne bouge pas a la transition). Ligne de version entiere, jamais coupee. Fond `BOOT_BACKGROUND` tant que
-  le theme n'est pas lu ; fond natif = `expo.backgroundColor` (#0B1220).
+- **Accueil = ecran de demarrage** : plus de splash a part. `HomeScreen` montre `AppTitle`, `SwayingCompass` (aiguille qui oscille, `HOME_COMPASS_SIZE`) et, dans un pied de hauteur fixe (`HOME_FOOTER_HEIGHT`), la `LoadingBar` (barre simulee `buildProgressSteps`, finit a `SPLASH_MIN_MS` = 5 s sur 96-97,5 %, se complete puis s'efface) qui laisse la place aux boutons « Jouer » / « Rejoindre » (`/setup?join=1` ouvre directement la saisie du code). La mascotte (reglages) est toujours en haut. `StartupSplash` (racine de `_layout.tsx`) attend que theme, langue, reglages et nom soient lus (`useSplashGate`, plafond `SPLASH_MAX_MS` = 15 s) et ecrit `useStartup().loading` ; tant que le theme est inconnu il ne peint que `BOOT_BACKGROUND` (pas de flash du mauvais theme) ; fond natif = `expo.backgroundColor` (#0B1220).
+- **Rejoindre une partie** : en mode rejoindre, les reglages (categories, difficulte, manches, options) restent masques tant qu'aucune partie n'est rejointe, puis s'affichent en lecture seule (`SetupScreenShell`).
 - **Version** : `app.json` `expo.version` + un animal par version (`expo.extra.codename` = `{ emoji, name, wiki }` ; `wiki` = article
   Wikipedia ANGLAIS de l'espece, a renseigner a chaque version ; `name` = nom complet de l'espece en ANGLAIS, kebab-case ASCII, ex.
   🦥 brown-throated-sloth). Affichage `v2.64.1 - 🦥 - brown-throated-sloth` via `versionParts`/`versionLabel`. Le skill `push` en
