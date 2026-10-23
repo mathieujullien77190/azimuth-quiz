@@ -6,8 +6,6 @@ export type CompassProps = {
   needles?: CompassNeedle[];
   /** Vrai cap, montre a la revelation. */
   truthBearing?: number | null;
-  /** Mobile : le cadran tourne pour que N pointe au vrai nord (capteur). */
-  live?: boolean;
   /** Absent = boussole decorative, non interactive. */
   onChange?: (bearing: number) => void;
 };
@@ -40,16 +38,4 @@ export type CompassFaceProps = {
   colors: Theme['colors'];
   typography: Theme['typography'];
   westLabel: string;
-};
-
-export type UseHeadingResult = {
-  heading: number | null;
-  /** A appeler au 1er toucher : sur le web, demarre l'ecoute du capteur (et la permission iOS, qui exige un geste). */
-  onTouch: () => void;
-};
-
-/** Evenement d'orientation du navigateur, plus le champ non standard de Safari iOS. */
-export type WebOrientationEvent = DeviceOrientationEvent & {
-  /** Safari iOS seulement : cap deja absolu (vrai nord), en degres. */
-  webkitCompassHeading?: number;
 };

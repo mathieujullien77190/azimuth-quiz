@@ -34,7 +34,6 @@ export type OnlineHeaderProps = {
 export type OnlineGameScreenViewProps = OnlineHeaderProps & {
   scrollRef: RefObject<ScrollView | null>;
   place: Place;
-  liveCompass: boolean;
   earthMarks: EarthMark[];
   /**
    * Point de depart de la manche : au reveal, permet de passer la Terre a la carte plate (voir

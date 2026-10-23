@@ -59,7 +59,6 @@ const baseProps: OnlineGameScreenViewProps = {
   roundNumber: 1,
   totalRounds: 2,
   place: BERLIN,
-  liveCompass: false,
   earthMarks: [],
   origin: { latitude: 48.8566, longitude: 2.3522 },
   showCountry: false,

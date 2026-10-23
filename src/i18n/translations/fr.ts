@@ -65,10 +65,6 @@ export const fr: Translations = {
     readOnlyNotice: 'Seul l’hôte peut modifier les options.',
     optionsTitle: 'Options',
     toggles: {
-      liveCompass: {
-        label: 'Boussole réelle',
-        description: 'Le N de la boussole pointe vers le vrai nord (capteur du téléphone).',
-      },
       useGps: {
         label: 'Utiliser ma position',
         description: 'Sinon, indique un point GPS.',

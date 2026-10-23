@@ -93,8 +93,6 @@ export type GameSettings = {
   /** Depart quand `useGps` est faux : latitude/longitude saisies (Paris par defaut). Ignore si `useGps`. */
   customLatitude: number;
   customLongitude: number;
-  /** Sur mobile, la boussole tourne pour que N pointe au nord vrai. */
-  liveCompass: boolean;
   /** Affiche le pays sous le nom du lieu. */
   showCountry: boolean;
   /** Mode voyage : chaque manche part du lieu de la precedente (`originForRound`). Absent d'une vieille room = faux. */

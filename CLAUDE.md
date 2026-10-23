@@ -161,7 +161,7 @@ plus de 30 jours, pas de TTL : exige la facturation Firebase).
 
 ## Etat connu
 
-- `npx expo lint` : 15 erreurs `react-hooks/refs` / `set-state-in-effect` dans `Compass.tsx`, `Globe3D.tsx`, `useHeading.ts`,
+- `npx expo lint` : 15 erreurs `react-hooks/refs` / `set-state-in-effect` dans `Compass.tsx`, `Globe3D.tsx`,
   `EarthSection.tsx`, `SliderTrack.tsx` : idiomes voulus (ref mis a jour a chaque rendu pour le `PanResponder`, `Animated.Value` lu
   au rendu), a ne pas corriger une par une.
 - Chaque document Firestore lu reste en memoire pour la session (pas de cache disque ni d'invalidation) : une donnee modifiee

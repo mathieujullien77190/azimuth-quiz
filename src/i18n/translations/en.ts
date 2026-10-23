@@ -65,10 +65,6 @@ export const en: Translations = {
     readOnlyNotice: 'Only the host can change the options.',
     optionsTitle: 'Options',
     toggles: {
-      liveCompass: {
-        label: 'Real compass',
-        description: 'The compass N points to true north (phone sensor).',
-      },
       useGps: {
         label: 'Use my location',
         description: 'Otherwise, everything starts from Paris.',

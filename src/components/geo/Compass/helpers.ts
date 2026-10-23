@@ -2,8 +2,6 @@ import { normalizeBearing } from '@/helpers';
 
 import {
   CARDINAL_BEARINGS,
-  HEADING_DEADBAND_DEG,
-  HEADING_SMOOTHING,
   TICK_LENGTH_RATIO,
   TICK_OUTER_RATIO,
   TICK_STEP_DEG,
@@ -63,15 +61,4 @@ export const buildTicks = (size: number): Tick[] => {
       kind,
     };
   });
-};
-
-/**
- * Lissage du cap du capteur (tres instable) : avance d'une fraction du plus court chemin,
- * ce qui gere le passage 359 -> 0. Les petites variations sont ignorees.
- */
-export const smoothHeading = (previous: number | null, next: number): number => {
-  if (previous === null) return normalizeBearing(next);
-  const delta = ((next - previous + 540) % 360) - 180;
-  if (Math.abs(delta) < HEADING_DEADBAND_DEG) return previous;
-  return normalizeBearing(previous + delta * HEADING_SMOOTHING);
 };

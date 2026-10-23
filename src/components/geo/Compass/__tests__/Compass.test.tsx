@@ -2,18 +2,11 @@ import { render } from '@testing-library/react-native';
 import { PanResponder, Platform } from 'react-native';
 
 import Compass from '..';
-import { useHeading } from '../useHeading';
-
-jest.mock('../useHeading');
-
-const mockedUseHeading = useHeading as jest.Mock;
-const onTouch = jest.fn();
 
 type PanResponderConfig = Parameters<typeof PanResponder.create>[0];
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockedUseHeading.mockReturnValue({ heading: null, onTouch });
 });
 
 describe('Compass — decorative (no onChange)', () => {
@@ -40,7 +33,7 @@ describe('Compass — interactive (onChange provided)', () => {
     expect(getByLabelText('Boussole').props.accessibilityRole).toBe('adjustable');
   });
 
-  it('reports the bearing under the touch, and arms the sensor on first contact', async () => {
+  it('reports the bearing under the touch', async () => {
     const onChange = jest.fn();
     const createSpy = jest.spyOn(PanResponder, 'create');
     await render(<Compass onChange={onChange} size={200} />);
@@ -52,9 +45,8 @@ describe('Compass — interactive (onChange provided)', () => {
     expect(config.onPanResponderTerminationRequest?.({} as never, {} as never)).toBe(false);
     expect(config.onShouldBlockNativeResponder?.({} as never, {} as never)).toBe(true);
 
-    // Toucher en haut du cadran : cap 0 (le cap du capteur, null ici, compte pour 0).
+    // Toucher en haut du cadran : cap 0.
     config.onPanResponderGrant?.({ nativeEvent: { locationX: 100, locationY: 0 } } as never, {} as never);
-    expect(onTouch).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenCalledWith(0);
 
     // Glisser a droite, mi-hauteur : cap 90.
@@ -74,30 +66,6 @@ describe('Compass — interactive (onChange provided)', () => {
     // Meme position : meme cap calcule (0), dedupliquee.
     config.onPanResponderMove?.({ nativeEvent: { locationX: 100, locationY: 0 } } as never, {} as never);
     expect(onChange).toHaveBeenCalledTimes(1);
-  });
-
-  it('adds the sensor heading to the touch bearing', async () => {
-    mockedUseHeading.mockReturnValue({ heading: 45, onTouch });
-    const onChange = jest.fn();
-    const createSpy = jest.spyOn(PanResponder, 'create');
-    await render(<Compass live onChange={onChange} size={200} />);
-    const config = createSpy.mock.calls[createSpy.mock.calls.length - 1][0] as PanResponderConfig;
-
-    config.onPanResponderGrant?.({ nativeEvent: { locationX: 100, locationY: 0 } } as never, {} as never);
-    expect(onChange).toHaveBeenCalledWith(45);
-  });
-});
-
-describe('Compass — north marker (live heading)', () => {
-  it('shows the north marker only once the heading is known', async () => {
-    mockedUseHeading.mockReturnValue({ heading: null, onTouch });
-    const { root, rerender } = await render(<Compass size={100} />);
-    const svgCount = () => root?.queryAll((instance) => instance.type === 'RNSVGSvgView').length ?? 0;
-    expect(svgCount()).toBe(1);
-
-    mockedUseHeading.mockReturnValue({ heading: 45, onTouch });
-    await rerender(<Compass live size={100} />);
-    expect(svgCount()).toBe(2);
   });
 });
 

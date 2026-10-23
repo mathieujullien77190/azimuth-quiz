@@ -24,7 +24,6 @@ export type SetupScreenViewProps = {
   onToggleCategory: (id: Category) => void;
   onSelectDifficulty: (id: Difficulty) => void;
   onSelectRounds: (rounds: number) => void;
-  onToggleLiveCompass: (value: boolean) => void;
   onToggleUseGps: (value: boolean) => void;
   onChangeCustomOrigin: (patch: { customLatitude?: number; customLongitude?: number }) => void;
   onToggleShowCountry: (value: boolean) => void;

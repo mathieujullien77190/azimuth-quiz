@@ -2,9 +2,9 @@
 import Toggle from '@/components/ui/Toggle';
 
 <Toggle
-  description={t.setup.toggles.liveCompass.description}
-  label={t.setup.toggles.liveCompass.label}
-  onValueChange={onToggleLiveCompass}
-  value={settings.liveCompass}
+  description={t.setup.toggles.showCountry.description}
+  label={t.setup.toggles.showCountry.label}
+  onValueChange={onToggleShowCountry}
+  value={settings.showCountry}
 />
 ```

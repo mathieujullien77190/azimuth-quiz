@@ -69,7 +69,7 @@ const setGame = (overrides: Record<string, unknown> = {}) => {
     isHost: true,
     connectionLost: false,
     connected: true,
-    roomSettings: { difficulty: 'easy', liveCompass: false, showCountry: false },
+    roomSettings: { difficulty: 'easy', showCountry: false },
     gameState: gameState(),
     place: BERLIN,
     bearing: 0,
@@ -99,7 +99,7 @@ beforeEach(() => {
 
 describe('OnlineGameScreen — travel mode', () => {
   const ROME = { ...BERLIN, name: 'Rome', coordinates: { latitude: 41.9, longitude: 12.5 } };
-  const TRAVEL = { difficulty: 'easy', liveCompass: false, showCountry: false, travel: true };
+  const TRAVEL = { difficulty: 'easy', showCountry: false, travel: true };
   const youAreAtRome = t.game.youAreAt('Rome');
   const revealState = (places: unknown[], roundIndex: number) =>
     gameState({

@@ -12,9 +12,3 @@ export const KNOB_RADIUS_RATIO = 0.74;
 
 /** N/E/S fixes ; l'ouest depend de la langue (voir `cardinalPoints`). */
 export const CARDINAL_BEARINGS = { N: 0, E: 90, S: 180, W: 270 } as const;
-
-// Cap du capteur : fraction du chemin parcourue a chaque mesure (0-1), et seuil en dessous duquel on ignore.
-export const HEADING_SMOOTHING = 0.3;
-export const HEADING_DEADBAND_DEG = 0.6;
-export const NORTH_MARKER_WIDTH = 16;
-export const NORTH_MARKER_HEIGHT = 11;

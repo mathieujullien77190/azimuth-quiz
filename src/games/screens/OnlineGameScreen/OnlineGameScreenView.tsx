@@ -36,7 +36,6 @@ export const OnlineGameScreenView = ({
   place,
   showCountry,
   compassColor,
-  liveCompass,
   bearing,
   onSetBearing,
   earthMarks,
@@ -115,7 +114,6 @@ export const OnlineGameScreenView = ({
       <View style={styles.compass}>
         {record ? (
           <Compass
-            live={liveCompass}
             needles={extraNeedles ?? []}
             size={compassSizeFor(width)}
             truthBearing={truthBearing}
@@ -123,8 +121,7 @@ export const OnlineGameScreenView = ({
         ) : (
           <>
             <Compass
-              live={liveCompass}
-              needles={[{ bearing, color: compassColor }]}
+                needles={[{ bearing, color: compassColor }]}
               onChange={onSetBearing}
               size={compassSizeFor(width)}
             />

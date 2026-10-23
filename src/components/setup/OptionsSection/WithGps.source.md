@@ -16,11 +16,11 @@ import OptionsSection from '@/components/setup/OptionsSection';
   }}
   options={[
     {
-      id: 'liveCompass',
-      title: t.setup.toggles.liveCompass.label,
-      description: t.setup.toggles.liveCompass.description,
-      value: settings.liveCompass,
-      onChange: onToggleLiveCompass,
+      id: 'showCountry',
+      title: t.setup.toggles.showCountry.label,
+      description: t.setup.toggles.showCountry.description,
+      value: settings.showCountry,
+      onChange: onToggleShowCountry,
     },
   ]}
   title={t.setup.optionsTitle}

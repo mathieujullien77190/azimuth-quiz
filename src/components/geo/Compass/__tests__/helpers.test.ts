@@ -1,5 +1,5 @@
-import { CARDINAL_BEARINGS, HEADING_DEADBAND_DEG, HEADING_SMOOTHING, TICK_STEP_DEG } from '../constants';
-import { bearingFromTouch, buildTicks, cardinalPoints, needlePoints, polarToPoint, smoothHeading } from '../helpers';
+import { CARDINAL_BEARINGS, TICK_STEP_DEG } from '../constants';
+import { bearingFromTouch, buildTicks, cardinalPoints, needlePoints, polarToPoint } from '../helpers';
 
 describe('cardinalPoints', () => {
   it('returns N/E/S fixed and the west label parameterized', () => {
@@ -68,27 +68,5 @@ describe('buildTicks', () => {
   it('classifies the rest as minor', () => {
     const minor = ticks.filter((tick) => tick.kind === 'minor');
     expect(minor).toHaveLength(360 / TICK_STEP_DEG - 4 - 4);
-  });
-});
-
-describe('smoothHeading', () => {
-  it('snaps directly to the first reading', () => {
-    expect(smoothHeading(null, 370)).toBe(10);
-  });
-
-  it('ignores variations smaller than the deadband', () => {
-    expect(smoothHeading(10, 10 + HEADING_DEADBAND_DEG / 2)).toBe(10);
-  });
-
-  it('moves a fraction of the shortest path towards the next reading', () => {
-    expect(smoothHeading(10, 20)).toBeCloseTo(10 + 10 * HEADING_SMOOTHING, 5);
-  });
-
-  it('wraps forward through 0 when that is the shorter path', () => {
-    expect(smoothHeading(350, 10)).toBeCloseTo(356, 5);
-  });
-
-  it('wraps backward through 0 when that is the shorter path', () => {
-    expect(smoothHeading(10, 350)).toBeCloseTo(4, 5);
   });
 });

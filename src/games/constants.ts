@@ -60,7 +60,6 @@ export const DEFAULT_SETTINGS: GameSettings = {
   // Paris par defaut, comme DEFAULT_ORIGIN (voir @/data).
   customLatitude: DEFAULT_ORIGIN.coordinates.latitude,
   customLongitude: DEFAULT_ORIGIN.coordinates.longitude,
-  liveCompass: false,
   showCountry: false,
   travel: false,
 };

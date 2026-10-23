@@ -72,7 +72,6 @@ export type Translations = {
     readOnlyNotice: string;
     optionsTitle: string;
     toggles: {
-      liveCompass: { label: string; description: string };
       useGps: { label: string; description: string };
       showCountry: { label: string; description: string };
       travel: { label: string; description: string };

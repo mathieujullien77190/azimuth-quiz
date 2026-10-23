@@ -25,7 +25,6 @@ export const SetupScreenView = ({
   onToggleCategory,
   onSelectDifficulty,
   onSelectRounds,
-  onToggleLiveCompass,
   onToggleUseGps,
   onChangeCustomOrigin,
   onToggleShowCountry,
@@ -85,13 +84,6 @@ export const SetupScreenView = ({
           ready,
         }}
         options={[
-          {
-            id: 'liveCompass',
-            title: t.setup.toggles.liveCompass.label,
-            description: t.setup.toggles.liveCompass.description,
-            value: settings.liveCompass,
-            onChange: onToggleLiveCompass,
-          },
           {
             id: 'showCountry',
             title: t.setup.toggles.showCountry.label,

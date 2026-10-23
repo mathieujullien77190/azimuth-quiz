@@ -16,10 +16,6 @@ const t = translations.fr;
 
 /** Titre/description de chaque option et du bloc GPS, par id, dans la langue de la barre d'outils. */
 const optionTexts = (texts: Translations): Record<string, { title: string; description?: string }> => ({
-  liveCompass: {
-    title: texts.setup.toggles.liveCompass.label,
-    description: texts.setup.toggles.liveCompass.description,
-  },
   showCountry: {
     title: texts.setup.toggles.showCountry.label,
     description: texts.setup.toggles.showCountry.description,
@@ -128,13 +124,6 @@ export const WithGps: Story = {
   args: {
     title: t.setup.optionsTitle,
     options: [
-      {
-        id: 'liveCompass',
-        ...t.setup.toggles.liveCompass,
-        title: t.setup.toggles.liveCompass.label,
-        value: false,
-        onChange: fn(),
-      },
       {
         id: 'showCountry',
         ...t.setup.toggles.showCountry,

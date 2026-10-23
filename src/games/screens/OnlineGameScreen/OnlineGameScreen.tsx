@@ -173,7 +173,6 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
         roomCode={code}
         isHost={isHost}
         isLastRound={isLastRound}
-        liveCompass={roomSettings.liveCompass}
         localIndex={myIndex}
         maxDistanceKm={maxDistanceKm}
         onCap={onCap}
