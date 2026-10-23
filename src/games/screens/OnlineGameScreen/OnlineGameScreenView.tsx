@@ -3,12 +3,12 @@ import { formatBearing, formatDistance, kmToRatio, ratioToKm } from '@/helpers';
 import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 
-import Compass from '@/components/Compass';
-import EarthSection from '@/components/EarthSection';
+import Compass from '@/components/geo/Compass';
+import EarthSection from '@/components/geo/EarthSection';
 import FooterNav from '../../components/FooterNav';
-import GameFooter from '@/components/GameFooter';
-import ReactionOverlay from '@/components/ReactionOverlay';
-import GameHeader from '@/components/GameHeader';
+import GameFooter from '@/components/game/GameFooter';
+import ReactionOverlay from '@/components/game/ReactionOverlay';
+import GameHeader from '@/components/game/GameHeader';
 import { compassSizeFor, distanceSliderMarks, earthSizeFor } from './helpers';
 import PlaceCard from '../../components/PlaceCard';
 import RoundResult from '../../components/RoundResult';

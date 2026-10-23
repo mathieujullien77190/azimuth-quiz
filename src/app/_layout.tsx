@@ -2,10 +2,10 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
-import ErrorNoticeHost from '@/components/ErrorNoticeHost';
-import LanguageProvider from '@/components/LanguageProvider';
-import StartupSplash from '@/components/StartupSplash';
-import ThemeProvider from '@/components/ThemeProvider';
+import ErrorNoticeHost from '@/components/providers/ErrorNoticeHost';
+import LanguageProvider from '@/components/providers/LanguageProvider';
+import StartupSplash from '@/components/providers/StartupSplash';
+import ThemeProvider from '@/components/providers/ThemeProvider';
 import { preloadCounts } from '@/games/helpers/counts';
 import { disableTextSelection, polyfillFlagEmoji } from '@/helpers';
 import { writeErrorRecord } from '@/firebase/errorSink';

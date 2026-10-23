@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 
 import { goBackOrHome } from '@/helpers/goBack';
 
-import SettingsScreen from '@/components/SettingsScreen';
+import SettingsScreen from '@/components/home/SettingsScreen';
 
 const SettingsRoute = () => {
   const router = useRouter();

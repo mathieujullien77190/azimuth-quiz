@@ -8,11 +8,11 @@ import type { OnlinePlayer } from '@/helpers/roomPlayers';
 import { useTranslation } from '@/i18n';
 import { useTheme } from '@/themes';
 
-import type { EarthMark } from '@/components/EarthSection';
+import type { EarthMark } from '@/components/geo/EarthSection';
 import type { RoundRecord } from '@/types';
 import EndScreen from '../EndScreen';
-import NoticeOverlay from '@/components/NoticeOverlay';
-import RoomDeletedScreen from '@/components/RoomDeletedScreen';
+import NoticeOverlay from '@/components/ui/NoticeOverlay';
+import RoomDeletedScreen from '@/components/game/RoomDeletedScreen';
 import { REVEAL_OPACITY } from './constants';
 import { buildRoundRecord } from './helpers';
 import { useSectionScroll } from './useSectionScroll';

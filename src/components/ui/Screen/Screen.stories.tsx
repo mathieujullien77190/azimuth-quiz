@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import GameFooter from '../../GameFooter';
+import GameFooter from '../../game/GameFooter';
 import Button from '../Button';
 import Card from '../Card';
 

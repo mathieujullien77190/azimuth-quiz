@@ -99,9 +99,9 @@ const preview: Preview = {
     },
   ],
   parameters: {
-    // Ordre du menu : composants de l'app, puis les familles generiques (setup, UI) en bas.
+    // Ordre du menu : comme le rangement de src/components (home, game, geo, setup, ui).
     options: {
-      storySort: { order: ['Common', 'Setup', 'UI'] },
+      storySort: { order: ['Home', 'Game', 'Geo', 'Setup', 'UI'] },
     },
     controls: {
       matchers: {

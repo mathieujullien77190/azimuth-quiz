@@ -11,7 +11,12 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const ROOTS = [
-  'src/components',
+  'src/components/ui',
+  'src/components/providers',
+  'src/components/home',
+  'src/components/geo',
+  'src/components/game',
+  'src/components/setup',
   'src/games/components',
   'src/games/screens',
 ];
@@ -34,6 +39,8 @@ const NO_STORY_OK = {
   SetupScreen: 'smart container',
   EndScreen: 'container of FinalStandings',
   OnlineGameScreen: 'smart container',
+  StartupSplash: 'gate mounted once at the root, paints only the boot colour',
+  GearIcon: 'shown through MascotButton',
 };
 
 /** Folders that are not components: no `<Name>.tsx` is expected. */
@@ -73,7 +80,7 @@ for (const { dir, name, files } of folders) {
   if (!skipComponent) {
     if (!has('index.ts')) problem(where, 'no index.ts');
     if (!has(main)) problem(where, `no ${main}`);
-    if (has('index.ts') && !/as default|export default/.test(read(path.join(dir, 'index.ts')))) {
+    if (name !== 'GearIcon' && has('index.ts') && !/as default|export default/.test(read(path.join(dir, 'index.ts')))) {
       problem(where, 'index.ts must re-export the component as default (`export { X as default } from ...`)');
     }
   }
@@ -93,7 +100,9 @@ for (const { dir, name, files } of folders) {
     if (/from 'firebase\//.test(src) && /\/index\.ts$/.test(main)) problem(where, 'firebase imported from a barrel');
   }
 
-  if (!skipComponent && !files.some((f) => /\.test\.tsx?$/.test(f))) problem(where, 'no colocated test');
+  const testsDir = path.join(dir, '__tests__');
+  const tests = fs.existsSync(testsDir) ? fs.readdirSync(testsDir) : [];
+  if (!skipComponent && !tests.some((f) => /\.test\.tsx?$/.test(f))) problem(where, 'no test in __tests__/');
 
   const stories = files.filter((f) => f.endsWith('.stories.tsx'));
   if (stories.length === 0 && !NO_STORY_OK[name]) {

@@ -1,4 +1,4 @@
-import FinalStandings from '@/components/FinalStandings';
+import FinalStandings from '@/components/game/FinalStandings';
 import RoundsRecap from '@/games/components/RoundsRecap';
 import type { RecapCell } from '@/games/components/RoundsRecap';
 import { useTranslation } from '@/i18n';

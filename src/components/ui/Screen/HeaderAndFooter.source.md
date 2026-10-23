@@ -1,5 +1,5 @@
 ```tsx
-import GameFooter from '@/components/GameFooter';
+import GameFooter from '@/components/game/GameFooter';
 import Screen from '@/components/ui/Screen';
 
 // `header` and `footer` sit outside the ScrollView, so they stay visible; the children scroll. The

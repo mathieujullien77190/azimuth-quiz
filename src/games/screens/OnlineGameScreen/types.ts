@@ -1,8 +1,8 @@
 import type { RefObject } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent, ScrollView } from 'react-native';
 
-import type { EarthMark } from '@/components/EarthSection';
-import type { ReactionOverlayProps } from '@/components/ReactionOverlay';
+import type { EarthMark } from '@/components/geo/EarthSection';
+import type { ReactionOverlayProps } from '@/components/game/ReactionOverlay';
 import type { OnlinePlayer } from '@/helpers/roomPlayers';
 import type { Coordinates, Difficulty, Place, RoundRecord } from '@/types';
 

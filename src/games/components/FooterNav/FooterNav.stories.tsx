@@ -9,7 +9,7 @@ import onHeadingCode from './OnHeading.source.md?raw';
 import validateDisabledCode from './ValidateDisabled.source.md?raw';
 
 const meta = {
-  title: 'Common/FooterNav',
+  title: 'Game/FooterNav',
   component: FooterNav,
   decorators: [
     (Story) => (

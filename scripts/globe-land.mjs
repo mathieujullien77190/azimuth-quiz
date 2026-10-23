@@ -216,10 +216,10 @@ const maskHeader = [
 const quoted = (value) => JSON.stringify(value).replace(/"/g, "'");
 
 writeFileSync(
-  'src/components/Globe3D/globeLand.ts',
+  'src/components/geo/Globe3D/globeLand.ts',
   landHeader + '\nexport const GLOBE_LAND_PATH =\n  ' + quoted(built.path) + ';\n',
 );
-writeFileSync('src/components/Globe3D/globeMask.ts', maskHeader + '\n    ' + quoted(runs) + ',\n};\n');
+writeFileSync('src/components/geo/Globe3D/globeMask.ts', maskHeader + '\n    ' + quoted(runs) + ',\n};\n');
 console.log(
   'globeLand.ts: ' +
     built.rings.length +

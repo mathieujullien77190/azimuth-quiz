@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 
-import NoticeOverlay from '@/components/NoticeOverlay';
+import NoticeOverlay from '@/components/ui/NoticeOverlay';
 import PartySection from '@/components/setup/PartySection';
 import Button from '@/components/ui/Button';
 import QuitButton from '@/components/ui/QuitButton';

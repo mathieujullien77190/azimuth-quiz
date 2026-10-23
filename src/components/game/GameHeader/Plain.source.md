@@ -1,0 +1,14 @@
+```tsx
+import GameHeader from '@/components/game/GameHeader';
+
+// Just the cross and code, the name and points, and the round line.
+<GameHeader
+  code={code}
+  difficulty={roomSettings.difficulty}
+  name={myName}
+  onQuit={handleQuit}
+  points={totals[myIndex] ?? 0}
+  roundNumber={gameState.roundIndex + 1}
+  totalRounds={gameState.places.length}
+/>
+```

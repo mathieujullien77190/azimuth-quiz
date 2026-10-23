@@ -16,7 +16,7 @@ import {
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-import { GLOBE_LAND_PATH } from '@/components/Globe3D/globeLand';
+import { GLOBE_LAND_PATH } from '@/components/geo/Globe3D/globeLand';
 
 import {
   CAMERA_DISTANCE,

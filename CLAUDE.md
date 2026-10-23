@@ -18,7 +18,7 @@ Identifiants de code en anglais.
 ```
 src/
   app/          # Expo Router : _layout (providers + Stack), routes = re-exports minces
-  components/   # hors jeu : ui/, HomeScreen, SettingsScreen, Compass, EarthSection, GameHeader/GameFooter, setup/...
+  components/   # ui/ (primitives : Button, Card, Chip, Screen...), providers/ (Theme, Language, StartupSplash, ErrorNoticeHost), home/ (HomeScreen, SettingsScreen, AppTitle, LoadingBar, SwayingCompass, MascotButton), geo/ (Compass, Globe3D, EarthSection), game/ (GameHeader/GameFooter, FinalStandings, Reaction*, RoomDeletedScreen), setup/ (preparation de partie)
   data/         # valeurs partagees (score/geo, options, palette), theme.ts, data/firestore/ (types, read.ts, numbering.ts, journal.ts...)
   games/        # screens/, components/, helpers/, firebase/ (room.ts, places.ts), constants.ts
   firebase/     # TOUT ce qui touche Firebase/Firestore : client.ts (app, db, auth), roomApi.ts (createRoomApi), roomCode.ts, errorSink.ts, groupCounts.ts, groupedDraw.ts
@@ -91,7 +91,7 @@ les deploie pas).
 longs que l'orthodromie (jusqu'a ~21 180 km, `MAX_SURFACE_DISTANCE_KM` = 22 000). Score (`games/helpers/scoring.ts`) :
 courbe logarithmique, 500 pts direction + 500 pts distance. Lieux : `fetchRandomPlaces` (`games/firebase/places.ts`).
 
-**Globe3D** (`components/Globe3D/`) : vraie boule **three.js** sur surface `expo-gl`, montree d'abord quand l'appelant donne
+**Globe3D** (`components/geo/Globe3D/`) : vraie boule **three.js** sur surface `expo-gl`, montree d'abord quand l'appelant donne
 `origin` (bouton 2D/3D), rotation au doigt, zoom a deux doigts ou +/− (`MAX_ZOOM` = 14), bouton « N » pour recentrer.
 - Gestes mesures sur la **position absolue** des doigts (`Fingers`), jamais sur le cumul d'un geste ; le geste reste au globe
   (`onShouldBlockNativeResponder`, `touchAction: 'none'`).
@@ -135,7 +135,7 @@ plus de 30 jours, pas de TTL : exige la facturation Firebase).
     carres = reste), niveau de detail selon la distance camera (constantes de `constants.ts`), clic = la meme carte que la liste
     (`PlacesView/PlaceCard` + `usePlaceEditing`). `GlobeScene.ts` possede three.js, logique pure dans `helpers.ts`. Vitest remplace `three`.
 - **Storybook** : stories colocalisees (`src/**/<Name>.stories.tsx`, config `admin/.storybook`, `npm run stories`), code reel via
-  `source(code)` + `<Story>.source.md` (skill personnel `storybook-story`). Menu : `Common`, `Setup`, `UI`
+  `source(code)` + `<Story>.source.md` (skill personnel `storybook-story`). Menu (comme le rangement de `components/`) : `Home`, `Game`, `Geo`, `Setup`, `UI`
   (ordre dans `admin/.storybook/preview.tsx` : y ajouter toute nouvelle section). Un composant dumb a sa story, pas les containers. Le chrome de Storybook a un theme classique clair/sombre (`admin/.storybook/manager.ts`, suit le bouton « Theme ») ; le theme du jeu (night/day) ne sert qu'aux composants de la preview.
 
 ## Build, deploiement, qualite
