@@ -43,8 +43,8 @@
     <rect x="785" y="138" width="50" height="690" rx="8"/>
     <rect x="885" y="138" width="50" height="690" rx="8"/>
     <rect x="985" y="138" width="50" height="690" rx="8"/>
-    <rect x="1085" y="138" width="50" height="690" rx="8"/>
-    <rect x="1185" y="138" width="50" height="690" rx="8"/>
+    <rect x="1085" y="138" width="50" height="757" rx="8"/>
+    <rect x="1185" y="138" width="50" height="757" rx="8"/>
   </g>
   <!-- 1 Créer et rejoindre -->
   <text x="24" y="150" font-size="13" font-weight="700" fill="#1f2a37">1 · Créer et rejoindre</text>
