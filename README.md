@@ -4,12 +4,9 @@
 · 🗺️ **[Admin des données](https://mathieujullien77190.github.io/azimuth-quiz/admin/)**
 · 🧩 **[Storybook](https://mathieujullien77190.github.io/azimuth-quiz/storybook/)**
 
-Deux jeux de géographie, jusqu'à 10 joueurs (un téléphone par joueur) et 20 manches :
-
-- **Boussole** : un lieu s'affiche, vise-le avec la boussole et estime la distance depuis ton point
-  de départ (GPS, ou Paris par défaut). Tout le monde répond en même temps, puis révélation.
-- **Indices** : devine une ville grâce à des indices qui se dévoilent (drapeau, population, monnaie,
-  jeu de mots...). Chacun son tour : on dévoile un indice ou on tente une réponse.
+Jeu de géographie **Boussole**, jusqu'à 10 joueurs (un téléphone par joueur) et 20 manches : un lieu s'affiche, vise-le
+avec la boussole et estime la distance depuis ton point de départ (GPS, ou Paris par défaut). Tout le monde répond en
+même temps, puis révélation.
 
 ## Jouer
 
@@ -50,9 +47,9 @@ Un push sur `master` publie le jeu web, l'admin (`/admin/`) et Storybook sur Git
 
 ## Architecture
 
-![Schéma d'architecture : écrans, jeux, stores Zustand, couche données, admin, Firebase et déploiement](docs/architecture.svg)
+![Schéma d'architecture : écrans, composants, store Zustand, couche firebase, admin, Firebase et déploiement](docs/architecture.svg)
 
-Pas de serveur propre : l'appli Expo (écrans, jeux Boussole et Indices, stores Zustand par room, couche `data/firestore`) et l'admin Vite, qui réutilise `components` et `data/firestore`, parlent directement à Firebase (Auth et Firestore, règles dans `firestore.rules`). Un push sur `master` construit le web, l'admin et Storybook vers GitHub Pages.
+Pas de serveur propre : l'appli Expo (écrans, composants, store Zustand de la room, couche `firebase/`) et l'admin Vite, qui réutilise `src/firebase` (types et lecture des documents), parlent directement à Firebase (Auth et Firestore, règles dans `firestore.rules`). Un push sur `master` construit le web, l'admin et Storybook vers GitHub Pages.
 
 ## Stack et structure
 

@@ -20,7 +20,7 @@ npx expo lint
 ```
 
 - `tsc` : **0 erreur**. Ajoute `(cd admin && npx tsc --noEmit -p .)` si tu as touché un fichier importé par `admin/`.
-- Lint : la base connue est **14 erreurs** (`react-hooks/refs` et `set-state-in-effect`, listées dans CLAUDE.md,
+- Lint : la base connue est **12 erreurs** (`react-hooks/refs` et `set-state-in-effect`, listées dans CLAUDE.md,
   "Etat connu"), **0 warning**. Plus = régression : trouve la règle et le fichier (`npx expo lint | grep -B3 error`).
 
 ## 1. Couverture de tests (seuil 100 %)
@@ -46,7 +46,7 @@ test qui manque, ou du code inatteignable a supprimer, jamais un commentaire d'e
   - Deux hooks montés dans un même test se re-rendent hors `act` quand le store change : `await unmount()` le
     premier avant de monter le second.
   - `firebase/firestore` plante Jest : on mocke `@/firebase/room`, on ne
-    l'importe jamais en vrai. Les stores de room se testent en posant l'état avec `store.setState(...)`.
+    l'importe jamais en vrai. Le store de la room (`useRoomStore`) se teste en posant l'état avec `useRoomStore.setState(...)`.
   - Timers : `jest.useFakeTimers()` en `beforeEach`, `jest.useRealTimers()` en `afterEach`.
   - Les hex de deux thèmes peuvent coïncider : préfère `getAllByText(...)` quand une valeur peut apparaître deux fois.
 
@@ -56,15 +56,16 @@ test qui manque, ou du code inatteignable a supprimer, jamais un commentaire d'e
 node .claude/skills/quality-check/scripts/audit-structure.cjs
 ```
 
-Le script vérifie chaque dossier de composant/écran (`src/components`, `src/games/*/components`,
-`src/games/*/screens`) et chaque story. Critère : **0 problème**. Règles appliquées (CLAUDE.md, "Structure") :
+Le script vérifie chaque dossier de composant/écran (`src/components/{ui,providers,home,geo,game,setup}`, `src/screens`) et
+chaque story. Critère : **0 problème**. Règles appliquées (CLAUDE.md racine, "Règles transverses", et `src/components/CLAUDE.md`) :
 
 - un composant = un dossier auto-contenu : `index.ts` + `<Nom>.tsx` + `styles.ts` (+ `types.ts`, `helpers.ts`,
   `constants.ts` si besoin) ; `<Nom>.tsx` a un **export nommé** `<Nom>`, jamais de `export default` ; `index.ts` le
   ré-exporte en default (`export { Nom as default } from './Nom'`) ;
 - jamais de `StyleSheet.create` dans le `.tsx` : c'est `styles.ts` (`createStyles(theme)`), branché par
   `useThemedStyles(createStyles)` avec un `createStyles` de niveau module ;
-- alias `@/` (pas de `../../../`) ; identifiants de code en anglais ; un test colocalisé par composant ;
+- alias `@/` (pas de `../..`) ; identifiants de code en anglais, commentaires en français sans accents ; un test dans
+  `__tests__/` par composant ; stories et exemples de code dans le sous-dossier `doc/` ;
 - pas d'import de `firebase/*` dans un barrel (`index.ts`) ni dans un composant "dumb".
 
 Ce que le script **ne** vérifie **pas** et que tu dois relire à la main sur les fichiers modifiés (`git diff --stat`) :
@@ -75,7 +76,8 @@ Ce que le script **ne** vérifie **pas** et que tu dois relire à la main sur le
 - **texte** : aucune chaîne française/anglaise en dur dans un composant, tout passe par `useTranslation()` (fr.ts
   ET en.ts ET `i18n/types.ts` ensemble) ; les clés i18n ajoutées sont utilisées, celles retirées ne traînent plus ;
 - **commentaires** : rares, sur le *pourquoi* ; pas de doc qui décrit du code supprimé ;
-- **CLAUDE.md** à jour quand la structure, un flux ou une convention change (pas de journal historique).
+- **CLAUDE.md** (racine et celui du dossier concerné : `components/`, `screens/`, `helpers/`, `firebase/`, `store/`, `admin/`) à jour
+  quand la structure, un flux ou une convention change, écrit au présent, sans journal historique.
 
 Une entrée de `NO_STORY_OK` dans le script justifie qu'un dossier n'ait pas de story (container smart, provider,
 hook) : ajoute-y un dossier seulement avec la raison à côté.

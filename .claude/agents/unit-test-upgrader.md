@@ -33,7 +33,7 @@ ou un code impossible à tester tel quel, tu le signales dans ton rapport au lie
 - Tests dans un dossier `__tests__/` à côté du fichier testé : `__tests__/Foo.test.tsx` (imports relatifs `../Foo`). Alias `@/` → `src/`.
 - RNTL est utilisé en **asynchrone** : `await render(...)`, `await renderHook(...)`,
   `await act(async () => ...)`, `await fireEvent.press(...)`.
-- `firebase/firestore` plante Jest à l'import : `room.ts`, `roomBase.ts` et les stores de room se
+- `firebase/firestore` plante Jest à l'import : `firebase/room.ts` et le store de la room (`store/roomStore.ts`) se
   mockent (voir les tests existants), on ne les importe pas en réel. Les hooks d'écran de jeu en ligne
   (`OnlineGameScreen`...) n'ont pas de test de rendu : teste leurs helpers et leurs hooks purs.
 - Timers : `jest.useFakeTimers()` en `beforeEach`, `jest.useRealTimers()` en `afterEach`.

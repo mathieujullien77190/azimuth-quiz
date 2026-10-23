@@ -107,4 +107,5 @@ Avant : lire le document, repérer **toutes** ses copies (section 1), savoir si 
 Après : relire les documents écrits ; compter les groupes si la numérotation a bougé (`n` dense de 1 à la taille dans chaque groupe); `dataVersion` incrémentée ; journal écrit **en dernier** avec tous les documents ;
 rappeler à l'utilisateur de recharger le jeu et, si besoin, l'admin. Ne commit rien sans demande.
 
-> Restes de l'ancien mode Indices en base, ignores du code : champs `clues`/`personality`/`wordplay` des lieux, `personalityJobs`, `meta/cluesCounts`, `devFeedback`.
+> Présents en base mais ignorés du code : champs `clues`, `personality` et `wordplay` des lieux, collections `personalityJobs` et
+> `devFeedback`, document `meta/cluesCounts`.

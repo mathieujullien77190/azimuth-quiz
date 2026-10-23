@@ -37,8 +37,8 @@ de branche ni de PR, sauf si l'utilisateur le demande.
    - **Admin** : `(cd admin && npx tsc --noEmit -p . && npm run test:coverage)` : les tests Vitest passent et la couverture de
      `admin/src` est aussi de **100 %** (même règle : sous 100 %, on n'avance pas). Puis `npm run build` dans `admin/`.
    - Pour un gros lot, proposer `/quality-check` (structure des composants, Storybook, code mort) avant de pousser.
-3. **Règles et index Firestore : le push ne les déploie pas**, et c'est ce qui a déjà cassé le jeu (`hintPicks` ajouté au
-   dépôt mais pas en ligne : l'indice du joueur non hôte « revenait »). Donc, à chaque push :
+3. **Règles et index Firestore : le push ne les déploie pas** : un champ écrit par le jeu mais absent des règles en ligne est
+   refusé et l'action du joueur « revient ». Donc, à chaque push :
    - Repérer si `firestore.rules` ou `firestore.indexes.json` change dans le lot (`git diff --stat` + `git diff origin/master
      --stat -- firestore.rules firestore.indexes.json`). Si oui, **le dire à l'utilisateur avant de pousser** : « les règles
      changent, je les déploie après le push ».
@@ -49,7 +49,7 @@ de branche ni de PR, sauf si l'utilisateur le demande.
      déployer avec `npx firebase-tools deploy --only firestore:rules --project azimuth-quiz` (et `firestore:indexes` si
      les index ont bougé), puis **relire les règles déployées et confirmer qu'elles sont identiques** au dépôt.
    - Ne jamais conclure « poussé » sans avoir dit où en sont les règles (identiques, déployées, ou écart à traiter).
-     Un champ qu'un joueur non hôte écrit dans une room doit être dans la liste `turnFields` des règles correspondantes.
+     Un champ qu'un joueur non hôte écrit dans une room doit être dans la liste de champs `compassPlayer` des règles.
 4. Les **données Firestore** (lieux, devinettes…) ne sont pas dans Git : rien à committer pour elles (voir le skill
    `firestore-data`).
 
