@@ -40,6 +40,7 @@ admin/          # outil interne (app Vite + Storybook), importe `src/` via l'ali
 - Tests dans un dossier `__tests__/` a cote du fichier teste. Jest (`npx jest --coverage`, seuil **100 %**, ignore `admin/`) et
   Vitest dans l'admin (`cd admin && npm run test:coverage`, seuil **100 %**). Pas de `/* istanbul ignore */` : un code inatteignable
   se supprime ou se reecrit.
+- Les schemas de `docs/` (SVG) sont inclus dans le `README.md` avec `?v=<version>` : GitHub met les images en cache, on change ce numero quand un schema change.
 - Les stories et leurs exemples de code vivent dans le sous-dossier `doc/` du composant (voir `admin/CLAUDE.md`).
 - Apres tout renommage ou deplacement dans `src/` : `(cd admin && npx tsc --noEmit -p . && npm run build)`.
 - Commits : Conventional Commits en anglais, sans trailer de co-auteur ; un commit par mise a jour, sans push. Le push passe par

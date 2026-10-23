@@ -54,20 +54,20 @@ Pas de serveur propre : l'appli Expo et l'admin Vite parlent directement à Fire
 
 Les couches de l'appli (routes, écrans, composants, hooks, store, helpers, `firebase/`), l'admin, Firebase et le déploiement.
 
-![Schéma d'architecture : qui appelle qui, de l'appli à Firebase et au déploiement](docs/architecture.svg)
+![Schéma d'architecture : qui appelle qui, de l'appli à Firebase et au déploiement](docs/architecture.svg?v=2.70.1)
 
 ### Structure des fichiers
 
 À quoi sert chaque dossier, et ce que contient un composant.
 
-![Structure des fichiers : à quoi sert chaque dossier](docs/structure.svg)
+![Structure des fichiers : à quoi sert chaque dossier](docs/structure.svg?v=2.70.1)
 
 ### Flux Firestore
 
 Une partie de bout en bout : créer et rejoindre, lancer, une manche, présence et départs, erreurs. Bleu = l'hôte, orange = les
 autres joueurs ; une barre par collection.
 
-![Flux Firestore : une partie de bout en bout](docs/firestore-flows.svg)
+![Flux Firestore : une partie de bout en bout](docs/firestore-flows.svg?v=2.70.1)
 
 ## Stack et structure
 
