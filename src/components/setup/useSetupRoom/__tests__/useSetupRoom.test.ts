@@ -2,7 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, renderHook } from '@testing-library/react-native';
 
 import { PLAYER_NAME_STORAGE_KEY } from '@/data';
-import { createRoomStore } from '@/store';
+import { subscribeToRoomGame, subscribeToRoomPlayers, subscribeToRoomSettings } from '@/games/firebase/room';
+import { useRoomStore } from '@/store/roomStore';
 import { loadLastJoinedRoom } from '@/helpers/lastRoom';
 import { resetErrorThrottle, setErrorReporter } from '@/helpers/reportError';
 import { nameTakenError } from '@/helpers/roomName';
@@ -19,6 +20,16 @@ const mockRouter = { push: mockPush, dismissTo: mockDismissTo };
 jest.mock('expo-router', () => ({ useRouter: () => mockRouter }));
 // La detection de coupure a ses propres tests (`useRoomPresence.test.ts`).
 jest.mock('@/helpers/useRoomPresence', () => ({ useRoomPresence: jest.fn() }));
+// `room.ts` charge `firebase/firestore` (ESM seul, plante Jest) : les abonnements du store sont des mocks.
+jest.mock('@/games/firebase/room', () => ({
+  subscribeToRoomPlayers: jest.fn(),
+  subscribeToRoomSettings: jest.fn(),
+  subscribeToRoomGame: jest.fn(),
+}));
+
+// Singleton de module : retour a l'etat initial entre les tests (la room est refermee par le demontage).
+const INITIAL_STORE_STATE = useRoomStore.getState();
+beforeEach(() => useRoomStore.setState(INITIAL_STORE_STATE, true));
 
 type Settings = { playerName: string; rounds: number };
 type RoomSettings = { rounds: number };
@@ -37,23 +48,20 @@ const setup = async (
   let onPlayers!: (players: RoomPlayers, hostUid: string | undefined, exists: boolean) => void;
   let onSettings!: (settings: RoomSettings) => void;
   let onGame!: (state: GameState) => void;
-  const store = createRoomStore<RoomSettings, GameState>({
-    defaultGameState: { screen: 'options' },
-    subscribeToRoomPlayers: (_code, callback) => {
-      onPlayers = callback;
-      return () => {};
-    },
-    subscribeToRoomSettings: (_code, callback) => {
-      onSettings = callback;
-      return () => {};
-    },
-    subscribeToRoomGame: (_code, callback) => {
-      onGame = callback;
-      return () => {};
-    },
+  jest.mocked(subscribeToRoomPlayers).mockImplementation((_code, callback) => {
+    onPlayers = callback as never;
+    return () => {};
   });
+  jest.mocked(subscribeToRoomSettings).mockImplementation((_code, callback) => {
+    onSettings = callback as never;
+    return () => {};
+  });
+  jest.mocked(subscribeToRoomGame).mockImplementation((_code, callback) => {
+    onGame = callback as never;
+    return () => {};
+  });
+  const store = useRoomStore;
   const adapter: SetupRoomAdapter<Settings, RoomSettings> = {
-    store: store as never,
     gamePath: '/online-game',
     colors: ['red', 'blue'],
     maxPlayers: 2,

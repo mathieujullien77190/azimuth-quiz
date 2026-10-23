@@ -1,7 +1,7 @@
 import { reporting } from './reportError';
 import { useEffect, useRef } from 'react';
 
-import type { RoomPlayers } from '../firebase/roomApi';
+import { useRoomStore } from '@/store/roomStore';
 
 // Lent et peu couteux expres : chaque heartbeat est une ecriture lue par tous (N joueurs = N lectures). 30 s / seuil
 // 90 s donnent ~500 ecritures et 2000 lectures pour 4 joueurs en 1 h, et rien seul ou au salon (voir `active`).
@@ -10,19 +10,6 @@ const LOST_AFTER_MS = 90_000;
 const CHECK_MS = 10_000;
 /** Un controle en retard de cet ordre = appareil suspendu (arriere-plan, ecran verrouille), pas une coupure : reinitialiser. */
 const SUSPENDED_GAP_MS = CHECK_MS * 3;
-
-type PresenceState = {
-  localUid: string | null;
-  hostUid: string | null;
-  players: RoomPlayers;
-  gameState: { screen: string };
-  markConnectionLost: () => void;
-};
-
-type PresenceStore = {
-  <U>(selector: (state: PresenceState) => U): U;
-  getState: () => PresenceState;
-};
 
 type PresenceApi = {
   sendHeartbeat: (code: string, uid: string) => Promise<void>;
@@ -38,10 +25,10 @@ type PresenceApi = {
  * - l'hote ne voit plus un joiner : il le retire (voir `useHostPruneLeavers`) ;
  * - un joiner ne voit plus l'hote : il part (sans hote, plus de manches ni de scores).
  */
-export const useRoomPresence = (store: PresenceStore, api: PresenceApi, code: string | null) => {
-  const localUid = store((s) => s.localUid);
-  const screen = store((s) => s.gameState.screen);
-  const playerCount = store((s) => Object.keys(s.players).length);
+export const useRoomPresence = (api: PresenceApi, code: string | null) => {
+  const localUid = useRoomStore((s) => s.localUid);
+  const screen = useRoomStore((s) => s.gameState.screen);
+  const playerCount = useRoomStore((s) => Object.keys(s.players).length);
   const active = code !== null && localUid !== null && screen === 'game' && playerCount > 1;
 
   const lastAckRef = useRef(0);
@@ -80,7 +67,7 @@ export const useRoomPresence = (store: PresenceStore, api: PresenceApi, code: st
       }
       lastCheckRef.current = now;
 
-      const state = store.getState();
+      const state = useRoomStore.getState();
       const isHost = localUid === state.hostUid;
       let hostSilent = false;
       const silentJoiners: string[] = [];
@@ -100,7 +87,8 @@ export const useRoomPresence = (store: PresenceStore, api: PresenceApi, code: st
       if (now - lastAckRef.current > LOST_AFTER_MS || (!isHost && hostSilent)) {
         state.markConnectionLost();
         if (isHost) api.deleteRoom(code).catch(reporting('room.deleteOnLoss', { kind: 'background', room: code }));
-        else api.removeRoomPlayer(code, localUid).catch(reporting('room.leaveOnLoss', { kind: 'background', room: code }));
+        else
+          api.removeRoomPlayer(code, localUid).catch(reporting('room.leaveOnLoss', { kind: 'background', room: code }));
         return;
       }
       if (isHost) {
@@ -111,5 +99,5 @@ export const useRoomPresence = (store: PresenceStore, api: PresenceApi, code: st
       }
     }, CHECK_MS);
     return () => clearInterval(interval);
-  }, [active, code, localUid, store, api]);
+  }, [active, code, localUid, api]);
 };

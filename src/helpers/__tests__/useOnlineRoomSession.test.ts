@@ -1,38 +1,44 @@
 import { act, renderHook } from '@testing-library/react-native';
-import { create } from 'zustand';
 
-import type { RoomStoreState } from '../../store';
+import { useRoomStore } from '@/store/roomStore';
+import type { RoomStoreState } from '@/store/types';
 import type { RoomPlayers } from '../../firebase/roomApi';
 import { useOnlineRoomSession } from '../useOnlineRoomSession';
 
 const mockDismissTo = jest.fn();
 const mockRouter = { dismissTo: mockDismissTo };
 jest.mock('expo-router', () => ({ useRouter: () => mockRouter }));
+// `room.ts` charge `firebase/firestore` (ESM seul, plante Jest) : le store n'ouvre ici aucun abonnement.
+jest.mock('@/games/firebase/room', () => ({}));
 
-type Settings = { rounds: number };
-type GameState = { screen: string };
-type State = RoomStoreState<Settings, GameState>;
+type State = RoomStoreState;
 
 const arrivedAt = (millis: number) => ({ toMillis: () => millis }) as never;
 
-const makeStore = (overrides: Partial<State> = {}) =>
-  create<State>()(() => ({
-    code: 'tabofuna',
-    players: {},
-    hostUid: null,
-    roomExists: true,
-    roomSettings: null,
-    gameState: { screen: 'playing' },
-    reaction: null,
-    localUid: null,
-    connectionLost: false,
-    connect: jest.fn(),
-    disconnect: jest.fn(),
-    markConnectionLost: jest.fn(),
-    markVoluntaryLeave: jest.fn(),
-    consumeVoluntaryLeave: jest.fn(() => false),
-    ...overrides,
-  }));
+// Le vrai store, remplace en entier : actions espionnees, etat de depart d'une manche en cours.
+const makeStore = (overrides: Partial<State> = {}) => {
+  useRoomStore.setState(
+    {
+      code: 'tabofuna',
+      players: {},
+      hostUid: null,
+      roomExists: true,
+      roomSettings: null,
+      gameState: { screen: 'playing' } as never,
+      reaction: null,
+      localUid: null,
+      connectionLost: false,
+      connect: jest.fn(),
+      disconnect: jest.fn(),
+      markConnectionLost: jest.fn(),
+      markVoluntaryLeave: jest.fn(),
+      consumeVoluntaryLeave: jest.fn(() => false),
+      ...overrides,
+    },
+    true,
+  );
+  return useRoomStore;
+};
 
 const setup = async (overrides: Partial<State> = {}) => {
   const store = makeStore(overrides);
@@ -44,7 +50,7 @@ const setup = async (overrides: Partial<State> = {}) => {
     removeRoomPlayer: jest.fn(() => Promise.resolve()),
   };
   const onQuit = jest.fn();
-  const hook = await renderHook(() => useOnlineRoomSession(store, roomApi, 'tabofuna', onQuit));
+  const hook = await renderHook(() => useOnlineRoomSession(roomApi, 'tabofuna', onQuit));
   return { store, roomApi, onQuit, ...hook };
 };
 
@@ -211,7 +217,7 @@ describe('useOnlineRoomSession — replay', () => {
   it('steps off the game screen once the room is back in its lobby, only once', async () => {
     const { store, onQuit } = await setup({ hostUid: 'zoe', localUid: 'max' });
     expect(onQuit).not.toHaveBeenCalled();
-    await act(async () => store.setState({ gameState: { screen: 'options' } }));
+    await act(async () => store.setState({ gameState: { screen: 'options' } as never }));
     expect(onQuit).toHaveBeenCalledTimes(1);
     await act(async () => store.setState({ players: {} }));
     expect(onQuit).toHaveBeenCalledTimes(1);
@@ -219,13 +225,13 @@ describe('useOnlineRoomSession — replay', () => {
 
   it('does not step off when the store was disconnected (its reset state is also the lobby)', async () => {
     const { store, onQuit } = await setup({ hostUid: 'zoe', localUid: 'zoe' });
-    await act(async () => store.setState({ code: null, gameState: { screen: 'options' } }));
+    await act(async () => store.setState({ code: null, gameState: { screen: 'options' } as never }));
     expect(onQuit).not.toHaveBeenCalled();
   });
 
   it('does not step off when the room is gone', async () => {
     const { store, onQuit } = await setup({ hostUid: 'zoe', localUid: 'max' });
-    await act(async () => store.setState({ roomExists: false, gameState: { screen: 'options' } }));
+    await act(async () => store.setState({ roomExists: false, gameState: { screen: 'options' } as never }));
     expect(onQuit).not.toHaveBeenCalled();
   });
 });

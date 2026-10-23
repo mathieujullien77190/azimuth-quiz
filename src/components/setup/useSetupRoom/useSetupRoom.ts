@@ -10,6 +10,7 @@ import { useDebouncedValue } from '@/helpers/useDebouncedValue';
 import { useRoomPresence } from '@/helpers/useRoomPresence';
 import { useTranslation } from '@/i18n';
 import { usePlayerName } from '@/settings';
+import { useRoomStore } from '@/store/roomStore';
 
 import type { SetupPartyProps, SetupRoomAdapter } from './types';
 
@@ -18,7 +19,7 @@ const NAME_SYNC_DELAY_MS = 600;
 
 /**
  * Toute la logique de room en ligne derriere l'ecran de setup d'un jeu, identique pour tous : etat, effets
- * Firestore, valeurs derivees et actions deja resolues. Chaque jeu branche sa collection/son store via `adapter`
+ * Firestore, valeurs derivees et actions deja resolues. Firestore passe par `adapter`
  * (voir `SetupRoomAdapter`) ; le container passe `party` tel quel a `SetupScreenShell`, rien ici ne rend.
  */
 export const useSetupRoom = <S extends { playerName: string }, R extends Partial<S>>(
@@ -27,7 +28,6 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
   updateSettings: (patch: Partial<S>) => void,
   initialChoice: 'host' | 'join' | null,
 ) => {
-  const { store } = adapter;
   const router = useRouter();
   const t = useTranslation();
   // Le nom est la seule chose partagee par les 3 jeux (voir `usePlayerName`) : chaque setup lit/ecrit ce store.
@@ -208,26 +208,27 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
 
   // Partage avec l'ecran de jeu en ligne, qui ne fait que le lire : cet ecran seul gere connexion/deconnexion,
   // car il etablit toujours la room avant toute navigation vers le jeu.
-  const players = store((s) => s.players);
-  const hostUid = store((s) => s.hostUid);
-  const localUid = store((s) => s.localUid);
+  const players = useRoomStore((s) => s.players);
+  const hostUid = useRoomStore((s) => s.hostUid);
+  const localUid = useRoomStore((s) => s.localUid);
   // Nom du joueur s'il ne tape rien : le premier nom par defaut qu'aucun autre joueur de la room n'a.
   const soloPlaceholder = freePlaceholder(NAME_PLACEHOLDERS, players, localUid);
-  const roomSettings = store((s) => s.roomSettings);
-  const roomScreen = store((s) => s.gameState.screen);
+  // Les reglages de la room sont ceux du seul jeu : `R` les type pour le setup.
+  const roomSettings = useRoomStore((s) => s.roomSettings) as R | null;
+  const roomScreen = useRoomStore((s) => s.gameState.screen);
   // L'ecran de jeu a pris le relais (la room a quitte le salon) : le lancement est fini. Cet ecran reste monte
   // dessous et son splash modal resterait sinon par-dessus le jeu, d'ou la remise a zero au rendu (pattern React
   // de state derive) plutot qu'en effet.
   if (starting && roomScreen !== 'options') setStarting(false);
-  const connectionLost = store((s) => s.connectionLost);
+  const connectionLost = useRoomStore((s) => s.connectionLost);
   // Detection de coupure pour toute la vie de la room (cet ecran reste monte sous le jeu) : voir `useRoomPresence`.
   // Qui perd la connexion quitte la partie.
-  useRoomPresence(store, adapter, connectedRoomCode);
+  useRoomPresence(adapter, connectedRoomCode);
   useEffect(() => {
     if (connectedRoomCode === null) return;
-    store.getState().connect(connectedRoomCode);
-    return () => store.getState().disconnect();
-  }, [connectedRoomCode, store]);
+    useRoomStore.getState().connect(connectedRoomCode);
+    return () => useRoomStore.getState().disconnect();
+  }, [connectedRoomCode]);
 
   // Connecte et cet appareil present dans la room.
   useEffect(() => {
@@ -259,11 +260,11 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     adapter
       .joinRoomPresence(connectedRoomCode, roomName.trim() || soloPlaceholder)
       .then((uid) => {
-        store.setState({ localUid: uid });
+        useRoomStore.setState({ localUid: uid });
         setNameTaken(false);
       })
       .catch((error) => setNameTaken(isNameTakenError(error)));
-  }, [adapter, connectedRoomCode, roomName, soloPlaceholder, store]);
+  }, [adapter, connectedRoomCode, roomName, soloPlaceholder]);
 
   // Quitte la room *precedente* au changement de room (ou en quittant l'ecran), sinon elle reste listee avec un
   // hote qui ne reviendra pas. L'hote supprime la room comme `handleQuit` ; un joiner retire seulement sa presence.
@@ -294,13 +295,13 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     setDisconnectReason(null);
     // L'ecran de jeu est ouvert par-dessus (celui-ci reste monte dessous) : quitter la room = rentrer a l'accueil.
     // Un simple reset detruirait l'etat de la room sous l'ecran de jeu sans rien pour le renvoyer a l'accueil.
-    if (store.getState().gameState.screen !== 'options') router.dismissTo('/');
+    if (useRoomStore.getState().gameState.screen !== 'options') router.dismissTo('/');
     resetChoice();
-  }, [resetChoice, router, store]);
+  }, [resetChoice, router]);
   useEffect(() => {
     if (connectedRoomCode === null) return;
     let hasBeenPresent = false;
-    return store.subscribe((state) => {
+    return useRoomStore.subscribe((state) => {
       if (!state.roomExists) {
         if (mode === 'join') setDisconnectReason('deleted');
         return;
@@ -310,11 +311,11 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
       else if (hasBeenPresent) {
         // Quitter volontairement (`handleQuit` de l'ecran en ligne, branche joiner) retire la presence comme une
         // expulsion ; `consumeVoluntaryLeave` les distingue. Pas de notice, juste le meme reset qu'une notice fermee.
-        if (store.getState().consumeVoluntaryLeave()) dismissDisconnectNotice();
+        if (useRoomStore.getState().consumeVoluntaryLeave()) dismissDisconnectNotice();
         else setDisconnectReason('kicked');
       }
     });
-  }, [connectedRoomCode, dismissDisconnectNotice, mode, store]);
+  }, [connectedRoomCode, dismissDisconnectNotice, mode]);
 
   // L'hote qui lance passe `screen` a 'game' pour tous les appareils (hote compris, via son abonnement) : cet
   // unique effet y emmene tout le monde. Une fois par partie : `roomScreen` change pendant la partie ('game',

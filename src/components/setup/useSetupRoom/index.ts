@@ -1,2 +1,2 @@
 export { useSetupRoom } from './useSetupRoom';
-export type { SetupPartyProps, SetupRoomAdapter, SetupRoomStore, SetupRoomStoreState } from './types';
+export type { SetupPartyProps, SetupRoomAdapter } from './types';

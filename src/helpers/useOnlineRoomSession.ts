@@ -2,18 +2,18 @@ import { reporting } from './reportError';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef } from 'react';
 
-import type { RoomStoreHook } from '../store';
+import { useRoomStore } from '@/store/roomStore';
+
 import { onlinePlayersFrom } from './roomPlayers';
 import { useHostPruneLeavers } from './useHostPruneLeavers';
 import { useRoomReactions } from './useRoomReactions';
 import type { StaleRoomData } from './useHostPruneLeavers';
 
 /**
- * Ce dont tout ecran de jeu en ligne a besoin sur sa room : etat du store partage (connexion geree par le setup,
+ * Ce dont tout ecran de jeu en ligne a besoin sur sa room : etat du store de room (connexion geree par le setup,
  * voir `useSetupRoom`), hote, joueurs en ordre d'arrivee, redirection "room supprimee", `handleQuit`.
  */
-export const useOnlineRoomSession = <Settings, GameState extends { screen: string }>(
-  store: RoomStoreHook<Settings, GameState>,
+export const useOnlineRoomSession = (
   roomApi: {
     deleteRoom: (code: string) => Promise<void>;
     restartRoom: (code: string) => Promise<void>;
@@ -26,16 +26,16 @@ export const useOnlineRoomSession = <Settings, GameState extends { screen: strin
 ) => {
   const router = useRouter();
 
-  const localUid = store((s) => s.localUid);
-  const players = store((s) => s.players);
-  const hostUid = store((s) => s.hostUid);
-  const roomExists = store((s) => s.roomExists);
-  const connectionLost = store((s) => s.connectionLost);
+  const localUid = useRoomStore((s) => s.localUid);
+  const players = useRoomStore((s) => s.players);
+  const hostUid = useRoomStore((s) => s.hostUid);
+  const roomExists = useRoomStore((s) => s.roomExists);
+  const connectionLost = useRoomStore((s) => s.connectionLost);
   // Faux une fois l'appareil sorti du store (l'hote qui quitte : voir `handleQuit`).
-  const connected = store((s) => s.code !== null);
-  const roomSettings = store((s) => s.roomSettings);
-  const gameState = store((s) => s.gameState);
-  const roomReaction = store((s) => s.reaction);
+  const connected = useRoomStore((s) => s.code !== null);
+  const roomSettings = useRoomStore((s) => s.roomSettings);
+  const gameState = useRoomStore((s) => s.gameState);
+  const roomReaction = useRoomStore((s) => s.reaction);
 
   // Room disparue (l'hote l'a supprimee) : la notice "l'hote a quitte" est geree par `useSetupRoom` ; repli
   // direct vers l'accueil, pas un simple retour (le setup montrerait la room morte).
@@ -74,13 +74,13 @@ export const useOnlineRoomSession = <Settings, GameState extends { screen: strin
   const handleQuit = () => {
     if (isHost) {
       roomApi.deleteRoom(code).catch(reporting('room.deleteOnQuit', { kind: 'background', room: code }));
-      store.getState().disconnect();
+      useRoomStore.getState().disconnect();
       router.dismissTo('/');
       return;
     }
     if (localUid !== null) {
       // Marque AVANT l'ecriture : le setup ecoute le meme update et ne distinguerait pas "j'ai quitte" de "expulse".
-      store.getState().markVoluntaryLeave();
+      useRoomStore.getState().markVoluntaryLeave();
       roomApi.removeRoomPlayer(code, localUid).catch(reporting('room.leaveOnQuit', { kind: 'background', room: code }));
     }
     onQuit();

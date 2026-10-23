@@ -22,7 +22,7 @@ src/
   data/         # valeurs partagees (score/geo, options, palette), theme.ts, data/firestore/ (types, read.ts, numbering.ts, journal.ts...)
   games/        # screens/, components/, helpers/, firebase/ (room.ts, places.ts), constants.ts
   firebase/     # TOUT ce qui touche Firebase/Firestore : client.ts (app, db, auth), roomApi.ts (createRoomApi), roomCode.ts, errorSink.ts, groupCounts.ts, groupedDraw.ts
-  store/        # stores Zustand de room : createRoomStore.ts (etat), actions.ts (actions), types.ts + roomStore.ts
+  store/        # UN seul store Zustand concret, `useRoomStore` (roomStore.ts : etat + actions connect/disconnect/drapeaux), types dans types.ts
   helpers/      # sans Firebase (geo, storage, useOnlineRoomSession...)
   settings/     # GameSettings (store Zustand singleton), usePlayerName
   themes/       # night.ts, day.ts, fonts.ts, ThemeContext
@@ -51,7 +51,7 @@ Collection `rooms`, champ `game` (`'compass'`) immuable, fixe a la creation. Un 
 - **Firestore** : `firebase/roomApi.ts` (`createRoomApi(game)`) ; chaque `games/firebase/room.ts` le lie et ajoute l'etat de
   manche. **Tout champ qu'un joueur non hote ecrit doit figurer dans sa liste de champs** de `firestore.rules`
   (`compassPlayer`), sinon l'ecriture est refusee et l'action « revient ».
-- **Store** : `store/` (`createRoomStore.ts` = etat, `actions.ts` = connect/disconnect/drapeaux, store de la room : `roomStore.ts`). **Setup** : `components/setup/useSetupRoom` + sections `*Section`.
+- **Store** : `store/roomStore.ts` = `useRoomStore`, store unique de la room (pas de fabrique ni de generiques) ; `useSetupRoom`, `useOnlineRoomSession` et `useRoomPresence` l'importent directement (les tests le remplissent par `setState` et mockent `@/games/firebase/room`). **Setup** : `components/setup/useSetupRoom` + sections `*Section`.
 - **Ecran de jeu** : `useOnlineRoomSession` (etat, hote, joueurs dans l'ordre d'arrivee, redirection « room supprimee », `handleQuit`), `useGuessDraft`.
 - **Pas de partie locale** : seul = room *cachee* (`hostedSilently`), donc reseau requis. `startOnlineGame(run)` couvre les deux cas.
 - **Un joueur part** (quitte, expulse, coupure) : l'hote efface ses donnees de manche (`useHostPruneLeavers`,

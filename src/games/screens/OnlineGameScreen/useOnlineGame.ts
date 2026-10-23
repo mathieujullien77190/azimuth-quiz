@@ -15,7 +15,6 @@ import {
   sendReaction,
   submitRoomGuess,
 } from '@/games/firebase/room';
-import { useRoomStore } from '@/store/roomStore';
 import type { RoundRecord, RoundScore } from '@/types';
 
 import { DEFAULT_BEARING } from './constants';
@@ -28,7 +27,7 @@ import { buildRoundRecord } from './helpers';
  */
 export const useOnlineGame = (code: string, onQuit: () => void) => {
   const { localUid, players, connectionLost, connected, roomSettings, gameState, onlinePlayers, isHost, handleQuit, handleReplay, reactions } =
-    useOnlineRoomSession(useRoomStore, { deleteRoom, restartRoom, sendReaction, removeRoomPlayer, pruneRoomPlayerData }, code, onQuit);
+    useOnlineRoomSession({ deleteRoom, restartRoom, sendReaction, removeRoomPlayer, pruneRoomPlayerData }, code, onQuit);
   const place = gameState.places[gameState.roundIndex];
 
   // Reponse en cours de cet appareil, remise a zero a chaque manche. Ajustee au rendu plutot qu'en effet
