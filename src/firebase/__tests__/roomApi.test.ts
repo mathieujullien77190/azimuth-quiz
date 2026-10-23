@@ -130,21 +130,18 @@ describe('roomExists', () => {
   });
 });
 
-describe('one collection for every game', () => {
+describe('one collection for the rooms', () => {
   it('stamps each game on its rooms, all in the same collection', async () => {
     jest.mocked(generateRoomCode).mockReturnValue('tabofuna');
     jest.mocked(getDoc).mockResolvedValue(snapshot(undefined) as never);
-    for (const game of ['compass', 'clues'] as const) {
-      await createRoomApi<Settings>(game).createRoom({ rounds: 5 });
-    }
-    expect(setDoc).toHaveBeenNthCalledWith(1, { path: 'rooms/tabofuna' }, expect.objectContaining({ game: 'compass' }));
-    expect(setDoc).toHaveBeenNthCalledWith(2, { path: 'rooms/tabofuna' }, expect.objectContaining({ game: 'clues' }));
+    await createRoomApi<Settings>('compass').createRoom({ rounds: 5 });
+    expect(setDoc).toHaveBeenCalledWith({ path: 'rooms/tabofuna' }, expect.objectContaining({ game: 'compass' }));
   });
 
   it("clears a host's previous rooms whatever their game", async () => {
     jest.mocked(generateRoomCode).mockReturnValue('tabofuna');
     jest.mocked(getDoc).mockResolvedValue(snapshot(undefined) as never);
-    await createRoomApi<Settings>('clues').createRoom({ rounds: 5 });
+    await createRoomApi<Settings>('compass').createRoom({ rounds: 5 });
     expect(collection).toHaveBeenCalledWith(expect.anything(), 'rooms');
   });
 });
@@ -316,7 +313,10 @@ describe('sendReaction', () => {
   it("overwrites the room's single reaction field with this device, the emoji and the time", async () => {
     jest.spyOn(Date, 'now').mockReturnValue(1234);
     await api.sendReaction('tabofuna', '🔥');
-    expect(updateDoc).toHaveBeenCalledWith({ path: 'rooms/tabofuna' }, { reaction: { uid: 'zoe', emoji: '🔥', seq: 1234 } });
+    expect(updateDoc).toHaveBeenCalledWith(
+      { path: 'rooms/tabofuna' },
+      { reaction: { uid: 'zoe', emoji: '🔥', seq: 1234 } },
+    );
     jest.restoreAllMocks();
   });
 });

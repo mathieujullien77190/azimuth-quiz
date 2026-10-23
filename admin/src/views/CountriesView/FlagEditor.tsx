@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 
-import type { ClueFlagColorId, ClueFlagColorRow } from '@/types';
+import type { FlagColorId, FlagColorRow } from '@/types';
 
-const FLAG_COLOR_IDS: ClueFlagColorId[] = ['red', 'blue', 'white', 'green', 'yellow', 'black'];
+const FLAG_COLOR_IDS: FlagColorId[] = ['red', 'blue', 'white', 'green', 'yellow', 'black'];
 
-const sameFlag = (a: ClueFlagColorRow[], b: ClueFlagColorRow[]): boolean => JSON.stringify(a) === JSON.stringify(b);
+const sameFlag = (a: FlagColorRow[], b: FlagColorRow[]): boolean => JSON.stringify(a) === JSON.stringify(b);
 
 /**
  * Liste de couleurs (id + hex + %) editable ligne a ligne, ajout/retrait : pas le clic-pour-editer des autres champs,
@@ -15,17 +15,17 @@ export const FlagEditor = ({
   saveFlag,
   onSave,
 }: {
-  value: ClueFlagColorRow[];
+  value: FlagColorRow[];
   saveFlag: React.ReactNode;
-  onSave: (next: ClueFlagColorRow[]) => void;
+  onSave: (next: FlagColorRow[]) => void;
 }) => {
-  const [rows, setRows] = useState<ClueFlagColorRow[]>(value);
+  const [rows, setRows] = useState<FlagColorRow[]>(value);
 
   useEffect(() => setRows(value), [value]);
 
   const dirty = !sameFlag(rows, value);
 
-  const updateRow = (i: number, next: ClueFlagColorRow) => {
+  const updateRow = (i: number, next: FlagColorRow) => {
     setRows((cur) => cur.map((row, idx) => (idx === i ? next : row)));
   };
 
@@ -33,7 +33,7 @@ export const FlagEditor = ({
     <div className="flag-editor">
       {rows.map((row, i) => (
         <div className="flag-row" key={i}>
-          <select className="kv-select flag-color-select" value={row[0]} onChange={(e) => updateRow(i, [e.target.value as ClueFlagColorId, row[1], row[2]])}>
+          <select className="kv-select flag-color-select" value={row[0]} onChange={(e) => updateRow(i, [e.target.value as FlagColorId, row[1], row[2]])}>
             {FLAG_COLOR_IDS.map((id) => (
               <option key={id} value={id}>
                 {id}

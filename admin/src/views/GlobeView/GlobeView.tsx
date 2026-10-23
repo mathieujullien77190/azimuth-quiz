@@ -157,7 +157,6 @@ export const GlobeView = () => {
               saveFlagFor={placeEditing.saveFlagFor}
               onDifficultyChange={placeEditing.handleDifficultyChange}
               onCompassChange={placeEditing.handleCompassChange}
-              onCluesChange={placeEditing.handleCluesChange}
               onDelete={async (row) => {
                 await placeEditing.handleDelete(row);
                 select(null);

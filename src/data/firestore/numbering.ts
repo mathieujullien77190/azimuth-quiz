@@ -1,32 +1,23 @@
-import type { Category, ClueCategory, Difficulty } from '@/types';
+import type { Category, Difficulty } from '@/types';
 
 import type { CompassCounts, PlaceDoc } from './types';
 
 /**
- * Numerotation dense 1..taille par groupe, deux fois : Boussole (`PlaceDoc.n`) et Indices (`clues.n`), ce
+ * Numerotation dense 1..taille par groupe, (`PlaceDoc.n`), ce
  * qui permet de tirer au hasard puis de demander `n in [...]`. Pur, partage par le seed, l'admin et le jeu.
  */
 
 export type Group = { category: Category; difficulty: Difficulty };
 
-/** Comment une numerotation trouve le groupe et le numero d'un lieu (ce qui distingue Boussole et Indices). */
+/** Comment une numerotation trouve le groupe et le numero d'un lieu. */
 export type Numbering = {
   groupOf: (place: PlaceDoc | null | undefined) => Group | null;
   numberOf: (place: PlaceDoc) => number | undefined;
 };
 
-/** Categorie Indices d'un lieu, derivee de sa categorie Boussole (meme decoupage que `placeCategory`). */
-export const cluesCategory = (place: Pick<PlaceDoc, 'compass'>): ClueCategory =>
-  place.compass?.category === 'capital' || place.compass?.category === 'citiesFr' ? place.compass.category : 'cities';
-
 export const COMPASS_NUMBERING: Numbering = {
   groupOf: (place) => (place?.compass ? { category: place.compass.category, difficulty: place.difficulty } : null),
   numberOf: (place) => place.n,
-};
-
-export const CLUES_NUMBERING: Numbering = {
-  groupOf: (place) => (place?.clues ? { category: cluesCategory(place), difficulty: place.difficulty } : null),
-  numberOf: (place) => place.clues?.n,
 };
 
 const groupId = ({ category, difficulty }: Group): string => `${category}|${difficulty}`;

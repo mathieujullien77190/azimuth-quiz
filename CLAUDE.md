@@ -2,14 +2,9 @@
 
 # Azimuth Quiz
 
-Deux jeux de geographie, **toujours en ligne** (une room par partie, meme seul), jusqu'a 10 joueurs et 20 manches :
+Un seul jeu, **Boussole** (`compass`), **toujours en ligne** (une room par partie, meme seul), jusqu'a 10 joueurs et 20 manches : un lieu s'affiche, chacun vise un cap et estime la distance depuis un point de depart.
 
-| Nom affiche | Dossier | Principe |
-|---|---|---|
-| Boussole | `compass` | un lieu s'affiche, chacun vise un cap et estime la distance depuis un point de depart |
-| Indices | `clues` | un lieu cache, indices devoiles a tour de role, on devine son nom |
-
-Nom de code et nom affiche different volontairement (traductions dans `fr.ts`). Web statique sur GitHub Pages
+Nom de code (`compass`) et nom affiche (Boussole) different volontairement (traductions dans `fr.ts`). Web statique sur GitHub Pages
 (`https://mathieujullien77190.github.io/azimuth-quiz/`) + builds natifs. Repo `mathieujullien77190/azimuth-quiz`, un seul
 contributeur, commits directs sur `master`.
 
@@ -23,13 +18,13 @@ Identifiants de code en anglais.
 ```
 src/
   app/          # Expo Router : _layout (providers + Stack), routes = re-exports minces
-  components/   # hors jeu : ui/, HomeScreen, SettingsScreen, Compass, EarthSection, PlayerTabs, GameHeader/GameFooter, setup/...
+  components/   # hors jeu : ui/, HomeScreen, SettingsScreen, Compass, EarthSection, GameHeader/GameFooter, setup/...
   data/         # valeurs partagees (score/geo, options, palette), theme.ts, data/firestore/ (types, read.ts, numbering.ts, journal.ts...)
   games/<jeu>/  # screens/, components/, helpers/, firebase/ (room.ts, places.ts), constants.ts
-  firebase/     # TOUT ce qui touche Firebase/Firestore : client.ts (app, db, auth), roomApi.ts (createRoomApi), roomCode.ts, errorSink.ts, devFeedback.ts, groupCounts.ts, groupedDraw.ts
-  store/        # stores Zustand de room : createRoomStore.ts (etat), actions.ts (actions), types.ts + compassRoomStore.ts, cluesRoomStore.ts
-  helpers/      # commun aux 2 jeux, sans Firebase (geo, storage, useOnlineRoomSession...)
-  settings/     # GameSettings, ClueSettings (stores Zustand singletons), usePlayerName
+  firebase/     # TOUT ce qui touche Firebase/Firestore : client.ts (app, db, auth), roomApi.ts (createRoomApi), roomCode.ts, errorSink.ts, groupCounts.ts, groupedDraw.ts
+  store/        # stores Zustand de room : createRoomStore.ts (etat), actions.ts (actions), types.ts + compassRoomStore.ts
+  helpers/      # sans Firebase (geo, storage, useOnlineRoomSession...)
+  settings/     # GameSettings (store Zustand singleton), usePlayerName
   themes/       # night.ts, day.ts, fonts.ts, ThemeContext
   types/
 admin/          # outil interne (app Vite a part), importe `src/` via le meme alias `@/`
@@ -51,17 +46,13 @@ reglages (requis par `useSetupRoom`, jamais envoye dans la room) ; `onChangeName
 
 ## Parties en ligne
 
-Collection `rooms`, champ `game` (`'compass' | 'clues'`) immuable : il choisit les regles de `firestore.rules`. Un code d'un autre
-jeu est refuse a la jonction.
+Collection `rooms`, champ `game` (`'compass'`) immuable, fixe a la creation. Un code d'un autre jeu est refuse a la jonction.
 
 - **Firestore** : `firebase/roomApi.ts` (`createRoomApi(game)`) ; chaque `games/<jeu>/firebase/room.ts` le lie et ajoute l'etat de
   manche. **Tout champ qu'un joueur non hote ecrit doit figurer dans sa liste de champs** de `firestore.rules`
-  (`turnBasedPlayer`, `compassPlayer`), sinon l'ecriture est refusee et l'action « revient ».
-- **Store** : `store/` (`createRoomStore.ts` = etat, `actions.ts` = connect/disconnect/drapeaux, un store par jeu : `compassRoomStore.ts`, `cluesRoomStore.ts`). **Setup** : `components/setup/useSetupRoom` + sections `*Section`.
-- **Ecran de jeu** : `useOnlineRoomSession` ; jeux a tour de role : `useHostTurnScoring` (l'hote seul ecrit `totalScores`),
-  `useHostTurnRecovery`, `useGuessDraft`, `nextPlayerUid`, `useTransientFlag`. **L'ordre des joueurs tourne par manche**
-  (Indices) : `playersForRound(onlinePlayers, roundIndex)` = ordre d'arrivee decale du numero de manche, deduit par chaque
-  appareil. Les hooks exposent `roundPlayers` (`PlayerTabs`, `turnIndex`) ; `nextPlayerUid` reste sur l'ordre d'arrivee.
+  (`compassPlayer`), sinon l'ecriture est refusee et l'action « revient ».
+- **Store** : `store/` (`createRoomStore.ts` = etat, `actions.ts` = connect/disconnect/drapeaux, store de Boussole : `compassRoomStore.ts`). **Setup** : `components/setup/useSetupRoom` + sections `*Section`.
+- **Ecran de jeu** : `useOnlineRoomSession` (etat, hote, joueurs dans l'ordre d'arrivee, redirection « room supprimee », `handleQuit`), `useGuessDraft`.
 - **Pas de partie locale** : seul = room *cachee* (`hostedSilently`), donc reseau requis. `startOnlineGame(run)` couvre les deux cas.
 - **Un joueur part** (quitte, expulse, coupure) : l'hote efface ses donnees de manche (`useHostPruneLeavers`,
   `pruneRoomPlayerData`) ; s'il revient, c'est un nouveau joueur.
@@ -77,16 +68,16 @@ jeu est refuse a la jonction.
 
 ## Donnees Firestore
 
-Firestore est la **seule source** (lieux, devinettes, metiers) : aucun JSON embarque, **aucun repli** si Firestore echoue. Donnees
+Firestore est la **seule source** (lieux) : aucun JSON embarque, **aucun repli** si Firestore echoue. Donnees
 **dupliquees expres** (un document par lieu porte tout ce dont une manche a besoin) et numerotees. **Toute modification de donnees
 (copies, numerotation, compteurs, `dataVersion`, journal) : suivre le skill `firestore-data`** ; l'admin (`admin/src/data.ts`) le fait deja.
 
 Collections : `places/{cle}` (3 lettres, permanente), `countries/{ISO}` (edites dans l'admin, recopies dans `places.country` via
 `applyCountryChange` ; le jeu ne les lit pas ; portent encore les champs de l'ancien jeu Silhouette, non lus ni effaces),
-`personalityJobs/{code}`, `meta/*` (`compassCounts`, `cluesCounts`, `dataVersion`), `journal/*` (admin), `devFeedback/*`, `errors`,
-`rooms/*`. Le jeu ne lit que `places`, `meta`, `rooms`. Types : `data/firestore/types.ts`.
+`meta/*` (`compassCounts`, `dataVersion`), `journal/*` (admin), `errors`,
+`rooms/*`. Le jeu ne lit que `places`, `meta`, `rooms`. Types : `data/firestore/types.ts`. Restes de l'ancien mode Indices toujours en base mais ignores du code : champs `clues`/`personality`/`wordplay` des lieux, `personalityJobs`, `meta/cluesCounts`, `devFeedback`.
 
-**Tirage** (`firebase/groupedDraw.ts` + `firebase/groupCounts.ts` + `helpers/groupCursors.ts`, commun aux 2 jeux) : l'hote tire seul. Groupe =
+**Tirage** (`firebase/groupedDraw.ts` + `firebase/groupCounts.ts` + `helpers/groupCursors.ts`, pour Boussole) : l'hote tire seul. Groupe =
 `category` × `difficulty`, numerote 1..taille (`numbering.ts`), tailles dans `meta/*Counts`, **un curseur par groupe** par appareil
 (AsyncStorage, boucle). Plusieurs categories : `splitEvenly`. Lecture : UNE requete `or` par tranche de 30 numeros. L'anglais releve
 d'un cran les lieux francais (`effectiveDifficulty`). Echec (Firestore ou trop peu d'elements) : le tirage rejette, `starting`
@@ -124,27 +115,6 @@ tour precedent**. Depart lu en UN seul endroit : `originForRound(gameState, trav
 (`location`) et l'overlay `useTravelNotice` (une fois par tour, 3 s ou clic, jamais au tour 1). `separateRepeats` evite deux fois le
 meme lieu de suite. Aucun champ de plus pour un non-hote.
 
-## Indices
-
-Lieux : `fetchClueRoundPlaces` (`games/clues/firebase/places.ts`), groupes par `clues.category` (`capital`/`citiesFr`/`cities`,
-`cluesCategory`). **Une manche ne lit que le lieu tire** : `cluesFromDoc` construit le `CluePlace` depuis le seul document.
-
-- **Quels indices** : `cluesFor(place)` filtre `CLUE_ORDER`. `citiesFr` perd 5 indices (heure locale, capitale, couleurs du
-  drapeau, devise, indicatif). `personality` et `wordplay` seulement si le lieu les a. `vowelsUnlocked` attend que tous les indices offerts soient pioches.
-- **Globe 3D** (`globe`, 2 clics) : `Globe3D` avec `gameState.origin` ; 1er clic = boule nue + equateur + Greenwich (`land={false}`),
-  2e = terres. Pas de rotation (`draggable={false}`) ; `backgroundColor` = couleur de la carte.
-- **Score** : `maxScoreForRound`/`remainingScore(revealedClueIds, place)` suivent la liste reellement offerte.
-- **Personnalite** : nom + metier optionnel, faits Wikipedia, `places.personality`. **Jeu de mots** : `difficulty` informative
-  seulement ; `wordplayFor(place)` rend `null` si vide.
-- **Saisie en direct** : le detenteur du tour ecrit `typing` (debounce 500 ms, jamais en solo ni hors tour) ; les autres le voient
-  en cases MAJUSCULES, seulement si `typing.uid === turnUid`.
-- **Qui s'est trompe** : `wrongGuesserName` derive de `wrongGuessUid`/`wrongGuessSeq` (jamais remis a zero entre manches).
-- **Une proposition par tour** : apres une erreur, plus de proposition avant qu'un indice sorte. `wrongGuessHints` (ecrit avec
-  `wrongGuessUid`/`wrongGuessSeq`, `null` a chaque debut de manche) donne `hasGuessedThisTurn` (`helpers/turnGuess.ts`) ; champ
-  de reponse et « Valider » disparaissent (brouillon garde), reste `t.game.alreadyGuessed` ; verrou local avant le retour de la
-  room. Le message d'erreur disparait des qu'un indice sort : `missIsFresh`. Le champ est dans `turnFields` des regles des 2 jeux.
-- **« Je ne sais pas »** : hote seul (`giveUp`), meme hors tour, via `isHost()` des regles.
-
 ## Erreurs de jeu
 
 Une ecriture Firestore qui echoue ne s'avale pas : `.catch(reporting('jeu.action', { room }))` (`helpers/reportError.ts`), jamais
@@ -154,24 +124,13 @@ installe dans `_layout.tsx`), dedupliquees (10 s jeu, 60 s fond). Les regles exi
 (`errorQuota` : 30 par appareil, 1000 au total). Hors journal et `dataVersion`. Lues dans la page admin « Erreurs » (nettoyage des
 plus de 30 jours, pas de TTL : exige la facturation Firebase).
 
-## Mode dev : avis de difficulte
-
-Reglages > « Mode dev » : taper `supermatou` (`DEV_CODE` dans `data/index.ts` et `firestore.rules`, la vraie barriere) garde
-seulement le code (`useDevCode`, hydrate dans `_layout.tsx` ; `useDevMode` = vaut exactement le secret). Un appareil en mode dev
-recoit, **une fois par manche**, `DifficultyFeedbackOverlay` (Facile / Moyen / Difficile) **apres le passage de l'hote a la manche
-suivante** (ou devant le classement final), sur le lieu de la manche PRECEDENTE (`useDevFeedback`). Un tap a cote ferme sans
-ecrire ; un bouton ecrit un document `devFeedback` (`sendDevFeedback`). Chaque appareil decide seul, jamais bloquant ; echec =
-log `background`. Regles : creation avec le code dev et champs exacts, lecture/suppression admins. Page admin `/admin/feedback` :
-directives par lieu (majorite, egalite = les deux), « Copier », « Nettoyer ». Hors journal et `dataVersion`.
-
 ## Ecrans et UI
 
 - **`Screen`** : `header`/`footer` hors du `ScrollView`. Piege : un `ScrollView` horizontal dans un `header` s'etire sur
-  react-native-web sans `style={{ flexGrow: 0, flexShrink: 0 }}` (voir `PlayerTabs.tsx`).
+  react-native-web sans `style={{ flexGrow: 0, flexShrink: 0 }}` .
 - **Theme** : `night` et `day`, fond uni, persiste (`ThemeProvider`, cle `azimuthquiz:theme`). `useThemedStyles(createStyles)` est
   le pattern. Police unique `FONT_FAMILY` ; un composant SVG lit `typography.<token>.fontFamily` et la passe a `<SvgText>`.
-- **Admin** (`admin/`, Vite, `/azimuth-quiz/admin/`) : une page statique par onglet (`places`, `countries`, `globe`, `jobs`,
-  `wordplay`, `errors`, `feedback`), declaree dans `admin/src/pageList.ts` ; lit une copie locale (IndexedDB) tenue par le journal
+- **Admin** (`admin/`, Vite, `/azimuth-quiz/admin/`) : une page statique par onglet (`places`, `countries`, `globe`, `errors`), declaree dans `admin/src/pageList.ts` ; lit une copie locale (IndexedDB) tenue par le journal
   (skill `firestore-data`).
   - **Pays** : `saveCountry` -> `applyCountryChange` ecrit `countries/{ISO}` et la copie `places.country` de chaque lieu dans le
     meme lot (plan pur `data/firestore/denormalize.ts`), avec journal et version. Les champs Silhouette sont reecrits tels quels.
@@ -179,15 +138,15 @@ directives par lieu (majorite, egalite = les deux), « Copier », « Nettoyer »
     carres = reste), niveau de detail selon la distance camera (constantes de `constants.ts`), clic = la meme carte que la liste
     (`PlacesView/PlaceCard` + `usePlaceEditing`). `GlobeScene.ts` possede three.js, logique pure dans `helpers.ts`. Vitest remplace `three`.
 - **Storybook** : stories colocalisees (`src/**/<Name>.stories.tsx`, config `admin/.storybook`, `npm run stories`), code reel via
-  `source(code)` + `<Story>.source.md` (skill personnel `storybook-story`). Menu : `Common`, `Compass`, `Clues`, `Setup`, `UI`
-  (ordre dans `admin/.storybook/preview.tsx` : y ajouter toute nouvelle section). Un composant dumb a sa story, pas les containers.
+  `source(code)` + `<Story>.source.md` (skill personnel `storybook-story`). Menu : `Common`, `Compass`, `Setup`, `UI`
+  (ordre dans `admin/.storybook/preview.tsx` : y ajouter toute nouvelle section). Un composant dumb a sa story, pas les containers. Le chrome de Storybook a un theme classique clair/sombre (`admin/.storybook/manager.ts`, suit le bouton « Theme ») ; le theme du jeu (night/day) ne sert qu'aux composants de la preview.
 
 ## Build, deploiement, qualite
 
 - **Web** : `app.json` `web.output: "static"` + `experiments.baseUrl: "/azimuth-quiz"` ; `@expo/metro-runtime` requis.
   `.github/workflows/deploy-pages.yml` publie jeu, admin (`dist/admin/`) et Storybook a chaque push sur `master`.
 - **Splash** : `StartupSplash` (racine de `_layout.tsx`) affiche `SplashScreen` au moins `SPLASH_MIN_MS` = 5 s, jusqu'a ce que
-  theme, langue, reglages, nom et code dev soient lus (`useSplashGate`), au plus `SPLASH_MAX_MS` = 15 s. Barre de chargement
+  theme, langue, reglages et nom soient lus (`useSplashGate`), au plus `SPLASH_MAX_MS` = 15 s. Barre de chargement
   simulee (`buildProgressSteps`, finit EXACTEMENT a `SPLASH_MIN_MS` sur 96-97,5 %, complete pendant le fondu). `AppTitle` partage
   avec l'accueil (le titre ne bouge pas a la transition). Ligne de version entiere, jamais coupee. Fond `BOOT_BACKGROUND` tant que
   le theme n'est pas lu ; fond natif = `expo.backgroundColor` (#0B1220).

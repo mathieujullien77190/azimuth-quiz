@@ -1,5 +1,5 @@
 import { CATEGORIES } from '@/games/compass/constants';
-import type { Category, Difficulty, CluePositionInCountry } from '@/types';
+import type { Category, Difficulty } from '@/types';
 
 export const CATEGORY_ORDER: Category[] = ['cities', 'capital', 'citiesFr', 'mountains', 'landmarks', 'nature', 'kids'];
 
@@ -43,14 +43,3 @@ export const DIFFICULTY_COLORS: Record<Difficulty, string> = {
   hard: '#FF6B6B',
 };
 
-export const POSITION_LABELS: Record<CluePositionInCountry, string> = {
-  center: 'Centre',
-  n: 'Nord',
-  s: 'Sud',
-  e: 'Est',
-  w: 'Ouest',
-  ne: 'Nord-Est',
-  nw: 'Nord-Ouest',
-  se: 'Sud-Est',
-  sw: 'Sud-Ouest',
-};

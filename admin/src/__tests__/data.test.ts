@@ -1,7 +1,7 @@
 import { Timestamp } from 'firebase/firestore';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { CluesDoc, CountryDoc, PlaceDoc } from '@/data/firestore/types';
+import type { CountryDoc, PlaceDoc } from '@/data/firestore/types';
 
 type Op = {
   op: 'set' | 'update' | 'delete';
@@ -100,26 +100,12 @@ const place = (overrides: Partial<PlaceDoc> = {}): PlaceDoc => ({
   ...overrides,
 });
 
-const cluesDoc = (overrides: Partial<CluesDoc> = {}): CluesDoc => ({
-  positionInCountry: 'center',
-  population: 1,
-  climateEmoji: 'x',
-  elevationMeters: 1,
-  timezone: 'Europe/Paris',
-  airportCode: 'CDG',
-  emojis: [],
-  ...overrides,
-});
-
 type CacheShape = Awaited<ReturnType<typeof snapshotCache>>;
 const snapshotCache = async (overrides: Record<string, unknown> = {}) => ({
   places: {} as Record<string, PlaceDoc>,
   countries: {} as Record<string, CountryDoc>,
-  jobs: {} as Record<string, { fr: string; en: string }>,
   compassCounts: {},
   compassShuffled: false,
-  cluesCounts: {},
-  cluesShuffled: false,
   ...overrides,
 });
 
@@ -179,9 +165,7 @@ describe('data / loadData', () => {
   it('does a full sync when there is no stored copy, and stores the result', async () => {
     h.collections.places = { par: place() };
     h.collections.countries = { FR: { fr: 'France', en: 'France' } };
-    h.collections.personalityJobs = { cha: { fr: 'chanteuse', en: 'singer' } };
     h.meta.compassCounts = { counts: { capital: { easy: 1 } }, shuffled: true };
-    h.meta.cluesCounts = { counts: { capital: { easy: 1 } }, shuffled: true };
     h.journal = [
       { id: 'a', at: 10 },
       { id: 'b', at: 50 },
@@ -192,11 +176,8 @@ describe('data / loadData', () => {
     expect(mod.data()).toEqual({
       places: { par: place() },
       countries: { FR: { fr: 'France', en: 'France' } },
-      jobs: { cha: { fr: 'chanteuse', en: 'singer' } },
       compassCounts: { capital: { easy: 1 } },
       compassShuffled: true,
-      cluesCounts: { capital: { easy: 1 } },
-      cluesShuffled: true,
     });
     expect(h.writeSnapshot).toHaveBeenCalledWith({ cache: mod.data(), syncedAt: Date.now(), journalAt: 50 });
   });
@@ -208,8 +189,6 @@ describe('data / loadData', () => {
       places: {},
       compassCounts: {},
       compassShuffled: false,
-      cluesCounts: {},
-      cluesShuffled: false,
     });
     expect(h.writeSnapshot).toHaveBeenCalledWith(expect.objectContaining({ journalAt: 0 }));
   });
@@ -334,15 +313,11 @@ describe('data / startJournalSync', () => {
     await load({
       places: { par: place({ name: 'old' }), gone: place() },
       countries: { FR: { fr: 'old', en: 'old' } },
-      jobs: { cha: { fr: 'old', en: 'old' } },
       compassCounts: { cities: { easy: 9 } },
-      cluesCounts: { cities: { easy: 9 } },
     });
     h.collections.places = { par: place({ name: 'new' }) };
     h.collections.countries = { FR: { fr: 'France', en: 'France' } };
-    h.collections.personalityJobs = { cha: { fr: 'chanteuse', en: 'singer' } };
     h.meta.compassCounts = { counts: { capital: { easy: 1 } }, shuffled: true };
-    h.meta.cluesCounts = { counts: { capital: { hard: 2 } } };
     mod.startJournalSync();
 
     emit([
@@ -353,10 +328,8 @@ describe('data / startJournalSync', () => {
           { c: 'places', id: 'par', op: 'set' },
           { c: 'places', id: 'gone', op: 'delete' },
           { c: 'countries', id: 'FR', op: 'set' },
-          { c: 'personalityJobs', id: 'cha', op: 'set' },
           { c: 'removedCollection' as never, id: 'pa', op: 'set' },
           { c: 'meta', id: 'compassCounts', op: 'set' },
-          { c: 'meta', id: 'cluesCounts', op: 'set' },
           { c: 'meta', id: 'dataVersion', op: 'set' },
         ],
       },
@@ -366,11 +339,8 @@ describe('data / startJournalSync', () => {
     const copy = mod.data();
     expect(copy.places).toEqual({ par: place({ name: 'new' }) });
     expect(copy.countries.FR).toEqual({ fr: 'France', en: 'France' });
-    expect(copy.jobs.cha).toEqual({ fr: 'chanteuse', en: 'singer' });
     expect(copy.compassCounts).toEqual({ capital: { easy: 1 } });
     expect(copy.compassShuffled).toBe(true);
-    expect(copy.cluesCounts).toEqual({ capital: { hard: 2 } });
-    expect(copy.cluesShuffled).toBe(false);
     expect(h.getDocReads).not.toContain('places/gone');
     expect(mod.dataRevision()).toBe(1);
     expect(h.writeSnapshot).toHaveBeenCalledWith({ cache: copy, syncedAt: expect.any(Number), journalAt: 700 });
@@ -380,8 +350,6 @@ describe('data / startJournalSync', () => {
     await load({
       compassCounts: { cities: { easy: 9 } },
       compassShuffled: true,
-      cluesCounts: { cities: { easy: 9 } },
-      cluesShuffled: true,
     });
     mod.startJournalSync();
 
@@ -390,8 +358,7 @@ describe('data / startJournalSync', () => {
         id: 'e1',
         at: 700,
         changes: [
-          { c: 'meta', id: 'compassCounts', op: 'set' },
-          { c: 'meta', id: 'cluesCounts', op: 'delete' },
+          { c: 'meta', id: 'compassCounts', op: 'delete' },
         ],
       },
     ]);
@@ -400,18 +367,16 @@ describe('data / startJournalSync', () => {
     expect(mod.data()).toMatchObject({
       compassCounts: {},
       compassShuffled: false,
-      cluesCounts: {},
-      cluesShuffled: false,
     });
   });
 
   it('skips the entries this admin wrote itself but still moves the journal position', async () => {
     await load();
-    await mod.putJob('cha', { fr: 'chanteuse', en: 'singer' });
+    await mod.applyPlaceChange('par', place());
     const ownId = journalEntry().ref.id;
     mod.startJournalSync();
 
-    emit([{ id: ownId, at: 800, changes: [{ c: 'personalityJobs', id: 'cha', op: 'set' }] }]);
+    emit([{ id: ownId, at: 800, changes: [{ c: 'places', id: 'par', op: 'set' }] }]);
     await flush();
 
     expect(h.getDocReads).toEqual([]);
@@ -474,38 +439,12 @@ describe('data / startJournalSync', () => {
   });
 });
 
-describe('data / single document writes', () => {
-  it('putPlace writes the place, the data version and the journal in one batch, then updates the copy', async () => {
-    await load();
-    const next = place({ name: 'Paris' });
-
-    await mod.putPlace('par', next);
-
-    expect(summary()).toEqual(['set places/par', 'set meta/dataVersion', expect.stringMatching(/^set journal\//)]);
-    expect(lastBatch().ops[0].value).toBe(next);
-    expect(lastBatch().committed).toBe(true);
-    expectBookkeeping([{ c: 'places', id: 'par', op: 'set' }]);
-    expect(mod.data().places.par).toBe(next);
-  });
-
-  it('putJob and removeJob write then delete the job', async () => {
-    await load();
-
-    await mod.putJob('cha', { fr: 'chanteuse', en: 'singer' });
-    expect(summary()[0]).toBe('set personalityJobs/cha');
-    expect(mod.data().jobs.cha).toEqual({ fr: 'chanteuse', en: 'singer' });
-
-    await mod.removeJob('cha');
-    expect(summary()[0]).toBe('delete personalityJobs/cha');
-    expectBookkeeping([{ c: 'personalityJobs', id: 'cha', op: 'delete' }]);
-    expect(mod.data().jobs).toEqual({});
-  });
-
+describe('data / persistence', () => {
   it('stores the copy once after a burst of writes', async () => {
     await load();
 
-    await mod.putJob('a', { fr: 'a', en: 'a' });
-    await mod.putJob('b', { fr: 'b', en: 'b' });
+    await mod.applyPlaceChange('a', place());
+    await mod.applyPlaceChange('b', place());
     expect(h.writeSnapshot).not.toHaveBeenCalled();
     await flush();
 
@@ -563,49 +502,20 @@ describe('data / applyCountryChange', () => {
   });
 });
 
-describe('data / applyJobChange', () => {
-  it('writes the job and copies its label into the personalities tagged with it', async () => {
-    await load({
-      places: {
-        par: place({ personality: { name: 'Edith', jobCode: 'cha', job: { fr: 'old', en: 'old' } } }),
-        lyo: place({ name: 'Lyon', personality: { name: 'Paul', jobCode: 'foo' } }),
-      },
-      jobs: { cha: { fr: 'old', en: 'old' } },
-    });
-
-    await mod.applyJobChange('cha', { fr: 'chanteuse', en: 'singer' });
-
-    expect(summary()).toEqual([
-      'set personalityJobs/cha',
-      'set places/par',
-      'set meta/dataVersion',
-      expect.stringMatching(/^set journal\//),
-    ]);
-    expect((lastBatch().ops[1].value as PlaceDoc).personality!.job).toEqual({ fr: 'chanteuse', en: 'singer' });
-    expectBookkeeping([
-      { c: 'personalityJobs', id: 'cha', op: 'set' },
-      { c: 'places', id: 'par', op: 'set' },
-    ]);
-    expect(mod.data().jobs.cha).toEqual({ fr: 'chanteuse', en: 'singer' });
-    expect(mod.data().places.par.personality!.job).toEqual({ fr: 'chanteuse', en: 'singer' });
-  });
-});
-
 describe('data / applyPlaceChange', () => {
   const capitals = () => ({
-    par: place({ compass: { category: 'capital' }, n: 1, clues: cluesDoc({ category: 'capital', n: 1 }) }),
+    par: place({ compass: { category: 'capital' }, n: 1 }),
     rom: place({
       name: 'Rome',
       code: 'IT',
       compass: { category: 'capital' },
       n: 2,
-      clues: cluesDoc({ category: 'capital', n: 2 }),
     }),
   });
   const counts = { capital: { easy: 2 } };
 
   it('deletes a place: the last one of each group takes its number, counts follow, everything in one batch', async () => {
-    await load({ places: capitals(), compassCounts: counts, compassShuffled: true, cluesCounts: counts });
+    await load({ places: capitals(), compassCounts: counts, compassShuffled: true });
 
     await mod.applyPlaceChange('par', null);
 
@@ -613,51 +523,42 @@ describe('data / applyPlaceChange', () => {
     expect(summary()).toEqual([
       'delete places/par',
       'update places/rom',
-      'update places/rom',
       'set meta/compassCounts',
-      'set meta/cluesCounts',
       'set meta/dataVersion',
       expect.stringMatching(/^set journal\//),
     ]);
     expect(lastBatch().ops[1].value).toEqual({ n: 1 });
-    expect(lastBatch().ops[2].value).toEqual({ 'clues.n': 1 });
-    expect(lastBatch().ops[3].value).toEqual({ counts: { capital: { easy: 1 } }, shuffled: true });
-    expect(lastBatch().ops[4].value).toEqual({ counts: { capital: { easy: 1 } } });
+    expect(lastBatch().ops[2].value).toEqual({ counts: { capital: { easy: 1 } }, shuffled: true });
     expectBookkeeping([
       { c: 'places', id: 'par', op: 'delete' },
       { c: 'places', id: 'rom', op: 'set' },
-      { c: 'places', id: 'rom', op: 'set' },
       { c: 'meta', id: 'compassCounts', op: 'set' },
-      { c: 'meta', id: 'cluesCounts', op: 'set' },
     ]);
     const copy = mod.data();
     expect(copy.places.par).toBeUndefined();
     expect(copy.places.rom.n).toBe(1);
-    expect(copy.places.rom.clues!.n).toBe(1);
     expect(copy.compassCounts).toEqual({ capital: { easy: 1 } });
-    expect(copy.cluesCounts).toEqual({ capital: { easy: 1 } });
   });
 
-  it('moves a place to another category: it goes last of the new groups and the Clues category follows', async () => {
-    await load({ places: capitals(), compassCounts: counts, cluesCounts: counts, cluesShuffled: true });
+  it('moves a place to another category: it goes last of the new group', async () => {
+    await load({ places: capitals(), compassCounts: counts, compassShuffled: true });
     const next = { ...capitals().par, compass: { category: 'cities' as const } };
 
     await mod.applyPlaceChange('par', next);
 
     const written = lastBatch().ops[0].value as PlaceDoc;
     expect(lastBatch().ops[0].op).toBe('set');
-    expect(written).toMatchObject({ n: 1, compass: { category: 'cities' }, clues: { category: 'cities', n: 1 } });
-    expect(lastBatch().ops[4].value).toEqual({ counts: { capital: { easy: 1 }, cities: { easy: 1 } }, shuffled: true });
+    expect(written).toMatchObject({ n: 1, compass: { category: 'cities' } });
+    expect(lastBatch().ops[2].value).toEqual({ counts: { capital: { easy: 1 }, cities: { easy: 1 } }, shuffled: true });
     expect(mod.data().places.par).toBe(written);
-    expect(mod.data().places.rom).toMatchObject({ n: 1, clues: { n: 1 } });
+    expect(mod.data().places.rom).toMatchObject({ n: 1 });
   });
 
-  it('keeps the numbers of a place that stays in its groups; a place without any keeps none', async () => {
-    const unnumbered = place({ compass: { category: 'capital' }, clues: cluesDoc({ category: 'capital' }) });
+  it('keeps the number of a place that stays in its group; a place without one keeps none', async () => {
+    const unnumbered = place({ compass: { category: 'capital' } });
     await load({
       places: { par: unnumbered },
       compassCounts: { capital: { easy: 1 } },
-      cluesCounts: { capital: { easy: 1 } },
     });
 
     await mod.applyPlaceChange('par', { ...unnumbered, name: 'Paris 2' });
@@ -665,31 +566,26 @@ describe('data / applyPlaceChange', () => {
     const written = lastBatch().ops[0].value as PlaceDoc;
     expect(written.name).toBe('Paris 2');
     expect(written).not.toHaveProperty('n');
-    expect(written.clues).not.toHaveProperty('n');
-    expect(lastBatch().ops).toHaveLength(5);
+    expect(lastBatch().ops).toHaveLength(4);
   });
 
-  it('adds a place without Clues data at the end of its Compass group only', async () => {
-    await load({ places: capitals(), compassCounts: counts, cluesCounts: counts });
+  it('adds a place at the end of its Compass group', async () => {
+    await load({ places: capitals(), compassCounts: counts });
     const added = place({ name: 'Brest', compass: { category: 'citiesFr' } });
 
     await mod.applyPlaceChange('bre', added);
 
     const written = lastBatch().ops[0].value as PlaceDoc;
     expect(written).toMatchObject({ n: 1 });
-    expect(written.clues).toBeUndefined();
     expect(mod.data().places.bre).toBe(written);
     expect(mod.data().compassCounts).toEqual({ capital: { easy: 2 }, citiesFr: { easy: 1 } });
-    expect(mod.data().cluesCounts).toEqual(counts);
   });
 
-  it('adds a Clues-only place without a Compass number', async () => {
-    await load({ places: {}, compassCounts: {}, cluesCounts: {} });
+  it('adds a place without Compass data without a number', async () => {
+    await load({ places: {}, compassCounts: {} });
 
-    await mod.applyPlaceChange('new', place({ clues: cluesDoc() }));
+    await mod.applyPlaceChange('new', place());
 
-    const written = lastBatch().ops[0].value as PlaceDoc;
-    expect(written).not.toHaveProperty('n');
-    expect(written.clues).toMatchObject({ category: 'cities', n: 1 });
+    expect(lastBatch().ops[0].value as PlaceDoc).not.toHaveProperty('n');
   });
 });

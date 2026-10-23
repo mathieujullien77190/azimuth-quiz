@@ -1,5 +1,5 @@
 import type { CountryDoc } from '@/data/firestore/types';
-import type { ClueFlagColorRow } from '@/types';
+import type { FlagColorRow } from '@/types';
 
 import { applyCountryChange, data } from '../data';
 
@@ -8,7 +8,7 @@ export type CountryRecord = {
   code: string;
   fr: string;
   en: string;
-  flag: ClueFlagColorRow[] | null;
+  flag: FlagColorRow[] | null;
   currency: string | null;
   currencySymbol: string | null;
   phoneCode: string | null;

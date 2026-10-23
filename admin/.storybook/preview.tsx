@@ -101,7 +101,7 @@ const preview: Preview = {
   parameters: {
     // Ordre du menu : composants de l'app, puis ceux de chaque jeu, puis les familles generiques (setup, UI) en bas.
     options: {
-      storySort: { order: ['Common', 'Compass', 'Clues', 'Setup', 'UI'] },
+      storySort: { order: ['Common', 'Compass', 'Setup', 'UI'] },
     },
     controls: {
       matchers: {

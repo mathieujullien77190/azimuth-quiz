@@ -34,14 +34,6 @@ export const HomeScreen = () => {
           tagline={t.home.games.compass.tagline}
           title={t.home.games.compass.title}
         />
-        <GameCard
-          ctaLabel={t.home.games.clues.cta}
-          icon={GAME_ICONS.clues}
-          maxPlayers={10}
-          onPress={() => router.push('/clues-setup')}
-          tagline={t.home.games.clues.tagline}
-          title={t.home.games.clues.title}
-        />
       </View>
     </Screen>
   );

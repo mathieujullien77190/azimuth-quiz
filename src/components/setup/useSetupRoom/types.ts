@@ -2,8 +2,8 @@ import type { PartySectionProps } from '@/components/setup/PartySection';
 import type { RoomPlayers } from '@/firebase/roomApi';
 
 /**
- * Partie du store de room d'un jeu (`useRoomStore`/`useClueRoomStore`) dont le setup a besoin : les deux
- * stores l'exposent, seule la forme de `gameState` differe au-dela de `screen`.
+ * Partie du store de room d'un jeu (`useRoomStore`) dont le setup a besoin : seule la forme de `gameState`
+ * compte au-dela de `screen`.
  */
 export type SetupRoomStoreState<R> = {
   players: RoomPlayers;
@@ -34,7 +34,7 @@ export type SetupRoomStore<R> = {
 export type SetupRoomAdapter<S, R> = {
   store: SetupRoomStore<R>;
   /** Route ou l'hote et les joiners sont envoyes quand l'hote lance la partie. */
-  gamePath: '/online-game' | '/clues-online-game';
+  gamePath: '/online-game';
   colors: readonly string[];
   maxPlayers: number;
   roomSettingsFrom: (settings: S) => R;

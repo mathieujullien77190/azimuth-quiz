@@ -1,31 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { CluesDoc, PlaceDoc } from '@/data/firestore/types';
+import type { PlaceDoc } from '@/data/firestore/types';
 
 const h = vi.hoisted(() => ({
   state: { places: {} as Record<string, unknown> },
   applyPlaceChange: undefined as unknown as (key: string, value: unknown) => Promise<void>,
-  putPlace: undefined as unknown as (key: string, value: unknown) => Promise<void>,
 }));
 
 vi.mock('../../data', () => ({
   data: () => h.state,
   applyPlaceChange: (key: string, value: unknown) => h.applyPlaceChange(key, value),
-  putPlace: (key: string, value: unknown) => h.putPlace(key, value),
 }));
 
-import { deletePlace, fetchPlaces, saveClues, saveCompass, saveDifficulty, type PlaceRow } from '../places';
-
-const cluesDoc = (overrides: Partial<CluesDoc> = {}): CluesDoc => ({
-  positionInCountry: 'center',
-  population: 100,
-  climateEmoji: 'x',
-  elevationMeters: 35,
-  timezone: 'Europe/Paris',
-  airportCode: 'CDG',
-  emojis: ['a'],
-  ...overrides,
-});
+import { deletePlace, fetchPlaces, saveCompass, saveDifficulty, type PlaceRow } from '../places';
 
 const place = (overrides: Partial<PlaceDoc> = {}): PlaceDoc => ({
   name: 'Paris',
@@ -43,20 +30,18 @@ const row = (key: string): PlaceRow => ({
   country: '',
   coordinates: { latitude: 0, longitude: 0 },
   compass: null,
-  clues: null,
 });
 
 beforeEach(() => {
   h.state.places = {};
   h.applyPlaceChange = vi.fn(async () => {});
-  h.putPlace = vi.fn(async () => {});
 });
 
 describe('fetchPlaces', () => {
-  it('lists the places sorted by name, with the data of each game when present', async () => {
+  it('lists the places sorted by name, with the Compass data when present', async () => {
     h.state.places = {
       zur: place({ name: 'Zurich' }),
-      par: place({ compass: { category: 'capital' }, clues: cluesDoc(), country: { fr: 'France' } as PlaceDoc['country'] }),
+      par: place({ compass: { category: 'capital' }, country: { fr: 'France' } as PlaceDoc['country'] }),
       ams: place({ name: 'Amsterdam', compass: { category: 'cities', description: 'canals' } }),
     };
 
@@ -70,12 +55,10 @@ describe('fetchPlaces', () => {
       country: 'FR',
       coordinates: { latitude: 48.8, longitude: 2.3 },
       compass: { category: 'cities', description: 'canals' },
-      clues: null,
-    });
+        });
     expect(rows[1].country).toBe('France');
     expect(rows[1].compass).not.toBeNull();
-    expect(rows[1].clues).toMatchObject({ key: 'par', population: 100 });
-    expect(rows[2]).toMatchObject({ compass: null, clues: null });
+    expect(rows[2]).toMatchObject({ compass: null });
   });
 });
 
@@ -101,31 +84,8 @@ describe('saveCompass', () => {
   });
 });
 
-describe('saveClues', () => {
-  it('writes the patched Clues data, copying the emojis', async () => {
-    h.state.places = { par: place({ clues: cluesDoc() }) };
-    const emojis: [string, string, string] = ['b', 'c', 'd'];
-
-    const clues = await saveClues(row('par'), { population: 5, emojis });
-
-    const written = (h.putPlace as ReturnType<typeof vi.fn>).mock.calls[0][1] as PlaceDoc;
-    expect(written.clues).toMatchObject({ population: 5, emojis: ['b', 'c', 'd'] });
-    expect(written.clues!.emojis).not.toBe(emojis);
-    expect(clues).toMatchObject({ key: 'par', population: 5 });
-  });
-
-  it('keeps the existing emojis when the patch has none', async () => {
-    h.state.places = { par: place({ clues: cluesDoc() }) };
-
-    await saveClues(row('par'), { climateEmoji: 'y' });
-
-    const written = (h.putPlace as ReturnType<typeof vi.fn>).mock.calls[0][1] as PlaceDoc;
-    expect(written.clues).toMatchObject({ climateEmoji: 'y', emojis: ['a'] });
-  });
-});
-
 describe('saveDifficulty', () => {
-  it('changes the difficulty of the place and returns the data of both games', async () => {
+  it('changes the difficulty of the place and returns the new Compass data', async () => {
     h.state.places = { par: place({ compass: { category: 'capital' } }) };
 
     const result = await saveDifficulty(row('par'), 'hard');
@@ -134,8 +94,7 @@ describe('saveDifficulty', () => {
       'par',
       place({ difficulty: 'hard', compass: { category: 'capital' } }),
     );
-    expect(result.compass).not.toBeNull();
-    expect(result.clues).toBeNull();
+    expect(result).toMatchObject({ category: 'capital', difficulty: 'hard' });
   });
 });
 

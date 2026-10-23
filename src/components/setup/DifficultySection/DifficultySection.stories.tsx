@@ -31,8 +31,8 @@ const SingleSelectDemo = (args: DifficultySectionProps) => {
 const t = translations.fr;
 
 const singleSelectText = (texts: Translations) => ({
-  title: texts.cluesSetup.difficultyTitle,
-  hint: texts.cluesSetup.difficultyHint,
+  title: texts.setup.difficultyTitle,
+  hint: texts.setup.difficultyHint,
 });
 const readOnlyText = (texts: Translations) => ({
   title: texts.setup.difficultyTitle,
@@ -56,7 +56,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Tous les jeux : un clic sur une puce remplace la selection, et est logge dans le panneau Actions
+ * Un clic sur une puce remplace la selection, et est logge dans le panneau Actions
  * (`onSelect` enveloppe dans `fn()`).
  */
 export const SingleSelect: Story = {

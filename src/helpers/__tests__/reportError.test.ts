@@ -26,8 +26,8 @@ afterEach(() => {
 
 describe('reportError', () => {
   it('logs to the console and tells the player when one of their own actions failed', () => {
-    reportError('clues.revealHint', new Error('boom'));
-    expect(consoleError).toHaveBeenCalledWith('[clues.revealHint]', expect.any(Error));
+    reportError('compass.submitGuess', new Error('boom'));
+    expect(consoleError).toHaveBeenCalledWith('[compass.submitGuess]', expect.any(Error));
     expect(useErrorNotice.getState().visible).toBe(true);
   });
 
@@ -40,10 +40,10 @@ describe('reportError', () => {
 
   it('records the action, the Firestore code, the message and the room', async () => {
     const denied = Object.assign(new Error('Missing or insufficient permissions'), { code: 'permission-denied' });
-    reportError('clues.pickClue', denied, { room: 'tabofuna' });
+    reportError('compass.submitGuess', denied, { room: 'tabofuna' });
     await flush();
     expect(sink).toHaveBeenCalledWith({
-      action: 'clues.pickClue',
+      action: 'compass.submitGuess',
       code: 'permission-denied',
       message: 'Missing or insufficient permissions',
       room: 'tabofuna',

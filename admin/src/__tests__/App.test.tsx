@@ -25,10 +25,7 @@ vi.mock('../data', () => ({
 vi.mock('../views/PlacesView', () => ({ PlacesView: () => <div>places view</div> }));
 vi.mock('../views/CountriesView', () => ({ CountriesView: () => <div>countries view</div> }));
 vi.mock('../views/GlobeView', () => ({ GlobeView: () => <div>globe view</div> }));
-vi.mock('../views/JobsView', () => ({ JobsView: () => <div>jobs view</div> }));
-vi.mock('../views/WordplayView', () => ({ WordplayView: () => <div>wordplay view</div> }));
 vi.mock('../views/ErrorsView', () => ({ ErrorsView: () => <div>errors view</div> }));
-vi.mock('../views/FeedbackView', () => ({ FeedbackView: () => <div>feedback view</div> }));
 
 import { App } from '../App';
 import { BASE_PATH, hrefOf, PAGES } from '../pages';
@@ -73,11 +70,11 @@ describe('App', () => {
     const push = vi.spyOn(window.history, 'pushState');
     render(<App />);
     await screen.findByText('places view');
-    await userEvent.click(screen.getByRole('link', { name: labelOf('jobs') }));
-    expect(await screen.findByText('jobs view')).toBeInTheDocument();
-    expect(push).toHaveBeenCalledWith(null, '', hrefOf('jobs'));
-    expect(screen.getByRole('link', { name: labelOf('jobs') })).toHaveAttribute('aria-pressed', 'true');
-    expect(document.title).toContain(labelOf('jobs'));
+    await userEvent.click(screen.getByRole('link', { name: labelOf('errors') }));
+    expect(await screen.findByText('errors view')).toBeInTheDocument();
+    expect(push).toHaveBeenCalledWith(null, '', hrefOf('errors'));
+    expect(screen.getByRole('link', { name: labelOf('errors') })).toHaveAttribute('aria-pressed', 'true');
+    expect(document.title).toContain(labelOf('errors'));
   });
 
   it('does not push anything when clicking the current page', async () => {
@@ -92,28 +89,28 @@ describe('App', () => {
     const push = vi.spyOn(window.history, 'pushState');
     render(<App />);
     await screen.findByText('places view');
-    const link = screen.getByRole('link', { name: labelOf('jobs') });
+    const link = screen.getByRole('link', { name: labelOf('errors') });
     link.addEventListener('click', (e) => e.preventDefault());
     fireEvent.click(link, { ctrlKey: true });
     expect(push).not.toHaveBeenCalled();
-    expect(screen.queryByText('jobs view')).toBeNull();
+    expect(screen.queryByText('errors view')).toBeNull();
   });
 
   it('switches page with the mobile select', async () => {
     render(<App />);
     await screen.findByText('places view');
-    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Page' }), 'wordplay');
-    expect(await screen.findByText('wordplay view')).toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Page' }), 'countries');
+    expect(await screen.findByText('countries view')).toBeInTheDocument();
   });
 
   it('follows the back button', async () => {
     render(<App />);
     await screen.findByText('places view');
-    window.history.replaceState(null, '', hrefOf('jobs'));
+    window.history.replaceState(null, '', hrefOf('errors'));
     await act(async () => {
       window.dispatchEvent(new PopStateEvent('popstate'));
     });
-    expect(await screen.findByText('jobs view')).toBeInTheDocument();
+    expect(await screen.findByText('errors view')).toBeInTheDocument();
   });
 
   it('remounts the views when the data revision changes', async () => {
@@ -134,7 +131,7 @@ describe('App', () => {
   it('shows every page', async () => {
     render(<App />);
     await screen.findByText('places view');
-    for (const view of ['jobs', 'countries', 'wordplay', 'errors', 'feedback']) {
+    for (const view of ['countries', 'errors']) {
       await userEvent.click(screen.getByRole('link', { name: labelOf(view) }));
       expect(await screen.findByText(`${view} view`)).toBeInTheDocument();
     }

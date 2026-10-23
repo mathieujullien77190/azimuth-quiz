@@ -43,8 +43,7 @@ export const TokyoSydney: Story = {
 };
 
 /** Boule nue avec equateur et meridien de Greenwich (pointilles) : assez pour lire ou est la reponse, sans les
- * terres. 1er stade de l'indice 3D d'Indices, ou les taps de la carte comptent plus que tourner le globe :
- * `draggable={false}` retire aussi les boutons. */
+ * terres. `draggable={false}` retire le tour a la main, le zoom et leurs boutons. */
 export const BareWithGuides: Story = {
   parameters: source(bareWithGuidesCode),
   args: {

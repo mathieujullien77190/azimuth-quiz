@@ -1,4 +1,4 @@
-import type { Category, Difficulty, ClueId } from '@/types';
+import type { Category, Difficulty } from '@/types';
 
 export type Language = 'fr' | 'en';
 
@@ -17,10 +17,6 @@ export type Translations = {
     /** Nom du point de depart quand la position de l'appareil est utilisee. */
     yourPosition: string;
     pts: string;
-    /** Formulation commune de "personne n'a trouve" ; `NoOneFoundText` choisit selon le nombre de joueurs. */
-    noOneFound: string;
-    /** Solo : nomme l'unique joueur. */
-    soloNotFound: (name: string) => string;
     /** Notice courte quand une action de jeu n'a pas atteint la room. */
     actionFailed: string;
   };
@@ -37,7 +33,6 @@ export type Translations = {
     playersRange: (max: number) => string;
     games: {
       compass: HomeGameCopy;
-      clues: HomeGameCopy;
     };
   };
   setup: {
@@ -98,8 +93,6 @@ export type Translations = {
     quit: string;
     round: string;
     validate: string;
-    /** Jeux a tour de role : au detenteur du tour qui a deja propose, seul un indice reste possible. */
-    alreadyGuessed: string;
     next: string;
     last: string;
     roundOver: string;
@@ -107,8 +100,6 @@ export type Translations = {
     nextStep: string;
     /** Revient a la section distance, sans valider. */
     previousStep: string;
-    /** Remplace les initiales sur l'onglet du joueur actif. */
-    playerTurn: (name: string) => string;
     /** Mode voyage, des le tour 2 : ou se trouve le joueur (lieu precedent), dans le header. */
     youAreAt: (name: string) => string;
     /** Une fois soumis, en attendant les autres : remplace le bouton Valider du footer. */
@@ -157,12 +148,6 @@ export type Translations = {
     /** Mot de liaison entre deux noms a egalite ("et" / "and"). */
     and: string;
   };
-  /** Question de difficulte du mode dev, posee apres une manche. */
-  devFeedback: {
-    placeQuestion: (name: string) => string;
-    /** Fond : le toucher ferme la question sans repondre. */
-    dismiss: string;
-  };
   settings: {
     title: string;
     languageTitle: string;
@@ -172,42 +157,11 @@ export type Translations = {
     aboutTitle: string;
     author: string;
     claudeMention: string;
-    devTitle: string;
-    devLabel: string;
     dataTitle: string;
     /** Dit ce que contient le stockage local, juste avant le bouton qui l'efface. */
     dataHint: string;
     clearData: string;
     dataCleared: string;
-  };
-  cluesSetup: {
-    screenTitle: string;
-    start: string;
-    difficultyTitle: string;
-    difficultyHint: string;
-    optionsTitle: string;
-    toggles: {
-      startWithFirstLetter: { label: string; description: string };
-    };
-  };
-  cluesGame: {
-    pointsAtStake: (points: string) => string;
-    giveUp: string;
-    scored: (name: string, points: string) => string;
-    /** Idem, chez le joueur qui l'a trouve. */
-    youScored: (points: string) => string;
-    missed: (name: string, points: string) => string;
-    guessPlaceholder: string;
-    submitGuess: string;
-    wasPlace: string;
-    continueLabel: string;
-    /** En ligne : montre au joueur dont c'est le tour. */
-    /** En ligne : ce que voit un joueur sans la main quand il touche un indice. */
-    notYourTurn: (name: string) => string;
-    clues: Record<ClueId, string>;
-    isCapitalYes: string;
-    isCapitalNo: string;
-    populationUnit: string;
   };
   /** Ecran de demarrage : le libelle de chargement. */
   splash: {

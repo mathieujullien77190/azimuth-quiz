@@ -20,11 +20,11 @@ export type EarthSectionProps = {
   marks: EarthMark[];
   /** Affiche les boutons +/- (revelation) : part du zoom ideal, descend jusqu'a 1 (Terre entiere). */
   zoomControls?: boolean;
-  /** Autorise le satellite au zoom 1 independamment des boutons +/- : suit `zoomControls` par defaut, mais la
-   * mini-Terre de l'indice "Distance" (Indices, toujours "revelee", sans boutons) peut l'activer seule. */
+  /** Autorise le satellite au zoom 1 independamment des boutons +/- : suit `zoomControls` par defaut, mais on
+   * peut l'activer seul. */
   allowSatellite?: boolean;
-  /** Force toutes les marques du meme cote (1 = droite) au lieu du cote reel de leur `bearing` : l'indice
-   * "Distance" ne doit reveler que la distance, pas la direction. */
+  /** Force toutes les marques du meme cote (1 = droite) au lieu du cote reel de leur `bearing`
+   * (ne reveler que la distance, pas la direction). */
   forceSide?: Side;
 };
 

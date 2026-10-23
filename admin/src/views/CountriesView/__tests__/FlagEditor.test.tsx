@@ -2,11 +2,11 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { ClueFlagColorRow } from '@/types';
+import type { FlagColorRow } from '@/types';
 
 import { FlagEditor } from '../FlagEditor';
 
-const value: ClueFlagColorRow[] = [
+const value: FlagColorRow[] = [
   ['blue', '#0000FF', 50],
   ['white', '#FFFFFF', 50],
 ];

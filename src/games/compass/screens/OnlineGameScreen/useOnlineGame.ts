@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import { DEFAULT_DISTANCE_KM } from '@/games/compass/constants';
 import { originForRound } from '@/games/compass/helpers/originForRound';
 import { applyBestBonus, scoreRound } from '@/helpers';
-import { useDevFeedback } from '@/helpers/useDevFeedback';
 import { useOnlineRoomSession } from '@/helpers/useOnlineRoomSession';
 import {
   deleteRoom,
@@ -118,19 +117,6 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
       }
     : undefined;
 
-  // Mode dev : une fois l'hote passe a la suite (ou partie finie), un appareil avec le code dev est
-  // interroge sur la difficulte du lieu.
-  const devFeedback = useDevFeedback({
-    game: 'compass',
-    roundIndex: gameState.roundIndex,
-    roundOver: gameState.screen === 'reveal',
-    gameOver: gameState.screen === 'end',
-    target:
-      place === undefined
-        ? undefined
-        : { targetType: 'place', targetKey: place.key ?? place.name, name: place.name, difficulty: place.difficulty },
-  });
-
   const goToNextRound = () => nextRoomRound(code, gameState.roundIndex + 1, gameState.places.length).catch(reporting('compass.nextRound', { room: code }));
 
   return {
@@ -155,7 +141,6 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
     handleQuit,
     handleReplay,
     reactions,
-    devFeedback,
     submit,
     kickPlayer,
     goToNextRound,

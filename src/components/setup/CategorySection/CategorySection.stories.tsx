@@ -3,7 +3,6 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 
 import { CATEGORIES } from '@/games/compass/constants';
-import { CLUE_CATEGORIES } from '@/games/clues/constants';
 import type { Translations } from '@/i18n';
 import { translations } from '@/i18n/translations';
 import { localizedArgs } from '@/storybook/localized';
@@ -13,7 +12,6 @@ import { CategorySection } from './CategorySection';
 import type { CategorySectionProps } from './types';
 import { source } from '@/storybook/source';
 import compassCode from './Compass.source.md?raw';
-import cluesCode from './Clues.source.md?raw';
 import readOnlyCode from './ReadOnly.source.md?raw';
 
 const t = translations.fr;
@@ -67,18 +65,6 @@ export const Compass: Story = {
     ...categoryText(120)(t),
     categories: CATEGORIES,
     selected: ['cities', 'capital', 'mountains'],
-    onToggle: fn(),
-  },
-};
-
-/** Sous-ensemble propre a Indices : categories de villes seulement. */
-export const Clues: Story = {
-  parameters: source(cluesCode),
-  decorators: [localizedArgs(categoryText(42))],
-  args: {
-    ...categoryText(42)(t),
-    categories: CLUE_CATEGORIES,
-    selected: ['cities'],
     onToggle: fn(),
   },
 };

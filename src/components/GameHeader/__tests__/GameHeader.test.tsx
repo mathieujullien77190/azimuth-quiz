@@ -14,11 +14,6 @@ const baseProps = {
   difficulty: 'easy' as const,
 };
 
-const players = [
-  { name: 'Zoé', color: '#EF4444' },
-  { name: 'Max', color: '#16A34A' },
-];
-
 beforeEach(() => jest.clearAllMocks());
 
 describe('GameHeader', () => {
@@ -42,22 +37,9 @@ describe('GameHeader', () => {
     expect(without.queryByText(/Vous êtes/)).toBeNull();
   });
 
-  it('has no player tabs nor question unless given', async () => {
+  it('has no question unless given', async () => {
     const { queryByText } = await render(<GameHeader {...baseProps} />);
-    expect(queryByText('MA')).toBeNull();
     expect(queryByText('Quel est ce pays ?')).toBeNull();
-  });
-
-  it('shows the player tabs, with the active player announced by name', async () => {
-    const { getByText } = await render(<GameHeader {...baseProps} players={players} turnIndex={1} />);
-    expect(getByText('À Max de jouer')).toBeTruthy();
-    expect(getByText('ZO')).toBeTruthy();
-  });
-
-  it('announces nobody by default (nobody has the turn)', async () => {
-    const { getByText, queryByText } = await render(<GameHeader {...baseProps} players={players} />);
-    expect(getByText('ZO')).toBeTruthy();
-    expect(queryByText(/de jouer/)).toBeNull();
   });
 
   it('renders by day too', async () => {

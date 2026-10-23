@@ -321,19 +321,6 @@ a.chip {
   font-style: italic;
 }
 
-.clue-editor {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--border);
-}
-
-.clue-editor-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 4px;
-}
-
 .kv-table {
   width: 100%;
   table-layout: fixed;
@@ -372,28 +359,6 @@ a.chip {
 
 .coord {
   font-variant-numeric: tabular-nums;
-}
-
-.jobs-table td {
-  padding: 6px 8px 6px 0;
-  color: var(--text);
-  vertical-align: top;
-}
-
-.jobs-table thead th {
-  text-align: left;
-  font-weight: 600;
-  color: var(--text-muted);
-  padding: 4px 8px 8px 0;
-}
-
-.jobs-table tr + tr td {
-  border-top: 1px solid rgba(37, 51, 79, 0.6);
-}
-
-.jobs-table .code-cell {
-  font-weight: 600;
-  white-space: nowrap;
 }
 
 .kv-edit-btn {
@@ -465,9 +430,8 @@ a.chip {
   letter-spacing: 0.3px;
   padding: 4px 8px;
   border-radius: 999px;
-  /* --tier-color is set inline where a select has a per-value color (e.g. WordplayEditor's
-     difficulty) — falls back to the theme accent otherwise (e.g. PersonalityEditor's job
-     picker), same fallback pattern as .chip[aria-pressed='true'] above. Without it the color/
+  /* --tier-color is set inline where a select has a per-value color (e.g. the difficulty
+     picker) — falls back to the theme accent otherwise, same fallback pattern as .chip[aria-pressed='true'] above. Without it the color/
      background/border vars are empty and the browser's own <select> default (often white text
      on white) shows through instead. */
   color: var(--tier-color, var(--accent));
@@ -678,65 +642,6 @@ footer {
   }
 }
 
-.wordplay-table {
-  width: 100%;
-  margin-bottom: 18px;
-}
-
-.wordplay-name {
-  width: 220px;
-  vertical-align: top;
-  padding-top: 8px;
-}
-
-.wordplay-actions {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 8px;
-  margin-top: 6px;
-}
-
-/* Wide screens: the difficulty picker keeps its natural size instead of stretching (`.field-select` grows). */
-@media (min-width: 641px) {
-  .wordplay-actions .field-select {
-    flex: 0 0 auto;
-  }
-}
-
-.wordplay-input {
-  width: 100%;
-  min-width: min(420px, 100%);
-  resize: vertical;
-  line-height: 1.4;
-}
-
-/* Narrow screens: a wordplay line stacks (name, then the text area over the full width, then the button). */
-@media (max-width: 640px) {
-  .wordplay-table,
-  .wordplay-table tbody,
-  .wordplay-table tr,
-  .wordplay-table td {
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .wordplay-table tr {
-    padding: 8px 0;
-  }
-
-  .wordplay-name {
-    width: 100%;
-    padding-top: 0;
-  }
-
-  .wordplay-input {
-    width: 100%;
-    min-width: 0;
-  }
-}
-
 /* ---- Monde page: the whole world in 3D (views/GlobeView) ---- */
 .wrap.wide {
   max-width: 1500px;
@@ -864,18 +769,6 @@ footer {
 
 .globe-panel-close {
   margin-bottom: 8px;
-}
-
-/* "Avis difficulté" page: the opinions as one read-only text, to copy into an AI. */
-.feedback-text {
-  width: 100%;
-  min-height: 360px;
-  box-sizing: border-box;
-  padding: 12px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 13px;
-  line-height: 1.5;
-  resize: vertical;
 }
 
 

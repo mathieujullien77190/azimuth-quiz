@@ -4,8 +4,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ---------------------------------------------------------------------------------------------
-    // Une seule collection `rooms` pour les deux jeux : Boussole (`game: 'compass'`) et Indices
-    // (`'clues'`). Le champ `game` est fixé à la création et ne change
+    // Collection `rooms` : le champ `game` (`'compass'`) est fixé à la création et ne change
     // plus jamais (voir `gameUnchanged`) : c'est lui qui dit quelles règles de mise à jour s'appliquent.
     //
     // Pas d'écran de connexion : chaque appareil reçoit un uid via l'authentification anonyme de
@@ -54,29 +53,8 @@ service cloud.firestore {
           .hasOnly([request.auth.uid]);
     }
 
-    // Jeu à tour de rôle (Indices) : un plateau partagé, révélé tour par tour. Un joueur
-    // qui n'est pas l'hôte peut :
-    // - rejoindre ou se renommer (`joinRoomPresence`), même au salon où `turnUid` n'existe pas
-    //   encore : il ne touche alors qu'à sa propre entrée de `players` ;
-    // - s'il est le joueur dont c'est le tour (`turnUid`, lu dans le document *avant* l'écriture, donc
-    //   c'est celui qui sortait qui autorise le passage de main, pas celui qui entre), modifier les
-    //   champs de progression de la manche listés dans `turnFields` (voir firebase/room.ts de chaque
-    //   jeu). `settings`, `screen` et `totalScores` restent réservés à l'hôte ;
-    //   Une proposition par tour : `wrongGuessHints` (le nombre d'indices au moment de l'erreur) fait que le joueur ne peut
-    //   plus proposer avant d'avoir dévoilé un indice (voir src/helpers/turnGuess.ts) ;
-    // - envoyer une réaction emoji (`reaction`, voir `reactionOk`), seule ou avec ce qui précède.
-    function turnBasedPlayer(turnFields) {
-      return request.auth != null
-        && reactionOk()
-        && ((request.resource.data.diff(resource.data).affectedKeys().hasOnly(['players', 'reaction'])
-            && onlyOwnPlayerEntry())
-          || (request.auth.uid == resource.data.get('turnUid', null)
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(turnFields.concat(['reaction']))
-            && onlyOwnPlayerEntry()));
-    }
-
     // ---------------------------------------------------------------------------------------------
-    // Données du jeu (lieux, pays, métiers) : lisibles par tout le monde (elles
+    // Données du jeu (lieux, pays) : lisibles par tout le monde (elles
     // sont de toute façon embarquées dans l'appli), modifiables uniquement par les administrateurs (la liste ci-dessous), qui
     // se connectent à l'outil `admin/` avec leur compte Google (adresse vérifiée). Les joueurs, eux,
     // n'ont qu'une authentification anonyme : ils ne passent jamais ce test.
@@ -95,11 +73,6 @@ service cloud.firestore {
     // Les pays : nom, drapeau, devise, indicatif (recopiés dans chaque lieu, voir `denormalize.ts`). Les documents écrits au temps
     // de Silhouette portent d'autres champs (contour, voisins...) : ils restent, l'admin n'y touche pas.
     match /countries/{code} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /personalityJobs/{code} {
       allow read: if true;
       allow write: if isAdmin();
     }
@@ -173,42 +146,15 @@ service cloud.firestore {
         && quotaIncreased('global_' + dayKey());
     }
 
-    // ---------------------------------------------------------------------------------------------
-    // Avis de difficulté du mode dev (`firebase/devFeedback.ts`, `useDevFeedback`) : un appareil dont le réglage « dev »
-    // contient le code secret est interrogé après chaque manche (« ce lieu était-il facile, moyen, difficile ? ») et écrit
-    // un avis ici. La règle est la vraie barrière : un avis n'est accepté qu'avec le code dev (le même que `DEV_CODE` dans
-    // src/data) dans le document. Un appareil connecté peut AJOUTER un avis, jamais le lire, le modifier ni le supprimer ;
-    // seuls les admins le lisent (page « Avis difficulté » de l'admin, qui le met en texte pour une IA et le nettoie).
-    // Rien de tout ça ne passe par le journal de l'admin (`journal`) ni par `meta/dataVersion`.
-    // ---------------------------------------------------------------------------------------------
-    match /devFeedback/{id} {
-      allow read, delete: if isAdmin();
-      allow create: if request.auth != null
-        && request.resource.data.keys().hasOnly(['devCode', 'game', 'targetType', 'targetKey', 'name', 'currentDifficulty',
-          'suggestedDifficulty', 'at', 'uid'])
-        && request.resource.data.keys().hasAll(['devCode', 'game', 'targetType', 'targetKey', 'name', 'currentDifficulty',
-          'suggestedDifficulty', 'at', 'uid'])
-        && request.resource.data.devCode == 'supermatou'
-        && request.resource.data.game in ['compass', 'clues']
-        && request.resource.data.targetType == 'place'
-        && request.resource.data.targetKey is string && request.resource.data.targetKey.size() > 0
-        && request.resource.data.targetKey.size() <= 80
-        && request.resource.data.name is string && request.resource.data.name.size() <= 80
-        && request.resource.data.currentDifficulty in ['easy', 'intermediate', 'hard']
-        && request.resource.data.suggestedDifficulty in ['easy', 'intermediate', 'hard']
-        && request.resource.data.at == request.time
-        && request.resource.data.uid == request.auth.uid;
-    }
-
     match /rooms/{code} {
       // N'importe qui peut lire une room (c'est ainsi qu'on vérifie un code avant de la rejoindre).
       allow read: if true;
 
-      // Tout appareil connecté peut créer une room à son nom, pour l'un des deux jeux, mais jamais
+      // Tout appareil connecté peut créer une room à son nom, pour Boussole, mais jamais
       // écraser une room existante (en cas de collision de code, le client réessaie avec un autre).
       allow create: if request.auth != null
         && request.resource.data.hostUid == request.auth.uid
-        && request.resource.data.game in ['compass', 'clues']
+        && request.resource.data.game == 'compass'
         && !exists(/databases/$(database)/documents/rooms/$(code));
 
       // L'hôte peut tout modifier (réglages, état de la manche, scores, retirer un joueur...), sauf le
@@ -216,10 +162,7 @@ service cloud.firestore {
       allow update: if request.auth != null
         && gameUnchanged()
         && (isHost()
-          || (resource.data.game == 'compass' && compassPlayer())
-          || (resource.data.game == 'clues'
-            && turnBasedPlayer(['players', 'revealedClueIds', 'turnUid', 'verdict', 'roundWinnerUid',
-              'wrongGuessUid', 'wrongGuessSeq', 'wrongGuessHints', 'typing'])));
+          || (resource.data.game == 'compass' && compassPlayer()));
 
       // Seul l'hôte supprime sa room : à la fermeture de la partie, et avant d'en créer une nouvelle
       // (`deletePreviousRoomsByHost`, qui efface toutes ses anciennes rooms, quel que soit le jeu). Supprimer une room

@@ -1,10 +1,8 @@
 import { create } from 'zustand';
 
-import { DEV_CODE } from '@/data';
-import { DEFAULT_CLUE_SETTINGS } from '@/games/clues/constants';
 import { DEFAULT_SETTINGS } from '@/games/compass/constants';
-import { loadDevCode, loadPlayerName, loadSettings, saveDevCode, savePlayerName, saveSettings } from '@/helpers';
-import type { ClueSettings, GameSettings } from '@/types';
+import { loadPlayerName, loadSettings, savePlayerName, saveSettings } from '@/helpers';
+import type { GameSettings } from '@/types';
 
 export type SettingsContextValue = {
   settings: GameSettings;
@@ -36,17 +34,6 @@ export const hydrateSettings = (): void => {
   loadSettings().then((settings) => useSettings.setState({ settings, ready: true }));
 };
 
-/** Reglages Indices : store independant de `GameSettings`, sans persistance (defauts a chaque lancement). */
-export type ClueSettingsContextValue = {
-  settings: ClueSettings;
-  updateSettings: (patch: Partial<ClueSettings>) => void;
-};
-
-export const useClueSettings = create<ClueSettingsContextValue>()((set) => ({
-  settings: DEFAULT_CLUE_SETTINGS,
-  updateSettings: (patch) => set((state) => ({ settings: { ...state.settings, ...patch } })),
-}));
-
 export type PlayerNameContextValue = {
   playerName: string;
   /** Faux tant que le nom sauvegarde n'est pas lu (`hydratePlayerName`). */
@@ -55,7 +42,7 @@ export type PlayerNameContextValue = {
 };
 
 /**
- * Nom du joueur, partage par les 2 jeux (leurs `playerName` n'en sont que le miroir, voir la synchro de `useSetupRoom`,
+ * Nom du joueur, partage (le `playerName` des reglages n'en est que le miroir, voir la synchro de `useSetupRoom`,
  * qui y migre aussi un nom Compass deja sauve). Persiste a chaque changement, sans debounce (rien vers Firestore).
  */
 export const usePlayerName = create<PlayerNameContextValue>()((set) => ({
@@ -71,29 +58,3 @@ export const usePlayerName = create<PlayerNameContextValue>()((set) => ({
 export const hydratePlayerName = (): void => {
   loadPlayerName().then((name) => usePlayerName.setState({ playerName: name ?? '', ready: true }));
 };
-
-export type DevCodeContextValue = {
-  /** Ce qui a ete tape dans le champ "dev" des reglages. */
-  devCode: string;
-  /** Faux tant que le code sauvegarde n'est pas lu (`hydrateDevCode`). */
-  ready: boolean;
-  setDevCode: (code: string) => void;
-};
-
-/** Code dev saisi : seulement garde ici, les jeux le lisent via `useDevMode` (avis de difficulte). Persiste a chaque changement. */
-export const useDevCode = create<DevCodeContextValue>()((set) => ({
-  devCode: '',
-  ready: false,
-  setDevCode: (code) => {
-    set({ devCode: code });
-    saveDevCode(code);
-  },
-}));
-
-/** Lit le code dev sauvegarde une fois (depuis le layout racine). */
-export const hydrateDevCode = (): void => {
-  loadDevCode().then((code) => useDevCode.setState({ devCode: code ?? '', ready: true }));
-};
-
-/** Le mode dev est-il actif : code sauvegarde egal a `DEV_CODE` (espaces ignores). */
-export const useDevMode = (): boolean => useDevCode((state) => state.devCode.trim() === DEV_CODE);

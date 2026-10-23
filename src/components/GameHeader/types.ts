@@ -1,4 +1,4 @@
-import type { Difficulty, Player } from '@/types';
+import type { Difficulty } from '@/types';
 
 export type GameHeaderProps = {
   onQuit: () => void;
@@ -11,11 +11,6 @@ export type GameHeaderProps = {
   roundNumber: number;
   totalRounds: number;
   difficulty: Difficulty;
-  /** Si donne : montre qui joue et a qui est le tour (`PlayerTabs`, statut seulement). Omis : pas d'onglets,
-   * pour un jeu sans tours (Boussole : tout le monde repond en meme temps). */
-  players?: Player[];
-  /** Index dans `players` de celui qui a le tour ; -1 (defaut) si personne, ex. manche finie. Utile avec `players`. */
-  turnIndex?: number;
   /** Mode voyage : ou se trouve le joueur ("Vous êtes à Cusco"), deja traduit ; ligne blanche sous la ligne de manche. */
   location?: string;
 };

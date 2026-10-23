@@ -45,7 +45,7 @@ export const PlacesView = () => {
   const totalPages = pageCount(visibleRows.length);
   const pageRows = useMemo(() => paginate(visibleRows, page), [visibleRows, page]);
 
-  const { saveFlagFor, handleDifficultyChange, handleCompassChange, handleCluesChange, handleDelete } = usePlaceEditing(setRows);
+  const { saveFlagFor, handleDifficultyChange, handleCompassChange, handleDelete } = usePlaceEditing(setRows);
 
   const resetFilters = () => {
     setQuery('');
@@ -125,7 +125,6 @@ export const PlacesView = () => {
             saveFlagFor={saveFlagFor}
             onDifficultyChange={handleDifficultyChange}
             onCompassChange={handleCompassChange}
-            onCluesChange={handleCluesChange}
             onDelete={handleDelete}
           />
         ))}

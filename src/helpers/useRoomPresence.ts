@@ -35,7 +35,7 @@ type PresenceApi = {
  * ecrit `lastSeen` et surveille celui des autres (changement, jamais compare a l'horloge locale). Qui perd la
  * connexion quitte la partie :
  * - son propre heartbeat sans accuse trop longtemps : `connectionLost` et sortie (hote supprime la room, joiner part) ;
- * - l'hote ne voit plus un joiner : il le retire (tour passe, voir `useHostTurnRecovery`) ;
+ * - l'hote ne voit plus un joiner : il le retire (voir `useHostPruneLeavers`) ;
  * - un joiner ne voit plus l'hote : il part (sans hote, plus de manches ni de scores).
  */
 export const useRoomPresence = (store: PresenceStore, api: PresenceApi, code: string | null) => {

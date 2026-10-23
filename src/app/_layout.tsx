@@ -6,12 +6,11 @@ import ErrorNoticeHost from '@/components/ErrorNoticeHost';
 import LanguageProvider from '@/components/LanguageProvider';
 import StartupSplash from '@/components/StartupSplash';
 import ThemeProvider from '@/components/ThemeProvider';
-import { preloadCluesCounts } from '@/games/clues/helpers/clueCounts';
 import { preloadCompassCounts } from '@/games/compass/helpers/compassCounts';
 import { disableTextSelection, polyfillFlagEmoji } from '@/helpers';
 import { writeErrorRecord } from '@/firebase/errorSink';
 import { setErrorReporter } from '@/helpers/reportError';
-import { hydrateDevCode, hydratePlayerName, hydrateSettings } from '@/settings';
+import { hydratePlayerName, hydrateSettings } from '@/settings';
 import { useTheme } from '@/themes';
 
 const ThemedShell = () => {
@@ -36,10 +35,8 @@ const RootLayout = () => {
   useEffect(polyfillFlagEmoji, []);
   useEffect(hydrateSettings, []);
   useEffect(hydratePlayerName, []);
-  useEffect(hydrateDevCode, []);
   // Tailles des groupes (`meta/*Counts`) lues des maintenant : un jeu les trouve deja chargees.
   useEffect(preloadCompassCounts, []);
-  useEffect(preloadCluesCounts, []);
   // Les ecritures en echec vont dans la collection `errors` (voir `helpers/reportError.ts`).
   useEffect(() => {
     setErrorReporter(writeErrorRecord);

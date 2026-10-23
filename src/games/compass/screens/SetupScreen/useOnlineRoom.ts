@@ -40,7 +40,7 @@ const adapter: SetupRoomAdapter<GameSettings, RoomSettings> = {
 };
 
 /**
- * Cote Compass de la room en ligne : le cycle de vie est `useSetupRoom` (commun avec Clues) ; seul ce que
+ * Cote Compass de la room en ligne : le cycle de vie est `useSetupRoom` ; seul ce que
  * "Lancer la partie" ecrit est propre : le GPS/position de l'hote (jamais un joiner) sert de reference, et
  * l'hote tire tous les lieux (`fetchRandomPlaces`, sans repli : l'echec rejette et `useSetupRoom` affiche
  * la notice).

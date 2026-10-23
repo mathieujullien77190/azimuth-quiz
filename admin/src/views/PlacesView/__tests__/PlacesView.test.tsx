@@ -8,29 +8,12 @@ const mocks = vi.hoisted(() => ({
   fetchPlaces: vi.fn(),
   deletePlace: vi.fn(),
   saveCompass: vi.fn(),
-  saveClues: vi.fn(),
   saveDifficulty: vi.fn(),
 }));
 
 vi.mock('../../../api/places', () => mocks);
-vi.mock('../WordplayEditor', () => ({ WordplayEditor: () => <div>wordplay-editor</div> }));
-vi.mock('../PersonalityEditor', () => ({ PersonalityEditor: () => <div>personality-editor</div> }));
 
 import { PlacesView } from '../PlacesView';
-
-const clues = (over: object = {}) => ({
-  difficulty: 'easy',
-  positionInCountry: 'n',
-  population: 2000000,
-  climateEmoji: '☀️',
-  elevationMeters: 35,
-  timezone: 'Europe/Paris',
-  phoneCode: '+33',
-  currency: 'EUR',
-  airportCode: 'CDG',
-  emojis: ['🗼', '🥖', '🍷'],
-  ...over,
-});
 
 const PARIS = {
   key: 'par',
@@ -45,7 +28,6 @@ const PARIS = {
     wikiFr: 'Paris',
     wikiEn: 'Paris',
   },
-  clues: clues(),
 } as unknown as PlaceRow;
 
 const ROME = {
@@ -55,7 +37,6 @@ const ROME = {
   country: 'Italie',
   coordinates: { latitude: -41.9, longitude: -12.5 },
   compass: { category: 'cities', difficulty: 'hard' },
-  clues: null,
 } as unknown as PlaceRow;
 
 const NICE = {
@@ -65,7 +46,6 @@ const NICE = {
   country: 'France',
   coordinates: { latitude: 43.7, longitude: 7.26 },
   compass: null,
-  clues: clues({ difficulty: 'intermediate', emojis: ['🌴', '', ''] }),
 } as unknown as PlaceRow;
 
 const cardOf = (name: string) =>
@@ -81,11 +61,10 @@ const renderView = async () => {
 beforeEach(() => {
   mocks.fetchPlaces.mockResolvedValue([PARIS, ROME, NICE]);
   mocks.saveDifficulty.mockImplementation(async (row: PlaceRow, difficulty: string) => ({
-    compass: row.compass && { ...row.compass, difficulty },
-    clues: row.clues && { ...row.clues, difficulty },
+    ...row.compass,
+    difficulty,
   }));
   mocks.saveCompass.mockImplementation(async (row: PlaceRow, patch: object) => ({ ...row.compass, ...patch }));
-  mocks.saveClues.mockImplementation(async (row: PlaceRow, patch: object) => ({ ...row.clues, ...patch }));
   mocks.deletePlace.mockResolvedValue(undefined);
 });
 
@@ -110,21 +89,17 @@ describe('PlacesView loading', () => {
 });
 
 describe('PlacesView cards', () => {
-  it('shows identity, coordinates and the games each place belongs to', async () => {
+  it('shows identity, coordinates and the Compass data when the place has some', async () => {
     await renderView();
     const paris = within(cardOf('Paris'));
     expect(paris.getByText('France (FR)')).toBeInTheDocument();
     expect(paris.getByText('48.8566° N')).toBeInTheDocument();
     expect(paris.getByText('2.3500° E')).toBeInTheDocument();
     expect(paris.getByText('La ville lumière')).toBeInTheDocument();
-    expect(paris.getByText('2 000 000', { exact: false })).toBeInTheDocument();
-    expect(paris.getByText('35 m')).toBeInTheDocument();
-    expect(paris.getByText('CDG')).toBeInTheDocument();
     expect(within(cardOf('Rome')).getByText('41.9000° S')).toBeInTheDocument();
     expect(within(cardOf('Rome')).getByText('12.5000° O')).toBeInTheDocument();
-    expect(within(cardOf('Rome')).getByText(/Absent d’Clues/)).toBeInTheDocument();
     expect(within(cardOf('Nice')).getByText('Absent de Compass')).toBeInTheDocument();
-    expect(within(cardOf('Nice')).getAllByRole('combobox')).toHaveLength(1);
+    expect(within(cardOf('Nice')).queryAllByRole('combobox')).toHaveLength(0);
   });
 });
 
@@ -151,7 +126,7 @@ describe('PlacesView filters', () => {
     await user.click(screen.getByRole('button', { name: /Facile/ }));
     await user.click(screen.getByRole('button', { name: /Moyen/ }));
     expect(screen.getByText('Rome', { selector: '.place-name' })).toBeInTheDocument();
-    expect(screen.queryByText('Nice', { selector: '.place-name' })).not.toBeInTheDocument();
+    expect(screen.getByText('Nice', { selector: '.place-name' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Réinitialiser' }));
     expect(countLine()).toBe('3 lieux affichés sur 3');
   });
@@ -191,17 +166,7 @@ describe('PlacesView difficulty', () => {
     await waitFor(() => expect(screen.queryByText('✓')).not.toBeInTheDocument(), { timeout: 2500 });
   });
 
-  it('reads the Clues difficulty when the place is not in Compass', async () => {
-    const user = userEvent.setup();
-    await renderView();
-    const select = within(cardOf('Nice')).getByRole('combobox');
-    expect(select).toHaveValue('intermediate');
-    await user.selectOptions(select, 'easy');
-    expect(mocks.saveDifficulty).toHaveBeenCalledWith(NICE, 'easy');
-    await waitFor(() => expect(within(cardOf('Nice')).getByRole('combobox')).toHaveValue('easy'));
-  });
-
-  it('changes the difficulty of a place that is only in Compass', async () => {
+  it('changes the difficulty of a Compass place', async () => {
     const user = userEvent.setup();
     await renderView();
     await user.selectOptions(within(cardOf('Rome')).getAllByRole('combobox')[1], 'easy');
@@ -256,51 +221,6 @@ describe('PlacesView Compass edits', () => {
     await renderView();
     expect(within(cardOf('Rome')).getByText('—', { selector: '.desc-preview' })).toBeInTheDocument();
     expect(within(cardOf('Rome')).getByText('—', { selector: '.wiki-empty' })).toBeInTheDocument();
-  });
-});
-
-describe('PlacesView Clues edits', () => {
-  it('saves the population as a number', async () => {
-    const user = userEvent.setup();
-    await renderView();
-    await user.click(within(cardOf('Paris')).getByText(/2 000 000/));
-    await user.keyboard('3000000{Enter}');
-    expect(mocks.saveClues).toHaveBeenCalledWith(PARIS, { population: 3000000 });
-    expect(await within(cardOf('Paris')).findByText(/3 000 000/)).toBeInTheDocument();
-  });
-
-  it('saves the climate emoji', async () => {
-    const user = userEvent.setup();
-    await renderView();
-    await user.click(within(cardOf('Paris')).getByText('☀️'));
-    await user.keyboard('🌧️{Enter}');
-    expect(mocks.saveClues).toHaveBeenCalledWith(PARIS, { climateEmoji: '🌧️' });
-  });
-
-  it('saves emojis as exactly three, padding missing ones', async () => {
-    const user = userEvent.setup();
-    await renderView();
-    await user.click(within(cardOf('Paris')).getByText('🗼 🥖 🍷'));
-    await user.keyboard('🌊 🐚{Enter}');
-    expect(mocks.saveClues).toHaveBeenCalledWith(PARIS, { emojis: ['🌊', '🐚', ''] });
-  });
-
-  it('pads with empty emojis when only one is given', async () => {
-    const user = userEvent.setup();
-    await renderView();
-    await user.click(within(cardOf('Nice')).getByText('🌴'));
-    await user.keyboard('🌊{Enter}');
-    expect(mocks.saveClues).toHaveBeenCalledWith(NICE, { emojis: ['🌊', '', ''] });
-  });
-
-  it('rolls back a Clues edit and warns when saving fails', async () => {
-    mocks.saveClues.mockRejectedValue(new Error('fail'));
-    const user = userEvent.setup();
-    await renderView();
-    await user.click(within(cardOf('Paris')).getByText('☀️'));
-    await user.keyboard('🌧️{Enter}');
-    await user.click(await within(cardOf('Paris')).findByText('☀️'));
-    expect(within(cardOf('Paris')).getByText('⚠')).toHaveAttribute('title', 'fail');
   });
 });
 

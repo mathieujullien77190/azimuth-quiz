@@ -17,24 +17,6 @@
           "order": "ASCENDING"
         }
       ]
-    },
-    {
-      "collectionGroup": "places",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "clues.category",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "difficulty",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "clues.n",
-          "order": "ASCENDING"
-        }
-      ]
     }
   ],
   "fieldOverrides": []

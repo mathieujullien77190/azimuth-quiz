@@ -34,7 +34,7 @@ export type RoomPlayers = Record<string, RoomPlayer>;
 export type RoomReaction = { uid: string; emoji: string; seq: number };
 
 /** Jeux ayant des rooms : valeur du champ `game`, fixee a la creation et immuable. */
-export type RoomGame = 'compass' | 'clues';
+export type RoomGame = 'compass';
 
 /** Les rooms de tous les jeux partagent cette collection. */
 const ROOMS_COLLECTION = 'rooms';

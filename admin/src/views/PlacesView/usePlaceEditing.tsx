@@ -2,16 +2,13 @@ import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 
 import {
   deletePlace,
-  saveClues,
   saveCompass,
   saveDifficulty,
-  type CluesPatch,
   type CompassPatch,
   type PlaceRow,
 } from '../../api/places';
 import type { Difficulty } from '@/types';
 
-import { CLUE_FIELD_BY_KEY } from './helpers';
 import type { Field, SaveState } from './types';
 
 /**
@@ -30,25 +27,22 @@ export const usePlaceEditing = (setRows: Dispatch<SetStateAction<PlaceRow[] | nu
 
   const handleDifficultyChange = (row: PlaceRow, difficulty: Difficulty) => {
     const previousCompass = row.compass;
-    const previousClues = row.clues;
     setRows((cur) =>
       cur!.map((r) =>
         r.key === row.key
-          ? { ...r, compass: r.compass && { ...r.compass, difficulty }, clues: r.clues && { ...r.clues, difficulty } }
+          ? { ...r, compass: r.compass && { ...r.compass, difficulty } }
           : r,
       ),
     );
     setSaveState({ key: row.key, field: 'difficulty', status: 'saving' });
 
     saveDifficulty(row, difficulty)
-      .then(({ compass, clues }) => {
-        setRows((cur) => cur!.map((r) => (r.key === row.key ? { ...r, compass, clues } : r)));
+      .then((compass) => {
+        setRows((cur) => cur!.map((r) => (r.key === row.key ? { ...r, compass } : r)));
         setSaveState({ key: row.key, field: 'difficulty', status: 'saved' });
       })
       .catch((err: Error) => {
-        setRows((cur) =>
-          cur!.map((r) => (r.key === row.key ? { ...r, compass: previousCompass, clues: previousClues } : r)),
-        );
+        setRows((cur) => cur!.map((r) => (r.key === row.key ? { ...r, compass: previousCompass } : r)));
         setSaveState({ key: row.key, field: 'difficulty', status: 'error', message: err.message });
       });
   };
@@ -70,24 +64,6 @@ export const usePlaceEditing = (setRows: Dispatch<SetStateAction<PlaceRow[] | nu
       });
   };
 
-  const handleCluesChange = (row: PlaceRow, patch: CluesPatch) => {
-    const key = Object.keys(patch)[0];
-    const field = CLUE_FIELD_BY_KEY[key];
-    const previous = row.clues;
-    setRows((cur) => cur!.map((r) => (r.key === row.key ? { ...r, clues: { ...r.clues!, ...patch } } : r)));
-    setSaveState({ key: row.key, field, status: 'saving' });
-
-    saveClues(row, patch)
-      .then((updated) => {
-        setRows((cur) => cur!.map((r) => (r.key === row.key ? { ...r, clues: updated } : r)));
-        setSaveState({ key: row.key, field, status: 'saved' });
-      })
-      .catch((err: Error) => {
-        setRows((cur) => cur!.map((r) => (r.key === row.key ? { ...r, clues: previous } : r)));
-        setSaveState({ key: row.key, field, status: 'error', message: err.message });
-      });
-  };
-
   const saveFlagFor = (row: PlaceRow, field: Field) => {
     const s = saveState?.key === row.key && saveState.field === field ? saveState : null;
     if (!s) return null;
@@ -105,5 +81,5 @@ export const usePlaceEditing = (setRows: Dispatch<SetStateAction<PlaceRow[] | nu
     setRows((cur) => cur!.filter((r) => r.key !== row.key));
   };
 
-  return { saveFlagFor, handleDifficultyChange, handleCompassChange, handleCluesChange, handleDelete };
+  return { saveFlagFor, handleDifficultyChange, handleCompassChange, handleDelete };
 };

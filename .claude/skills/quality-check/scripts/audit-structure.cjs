@@ -13,9 +13,7 @@ const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const ROOTS = [
   'src/components',
   'src/games/compass/components',
-  'src/games/clues/components',
   'src/games/compass/screens',
-  'src/games/clues/screens',
 ];
 
 /**
@@ -36,8 +34,6 @@ const NO_STORY_OK = {
   SetupScreen: 'smart container',
   EndScreen: 'container of FinalStandings',
   OnlineGameScreen: 'smart container',
-  ClueSetupScreen: 'smart container',
-  OnlineClueGameScreen: 'smart container',
 };
 
 /** Folders that are not components: no `<Name>.tsx` is expected. */

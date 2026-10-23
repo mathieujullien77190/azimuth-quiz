@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { COMPASS_CURSORS_STORAGE_KEY } from '@/games/compass/constants';
 
-// Le module cache dans des variables : chaque test en a une copie neuve (comme `clueHistory.test.ts`).
+// Le module cache dans des variables : chaque test en a une copie neuve.
 const freshModule = () => {
   let mod!: typeof import('../compassCursors');
   jest.isolateModules(() => {

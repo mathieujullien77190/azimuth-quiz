@@ -277,7 +277,7 @@ export const buildGlobeScene = ({ origin, marks, land, equator, greenwich, north
 };
 
 /** Rend a la carte graphique les geometries et materiaux d'une scene — ou d'une partie, comme un groupe de routes :
- * on en construit une nouvelle a chaque changement (reponse, zoom, theme, stade d'un indice) et l'ancienne
+ * on en construit une nouvelle a chaque changement (reponse, zoom, theme) et l'ancienne
  * resterait sinon en memoire. */
 export const disposeScene = (scene: Object3D): void => {
   scene.traverse((object) => {

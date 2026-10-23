@@ -10,7 +10,6 @@ import {
   DIFFICULTY_COLORS,
   DIFFICULTY_LABELS,
   DIFFICULTY_ORDER,
-  POSITION_LABELS,
 } from '../constants';
 
 describe('category constants', () => {
@@ -34,9 +33,5 @@ describe('difficulty and position constants', () => {
       expect(DIFFICULTY_LABELS[difficulty]).toBeTruthy();
       expect(DIFFICULTY_COLORS[difficulty]).toMatch(/^#[0-9A-F]{6}$/);
     }
-  });
-
-  it('labels the nine positions in a country', () => {
-    expect(Object.keys(POSITION_LABELS).sort()).toEqual(['center', 'e', 'n', 'ne', 'nw', 's', 'se', 'sw', 'w']);
   });
 });

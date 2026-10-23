@@ -20,9 +20,9 @@ describe('pageFromPath', () => {
     vi.resetModules();
     const built = await import('../pages');
     expect(built.BASE_PATH).toBe('/azimuth-quiz/admin');
-    expect(built.pageFromPath('/azimuth-quiz/admin/jobs')).toBe('jobs');
-    expect(built.pageFromPath('/jobs')).toBe('jobs');
-    expect(built.hrefOf('jobs')).toBe('/azimuth-quiz/admin/jobs');
+    expect(built.pageFromPath('/azimuth-quiz/admin/countries')).toBe('countries');
+    expect(built.pageFromPath('/countries')).toBe('countries');
+    expect(built.hrefOf('countries')).toBe('/azimuth-quiz/admin/countries');
   });
 
   afterEach(() => {
@@ -33,6 +33,6 @@ describe('pageFromPath', () => {
 
 describe('hrefOf', () => {
   it('builds the static url of a page', () => {
-    expect(hrefOf('jobs')).toBe(`${BASE_PATH}/jobs`);
+    expect(hrefOf('countries')).toBe(`${BASE_PATH}/countries`);
   });
 });

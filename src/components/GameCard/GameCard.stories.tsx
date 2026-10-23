@@ -7,12 +7,11 @@ import { localizedArgs } from '@/storybook/localized';
 import { GameCard } from './GameCard';
 import { source } from '@/storybook/source';
 import compassCode from './Compass.source.md?raw';
-import cluesCode from './Clues.source.md?raw';
 
 const t = translations.fr;
 
 /** Textes de la carte, dans la langue de la barre d'outils. */
-const textArgs = (game: 'compass' | 'clues') => (texts: Translations) => ({
+const textArgs = (game: 'compass') => (texts: Translations) => ({
   ctaLabel: texts.home.games[game].cta,
   tagline: texts.home.games[game].tagline,
   title: texts.home.games[game].title,
@@ -40,17 +39,6 @@ export const Compass: Story = {
   args: {
     ...textArgs('compass')(t),
     icon: '🧭',
-    maxPlayers: 10,
-    onPress: () => {},
-  },
-};
-
-export const Clues: Story = {
-  parameters: source(cluesCode),
-  decorators: [localizedArgs(textArgs('clues'))],
-  args: {
-    ...textArgs('clues')(t),
-    icon: '🧩',
     maxPlayers: 10,
     onPress: () => {},
   },

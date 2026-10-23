@@ -8,7 +8,7 @@ import { SPLASH_CODENAME, SPLASH_VERSION_NUMBER } from '../constants';
 import StartupSplash from '..';
 
 
-type Ready = { theme: boolean; language: boolean; settings: boolean; name: boolean; devCode: boolean };
+type Ready = { theme: boolean; language: boolean; settings: boolean; name: boolean };
 let mockReady: Ready;
 let mockThemeId: 'night' | 'day';
 
@@ -29,10 +29,9 @@ jest.mock('@/i18n', () => {
 jest.mock('@/settings', () => ({
   useSettings: (select: (state: { ready: boolean }) => boolean) => select({ ready: mockReady.settings }),
   usePlayerName: (select: (state: { ready: boolean }) => boolean) => select({ ready: mockReady.name }),
-  useDevCode: (select: (state: { ready: boolean }) => boolean) => select({ ready: mockReady.devCode }),
 }));
 
-const allReady: Ready = { theme: true, language: true, settings: true, name: true, devCode: true };
+const allReady: Ready = { theme: true, language: true, settings: true, name: true };
 
 beforeEach(() => {
   jest.useFakeTimers();

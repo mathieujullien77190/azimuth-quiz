@@ -1,12 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLocales } from 'expo-localization';
 
-import { DEV_CODE_STORAGE_KEY, LANGUAGE_STORAGE_KEY, PLAYER_NAME_STORAGE_KEY, THEME_STORAGE_KEY } from '@/data';
+import { LANGUAGE_STORAGE_KEY, PLAYER_NAME_STORAGE_KEY, THEME_STORAGE_KEY } from '@/data';
 import { BEST_SCORE_STORAGE_KEY, SETTINGS_STORAGE_KEY } from '@/games/compass/constants';
 import type { Language } from '@/i18n';
 import type { GameSettings, ThemeId } from '@/types';
 
-import { clearClueCursors } from '@/games/clues/helpers/clueCursors';
 import { clearCompassCursors } from '@/games/compass/helpers/compassCursors';
 
 import { sanitizeSettings } from './settings';
@@ -69,22 +68,6 @@ export const saveThemeId = async (themeId: ThemeId): Promise<void> => {
 };
 
 /** Dernier nom tape dans le setup d'un jeu ; `null` tant qu'aucun (seul lecteur/ecrivain : prefill de `useSetupRoom`). */
-export const loadDevCode = async (): Promise<string | null> => {
-  try {
-    return await AsyncStorage.getItem(DEV_CODE_STORAGE_KEY);
-  } catch {
-    return null;
-  }
-};
-
-export const saveDevCode = async (code: string): Promise<void> => {
-  try {
-    await AsyncStorage.setItem(DEV_CODE_STORAGE_KEY, code);
-  } catch {
-    // Non sauve : a retaper, sans gravite.
-  }
-};
-
 export const loadPlayerName = async (): Promise<string | null> => {
   try {
     return await AsyncStorage.getItem(PLAYER_NAME_STORAGE_KEY);
@@ -102,9 +85,8 @@ export const savePlayerName = async (name: string): Promise<void> => {
 };
 
 /** Efface tout ce que l'app sauve sur l'appareil : reglages Compass, langue, theme, nom partage, curseurs de lieux,
- * ancien "meilleur score". Les reglages Clues ne sont pas persistes. */
+ * ancien "meilleur score". */
 export const clearAppData = async (): Promise<void> => {
-  clearClueCursors();
   clearCompassCursors();
   try {
     await AsyncStorage.multiRemove([
@@ -113,7 +95,6 @@ export const clearAppData = async (): Promise<void> => {
       LANGUAGE_STORAGE_KEY,
       THEME_STORAGE_KEY,
       PLAYER_NAME_STORAGE_KEY,
-      DEV_CODE_STORAGE_KEY,
     ]);
   } catch {
     // Au pire les anciennes donnees restent, sans gravite.

@@ -21,9 +21,7 @@ Projet Firebase : `azimuth-quiz`. Documents : `projects/azimuth-quiz/databases/(
 | Source | Copies à garder à jour |
 |---|---|
 | `countries/{ISO}` (nom fr/en, drapeau avec ses couleurs et leurs %, devise, symbole, indicatif) | `places/{cle}.country` de **chaque lieu** du pays (`applyCountryChange`, page « Pays » de l'admin : elle écrit le pays et ses lieux dans un même lot). Les documents `countries` portent encore des champs de l'ancien jeu Silhouette (contour, voisins, difficulté...) : l'admin ne les lit pas et ne les efface jamais |
-| `personalityJobs/{code}` | `places/{cle}.personality.job` des personnalités étiquetées (`applyJobChange`) |
-| `places/{cle}.compass.category` | `places/{cle}.clues.category` (`cluesCategory` : `capital` / `citiesFr` / `cities`) |
-| numérotation d'un groupe | `places.n` (Boussole) **et** `places.clues.n` (Indices) + `meta/compassCounts` **et** `meta/cluesCounts` |
+| numérotation d'un groupe | `places.n` + `meta/compassCounts` |
 
 À savoir :
 - Pas de tableaux imbriqués ni de `undefined` dans Firestore : drapeaux en objets, champ optionnel absent = omis.
@@ -31,8 +29,7 @@ Projet Firebase : `azimuth-quiz`. Documents : `projects/azimuth-quiz/databases/(
 ## 2. Numérotation et compteurs
 
 - Chaque groupe est numéroté `n` = 1..taille, **dense**, dans l'ordre mélangé d'un hash de la clé (`shuffleRank`,
-  `data/firestore/numbering.ts`). Groupes : Boussole = `compass.category` × `difficulty`, Indices = `clues.category` ×
-  `difficulty`.
+  `data/firestore/numbering.ts`). Groupes : Boussole = `compass.category` × `difficulty`.
 - Le jeu tire au hasard un `n` entre 1 et la taille lue dans `meta/*Counts` : **un compteur trop petit rend des lieux
   inatteignables, trop grand fait chercher des `n` sans document**.
 - **Ajouter** un lieu : `n` = taille + 1 dans le groupe (les deux numérotations), puis les compteurs passent à la nouvelle
@@ -53,11 +50,11 @@ Pour chaque écriture, dans cet ordre (les données d'abord, le journal en derni
 toutes les données qu'elle nomme écrites) :
 
 1. les documents de données ;
-2. les compteurs (`meta/compassCounts`, `meta/cluesCounts`) si un groupe a changé de taille ;
+2. les compteurs (`meta/compassCounts`) si un groupe a changé de taille ;
 3. `meta/dataVersion` : `version` + 1 et `updatedAt` = maintenant en ms ;
 4. une entrée `journal/{id aléatoire}` :
    ```
-   { at: <timestamp>, changes: [ { c: 'places' | 'meta' | 'personalityJobs',
+   { at: <timestamp>, changes: [ { c: 'places' | 'meta',
                                    id: '<id du document>', op: 'set' | 'delete' }, ... ] }
    ```
    Liste **tous** les documents touchés, y compris les compteurs (`{ c: 'meta', id: 'compassCounts', op: 'set' }`) et
@@ -91,10 +88,9 @@ Le journal n'est jamais purgé. Il est lisible et inscriptible par les admins un
 ## 5. Recettes
 
 - **Nom, drapeau (couleurs et %), devise, symbole, indicatif d'un pays** : page « Pays » de l'admin (`applyCountryChange`) : le pays et tous les `places.country` de ce pays sont réécrits ensemble, journal pour chacun. À la main : refaire les deux, en repartant du document stocké pour garder les champs que l'admin ne gère pas.
-- **Ajouter des lieux** : document complet (identité, `country`, `compass`, `clues` avec `category`,
-  `n` des deux numérotations), compteurs, version, journal.
-- **Supprimer / changer de catégorie ou de difficulté un lieu** : `applyPlaceChange` dans l'admin (il garde les deux
-  numérotations denses dans le même batch).
+- **Ajouter des lieux** : document complet (identité, `country`, `compass` avec `category`, `n`), compteurs, version, journal.
+- **Supprimer / changer de catégorie ou de difficulté un lieu** : `applyPlaceChange` dans l'admin (il garde la
+  numérotation dense dans le même batch).
 - **Métier** : `applyJobChange` ou les éditeurs de l'admin.
 
 ## 6. Après l'écriture : pourquoi ça n'apparaît pas
@@ -110,6 +106,7 @@ Le journal n'est jamais purgé. Il est lisible et inscriptible par les admins un
 ## 7. Checklist
 
 Avant : lire le document, repérer **toutes** ses copies (section 1), savoir si une fonction de l'admin fait déjà le travail.
-Après : relire les documents écrits ; compter les groupes si la numérotation a bougé (`n` dense de 1 à la taille dans chaque groupe,
-pour Boussole **et** pour Indices) ; `dataVersion` incrémentée ; journal écrit **en dernier** avec tous les documents ;
+Après : relire les documents écrits ; compter les groupes si la numérotation a bougé (`n` dense de 1 à la taille dans chaque groupe); `dataVersion` incrémentée ; journal écrit **en dernier** avec tous les documents ;
 rappeler à l'utilisateur de recharger le jeu et, si besoin, l'admin. Ne commit rien sans demande.
+
+> Restes de l'ancien mode Indices en base, ignores du code : champs `clues`/`personality`/`wordplay` des lieux, `personalityJobs`, `meta/cluesCounts`, `devFeedback`.

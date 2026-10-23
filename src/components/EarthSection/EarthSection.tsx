@@ -202,8 +202,8 @@ export const EarthSection = ({
               },
             ]}
           >
-            {/* Pas d'accessibilityRole="button" : EarthSection peut etre dans un vrai bouton
-            (indice "Distance"), et le web refuse un <button> imbrique. */}
+            {/* Pas d'accessibilityRole="button" : EarthSection peut etre dans un vrai bouton,
+            et le web refuse un <button> imbrique. */}
             <Pressable hitSlop={10} onPress={() => setShowQuip((v) => !v)}>
               <Text style={styles.satelliteEmoji}>{SATELLITE_EMOJI}</Text>
             </Pressable>

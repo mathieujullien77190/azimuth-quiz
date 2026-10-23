@@ -9,7 +9,6 @@ import { localizedArgs } from '@/storybook/localized';
 import { OptionsSection } from './OptionsSection';
 import type { OptionsSectionProps } from './types';
 import { source } from '@/storybook/source';
-import withoutGpsCode from './WithoutGps.source.md?raw';
 import withGpsCode from './WithGps.source.md?raw';
 import readOnlyCode from './ReadOnly.source.md?raw';
 
@@ -17,10 +16,6 @@ const t = translations.fr;
 
 /** Titre/description de chaque option et du bloc GPS, par id, dans la langue de la barre d'outils. */
 const optionTexts = (texts: Translations): Record<string, { title: string; description?: string }> => ({
-  startWithFirstLetter: {
-    title: texts.cluesSetup.toggles.startWithFirstLetter.label,
-    description: texts.cluesSetup.toggles.startWithFirstLetter.description,
-  },
   liveCompass: {
     title: texts.setup.toggles.liveCompass.label,
     description: texts.setup.toggles.liveCompass.description,
@@ -51,7 +46,6 @@ const localizedTexts =
       }),
     };
   };
-const cluesOptionsTitle = (texts: Translations) => texts.cluesSetup.optionsTitle;
 const compassOptionsTitle = (texts: Translations) => texts.setup.optionsTitle;
 
 /**
@@ -126,24 +120,6 @@ const gpsOption = {
   latitude: 48.8566,
   longitude: 2.3522,
   onChangeCustomOrigin: fn(),
-};
-
-/** Bloc propre a Indices : une option simple, pas de GPS. */
-export const WithoutGps: Story = {
-  parameters: source(withoutGpsCode),
-  decorators: [localizedArgs(localizedTexts(cluesOptionsTitle))],
-  args: {
-    title: t.cluesSetup.optionsTitle,
-    options: [
-      {
-        id: 'startWithFirstLetter',
-        title: t.cluesSetup.toggles.startWithFirstLetter.label,
-        description: t.cluesSetup.toggles.startWithFirstLetter.description,
-        value: true,
-        onChange: fn(),
-      },
-    ],
-  },
 };
 
 /**

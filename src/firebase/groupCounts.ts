@@ -8,7 +8,7 @@ import { db } from './client';
 // Hors du barrel de `helpers/index.ts` : `firebase/firestore` est ESM seul et fait planter Jest.
 
 /**
- * Charge les tailles de groupes d'un jeu (`meta/compassCounts`, `meta/cluesCounts`) : lues une fois et partagees,
+ * Charge les tailles de groupes (`meta/compassCounts`) : lues une fois et partagees,
  * un echec n'est pas garde. Elles ne changent que si l'admin edite les lieux : relues au lancement suivant.
  */
 export const createGroupCounts = <C = CompassCounts>(source: { collection: string; id: string }) => {

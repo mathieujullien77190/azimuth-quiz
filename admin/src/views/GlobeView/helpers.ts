@@ -97,16 +97,16 @@ export const hexFloats = (css: string): [number, number, number] => {
   return [((value >> 16) & 255) / 255, ((value >> 8) & 255) / 255, (value & 255) / 255];
 };
 
-/** Couleur du point d'un lieu : celle de sa categorie Boussole, gris s'il n'est que dans Indices. */
+/** Couleur du point d'un lieu : celle de sa categorie Boussole, gris s'il n'a pas de donnees Boussole. */
 export const placeColor = (category: Category | null): string =>
   category === null ? NEUTRAL_PLACE_COLOR : CATEGORY_COLORS[category];
 
 export const categoryOf = (row: PlaceRow): Category | null => row.compass?.category ?? null;
-export const difficultyOf = (row: PlaceRow): Difficulty => (row.compass ?? row.clues)!.difficulty;
+export const difficultyOf = (row: PlaceRow): Difficulty | null => row.compass?.difficulty ?? null;
 
 /**
- * Lieux passant les filtres categorie et difficulte (un lieu seulement dans Indices n'a pas de categorie : les puces
- * ne s'y appliquent pas).
+ * Lieux passant les filtres categorie et difficulte (un lieu sans donnees Boussole n'a ni categorie ni difficulte :
+ * les puces ne s'y appliquent pas).
  */
 export const visiblePlaces = (
   rows: readonly PlaceRow[],
@@ -115,14 +115,15 @@ export const visiblePlaces = (
 ): PlaceRow[] =>
   rows.filter((row) => {
     const category = categoryOf(row);
-    return (category === null || categories.has(category)) && difficulties.has(difficultyOf(row));
+    const difficulty = difficultyOf(row);
+    return (category === null || categories.has(category)) && (difficulty === null || difficulties.has(difficulty));
   });
 
 export const PLACE_SHAPES: readonly PlaceShape[] = ['round', 'star', 'square'];
 
 /**
  * Forme du point : rond pour les villes (francaises aussi), etoile pour les capitales, carre pour le reste
- * (montagnes, monuments, nature, enfants, lieu seulement dans Indices).
+ * (montagnes, monuments, nature, enfants, lieu sans donnees Boussole).
  */
 export const placeShape = (category: Category | null): PlaceShape => {
   if (category === 'cities' || category === 'citiesFr') return 'round';

@@ -54,7 +54,6 @@ const row = (key: string, over: Partial<PlaceRow> = {}): PlaceRow => ({
   country: 'France',
   coordinates: { latitude: 10, longitude: 20 },
   compass: { category: 'cities', difficulty: 'easy' } as PlaceRow['compass'],
-  clues: null,
   ...over,
 });
 
@@ -129,22 +128,22 @@ describe('colours', () => {
 
 describe('places', () => {
   const capital = row('cap', { compass: { category: 'capital', difficulty: 'hard' } as PlaceRow['compass'] });
-  const cluesOnly = row('clu', { compass: null, clues: { difficulty: 'intermediate' } as PlaceRow['clues'] });
+  const bare = row('bar', { compass: null });
 
-  it('reads the category and the difficulty of a place, whichever game it is in', () => {
+  it('reads the category and the difficulty of a place, with none for a place outside Compass', () => {
     expect(categoryOf(capital)).toBe('capital');
-    expect(categoryOf(cluesOnly)).toBeNull();
+    expect(categoryOf(bare)).toBeNull();
     expect(difficultyOf(capital)).toBe('hard');
-    expect(difficultyOf(cluesOnly)).toBe('intermediate');
+    expect(difficultyOf(bare)).toBeNull();
   });
 
   it('filters by category and difficulty; a place with no category ignores the category filter', () => {
-    const rows = [row('a'), capital, cluesOnly];
+    const rows = [row('a'), capital, bare];
     const all = new Set(['cities', 'capital', 'citiesFr', 'mountains', 'landmarks', 'nature', 'kids'] as const);
     const every = new Set(['easy', 'intermediate', 'hard'] as const);
-    expect(visiblePlaces(rows, all, every).map((r) => r.key)).toEqual(['a', 'cap', 'clu']);
-    expect(visiblePlaces(rows, new Set(['cities']), every).map((r) => r.key)).toEqual(['a', 'clu']);
-    expect(visiblePlaces(rows, all, new Set(['hard'])).map((r) => r.key)).toEqual(['cap']);
+    expect(visiblePlaces(rows, all, every).map((r) => r.key)).toEqual(['a', 'cap', 'bar']);
+    expect(visiblePlaces(rows, new Set(['cities']), every).map((r) => r.key)).toEqual(['a', 'bar']);
+    expect(visiblePlaces(rows, all, new Set(['hard'])).map((r) => r.key)).toEqual(['cap', 'bar']);
   });
 
   it('gives round dots to the cities, stars to the capitals, squares to the rest', () => {
@@ -157,7 +156,7 @@ describe('places', () => {
   });
 
   it('builds every position in order, and the dots split by shape with their colours', () => {
-    const { positions, kinds, shapes } = placeBuffers([row('a'), capital, cluesOnly], 1.006);
+    const { positions, kinds, shapes } = placeBuffers([row('a'), capital, bare], 1.006);
     expect(positions).toHaveLength(9);
     expect(Math.hypot(...positions.slice(0, 3))).toBeCloseTo(1.006, 6);
     expect(shapes.round.positions).toEqual(positions.slice(0, 3));

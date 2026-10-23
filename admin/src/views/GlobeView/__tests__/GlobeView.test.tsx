@@ -8,7 +8,6 @@ const mocks = vi.hoisted(() => ({
   fetchPlaces: vi.fn(),
   deletePlace: vi.fn(),
   saveCompass: vi.fn(),
-  saveClues: vi.fn(),
   saveDifficulty: vi.fn(),
   canvas: null as null | import('../GlobeCanvas').GlobeCanvasProps,
 }));
@@ -17,11 +16,8 @@ vi.mock('../../../api/places', () => ({
   fetchPlaces: mocks.fetchPlaces,
   deletePlace: mocks.deletePlace,
   saveCompass: mocks.saveCompass,
-  saveClues: mocks.saveClues,
   saveDifficulty: mocks.saveDifficulty,
 }));
-vi.mock('../../PlacesView/WordplayEditor', () => ({ WordplayEditor: () => <div>wordplay-editor</div> }));
-vi.mock('../../PlacesView/PersonalityEditor', () => ({ PersonalityEditor: () => <div>personality-editor</div> }));
 vi.mock('../GlobeCanvas', () => ({
   GlobeCanvas: (props: import('../GlobeCanvas').GlobeCanvasProps) => {
     mocks.canvas = props;
@@ -39,7 +35,6 @@ const PARIS = {
   country: 'France',
   coordinates: { latitude: 48.85, longitude: 2.35 },
   compass: { name: 'Paris', code: 'FR', category: 'capital', difficulty: 'easy', coordinates: { latitude: 48.85, longitude: 2.35 } },
-  clues: null,
 } as unknown as PlaceRow;
 const KYOTO = {
   key: 'kyo',
@@ -47,7 +42,6 @@ const KYOTO = {
   country: 'Japon',
   coordinates: { latitude: 35, longitude: 135.7 },
   compass: { name: 'Kyoto', code: 'JP', category: 'cities', difficulty: 'hard', coordinates: { latitude: 35, longitude: 135.7 } },
-  clues: null,
 } as unknown as PlaceRow;
 
 const counts = () => document.querySelector('.count-line')!;
@@ -150,7 +144,7 @@ describe('GlobeView selection', () => {
 
   it('edits the place through the very same save as the Places list, and the globe follows', async () => {
     const user = userEvent.setup();
-    mocks.saveDifficulty.mockResolvedValue({ compass: { ...PARIS.compass, difficulty: 'hard' }, clues: null });
+    mocks.saveDifficulty.mockResolvedValue({ ...PARIS.compass, difficulty: 'hard' });
     await renderReady();
     act2(() => canvas().onSelect({ kind: 'place', id: 'par' }));
     await user.selectOptions(screen.getAllByRole('combobox').find((el) => (el as HTMLSelectElement).value === 'easy')!, 'hard');

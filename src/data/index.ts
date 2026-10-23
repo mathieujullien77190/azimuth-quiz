@@ -2,7 +2,7 @@ import type { Difficulty, Origin } from '@/types';
 
 export * from './theme';
 
-// --- Geographie (commune a Boussole et Indices, voir helpers/geo) ---
+// --- Geographie (voir helpers/geo) ---
 export const EARTH_RADIUS_KM = 6371;
 
 export const DEFAULT_ORIGIN: Origin = {
@@ -21,12 +21,6 @@ export const THEME_STORAGE_KEY = 'azimuthquiz:theme';
 export const PLAYER_NAME_STORAGE_KEY = 'azimuthquiz:player-name';
 /** Derniere room rejointe, proposee en raccourci « rejoindre » sur l'ecran de preparation. */
 export const LAST_JOINED_ROOM_STORAGE_KEY = 'azimuthquiz:last-joined-room';
-/** Code dev saisi (`useDevCode`), garde tel quel : seul `DEV_CODE` active le mode dev. */
-export const DEV_CODE_STORAGE_KEY = 'azimuthquiz:dev-code';
-/** Secret du mode dev, aussi dans `firestore.rules` (la vraie barriere) : changer les deux ensemble. */
-export const DEV_CODE = 'supermatou';
-/** Avis de difficulte du mode dev (page admin « Avis difficulte », hors journal). */
-export const DEV_FEEDBACK_COLLECTION = 'devFeedback';
 /** Dernier code de room heberge, reoffert pour la prochaine (`createRoom`). */
 export const ROOM_CODE_STORAGE_KEY = 'azimuthquiz:room-code';
 
@@ -56,7 +50,7 @@ export const PLAYER_COLORS = ['#EF4444', '#16A34A', '#0891B2', '#2563EB', '#9333
 export const ROOM_PLAYER_COLORS = [...PLAYER_COLORS, '#0D9488', '#4F46E5', '#C026D3', '#E11D48'] as const;
 
 /** Emoji de chaque jeu (carte d'accueil et en-tete de preparation). */
-export const GAME_ICONS = { compass: '🧭', clues: '🧩' } as const;
+export const GAME_ICONS = { compass: '🧭' } as const;
 
 // Libelle/description : voir translations.setup.difficulties (meme id).
 export const DIFFICULTIES: { id: Difficulty; emoji: string }[] = [
