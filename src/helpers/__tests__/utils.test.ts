@@ -1,4 +1,56 @@
-import { splitEvenly } from '../splitEvenly';
+import { formatBearing, formatDistance, formatNumber, initials, splitEvenly } from '../utils';
+
+describe('formatNumber', () => {
+  it('rounds to the nearest integer', () => {
+    expect(formatNumber(3.4)).toBe('3');
+    expect(formatNumber(3.6)).toBe('4');
+  });
+
+  it('inserts a narrow no-break space every 3 digits', () => {
+    expect(formatNumber(1234)).toBe('1 234');
+    expect(formatNumber(1234567)).toBe('1 234 567');
+  });
+
+  it('leaves small numbers untouched', () => {
+    expect(formatNumber(42)).toBe('42');
+  });
+});
+
+describe('formatDistance', () => {
+  it('appends km with a narrow no-break space', () => {
+    expect(formatDistance(1234)).toBe('1 234 km');
+  });
+});
+
+describe('formatBearing', () => {
+  const cardinals = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'] as const;
+
+  it('combines the cardinal point and the rounded degrees', () => {
+    expect(formatBearing(0, cardinals)).toBe('N · 0°');
+    expect(formatBearing(90, cardinals)).toBe('E · 90°');
+  });
+
+  it('normalizes negative or out-of-range degrees', () => {
+    // -10 se normalise en 350°, plus proche de N (360=0) que de NO (315).
+    expect(formatBearing(-10, cardinals)).toBe('N · 350°');
+    expect(formatBearing(370, cardinals)).toBe('N · 10°');
+  });
+});
+
+describe('initials', () => {
+  it('takes the first 2 letters, uppercased', () => {
+    expect(initials('mathieu')).toBe('MA');
+  });
+
+  it('trims surrounding whitespace first', () => {
+    expect(initials('  zoe  ')).toBe('ZO');
+  });
+
+  it('handles names shorter than 2 letters', () => {
+    expect(initials('a')).toBe('A');
+    expect(initials('')).toBe('');
+  });
+});
 
 const sum = (values: number[]) => values.reduce((total, value) => total + value, 0);
 

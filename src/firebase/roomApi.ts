@@ -16,7 +16,7 @@ import {
 
 import { db } from '@/firebase/client';
 import { generateRoomCode, getLocalUid, loadMyRoomCode, saveMyRoomCode } from '@/firebase/roomCode';
-import { isNameTaken, nameTakenError } from '@/helpers/roomName';
+import { isNameTaken, nameTakenError } from '@/helpers/roomPlayers';
 
 // Hors du barrel de `helpers` : `firebase/firestore` est ESM seul et fait planter Jest des qu'il est requis.
 // Tout ce qui est commun aux rooms (cycle de vie, presence, couleurs, reglages), lie a un jeu par `createRoomApi(game)` ;

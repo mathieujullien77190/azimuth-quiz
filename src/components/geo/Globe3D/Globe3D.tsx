@@ -4,7 +4,7 @@ import { PanResponder, Pressable, Text, View } from 'react-native';
 
 import { PLAYER_LABEL, SATELLITE_EMOJI, SATELLITE_QUIP } from '@/components/geo/EarthSection/constants';
 import { rhumbDestination } from '@/helpers/geo';
-import { noPageScroll } from '@/helpers/web';
+import { noPageScroll } from '@/helpers/platform';
 import { useTheme, useThemedStyles } from '@/themes';
 import type { Coordinates } from '@/types';
 

@@ -90,7 +90,7 @@ great-tit : vérifier qu'elle répond et correspond au titre de l'article) : à 
 lien du nom d'animal partout où la version s'affiche (`VersionLine`, `AppVersion` de l'admin).
 C'est ce que montrent l'écran Réglages (« v2.64.1 🦥 brown-throated-sloth »), l'écran de démarrage
 (« v2.64.1 - 🦥 - brown-throated-sloth ») et l'en-tête de l'admin (`versionLabel` de
-`src/helpers/version.ts`). Le dire à l'utilisateur dans le compte rendu
+`src/helpers/appInfo.ts`). Le dire à l'utilisateur dans le compte rendu
 (« 2.65.0, le great-tit 🐦 »). Le nom d'animal ne va ni dans `package.json` ni dans `package-lock.json`.
 
 ## Android (Play Console) : à garder en tête au moment de livrer

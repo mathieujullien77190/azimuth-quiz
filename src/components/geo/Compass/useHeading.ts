@@ -1,4 +1,4 @@
-import { reporting } from '@/helpers/reportError';
+import { reporting } from '@/helpers/errors';
 import * as Location from 'expo-location';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';

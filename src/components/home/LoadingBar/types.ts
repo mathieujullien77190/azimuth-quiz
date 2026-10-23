@@ -1,4 +1,4 @@
-import type { Codename } from '@/helpers/version';
+import type { Codename } from '@/helpers/appInfo';
 
 export type LoadingBarProps = {
   /** Vrai tant que le chargement dure ; une fois faux, la barre se complete, s'efface et se retire. */

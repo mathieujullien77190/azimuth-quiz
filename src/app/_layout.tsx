@@ -9,7 +9,7 @@ import ThemeProvider from '@/components/providers/ThemeProvider';
 import { preloadCounts } from '@/games/helpers/counts';
 import { disableTextSelection, polyfillFlagEmoji } from '@/helpers';
 import { writeErrorRecord } from '@/firebase/errorSink';
-import { setErrorReporter } from '@/helpers/reportError';
+import { setErrorReporter } from '@/helpers/errors';
 import { hydratePlayerName, hydrateSettings } from '@/settings';
 import { useTheme } from '@/themes';
 
@@ -37,7 +37,7 @@ const RootLayout = () => {
   useEffect(hydratePlayerName, []);
   // Tailles des groupes (`meta/*Counts`) lues des maintenant : un jeu les trouve deja chargees.
   useEffect(preloadCounts, []);
-  // Les ecritures en echec vont dans la collection `errors` (voir `helpers/reportError.ts`).
+  // Les ecritures en echec vont dans la collection `errors` (voir `helpers/errors.ts`).
   useEffect(() => {
     setErrorReporter(writeErrorRecord);
     return () => setErrorReporter(null);

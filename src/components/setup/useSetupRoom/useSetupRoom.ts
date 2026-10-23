@@ -1,13 +1,13 @@
-import { reporting } from '@/helpers/reportError';
+import { reporting } from '@/helpers/errors';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { NAME_PLACEHOLDERS, PLAYER_COLORS } from '@/data';
-import { loadLastJoinedRoom, saveLastJoinedRoom } from '@/helpers/lastRoom';
+import { loadLastJoinedRoom, saveLastJoinedRoom } from '@/helpers/storage';
 import { playersByArrival } from '@/helpers/roomPlayers';
-import { freePlaceholder, isNameTakenError } from '@/helpers/roomName';
-import { useDebouncedValue } from '@/helpers/useDebouncedValue';
-import { useRoomPresence } from '@/helpers/useRoomPresence';
+import { freePlaceholder, isNameTakenError } from '@/helpers/roomPlayers';
+import { useDebouncedValue } from '@/helpers/hooks';
+import { useRoomPresence } from '@/helpers/roomHooks';
 import { useTranslation } from '@/i18n';
 import { usePlayerName } from '@/settings';
 import { useRoomStore } from '@/store/roomStore';

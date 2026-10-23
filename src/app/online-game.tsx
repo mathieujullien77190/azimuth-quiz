@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import { goBackOrHome } from '@/helpers/goBack';
-import { useImmersiveNavigationBar } from '@/helpers/useImmersiveNavigationBar';
+import { goBackOrHome } from '@/helpers/platform';
+import { useImmersiveNavigationBar } from '@/helpers/hooks';
 
 import OnlineGameScreen from '@/games/screens/OnlineGameScreen';
 

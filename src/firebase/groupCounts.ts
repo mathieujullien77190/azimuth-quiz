@@ -1,4 +1,4 @@
-import { reporting } from '../helpers/reportError';
+import { reporting } from '../helpers/errors';
 import { doc, getDoc } from 'firebase/firestore';
 
 import type { Counts } from '@/data/firestore/types';

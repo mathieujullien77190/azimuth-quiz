@@ -1,12 +1,6 @@
 import { DEFAULT_ORIGIN, PLAYER_COLORS } from '@/data';
 import { DEFAULT_DISTANCE_KM, MAX_SURFACE_DISTANCE_KM } from '@/games/constants';
-import type {
-  Guess,
-  Place,
-  Player,
-  PlayerResult,
-  RoundRecord,
-} from '@/types';
+import type { Guess, Place, Player, PlayerResult, RoundRecord } from '@/types';
 
 import { bearingDeg, distanceKm, normalizeBearing } from './geo';
 import { applyBestBonus, scoreRound } from '@/games/helpers/scoring';
@@ -91,4 +85,3 @@ export const SAMPLE_TOTALS: number[] = SAMPLE_RESULTS.map((result) => result.sco
 export const SAMPLE_MAX_SURFACE_KM = MAX_SURFACE_DISTANCE_KM;
 
 export const SAMPLE_DISTANCE_KM = DEFAULT_DISTANCE_KM;
-

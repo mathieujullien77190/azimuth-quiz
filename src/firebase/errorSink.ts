@@ -3,7 +3,7 @@ import { collection, doc, increment, serverTimestamp, Timestamp, writeBatch } fr
 import { Platform } from 'react-native';
 
 import { auth, db } from './client';
-import type { ErrorRecord } from '../helpers/reportError';
+import type { ErrorRecord } from '../helpers/errors';
 
 /** Une erreur est nettoyable apres 30 jours (`expireAt`). */
 const RETENTION_MS = 30 * 24 * 60 * 60 * 1000;

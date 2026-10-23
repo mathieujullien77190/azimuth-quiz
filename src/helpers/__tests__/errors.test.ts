@@ -1,5 +1,11 @@
-import { useErrorNotice } from '../errorNotice';
-import { reportError, reporting, resetErrorThrottle, setErrorReporter, type ErrorRecord } from '../reportError';
+import {
+  reportError,
+  reporting,
+  resetErrorThrottle,
+  setErrorReporter,
+  useErrorNotice,
+  type ErrorRecord,
+} from '../errors';
 
 const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
@@ -125,7 +131,9 @@ describe('reporting', () => {
   it('builds the handler that replaces a silent catch', async () => {
     await Promise.reject(new Error('boom')).catch(reporting('room.leave', { kind: 'background', room: 'abc' }));
     await flush();
-    expect(sink).toHaveBeenCalledWith(expect.objectContaining({ action: 'room.leave', room: 'abc', kind: 'background' }));
+    expect(sink).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'room.leave', room: 'abc', kind: 'background' }),
+    );
   });
 
   it('works without options', async () => {

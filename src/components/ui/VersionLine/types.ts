@@ -1,6 +1,6 @@
 import type { StyleProp, TextStyle } from 'react-native';
 
-import type { Codename } from '@/helpers/version';
+import type { Codename } from '@/helpers/appInfo';
 
 export type VersionLineProps = {
   version: string;

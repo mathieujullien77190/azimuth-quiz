@@ -4,7 +4,7 @@ import { View } from 'react-native';
 
 import { HOME_COMPASS_SIZE, SPLASH_MIN_MS } from '@/data';
 import { APP_CODENAME, APP_VERSION_NUMBER } from '@/helpers/appInfo';
-import { useStartup } from '@/helpers/startupStore';
+import { useStartup } from '@/store/startupStore';
 import { useTranslation } from '@/i18n';
 import { useThemedStyles } from '@/themes';
 

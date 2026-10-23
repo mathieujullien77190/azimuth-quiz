@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import { goBackOrHome } from '@/helpers/goBack';
+import { goBackOrHome } from '@/helpers/platform';
 
 import SetupScreen from '@/games/screens/SetupScreen';
 

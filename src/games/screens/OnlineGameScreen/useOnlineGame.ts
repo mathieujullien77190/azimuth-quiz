@@ -1,10 +1,10 @@
-import { reporting } from '@/helpers/reportError';
+import { reporting } from '@/helpers/errors';
 import { useEffect, useRef, useState } from 'react';
 
 import { DEFAULT_DISTANCE_KM } from '@/games/constants';
 import { originForRound } from '@/games/helpers/originForRound';
 import { applyBestBonus, scoreRound } from '@/helpers';
-import { useOnlineRoomSession } from '@/helpers/useOnlineRoomSession';
+import { useOnlineRoomSession } from '@/helpers/roomHooks';
 import {
   deleteRoom,
   finishRoomRound,

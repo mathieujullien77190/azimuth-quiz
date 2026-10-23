@@ -7,7 +7,7 @@ import { useThemeSettings } from '@/themes';
 import type { ThemeId } from '@/types';
 
 import SettingsScreen from '..';
-import { versionLabel } from '@/helpers/version';
+import { versionLabel } from '@/helpers/appInfo';
 import { APP_CODENAME, APP_VERSION_NUMBER } from '../constants';
 
 jest.mock('@/helpers', () => ({ clearAppData: jest.fn() }));

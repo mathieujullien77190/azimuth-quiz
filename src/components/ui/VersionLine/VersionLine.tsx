@@ -1,6 +1,6 @@
 import { Linking, Text } from 'react-native';
 
-import { versionParts } from '@/helpers/version';
+import { versionParts } from '@/helpers/appInfo';
 import { useThemedStyles } from '@/themes';
 
 import { wikiLabel } from './helpers';

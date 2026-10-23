@@ -6,8 +6,8 @@ import type { Category, Difficulty } from '@/types';
 
 import { db } from './client';
 import type { GroupCursors } from '../helpers/groupCursors';
-import { shuffle } from '../helpers/random';
-import { splitEvenly } from '../helpers/splitEvenly';
+import { shuffle } from '../helpers/utils';
+import { splitEvenly } from '../helpers/utils';
 
 // Hors du barrel de `helpers/index.ts` : `firebase/firestore` est ESM seul et fait planter Jest.
 

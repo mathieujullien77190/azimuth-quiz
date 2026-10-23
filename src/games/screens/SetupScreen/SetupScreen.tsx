@@ -1,4 +1,4 @@
-import { reporting } from '@/helpers/reportError';
+import { reporting } from '@/helpers/errors';
 import { useEffect, useMemo, useState } from 'react';
 
 import type { Counts } from '@/data/firestore/types';

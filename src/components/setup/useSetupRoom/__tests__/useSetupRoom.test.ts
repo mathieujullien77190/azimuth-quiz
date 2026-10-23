@@ -4,9 +4,9 @@ import { act, renderHook } from '@testing-library/react-native';
 import { PLAYER_NAME_STORAGE_KEY } from '@/data';
 import { subscribeToRoomGame, subscribeToRoomPlayers, subscribeToRoomSettings } from '@/games/firebase/room';
 import { useRoomStore } from '@/store/roomStore';
-import { loadLastJoinedRoom } from '@/helpers/lastRoom';
-import { resetErrorThrottle, setErrorReporter } from '@/helpers/reportError';
-import { nameTakenError } from '@/helpers/roomName';
+import { loadLastJoinedRoom } from '@/helpers/storage';
+import { resetErrorThrottle, setErrorReporter } from '@/helpers/errors';
+import { nameTakenError } from '@/helpers/roomPlayers';
 import type { RoomPlayers } from '@/firebase/roomApi';
 import { usePlayerName } from '@/settings';
 
@@ -19,7 +19,7 @@ const mockDismissTo = jest.fn();
 const mockRouter = { push: mockPush, dismissTo: mockDismissTo };
 jest.mock('expo-router', () => ({ useRouter: () => mockRouter }));
 // La detection de coupure a ses propres tests (`useRoomPresence.test.ts`).
-jest.mock('@/helpers/useRoomPresence', () => ({ useRoomPresence: jest.fn() }));
+jest.mock('@/helpers/roomHooks', () => ({ useRoomPresence: jest.fn() }));
 // `room.ts` charge `firebase/firestore` (ESM seul, plante Jest) : les abonnements du store sont des mocks.
 jest.mock('@/games/firebase/room', () => ({
   subscribeToRoomPlayers: jest.fn(),

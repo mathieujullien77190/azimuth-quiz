@@ -1,6 +1,6 @@
 import { act, fireEvent, render } from '@testing-library/react-native';
 
-import { useErrorNotice } from '@/helpers/errorNotice';
+import { useErrorNotice } from '@/helpers/errors';
 import { translations } from '@/i18n/translations';
 
 import { NOTICE_DURATION_MS } from '../constants';

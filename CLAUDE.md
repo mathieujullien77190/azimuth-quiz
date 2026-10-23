@@ -23,7 +23,7 @@ src/
   games/        # screens/, components/, helpers/, firebase/ (room.ts, places.ts), constants.ts
   firebase/     # TOUT ce qui touche Firebase/Firestore : client.ts (app, db, auth), roomApi.ts (createRoomApi), roomCode.ts, errorSink.ts, groupCounts.ts, groupedDraw.ts
   store/        # UN seul store Zustand concret, `useRoomStore` (roomStore.ts : etat + actions connect/disconnect/drapeaux), types dans types.ts
-  helpers/      # sans Firebase (geo, storage, useOnlineRoomSession...)
+  helpers/      # sans Firebase, regroupes par theme : geo, utils (format, random, splitEvenly), platform (web, drapeaux, goBack, position), storage (AsyncStorage : reglages, langue, theme, nom, derniere room), errors (reportError + notice), appInfo (version), hooks, roomPlayers (+ noms), roomHooks (session, presence, reactions, purge), groupCursors
   settings/     # GameSettings (store Zustand singleton), usePlayerName
   themes/       # night.ts, day.ts, fonts.ts, ThemeContext
   types/
@@ -51,7 +51,7 @@ Collection `rooms`, champ `game` (`'compass'`) immuable, fixe a la creation. Un 
 - **Firestore** : `firebase/roomApi.ts` (`createRoomApi(game)`) ; chaque `games/firebase/room.ts` le lie et ajoute l'etat de
   manche. **Tout champ qu'un joueur non hote ecrit doit figurer dans sa liste de champs** de `firestore.rules`
   (`compassPlayer`), sinon l'ecriture est refusee et l'action « revient ».
-- **Store** : `store/roomStore.ts` = `useRoomStore`, store unique de la room (pas de fabrique ni de generiques) ; `useSetupRoom`, `useOnlineRoomSession` et `useRoomPresence` l'importent directement (les tests le remplissent par `setState` et mockent `@/games/firebase/room`). **Setup** : `components/setup/useSetupRoom` + sections `*Section`.
+- **Store** : `store/roomStore.ts` = `useRoomStore`, store unique de la room (pas de fabrique ni de generiques) ; `useSetupRoom` et les hooks de `helpers/roomHooks.ts` l'importent directement (les tests le remplissent par `setState` et mockent `@/games/firebase/room`). **Setup** : `components/setup/useSetupRoom` + sections `*Section`.
 - **Ecran de jeu** : `useOnlineRoomSession` (etat, hote, joueurs dans l'ordre d'arrivee, redirection « room supprimee », `handleQuit`), `useGuessDraft`.
 - **Pas de partie locale** : seul = room *cachee* (`hostedSilently`), donc reseau requis. `startOnlineGame(run)` couvre les deux cas.
 - **Un joueur part** (quitte, expulse, coupure) : l'hote efface ses donnees de manche (`useHostPruneLeavers`,
@@ -116,7 +116,7 @@ meme lieu de suite. Aucun champ de plus pour un non-hote.
 
 ## Erreurs de jeu
 
-Une ecriture Firestore qui echoue ne s'avale pas : `.catch(reporting('jeu.action', { room }))` (`helpers/reportError.ts`), jamais
+Une ecriture Firestore qui echoue ne s'avale pas : `.catch(reporting('jeu.action', { room }))` (`helpers/errors.ts`), jamais
 `.catch(() => {})`. `kind: 'game'` prevent le joueur (`ErrorNoticeHost`) ; `kind: 'background'` (presence, saisie, nettoyage) ne
 fait que `console.debug` (en dev, `console.error` = toast rouge). Toutes vont dans la collection `errors` (`firebase/errorSink.ts`,
 installe dans `_layout.tsx`), dedupliquees (10 s jeu, 60 s fond). Les regles exigent le meme lot que deux compteurs du jour

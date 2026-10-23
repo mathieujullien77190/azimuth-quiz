@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-import { useErrorNotice } from '@/helpers/errorNotice';
+import { useErrorNotice } from '@/helpers/errors';
 import { useTranslation } from '@/i18n';
 
 import NoticeOverlay from '@/components/ui/NoticeOverlay';

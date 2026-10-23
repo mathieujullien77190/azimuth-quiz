@@ -1,4 +1,4 @@
-import { versionParts } from '@/helpers/version';
+import { versionParts } from '@/helpers/appInfo';
 
 import appConfig from '../../../../app.json';
 

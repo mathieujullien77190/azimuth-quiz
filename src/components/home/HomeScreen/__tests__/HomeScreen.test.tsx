@@ -1,6 +1,6 @@
 import { act, fireEvent, render } from '@testing-library/react-native';
 
-import { useStartup } from '@/helpers/startupStore';
+import { useStartup } from '@/store/startupStore';
 
 import HomeScreen from '..';
 

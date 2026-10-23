@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 
-import { goBackOrHome } from '@/helpers/goBack';
+import { goBackOrHome } from '@/helpers/platform';
 
 import SettingsScreen from '@/components/home/SettingsScreen';
 

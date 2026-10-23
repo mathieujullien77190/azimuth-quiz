@@ -1,7 +1,7 @@
 import { act, render } from '@testing-library/react-native';
 
 import { SPLASH_MAX_MS, SPLASH_MIN_MS } from '@/data';
-import { useStartup } from '@/helpers/startupStore';
+import { useStartup } from '@/store/startupStore';
 
 import StartupSplash from '..';
 

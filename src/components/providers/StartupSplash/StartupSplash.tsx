@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { SPLASH_MAX_MS, SPLASH_MIN_MS } from '@/data';
-import { useStartup } from '@/helpers/startupStore';
-import { useSplashGate } from '@/helpers/useSplashGate';
+import { useStartup } from '@/store/startupStore';
+import { useSplashGate } from '@/helpers/hooks';
 import { useLanguage } from '@/i18n';
 import { usePlayerName, useSettings } from '@/settings';
 import { useThemeSettings } from '@/themes';

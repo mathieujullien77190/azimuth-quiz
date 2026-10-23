@@ -1,4 +1,4 @@
-/** Une erreur de la collection `errors` (ecrite par le jeu, voir `src/helpers/reportError.ts`). */
+/** Une erreur de la collection `errors` (ecrite par le jeu, voir `src/helpers/errors.ts`). */
 export type ErrorRow = {
   id: string;
   action: string;

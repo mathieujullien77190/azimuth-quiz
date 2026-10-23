@@ -1,7 +1,7 @@
-export { formatBearing, formatDistance, formatNumber, initials } from './format';
+export { formatBearing, formatDistance, formatNumber, initials } from './utils';
 export { bearingDeg, distanceKm, normalizeBearing } from './geo';
 export { kmToRatio, ratioToKm } from '../games/helpers/distanceScale';
-export { resolveOrigin } from './location';
+export { resolveOrigin } from './platform';
 export { applyBestBonus, scoreRound } from '../games/helpers/scoring';
 export {
   clearAppData,
@@ -15,4 +15,4 @@ export {
   saveThemeId,
   systemLanguage,
 } from './storage';
-export { disableTextSelection, polyfillFlagEmoji } from './web';
+export { disableTextSelection, polyfillFlagEmoji } from './platform';

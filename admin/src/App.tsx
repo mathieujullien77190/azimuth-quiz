@@ -31,7 +31,7 @@ const AdminApp = () => {
   // Un changement venu d'ailleurs est arrive dans la copie locale : les vues se remontent.
   const revision = useSyncExternalStore(subscribeRevision, dataRevision);
   useEffect(() => startJournalSync(), []);
-  // Meme repli drapeau Chromium/Windows que le jeu (voir helpers/web.ts), pour le badge ci-dessous.
+  // Meme repli drapeau Chromium/Windows que le jeu (voir helpers/platform.ts), pour le badge ci-dessous.
   useEffect(() => {
     polyfillCountryFlagEmojis();
   }, []);

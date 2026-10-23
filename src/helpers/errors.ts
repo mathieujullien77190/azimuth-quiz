@@ -1,4 +1,17 @@
-import { useErrorNotice } from './errorNotice';
+import { create } from 'zustand';
+
+type ErrorNoticeState = {
+  /** Une action de jeu vient d'echouer : la notice est affichee (voir `components/providers/ErrorNoticeHost`). */
+  visible: boolean;
+  show: () => void;
+  hide: () => void;
+};
+
+export const useErrorNotice = create<ErrorNoticeState>()((set) => ({
+  visible: false,
+  show: () => set({ visible: true }),
+  hide: () => set({ visible: false }),
+}));
 
 /** `game`: action que le joueur vient de faire (il est prevenu). `background`: entretien (presence, saisie...) : log seul. */
 export type ErrorKind = 'game' | 'background';
@@ -44,7 +57,11 @@ const messageOf = (error: unknown): string =>
   (error instanceof Error ? error.message : String(error)).slice(0, MAX_MESSAGE_LENGTH);
 
 /** Remplace `.catch(() => {})` : log, previent le joueur si c'est son action, enregistre (limite). Ne leve jamais. */
-export const reportError = (action: string, error: unknown, { kind = 'game', room = null }: ReportOptions = {}): void => {
+export const reportError = (
+  action: string,
+  error: unknown,
+  { kind = 'game', room = null }: ReportOptions = {},
+): void => {
   // Le fond evite console.error : en dev il s'affiche en toast rouge.
   if (kind === 'game') {
     console.error(`[${action}]`, error);
