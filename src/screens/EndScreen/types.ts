@@ -1,3 +1,5 @@
+import type { StandingEntry } from '@/components/game/FinalStandings/types';
+import type { RecapRow } from '@/components/game/RoundsRecap';
 import type { Player, RoundRecord } from '@/types';
 
 export type EndScreenProps = {
@@ -7,6 +9,18 @@ export type EndScreenProps = {
   totals: number[];
   /** Nom du joueur de cet appareil, voir `localName` de `FinalStandings`. */
   localName: string;
+  onReplay: () => void;
+  onQuit: () => void;
+};
+
+export type EndScreenViewProps = {
+  title: string;
+  entries: StandingEntry[];
+  localName: string;
+  recapTitle: string;
+  /** Intitule des colonnes du recap (direction, distance). */
+  columns: string[];
+  rows: RecapRow[];
   onReplay: () => void;
   onQuit: () => void;
 };

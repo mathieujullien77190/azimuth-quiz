@@ -28,7 +28,7 @@ Vitest (jsdom + Testing Library) : `npm run test:coverage`, seuil **100 %** sur 
 - **Rangement** : la story d'un composant et ses exemples de code vivent dans le sous-dossier `doc/` du composant
   (`doc/<Name>.stories.tsx`, `doc/<Story>.source.md`). `source(code)` (`.storybook/utils/source.ts`, alias `~sb/source`) affiche le
   vrai code d'utilisation de la story ; `localizedArgs` (`~sb/localized`) fait suivre la langue aux textes des `args`.
-- **Menu** : `Home`, `Game`, `Geo`, `Setup`, `UI`, comme le rangement de `components/` (ordre dans `.storybook/preview.tsx` : y
+- **Menu** : `Home`, `Game`, `Geo`, `Screens` (vues de `screens/`), `Setup`, `UI` (ordre dans `.storybook/preview.tsx` : y
   ajouter toute nouvelle section).
 - **Themes** : le chrome de Storybook a un theme classique clair / sombre (`manager.ts`) qui suit le bouton « Theme » de la barre
   d'outils ; le theme du jeu (night / day) ne s'applique qu'aux composants dans la preview.

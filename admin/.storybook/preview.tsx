@@ -99,9 +99,9 @@ const preview: Preview = {
     },
   ],
   parameters: {
-    // Ordre du menu : comme le rangement de src/components (home, game, geo, setup, ui).
+    // Ordre du menu : comme le rangement de src/components (home, game, geo, screens, setup, ui).
     options: {
-      storySort: { order: ['Home', 'Game', 'Geo', 'Setup', 'UI'] },
+      storySort: { order: ['Home', 'Game', 'Geo', 'Screens', 'Setup', 'UI'] },
     },
     controls: {
       matchers: {

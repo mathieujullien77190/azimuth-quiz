@@ -26,17 +26,13 @@ const ROOTS = [
  * Anything NOT listed here must have one. Keep the reason next to the name.
  */
 const NO_STORY_OK = {
-  HomeScreen: 'smart container (router, storage)',
-  SettingsScreen: 'smart container (settings stores)',
   LanguageProvider: 'provider',
   ErrorNoticeHost: 'reads the error store, mounted once at the root',
   ThemeProvider: 'provider',
-  RoomDeletedScreen: 'reads the router',
   useSetupRoom: 'hook, not a component',
   HelicopterButton: 'shown through MascotButton',
   UfoButton: 'shown through MascotButton',
   SetupScreen: 'smart container',
-  EndScreen: 'container of FinalStandings',
   OnlineGameScreen: 'smart container',
   StartupSplash: 'gate mounted once at the root, paints only the boot colour',
   GearIcon: 'shown through MascotButton',

@@ -5,8 +5,9 @@ Un dossier par ecran, rendu par une route de `app/` : `HomeScreen`, `SettingsScr
 
 ## Container / vue / hook
 
-`SetupScreen` et `OnlineGameScreen` se decoupent en trois fichiers : un hook colocalise (`useOnlineRoom.ts`, `useOnlineGame.ts`)
-porte l'etat, les effets et les actions deja resolues ; le container (`*Screen.tsx`) appelle le hook, calcule les libelles
+Les six ecrans se decoupent en container + vue ; `HomeScreen`, `SettingsScreen`, `RoomDeletedScreen` et `EndScreen` gardent leur
+logique dans le container, et chaque vue a une story `Screens/<Name>View` (dans `doc/`). `SetupScreen` et `OnlineGameScreen`
+ajoutent un hook colocalise (`useOnlineRoom.ts`, `useOnlineGame.ts`) qui porte l'etat, les effets et les actions deja resolues ; le container (`*Screen.tsx`) appelle le hook, calcule les libelles
 (`useTranslation`, `useTheme`) et garde les early-returns d'ecran entier (chargement, fin, notice « room supprimee ») ; la vue
 (`*View.tsx`) ne fait que du rendu (jamais d'effet ni de store metier ; `readOnly`, kick... sont decides dans le container).
 `useTranslation`, `useTheme`, `useThemedStyles` et `useWindowDimensions` sont permis dans la vue. Chaque fichier de style porte
