@@ -1,128 +1,146 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1010" width="1200" height="1010" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1560 1010" width="1560" height="1010" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
   <title>Flux Firestore d'Azimuth Quiz</title>
   <defs>
-    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0 0 L10 5 L0 10 z" fill="#1f2a37"/>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#1f5fa8"/>
     </marker>
-    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0 0 L10 5 L0 10 z" fill="#4a8a4a"/>
+    <marker id="ap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#c2571a"/>
     </marker>
   </defs>
-  <rect width="1200" height="1010" fill="#ffffff"/>
+  <rect width="1560" height="1010" fill="#ffffff"/>
   <text x="24" y="34" font-size="18" font-weight="700" fill="#1f2a37">Flux Firestore : une partie de bout en bout</text>
-  <text x="24" y="54" font-size="12.5" fill="#5b6b7c">rouge = écriture · vert = abonnement temps réel (onSnapshot) · tout passe par src/firebase/room.ts et par firestore.rules</text>
+  <g font-size="12.5" fill="#5b6b7c">
+    <path d="M24 49 H64" stroke="#1f5fa8" stroke-width="2.4"/><text x="72" y="54" fill="#1f5fa8" font-weight="700">hôte</text>
+    <path d="M122 49 H162" stroke="#c2571a" stroke-width="2.4"/><text x="170" y="54" fill="#c2571a" font-weight="700">joueurs 2 à 10</text>
+    <path d="M290 49 H330" stroke="#5b6b7c" stroke-width="2.2"/><text x="338" y="54">trait plein = écriture</text>
+    <path d="M490 49 H530" stroke="#5b6b7c" stroke-width="2.2" stroke-dasharray="6 4"/><text x="538" y="54">pointillés = abonnement temps réel (onSnapshot)</text>
+    <text x="840" y="54">tout passe par src/firebase/room.ts et firestore.rules</text>
+  </g>
 
   <!-- Colonnes -->
   <g font-size="14" font-weight="700" text-anchor="middle" fill="#1f2a37">
-    <rect x="30" y="72" width="230" height="40" rx="10" fill="#eef4fb" stroke="#9db3c8"/><text x="145" y="97">Hôte (appareil 1)</text>
-    <rect x="285" y="72" width="230" height="40" rx="10" fill="#eef4fb" stroke="#9db3c8"/><text x="400" y="97">Joueur (appareil 2..10)</text>
-    <rect x="540" y="72" width="330" height="40" rx="10" fill="#eaf5ea" stroke="#4a8a4a"/><text x="705" y="97">Firestore : rooms/{code}</text>
-    <rect x="895" y="72" width="275" height="40" rx="10" fill="#fff7ec" stroke="#b5651d"/><text x="1032" y="97">Autres collections</text>
+    <rect x="30" y="72" width="230" height="40" rx="10" fill="#e3eefb" stroke="#1f5fa8" stroke-width="2"/><text x="145" y="97" fill="#1f5fa8">Hôte (appareil 1)</text>
+    <rect x="285" y="72" width="230" height="40" rx="10" fill="#fdeee3" stroke="#c2571a" stroke-width="2"/><text x="400" y="97" fill="#c2571a">Joueurs 2 à 10</text>
+    <rect x="540" y="72" width="990" height="40" rx="10" fill="#eaf5ea" stroke="#4a8a4a" stroke-width="2"/><text x="1035" y="97">Firestore : les collections</text>
   </g>
   <g stroke="#c9d6e3" stroke-width="1" stroke-dasharray="4 5">
-    <path d="M145 112 V990"/><path d="M400 112 V990"/><path d="M705 112 V990"/><path d="M1032 112 V990"/>
+    <path d="M145 112 V990" stroke="#1f5fa8" opacity="0.45"/><path d="M400 112 V990" stroke="#c2571a" opacity="0.45"/><path d="M855 112 V990" opacity="0"/>
   </g>
 
   <!-- 1 Créer -->
   <text x="24" y="142" font-size="13" font-weight="700" fill="#1f2a37">1 · Créer et rejoindre</text>
   <g font-size="12" fill="#1f2a37">
-    <path d="M145 164 H585" stroke="#1f2a37" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
-    <text x="160" y="158">createRoom : supprime ses anciennes rooms, setDoc {hostUid, game, settings}</text>
-    <path d="M400 196 H585" stroke="#1f2a37" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
-    <text x="300" y="190" text-anchor="start">roomExists : getDoc (game == 'compass' ?)</text>
-    <path d="M400 228 H585" stroke="#1f2a37" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+    <path d="M145 164 H585" stroke="#1f5fa8" stroke-width="1.8" fill="none" marker-end="url(#ah)"/>
+    <text x="160" y="158">createRoom : supprime ses anciennes rooms, setDoc {hostUid, settings}</text>
+    <path d="M400 196 H585" stroke="#c2571a" stroke-width="1.8" fill="none" marker-end="url(#ap)"/>
+    <text x="300" y="190" text-anchor="start">roomExists : getDoc (la room existe-t-elle ?)</text>
+    <path d="M400 228 H585" stroke="#c2571a" stroke-width="1.8" fill="none" marker-end="url(#ap)"/>
     <text x="300" y="222">joinRoomPresence : players.{uid}.name · joinedAt</text>
-    <path d="M145 260 H585" stroke="#1f2a37" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+    <path d="M145 260 H585" stroke="#1f5fa8" stroke-width="1.8" fill="none" marker-end="url(#ah)"/>
     <text x="160" y="254">presence + updateRoomPlayerColors (hôte seul écrit les couleurs)</text>
-    <path d="M585 292 H160" stroke="#4a8a4a" stroke-width="1.6" fill="none" marker-end="url(#g)"/>
-    <path d="M585 296 H415" stroke="#4a8a4a" stroke-width="1.6" fill="none" marker-end="url(#g)"/>
+    <path d="M585 292 H160" stroke="#1f5fa8" stroke-width="1.8" fill="none" stroke-dasharray="6 4" marker-end="url(#ah)"/>
+    <path d="M585 296 H415" stroke="#c2571a" stroke-width="1.8" fill="none" stroke-dasharray="6 4" marker-end="url(#ap)"/>
     <text x="600" y="286" fill="#2f6b2f">connect() : 3 abonnements → useRoomStore (joueurs · réglages · manche)</text>
   </g>
 
   <!-- 2 Lancer -->
   <text x="24" y="338" font-size="13" font-weight="700" fill="#1f2a37">2 · Lancer la partie (l'hôte tire seul)</text>
   <g font-size="12" fill="#1f2a37">
-    <path d="M145 360 H920" stroke="#4a8a4a" stroke-width="1.6" fill="none" marker-start="url(#g)"/>
+    <path d="M145 360 H920" stroke="#1f5fa8" stroke-width="1.8" fill="none" stroke-dasharray="6 4" marker-start="url(#ah)"/>
     <text x="160" y="354">lit meta/compassCounts puis places/{clé} (une requête `or` par tranche de 30 numéros)</text>
-    <path d="M145 392 H585" stroke="#1f2a37" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+    <path d="M145 392 H585" stroke="#1f5fa8" stroke-width="1.8" fill="none" marker-end="url(#ah)"/>
     <text x="160" y="386">startRoomGame : screen 'game', origin, places, roundIndex 0, guesses {}</text>
   </g>
 
   <!-- 3 Manche -->
   <text x="24" y="438" font-size="13" font-weight="700" fill="#1f2a37">3 · Une manche</text>
   <g font-size="12" fill="#1f2a37">
-    <path d="M400 460 H585" stroke="#1f2a37" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
-    <path d="M145 464 H585" stroke="#1f2a37" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+    <path d="M400 460 H585" stroke="#c2571a" stroke-width="1.8" fill="none" marker-end="url(#ap)"/>
+    <path d="M145 464 H585" stroke="#1f5fa8" stroke-width="1.8" fill="none" marker-end="url(#ah)"/>
     <text x="600" y="458">submitRoomGuess : guesses.{uid} (chacun écrit la sienne)</text>
-    <path d="M145 496 H585" stroke="#1f2a37" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+    <path d="M145 496 H585" stroke="#1f5fa8" stroke-width="1.8" fill="none" marker-end="url(#ah)"/>
     <text x="160" y="490">tous ont répondu → finishRoomRound : scores, totalScores, screen 'reveal'</text>
-    <path d="M585 528 H415" stroke="#4a8a4a" stroke-width="1.6" fill="none" marker-end="url(#g)"/>
+    <path d="M585 528 H415" stroke="#c2571a" stroke-width="1.8" fill="none" stroke-dasharray="6 4" marker-end="url(#ap)"/>
+    <path d="M585 534 H160" stroke="#1f5fa8" stroke-width="1.8" fill="none" stroke-dasharray="6 4" marker-end="url(#ah)"/>
     <text x="300" y="522" fill="#2f6b2f">révélation chez tous</text>
-    <path d="M145 560 H585" stroke="#1f2a37" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+    <path d="M145 560 H585" stroke="#1f5fa8" stroke-width="1.8" fill="none" marker-end="url(#ah)"/>
     <text x="160" y="554">nextRoomRound : roundIndex + 1 (ou screen 'end') ; les invités continuent avec leur bouton</text>
-    <path d="M400 592 H585" stroke="#1f2a37" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+    <path d="M400 592 H585" stroke="#c2571a" stroke-width="1.8" fill="none" marker-end="url(#ap)"/>
     <text x="300" y="586">sendReaction : champ reaction {uid, emoji, seq}</text>
   </g>
 
   <!-- 4 Vie de la room -->
   <text x="24" y="638" font-size="13" font-weight="700" fill="#1f2a37">4 · Présence et départs</text>
   <g font-size="12" fill="#1f2a37">
-    <path d="M400 660 H585" stroke="#1f2a37" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
-    <path d="M145 664 H585" stroke="#1f2a37" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+    <path d="M400 660 H585" stroke="#c2571a" stroke-width="1.8" fill="none" marker-end="url(#ap)"/>
+    <path d="M145 664 H585" stroke="#1f5fa8" stroke-width="1.8" fill="none" marker-end="url(#ah)"/>
     <text x="600" y="658">heartbeat players.{uid}.lastSeen toutes les 30 s</text>
-    <path d="M145 696 H585" stroke="#1f2a37" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+    <path d="M145 696 H585" stroke="#1f5fa8" stroke-width="1.8" fill="none" marker-end="url(#ah)"/>
     <text x="160" y="690">l'hôte retire un joueur silencieux (90 s) ou expulsé : removeRoomPlayer, pruneRoomPlayerData</text>
-    <path d="M400 728 H585" stroke="#1f2a37" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+    <path d="M400 728 H585" stroke="#c2571a" stroke-width="1.8" fill="none" marker-end="url(#ap)"/>
     <text x="300" y="722">un joueur quitte : retire sa propre entrée</text>
-    <path d="M145 760 H585" stroke="#1f2a37" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+    <path d="M145 760 H585" stroke="#1f5fa8" stroke-width="1.8" fill="none" marker-end="url(#ah)"/>
     <text x="160" y="754">restartRoom : screen 'options' (rejouer) · deleteRoom : l'hôte quitte, la room disparaît</text>
   </g>
 
   <!-- 5 Erreurs -->
   <text x="24" y="806" font-size="13" font-weight="700" fill="#1f2a37">5 · Erreurs de jeu</text>
   <g font-size="12" fill="#1f2a37">
-    <path d="M400 828 H985" stroke="#1f2a37" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
-    <path d="M145 832 H985" stroke="#1f2a37" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+    <path d="M400 828 H1235" stroke="#c2571a" stroke-width="1.8" fill="none" marker-end="url(#ap)"/>
+    <path d="M145 832 H1235" stroke="#1f5fa8" stroke-width="1.8" fill="none" marker-end="url(#ah)"/>
     <text x="410" y="822">reporting() → errors/{id} + errorQuota (30/appareil, 1000/jour), même lot</text>
   </g>
 
+  <!-- Barre de la collection rooms : cible des fleches -->
+  <rect x="585" y="136" width="12" height="640" rx="6" fill="#eaf5ea" stroke="#4a8a4a"/>
+  <text x="591" y="128" font-size="12" font-weight="700" text-anchor="middle" fill="#2f6b2f">rooms</text>
+
   <!-- Colonne collections -->
+  <rect x="1224" y="118" width="322" height="860" rx="12" fill="#f3faf3" stroke="#4a8a4a" stroke-dasharray="2 4"/>
   <g font-size="11.5" fill="#1f2a37">
-    <rect x="910" y="130" width="245" height="94" rx="8" fill="#fff" stroke="#b5651d"/>
-    <text x="922" y="150" font-weight="700">places/{clé}</text>
-    <text x="922" y="168">lieux (copie du pays, numéro n)</text>
-    <text x="922" y="186">lecture publique ; écriture admin</text>
-    <text x="922" y="204">lue par l'hôte au tirage</text>
-    <rect x="910" y="236" width="245" height="68" rx="8" fill="#fff" stroke="#b5651d"/>
-    <text x="922" y="256" font-weight="700">meta/*</text>
-    <text x="922" y="274">compassCounts (tailles des groupes)</text>
-    <text x="922" y="292">dataVersion ; lecture publique</text>
-    <rect x="910" y="316" width="245" height="68" rx="8" fill="#fff" stroke="#b5651d"/>
-    <text x="922" y="336" font-weight="700">countries/{ISO}</text>
-    <text x="922" y="354">nom fr/en, recopié dans les lieux</text>
-    <text x="922" y="372">non lu par le jeu</text>
-    <rect x="910" y="396" width="245" height="68" rx="8" fill="#fff" stroke="#b5651d"/>
-    <text x="922" y="416" font-weight="700">journal/*  (admin seulement)</text>
-    <text x="922" y="434">une entrée par modification de données :</text>
-    <text x="922" y="452">l'admin ne relit que les documents cités</text>
-    <rect x="910" y="476" width="245" height="68" rx="8" fill="#fff" stroke="#b5651d"/>
-    <text x="922" y="496" font-weight="700">errors/* · errorQuota/*</text>
-    <text x="922" y="514">erreurs de jeu et compteurs du jour</text>
-    <text x="922" y="532">lues dans la page Erreurs de l'admin</text>
-    <rect x="910" y="860" width="245" height="106" rx="8" fill="#fff" stroke="#4a8a4a"/>
-    <text x="922" y="880" font-weight="700">Admin (écrit puis journalise)</text>
-    <text x="922" y="898">1 · documents (places…)</text>
-    <text x="922" y="914">2 · compteurs meta/compassCounts</text>
-    <text x="922" y="930">3 · meta/dataVersion + 1</text>
-    <text x="922" y="946">4 · journal/{id}, écrit en dernier</text>
+    <rect x="1240" y="124" width="290" height="112" rx="8" fill="#fff" stroke="#4a8a4a"/>
+    <text x="1252" y="144" font-weight="700">rooms/{code}  (une par partie)</text>
+    <text x="1252" y="162">hostUid · settings</text>
+    <text x="1252" y="180">players.{uid} : name, joinedAt, color, lastSeen</text>
+    <text x="1252" y="198">manche : screen, origin, places, roundIndex</text>
+    <text x="1252" y="216">guesses.{uid} · scores · totalScores</text>
+    <text x="1252" y="234">reaction {uid, emoji, seq}</text>
+    <rect x="1240" y="246" width="290" height="76" rx="8" fill="#fff" stroke="#b5651d"/>
+    <text x="1252" y="266" font-weight="700">places/{clé}</text>
+    <text x="1252" y="284">lieux (copie du pays, numéro n)</text>
+    <text x="1252" y="302">lecture publique ; écriture admin</text>
+    <text x="1252" y="320">lue par l'hôte au tirage</text>
+    <rect x="1240" y="332" width="290" height="60" rx="8" fill="#fff" stroke="#b5651d"/>
+    <text x="1252" y="352" font-weight="700">meta/*</text>
+    <text x="1252" y="370">compassCounts (tailles des groupes)</text>
+    <text x="1252" y="388">dataVersion ; lecture publique</text>
+    <rect x="1240" y="402" width="290" height="60" rx="8" fill="#fff" stroke="#b5651d"/>
+    <text x="1252" y="422" font-weight="700">countries/{ISO}</text>
+    <text x="1252" y="440">nom fr/en, recopié dans les lieux</text>
+    <text x="1252" y="458">non lu par le jeu</text>
+    <rect x="1240" y="472" width="290" height="60" rx="8" fill="#fff" stroke="#b5651d"/>
+    <text x="1252" y="492" font-weight="700">journal/*  (admin seulement)</text>
+    <text x="1252" y="510">une entrée par modification de données :</text>
+    <text x="1252" y="528">l'admin ne relit que les documents cités</text>
+    <rect x="1240" y="784" width="290" height="60" rx="8" fill="#fff" stroke="#b5651d"/>
+    <text x="1252" y="804" font-weight="700">errors/* · errorQuota/*</text>
+    <text x="1252" y="822">erreurs de jeu et compteurs du jour</text>
+    <text x="1252" y="840">lues dans la page Erreurs de l'admin</text>
+    <rect x="1240" y="860" width="290" height="106" rx="8" fill="#fff" stroke="#4a8a4a"/>
+    <text x="1252" y="880" font-weight="700">Admin (écrit puis journalise)</text>
+    <text x="1252" y="898">1 · documents (places…)</text>
+    <text x="1252" y="914">2 · compteurs meta/compassCounts</text>
+    <text x="1252" y="930">3 · meta/dataVersion + 1</text>
+    <text x="1252" y="946">4 · journal/{id}, écrit en dernier</text>
   </g>
 
   <!-- Règles -->
   <rect x="30" y="868" width="860" height="104" rx="10" fill="#fdf0f0" stroke="#b04a4a"/>
   <g font-size="12" fill="#1f2a37">
     <text x="46" y="890" font-weight="700">firestore.rules : qui peut écrire quoi dans rooms/{code}</text>
-    <text x="46" y="910">• create : tout appareil connecté (auth anonyme), à son nom (hostUid = soi), game == 'compass', jamais écraser une room</text>
-    <text x="46" y="928">• update par l'hôte : tout, sauf le champ game · update par un joueur (compassPlayer) : seulement players.{son uid},</text>
+    <text x="46" y="910">• create : tout appareil connecté (auth anonyme), à son nom (hostUid = soi), jamais écraser une room</text>
+    <text x="46" y="928">• update par l'hôte : tout · update par un joueur (compassPlayer) : seulement players.{son uid},</text>
     <text x="46" y="944">  guesses.{son uid} et reaction (reactionOk) · delete : l'hôte seul</text>
     <text x="46" y="962">• places, meta, countries : lecture publique, écriture admin (compte Google de la liste) · journal, errors : admin</text>
   </g>

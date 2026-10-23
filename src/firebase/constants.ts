@@ -26,9 +26,6 @@ export const JOURNAL_COLLECTION = 'journal';
 // Rooms
 // ---------------------------------------------------------------------------------------------------------------
 
-/** Valeur du champ `game` des rooms, fixee a la creation et immuable. */
-export const ROOM_GAME = 'compass';
-
 /** Une room ne tient pas plus de joueurs connectes qu'il n'y a de couleurs. */
 export const ROOM_MAX_PLAYERS = 10;
 

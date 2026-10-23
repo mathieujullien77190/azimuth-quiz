@@ -85,7 +85,7 @@ describe('createRoom', () => {
 
     expect(setDoc).toHaveBeenCalledWith(
       { path: 'rooms/tabofuna' },
-      { createdAt: 'SERVER_TIMESTAMP', hostUid: 'zoe', game: 'compass', settings },
+      { createdAt: 'SERVER_TIMESTAMP', hostUid: 'zoe', settings },
     );
   });
 
@@ -138,21 +138,12 @@ describe('createRoom', () => {
 });
 
 describe('roomExists', () => {
-  it('reflects whether a room of this game exists under the code', async () => {
+  it('reflects whether a room exists under the code', async () => {
     jest
       .mocked(getDoc)
-      .mockResolvedValueOnce(snapshot({ game: 'compass' }) as never)
+      .mockResolvedValueOnce(snapshot({ hostUid: 'zoe' }) as never)
       .mockResolvedValueOnce(snapshot(undefined) as never);
     await expect(roomExists('tabofuna')).resolves.toBe(true);
-    await expect(roomExists('kilobani')).resolves.toBe(false);
-  });
-
-  it("does not count another game's room, nor a room with no game (created before the games were merged)", async () => {
-    jest
-      .mocked(getDoc)
-      .mockResolvedValueOnce(snapshot({ game: 'clues' }) as never)
-      .mockResolvedValueOnce(snapshot({}) as never);
-    await expect(roomExists('tabofuna')).resolves.toBe(false);
     await expect(roomExists('kilobani')).resolves.toBe(false);
   });
 });

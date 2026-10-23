@@ -39,7 +39,7 @@ pas. Les index composites sont dans `firestore.indexes.json`.
 
 ## Room en ligne
 
-Une seule collection `rooms`, champ `game` (`'compass'`) immuable fixe a la creation ; un code d'un autre jeu est refuse a la jonction.
+Une seule collection `rooms` : un document par partie, identifie par son code.
 
 - **Regles** : `firestore.rules` (a la racine). **Tout champ qu'un joueur non hote ecrit doit figurer dans sa liste de champs**
   (`compassPlayer`), sinon l'ecriture est refusee et l'action « revient ». Les regles et les index se deploient a part.

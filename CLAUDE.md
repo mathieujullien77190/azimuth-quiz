@@ -8,7 +8,7 @@ s'affiche, chacun vise un cap et estime la distance depuis un point de depart. W
 contributeur, commits directs sur `master`.
 
 Le nom affiche (Boussole) vit dans `fr.ts`. `compass` ne subsiste que comme nom de donnee Firestore (`places.compass`,
-`meta/compassCounts`, `game: 'compass'`) et pour le composant qui dessine la boussole.
+`meta/compassCounts`) et pour le composant qui dessine la boussole.
 
 ## Carte du depot
 

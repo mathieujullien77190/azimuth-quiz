@@ -4,8 +4,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ---------------------------------------------------------------------------------------------
-    // Collection `rooms` : le champ `game` (`'compass'`) est fixé à la création et ne change
-    // plus jamais (voir `gameUnchanged`) : c'est lui qui dit quelles règles de mise à jour s'appliquent.
+    // Collection `rooms` : une room par partie, identifiée par son code.
     //
     // Pas d'écran de connexion : chaque appareil reçoit un uid via l'authentification anonyme de
     // Firebase (voir `ensureSignedIn` dans firebase/roomCode.ts). La room garde l'uid de son créateur
@@ -15,11 +14,6 @@ service cloud.firestore {
     // Vrai si l'appareil connecté est l'hôte de la room (évalué sur le document *avant* l'écriture).
     function isHost() {
       return request.auth != null && request.auth.uid == resource.data.hostUid;
-    }
-
-    // Le jeu d'une room ne change jamais, pas même par l'hôte.
-    function gameUnchanged() {
-      return request.resource.data.game == resource.data.game;
     }
 
     // Vrai si, dans la map `players`, seule l'entrée de l'appareil connecté est ajoutée, modifiée ou
@@ -150,19 +144,15 @@ service cloud.firestore {
       // N'importe qui peut lire une room (c'est ainsi qu'on vérifie un code avant de la rejoindre).
       allow read: if true;
 
-      // Tout appareil connecté peut créer une room à son nom, pour Boussole, mais jamais
+      // Tout appareil connecté peut créer une room à son nom, mais jamais
       // écraser une room existante (en cas de collision de code, le client réessaie avec un autre).
       allow create: if request.auth != null
         && request.resource.data.hostUid == request.auth.uid
-        && request.resource.data.game == 'compass'
         && !exists(/databases/$(database)/documents/rooms/$(code));
 
-      // L'hôte peut tout modifier (réglages, état de la manche, scores, retirer un joueur...), sauf le
-      // jeu. Les autres joueurs ne peuvent faire que ce que permet le jeu de la room.
-      allow update: if request.auth != null
-        && gameUnchanged()
-        && (isHost()
-          || (resource.data.game == 'compass' && compassPlayer()));
+      // L'hôte peut tout modifier (réglages, état de la manche, scores, retirer un joueur...). Les autres joueurs ne
+      // peuvent faire que ce que permet `compassPlayer`.
+      allow update: if request.auth != null && (isHost() || compassPlayer());
 
       // Seul l'hôte supprime sa room : à la fermeture de la partie, et avant d'en créer une nouvelle
       // (`deletePreviousRoomsByHost`, qui efface toutes ses anciennes rooms, quel que soit le jeu). Supprimer une room

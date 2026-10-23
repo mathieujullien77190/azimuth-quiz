@@ -22,7 +22,7 @@ import type { GameSettings, Guess, Origin, Place, RoundScore } from '@/types';
 // Hors barrel : `firebase/firestore` est ESM seul et plante Jest (voir `firebase/client.ts`). Cycle de vie de
 // la room (creation, presence, couleurs, reglages) puis ce que Compass joue : chacun repond seul, puis reveal commun.
 
-import { ROOM_GAME, ROOM_MAX_PLAYERS, ROOMS_COLLECTION } from '@/firebase/constants';
+import { ROOM_MAX_PLAYERS, ROOMS_COLLECTION } from '@/firebase/constants';
 
 export { isValidRoomCode } from '@/firebase/roomCode';
 
@@ -65,7 +65,7 @@ export const createRoom = async (settings: RoomSettings): Promise<string> => {
     const ref = roomRef(code);
     if ((await getDoc(ref)).exists()) continue;
 
-    await setDoc(ref, { createdAt: serverTimestamp(), hostUid, game: ROOM_GAME, settings });
+    await setDoc(ref, { createdAt: serverTimestamp(), hostUid, settings });
     await saveMyRoomCode(code);
     return code;
   }
@@ -74,7 +74,7 @@ export const createRoom = async (settings: RoomSettings): Promise<string> => {
 /** Une room de CE jeu existe-t-elle sous ce code ? Le code d'un autre jeu ne compte pas. */
 export const roomExists = async (code: string): Promise<boolean> => {
   const snapshot = await getDoc(roomRef(code));
-  return snapshot.exists() && snapshot.data()?.game === ROOM_GAME;
+  return snapshot.exists();
 };
 
 /** Envoie les reglages de l'hote aux joiners. */
