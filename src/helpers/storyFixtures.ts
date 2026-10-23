@@ -1,5 +1,7 @@
 import { DEFAULT_ORIGIN, PLAYER_COLORS } from '@/data';
 import { DEFAULT_DISTANCE_KM, MAX_SURFACE_DISTANCE_KM } from '@/data/game';
+import type { SetupPartyProps } from '@/components/setup/useSetupRoom';
+import type { OnlinePlayer } from '@/helpers/roomPlayers';
 import type { Guess, Place, Player, PlayerResult, RoundRecord } from '@/types';
 
 import { bearingDeg, distanceKm, normalizeBearing } from './geo';
@@ -85,3 +87,33 @@ export const SAMPLE_TOTALS: number[] = SAMPLE_RESULTS.map((result) => result.sco
 export const SAMPLE_MAX_SURFACE_KM = MAX_SURFACE_DISTANCE_KM;
 
 export const SAMPLE_DISTANCE_KM = DEFAULT_DISTANCE_KM;
+
+/** Les memes joueurs que `SAMPLE_PLAYERS`, avec un uid : la forme que prennent les ecrans de jeu en ligne. */
+export const SAMPLE_ONLINE_PLAYERS: OnlinePlayer[] = SAMPLE_PLAYERS.map((player, index) => ({
+  uid: `uid-${index}`,
+  name: player.name,
+  color: player.color,
+}));
+
+/** Bloc « partie » du setup en solo (rien de connecte) ; les stories en derivent hote et joiner. Callbacks vides. */
+export const SAMPLE_PARTY: SetupPartyProps = {
+  soloName: 'Zoé',
+  soloPlaceholder: 'Zoé',
+  soloColor: PLAYER_COLORS[0],
+  nameEditable: true,
+  onChangeName: () => {},
+  connectedPlayers: [],
+  localUid: null,
+  hostUid: null,
+  isHost: false,
+  onKick: () => {},
+  onlineChoice: null,
+  onChooseSolo: () => {},
+  onChooseHost: () => {},
+  onChooseJoin: () => {},
+  roomCode: null,
+  joinCode: '',
+  onJoinCodeChange: () => {},
+  joinCodeIsValid: false,
+  joinStatus: 'idle',
+};
