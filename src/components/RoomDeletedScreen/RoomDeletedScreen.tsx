@@ -9,12 +9,9 @@ import NoticeOverlay from '@/components/NoticeOverlay';
 import { styles } from './styles';
 
 /**
- * "The host deleted the room" notice, shared by every online game screen. Only a joiner ever sees
- * this: the host is the one who made the room disappear (see `useOnlineRoomSession`'s
- * `handleQuit`), and it's already navigating itself home in that same tap — showing it this same
- * notice too just traps it behind a modal with nothing to do until the redundant redirect timeout
- * catches up. Also used, with its own `message`, when a connection was lost (`useRoomPresence`).
- * Tappable rather than only ever auto-dismissing: no reason to make a joiner wait it out.
+ * Notice « l'hote a supprime la room », commune aux ecrans de jeu en ligne. Seul un joiner la voit : l'hote
+ * a supprime la room lui-meme et rentre deja a l'accueil dans ce meme tap. Sert aussi, avec son propre `message`,
+ * a une connexion perdue (`useRoomPresence`). Cliquable : inutile de faire attendre le joiner.
  */
 export const RoomDeletedScreen = ({ message }: { message?: string }) => {
   const router = useRouter();

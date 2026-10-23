@@ -7,8 +7,10 @@ import type { QuitButtonProps } from './types';
 
 import { createStyles } from './styles';
 
-/** "Quit": a cross, icon only — the label ("Quitter") lives in the accessibility label. `base` is the
- * circled cross of every game header, `accent` the plain accent-colored one of the setup screens. */
+/**
+ * « Quitter » : une croix, icone seule ; le libelle est dans le libelle d'accessibilite. `base` = croix cerclee
+ * des headers de jeu, `accent` = croix simple couleur d'accent des ecrans de setup.
+ */
 export const QuitButton = ({ onPress, variant = 'base' }: QuitButtonProps) => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();

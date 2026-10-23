@@ -155,7 +155,7 @@ describe('GlobeView selection', () => {
     act2(() => canvas().onSelect({ kind: 'place', id: 'par' }));
     await user.selectOptions(screen.getAllByRole('combobox').find((el) => (el as HTMLSelectElement).value === 'easy')!, 'hard');
     expect(mocks.saveDifficulty).toHaveBeenCalledWith(expect.objectContaining({ key: 'par' }), 'hard');
-    // Hard places are all that is left once the filter says so: the edited place is among them.
+    // Il ne reste que les lieux difficiles une fois le filtre pose : le lieu edite en fait partie.
     await waitFor(() => expect(canvas().placeKeys).toEqual(['par', 'kyo']));
   });
 

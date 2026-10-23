@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
 
 export type GameFooterProps = {
-  /** Whatever the game puts in its footer: the answer bar, the "next round" button, a waiting text... */
+  /** Ce que le jeu met dans son footer : barre de reponse, bouton "manche suivante", texte d'attente... */
   children: ReactNode;
-  /** Floats the round reactions button above the footer (its column of emojis calling this); leave it out where nobody
-   * is there to see them (alone in the room). Takes no room in the footer. */
+  /** Fait flotter le bouton de reactions au-dessus du footer ; a omettre quand personne ne les voit (seul dans
+   * la room). Ne prend pas de place dans le footer. */
   onReact?: (emoji: string) => void;
 };

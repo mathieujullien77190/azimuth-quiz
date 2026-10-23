@@ -1,6 +1,6 @@
 import { buildProgressSteps } from '../helpers';
 
-/** A small deterministic random, so a look is the same from one run to the next. */
+/** Petit aleatoire deterministe, pour un rendu identique d'un lancement a l'autre. */
 const seeded = (seed: number) => {
   let state = seed;
   return () => {

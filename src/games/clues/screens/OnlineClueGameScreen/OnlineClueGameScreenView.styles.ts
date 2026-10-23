@@ -19,7 +19,7 @@ export const createStyles = ({ colors, isDark, radius, typography }: Theme) =>
     buzzRow: {
       gap: spacing.sm,
     },
-    // The turn-holder who already guessed: what is left to him.
+    // Detenteur du tour qui a deja propose : ce qui lui reste.
     guessedNote: {
       ...typography.body,
       color: colors.textMuted,

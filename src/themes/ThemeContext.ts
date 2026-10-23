@@ -9,12 +9,10 @@ export const THEMES: Record<ThemeId, Theme> = { night, day };
 
 export type ThemeSettingsValue = {
   themeId: ThemeId;
-  /** False until the saved theme has been read (Night is returned by default until then). */
+  /** Faux tant que le theme sauvegarde n'est pas lu (Night par defaut). */
   ready: boolean;
   setThemeId: (themeId: ThemeId) => void;
-  /** Resets the in-memory theme to Night by default, without rewriting storage
-   * (used after "Clear data": otherwise the app keeps the theme in memory until the next
-   * launch, even though storage is already empty). */
+  /** Remet Night en memoire sans toucher au stockage (apres "Effacer les donnees"). */
   resetThemeId: () => void;
 };
 

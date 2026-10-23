@@ -10,8 +10,8 @@ import type { DifficultyFeedbackOverlayProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * The dev mode's question after a round: "Le lieu Paris était-il… 🟢 Facile / 🟡 Moyen / 🔴 Difficile". Dumb. A tap on one
- * of the three answers calls `onChoose`; a tap anywhere else (the backdrop) calls `onDismiss` and the game goes on.
+ * Question du mode dev apres une manche (dumb). Un tap sur une reponse appelle `onChoose` ;
+ * un tap ailleurs (le fond) appelle `onDismiss` et le jeu continue.
  */
 export const DifficultyFeedbackOverlay = ({ question, onChoose, onDismiss }: DifficultyFeedbackOverlayProps) => {
   const styles = useThemedStyles(createStyles);
@@ -21,7 +21,7 @@ export const DifficultyFeedbackOverlay = ({ question, onChoose, onDismiss }: Dif
   return (
     <Modal animationType="fade" onRequestClose={onDismiss} transparent visible={question !== null}>
       <Pressable accessibilityLabel={t.devFeedback.dismiss} onPress={onDismiss} style={styles.backdrop}>
-        {/* A tap on the card itself (its text, its gaps) must not read as "beside the answers". */}
+        {/* Un tap sur la carte elle-meme ne doit pas compter comme "a cote des reponses". */}
         <Pressable onPress={() => {}} style={styles.card}>
           <Text style={styles.question}>{question}</Text>
           <View style={styles.answers}>

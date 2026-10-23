@@ -30,43 +30,31 @@ import { normalizePlaceGuess, remainingScore } from '@/games/clues/helpers/clueG
 import { useClueRoomStore } from '@/store/cluesRoomStore';
 import type { ClueId } from '@/types';
 
-/**
- * All the online-clues business logic behind `OnlineClueGameScreen` — the room session (state,
- * host, players, quit) is the shared `useOnlineRoomSession`; this owns this device's draft guess
- * text and exposes already-resolved actions gated on "is it my turn"/"am I the host". The container
- * still computes the JSX-ready shapes (skeleton groups, labels...), same split as Compass' own
- * `useOnlineGame`/`OnlineGameScreen.tsx`.
- */
+/** Logique metier en ligne derriere `OnlineClueGameScreen` : la session de room est `useOnlineRoomSession` (partage) ; ici le brouillon
+ * de cet appareil et des actions deja gardees par "mon tour" / "je suis l'hote". Le container calcule les formes JSX. */
 export const useOnlineClueGame = (code: string, onQuit: () => void) => {
   const { localUid, players, connectionLost, connected, roomSettings, gameState, onlinePlayers, isHost, handleQuit, handleReplay, reactions } =
     useOnlineRoomSession(useClueRoomStore, { deleteRoom, restartRoom, sendReaction, removeRoomPlayer, pruneRoomPlayerData }, code, onQuit);
 
   const place = gameState.places[gameState.roundIndex];
   const isMyTurn = localUid !== null && localUid === gameState.turnUid;
-  // One guess per turn: once the turn-holder has missed, the only thing left to him is to reveal a hint (which passes the
-  // hand). Shared state (`wrongGuessHints`, see `turnGuess.ts`) says so on every device; the local guard covers the gap
-  // before the room's update comes back, so a double tap cannot send a second guess.
+  // Une proposition par tour : apres une erreur il ne reste qu'un indice a devoiler. L'etat partage (`wrongGuessHints`) le dit partout ;
+  // le verrou local couvre l'instant avant le retour de la room (double tap).
   const hintsOut = gameState.revealedClueIds.length;
   const [guessGuard, setGuessGuard] = useState<{ round: number; hints: number } | null>(null);
   const guessedThisTurn =
     isMyTurn &&
     (hasGuessedThisTurn(gameState, hintsOut) ||
       (guessGuard !== null && guessGuard.round === gameState.roundIndex && guessGuard.hints === hintsOut));
-  // Who plays in which order this round: arrival order rotated by the round number, so that each
-  // player in turn opens a round (`playersForRound`). What the tabs show, too.
+  // Ordre de jeu de la manche : ordre d'arrivee decale par la manche (`playersForRound`), aussi celui des onglets.
   const roundPlayers = playersForRound(onlinePlayers, gameState.roundIndex);
 
-  // This device's own in-progress guess text.
+  // Brouillon de proposition de cet appareil.
   const { guessText, setGuessText } = useGuessDraft(gameState.roundIndex, gameState.turnUid);
 
-  // Who just missed, for everyone to see (not just the guesser — `wrongGuessUid`/`wrongGuessSeq`
-  // are room-wide). `wrongGuessSeq` only ever increases, never reset between rounds (the host's own
-  // scoring effect relies on that to never re-apply a penalty, see `useHostTurnScoring`), so a
-  // baseline captured once per round (the "reset state when a prop changes" pattern, see
-  // `useGuessDraft`'s own comment) tells a miss that actually happened this round apart from one
-  // carried over from an earlier one. Still `turnUid`-gated too (same idiom as `typedByActivePlayer`
-  // below): a miss stops being "current" the moment its own player's turn ends (they pick another
-  // clue), same as it used to disappear from the guesser's own screen before this was shared.
+  // Qui vient de se tromper, pour tous. `wrongGuessSeq` ne fait que croitre (l'hote s'y appuie, voir `useHostTurnScoring`) :
+  // une base prise une fois par manche distingue une erreur de cette manche d'une ancienne.
+  // Garde par `turnUid` aussi : l'erreur cesse d'etre "courante" quand le tour de son auteur finit.
   const [wrongSeqRoundIndex, setWrongSeqRoundIndex] = useState(gameState.roundIndex);
   const [wrongSeqAtRoundStart, setWrongSeqAtRoundStart] = useState(gameState.wrongGuessSeq);
   if (wrongSeqRoundIndex !== gameState.roundIndex) {
@@ -77,20 +65,15 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     gameState.wrongGuessUid !== null &&
     gameState.wrongGuessUid === gameState.turnUid &&
     gameState.wrongGuessSeq > wrongSeqAtRoundStart &&
-    // Gone as soon as a hint is revealed after the miss, on every device (`wrongGuessHints`, see `turnGuess.ts`).
+    // Disparait chez tous des qu'un indice sort apres l'erreur (`wrongGuessHints`, voir `turnGuess.ts`).
     missIsFresh(gameState.wrongGuessHints, hintsOut)
       ? (onlinePlayers.find((player) => player.uid === gameState.wrongGuessUid)?.name ?? null)
       : null;
 
-  // Mirrors this device's own guess text to the room, ~500ms after it stops changing, so the other
-  // players can watch the turn-holder type it live (`typing` in `ClueRoomGameState`). Solo (nobody
-  // else could see it) and spectators (never this device's own turn) never write; a round already
-  // over stops writing too. `lastWrittenRef` skips a write when the debounced value hasn't actually
-  // changed since the last one that went out (the effect would otherwise still fire on unrelated
-  // re-renders with the same debounced value).
+  // Copie le brouillon dans la room ~500 ms apres sa derniere modification, pour que les autres le voient en direct (`typing`).
+  // Pas d'ecriture en solo, en spectateur ni manche finie ; `lastWrittenRef` evite de reecrire une valeur inchangee.
   const debouncedGuessText = useDebouncedValue(guessText, 500);
-  // Starts at '' (not null): an untouched field has nothing to show anyone, so the very first
-  // render must not fire a write of its own just because nothing has been sent yet.
+  // Commence a '' (pas null) : un champ intact ne declenche pas d'ecriture au premier rendu.
   const lastWrittenTypingRef = useRef('');
   useEffect(() => {
     if (!isMyTurn || localUid === null || gameState.verdict !== null || onlinePlayers.length <= 1) return;
@@ -101,9 +84,7 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     );
   }, [debouncedGuessText, isMyTurn, localUid, gameState.verdict, onlinePlayers.length, code]);
 
-  // Only meaningful for a spectator watching the current turn-holder, mid-round: `typing.uid` is
-  // checked against `turnUid` because it is never reset by itself on a turn/round change, so a
-  // value left over from the previous turn-holder must not leak into the new one's.
+  // Pour un spectateur du detenteur du tour courant : `typing.uid` est verifie contre `turnUid` car jamais remis a zero au changement de tour.
   const typedByActivePlayer =
     !isMyTurn && gameState.verdict === null && gameState.typing !== null && gameState.typing.uid === gameState.turnUid
       ? gameState.typing.text
@@ -125,12 +106,10 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
         })
       : [];
 
-  // `place` is briefly undefined while the room's data is still loading (the screen shows the
-  // loading splash then, see OnlineClueGameScreen.tsx) — 0 is never actually shown to a player.
+  // `place` est brievement undefined au chargement (splash dans OnlineClueGameScreen.tsx) : 0 n'est jamais montre.
   const remaining = place !== undefined ? remainingScore(gameState.revealedClueIds, place) : 0;
 
-  // Host-only: the turn-holder only ever self-reports a find/miss, this is the only thing that
-  // writes `totalScores` (see `room.ts`'s own comment on `applyClueRoomScore`).
+  // Hote seul : le detenteur du tour annonce trouve/rate, ceci est le seul ecrivain de `totalScores` (voir `applyClueRoomScore`).
   const applyScore = useCallback(
     (totalScores: Record<string, number>) => applyClueRoomScore(code, totalScores),
     [code],
@@ -162,9 +141,7 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     setGuessText('');
   };
 
-  // Host-only, whoever's turn it is: cuts the round short rather than let it drag on. The Firestore
-  // rules let the host write any field (`isHost()`, ahead of `turnBasedPlayer`'s own turn-holder
-  // check), so no rule change is needed for this to work off the host's own turn too.
+  // Hote seul, meme hors de son tour : coupe la manche. Les regles l'autorisent (`isHost()` avant `turnBasedPlayer`), aucun changement de regle.
   const giveUp = () => {
     if (!isHost) return;
     giveUpClueRoom(code).catch(reporting('clues.giveUp', { room: code }));
@@ -173,7 +150,7 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
   const goToNextRound = () => {
     if (!isHost) return;
     const nextRoundIndex = gameState.roundIndex + 1;
-    // The next round's own order: the player after this round's opener takes the lead.
+    // Ordre de la manche suivante : le joueur apres l'ouvreur de celle-ci prend la tete.
     const firstTurnUid = playersForRound(onlinePlayers, nextRoundIndex)[0]?.uid;
     if (firstTurnUid === undefined) return;
     nextClueRoomRound(
@@ -185,7 +162,7 @@ export const useOnlineClueGame = (code: string, onQuit: () => void) => {
     ).catch(reporting('clues.nextRound', { room: code }));
   };
 
-  // Dev mode: once the host has moved on from a round (or the game is over), a device with the dev code is asked how hard that round's place was.
+  // Mode dev : une fois l'hote passe a la suite (ou partie finie), l'appareil avec le code dev juge la difficulte du lieu.
   const devFeedback = useDevFeedback({
     game: 'clues',
     roundIndex: gameState.roundIndex,

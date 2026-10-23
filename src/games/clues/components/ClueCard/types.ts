@@ -7,40 +7,31 @@ export type ClueCardProps = {
   label: string;
   place: CluePlace;
   state: ClueState;
-  /** Locked + provided: the card becomes pressable to pick this clue. */
+  /** Verrouille + fourni : la carte devient cliquable pour choisir cet indice. */
   onPress?: () => void;
-  /** Allows re-clicking an already-revealed card (`emoji`/`flagColors` clues, as long as there's
-   * still something to reveal: each click counts as a newly picked clue, cost included). */
+  /** Permet de recliquer une carte devoilee (`emoji`/`flagColors`) tant qu'il reste a devoiler ; chaque clic compte comme un indice. */
   moreToReveal?: boolean;
-  /** Only for the `bearing`/`distance` clues: heading and distance from the player. */
+  /** Indices `bearing`/`distance` seulement : cap et distance depuis le joueur. */
   bearingDeg?: number;
   distanceKm?: number;
-  /** Only for the 'globe' clue: the starting point, which the heading and the distance are from. */
+  /** Indice 'globe' seulement : le point de depart. */
   origin?: Coordinates;
-  /** Only for the 'globe' clue: 1 = the place and the starting point with the equator and the Greenwich meridian, 2 =
-   * and the land. */
+  /** Indice 'globe' seulement : 1 = lieu et depart avec equateur et Greenwich, 2 = plus les terres. */
   globeStage?: number;
-  /** Only for the `emoji` clue: how many of the 3 emoji are already revealed (0-3). */
+  /** Indice `emoji` seulement : nombre d'emoji deja devoiles (0-3). */
   emojiStage?: number;
-  /** Only for the `flagColors` clue: how many of the flag's colors are already revealed
-   * (1 to `place.flagColors.length`). */
+  /** Indice `flagColors` seulement : nombre de couleurs deja devoilees (1 a `place.flagColors.length`). */
   flagStage?: number;
-  /** Only for the `distance` clue: 1 = heading+distance shown on the globe but the km value
-   * hidden ("?" in the middle, re-clickable), 2 = km revealed (same idea as emoji/flagStage). */
+  /** Indice `distance` seulement : 1 = cap+distance sur le globe, km masques ("?"), 2 = km devoiles. */
   distanceStage?: number;
-  /** Only for the `elevation` clue: 1 = tier emoji (see `elevationTierEmoji`), 2 =
-   * exact elevation revealed. */
+  /** Indice `elevation` seulement : 1 = emoji de palier, 2 = altitude exacte. */
   elevationStage?: number;
-  /** Only for the `population` clue: 1 = 5-dot gauge (see `populationTier`), 2 =
-   * exact population revealed. */
+  /** Indice `population` seulement : 1 = jauge de 5 points, 2 = population exacte. */
   populationStage?: number;
-  /** Only for the `currency` clue: 1 = symbol (`place.currency`), 2 = full currency
-   * name (`place.currencyName`). */
+  /** Indice `currency` seulement : 1 = symbole, 2 = nom complet. */
   currencyStage?: number;
-  /** Only for the `localTime` clue: 1 = day/night emoji (see `dayNightEmoji`), 2 = exact
-   * local time revealed. */
+  /** Indice `localTime` seulement : 1 = emoji jour/nuit, 2 = heure exacte. */
   localTimeStage?: number;
-  /** Only for the `letter` clue: 1 = first letter alone, 2 = every letter's slot, real length
-   * per word. */
+  /** Indice `letter` seulement : 1 = premiere lettre seule, 2 = une case par lettre, longueur reelle par mot. */
   letterStage?: number;
 };

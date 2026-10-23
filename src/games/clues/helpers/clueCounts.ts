@@ -1,11 +1,11 @@
 import { CLUES_COUNTS_DOC } from '@/data/firestore/types';
 import { createGroupCounts } from '@/firebase/groupCounts';
 
-// Not re-exported from `helpers/index.ts`'s barrel, same reason as `room.ts` and `firestoreCluePlaces.ts`.
+// Hors barrel de `helpers/index.ts`, comme `room.ts` et `firestoreCluePlaces.ts`.
 
 const counts = createGroupCounts(CLUES_COUNTS_DOC);
 
-/** The Clues group sizes (`meta/cluesCounts`, see `fetchClueRoundPlaces`), read once and shared. */
+/** Tailles des groupes Indices (`meta/cluesCounts`, voir `fetchClueRoundPlaces`), lues une fois et partagees. */
 export const loadCluesCounts = counts.load;
 export const preloadCluesCounts = counts.preload;
 export const clearCluesCounts = counts.clear;

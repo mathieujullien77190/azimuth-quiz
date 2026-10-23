@@ -5,35 +5,26 @@ const toRadians = (degrees: number): number => (degrees * Math.PI) / 180;
 const toDegrees = (radians: number): number => (radians * 180) / Math.PI;
 
 /**
- * The game works with the rhumb line (loxodrome), not the great circle (orthodrome): the route you follow
- * by holding the SAME heading all the way, the one a compass gives. It is a bit longer than the great
- * circle (up to about 21 180 km on Earth, against 20 015 km) and its heading is a single value instead of
- * one that drifts as you go.
- *
- * Every formula below is the loxodrome one. They are short because a route of constant heading is a
- * straight line once latitudes are stretched the Mercator way.
+ * Loxodromie (cap constant, celui d'une boussole), pas orthodromie : un peu plus longue (jusqu'a ~21 180 km
+ * contre 20 015 km). C'est une droite une fois les latitudes etirees facon Mercator.
  */
 const stretchedLatitude = (latitude: number): number => Math.log(Math.tan(latitude / 2 + Math.PI / 4));
 
-/** Below this difference of stretched latitudes the route is due east or west (same parallel). */
+/** Sous cet ecart de latitudes etirees, la route est plein est/ouest (meme parallele). */
 const SAME_PARALLEL_EPSILON = 1e-12;
 
-/** A longitude brought back into [-180, 180[. */
+/** Longitude ramenee dans [-180, 180[. */
 export const wrapLongitude = (longitude: number): number => ((((longitude + 180) % 360) + 360) % 360) - 180;
 
-/** How far east (> 0) or west (< 0) `to` is from `from`, the shorter way around, in degrees. */
+/** Ecart en degres vers l'est (> 0) ou l'ouest (< 0), par le chemin le plus court. */
 const longitudeDifference = (from: Coordinates, to: Coordinates): number =>
   wrapLongitude(to.longitude - from.longitude);
 
-/**
- * How much the Mercator stretching inflated the latitudes of the route: `distanceKm` and
- * `rhumbDestination` both need it to turn a difference of longitudes into a real distance. Due east or
- * west nothing moves in latitude, and the ratio is the cosine of the parallel being followed.
- */
+/** Facteur pour convertir un ecart de longitudes en distance reelle ; plein est/ouest, c'est le cosinus du parallele. */
 const stretchRatio = (fromLatitude: number, latitudeDelta: number, stretchedDelta: number): number =>
   Math.abs(stretchedDelta) > SAME_PARALLEL_EPSILON ? latitudeDelta / stretchedDelta : Math.cos(fromLatitude);
 
-/** Length in km of the constant-heading route from `from` to `to` (rhumb line, see above). */
+/** Longueur en km de la route a cap constant (loxodromie). */
 export const distanceKm = (from: Coordinates, to: Coordinates): number => {
   const lat1 = toRadians(from.latitude);
   const lat2 = toRadians(to.latitude);
@@ -43,20 +34,19 @@ export const distanceKm = (from: Coordinates, to: Coordinates): number => {
   return EARTH_RADIUS_KM * Math.hypot(dLat, q * dLon);
 };
 
-/** Heading from `from` to `to`, in degrees [0, 360[ (0 = north, 90 = east): the one to hold all the way. */
+/** Cap en degres [0, 360[ (0 = nord, 90 = est) a tenir tout le long. */
 export const bearingDeg = (from: Coordinates, to: Coordinates): number => {
   const dLon = toRadians(longitudeDifference(from, to));
   const dStretched = stretchedLatitude(toRadians(to.latitude)) - stretchedLatitude(toRadians(from.latitude));
   return normalizeBearing(toDegrees(Math.atan2(dLon, dStretched)));
 };
 
-/** Where you end up after `km` on the constant heading `bearing` from `origin`: the other way round from
- * `bearingDeg`/`distanceKm`, to draw where an answer lands and the route it takes. */
+/** Point d'arrivee apres `km` au cap `bearing` : l'inverse de `bearingDeg`/`distanceKm`. */
 export const rhumbDestination = (origin: Coordinates, bearing: number, km: number): Coordinates => {
   const angular = km / EARTH_RADIUS_KM;
   const theta = toRadians(bearing);
   const lat1 = toRadians(origin.latitude);
-  // Holding a heading never takes you past a pole: the route winds tighter and tighter round it, so it stops there.
+  // Un cap tenu ne depasse jamais un pole (la route s'y enroule) : on borne la latitude.
   const lat2 = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, lat1 + angular * Math.cos(theta)));
   const dLat = lat2 - lat1;
   const q = stretchRatio(lat1, dLat, stretchedLatitude(lat2) - stretchedLatitude(lat1));
@@ -66,13 +56,13 @@ export const rhumbDestination = (origin: Coordinates, bearing: number, km: numbe
 
 export const normalizeBearing = (degrees: number): number => ((degrees % 360) + 360) % 360;
 
-/** Shortest angular difference between two headings, in [0, 180]. */
+/** Plus petit ecart angulaire entre deux caps, dans [0, 180]. */
 export const angleDifference = (a: number, b: number): number => {
   const diff = Math.abs(normalizeBearing(a) - normalizeBearing(b));
   return diff > 180 ? 360 - diff : diff;
 };
 
-/** Cardinal point (N, NE, E...) closest to a heading, in the language of `labels`. */
+/** Point cardinal (N, NE, E...) le plus proche d'un cap, dans la langue de `labels`. */
 export const bearingToCardinal = (degrees: number, labels: readonly string[]): string => {
   const index = Math.round(normalizeBearing(degrees) / 45) % labels.length;
   return labels[index];

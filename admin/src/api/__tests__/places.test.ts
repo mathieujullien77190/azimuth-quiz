@@ -66,7 +66,7 @@ describe('fetchPlaces', () => {
     expect(rows[0]).toMatchObject({
       name: 'Amsterdam',
       code: 'FR',
-      // No country copy on this place: the code stands in for the name.
+      // Sans copie du pays : le code tient lieu de nom.
       country: 'FR',
       coordinates: { latitude: 48.8, longitude: 2.3 },
       compass: { category: 'cities', description: 'canals' },

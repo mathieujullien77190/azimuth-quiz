@@ -1,8 +1,8 @@
-/** The least a touch target should be (px): the buttons are small to fit a column, not to be missed. */
+/** Taille minimale d'une cible tactile (px) : boutons petits pour tenir en colonne, pas pour etre rates. */
 export const MIN_TOUCH_SIZE = 48;
-/** The round button floating above the footer. */
+/** Bouton rond flottant au-dessus du footer. */
 export const TOGGLE_SIZE = 48;
-/** How much a button fades while a finger is down on it (0-1). */
+/** Fondu d'un bouton sous le doigt (0-1). */
 export const PRESSED_FADE = 0.4;
-/** What the footer's button shows. */
+/** Ce qu'affiche le bouton du footer. */
 export const TOGGLE_EMOJI = '😀';

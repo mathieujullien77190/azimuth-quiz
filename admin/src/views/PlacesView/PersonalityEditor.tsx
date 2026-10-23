@@ -11,21 +11,15 @@ import { EditableValue } from '../../components/EditableValue';
 import type { CluePlace } from '@/types';
 
 /**
- * A real, Wikipedia-documented person tied to the place (nom + métier optionnel). Same model as
- * `WordplayEditor` (deployed under a place's own "Clues" block in `PlacesView`,
- * click-to-edit/save-on-blur via `EditableValue`, nothing written to disk, every change just
- * logged): the name starts empty for every place, curated by hand from scratch, so it opts into
- * `allowEmpty` — clearing it back to blank removes the curated entry entirely (see
- * `savePersonalityName`'s own doc comment), same convention as `WordplayEditor`'s sentence.
- * `jobCode` is a plain select over `data/personalityJobs.json`'s shared vocabulary (`jobOptions`,
- * French label shown, code saved) rather than free text, so every place tagged "footballeur"
- * shares the exact same entry (and its English translation) instead of retyping it — an "(aucun)"
- * option clears it back to `null` (a name with no short safe job tag is a valid, curated state).
+ * Personnalite reelle documentee par Wikipedia, liee au lieu (nom + metier optionnel). Meme modele que
+ * `WordplayEditor` : clic pour editer, sauvegarde au blur via `EditableValue`. Le nom part vide pour chaque lieu,
+ * cure a la main ; le metier est un select de codes (libelle francais affiche, code sauve) pour que tous les
+ * "footballeur" partagent la meme entree et sa traduction ; "(aucun)" le remet a `null`.
  */
 export const PersonalityEditor = ({ initialPlace }: { initialPlace: CluePlace }) => {
   const [place] = useState(initialPlace);
   const [draft, setDraft] = useState<PersonalityDraft>(() => personalityDraftFor(place));
-  // Which field last saved, for a brief "✓" next to it — same shape as WordplayEditor.
+  // Dernier champ sauve, pour un bref "✓" a cote.
   const [savedField, setSavedField] = useState<string | null>(null);
 
   useEffect(() => {

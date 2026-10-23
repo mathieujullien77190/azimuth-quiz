@@ -13,8 +13,7 @@ import { source } from '@/storybook/source';
 import singleSelectCode from './SingleSelect.source.md?raw';
 import readOnlyCode from './ReadOnly.source.md?raw';
 
-/** Named (capitalized) so eslint's rules-of-hooks recognizes it as a component and allows the
- * `useState` below — an inline arrow assigned to a story's `render` doesn't qualify. */
+/** Nomme (majuscule) pour que rules-of-hooks d'eslint accepte le `useState`. */
 const SingleSelectDemo = (args: DifficultySectionProps) => {
   const [selected, setSelected] = useState<Difficulty>(args.selected);
   return (
@@ -56,8 +55,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Every game: clicking a chip replaces the selection — each click also logged in the Actions
- * panel (`onSelect` wrapped in `fn()`). */
+/**
+ * Tous les jeux : un clic sur une puce remplace la selection, et est logge dans le panneau Actions
+ * (`onSelect` enveloppe dans `fn()`).
+ */
 export const SingleSelect: Story = {
   parameters: source(singleSelectCode),
   args: {

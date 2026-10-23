@@ -17,8 +17,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Two answers from Paris: the true one (a circled point, no route) and a guess whose route follows the curve of the
- * ball. Drag the globe to turn it, pinch (or +/−) to zoom, "⌖ N" to put it back where it opened, north up. */
+/** Deux reponses depuis Paris : la vraie (point entoure, sans route) et une estimation dont la route suit la courbe
+ * de la boule. Glisser pour tourner, pincer (ou +/−) pour zoomer, "⌖ N" pour revenir a la vue de depart. */
 export const ParisNewYork: Story = {
   parameters: source(parisNewYorkCode),
   args: {
@@ -31,8 +31,8 @@ export const ParisNewYork: Story = {
   },
 };
 
-/** A long route to the other hemisphere: the globe first shows the middle of the way, the route goes behind it where
- * the Earth curves away. */
+/** Longue route vers l'autre hemisphere : le globe montre d'abord le milieu du trajet, la route passe derriere
+ * ou la Terre s'incurve. */
 export const TokyoSydney: Story = {
   parameters: source(tokyoSydneyCode),
   args: {
@@ -42,9 +42,9 @@ export const TokyoSydney: Story = {
   },
 };
 
-/** The bare ball with the equator and the Greenwich meridian (dashed): enough to read where the answer is, without the
- * land. This is the first stage of the Clues game's 3D clue, where the card's taps matter more than turning the globe:
- * `draggable={false}` also takes the buttons away. */
+/** Boule nue avec equateur et meridien de Greenwich (pointilles) : assez pour lire ou est la reponse, sans les
+ * terres. 1er stade de l'indice 3D d'Indices, ou les taps de la carte comptent plus que tourner le globe :
+ * `draggable={false}` retire aussi les boutons. */
 export const BareWithGuides: Story = {
   parameters: source(bareWithGuidesCode),
   args: {

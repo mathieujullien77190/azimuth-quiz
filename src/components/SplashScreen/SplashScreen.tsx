@@ -24,19 +24,17 @@ import type { SplashScreenProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * The startup splash screen — dumb: the title block (the shared `AppTitle`, drawn at the very position it has on the home screen), a compass dial whose needle swings (red north tip, the
- * accent colour south), a loading bar that jumps and stalls like a real loader
- * (`buildProgressSteps`, ending on the `fillMs` minimum time and completed when the splash is released) with its
- * percentage, a breathing "loading" label and the version line. It follows the
- * theme of the player (night or day) through the theme tokens. While `visible` it just plays; once it turns false it
- * fades out and removes itself, so whoever mounts it only has to say when it is wanted.
+ * Ecran de demarrage : titre partage `AppTitle` (a la meme position qu'a l'accueil), cadran de boussole a
+ * aiguille oscillante, barre de chargement realiste (`buildProgressSteps`, finissant sur le temps minimum
+ * `fillMs`, completee a la liberation) avec son pourcentage, libelle qui respire et ligne de version. Suit le
+ * theme du joueur. Tant que `visible`, il joue ; une fois faux, il s'efface et se retire seul.
  */
 export const SplashScreen = ({ visible, tagline, loadingLabel, version, codename, fillMs, random }: SplashScreenProps) => {
   const styles = useThemedStyles(createStyles);
   const { colors, compass, isDark, typography } = useTheme();
-  // State rather than refs: the values are read while rendering (the interpolations below).
+  // State plutot que refs : les valeurs sont lues au rendu (interpolations ci-dessous).
   const [sway] = useState(() => new Animated.Value(0));
-  // The bar's progress, in percent (0-100); the schedule of its jumps and stalls is drawn once per launch.
+  // Progression de la barre en pourcent (0-100) ; le calendrier des a-coups est tire une fois par lancement.
   const [fill] = useState(() => new Animated.Value(0));
   const [steps] = useState(() => buildProgressSteps(fillMs, random));
   const [percent, setPercent] = useState(0);
@@ -67,8 +65,8 @@ export const SplashScreen = ({ visible, tagline, loadingLabel, version, codename
         Animated.timing(blink, { toValue: 0, duration: BLINK_MS, useNativeDriver: true }),
       ]),
     );
-    // The bar's width cannot be animated by the native driver: it is the only one that runs on the JS thread. Each
-    // keyframe waits for its time (a stall), then jumps or creeps to its value.
+    // La largeur de la barre ne peut pas utiliser le driver natif : seule animation sur le thread JS. Chaque
+    // keyframe attend son heure (blocage) puis saute ou rampe vers sa valeur.
     let previousEnd = 0;
     const filling = Animated.sequence(
       steps.flatMap(({ at, to, easeMs }) => {
@@ -90,7 +88,7 @@ export const SplashScreen = ({ visible, tagline, loadingLabel, version, codename
     };
   }, [sway, blink, fill, steps]);
 
-  // The percentage under the bar changes whole points only, so the dial is not redrawn on every frame of the bar.
+  // Le pourcentage ne change que par points entiers, pour ne pas redessiner le cadran a chaque image de la barre.
   useEffect(() => {
     const id = fill.addListener(({ value }) => setPercent(Math.round(value)));
     return () => fill.removeListener(id);
@@ -98,7 +96,7 @@ export const SplashScreen = ({ visible, tagline, loadingLabel, version, codename
 
   useEffect(() => {
     if (visible) return;
-    // Released: the bar completes while the splash fades out (it never reached 100 % before: the app was not ready).
+    // Liberation : la barre se complete pendant le fondu (elle n'atteignait pas 100 % avant : l'app n'etait pas prete).
     fill.stopAnimation();
     Animated.timing(fill, { toValue: 100, duration: FADE_OUT_MS, useNativeDriver: false }).start();
     Animated.timing(fade, { toValue: 0, duration: FADE_OUT_MS, useNativeDriver: true }).start(() => setMounted(false));

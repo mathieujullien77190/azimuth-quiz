@@ -23,7 +23,7 @@ describe('FinalStandings — the scores', () => {
     expect(getByText('Classement final')).toBeTruthy();
     expect(getByText('Max gagne !')).toBeTruthy();
     expect(getAllByText(/^(🥇|🥈|🥉)$/).map((node) => node.props.children)).toEqual(['🥇', '🥈', '🥉']);
-    // Fourth place has no medal, its number.
+    // La 4e place n'a pas de medaille, son numero.
     expect(getByText('4.')).toBeTruthy();
   });
 

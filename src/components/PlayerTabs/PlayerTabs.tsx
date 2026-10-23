@@ -8,8 +8,7 @@ import type { PlayerTabsProps } from './types';
 
 import { createStyles } from './styles';
 
-/** Who's playing, fixed at the top of an online game screen — purely informational: status only
- * (whose turn it is), nothing to tap. */
+/** Qui joue, fixe en haut de l'ecran de jeu en ligne. Purement informatif (statut, tour), rien a toucher. */
 export const PlayerTabs = memo(function PlayerTabs({ players, order, activeIndex, activeLabel }: PlayerTabsProps) {
   const styles = useThemedStyles(createStyles);
   const { width } = useWindowDimensions();

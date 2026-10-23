@@ -22,8 +22,10 @@ const CODES: Record<Continent, string> = {
   other: 'AQ',
 };
 
-/** The continent of each ISO code (Russia counts as Europe; Turkey, Georgia, Armenia, Azerbaijan and Kazakhstan as Asia;
- * Central America and the Caribbean as North America). A code that is in no list is treated as `other`. */
+/**
+ * Continent de chaque code ISO (Russie = Europe ; Turquie, Georgie, Armenie, Azerbaidjan, Kazakhstan = Asie ;
+ * Amerique centrale et Caraibes = Amerique du Nord). Un code absent des listes vaut `other`.
+ */
 export const CONTINENT_OF: Record<string, Continent> = Object.fromEntries(
   (Object.entries(CODES) as [Continent, string][]).flatMap(([continent, codes]) =>
     codes.split(' ').map((code) => [code, continent] as const),

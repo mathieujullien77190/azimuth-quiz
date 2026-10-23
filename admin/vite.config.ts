@@ -10,8 +10,10 @@ import { sharedDefine, sharedOptimizeDeps, sharedResolve } from './vite.shared';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
-/** GitHub Pages serves files, with no fallback to the app: every page gets its own copy of `index.html` in
- * `dist/<page>/` (`/admin/places` → `dist/places/index.html`), asset URLs being absolute they work from there. */
+/**
+ * GitHub Pages sert des fichiers sans repli vers l'app : chaque page a donc sa propre copie de `index.html` dans
+ * `dist/<page>/`.
+ */
 const staticPages = (): Plugin => {
   let outDir = '';
   return {
@@ -22,7 +24,8 @@ const staticPages = (): Plugin => {
     },
     closeBundle() {
       const dist = path.resolve(rootDir, 'dist');
-      // Storybook builds with this same config into another folder (and may run before there is a `dist`): leave it alone.
+      // Storybook build avec cette config dans un autre dossier (parfois avant qu'il y ait un `dist`) : on n'y touche
+      // pas.
       if (outDir !== dist) return;
       const html = readFileSync(path.join(dist, 'index.html'), 'utf8');
       for (const { path: page, label } of PAGES) {
@@ -37,11 +40,10 @@ const staticPages = (): Plugin => {
 };
 
 export default defineConfig(({ command }) => ({
-  // Only the production build needs the subpath: it's served under the main app's GitHub Pages
-  // site (see .github/workflows/deploy-pages.yml, which builds this into dist/admin/). The dev
-  // server (`npm run admin`) stays at the root so `npm run admin` keeps working exactly as before.
+  // Seul le build de production a besoin du sous-chemin (servi sous le site GitHub Pages du jeu, voir
+  // deploy-pages.yml) ; le serveur de dev reste a la racine.
   base: command === 'build' ? '/azimuth-quiz/admin/' : '/',
-  // Reuses the game's root `.env` (Firebase config, `EXPO_PUBLIC_*`) instead of duplicating it.
+  // Reutilise le `.env` racine du jeu (config Firebase, `EXPO_PUBLIC_*`).
   envDir: path.resolve(rootDir, '..'),
   envPrefix: ['VITE_', 'EXPO_PUBLIC_'],
   plugins: [react(), staticPages()],
@@ -49,14 +51,14 @@ export default defineConfig(({ command }) => ({
   define: sharedDefine(command),
   optimizeDeps: sharedOptimizeDeps,
   build: {
-    // The Firebase SDK alone is ~670 kB (minified): it is a vendor chunk of its own, not something to split further.
+    // Le SDK Firebase seul fait ~670 ko (minifie) : chunk vendor a part, inutile de le couper plus.
     chunkSizeWarningLimit: 700,
     rollupOptions: {
       output: {
-        // Heavy third-party code gets its own long-lived chunks, the rest is split by page (see `App.tsx`).
+        // Le code tiers lourd a ses propres chunks durables, le reste se coupe par page (voir `App.tsx`).
         manualChunks(id: string) {
           if (id.includes('node_modules/firebase') || id.includes('node_modules/@firebase')) return 'firebase';
-          // The Monde page's 3D library is its own chunk: only that page downloads it.
+          // La lib 3D de la page Monde est un chunk a part : seule cette page la telecharge.
           if (id.includes('node_modules/three')) return 'three';
           if (id.includes('react-native-web') || id.includes('react-native-svg')) return 'react-native-web';
           return undefined;

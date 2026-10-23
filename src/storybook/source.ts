@@ -1,11 +1,7 @@
 /**
- * Storybook's "Show code" for a story: the snippet a consumer of the component would actually write
- * (imports from `@/…`, real wiring), instead of the JSX Storybook rebuilds from the story's `args`.
- *
- * The snippet lives in `<Story>.source.md` next to the story file, in a ```tsx fence, and is
- * imported with `?raw` — no backtick or `${` to escape. Put `source()` on the *story*, never on the
- * `meta`: the CSF plugin adds its own `parameters` key to a meta that carries a doc comment, and the
- * duplicate key wins there.
+ * "Show code" de Storybook : le snippet qu'un consommateur ecrirait vraiment, au lieu du JSX reconstruit des `args`.
+ * Il vit dans `<Story>.source.md` (bloc ```tsx), importe en `?raw`. A poser sur la *story*, jamais sur le `meta` :
+ * le plugin CSF y ajoute sa cle `parameters` et la cle en double gagne.
  */
 export const source = (markdown: string) => ({
   docs: {

@@ -34,21 +34,21 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Without `players` and without `question`: the cross and code, the name and points, and the
- * "Manche 3 / 10 · difficulté" line — Compass, where everyone answers at once. */
+/** Sans `players` ni `question` : croix et code, nom et points, ligne "Manche 3 / 10 · difficulte" —
+ * Boussole, ou tout le monde repond en meme temps. */
 export const Plain: Story = {
   name: 'Without players, without question',
   parameters: source(plainCode),
 };
 
-/** With `players`: the tabs saying who's playing and whose turn it is (`turnIndex`) — Clues. */
+/** Avec `players` : les onglets disant qui joue et a qui est le tour (`turnIndex`) — Indices. */
 export const WithPlayers: Story = {
   name: 'With players',
   parameters: source(withPlayersCode),
   args: { players: SAMPLE_PLAYERS, turnIndex: 1 },
 };
 
-/** Travel mode (Compass): where the player stands, in white under the round row. */
+/** Mode voyage (Boussole) : ou se trouve le joueur, en blanc sous la ligne de manche. */
 export const WithLocation: Story = {
   name: 'With a location (travel mode)',
   parameters: source(withLocationCode),

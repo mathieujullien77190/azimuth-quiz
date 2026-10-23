@@ -8,8 +8,7 @@ import {
   subscribeToRoomSettings,
 } from '../games/clues/firebase/room';
 
-// Not re-exported from `helpers/index.ts`'s barrel, same reason as `room.ts` itself: it imports
-// `firebase/firestore` transitively, which crashes Jest the moment anything requires it.
+// Hors du barrel de `helpers/index.ts` : importe `firebase/firestore`, qui fait planter Jest.
 
 const DEFAULT_GAME_STATE: ClueRoomGameState = {
   screen: 'options',
@@ -27,8 +26,7 @@ const DEFAULT_GAME_STATE: ClueRoomGameState = {
   typing: null,
 };
 
-/** Clues' own room store — same lifecycle as Compass' (see `createRoomStore`), only the
- * `gameState` shape differs. */
+/** Store de room d'Indices : meme cycle que Boussole (`createRoomStore`), seul `gameState` change. */
 export const useClueRoomStore = createRoomStore<ClueRoomSettings, ClueRoomGameState>({
   defaultGameState: DEFAULT_GAME_STATE,
   subscribeToRoomPlayers,

@@ -2,16 +2,13 @@ import type { Theme } from '@/types';
 
 export type CompassProps = {
   size: number;
-  /** Every needle to draw, drawn identically — Compass no longer distinguishes "my own" from
-   * anyone else's; a caller wanting one to stand out (e.g. the player currently dragging it)
-   * just includes it here like any other. Omit an entry entirely for "not answered yet" rather
-   * than a null bearing. */
+  /** Toutes les aiguilles, dessinees pareil ; omettre une entree pour "pas encore repondu" plutot qu'un cap null. */
   needles?: CompassNeedle[];
-  /** True heading, shown on reveal. */
+  /** Vrai cap, montre a la revelation. */
   truthBearing?: number | null;
-  /** On mobile: the dial rotates so N points to true north (phone sensor). */
+  /** Mobile : le cadran tourne pour que N pointe au vrai nord (capteur). */
   live?: boolean;
-  /** Absent = decorative, non-interactive compass. */
+  /** Absent = boussole decorative, non interactive. */
   onChange?: (bearing: number) => void;
 };
 
@@ -47,13 +44,12 @@ export type CompassFaceProps = {
 
 export type UseHeadingResult = {
   heading: number | null;
-  /** Call on the compass's first touch: on web, kicks off listening to the sensor
-   * (and, on iOS, the permission request, which requires a user gesture). No effect elsewhere. */
+  /** A appeler au 1er toucher : sur le web, demarre l'ecoute du capteur (et la permission iOS, qui exige un geste). */
   onTouch: () => void;
 };
 
-/** Browser orientation event, plus Safari iOS's non-standard field. */
+/** Evenement d'orientation du navigateur, plus le champ non standard de Safari iOS. */
 export type WebOrientationEvent = DeviceOrientationEvent & {
-  /** Safari iOS only: already-absolute heading (true north), in degrees. */
+  /** Safari iOS seulement : cap deja absolu (vrai nord), en degres. */
   webkitCompassHeading?: number;
 };

@@ -1,7 +1,5 @@
-/** The actual flag emoji for an ISO 3166-1 alpha-2 code (e.g. "FR" -> 🇫🇷): built from the two
- * regional indicator symbols, not stored data — works for any valid code. Relies on
- * `FLAG_FONT_FAMILY` (see themes/fonts.ts) being applied wherever this is rendered, since some
- * platforms (Chromium on Windows) don't ship a system font that renders these as flags. */
+/** Emoji drapeau d'un code ISO 3166-1 alpha-2 ("FR" -> 🇫🇷). Exige `FLAG_FONT_FAMILY` (themes/fonts.ts)
+ * a l'affichage : Chromium sous Windows n'a pas de police systeme pour les drapeaux. */
 export const flagEmoji = (code: string): string =>
   code
     .toUpperCase()

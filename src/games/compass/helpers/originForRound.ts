@@ -1,13 +1,12 @@
 import type { Coordinates, Origin, Place } from '@/types';
 
-/** What the round's start depends on: the room's starting point, the drawn places and which round is being played. */
+/** Ce dont depend le depart : point de depart de la room, lieux tires, manche jouee. */
 type RoundOrigin = { origin: Origin | null; places: Place[]; roundIndex: number };
 
 /**
- * Where a round is played from: the room's starting point, or — in travel mode, from the second round on — the place
- * of the previous round (the player has "travelled" there). The one place the start is read, so scoring, the true
- * heading and distance, the globe and the reveal can never disagree. Null until the room has delivered its origin.
- * `travel` is `undefined` for a room made before the option existed: off.
+ * Depart d'une manche : celui de la room, ou en mode voyage (des la 2e) le lieu de la manche precedente. Lu
+ * en un seul endroit pour que score, cap/distance vrais, globe et reveal concordent. Null tant que la room
+ * n'a pas livre son origine ; `travel` `undefined` (room ancienne) = off.
  */
 export const originForRound = ({ origin, places, roundIndex }: RoundOrigin, travel: boolean | undefined): Coordinates | null => {
   if (origin === null) return null;
@@ -15,17 +14,15 @@ export const originForRound = ({ origin, places, roundIndex }: RoundOrigin, trav
   return travel === true && previous !== undefined ? previous.coordinates : origin.coordinates;
 };
 
-/** The place a travel-mode round starts from, to name it for the player; undefined on the first round or without travel. */
+/** Lieu d'ou part une manche en mode voyage, pour le nommer ; undefined au 1er tour ou sans voyage. */
 export const travelFromPlace = (
   { places, roundIndex }: Pick<RoundOrigin, 'places' | 'roundIndex'>,
   travel: boolean | undefined,
 ): Place | undefined => (travel === true ? places[roundIndex - 1] : undefined);
 
 /**
- * The draw with no place right after itself: in travel mode a round starts from the previous place, so two identical
- * places in a row would be a round of distance zero. The draw only repeats a place once a whole group has been gone
- * through (more rounds than places), which is rare, but cheap to guard: the repeat is swapped with the next different
- * place (or left if there is none, e.g. every round the same place).
+ * Tirage sans lieu identique a la suite (en mode voyage, distance zero) : un doublon, rare (apres un tour
+ * de groupe), est echange avec le prochain lieu different.
  */
 export const separateRepeats = (places: Place[]): Place[] => {
   const result = [...places];

@@ -65,14 +65,10 @@ export const OnlineClueGameScreenView = ({
   const { colors } = useTheme();
   const t = useTranslation();
   const roundOver = verdict !== undefined;
-  // What the letter clue's skeleton overlays: the turn-holder's own draft while typing it, the
-  // mirrored `typing` text for everyone else — same value, same live update, whoever's looking.
+  // Ce que le squelette de `letter` superpose : le brouillon du detenteur, le texte `typing` pour les autres.
   const previewText = isMyTurn ? guessText : typedByActivePlayer;
-  // Below tier 2 (`skeletonLengthKnown`), the real shape isn't known — boxing `skeletonGroups`
-  // itself would freeze the display on its one official slot (the clue's first letter) no matter
-  // how much more gets typed. `typedSkeleton` reads the very same boxed shape off what's actually
-  // been typed instead, which doesn't leak anything beyond what's already been typed; the clue's
-  // own first letter is only shown before that, as a starting hint.
+  // Sous le palier 2 (`skeletonLengthKnown`) la forme reelle est inconnue : encadrer `skeletonGroups` figerait l'affichage sur la 1re lettre.
+  // `typedSkeleton` encadre la saisie elle-meme, sans rien reveler ; la 1re lettre de l'indice n'est qu'un depart.
   const displayGroups = skeletonLengthKnown
     ? overlayTypedLetters(skeletonGroups, previewText)
     : previewText !== ''
@@ -89,8 +85,7 @@ export const OnlineClueGameScreenView = ({
               <Text style={styles.pointsAtStake}>{t.cluesGame.pointsAtStake(formatNumber(remaining))}</Text>
             )}
             {!roundOver && <TypedAnswer groups={displayGroups} />}
-            {/* Whoever just missed, live and shown to everyone in the room (not just them) — see
-                `wrongGuesserName`'s own comment in the hook for why it clears itself. */}
+            {/* Qui vient de se tromper, visible de toute la room (voir `wrongGuesserName` dans le hook). */}
             {!roundOver && wrongGuesserName !== null && (
               <Text style={[styles.resultBanner, styles.resultWrong]}>
                 {t.cluesGame.missed(wrongGuesserName, formatNumber(WRONG_ANSWER_PENALTY))}
@@ -123,8 +118,7 @@ export const OnlineClueGameScreenView = ({
             ) : isMyTurn ? (
               <View style={styles.buzzRow}>
                 {guessedThisTurn ? (
-                  // Already guessed this turn: the field and "Valider" are gone, a hint is the only move left (the host
-                  // can still cut the round short).
+                  // Deja propose ce tour : plus de champ ni "Valider", seul un indice reste (l'hote peut encore couper la manche).
                   <>
                     <Text style={styles.guessedNote}>{t.game.alreadyGuessed}</Text>
                     {isHost && <Button label={t.cluesGame.giveUp} onPress={onGiveUp} variant="ghost" />}
@@ -151,15 +145,14 @@ export const OnlineClueGameScreenView = ({
                     {guessText.trim().length > 0 ? (
                       <Button label={t.cluesGame.submitGuess} onPress={onSubmitGuess} />
                     ) : (
-                      // Giving up is a host call (below), not the turn-holder's own — even when it's
-                      // the host's own turn, it goes through the very same button, not a duplicate.
+                      // Abandonner est un choix de l'hote, meme a son propre tour : un seul bouton, pas de doublon.
                       isHost && <Button label={t.cluesGame.giveUp} onPress={onGiveUp} variant="ghost" />
                     )}
                   </>
                 )}
               </View>
             ) : (
-              // Not this device's turn: only the host can still cut the round short from here.
+              // Pas le tour de cet appareil : seul l'hote peut encore couper la manche.
               isHost && <Button label={t.cluesGame.giveUp} onPress={onGiveUp} variant="ghost" />
             )}
           </View>

@@ -3,10 +3,10 @@ import { create } from 'zustand';
 import { createRoomActions } from './actions';
 import type { RoomStoreConfig, RoomStoreData, RoomStoreState } from './types';
 
-/** One Zustand store per game's online room: the connection lifecycle, players/settings/game
- * state and the voluntary-leave flag are identical for every game, only the shape of `gameState`
- * (and the Firestore subscriptions feeding it) differs. The state lives here, the actions in
- * `actions.ts`. */
+/**
+ * Un store Zustand par room de jeu : cycle de connexion, joueurs, reglages et drapeau de depart identiques pour
+ * tous, seule la forme de `gameState` varie. Etat ici, actions dans `actions.ts`.
+ */
 export const createRoomStore = <Settings, GameState>(config: RoomStoreConfig<Settings, GameState>) => {
   const initialData: RoomStoreData<Settings, GameState> = {
     code: null,

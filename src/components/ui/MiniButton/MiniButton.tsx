@@ -7,8 +7,8 @@ import type { MiniButtonProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * The small pill button ("Expulser", "Comment les points sont calculés"...): outlined, in the
- * accent color or, for a destructive action, the danger red (`variant="danger"`).
+ * Petit bouton en pilule (« Expulser », « Comment les points sont calcules »...) : contour de la couleur
+ * d'accent ou, pour une action destructive, rouge danger (`variant="danger"`).
  */
 export const MiniButton = ({ label, onPress, variant = 'accent', accessibilityLabel, style }: MiniButtonProps) => {
   const styles = useThemedStyles(createStyles);

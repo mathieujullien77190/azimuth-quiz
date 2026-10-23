@@ -1,11 +1,9 @@
 import type { ClueCategory, ClueId, ClueSettings } from '@/types';
 
-/** Where this device is in each Clues group, to take the next places (see `helpers/clueCursors.ts`). */
+/** Position de cet appareil dans chaque groupe Indices, pour prendre les lieux suivants (voir `helpers/clueCursors.ts`). */
 export const CLUE_CURSORS_STORAGE_KEY = 'azimuthquiz:clue-cursors';
 
-// Display order in the grid: from easiest (highest cost, at the top) to hardest (cost
-// 1, purple, at the bottom). Every round now shows all clues (no more subset):
-// so this order is the full display order, not just a visual sort of a partial draw.
+// Ordre d'affichage : du plus facile (cout le plus haut, en haut) au plus dur (cout 1, violet, en bas).
 export const CLUE_ORDER: ClueId[] = [
   'population',
   'localTime',
@@ -23,13 +21,11 @@ export const CLUE_ORDER: ClueId[] = [
   'airportCode',
   'currency',
   'phoneCode',
-  // The word-game clue closes the list, whatever its cost.
+  // Le jeu de mots ferme la liste, quel que soit son cout.
   'wordplay',
 ];
 
-// Reuses Compass's category id/emoji/label conventions (see games/compass/constants.ts and
-// i18n's setup.categories) rather than duplicating them — only these 3 of the 7 Compass
-// categories apply to Clues, since its whole pool is cities.
+// Reprend les conventions de categories de Compass (id/emoji/libelle) ; seules 3 des 7 s'appliquent ici (que des villes).
 export const CLUE_CATEGORIES: { id: ClueCategory; emoji: string }[] = [
   { id: 'cities', emoji: '🏙️' },
   { id: 'citiesFr', emoji: '🥖' },
@@ -43,7 +39,5 @@ export const DEFAULT_CLUE_SETTINGS: ClueSettings = {
   rounds: 5,
   startWithFirstLetter: true,
 };
-/** Fixed penalty for buzzing in and being wrong: unlike an unfound round
- * (0 points, see `giveUp`), being wrong genuinely costs something — otherwise buzzing at
- * random would always be risk-free. */
+/** Penalite fixe d'une mauvaise reponse : sinon buzzer au hasard serait sans risque. */
 export const WRONG_ANSWER_PENALTY = 10;

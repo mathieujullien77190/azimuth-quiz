@@ -9,30 +9,25 @@ import type { GroupCursors } from '../helpers/groupCursors';
 import { shuffle } from '../helpers/random';
 import { splitEvenly } from '../helpers/splitEvenly';
 
-// Not re-exported from `helpers/index.ts`'s barrel, same reason as `room.ts`: `firebase/firestore` is
-// ESM-only and crashes Jest for every test that imports the barrel for something unrelated.
+// Hors du barrel de `helpers/index.ts` : `firebase/firestore` est ESM seul et fait planter Jest.
 
-/** Positions drawn per round when a tier needs filtering afterwards (English: French places are bumped a
- * tier): only some of the ones read from the tier below are kept, the rest is slack. In every other case
- * each position drawn is kept. */
+/** Positions tirees par manche quand une difficulte est refiltree ensuite (anglais) : marge de lecture. */
 const DRAW_PER_ROUND_WITH_BUMP = 3;
 
-/** Firestore's cap on the values of one `in` filter (and of one `or` query in total). */
+/** Plafond Firestore des valeurs d'un filtre `in` (et d'une requete `or`). */
 const IN_LIMIT = 30;
 
 export const groupKey = ({ category, difficulty }: Pick<Group, 'category' | 'difficulty'>): string =>
   `${category}|${difficulty}`;
 
-/** A place read from Firestore, with the group and `n` it was read at. */
+/** Un lieu lu dans Firestore, avec le groupe et le `n` de sa lecture. */
 type Drawn<T> = { item: T; slot: Slot };
 
-/** How one group is gone through in a game: from its cursor (a random place the first time), one position
- * after the other, wrapping at the end of the group. */
+/** Parcours d'un groupe : depuis son curseur (aleatoire la 1re fois), une position apres l'autre, en bouclant. */
 type Walk = { key: string; group: Group; size: number; start: number; taken: number };
 
 const remaining = (walks: Walk[]): number => walks.reduce((sum, walk) => sum + walk.size - walk.taken, 0);
 
-/** The next place of a group: its cursor, moved on by one (wrapping at the end of the group). */
 const takeFrom = (walk: Walk): Slot => {
   const n = ((walk.start + walk.taken) % walk.size) + 1;
   walk.taken += 1;
@@ -40,10 +35,8 @@ const takeFrom = (walk: Walk): Slot => {
 };
 
 /**
- * The next `count` places (fewer when the groups run out), shared as evenly as possible between the
- * selected categories (`splitEvenly`: 5 places over 6 categories is one each for 5 of them, chosen at
- * random), then, inside a category, between its tiers (there are two in English), each place being the next
- * one of its group.
+ * Les `count` prochains lieux (moins si les groupes manquent), repartis au plus egal entre les categories
+ * (`splitEvenly`), puis entre les difficultes d'une categorie (deux en anglais).
  */
 const takeSlots = (walks: Walk[], count: number): Slot[] => {
   const byCategory = [...new Set(walks.map((walk) => walk.group.category))].map((category) =>
@@ -61,38 +54,29 @@ const takeSlots = (walks: Walk[], count: number): Slot[] => {
   );
 };
 
-/** What a game plugs into the draw: which fields number its places, how a document becomes its place, and
- * which read places it keeps. */
+/** Ce qu'un jeu branche sur le tirage : numerotation, conversion document -> lieu, filtre. */
 export type GroupedDrawOptions<T> = {
-  /** Compass or Clues: finds a document's group and number (`numbering.ts`). */
   numbering: Numbering;
-  /** Firestore field paths of the group's category and of the number (`compass.category` / `n`, ...). */
   categoryField: string;
   numberField: string;
   counts: CompassCounts;
   cursors: GroupCursors;
   saveCursors: (moved: GroupCursors) => void;
   categories: Category[];
-  /** The stored tiers the pool reads: `[difficulty]`, plus the one below when a tier is filtered afterwards. */
+  /** Difficultes stockees lues : `[difficulty]`, plus celle du dessous si refiltrage. */
   tiers: Difficulty[];
   rounds: number;
   toItem: (data: PlaceDoc, id: string) => T;
-  /** Filters what was read (the English tier bump). */
+  /** Filtre ce qui a ete lu (relevement anglais). */
   keep: (item: T) => boolean;
 };
 
 /**
- * Draws a game's places from Firestore, which has no "N random documents" query: places are numbered
- * 1..size inside their group (category x difficulty, in a shuffled order fixed once, see
- * `data/firestore/numbering.ts`), the group sizes are in `counts`, and each group has a cursor on this
- * device: a game takes the next places of its groups from there and moves the cursors on, wrapping at the end,
- * so a group is gone through completely before a place comes back; the first time, a group starts at a random
- * place. Several categories share the places as evenly as possible (`splitEvenly`). Everything is read with
- * one `or` query per 30 places (1 read per place); the first pass reads exactly what is needed (plus slack
- * when a tier needs filtering), a place missing or filtered out brings a next pass, doubling in size.
+ * Tire les lieux d'une partie : Firestore n'a pas de requete "N documents au hasard", donc les lieux sont numerotes
+ * 1..taille par groupe (`data/firestore/numbering.ts`) et chaque groupe a un curseur local qui avance en bouclant.
+ * Une requete `or` par tranche de 30 ; une passe de plus (taille doublee) si des lieux manquent ou sont filtres.
  *
- * Rejects when fewer than `rounds` places exist at all — the caller's start flow shows a notice and nothing
- * is started (cursors untouched).
+ * Rejette s'il existe moins de `rounds` lieux : curseurs intacts.
  */
 export const drawFromGroups = async <T>(options: GroupedDrawOptions<T>): Promise<T[]> => {
   const { numbering, categoryField, numberField, counts, cursors, categories, tiers, rounds, toItem, keep } = options;
@@ -107,10 +91,10 @@ export const drawFromGroups = async <T>(options: GroupedDrawOptions<T>): Promise
   const total = remaining(walks);
   if (total < rounds) throw new Error(`Not enough places for this game (${total} found, ${rounds} needed)`);
 
-  /** Reads the given slots (the `n`-th place of a group) with ONE query per 30 slots, whatever their groups:
-   * an `or` of one `(category, difficulty, n in [...])` clause per group. The answer is a single list of
-   * documents; a slot with no document (the sizes are read once per launch, the admin may have removed
-   * places since) is just missing from it. */
+  /**
+   * Lit les emplacements donnes avec UNE requete par tranche de 30, tous groupes confondus ; un emplacement sans
+   * document (lieu retire depuis la lecture des tailles) manque simplement.
+   */
   const readSlots = async (slots: Slot[]): Promise<Drawn<T>[]> => {
     const places = collection(db, COLLECTIONS.places);
     const queries = Array.from({ length: Math.ceil(slots.length / IN_LIMIT) }, (_, chunk) => {
@@ -156,7 +140,7 @@ export const drawFromGroups = async <T>(options: GroupedDrawOptions<T>): Promise
   if (candidates.length < rounds)
     throw new Error(`Not enough places for this game (${candidates.length} found, ${rounds} needed)`);
 
-  // Every place taken counts as gone through, also the slack that was read but not kept.
+  // Tout lieu pris compte comme parcouru, marge non gardee comprise.
   options.saveCursors(
     Object.fromEntries(
       walks.filter((walk) => walk.taken > 0).map((walk) => [walk.key, (walk.start + walk.taken) % walk.size]),
@@ -171,8 +155,7 @@ export const drawFromGroups = async <T>(options: GroupedDrawOptions<T>): Promise
 
 const DIFFICULTY_ORDER: Difficulty[] = ['easy', 'intermediate', 'hard'];
 
-/** Stored difficulties that can display as `difficulty` once the English bump ran: in English a French place
- * is bumped one tier, so its stored tier is the one below. */
+/** Difficultes stockees qui peuvent s'afficher en `difficulty` apres le relevement anglais (un lieu francais monte d'un cran). */
 export const storedTiers = (difficulty: Difficulty, language: 'fr' | 'en'): Difficulty[] => {
   const below = DIFFICULTY_ORDER[DIFFICULTY_ORDER.indexOf(difficulty) - 1];
   return language === 'en' && below ? [difficulty, below] : [difficulty];

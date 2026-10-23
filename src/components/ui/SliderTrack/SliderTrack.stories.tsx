@@ -14,11 +14,11 @@ import percentageCode from './Percentage.source.md?raw';
 import { SliderTrack } from './SliderTrack';
 import type { SliderTrackProps } from './types';
 
-/** Named (capitalized) so eslint's rules-of-hooks recognizes it as a component and allows the
- * `useState` below — an inline arrow assigned to a story's `render` doesn't qualify. The track is
- * controlled by its caller: the ratio lives here, so dragging the thumb (or clicking the track)
- * really moves it and the value text follows (`valueText` is derived from the ratio, not a fixed arg) —
- * each change also shows up in the Actions panel (`onRatioChange` in `fn()`). */
+/**
+ * Nomme (majuscule) pour que rules-of-hooks d'eslint accepte le `useState`. La piste est controlee par son
+ * appelant : le ratio vit ici, donc glisser le curseur (ou cliquer la piste) le deplace vraiment et le texte suit
+ * (`valueText` derive du ratio) ; chaque changement apparait dans Actions (`onRatioChange` dans `fn()`).
+ */
 const PercentageDemo = (args: SliderTrackProps) => {
   const [ratio, setRatio] = useState(args.ratio);
   return (
@@ -34,7 +34,7 @@ const PercentageDemo = (args: SliderTrackProps) => {
   );
 };
 
-/** Same, for a distance derived from the ratio (`valueText` follows the thumb). */
+/** Pareil, pour une distance derivee du ratio (`valueText` suit le curseur). */
 const DistanceDemo = (args: SliderTrackProps) => {
   const [ratio, setRatio] = useState(args.ratio);
   const km = ratioToKm(ratio, SAMPLE_MAX_SURFACE_KM);
@@ -68,8 +68,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The ratio-only primitive: no domain knowledge of its own, the caller converts whatever it
- * measures to and from a plain 0-1 ratio. Drag the thumb or click the track. */
+/**
+ * Primitive de ratio seul : aucune connaissance metier, l'appelant convertit ce qu'il mesure vers/depuis un
+ * ratio 0-1. Glisser le curseur ou cliquer la piste.
+ */
 export const Percentage: Story = {
   parameters: source(percentageCode),
   args: {
@@ -85,8 +87,10 @@ export const Percentage: Story = {
   render: PercentageDemo,
 };
 
-/** Compass' distance slider: a logarithmic distance scale (`ratioToKm` /
- * `kmToRatio`), so the first hundred kilometres get as much room as the last ten thousand. */
+/**
+ * Curseur de distance de Compass : echelle logarithmique (`ratioToKm` / `kmToRatio`), les cent premiers
+ * kilometres ont autant de place que les dix mille derniers.
+ */
 export const Distance: Story = {
   parameters: source(distanceCode),
   decorators: [localizedArgs((t) => ({ label: t.sliders.distance }))],

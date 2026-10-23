@@ -12,10 +12,7 @@ import { createStyles } from './styles';
 
 const MAX_FLAG_STAGE = 3;
 
-/**
- * The grid of clue cards, plus the hidden "vowels" card once unlocked — rendered from the room's
- * shared state (`revealedClueIds`) with the per-clue stage-counting logic kept out of the screen. Dumb: everything it needs is already resolved by the caller.
- */
+/** Grille des cartes d'indices, plus la carte "voyelles" une fois debloquee. Dumb : tout est deja resolu par l'appelant. */
 export const ClueGrid = ({
   place,
   bearingDeg,
@@ -27,13 +24,9 @@ export const ClueGrid = ({
 }: ClueGridProps) => {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
-  // What this particular place actually offers: `CLUE_ORDER` minus whatever doesn't apply to it
-  // (a `citiesFr` place drops a handful of clues that never vary for a French city, and any place
-  // drops `personality` when none was curated for it — see `cluesFor`).
+  // Ce que ce lieu offre vraiment (voir `cluesFor`).
   const availableClueIds = cluesFor(place);
-  // Unlike every other card, `vowels` only ever renders once genuinely unlocked (all other clues
-  // picked at least once) — never just because the round is over (a round that ended early via
-  // "give up" never shows it, even in reveal).
+  // `vowels` n'apparait que si elle est vraiment debloquee, jamais juste parce que la manche est finie (meme apres "je ne sais pas").
   const showVowels = vowelsUnlocked(revealedClueIds, availableClueIds);
 
   return (

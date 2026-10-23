@@ -16,13 +16,13 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A cross in a circle, in the normal text color: the in-game headers'. */
+/** Croix dans un cercle, couleur de texte normale : celle des headers de jeu. */
 export const Base: Story = {
   parameters: source(baseCode),
   args: { onPress: fn(), variant: 'base' },
 };
 
-/** A plain cross in the accent color, no circle: the setup screens'. */
+/** Croix simple couleur d'accent, sans cercle : celle des ecrans de setup. */
 export const Accent: Story = {
   parameters: source(accentCode),
   args: { onPress: fn(), variant: 'accent' },

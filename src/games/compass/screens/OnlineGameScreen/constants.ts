@@ -1,8 +1,9 @@
 import type { RoundScore } from '@/types';
 
-/** Fallback for a player who has no score for a round — a player who left the room between
- * submitting and the host finishing the round, in practice. Everything at 0 rather than throwing:
- * a vanished player's row is more useful than a crash. */
+/**
+ * Repli pour un joueur sans score de la manche (parti entre l'envoi et la fin de manche) : tout a 0 plutot
+ * qu'un crash.
+ */
 export const ZERO_SCORE: RoundScore = {
   trueBearing: 0,
   trueSurfaceDistanceKm: 0,
@@ -18,15 +19,14 @@ export const ZERO_SCORE: RoundScore = {
   total: 0,
 };
 
-/** Needle at north, distance slider at its default step: every device's starting draft, reset at
- * the top of every round. */
+/** Aiguille au nord, curseur au pas par defaut : brouillon de depart, remis a zero a chaque manche. */
 export const DEFAULT_BEARING = 0;
 
 export const MAX_COMPASS_SIZE = 300;
 export const MAX_EARTH_SIZE = 240;
 
-/** On reveal, players' answers are slightly faded to make the true answer stand out. */
+/** Au reveal, les reponses des joueurs sont un peu estompees pour faire ressortir la vraie. */
 export const REVEAL_OPACITY = 0.8;
 
-/** How long the travel-mode "you are in ..." splash stays up on its own at the start of a round (ms). */
+/** Duree du splash "vous etes a ..." du mode voyage en debut de manche (ms). */
 export const TRAVEL_NOTICE_MS = 3000;

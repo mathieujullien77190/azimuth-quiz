@@ -67,9 +67,9 @@ import type { EarthMark } from '@/components/EarthSection';
 import type { GlobeScene, GlobeSceneInput } from './types';
 
 /**
- * The world's coastlines as one flat list of segment ends, worked out the first time the globe is drawn with the land
- * on (reading 800 coastlines out of the asset is not work to do at import time, for a ball that may never show them).
- * The outline never changes — only the colour it is drawn in — so it is kept for the next globe.
+ * Les cotes du monde en une liste plate d'extremites de segments, calculee au premier globe dessine avec les terres
+ * (lire 800 cotes de l'asset n'est pas du travail d'import, pour une boule qui ne les montrera peut-etre jamais).
+ * Le contour ne change jamais, seule sa couleur : gardee pour le globe suivant.
  */
 let landSegments: number[] | null = null;
 
@@ -78,7 +78,7 @@ const worldSegments = (): number[] => {
   const built: number[] = [];
   parseRings(GLOBE_LAND_PATH).forEach((coastline) => {
     coastline.forEach((point, index) => {
-      // A closed ring: the last point goes back to the first.
+      // Anneau ferme : le dernier point revient au premier.
       built.push(...scenePoint(point, LAND_ALTITUDE), ...scenePoint(coastline[(index + 1) % coastline.length], LAND_ALTITUDE));
     });
   });
@@ -87,9 +87,9 @@ const worldSegments = (): number[] => {
 };
 
 /**
- * The land/sea mask as a picture the shell below is painted with: one pixel per pixel of `GLOBE_MASK`, white and
- * opaque over land, nothing at all over the sea. The mask is run-length encoded (the lengths of the stretches of sea
- * and land, starting with sea), which unpacks in one pass; it is kept for the next globe, like the coastlines.
+ * Le masque terre/mer en image dont est peinte la coque : un pixel par pixel de `GLOBE_MASK`, blanc opaque sur la
+ * terre, rien sur la mer. Le masque est encode en RLE (longueurs de mer et de terre, mer d'abord), decode en une
+ * passe ; garde pour le globe suivant, comme les cotes.
  */
 let landPicture: Texture | null = null;
 
@@ -106,7 +106,7 @@ const landMask = (): Texture => {
     land = !land;
   }
   const texture = new DataTexture(pixels, width, height, RGBAFormat);
-  // The map meets itself at the date line: without this, the last column would be smeared against the first.
+  // La carte se rejoint a la ligne de date : sans ca, la derniere colonne serait etalee contre la premiere.
   texture.wrapS = RepeatWrapping;
   texture.needsUpdate = true;
   landPicture = texture;
@@ -114,9 +114,9 @@ const landMask = (): Texture => {
 };
 
 /**
- * The shell the continents are painted on: a ball of its own, a hair above the sea, carrying the mask as a picture. A
- * grid of its own too, so that each of its corners knows where it is on the map (`uv`) — the ball's own corners are
- * laid out by three.js in another order, and the point here is to be sure a coast falls on its coast.
+ * La coque ou sont peints les continents : une boule a part, un poil au-dessus de la mer, portant le masque en
+ * image. Grille a part aussi, pour que chaque sommet connaisse sa place sur la carte (`uv`) — ceux de la boule sont
+ * ranges par three.js dans un autre ordre, et il faut etre sur qu'une cote tombe sur sa cote.
  */
 const landFill = (color: string, opacity: number, flat: boolean): Mesh => {
   const columns = LAND_FILL_SEGMENTS;
@@ -149,23 +149,23 @@ const landFill = (color: string, opacity: number, flat: boolean): Mesh => {
     map: landMask(),
     transparent: true,
     opacity,
-    // The sea below it is opaque anyway, and the coastline above must not be cut out by a see-through shell.
+    // La mer dessous est opaque de toute facon, et la cote au-dessus ne doit pas etre decoupee par une coque transparente.
     depthWrite: false,
   };
   return new Mesh(geometry, flat ? new MeshBasicMaterial(paint) : new MeshLambertMaterial(paint));
 };
 
-/** A line (open or closed) through places, drawn at `altitude` above the ball. */
+/** Une ligne (ouverte ou fermee) a travers des lieux, a `altitude` au-dessus de la boule. */
 const polyline = (points: Coordinates[], altitude: number, material: Material, closed: boolean): Line => {
   const geometry = new BufferGeometry();
   geometry.setAttribute('position', new Float32BufferAttribute(polylinePositions(points, altitude), 3));
   const line = closed ? new LineLoop(geometry, material) : new Line(geometry, material);
-  // Dashes are measured along the line, so it has to know its own length.
+  // Les pointilles se mesurent le long de la ligne : elle doit connaitre sa longueur.
   line.computeLineDistances();
   return line;
 };
 
-/** A dot sitting on the ball at `point`. */
+/** Une pastille posee sur la boule en `point`. */
 const dot = (point: Coordinates, radius: number, altitude: number, color: string): Mesh => {
   const mesh = new Mesh(
     new SphereGeometry(radius, DOT_SEGMENTS, DOT_SEGMENTS / 2),
@@ -175,20 +175,19 @@ const dot = (point: Coordinates, radius: number, altitude: number, color: string
   return mesh;
 };
 
-/** The ring around the true answer: a flat circle laid on the ball, facing the viewer like a target. */
+/** L'anneau autour de la vraie reponse : un cercle plat couche sur la boule, face au spectateur comme une cible. */
 const ring = (point: Coordinates, color: string): Mesh => {
   const mesh = new Mesh(
     new TorusGeometry(TRUTH_RING, TRUTH_RING_THICKNESS, 8, DOT_SEGMENTS * 2),
     new MeshBasicMaterial({ color }),
   );
   mesh.position.set(...scenePoint(point, MARK_ALTITUDE));
-  // A torus lies in its own x/y plane, around its z axis: pointing that axis at the middle of the globe lays the ring
-  // flat on the ground.
+  // Un tore est dans son plan x/y, autour de son axe z : pointer cet axe vers le milieu du globe couche l'anneau sur le sol.
   mesh.lookAt(0, 0, 0);
   return mesh;
 };
 
-/** An answer's route, as a tube thick enough to be seen (a line would be one pixel wide on most devices). */
+/** La route d'une reponse, en tube assez epais pour se voir (une ligne ferait un pixel sur la plupart des appareils). */
 const routeTube = (
   origin: Coordinates,
   bearing: number,
@@ -207,12 +206,11 @@ const routeTube = (
 };
 
 /**
- * The answers' routes, apart from the rest of the globe: how thick a tube is cannot be changed by scaling it (that
- * would shorten it too), so they are rebuilt whenever `thickness` changes — which the zoom does, to keep the route the
- * same width on screen as the dots keep their size. Everything else (the ball, the world, the dots) stays put.
+ * Les routes des reponses, a part du reste du globe : l'epaisseur d'un tube ne se change pas par mise a l'echelle
+ * (il raccourcirait aussi), donc on les reconstruit quand `thickness` change — ce que fait le zoom, pour garder la
+ * route a la meme largeur a l'ecran que les pastilles. Le reste (boule, monde, pastilles) ne bouge pas.
  *
- * The true answer has one as well — the way one would actually have gone, which is the whole point of the screen —
- * on top of its circled end point.
+ * La vraie reponse a aussi la sienne — le chemin qu'il fallait vraiment prendre —, par-dessus son point entoure.
  */
 export const buildRoutes = (origin: Coordinates, marks: EarthMark[], thickness: number): Group => {
   const routes = new Group();
@@ -223,15 +221,14 @@ export const buildRoutes = (origin: Coordinates, marks: EarthMark[], thickness: 
 };
 
 /**
- * The whole globe as three.js objects: the ball, the world's outline and colour, the guides, the starting point and
- * every answer's end point (the true one circled). The routes themselves are built apart (`buildRoutes`), since the
- * zoom changes how thick they are. Nothing here knows about the screen: what is in front and what is hidden behind the ball is the depth buffer's business, not
- * ours — which is the whole point of drawing it in 3D.
+ * Tout le globe en objets three.js : la boule, contour et couleur du monde, les reperes, le point de depart et la fin
+ * de chaque reponse (la vraie entouree). Les routes sont construites a part (`buildRoutes`) car le zoom change leur
+ * epaisseur. Rien ici ne connait l'ecran : devant/derriere la boule, c'est l'affaire du depth buffer.
  *
- * The lamp comes back out with the scene (`headlight`) instead of being added to it: the caller hangs it on the camera,
- * so the same side of the ball always catches the light however the globe is turned. So do the dots (`screenSized`):
- * zoomed in, they are shrunk back to the size they have on screen unzoomed, or they would end up hiding the very map
- * one zoomed in to read (`markScale` in `useGlobeRenderer`).
+ * La lampe sort avec la scene (`headlight`) au lieu d'y etre ajoutee : l'appelant l'accroche a la camera, pour que
+ * le meme cote prenne toujours la lumiere. Les pastilles (`screenSized`) aussi : zoomees, elles sont remises a leur
+ * taille d'ecran non zoomee, sinon elles cacheraient la carte qu'on zoome pour lire (`markScale` dans
+ * `useGlobeRenderer`).
  */
 export const buildGlobeScene = ({ origin, marks, land, equator, greenwich, north, colors }: GlobeSceneInput): GlobeScene => {
   const scene = new Scene();
@@ -247,11 +244,10 @@ export const buildGlobeScene = ({ origin, marks, land, equator, greenwich, north
   headlight.position.set(...HEADLIGHT_POSITION);
 
   if (land) {
-    // The continents painted in, then their coast drawn over it: the colour comes from a picture of the world, the
-    // sharp edge from the outline itself.
+    // Les continents peints, puis leur cote par-dessus : la couleur vient d'une image du monde, le trait net du contour.
     scene.add(landFill(colors.fill, colors.fillOpacity, colors.flat));
-    // Every coast in one object: 800 coastlines of their own would be 800 draws for the graphics card, and the world
-    // can be as detailed as the asset is without that changing.
+    // Toutes les cotes en un objet : 800 cotes distinctes feraient 800 dessins pour la carte graphique, alors que le
+    // detail de l'asset n'y change rien.
     const geometry = new BufferGeometry();
     geometry.setAttribute('position', new Float32BufferAttribute(worldSegments(), 3));
     scene.add(new LineSegments(geometry, new LineBasicMaterial({ color: colors.land })));
@@ -261,7 +257,7 @@ export const buildGlobeScene = ({ origin, marks, land, equator, greenwich, north
   if (equator) scene.add(polyline(equatorPoints(GUIDE_STEP), GUIDE_ALTITUDE, guide(), true));
   if (greenwich) scene.add(polyline(greenwichPoints(GUIDE_STEP), GUIDE_ALTITUDE, guide(), false));
 
-  // What the zoom must not blow up: the dots and the ring, not the ball or the routes.
+  // Ce que le zoom ne doit pas gonfler : les pastilles et l'anneau, pas la boule ni les routes.
   const screenSized: Mesh[] = [];
   const addMark = (mesh: Mesh) => {
     screenSized.push(mesh);
@@ -280,9 +276,9 @@ export const buildGlobeScene = ({ origin, marks, land, equator, greenwich, north
   return { scene, headlight, screenSized };
 };
 
-/** Hands the geometries and materials of a scene — or of any part of one, like a group of routes — back to the
- * graphics card: a new one is built whenever an answer, the zoom, the theme or the stage of a clue changes, and the old
- * one would otherwise stay there taking up memory. */
+/** Rend a la carte graphique les geometries et materiaux d'une scene — ou d'une partie, comme un groupe de routes :
+ * on en construit une nouvelle a chaque changement (reponse, zoom, theme, stade d'un indice) et l'ancienne
+ * resterait sinon en memoire. */
 export const disposeScene = (scene: Object3D): void => {
   scene.traverse((object) => {
     const drawn = object as Partial<Mesh>;

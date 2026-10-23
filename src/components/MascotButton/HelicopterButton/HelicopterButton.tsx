@@ -44,14 +44,14 @@ export const HelicopterButton = ({ onPress, accessibilityLabel }: HelicopterButt
   const tailRotorR = SIZE * 0.055;
   const skidY = bodyRy + SIZE * 0.08;
   const gearR = SIZE * GEAR_RADIUS_RATIO;
-  // The rope hangs from the fuselage's belly, through the skids, down to the gear's center.
+  // La corde pend du ventre du fuselage, entre les patins, jusqu'au centre de l'engrenage.
   const gearY = skidY + SIZE * ROPE_LENGTH_RATIO;
 
   return (
     <Pressable accessibilityLabel={accessibilityLabel} accessibilityRole="button" hitSlop={12} onPress={onPress}>
       <Svg height={SIZE * 1.85} width={SIZE}>
         <G transform={`translate(${SIZE / 2} ${SIZE * 0.75 + bobY})`}>
-          {/* Skids. */}
+          {/* Patins. */}
           <Line
             stroke={colors.textMuted}
             strokeWidth={1.5}
@@ -77,13 +77,13 @@ export const HelicopterButton = ({ onPress, accessibilityLabel }: HelicopterButt
             y2={skidY}
           />
 
-          {/* Rope + the gear hanging on it. */}
+          {/* Corde + engrenage suspendu. */}
           <Line stroke={colors.textMuted} strokeWidth={1.2} x1={0} x2={0} y1={bodyRy} y2={gearY} />
           <G transform={`translate(0 ${gearY})`}>
             <GearIcon angleDeg={gearDeg} color={colors.accent} radius={gearR} />
           </G>
 
-          {/* Tail boom + rotor + anti-collision light. */}
+          {/* Poutre de queue + rotor + feu anticollision. */}
           <Rect
             fill={colors.text}
             height={tailWidth}
@@ -95,7 +95,7 @@ export const HelicopterButton = ({ onPress, accessibilityLabel }: HelicopterButt
           <Circle cx={tailStartX + tailLength} cy={0} fill="none" r={tailRotorR} stroke={colors.text} strokeWidth={1} />
           <Circle cx={tailStartX + tailLength} cy={0} fill={colors.danger} opacity={blinkOpacity} r={1.4} />
 
-          {/* Fuselage + cockpit bubble. */}
+          {/* Fuselage + bulle du cockpit. */}
           <Ellipse cx={0} cy={0} fill={colors.text} rx={bodyRx} ry={bodyRy} />
           <Circle cx={-bodyRx * 0.55} cy={-bodyRy * 0.1} fill={COCKPIT_COLOR} opacity={0.8} r={bodyRy * 0.85} />
           <Circle
@@ -106,7 +106,7 @@ export const HelicopterButton = ({ onPress, accessibilityLabel }: HelicopterButt
             r={bodyRy * 0.22}
           />
 
-          {/* Mast + spinning main rotor. */}
+          {/* Mat + rotor principal qui tourne. */}
           <Line stroke={colors.text} strokeWidth={1.5} x1={0} x2={0} y1={-bodyRy} y2={rotorTopY} />
           <Circle cx={0} cy={rotorTopY} fill={colors.text} r={1.8} />
           <G transform={`rotate(${rotorAngleDeg} 0 ${rotorTopY})`}>

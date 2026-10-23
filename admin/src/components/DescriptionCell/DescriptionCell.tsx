@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 
-/** Collapsed by default (trivia too long to stay displayed on 900+ cards), opens as a
- * textarea on demand. Keeps its own draft, only pushes to the parent on clicking
- * "Save". */
+/**
+ * Replie par defaut (anecdotes trop longues pour 900+ cartes), s'ouvre en textarea. Garde son brouillon et ne le
+ * pousse au parent qu'a la validation.
+ */
 export const DescriptionCell = ({
   value,
   saveFlag,

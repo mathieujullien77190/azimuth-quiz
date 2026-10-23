@@ -11,13 +11,13 @@ export type OnlineGameScreenProps = {
   onQuit: () => void;
 };
 
-/** A needle drawn on `Compass` besides the active/current one. */
+/** Aiguille dessinee sur `Compass` en plus de l'active. */
 export type Needle = { bearing: number; color: string };
 
-/** Header shared by both phases: quit + name/score + round progress. Pure rendering. */
+/** En-tete commun aux deux phases : quitter, nom/score, progression. Rendu pur. */
 export type OnlineHeaderProps = {
   onQuit: () => void;
-  /** This device's player and running total, for the header. */
+  /** Joueur de cet appareil et son total. */
   name: string;
   points: number;
   roomCode: string;
@@ -27,23 +27,26 @@ export type OnlineHeaderProps = {
 };
 
 /**
- * Single view for both phases (answer / submitted-or-revealed) sharing one `Screen`/`ScrollView`
- * instance — kept mounted across the submit so the scroll position survives it, instead of
- * unmounting into a separate `Screen` (which used to reset the native scroll to the top). `record`
- * is the discriminant, same convention as the local `GameScreen`'s own view: `undefined` while
- * still answering, always set (pending or confirmed) once submitted — see `OnlineGameScreen`'s
- * `record: confirmedRecord ?? buildRoundRecord(...)`.
+ * Vue unique pour les deux phases (reponse / envoye-reveal) : un seul `Screen`/`ScrollView` reste monte a
+ * l'envoi pour garder le defilement. `record` discrimine : `undefined` pendant la reponse, defini (pending
+ * ou confirme) ensuite.
  */
 export type OnlineGameScreenViewProps = OnlineHeaderProps & {
   scrollRef: RefObject<ScrollView | null>;
   place: Place;
   liveCompass: boolean;
   earthMarks: EarthMark[];
-  /** The round's starting point: at the reveal, lets the Earth view switch to the flat world map (see `EarthSection`). */
+  /**
+   * Point de depart de la manche : au reveal, permet de passer la Terre a la carte plate (voir
+   * `EarthSection`).
+   */
   origin: Coordinates;
-  /** Travel mode, rounds after the first: where the player stands ("Vous êtes à Cusco"), shown in the header. */
+  /**
+   * Mode voyage, apres la 1re manche : ou se trouve le joueur ("Vous etes a Cusco"), affiche dans le
+   * header.
+   */
   location?: string;
-  // Answer phase only (ignored once `record` is set).
+  // Phase reponse seulement (ignore des que `record` est defini).
   showCountry: boolean;
   compassColor: string;
   bearing: number;
@@ -51,14 +54,14 @@ export type OnlineGameScreenViewProps = OnlineHeaderProps & {
   distanceKm: number;
   onSetDistanceKm: (value: number) => void;
   maxDistanceKm: number;
-  /** See `FooterNav`'s own comment: which section the round is scrolled to right now. */
+  /** Voir le commentaire de `FooterNav`. */
   onCap: boolean;
   onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
   onGoToCap: () => void;
   onGoToDistance: () => void;
   onSubmit: () => void;
   submitDisabled: boolean;
-  // Submitted-or-revealed phase only (present once `record` is set).
+  // Phase envoye/reveal seulement (present des que `record` est defini).
   extraNeedles?: Needle[];
   truthBearing?: number | null;
   answered?: boolean[];
@@ -71,7 +74,10 @@ export type OnlineGameScreenViewProps = OnlineHeaderProps & {
   isHost?: boolean;
   isLastRound?: boolean;
   onNextRound?: () => void;
-  /** The emoji reaction on screen right now, and what a tap on the footer's emojis calls (undefined alone in the room). */
+  /**
+   * Reaction emoji a l'ecran, et ce que le tap sur les emojis du pied appelle (undefined seul dans la
+   * room).
+   */
   reaction?: ReactionOverlayProps['reaction'];
   onReact?: (emoji: string) => void;
 };

@@ -14,11 +14,9 @@ export const PlaceCard = memo(function PlaceCard({ place, showCountry, descripti
   const { language } = useLanguage();
   const t = useTranslation();
   const revealed = description !== undefined;
-  // The trivia only exists in French (never translated): we don't show it in English rather
-  // than displaying text in the wrong language. The Wikipedia link, though, stays bilingual.
+  // L'anecdote n'existe qu'en francais : masquee en anglais. Le lien Wikipedia reste bilingue.
   const showDescription = revealed && language === 'fr';
-  // The Wikipedia link only makes sense on reveal (never while guessing): same guard
-  // as the reveal itself, rather than a separate prop to keep in sync.
+  // Lien Wikipedia seulement au reveal (meme garde que le reveal, pas de prop a synchroniser).
   const url = revealed ? wikiUrl(place, language) : undefined;
 
   return (

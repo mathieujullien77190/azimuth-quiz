@@ -6,29 +6,25 @@ import type { Difficulty } from '@/types';
 import { db } from './client';
 import { getLocalUid } from './roomCode';
 
-// Not re-exported from `helpers/index.ts`'s barrel, like `room.ts`: `firebase/firestore` is ESM-only and crashes Jest for
-// every test that imports the barrel for something unrelated.
+// Hors du barrel de `helpers/index.ts` : `firebase/firestore` est ESM seul et fait planter Jest.
 
-/** One opinion about how hard a place is, given by a device in dev mode (see `useDevFeedback`). */
+/** Un avis de difficulte sur un lieu, envoye par un appareil en mode dev (`useDevFeedback`). */
 export type DevFeedback = {
   game: 'compass' | 'clues';
   targetType: 'place';
-  /** The place's key (`places/{key}`). */
+  /** Cle du lieu (`places/{key}`). */
   targetKey: string;
   name: string;
-  /** What the data says now. */
   currentDifficulty: Difficulty;
-  /** What the player thinks. */
   suggestedDifficulty: Difficulty;
 };
 
-/** The longest a name or key may be: the rules refuse longer strings. */
+/** Longueur max d'un nom ou d'une cle : les regles refusent plus long. */
 const MAX_LENGTH = 80;
 
 /**
- * Writes one opinion in `devFeedback`. The collection's rules only accept it with the secret dev code in the document
- * (`DEV_CODE`): the real gate, the setting that turns the mode on is only a convenience. Read, and cleaned, by the admin's
- * "Avis difficulté" page; nothing here goes through the journal or `meta/dataVersion`.
+ * Ecrit un avis dans `devFeedback`. Les regles exigent le code dev secret (`DEV_CODE`) : c'est la vraie barriere.
+ * Hors journal et `meta/dataVersion`.
  */
 export const sendDevFeedback = async (feedback: DevFeedback): Promise<void> => {
   const uid = await getLocalUid();

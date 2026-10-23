@@ -5,9 +5,9 @@ import { saveCountry, type CountryPatch, type CountryRecord } from '../../api/co
 import type { Field, SaveState } from './types';
 
 /**
- * Every way of editing a country, with the optimistic update of the list it lives in and the little
- * saving/saved/error flag of each field: what the Countries list and the Monde page's side panel both use, so a
- * country is always written through the same `api/countries` functions (journal and data version included).
+ * Toutes les editions d'un pays, avec mise a jour optimiste de la liste et petit drapeau enregistrement/ok/erreur par
+ * champ ; sert a la liste Pays et au panneau de la page Monde, donc tout passe par `api/countries` (journal et
+ * version inclus).
  */
 export const useCountryEditing = (
   countries: CountryRecord[] | null,

@@ -31,7 +31,7 @@ describe('useHostTurnScoring — a find', () => {
     await rerender({ isHost: true, state: found });
     expect(applyScore).toHaveBeenCalledWith({ zoe: 475 });
 
-    // Same round re-delivered (e.g. a totals update) must not score it a second time.
+    // Meme manche relivree (ex. maj des totaux) : ne doit pas etre notee deux fois.
     await rerender({ isHost: true, state: { ...found, totalScores: { zoe: 475 } } });
     expect(applyScore).toHaveBeenCalledTimes(1);
   });

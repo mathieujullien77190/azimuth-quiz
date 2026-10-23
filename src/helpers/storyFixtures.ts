@@ -12,12 +12,10 @@ import type {
 import { bearingDeg, distanceKm, normalizeBearing } from './geo';
 import { applyBestBonus, scoreRound } from '@/games/compass/helpers/scoring';
 
-// Sample data shared by every component's `.stories.tsx` and by the tests that need a few places: small,
-// hand-written and self-contained (the game's real data lives in Firestore). Lives here (not in `admin/`)
-// so a component's story never depends on admin code — admin already depends on `src/` via its `@/`
-// alias, never the other way around.
+// Donnees d'exemple pour les `.stories.tsx` et les tests : petites, ecrites a la main (les vraies donnees sont dans
+// Firestore). Ici et pas dans `admin/`, qui depend de `src/` et non l'inverse.
 
-/** A few Compass places, in the shape the game reads them from a Firestore document. */
+/** Quelques lieux Compass, au format d'un document Firestore. */
 export const FIXTURE_PLACES: Place[] = [
   {
     name: 'Tokyo',
@@ -79,7 +77,7 @@ const clue = (
   ...partial,
 });
 
-/** A few Clues places, in the shape the game reads them from a Firestore document (country... copied in). */
+/** Quelques lieux Clues, au format d'un document Firestore (pays... copie dedans). */
 export const FIXTURE_CLUE_PLACES: CluePlace[] = [
   clue({
     key: 'par',
@@ -160,22 +158,18 @@ const findPlace = (name: string, code: string): Place =>
 const findCluePlace = (name: string, code: string): CluePlace =>
   FIXTURE_CLUE_PLACES.find((place) => place.name === name && place.code === code)!;
 
-/** Has a French trivia description (see PlaceCard's reveal state) — the sample Compass place, used by
- * every story that needs one (the guessing and the revealed states alike). */
+/** Lieu Compass d'exemple avec description (etat revele de PlaceCard). */
 export const SAMPLE_PLACE_REVEALED: Place = findPlace('Tokyo', 'JP');
 
 export const SAMPLE_CLUE_PLACE: CluePlace = findCluePlace('Tokyo', 'JP');
 
-/** A multi-word name with a space ("New York"), for the letter clue's skeleton (one group per
- * word) — see `SAMPLE_CLUE_PLACE_HYPHEN` for the hyphen case. */
+/** Nom a plusieurs mots ("New York") pour le squelette de l'indice lettres ; voir `SAMPLE_CLUE_PLACE_HYPHEN`. */
 export const SAMPLE_CLUE_PLACE_SPACE: CluePlace = findCluePlace('New York', 'US');
 
-/** A name with a hyphen ("Saint-Malo"), for the letter clue's skeleton (the hyphen sits in place,
- * outside any letter slot — see `HYPHEN_SLOT`). */
+/** Nom avec trait d'union ("Saint-Malo"), hors des cases de lettres (voir `HYPHEN_SLOT`). */
 export const SAMPLE_CLUE_PLACE_HYPHEN: CluePlace = findCluePlace('Saint-Malo', 'FR');
 
-/** A French city (`citiesFr`), for `cluesFor`'s reduced clue set: same time zone/flag/currency/
- * phone code as every other French place, so those clues are dropped for it (see `ClueGrid`). */
+/** Ville francaise (`citiesFr`) pour le jeu d'indices reduit de `cluesFor` (voir `ClueGrid`). */
 export const SAMPLE_CLUE_PLACE_FR: CluePlace = findCluePlace('Marseille', 'FR');
 
 export const SAMPLE_PLAYERS: Player[] = [
@@ -188,9 +182,7 @@ const ORIGIN = DEFAULT_ORIGIN.coordinates;
 const TRUE_BEARING = bearingDeg(ORIGIN, SAMPLE_PLACE_REVEALED.coordinates);
 const TRUE_DISTANCE_KM = distanceKm(ORIGIN, SAMPLE_PLACE_REVEALED.coordinates);
 
-/** Three plausible guesses (one spot-on, one overshooting, one wide off) for the same round, fed
- * through the real scoring helpers — every number RoundResult shows is exactly what the real game
- * would compute for these guesses, not invented. */
+/** Trois reponses (exacte, trop loin, tres loin) passees par les vrais helpers de score : valeurs reelles. */
 const SAMPLE_GUESSES: Guess[] = [
   { bearing: normalizeBearing(TRUE_BEARING + 2), distanceKm: Math.round(TRUE_DISTANCE_KM * 0.97) },
   { bearing: normalizeBearing(TRUE_BEARING - 18), distanceKm: Math.round(TRUE_DISTANCE_KM * 1.35) },
@@ -206,14 +198,13 @@ const SAMPLE_RESULTS: PlayerResult[] = applyBestBonus(
 
 export const SAMPLE_ROUND_RECORD: RoundRecord = { place: SAMPLE_PLACE_REVEALED, results: SAMPLE_RESULTS };
 
-/** Round 1: cumulative totals equal this round's own totals. */
+/** Manche 1 : totaux cumules = totaux de la manche. */
 export const SAMPLE_TOTALS: number[] = SAMPLE_RESULTS.map((result) => result.score.total);
 
 export const SAMPLE_MAX_SURFACE_KM = MAX_SURFACE_DISTANCE_KM;
 
 export const SAMPLE_DISTANCE_KM = DEFAULT_DISTANCE_KM;
 
-/** Bearing/distance from the same default origin to the Clues sample place — real values for
- * ClueCard's `bearing`/`distance` clues. */
+/** Cap/distance du depart par defaut au lieu Clues d'exemple, pour les indices `bearing`/`distance` de ClueCard. */
 export const SAMPLE_CLUE_BEARING = bearingDeg(ORIGIN, SAMPLE_CLUE_PLACE.coordinates);
 export const SAMPLE_CLUE_DISTANCE_KM = distanceKm(ORIGIN, SAMPLE_CLUE_PLACE.coordinates);

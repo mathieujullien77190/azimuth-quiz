@@ -14,10 +14,8 @@ import type { FinalStandingsProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * End-of-game scoreboard shared by every game — dumb: title, the winner (or the tie) as a banner once
- * there's more than one player, the ranked scores (medals for the podium), then whatever the game adds
- * as `children` (Compass' rank card and round-by-round recap...), and the two buttons every game shares: play
- * again (back to the lobby with everyone) and leave.
+ * Classement de fin de partie commun aux jeux (dumb) : titre, vainqueur (ou egalite) en banniere des qu'il y a
+ * plusieurs joueurs, scores classes (medailles au podium), `children` propres au jeu, puis rejouer / quitter.
  */
 export const FinalStandings = ({ title, entries, localName, children, onReplay, onQuit }: FinalStandingsProps) => {
   const styles = useThemedStyles(createStyles);

@@ -34,11 +34,10 @@ const toRow = (snapshot: QueryDocumentSnapshot): FeedbackRow => {
 };
 
 /**
- * What the players said about how hard a place is, in dev mode (`devFeedback`, see `useDevFeedback`): one
- * read-only text of instructions for an AI that edits the data ("Change la difficulté du lieu … de … à …"), which updates
- * by itself as opinions arrive, a "Copier" button, and "Nettoyer" which deletes every opinion (asks twice: a confirmation
- * inside the page, since a browser dialog would block). Reads Firestore directly: nothing here goes through the data copy
- * or the journal.
+ * Avis des joueurs sur la difficulte d'un lieu, en mode dev (`devFeedback`) : un texte en lecture seule de consignes
+ * pour une IA qui edite les donnees, mis a jour en direct, un bouton "Copier" et "Nettoyer" qui supprime tout
+ * (confirmation dans la page, un dialogue navigateur bloquerait). Lit Firestore directement, hors copie de donnees et
+ * journal.
  */
 export const FeedbackView = () => {
   const [rows, setRows] = useState<FeedbackRow[] | null>(null);
@@ -62,7 +61,7 @@ export const FeedbackView = () => {
     setCopied(true);
   };
 
-  /** Deletes every opinion, 500 at a time (a batch's own cap), until none is left. */
+  /** Supprime tous les avis par 500 (plafond d'un lot) jusqu'a ce qu'il n'en reste plus. */
   const clean = async () => {
     setCleaning(true);
     try {

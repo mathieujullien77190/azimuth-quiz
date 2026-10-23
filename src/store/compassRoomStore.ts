@@ -8,8 +8,7 @@ import {
   subscribeToRoomSettings,
 } from '../games/compass/firebase/room';
 
-// Not re-exported from `helpers/index.ts`'s barrel, same reason as `room.ts` itself: it imports
-// `firebase/firestore` transitively, which crashes Jest the moment anything requires it.
+// Hors du barrel de `helpers/index.ts` : importe `firebase/firestore`, qui fait planter Jest.
 
 const DEFAULT_GAME_STATE: RoomGameState = {
   screen: 'options',
@@ -21,8 +20,7 @@ const DEFAULT_GAME_STATE: RoomGameState = {
   totalScores: {},
 };
 
-/** Shared with `OnlineGameScreen`, which only ever reads it — `SetupScreen` (through
- * `useSetupRoom`) owns the connect/disconnect lifecycle. See `createRoomStore` for the fields. */
+/** Lu par `OnlineGameScreen` ; `SetupScreen` (via `useSetupRoom`) possede connexion/deconnexion. */
 export const useRoomStore = createRoomStore<RoomSettings, RoomGameState>({
   defaultGameState: DEFAULT_GAME_STATE,
   subscribeToRoomPlayers,

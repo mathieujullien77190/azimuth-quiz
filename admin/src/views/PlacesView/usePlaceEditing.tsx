@@ -15,9 +15,9 @@ import { CLUE_FIELD_BY_KEY } from './helpers';
 import type { Field, SaveState } from './types';
 
 /**
- * Every way of editing a place, with the optimistic update of the list it lives in and the little saving/saved/error
- * flag of each field: what the Places list and the Monde page's side panel both use, so a place is always written
- * through the same `api/places` functions (journal and data version included).
+ * Toutes les editions d'un lieu, avec mise a jour optimiste de la liste et petit drapeau enregistrement/ok/erreur par
+ * champ ; sert a la liste Lieux et au panneau de la page Monde, donc tout passe par `api/places` (journal et version
+ * inclus).
  */
 export const usePlaceEditing = (setRows: Dispatch<SetStateAction<PlaceRow[] | null>>) => {
   const [saveState, setSaveState] = useState<SaveState | null>(null);

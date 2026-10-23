@@ -46,7 +46,7 @@ describe('EndScreen — alone', () => {
     expect(getByText('Paris')).toBeTruthy();
     expect(getByText('+400')).toBeTruthy();
     expect(getByText('+350')).toBeTruthy();
-    // Alone, "the best" is always you: the recap names nobody (only the ranking lists Alice), no banner.
+    // Seul, "le meilleur" c'est toujours soi : le recap ne nomme personne, pas de banniere.
     expect(getAllByText('Alice')).toHaveLength(1);
     expect(queryByText(/gagne/)).toBeNull();
   });
@@ -73,9 +73,9 @@ describe('EndScreen — alone', () => {
 
 describe('EndScreen — several players', () => {
   const records: RoundRecord[] = [
-    // Paris: Alice best on direction, Bob best on distance.
+    // Paris : Alice meilleure au cap, Bob a la distance.
     { place: place('Paris', 'FR'), results: [result(400, 100), result(200, 300)] },
-    // Berlin: a tie on direction, nobody scored on distance.
+    // Berlin : egalite au cap, personne ne marque a la distance.
     { place: place('Berlin', 'DE'), results: [result(250, 0), result(250, 0)] },
   ];
 
@@ -107,7 +107,7 @@ describe('EndScreen — several players', () => {
     // Paris
     expect(getByText('+400')).toBeTruthy();
     expect(getByText('+300')).toBeTruthy();
-    // Berlin: both share the direction, nobody has a distance
+    // Berlin : cap partage, pas de distance.
     expect(getByText('Alice, Bob')).toBeTruthy();
     expect(getByText('+250')).toBeTruthy();
     expect(getAllByText('–')).toHaveLength(1);
@@ -121,7 +121,7 @@ describe('EndScreen — several players', () => {
   });
 
   it('copes with a round that has more results than the players left', async () => {
-    // Three results, two players left: the third one (best on both) has quit.
+    // Trois resultats, deux joueurs restants : le 3e (meilleur partout) est parti.
     const withLeaver: RoundRecord[] = [
       { place: place('Paris', 'FR'), results: [result(100, 100), result(200, 200), result(900, 900)] },
     ];

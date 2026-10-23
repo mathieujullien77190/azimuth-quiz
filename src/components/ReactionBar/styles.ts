@@ -7,9 +7,8 @@ import { MIN_TOUCH_SIZE, TOGGLE_SIZE } from './constants';
 
 export const createStyles = ({ colors }: Theme) =>
   StyleSheet.create({
-    // Floats just above the footer it is a child of (`bottom: '100%'` of it), at its right corner: out of the footer's
-    // flow, so the footer's own buttons keep their layout and width, and above them, never over them. The column hangs
-    // off it (see `column`).
+    // Flotte juste au-dessus du footer (`bottom: '100%'`), a son coin droit : hors de son flux, donc les boutons du
+    // footer gardent leur largeur. La colonne pend de ce bouton (voir `column`).
     bar: {
       position: 'absolute',
       bottom: '100%',
@@ -30,8 +29,7 @@ export const createStyles = ({ colors }: Theme) =>
     toggleEmoji: {
       fontSize: fontSize.subtitle + 6,
     },
-    // Opens upward from the round button, stacked above it and flush against the right edge of the screen (the
-    // button's own margin is taken back).
+    // S'ouvre vers le haut, collee au bord droit de l'ecran (la marge du bouton est reprise).
     column: {
       position: 'absolute',
       bottom: '100%',

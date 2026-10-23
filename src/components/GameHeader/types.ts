@@ -2,21 +2,20 @@ import type { Difficulty, Player } from '@/types';
 
 export type GameHeaderProps = {
   onQuit: () => void;
-  /** The room code, next to the quit cross (every game is an online room). */
+  /** Code de la room, a cote de la croix de sortie. */
   code: string;
-  /** This device's player and running total, top right ("Zoé · 350 pts"). */
+  /** Joueur de cet appareil et son total, en haut a droite ("Zoé · 350 pts"). */
   name: string;
   points: number;
-  /** Shown as "Manche 3 / 10 · difficulty", aligned left under the top row. */
+  /** Affiche "Manche 3 / 10 · difficulte", aligne a gauche sous la ligne du haut. */
   roundNumber: number;
   totalRounds: number;
   difficulty: Difficulty;
-  /** Given: shows who's playing and whose turn it is (`PlayerTabs`, status only). Omitted: no tabs,
-   * for a game with no turns (Compass: everyone answers at once). */
+  /** Si donne : montre qui joue et a qui est le tour (`PlayerTabs`, statut seulement). Omis : pas d'onglets,
+   * pour un jeu sans tours (Boussole : tout le monde repond en meme temps). */
   players?: Player[];
-  /** Index into `players` of whoever has the turn; -1 (the default) when nobody does, e.g. once
-   * the round is over. Only meaningful with `players`. */
+  /** Index dans `players` de celui qui a le tour ; -1 (defaut) si personne, ex. manche finie. Utile avec `players`. */
   turnIndex?: number;
-  /** Travel mode: where the player stands ("Vous êtes à Cusco"), already translated; a white line under the round row. */
+  /** Mode voyage : ou se trouve le joueur ("Vous êtes à Cusco"), deja traduit ; ligne blanche sous la ligne de manche. */
   location?: string;
 };

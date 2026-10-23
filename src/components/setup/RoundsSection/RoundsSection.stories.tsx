@@ -8,8 +8,7 @@ import { source } from '@/storybook/source';
 import defaultCode from './Default.source.md?raw';
 import readOnlyCode from './ReadOnly.source.md?raw';
 
-/** Named (capitalized) so eslint's rules-of-hooks recognizes it as a component and allows the
- * `useState` below — an inline arrow assigned to a story's `render` doesn't qualify. */
+/** Nomme (majuscule) pour que rules-of-hooks d'eslint accepte le `useState`. */
 const InteractiveDemo = (args: RoundsSectionProps) => {
   const [rounds, setRounds] = useState(args.rounds);
   return (
@@ -40,9 +39,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Clicking a different chip actually re-selects it (local state in the story, not the
- * component — `RoundsSection` itself stays fully controlled by its caller) — and shows up in the
- * Actions panel below, `onSelect` wrapped in `fn()`. */
+/**
+ * Un clic sur une autre puce la re-selectionne (state local de la story ; `RoundsSection` reste controle) et
+ * apparait dans le panneau Actions (`onSelect` enveloppe dans `fn()`).
+ */
 export const Default: Story = {
   parameters: source(defaultCode),
   args: { rounds: 10, onSelect: fn() },

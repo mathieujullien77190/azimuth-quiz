@@ -69,7 +69,7 @@ describe('markEnd', () => {
 
 describe('fitZoom', () => {
   it('picks the highest step that keeps every mark within the available space', () => {
-    // A tiny offset compared to the available space allows the max zoom step.
+    // Un decalage minuscule devant la place disponible autorise le zoom max.
     const zoom = fitZoom([{ x: 1, y: 1 }], 1000, 1000);
     expect(zoom).toBe(MAX_ZOOM);
   });
@@ -80,7 +80,7 @@ describe('fitZoom', () => {
   });
 
   it('picks an intermediate step matching the constraint', () => {
-    // limit = 20 exactly matches a step of ZOOM_STEPS.
+    // limit = 20 tombe exactement sur un palier de ZOOM_STEPS.
     const zoom = fitZoom([{ x: 5, y: 5 }], 100, 100);
     expect(ZOOM_STEPS).toContain(zoom);
     expect(zoom).toBeGreaterThan(1);
@@ -92,7 +92,7 @@ describe('fitZoom', () => {
   });
 
   it('only considers the positive (downward) part of the y offset', () => {
-    // A negative y offset (above the player) must not constrain the vertical zoom.
+    // Un decalage y negatif (au-dessus du joueur) ne doit pas limiter le zoom vertical.
     const zoom = fitZoom([{ x: 1, y: -1000 }], 1000, 10);
     expect(zoom).toBe(MAX_ZOOM);
   });

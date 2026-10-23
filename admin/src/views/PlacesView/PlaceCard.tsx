@@ -24,7 +24,7 @@ import type { Field } from './types';
 
 export type PlaceCardProps = {
   row: PlaceRow;
-  /** The little "saving / saved / error" flag of one field of this place (see `usePlaceEditing`). */
+  /** Petit drapeau "enregistrement / ok / erreur" d'un champ du lieu (voir `usePlaceEditing`). */
   saveFlagFor: (row: PlaceRow, field: Field) => ReactNode;
   onDifficultyChange: (row: PlaceRow, difficulty: Difficulty) => void;
   onCompassChange: (row: PlaceRow, patch: CompassPatch) => void;
@@ -32,8 +32,10 @@ export type PlaceCardProps = {
   onDelete: (row: PlaceRow) => Promise<void>;
 };
 
-/** One place and every field of it that can be edited: shared by the Places list and the Monde page's side panel,
- * so both write through the very same handlers (see `usePlaceEditing`). */
+/**
+ * Un lieu et tous ses champs editables, partages par la liste Lieux et le panneau de la page Monde : memes handlers
+ * (voir `usePlaceEditing`).
+ */
 export const PlaceCard = ({ row, saveFlagFor, onDifficultyChange, onCompassChange, onCluesChange, onDelete }: PlaceCardProps) => (
     <div className="place-card">
       <div className="place-header">

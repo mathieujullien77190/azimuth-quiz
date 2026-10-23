@@ -3,24 +3,19 @@ import type { Category, ClueCategory, Difficulty } from '@/types';
 import type { CompassCounts, PlaceDoc } from './types';
 
 /**
- * Places are numbered inside their group, 1..size, dense — twice: Compass places by (`compass.category` x
- * `difficulty`, stored in `PlaceDoc.n`) and Clues places by (`clues.category` x `difficulty`, stored in
- * `clues.n`). The game reads the group sizes (`meta/compassCounts`, `meta/cluesCounts`), draws random
- * positions over the selected groups and asks Firestore for `n in [...]` — see
- * `games/compass/firebase/places.ts`. Everything here is pure: the seed, the admin (numbering
- * screens, edits) and the game share it. The two numberings differ only by the `Numbering` they use.
+ * Numerotation dense 1..taille par groupe, deux fois : Boussole (`PlaceDoc.n`) et Indices (`clues.n`), ce
+ * qui permet de tirer au hasard puis de demander `n in [...]`. Pur, partage par le seed, l'admin et le jeu.
  */
 
 export type Group = { category: Category; difficulty: Difficulty };
 
-/** How a numbering finds a place's group and its number: what tells Compass and Clues apart. */
+/** Comment une numerotation trouve le groupe et le numero d'un lieu (ce qui distingue Boussole et Indices). */
 export type Numbering = {
   groupOf: (place: PlaceDoc | null | undefined) => Group | null;
   numberOf: (place: PlaceDoc) => number | undefined;
 };
 
-/** The Clues category of a place, derived from its Compass category: a capital, a French city, or any
- * other (foreign) city — the same three-way split `placeCategory` makes in the game. */
+/** Categorie Indices d'un lieu, derivee de sa categorie Boussole (meme decoupage que `placeCategory`). */
 export const cluesCategory = (place: Pick<PlaceDoc, 'compass'>): ClueCategory =>
   place.compass?.category === 'capital' || place.compass?.category === 'citiesFr' ? place.compass.category : 'cities';
 
@@ -46,9 +41,7 @@ const withSize = (counts: CompassCounts, { category, difficulty }: Group, size: 
   return next;
 };
 
-/** A stable pseudo-random rank for a place key (FNV-1a + murmur3 finalizer): always the same for a key,
- * spread evenly. Numbering a group in this order shuffles it once for all, so consecutive `n` — what the
- * game's per-group cursor takes — look random instead of following the import order. */
+/** Rang pseudo-aleatoire stable d'une cle (FNV-1a + murmur3) : numeroter dans cet ordre melange le groupe une fois pour toutes. */
 export const shuffleRank = (key: string): number => {
   let hash = 0x811c9dc5;
   for (let index = 0; index < key.length; index += 1) {
@@ -63,8 +56,7 @@ export const shuffleRank = (key: string): number => {
   return (hash >>> 0) / 2 ** 32;
 };
 
-/** Numbers every place of `entries` that `numbering` puts in a group, 1..size, in the shuffled order of
- * `shuffleRank`. */
+/** Numerote les lieux de `entries` qui ont un groupe, dans l'ordre de `shuffleRank`. */
 export const computeNumbering = (
   entries: [string, PlaceDoc][],
   { numbering = COMPASS_NUMBERING }: { numbering?: Numbering } = {},
@@ -87,18 +79,14 @@ export const computeNumbering = (
 };
 
 export type Regroup = {
-  /** The changed place's own number (`null` when it has no group any more / never had one). */
+  /** Numero du lieu modifie (`null` sans groupe). */
   n: number | null;
-  /** Other places whose number changes: the last one of the group the place left takes its freed number. */
+  /** Autres lieux renumerotes : le dernier du groupe quitte prend le numero libere. */
   moved: Record<string, number>;
   counts: CompassCounts;
 };
 
-/**
- * Keeps the numbering dense when `places[key]` becomes `next` (`null` = deleted): the place leaves its old
- * group (the last-numbered place of that group takes the freed number, the group shrinks by one) and joins
- * its new one at the end (`size + 1`). Nothing moves when the group is the same.
- */
+/** Garde la numerotation dense quand `places[key]` devient `next` (`null` = supprime). Rien ne bouge si le groupe est le meme. */
 export const planRegroup = (
   places: Record<string, PlaceDoc>,
   counts: CompassCounts,
@@ -136,10 +124,10 @@ export const planRegroup = (
   return { n, moved, counts: nextCounts };
 };
 
-/** A random draw target: the `n`-th place of a group. */
+/** Cible d'un tirage : le `n`-ieme lieu d'un groupe. */
 export type Slot = Group & { n: number };
 
-/** Maps `position` (0-based) over the concatenation of `pool`'s groups to the group and `n` it falls in. */
+/** Place `position` (base 0) sur la concatenation des groupes de `pool` : groupe et `n`. */
 export const slotAt = (pool: (Group & { size: number })[], position: number): Slot => {
   let offset = position;
   for (const { size, ...group } of pool) {

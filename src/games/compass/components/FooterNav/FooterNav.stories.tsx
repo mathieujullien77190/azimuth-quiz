@@ -25,19 +25,19 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Scrolled to the heading (compass) section: the button leads down to the distance. */
+/** Section cap : le bouton mene a la distance. */
 export const OnHeading: Story = {
   parameters: source(onHeadingCode),
   args: { onCap: true },
 };
 
-/** Scrolled to the distance section: the button leads back up to the heading. */
+/** Section distance : le bouton ramene au cap. */
 export const OnDistance: Story = {
   parameters: source(onDistanceCode),
   args: { onCap: false },
 };
 
-/** Nothing touched yet on this device: "Valider" stays disabled. */
+/** Rien touche sur cet appareil : "Valider" reste desactive. */
 export const ValidateDisabled: Story = {
   parameters: source(validateDisabledCode),
   args: { onCap: true, validateDisabled: true },

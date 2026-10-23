@@ -1,2 +1,2 @@
-/** Medals for the first three ranks; the others show their number. */
+/** Medailles des trois premiers rangs ; les autres montrent leur numero. */
 export const MEDALS = ['🥇', '🥈', '🥉'] as const;

@@ -8,7 +8,7 @@ import { source } from '@/storybook/source';
 import defaultCode from './Default.source.md?raw';
 import { RoundsRecap } from './RoundsRecap';
 
-/** The recap's texts, in the toolbar's language. */
+/** Textes du recap, dans la langue de la barre d'outils. */
 const textArgs = (t: Translations) => ({
   title: t.endScreen.recapTitle,
   columns: [t.roundResult.direction, t.roundResult.distance],
@@ -32,8 +32,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Who was best at the heading and at the distance, round by round — with a tie, and a criterion
- * nobody scored on ("–"). */
+/** Meilleur au cap et a la distance par manche, avec egalite et critere sans score ("-"). */
 export const Default: Story = {
   parameters: source(defaultCode),
   args: {
@@ -57,7 +56,7 @@ export const Default: Story = {
   },
 };
 
-/** Playing alone there is nobody to compare with: just the points won on each criterion. */
+/** Seul, rien a comparer : seulement les points gagnes par critere. */
 export const Solo: Story = {
   parameters: source(defaultCode),
   args: {

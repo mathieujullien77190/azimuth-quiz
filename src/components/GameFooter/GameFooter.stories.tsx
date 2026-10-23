@@ -24,16 +24,16 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The panel every game's footer sits in (translucent surface, top border);
- * the content is up to the game: here the host's "next round" button. */
+/** Le panneau dans lequel se pose le footer de chaque jeu (surface translucide, bord haut) ;
+ * le contenu depend du jeu : ici le bouton "manche suivante" de l'hote. */
 export const WithButton: Story = {
   parameters: source(withButtonCode),
   args: { children: <Button label="Manche suivante" onPress={fn()} /> },
 };
 
-/** In a room with other players, a small round button floats just above the footer, at its right corner (out of its
- * flow: the footer's own buttons keep their whole width). It shows a column of emojis upward against the right edge, and a
- * tap on one sends it to everyone (see `useRoomReactions`). Alone in the room `onReact` is left out and so is the button. */
+/** Dans une room a plusieurs, un petit bouton rond flotte juste au-dessus du footer, a son coin droit (hors de son
+ * flux). Il ouvre une colonne d'emojis contre le bord droit ; un tap en envoie un a tous (voir `useRoomReactions`).
+ * Seul dans la room, `onReact` est omis et le bouton aussi. */
 export const WithReactions: Story = {
   parameters: source(withReactionsCode),
   args: { children: <Button label="Manche suivante" onPress={fn()} />, onReact: fn() },

@@ -7,18 +7,13 @@ export type Coordinates = {
 
 export type Category = 'cities' | 'mountains' | 'landmarks' | 'nature' | 'kids' | 'capital' | 'citiesFr';
 
-/** Clues only draws from cities, so only these three of the 7 Compass categories apply. */
+/** Indices ne tire que dans les villes : seulement 3 des 7 categories Boussole. */
 export type ClueCategory = Extract<Category, 'cities' | 'capital' | 'citiesFr'>;
 
-/** Popularity/fame of the place, from best-known to most niche. */
+/** Notoriete du lieu, du plus connu au plus confidentiel. */
 export type Difficulty = 'easy' | 'intermediate' | 'hard';
 
-/**
- * Base shared by both games: the minimal geographic identity of a place. Compass (`Place`) and
- * Clues (`CluePlace`) each extend it with their own game-specific fields — both keep
- * totally separate place pools (different curation, size and criteria), only this
- * shape is shared.
- */
+/** Base commune aux 2 jeux : l'identite geographique minimale d'un lieu. `Place` et `CluePlace` l'etendent ; les deux jeux gardent des lieux totalement separes. */
 export type GeoPlace = {
   name: string;
   country: string;
@@ -26,21 +21,17 @@ export type GeoPlace = {
 };
 
 export type Place = Omit<GeoPlace, 'country'> & {
-  /** ISO 3166-1 alpha-2 country code (source of the flag). */
+  /** Code pays ISO 3166-1 alpha-2 (source du drapeau). */
   code: string;
-  /** The place's id in Firestore (`places/{key}`): lets the dev mode's difficulty opinions point at the document. Absent
-   * on a place written by an older version of the game. */
+  /** Id Firestore du lieu (`places/{key}`), pour les avis de difficulte du mode dev. Absent d'un vieux lieu. */
   key?: string;
-  /** The country's names, copied into the place document (no lookup at runtime): shown under the place's name
-   * when the game option is on. */
+  /** Noms du pays copies dans le document du lieu : affiches sous le nom si l'option est active. */
   country?: { fr: string; en: string };
   category: Category;
   difficulty: Difficulty;
-  /** Short trivia about the place: shown collapsed, only on reveal. Absent for
-   * places not yet documented (the component then shows nothing). */
+  /** Anecdote courte, repliee, au reveal seulement. Absente si non documentee. */
   description?: string;
-  /** End of the Wikipedia URL (after "https://fr.wikipedia.org/wiki/" or ".../en.wikipedia.org/wiki/"),
-   * not the full URL. Absent if nobody has filled it in yet for this place. */
+  /** Fin de l'URL Wikipedia (apres `.../wiki/`), pas l'URL complete. Absente si non renseignee. */
   wikiFr?: string;
   wikiEn?: string;
 };
@@ -52,36 +43,29 @@ export type Origin = {
 };
 
 export type Guess = {
-  /** Heading on the horizontal plane, 0 = north: the one held all the way (rhumb line, see `helpers/geo`). */
+  /** Cap sur le plan, 0 = nord : celui tenu tout du long (loxodromie, `helpers/geo`). */
   bearing: number;
-  /** Estimated distance along the surface, following that heading. */
+  /** Distance estimee en surface, suivant ce cap. */
   distanceKm: number;
 };
 
 export type RoundScore = {
   trueBearing: number;
   trueSurfaceDistanceKm: number;
-  /** Angular error on the plane. */
+  /** Ecart angulaire sur le plan. */
   directionError: number;
-  /** |ln(estimate / true distance)| : raw error used to break ties for the "closest" bonus
-   * (see `applyBestBonus`), uncapped unlike `distancePoints` — two players both out of
-   * tolerance (thus at 0 points) can still have very different errors. */
+  /** |ln(estime / vraie distance)| : erreur brute pour departager le bonus "plus proche" (`applyBestBonus`), non plafonnee contrairement a `distancePoints`. */
   distanceError: number;
   directionPoints: number;
   distancePoints: number;
-  /** Bonus (1/5 of the category's max) for the player(s) closest in the round, on
-   * each category separately. Always 0 in solo (no one to beat). */
+  /** Bonus (1/5 du max de la categorie) du ou des joueurs les plus proches, par categorie. Toujours 0 en solo. */
   directionBonus: number;
   distanceBonus: number;
-  /** Bonus for guessing the exact heading, to the nearest degree (see EXACT_DIRECTION_BONUS).
-   * Independent of `directionBonus`: everyone who nails it gets it, not just the round's best. */
+  /** Bonus du cap exact au degre pres (`EXACT_DIRECTION_BONUS`), pour tous ceux qui le trouvent, independant de `directionBonus`. */
   directionExactBonus: number;
-  /** Bonus for guessing the exact distance, to the nearest step the slider can actually land on
-   * at that magnitude (see EXACT_DISTANCE_BONUS/`roundDistance`). Independent of `distanceBonus`:
-   * everyone who nails it gets it, not just the round's best. */
+  /** Bonus de la distance exacte, au pas du curseur a cette echelle (`EXACT_DISTANCE_BONUS`/`roundDistance`), independant de `distanceBonus`. */
   distanceExactBonus: number;
-  /** Rhumb-line gap (km) between the point aimed at (heading + distance from the origin) and the true place: only
-   * shown, as "(🎯 N km)" next to the distance guess — the bonuses of the round are per axis (see `applyBestBonus`). */
+  /** Ecart loxodromique (km) entre le point vise (cap + distance depuis le depart) et le vrai lieu, affiche "(🎯 N km)". */
   targetGapKm: number;
   total: number;
 };
@@ -98,27 +82,25 @@ export type PlayerResult = {
 
 export type RoundRecord = {
   place: Place;
-  /** One result per player, in player order. */
+  /** Un resultat par joueur, dans l'ordre des joueurs. */
   results: PlayerResult[];
 };
 
 export type GameSettings = {
-  /** This device's player name; empty means "use a default name". Stays local: a room doesn't share it. */
+  /** Nom du joueur sur cet appareil ; vide = nom par defaut. Reste local : la room ne le partage pas. */
   playerName: string;
   categories: Category[];
   difficulty: Difficulty;
   rounds: number;
   useGps: boolean;
-  /** Starting point when `useGps` is off: latitude/longitude entered by hand,
-   * Paris by default. Ignored when `useGps` is on (device position used). */
+  /** Depart quand `useGps` est faux : latitude/longitude saisies (Paris par defaut). Ignore si `useGps`. */
   customLatitude: number;
   customLongitude: number;
-  /** On mobile, the compass rotates so N points to true north. */
+  /** Sur mobile, la boussole tourne pour que N pointe au nord vrai. */
   liveCompass: boolean;
-  /** Shows the country under the place's name. */
+  /** Affiche le pays sous le nom du lieu. */
   showCountry: boolean;
-  /** Travel mode: every round after the first starts from the place of the previous round (see `originForRound`),
-   * instead of always from the starting point. A room made before this option existed has none: read as off. */
+  /** Mode voyage : chaque manche part du lieu de la precedente (`originForRound`). Absent d'une vieille room = faux. */
   travel: boolean;
 };
 
@@ -131,32 +113,28 @@ export type ThemeColors = {
   textMuted: string;
   accent: string;
   accentDark: string;
-  /** Screen titles and the quit cross: the accent by night, the text color by day (the accent is too soft for a title on light). */
+  /** Titres d'ecran et croix : l'accent la nuit, la couleur du texte le jour (l'accent est trop doux sur fond clair). */
   title: string;
   onAccent: string;
-  /** Color of the "truth" (true needle, true value). */
+  /** Couleur de la verite (aiguille et valeur vraies). */
   truth: string;
   danger: string;
   success: string;
 };
 
 export type ThemeTypography = {
-  /** Big text: place name, scores, title. */
+  /** Gros texte : nom du lieu, scores, titre. */
   display: TextStyle;
-  /** Medium text: values, buttons. */
+  /** Texte moyen : valeurs, boutons. */
   heading: TextStyle;
-  /** Small labels (letter-spaced uppercase, depends on the theme). */
+  /** Petits libelles (majuscules espacees, selon le theme). */
   label: TextStyle;
   body: TextStyle;
 };
 
-// --- Clues: game independent from Azimuth Quiz, with its own places (Firestore, see data/firestore/) ---
+// --- Indices : jeu independant, avec ses propres lieux (Firestore, voir data/firestore/) ---
 
-/** A clue's identifier: they all have the same "cost" (1 point off the score countdown,
- * see ClueGameScreen), no imposed order, each player freely picks on their turn. `vowels`
- * is the exception — a hidden bonus clue, absent from `CLUE_ORDER`, that only appears
- * once every other clue has been picked, and drops the round's score to 1 instead of the usual
- * -1 (see ClueGameScreen). */
+/** Id d'un indice : tous coutent 1 point, sans ordre impose. `vowels` est l'exception : indice bonus cache, absent de `CLUE_ORDER`, qui n'apparait qu'apres tous les autres et fait tomber le score de la manche a 1 (voir ClueGameScreen). */
 export type ClueId =
   | 'position'
   | 'population'
@@ -177,74 +155,62 @@ export type ClueId =
   | 'wordplay'
   | 'vowels';
 
-/** Approximate position of the city within its country, on a 3x3 grid. */
+/** Position approximative de la ville dans son pays, sur une grille 3x3. */
 export type CluePositionInCountry = 'center' | 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
 
-/** Generic colors used by the supported flags. */
+/** Couleurs generiques des drapeaux geres. */
 export type ClueFlagColorId = 'red' | 'blue' | 'white' | 'green' | 'yellow' | 'black';
 
-/** A flag color and its share of the area (%), as stored in a place: same fields as `ClueFlagColorRow`. */
+/** Couleur de drapeau et sa part de surface (%), telle que stockee : memes champs que `ClueFlagColorRow`. */
 export type ClueFlagColor = { id: ClueFlagColorId; hex: string; percent: number };
 
-/** A flag color and its share of the total area (%), unique colors merged and
- * sorted in their order of appearance on the flag (the clue only reveals the first one).
- * Positional tuple `[colorId, hex, percent]` (the admin's flag editor); a place stores objects, see `ClueFlagColor`. */
+/** Couleur de drapeau et sa part de surface (%), couleurs uniques fusionnees dans l'ordre d'apparition (l'indice ne revele que la 1re). Tuple `[colorId, hex, percent]` (editeur de drapeau de l'admin) ; un lieu stocke des objets (`ClueFlagColor`). */
 export type ClueFlagColorRow = readonly [colorId: ClueFlagColorId, hex: string, percent: number];
 
-/** A place in the Clues game: extends `GeoPlace`, but its place pool stays independent from
- * Compass's (each game draws its places from Firestore, see `data/firestore/`). `code` is the country ISO code;
- * the country's names, flag and currency are copied into the place. */
+/** Un lieu d'Indices : etend `GeoPlace`, pool independant de Boussole. `code` = code pays ISO ; nom, drapeau et devise du pays sont copies dans le lieu. */
 export type CluePlace = GeoPlace & {
   code: string;
-  /** The place's id in Firestore (`places/{key}`, a permanent 3-letter code such as `"par"` for Paris). Never shown to
-   * a player: it identifies the document (the admin's edits). Compass's own `Place` has no equivalent. */
+  /** Id Firestore (`places/{key}`, code permanent de 3 lettres, ex. `"par"`). Jamais montre au joueur : sert aux editions de l'admin. */
   key: string;
   difficulty: Difficulty;
   positionInCountry: CluePositionInCountry;
   population: number;
-  /** General climate trend, as an emoji (sun, rain, snow, desert...). */
+  /** Tendance climatique generale, en emoji. */
   climateEmoji: string;
   elevationMeters: number;
-  /** IANA timezone identifier (e.g. "Europe/Paris"), for the local-time clue. */
+  /** Fuseau IANA (ex. "Europe/Paris"), pour l'indice d'heure locale. */
   timezone: string;
-  /** Country's international phone code (e.g. "+33"). */
+  /** Indicatif telephonique international du pays (ex. "+33"). */
   phoneCode: string;
-  /** Country's currency symbol (e.g. "€", "$"): several countries can legitimately share
-   * the same symbol (euro zone...), the clue is then deliberately weaker. */
+  /** Symbole de la devise : plusieurs pays peuvent le partager (zone euro), l'indice est alors volontairement plus faible. */
   currency: string;
-  /** IATA code (3 letters) of the city's main commercial airport. */
+  /** Code IATA (3 lettres) de l'aeroport commercial principal. */
   airportCode: string;
-  /** 3 candidate emoji evoking the city (landmark/culture/nature...): the clue draws one at
-   * random on each reveal, not always the same one. */
+  /** 3 emojis evoquant la ville : l'indice en tire un au hasard a chaque reveal. */
   emojis: readonly [string, string, string];
-  /** A real, Wikipedia-documented person tied to this place (born there, or overwhelmingly
-   * identified with it) — absent for the vast majority of places (curated by hand, never
-   * invented, see `ClueRow`'s own doc comment). `description` is a short one/two-word tag (a
-   * profession, e.g. "footballeur"), itself absent when there's nothing short and safe to add. */
+  /** Personne reelle documentee par Wikipedia liee au lieu ; absente pour la plupart (curation manuelle, voir `ClueRow`). `description` : etiquette courte (ex. "footballeur"), absente si rien de sur a ajouter. */
   personality?: { name: string; description: string | null };
-  /** Which of the 3 Clues categories the place falls into (capital, French city, other city). */
+  /** Parmi les 3 categories d'Indices : capitale, ville francaise, autre ville. */
   category: ClueCategory;
-  /** The country's flag colors in order of appearance (objects, not tuples: a place is written to a room
-   * document and Firestore refuses nested arrays). Copied from the country into the place. */
+  /** Couleurs du drapeau dans l'ordre d'apparition (objets, pas tuples : Firestore refuse les tableaux imbriques). Copiees du pays. */
   flagColors: ClueFlagColor[];
-  /** The country's currency generic name ("Euro", "Dollar"), copied from the country. */
+  /** Nom generique de la devise ("Euro"), copie du pays. */
   currencyName: string;
-  /** A play on words on the name, one sentence (see `wordplayFor`). Absent when not curated. */
+  /** Jeu de mots sur le nom, une phrase (`wordplayFor`). Absent si non cure. */
   wordplay?: { sentence: string; difficulty: Difficulty };
 };
 
 export type ClueSettings = {
-  /** This device's player name; empty means "use a default name". Stays local. */
+  /** Nom du joueur sur cet appareil ; vide = nom par defaut. Reste local. */
   playerName: string;
   difficulty: Difficulty;
   categories: ClueCategory[];
   rounds: number;
-  /** Each round starts with the first-letter clue already revealed for free, instead of
-   * everything locked. */
+  /** Chaque manche commence avec l'indice de premiere lettre deja revele gratuitement. */
   startWithFirstLetter: boolean;
 };
 
-/** The two available themes (see src/themes): 'night' is the default. */
+/** Les deux themes (voir src/themes) : 'night' par defaut. */
 export type ThemeId = 'night' | 'day';
 
 export type Theme = {
@@ -256,7 +222,7 @@ export type Theme = {
   radius: { sm: number; md: number; lg: number; button: number };
   typography: ThemeTypography;
   card: { borderWidth: number; shadowColor: string | null; shadowOpacity: number };
-  /** Thickness of the "relief" under the main buttons (0 = flat). */
+  /** Epaisseur du "relief" sous les boutons principaux (0 = plat). */
   buttonDepth: number;
   compass: { faceInner: string; faceOuter: string };
 };

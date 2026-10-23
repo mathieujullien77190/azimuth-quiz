@@ -2,7 +2,7 @@ import type { Theme } from '@/types';
 
 import { FONT_FAMILY } from './fonts';
 
-/** Night blue + amber: the original design. Generous rounding, very bold text. */
+/** Bleu nuit + ambre : le design d'origine. Arrondis genereux, texte tres gras. */
 export const night: Theme = {
   id: 'night',
   name: 'Nuit',

@@ -16,9 +16,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Follows `theme.isDark` directly, no color token: a flying saucer at night, a helicopter by
- * day. Each story below forces the theme (rather than a Storybook toolbar toggle) so both draw
- * side by side regardless of the app's actual default. */
+/** Suit `theme.isDark` : soucoupe la nuit, helicoptere le jour. Chaque story force le theme pour afficher les deux. */
 export const Night: Story = {
   parameters: source(nightCode),
   name: 'Night (UFO)',

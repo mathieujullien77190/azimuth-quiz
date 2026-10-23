@@ -2,40 +2,38 @@ import type { Category, Difficulty, ClueId } from '@/types';
 
 export type Language = 'fr' | 'en';
 
-/** Content of a game card on the home screen (`HomeScreen` / `GameCard`). */
+/** Contenu d'une carte de jeu de l'accueil (`GameCard`). */
 export type HomeGameCopy = {
   title: string;
   tagline: string;
   cta: string;
 };
 
-/** The 8 cardinal points, in order N, NE, E, SE, S, SO/SW, O/W, NO/NW (no "north" entry). */
+/** Les 8 points cardinaux dans l'ordre N, NE, E, SE, S, SO, O, NO. */
 export type CardinalLabels = readonly [string, string, string, string, string, string, string, string];
 
 export type Translations = {
   common: {
-    /** Name shown as the starting point when the device's position is used. */
+    /** Nom du point de depart quand la position de l'appareil est utilisee. */
     yourPosition: string;
     pts: string;
-    /** Shared "nobody found it" wording (Clues' give-up) — see
-     * `components/ui/NoOneFoundText`, which picks between these two depending on player count. */
+    /** Formulation commune de "personne n'a trouve" ; `NoOneFoundText` choisit selon le nombre de joueurs. */
     noOneFound: string;
-    /** Solo play only: names the one player instead of the generic "nobody" (there's no one else
-     * it could have been). */
+    /** Solo : nomme l'unique joueur. */
     soloNotFound: (name: string) => string;
-    /** Short notice when a game action (hint, answer...) could not reach the room. */
+    /** Notice courte quand une action de jeu n'a pas atteint la room. */
     actionFailed: string;
   };
-  /** The 8 abbreviated cardinal points, for formatBearing (e.g. "S · 173°"). */
+  /** Points cardinaux abreges pour `formatBearing` (ex. "S · 173°"). */
   cardinals: CardinalLabels;
-  /** Single letter for west on the compass dial ("O" in French, "W" in English). */
+  /** Lettre de l'ouest sur le cadran ("O" en fr, "W" en en). */
   compassWestLabel: string;
   compassAccessibilityLabel: string;
-  /** The tagline under the app's title, on the home screen and on the startup splash (`AppTitle`). */
+  /** Slogan sous le titre (accueil et splash, `AppTitle`). */
   app: { tagline: string };
   home: {
     settingsButtonLabel: string;
-    /** Player-count line of a game card ("1 à 10 joueurs"). */
+    /** Ligne du nombre de joueurs d'une carte de jeu. */
     playersRange: (max: number) => string;
     games: {
       compass: HomeGameCopy;
@@ -44,7 +42,7 @@ export type Translations = {
   };
   setup: {
     back: string;
-    /** The setup screens' bottom button (and close cross): leaves the game's setup. */
+    /** Bouton du bas (et croix) des ecrans de preparation : quitte la preparation. */
     quit: string;
     start: string;
     playersSection: { title: string; hint: string };
@@ -56,40 +54,34 @@ export type Translations = {
     difficultyHint: string;
     difficulties: Record<Difficulty, string>;
     roundsTitle: string;
-    /** No player list/count picker any more — play solo (the default), host a room (a code gets
-     * generated) or join one (type in a code someone else generated) instead. See
-     * `firebase/room.ts`. Joining shows every other setup section read-only: the host's settings
-     * apply, a joiner doesn't configure anything (see `readOnlyNotice`). */
+    /** Solo (defaut), heberger (un code est genere) ou rejoindre (saisir un code). En rejoignant, les autres sections sont en lecture seule (`readOnlyNotice`). */
     online: {
       solo: string;
       host: string;
       join: string;
-      /** Replaces `join`'s label once actually connected (`joinStatus === 'valid'`) — the code
-       * field locks at that point (see SetupScreenView), so this chip becomes the only way back
-       * out of the room. */
+      /** Remplace le libelle de `join` une fois connecte : le code est verrouille, cette puce est la seule sortie. */
       leave: string;
       generating: string;
       codePlaceholder: string;
       invalidCode: string;
-      /** Under the name field: another player of the room already has that name. */
+      /** Sous le champ nom : un autre joueur de la room a deja ce nom. */
       nameTaken: string;
       joined: (code: string) => string;
       hostBadge: (name: string) => string;
-      /** Accessibility label for the host's "kick this player" button. */
+      /** Libelle d'accessibilite du bouton d'expulsion. */
       removePlayer: (name: string) => string;
-      /** Label of the host's "kick this player" mini button. */
+      /** Libelle du mini bouton d'expulsion. */
       kick: string;
-      /** Shown to a joiner (in the same splash as `readOnlyNotice`) once the host removes it. */
+      /** Au joiner expulse par l'hote. */
       kickedNotice: string;
-      /** Shown to a joiner, same splash, once the room itself is gone (host started a new one). */
+      /** Au joiner quand la room a disparu. */
       roomDeletedNotice: string;
-      /** Whoever loses the connection during a game leaves it (see `useRoomPresence`). */
+      /** Qui perd la connexion en partie la quitte (`useRoomPresence`). */
       connectionLostNotice: string;
-      /** Shown to the host when "Lancer la partie" failed (e.g. the places could not be fetched):
-       * nothing was started, pressing the button again retries. */
+      /** A l'hote quand le lancement a echoue : rien n'a demarre, le bouton relance. */
       startFailedNotice: string;
     };
-    /** Shown briefly (see SetupScreen's `notifyReadOnly`) when a joiner taps a read-only option. */
+    /** Bref message quand un joiner touche une option en lecture seule (`notifyReadOnly`). */
     readOnlyNotice: string;
     optionsTitle: string;
     toggles: {
@@ -98,7 +90,7 @@ export type Translations = {
       showCountry: { label: string; description: string };
       travel: { label: string; description: string };
     };
-    /** Latitude/longitude entered by hand when "Use my position" is off. */
+    /** Latitude/longitude saisies a la main quand "Utiliser ma position" est desactive. */
     customOrigin: { latitude: string; longitude: string };
   };
   game: {
@@ -106,34 +98,33 @@ export type Translations = {
     quit: string;
     round: string;
     validate: string;
-    /** Turn-based games: shown to the turn-holder who already guessed this turn (the only move left is a hint). */
+    /** Jeux a tour de role : au detenteur du tour qui a deja propose, seul un indice reste possible. */
     alreadyGuessed: string;
     next: string;
     last: string;
     roundOver: string;
-    /** Navigates to the "heading" (compass) section while answering, without submitting. */
+    /** Va a la section cap pendant la reponse, sans valider. */
     nextStep: string;
-    /** Goes back to the "distance" section while answering, without submitting. */
+    /** Revient a la section distance, sans valider. */
     previousStep: string;
-    /** Replaces the initials on the active player's tab ("Matou's turn"). */
+    /** Remplace les initiales sur l'onglet du joueur actif. */
     playerTurn: (name: string) => string;
-    /** Travel mode, rounds after the first: where the player stands (the previous place), in the game header. */
+    /** Mode voyage, des le tour 2 : ou se trouve le joueur (lieu precedent), dans le header. */
     youAreAt: (name: string) => string;
-    /** Shown once this device has submitted, while other online players haven't yet
-     * (`OnlineGameScreen`) — replaces the footer's Valider button. */
+    /** Une fois soumis, en attendant les autres : remplace le bouton Valider du footer. */
     waitingForOthers: string;
   };
   placeCard: {
-    /** Accessibility label for the "W" badge that opens the place's Wikipedia page (reveal only). */
+    /** Libelle d'accessibilite du badge "W" (page Wikipedia du lieu, reveal seulement). */
     wikiLabel: string;
   };
   sliders: {
     distance: string;
   };
   reactions: {
-    /** The accessibility label of an emoji button of the footer. */
+    /** Libelle d'accessibilite d'un bouton emoji du footer. */
     send: (emoji: string) => string;
-    /** The accessibility label of the footer's round button that opens and closes the emojis. */
+    /** Libelle d'accessibilite du bouton rond qui ouvre/ferme les emojis. */
     toggle: string;
   };
   roundResult: {
@@ -141,37 +132,35 @@ export type Translations = {
     direction: string;
     distance: string;
     yourScore: string;
-    /** Accessibility label for the ⓘ button that shows/hides the scoring explanation. */
+    /** Libelle d'accessibilite du bouton ⓘ qui affiche l'explication du score. */
     scoringInfoLabel: string;
-    /** The scoring explanation, in three parts: the middle one (the rhumb-line wording) is the Wikipedia link. */
+    /** Explication du score en trois parties : celle du milieu (loxodromie) est le lien Wikipedia. */
     scoringInfoBefore: string;
     rhumbLineLabel: string;
     scoringInfoAfter: string;
     rhumbLineUrl: string;
-    /** Shown instead of "(+0°)" for an exact heading guess — kept in English in both
-     * languages, on purpose (see git history). */
+    /** Affiche a la place de "(+0°)" pour un cap exact, en anglais dans les deux langues volontairement. */
     perfect: string;
   };
   endScreen: {
-    /** Title of every game's end screen. */
+    /** Titre de l'ecran de fin de chaque jeu. */
     title: string;
-    /** Heading of the round-by-round recap (who was best at what). */
+    /** Titre du recap manche par manche. */
     recapTitle: string;
-    /** End screen buttons: back to the lobby with everyone / leave the game. */
+    /** Boutons de fin : retour au salon avec tous / quitter. */
     replay: string;
     quit: string;
     winner: (name: string) => string;
-    /** Same as `winner`, but for the local device's own player — no need to name them to
-     * themselves (see `FinalStandings`' `localName`). */
+    /** Comme `winner`, pour le joueur local (`FinalStandings`, `localName`). */
     youWin: string;
     tie: (names: string) => string;
-    /** Connector word between two tied names ("et" / "and"). */
+    /** Mot de liaison entre deux noms a egalite ("et" / "and"). */
     and: string;
   };
-  /** The dev mode's difficulty question, asked after a round to a device that has the dev code. */
+  /** Question de difficulte du mode dev, posee apres une manche. */
   devFeedback: {
     placeQuestion: (name: string) => string;
-    /** Accessibility label of the backdrop: tapping it closes the question without answering. */
+    /** Fond : le toucher ferme la question sans repondre. */
     dismiss: string;
   };
   settings: {
@@ -186,7 +175,7 @@ export type Translations = {
     devTitle: string;
     devLabel: string;
     dataTitle: string;
-    /** Explains precisely what local storage contains, right before the button that clears it. */
+    /** Dit ce que contient le stockage local, juste avant le bouton qui l'efface. */
     dataHint: string;
     clearData: string;
     dataCleared: string;
@@ -205,22 +194,22 @@ export type Translations = {
     pointsAtStake: (points: string) => string;
     giveUp: string;
     scored: (name: string, points: string) => string;
-    /** Same, on the device of the player who found it. */
+    /** Idem, chez le joueur qui l'a trouve. */
     youScored: (points: string) => string;
     missed: (name: string, points: string) => string;
     guessPlaceholder: string;
     submitGuess: string;
     wasPlace: string;
     continueLabel: string;
-    /** Online only: shown to the player whose turn it is right now. */
-    /** Online only: what a player who isn't the turn-holder is told when they tap a clue. */
+    /** En ligne : montre au joueur dont c'est le tour. */
+    /** En ligne : ce que voit un joueur sans la main quand il touche un indice. */
     notYourTurn: (name: string) => string;
     clues: Record<ClueId, string>;
     isCapitalYes: string;
     isCapitalNo: string;
     populationUnit: string;
   };
-  /** The startup splash screen: the loading label. */
+  /** Ecran de demarrage : le libelle de chargement. */
   splash: {
     loading: string;
   };

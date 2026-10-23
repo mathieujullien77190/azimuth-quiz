@@ -3,15 +3,12 @@ import { useEffect, useRef } from 'react';
 
 import type { RoomPlayers } from '../firebase/roomApi';
 
-// Deliberately slow and cheap: every heartbeat is a Firestore write that every connected player then
-// reads too (N players => N reads per write), so this dominates the room's traffic. 30s beats with a
-// 90s threshold keep a 4-player hour around 500 writes / 2000 reads, and nothing is sent at all
-// alone or in the lobby (see `active`).
+// Lent et peu couteux expres : chaque heartbeat est une ecriture lue par tous (N joueurs = N lectures). 30 s / seuil
+// 90 s donnent ~500 ecritures et 2000 lectures pour 4 joueurs en 1 h, et rien seul ou au salon (voir `active`).
 const HEARTBEAT_MS = 30_000;
 const LOST_AFTER_MS = 90_000;
 const CHECK_MS = 10_000;
-/** A check running this much later than scheduled means the device itself was suspended (app in the
- * background, screen locked...) and no timer ran: not a network loss, restart the baselines. */
+/** Un controle en retard de cet ordre = appareil suspendu (arriere-plan, ecran verrouille), pas une coupure : reinitialiser. */
 const SUSPENDED_GAP_MS = CHECK_MS * 3;
 
 type PresenceState = {
@@ -34,19 +31,12 @@ type PresenceApi = {
 };
 
 /**
- * Connection-loss detection, identical for every game — mounted once, by `useSetupRoom`, which stays
- * alive under the game screen for the whole life of the room. While a game is running with more than
- * one player, each device writes a heartbeat (`lastSeen`) and everyone watches the others' (whether
- * it changed lately — never compared to a local clock, which can be skewed). Nobody tries to recover
- * anything: whoever loses the connection just leaves the game.
- *
- * - This device's own heartbeat never gets acknowledged by the server for too long: it's offline,
- *   marks `connectionLost` (screens show a notice and head home) and leaves the room — the host
- *   deleting it, a joiner dropping out (both queued by Firestore until it's back, if ever).
- * - The host stops seeing a joiner's heartbeat: it removes that joiner (the turn-based games then
- *   hand the turn on, see `useHostTurnRecovery`); the others keep playing.
- * - A joiner stops seeing the host's: with no host the game can't advance (it starts rounds and
- *   writes scores), same outcome as the host quitting — the joiner leaves.
+ * Detection de coupure, commune aux jeux, montee une fois par `useSetupRoom`. En partie a plusieurs, chaque appareil
+ * ecrit `lastSeen` et surveille celui des autres (changement, jamais compare a l'horloge locale). Qui perd la
+ * connexion quitte la partie :
+ * - son propre heartbeat sans accuse trop longtemps : `connectionLost` et sortie (hote supprime la room, joiner part) ;
+ * - l'hote ne voit plus un joiner : il le retire (tour passe, voir `useHostTurnRecovery`) ;
+ * - un joiner ne voit plus l'hote : il part (sans hote, plus de manches ni de scores).
  */
 export const useRoomPresence = (store: PresenceStore, api: PresenceApi, code: string | null) => {
   const localUid = store((s) => s.localUid);
@@ -58,8 +48,7 @@ export const useRoomPresence = (store: PresenceStore, api: PresenceApi, code: st
   const lastCheckRef = useRef(0);
   const seenRef = useRef(new Map<string, { value: number | null; at: number }>());
 
-  // This device's own heartbeat. Resolving means the server got it — that's the only "am I online?"
-  // signal there is (a rejected write, e.g. the room is gone, doesn't count).
+  // Seul signal "en ligne" : l'ecriture est acquittee par le serveur (un rejet, ex. room disparue, ne compte pas).
   useEffect(() => {
     if (!active || code === null || localUid === null) return;
     const beat = () =>

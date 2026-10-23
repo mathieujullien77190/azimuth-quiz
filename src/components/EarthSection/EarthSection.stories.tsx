@@ -17,8 +17,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Continuous zoom: recomputed every render from the current `marks` via `fitZoom` — a short
- * distance alone already zooms in without touching `zoomControls`. */
+/** Zoom continu : recalcule a chaque rendu depuis `marks` via `fitZoom` ; une courte distance suffit a zoomer. */
 export const Surface: Story = {
   parameters: source(surfaceCode),
   args: {
@@ -36,7 +35,7 @@ export const WithZoomControls: Story = {
   },
 };
 
-/** At the whole-Earth zoom, a long answer can be seen on a 3D globe, turned with a finger: needs the starting point (`origin`). */
+/** Au zoom Terre entiere, une longue reponse se voit sur un globe 3D tournant au doigt : exige `origin`. */
 export const WithGlobe: Story = {
   parameters: source(withGlobeCode),
   args: {

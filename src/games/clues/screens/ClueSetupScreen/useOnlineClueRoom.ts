@@ -39,11 +39,8 @@ const adapter: SetupRoomAdapter<ClueSettings, ClueRoomSettings> = {
   updateRoomPlayerColors,
 };
 
-/** Clues' side of the online setup: the room lifecycle is `useSetupRoom`'s (shared with Compass),
- * only what "Lancer la partie" writes is specific — it also has to pick who gets the first turn
- * (arrival order) and the whole game's places upfront (`fetchClueRoundPlaces`, from Firestore), since Clues has no
- * per-player independent guess: one shared board, revealed turn by turn. The shared origin is
- * always the device position or Paris (Clues has no `useGps`/custom-origin setting). */
+/** Cote Indices du setup en ligne : le cycle de la room est `useSetupRoom` (partage) ; seul ce que "Lancer la partie" ecrit est propre ici :
+ * le 1er tour (ordre d'arrivee) et tous les lieux d'avance (`fetchClueRoundPlaces`). L'origine est la position de l'appareil ou Paris. */
 export const useOnlineClueRoom = (settings: ClueSettings, updateSettings: (patch: Partial<ClueSettings>) => void) => {
   const t = useTranslation();
   const { language } = useLanguage();
@@ -51,11 +48,11 @@ export const useOnlineClueRoom = (settings: ClueSettings, updateSettings: (patch
 
   const startOnlineClueGame = () =>
     room.startOnlineGame(async (code) => {
-      // Read here, not before: in solo the room only exists (and lists this device) by the time this runs.
+      // Lu ici, pas avant : en solo la room (et cet appareil dedans) n'existe qu'a ce moment.
       const firstTurnUid = playersByArrival(useClueRoomStore.getState().players)[0]?.[0];
       if (firstTurnUid === undefined) throw new Error('no player in the room');
       const origin = await resolveOrigin(t.common.yourPosition);
-      // Drawn from Firestore, no fallback: a failure rejects, and the shared start flow shows a notice.
+      // Tire depuis Firestore, sans repli : un echec rejette et le flux de lancement partage affiche une notice.
       const places = await fetchClueRoundPlaces(settings, language);
       await startClueRoomGame(code, { origin, places }, firstTurnUid, settings.startWithFirstLetter);
     });

@@ -10,10 +10,10 @@ export type OnlineClueGameScreenProps = {
 
 export type OnlineClueGameScreenViewProps = {
   onQuit: () => void;
-  /** The emoji reaction on screen right now, and what a tap on the footer's emojis calls (undefined alone in the room). */
+  /** Reaction emoji a l'ecran, et ce qu'appelle un tap sur les emojis du footer (undefined seul dans la room). */
   reaction?: ReactionOverlayProps['reaction'];
   onReact?: (emoji: string) => void;
-  /** This device's player and running total, for the header. */
+  /** Joueur de cet appareil et son total, pour l'en-tete. */
   name: string;
   points: number;
   roomCode: string;
@@ -24,28 +24,27 @@ export type OnlineClueGameScreenViewProps = {
   place: CluePlace;
   bearingDeg: number;
   distanceKm: number;
-  /** The starting point (for the globe clue). */
+  /** Le point de depart (indice globe). */
   origin?: Coordinates;
   revealedClueIds: ClueId[];
   skeletonGroups: NameSkeletonSlot[][];
   skeletonLengthKnown: boolean;
 
-  /** The players in this round's own order (arrival order rotated by the round, see `playersForRound`). */
+  /** Joueurs dans l'ordre de la manche (ordre d'arrivee decale par la manche, voir `playersForRound`). */
   players: OnlinePlayer[];
-  /** Index into `players` of whoever holds the turn. */
+  /** Index dans `players` du detenteur du tour. */
   turnIndex: number;
   isMyTurn: boolean;
-  /** The turn-holder already guessed this turn: "Valider" is off, a hint is the only move left (`turnGuess.ts`). */
+  /** Le detenteur du tour a deja propose : "Valider" est coupe, seul un indice reste (`turnGuess.ts`). */
   guessedThisTurn: boolean;
-  /** The turn-holder's in-progress answer text, live — empty when there is nothing to show (this
-   * device's own turn, the round is over, or nothing has been typed yet). */
+  /** Saisie du detenteur du tour en direct ; vide s'il n'y a rien a montrer (son propre tour, manche finie, rien tape). */
   typedByActivePlayer: string;
 
   remaining: number;
-  /** Undefined outside `verdict !== null` (round in progress). */
+  /** Undefined hors `verdict !== null` (manche en cours). */
   verdict?: 'correct' | 'giveUp';
   winnerName?: string;
-  /** This device is the one who found the place (the banner then says "you"). */
+  /** Cet appareil a trouve le lieu (le bandeau dit "toi"). */
   iWon: boolean;
 
   wrongGuesserName: string | null;
@@ -54,7 +53,7 @@ export type OnlineClueGameScreenViewProps = {
   onSubmitGuess: () => void;
   onGiveUp: () => void;
   onPickClue: (clueId: ClueId) => void;
-  /** Why the tapped clue didn't open ("it's Zoé's turn"), shown over the board; null when nothing to say. */
+  /** Pourquoi l'indice touche ne s'est pas ouvert ("c'est le tour de Zoe"), montre sur le plateau ; null sinon. */
   notice: string | null;
   onDismissNotice: () => void;
 

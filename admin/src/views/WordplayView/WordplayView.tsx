@@ -7,7 +7,10 @@ import type { Difficulty } from '@/types';
 
 type Row = { key: string; name: string; country: string; sentence: string; difficulty: Difficulty };
 
-/** Clues places of one category (`clues.category`), by name — the page lists French cities, then capitals. */
+/**
+ * Lieux Indices d'une categorie (`clues.category`), par nom : la page liste les villes francaises, puis les
+ * capitales.
+ */
 const rowsFor = (category: string): Row[] =>
   Object.entries(data().places)
     .filter(([, doc]) => doc.clues?.category === category)
@@ -20,9 +23,10 @@ const rowsFor = (category: string): Row[] =>
     }))
     .sort((a, b) => a.name.localeCompare(b.name, 'fr'));
 
-/** One place: its name, a text area for the pun, its difficulty and the button that saves both. The button says
- * "Ajouter" while the place has no wordplay yet, "Modifier" once it has one; it is only enabled when the text or
- * the difficulty changed. */
+/**
+ * Un lieu : nom, zone de texte du jeu de mots, difficulte et bouton qui sauve les deux ("Ajouter" sans jeu de mots,
+ * "Modifier" sinon ; actif seulement si le texte ou la difficulte a change).
+ */
 const WordplayLine = ({
   row,
   onSaved,
@@ -131,9 +135,9 @@ const Section = ({
 };
 
 /**
- * A page made for writing the wordplay clue: the French cities first, then the capitals, each with its name, a
- * text area and a button. Saving goes through `saveWordplaySentence` (Firestore, like the place cards' own
- * wordplay editor); an empty text removes the clue for that place.
+ * Page d'ecriture du jeu de mots : villes francaises d'abord, puis capitales, chacune avec nom, zone de texte et
+ * bouton. Sauve via `saveWordplaySentence` (Firestore, comme l'editeur des cartes lieu) ; un texte vide retire
+ * l'indice.
  */
 export const WordplayView = () => {
   const [frenchCities, setFrenchCities] = useState(() => rowsFor('citiesFr'));

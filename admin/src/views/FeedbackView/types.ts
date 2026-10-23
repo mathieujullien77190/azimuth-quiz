@@ -1,27 +1,27 @@
 import type { Difficulty } from '@/types';
 
-/** One opinion of the `devFeedback` collection (written by the game in dev mode, see `src/firebase/devFeedback.ts`). */
+/** Un avis de la collection `devFeedback` (ecrit par le jeu en mode dev, voir `src/firebase/devFeedback.ts`). */
 export type FeedbackRow = {
   id: string;
   game: 'compass' | 'clues';
-  /** The place's key (`places/{key}`). */
+  /** Cle du lieu (`places/{key}`). */
   targetKey: string;
   name: string;
-  /** What the data said when the opinion was given. */
+  /** Ce que disaient les donnees au moment de l'avis. */
   currentDifficulty: Difficulty;
   suggestedDifficulty: Difficulty;
-  /** ms since epoch. */
+  /** ms depuis l'epoch. */
   at: number;
 };
 
-/** The opinions about one place, counted per suggested difficulty. */
+/** Avis sur un lieu, comptes par difficulte proposee. */
 export type FeedbackTarget = {
   targetKey: string;
   name: string;
-  /** The difficulty the newest opinion saw in the data. */
+  /** Difficulte que le plus recent avis voyait dans les donnees. */
   currentDifficulty: Difficulty;
   votes: Record<Difficulty, number>;
   total: number;
-  /** The most voted difficulties: one, or several on a tie. */
+  /** Difficultes les plus votees : une, ou plusieurs en cas d'egalite. */
   winners: Difficulty[];
 };

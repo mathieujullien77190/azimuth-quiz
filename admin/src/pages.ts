@@ -2,10 +2,10 @@ import { DEFAULT_PAGE, PAGES, type PageId } from './pageList';
 
 export { DEFAULT_PAGE, PAGES, type PageId };
 
-/** The app's base path without its trailing slash (`/azimuth-quiz/admin` once built, empty in dev). */
+/** Chemin de base de l'app sans slash final (`/azimuth-quiz/admin` en build, vide en dev). */
 export const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, '');
 
-/** The page a pathname points to; `/admin/` and any unknown path fall back to the first page. */
+/** Page d'un chemin ; `/admin/` et tout chemin inconnu retombent sur la premiere. */
 export const pageFromPath = (pathname: string): PageId => {
   const rest = pathname.startsWith(BASE_PATH) ? pathname.slice(BASE_PATH.length) : pathname;
   const segment = rest.split('/').filter(Boolean)[0];

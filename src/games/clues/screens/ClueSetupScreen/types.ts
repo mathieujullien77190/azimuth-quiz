@@ -7,16 +7,14 @@ export type ClueSetupScreenProps = {
 
 export type ClueSetupScreenViewProps = {
   settings: ClueSettings;
-  /** How many places the selection offers, `null` while the group sizes are not loaded yet. */
+  /** Nombre de lieux offerts par la selection, `null` tant que les tailles de groupes ne sont pas chargees. */
   available: number | null;
 
-  /** Solo / host / join block, shared with every other game's setup (`useSetupRoom`). */
+  /** Bloc solo / hote / invite, partage avec les autres setups (`useSetupRoom`). */
   party: SetupPartyProps;
 
   readOnly: boolean;
-  /** `Category`, not `ClueCategory`: matches `CategorySection`'s generic `onToggle` — the
-   * container narrows back to `ClueCategory` when writing to `settings.categories`, safe since
-   * this view only ever passes it `CLUE_CATEGORIES`' own (already-`ClueCategory`) ids. */
+  /** `Category` et non `ClueCategory` : colle au `onToggle` generique de `CategorySection` ; le container re-restreint a `ClueCategory`. */
   onToggleCategory: (id: Category) => void;
   onSelectDifficulty: (id: Difficulty) => void;
   onToggleStartWithFirstLetter: (value: boolean) => void;

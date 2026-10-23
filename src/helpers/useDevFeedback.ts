@@ -7,35 +7,30 @@ import type { Difficulty } from '@/types';
 import { sendDevFeedback, type DevFeedback } from '../firebase/devFeedback';
 import { reporting } from './reportError';
 
-/** What a round is about, for the question: the place or the country, as the game knows it. */
+/** Sujet de la question : le lieu ou le pays, tel que le jeu le connait. */
 export type DevFeedbackTarget = Pick<DevFeedback, 'targetType' | 'targetKey' | 'name'> & {
-  /** The difficulty the data has now. */
+  /** Difficulte actuelle en base. */
   difficulty: Difficulty;
 };
 
 type Options = {
   game: DevFeedback['game'];
-  /** Which round is on. */
+  /** Manche en cours. */
   roundIndex: number;
-  /** The round's answer is known (the reveal, the verdict): the round is remembered from then on, but nothing is asked yet. */
+  /** Reponse connue (reveal, verdict) : la manche est retenue, rien n'est encore demande. */
   roundOver: boolean;
-  /** The game is over (the final standings): the last round is asked about there, whatever the round state still says. */
+  /** Partie finie : on interroge sur la derniere manche, quel que soit l'etat de la manche. */
   gameOver: boolean;
-  /** Undefined while the round's data is still loading. */
+  /** Undefined tant que les donnees de la manche chargent. */
   target: DevFeedbackTarget | undefined;
 };
 
 type EndedRound = { roundIndex: number; target: DevFeedbackTarget };
 
 /**
- * The dev mode's difficulty question, for every game: a device that has the dev code is asked whether the place/country of
- * the round that just ended was easy, intermediate or hard — but only once the game has moved past that round (the host
- * pressed "next round", or the final standings are up), never over the reveal/verdict itself. The question is about the
- * PREVIOUS round's target, remembered while that round was over, and asked at most once per round; if two rounds go by
- * before the player answers, only the latest ended one is asked. `question` (already translated, or null) feeds
- * `DifficultyFeedbackOverlay`; `choose` writes the opinion (a failure is only logged, never shown) and `dismiss` drops the
- * question without writing. Each device decides alone: nothing here touches the room, so it never delays scoring or the
- * next round. A new game on the same room (the round counter going back) forgets the remembered round.
+ * Question de difficulte du mode dev : portee sur le lieu de la manche PRECEDENTE, une fois l'hote passe a la suivante
+ * (ou au classement final), une fois par manche (si deux passent sans reponse, seule la derniere). Chaque appareil
+ * decide seul, rien dans la room. Un echec d'ecriture est seulement logge. Compteur de manche qui recule = nouvelle partie.
  */
 export const useDevFeedback = ({ game, roundIndex, roundOver, gameOver, target }: Options) => {
   const t = useTranslation();
@@ -43,8 +38,7 @@ export const useDevFeedback = ({ game, roundIndex, roundOver, gameOver, target }
   const [ended, setEnded] = useState<EndedRound | null>(null);
   const [handledRound, setHandledRound] = useState<number | null>(null);
 
-  // Remembered while the round is over (set during render, React's pattern for state derived from props): the round
-  // being over is the only moment its place/country is on screen. A round counter that went back is a new game.
+  // Retenu pendant que la manche est finie (pose au rendu) : seul moment ou son lieu est a l'ecran.
   if (roundOver && target !== undefined && ended?.roundIndex !== roundIndex) {
     setEnded({ roundIndex, target });
   } else if (ended !== null && roundIndex < ended.roundIndex) {

@@ -11,9 +11,8 @@ import type { RoundsSectionProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * Round-count picker (`ROUND_OPTIONS`, shared across all 3 games) — dumb: the title is `@/i18n`'s
- * `setup.roundsTitle`, already the same key in all three games' translations, so it's the one
- * piece of text this component doesn't need as a prop.
+ * Choix du nombre de manches (`ROUND_OPTIONS`, commun aux 3 jeux), dumb : le titre est `setup.roundsTitle`
+ * (`@/i18n`), meme cle partout, donc le seul texte qui n'est pas une prop.
  */
 export const RoundsSection = ({ rounds, onSelect, disabled = false }: RoundsSectionProps) => {
   const styles = useThemedStyles(createStyles);

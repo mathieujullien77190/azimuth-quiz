@@ -7,12 +7,10 @@ export type { Language, Translations };
 
 export type LanguageContextValue = {
   language: Language;
-  /** False until the saved language has been read (French is returned by default until then). */
+  /** Faux tant que la langue sauvegardee n'est pas lue (francais par defaut). */
   ready: boolean;
   setLanguage: (language: Language) => void;
-  /** Resets the in-memory language to French by default, without rewriting storage
-   * (used after "Clear data": otherwise the app keeps the language in memory until the next
-   * launch, even though storage is already empty). */
+  /** Remet le francais en memoire sans toucher au stockage (apres "Effacer les donnees"). */
   resetLanguage: () => void;
 };
 

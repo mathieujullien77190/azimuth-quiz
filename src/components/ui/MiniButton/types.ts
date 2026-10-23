@@ -1,15 +1,14 @@
 import type { StyleProp, ViewStyle } from 'react-native';
 
-/** Which color the button's border and label take: the app's accent, or the danger red (expel,
- * delete...). */
+/** Couleur de la bordure et du libelle : l'accent de l'app, ou le rouge danger (expulser, supprimer...). */
 export type MiniButtonVariant = 'accent' | 'danger';
 
 export type MiniButtonProps = {
   label: string;
   onPress: () => void;
   variant?: MiniButtonVariant;
-  /** Read out instead of `label` when the label alone is ambiguous ("Kick" → "Remove Anna"). */
+  /** Lu a la place de `label` quand le libelle seul est ambigu (« Expulser » -> « Retirer Anna »). */
   accessibilityLabel?: string;
-  /** For the caller's own spacing (`marginTop`...) — the button itself carries none. */
+  /** Pour l'espacement de l'appelant (`marginTop`...) : le bouton n'en porte aucun. */
   style?: StyleProp<ViewStyle>;
 };

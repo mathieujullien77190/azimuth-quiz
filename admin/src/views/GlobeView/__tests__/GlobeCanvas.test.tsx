@@ -51,7 +51,7 @@ const props = (over: Partial<GlobeCanvasProps> = {}): GlobeCanvasProps => ({
 
 const canvasOf = (container: HTMLElement) => container.querySelector('canvas')!;
 
-// jsdom's pointer events carry no coordinates: a mouse event of the same type does.
+// Les pointer events de jsdom n'ont pas de coordonnees : un evenement souris du meme type en a.
 const pointer = (target: Element, type: string, clientX = 0, clientY = 0) =>
   fireEvent(target, new MouseEvent(type, { bubbles: true, clientX, clientY }));
 

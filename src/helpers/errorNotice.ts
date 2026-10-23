@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 type ErrorNoticeState = {
-  /** A game action just failed: the notice is on screen (see `components/ErrorNoticeHost`). */
+  /** Une action de jeu vient d'echouer : la notice est affichee (voir `components/ErrorNoticeHost`). */
   visible: boolean;
   show: () => void;
   hide: () => void;

@@ -72,7 +72,7 @@ describe('useSettings (Zustand store)', () => {
     useSettings.getState().updateSettings({ useGps: false });
 
     expect(useSettings.getState().settings.useGps).toBe(false);
-    // The rest of the settings is preserved (a partial merge, not a replacement).
+    // Le reste des reglages est conserve (fusion partielle).
     expect(useSettings.getState().settings.rounds).toBe(DEFAULT_SETTINGS.rounds);
     expect(mockedSaveSettings).toHaveBeenCalledWith(expect.objectContaining({ useGps: false }));
   });
@@ -86,9 +86,7 @@ describe('useSettings (Zustand store)', () => {
   });
 });
 
-// Clues settings: no persistence at all (see each store's own comment in
-// `settings/index.ts`) — just the default-state and merge behavior, no `loadSettings`/
-// `saveSettings` involved.
+// Reglages Indices : aucune persistance (voir `settings/index.ts`), seulement defauts et fusion.
 describe('useClueSettings (Zustand store)', () => {
   it('starts with the default settings', () => {
     expect(useClueSettings.getState().settings).toEqual(DEFAULT_CLUE_SETTINGS);
@@ -98,7 +96,7 @@ describe('useClueSettings (Zustand store)', () => {
     useClueSettings.getState().updateSettings({ difficulty: 'hard' });
 
     expect(useClueSettings.getState().settings.difficulty).toBe('hard');
-    // The rest of the settings is preserved (a partial merge, not a replacement).
+    // Le reste des reglages est conserve (fusion partielle).
     expect(useClueSettings.getState().settings.rounds).toBe(DEFAULT_CLUE_SETTINGS.rounds);
     expect(mockedSaveSettings).not.toHaveBeenCalled();
   });

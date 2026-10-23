@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-/** Value shown as plain text, which becomes an `<input>` on click — only blur or Enter
- * saves, Escape cancels. */
+/** Texte qui devient un `<input>` au clic ; seuls blur ou Entree sauvent, Echap annule. */
 export const EditableValue = ({
   value,
   saveFlag,
@@ -16,18 +15,16 @@ export const EditableValue = ({
   onSave: (next: string) => void;
   type?: 'text' | 'number';
   display?: string;
-  /** An empty draft normally cancels instead of saving (most fields are never blank) — set this
-   * for a field where blank is itself a valid value to save (clearing it on purpose). */
+  /** Un brouillon vide annule normalement ; a activer quand vider est une valeur valide. */
   allowEmpty?: boolean;
-  /** A text box that grows with what is typed (and a wider one) instead of a single-line input: for long
-   * sentences such as a pun. Enter still saves. */
+  /** Zone de texte qui grandit avec la saisie, pour les longues phrases (jeu de mots). Entree sauve toujours. */
   multiline?: boolean;
 }) => {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const area = useRef<HTMLTextAreaElement>(null);
 
-  // Grow the box to fit its text (shrink first, so it also follows the text when it gets shorter).
+  // Ajuste la hauteur au texte (reduit d'abord pour suivre aussi un texte qui raccourcit).
   useLayoutEffect(() => {
     if (!area.current) return;
     area.current.style.height = 'auto';

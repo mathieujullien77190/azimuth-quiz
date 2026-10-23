@@ -11,20 +11,24 @@ export type GpsOption = {
   description?: string;
   useGps: boolean;
   onToggleUseGps: (value: boolean) => void;
-  /** Custom starting point, shown under the toggle only while `useGps` is off. */
+  /** Point de depart perso, affiche sous le toggle seulement quand `useGps` est faux. */
   latitude: number;
   longitude: number;
   onChangeCustomOrigin: (patch: { customLatitude?: number; customLongitude?: number }) => void;
-  /** The coordinate fields keep their own text state (see `CustomOriginInputs`), seeded once —
-   * flip this when the persisted settings finish loading so they re-seed from the real values. */
+  /**
+   * Les champs de coordonnees gardent leur propre state texte (voir `CustomOriginInputs`), initialise une fois :
+   * changer cette valeur quand les reglages persistes finissent de charger pour les reinitialiser.
+   */
   ready?: boolean;
 };
 
 export type OptionsSectionProps = {
   title: string;
   options: OptionItem[];
-  /** "Use my GPS position" option (+ custom origin fields) — displayed only when provided, so a
-   * game with no starting point (Clues) just omits it. Rendered after `options`. */
+  /**
+   * Option « Utiliser ma position GPS » (+ champs d'origine perso), affichee seulement si fournie : un jeu sans
+   * point de depart (Indices) l'omet. Rendue apres `options`.
+   */
   gps?: GpsOption;
   disabled?: boolean;
 };

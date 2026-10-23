@@ -10,7 +10,7 @@ import guessingCode from './Guessing.source.md?raw';
 import longNameCode from './LongName.source.md?raw';
 import revealedCode from './Revealed.source.md?raw';
 
-/** A long name: it must show in full, wrapping onto several lines, never cut short with an ellipsis. */
+/** Nom long : il s'affiche en entier, sur plusieurs lignes, sans points de suspension. */
 const LONG_NAME_PLACE: Place = {
   name: 'Cap de Bonne-Espérance',
   coordinates: { latitude: -34.357, longitude: 18.474 },

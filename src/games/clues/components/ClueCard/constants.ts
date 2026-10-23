@@ -1,6 +1,6 @@
 import type { CluePositionInCountry } from '@/types';
 
-/** Center of the small "city" square inside the big "country" square, in % (3x3 grid). */
+/** Centre du petit carre "ville" dans le grand carre "pays", en % (grille 3x3). */
 export const POSITION_COORDS: Record<CluePositionInCountry, { left: number; top: number }> = {
   center: { left: 50, top: 50 },
   n: { left: 50, top: 18 },
@@ -13,9 +13,8 @@ export const POSITION_COORDS: Record<CluePositionInCountry, { left: number; top:
   sw: { left: 18, top: 82 },
 };
 
-// 'bearing'/'distance' clues: switch to a full-width card once revealed, to give the
-// compass / Earth (components reused as-is from Azimuth Quiz) room to breathe.
+// Indices cap/distance : pleine largeur une fois devoiles, pour laisser respirer la boussole/Terre.
 export const COMPASS_CLUE_SIZE = 140;
 export const EARTH_CLUE_SIZE = 170;
-// The 'globe' clue: a full-width card too, the globe being turned with a finger.
+// Indice globe : pleine largeur aussi (le globe est tourne au doigt).
 export const GLOBE_CLUE_SIZE = 220;

@@ -37,26 +37,25 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** It's this device's turn: the unrevealed cards can be picked (each pick also passes the turn). */
+/** Tour de cet appareil : les cartes non devoilees sont cliquables (chaque clic passe aussi la main). */
 export const MyTurn: Story = {
   parameters: source(myTurnCode),
   args: { onPickClue: fn(), revealedClueIds: ['population', 'letter'] },
 };
 
-/** Somebody else's turn (or a joiner watching): `onPickClue` omitted, every card is read-only. */
+/** Tour d'un autre (ou joiner spectateur) : `onPickClue` absent, cartes en lecture seule. */
 export const ReadOnly: Story = {
   parameters: source(readOnlyCode),
   args: { revealedClueIds: ['population', 'bearing', 'letter'] },
 };
 
-/** Round over: everything is shown, whatever was actually picked. */
+/** Manche finie : tout est montre, quoi qu'il ait ete choisi. */
 export const RoundOver: Story = {
   parameters: source(roundOverCode),
   args: { revealedClueIds: ['population'], roundOver: true },
 };
 
-/** A French city (`citiesFr`): fewer cards than usual — the clues that never vary for a French
- * place (local time, capital, flag, currency, phone code) aren't offered at all (see `cluesFor`). */
+/** Ville francaise (`citiesFr`) : moins de cartes, les indices qui ne varient pas en France ne sont pas offerts (voir `cluesFor`). */
 export const FrenchCity: Story = {
   parameters: source(frenchCityCode),
   args: { onPickClue: fn(), place: SAMPLE_CLUE_PLACE_FR, revealedClueIds: ['population'] },

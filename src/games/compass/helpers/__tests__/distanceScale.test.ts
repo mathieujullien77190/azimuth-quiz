@@ -17,9 +17,9 @@ describe('ratioToKm', () => {
   });
 
   it('rounds intermediate values to a readable step', () => {
-    // km < 100 -> step of 5
+    // km < 100 -> pas de 5
     expect(ratioToKm(0.3, 20000) % 5).toBe(0);
-    // km >= 1000 -> step of 50 (checked via a value we know is large)
+    // km >= 1000 -> pas de 50 (valeur connue comme grande)
     expect(ratioToKm(0.9, 20000) % 10).toBe(0);
   });
 

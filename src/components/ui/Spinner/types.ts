@@ -1,7 +1,9 @@
 export type SpinnerProps = {
-  /** `small` inline (next to a name, in a row), `large` on its own (a splash). */
+  /** `small` en ligne (a cote d'un nom), `large` seul (un splash). */
   size?: 'small' | 'large';
-  /** Any color; the app's accent by default. A player's own color while waiting for them, a light
-   * grey on the dark notice splash. */
+  /**
+   * Couleur libre ; l'accent de l'app par defaut. La couleur du joueur attendu, un gris clair sur le splash sombre
+   * de notice.
+   */
   color?: string;
 };

@@ -17,8 +17,8 @@ export const createStyles = ({ colors, isDark, radius, typography, buttonDepth }
       borderBottomColor: colors.accentDark,
     },
     ghost: {
-      // By night `surfaceHigh` is the very color of the game footer panel (`GameFooter`), so the
-      // secondary button disappeared into it: the border blue (`#25334F`) stands out from it.
+      // De nuit `surfaceHigh` est la couleur du panneau du footer (`GameFooter`) : le bouton secondaire s'y fondait,
+      // le bleu de bordure (`#25334F`) s'en detache.
       backgroundColor: isDark ? colors.border : colors.surfaceHigh,
       borderWidth: 1.5,
       borderColor: colors.border,

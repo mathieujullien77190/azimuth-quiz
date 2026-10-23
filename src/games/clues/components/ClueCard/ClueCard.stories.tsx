@@ -72,7 +72,7 @@ export const DistanceRevealed: Story = {
 
 const PARIS = { latitude: 48.8566, longitude: 2.3522 };
 
-/** First stage: the starting point and the place on the bare ball, with the equator and the Greenwich meridian. */
+/** 1er clic : le depart et le lieu sur la boule nue, avec l'equateur et Greenwich. */
 export const GlobeRevealed: Story = {
   parameters: source(globeRevealedCode),
   args: {
@@ -87,7 +87,7 @@ export const GlobeRevealed: Story = {
   },
 };
 
-/** Second stage: the world's land appears on the globe. */
+/** 2e clic : les terres apparaissent sur le globe. */
 export const GlobeLandRevealed: Story = {
   parameters: source(globeLandRevealedCode),
   args: { ...GlobeRevealed.args, globeStage: 2 },
@@ -98,21 +98,20 @@ export const FlagColorsRevealed: Story = {
   args: { clueId: 'flagColors', flagStage: 3, label: 'Drapeau', place: SAMPLE_CLUE_PLACE, state: 'revealed' },
 };
 
-/** A multi-word name ("New York"): the letter clue splits it into one skeleton group per word. */
+/** Nom en plusieurs mots ("New York") : un groupe de cases par mot. */
 export const LetterRevealedSpace: Story = {
   parameters: source(letterRevealedSpaceCode),
   args: { clueId: 'letter', label: 'Lettres', letterStage: 2, place: SAMPLE_CLUE_PLACE_SPACE, state: 'revealed' },
 };
 
-/** A hyphenated name ("Saint-Malo"): the hyphen is drawn in place, outside any letter slot, and
- * is never itself a slot to fill. */
+/** Nom avec trait d'union ("Saint-Malo") : le trait est dessine en place, jamais une case a remplir. */
 export const LetterRevealedHyphen: Story = {
   parameters: source(letterRevealedHyphenCode),
   args: { clueId: 'letter', label: 'Lettres', letterStage: 2, place: SAMPLE_CLUE_PLACE_HYPHEN, state: 'revealed' },
 };
 
-/** A real person tied to the place (here Tokyo), curated in `scripts/personalityCuration.json` —
- * a place with none curated never offers this card at all (see `cluesFor`). */
+/** Personnalite liee au lieu (ici Tokyo), curee dans `scripts/personalityCuration.json` ;
+ * sans curation, la carte n'est jamais offerte (voir `cluesFor`). */
 export const PersonalityRevealed: Story = {
   parameters: source(personalityRevealedCode),
   args: { clueId: 'personality', label: 'Personnalité', place: SAMPLE_CLUE_PLACE, state: 'revealed' },

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// jsdom has no WebGL: three.js is replaced by small stand-ins that remember what they were given. What is under test is
-// what the scene asks of three.js (which objects, which settings, when they are handed back), not the drawing itself.
+// jsdom n'a pas de WebGL : three.js est remplace par des doublures qui retiennent ce qu'on leur donne. On teste ce
+// que la scene demande a three.js (objets, reglages, moment de la restitution), pas le dessin.
 const mocks = vi.hoisted(() => {
   class FakeVector3 {
     constructor(
@@ -126,7 +126,7 @@ import { createGlobeScene, type GlobeScene } from '../GlobeScene';
 import { toVector } from '../helpers';
 import type { PlaceBuffers } from '../types';
 
-/** The dots of a few places: `round`, `star` and `square` positions, as `setPlaces` takes them. */
+/** Points de quelques lieux : positions `round`, `star` et `square`, comme `setPlaces` les prend. */
 const buffersOf = (round: number[] = [], star: number[] = [], square: number[] = []): PlaceBuffers => ({
   positions: [...round, ...star, ...square],
   kinds: [
@@ -146,7 +146,7 @@ let frames: Frame[] = [];
 let canvas: HTMLCanvasElement;
 let scene: GlobeScene;
 
-/** Runs the animation frame that is waiting, at `time` ms. */
+/** Joue la frame d'animation en attente, a `time` ms. */
 const tick = (time: number) => {
   const next = frames.shift()!;
   next(time);
@@ -170,7 +170,7 @@ beforeEach(() => {
   mocks.unproject = (vector) => vector;
   vi.stubGlobal('requestAnimationFrame', (callback: Frame) => frames.push(callback));
   vi.stubGlobal('cancelAnimationFrame', vi.fn());
-  // jsdom has no 2d context: a stand-in that takes any drawing call.
+  // jsdom n'a pas de contexte 2d : une doublure qui accepte tout appel de dessin.
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
     new Proxy({}, { get: () => () => undefined, set: () => true }) as never,
   );
@@ -229,7 +229,8 @@ describe('places', () => {
       expect((dots.material as InstanceType<typeof mocks.FakeMaterial>).options).toMatchObject({ vertexColors: true });
       expect((dots.geometry as InstanceType<typeof mocks.FakeGeometry>).attributes).toHaveProperty('color');
     }
-    // The cities are round, the capitals star-shaped (a bit bigger), the rest square: only the first two use a picture.
+    // Villes rondes, capitales en etoile (un peu plus grandes), le reste carre : seules les deux premieres utilisent
+    // une image.
     const options = [round, star, square].map((dots) => (dots.material as InstanceType<typeof mocks.FakeMaterial>).options);
     expect(options.map((entry) => entry.size)).toEqual([7, 13, 6]);
     expect(options.map((entry) => 'map' in entry)).toEqual([true, true, false]);
@@ -278,7 +279,7 @@ describe('level of detail', () => {
 
   it('draws the places only once the camera is close enough, the capitals from further away', () => {
     const dots = draw();
-    // The camera opens at ~3.2: only the capitals are there.
+    // La camera s'ouvre a ~3,2 : seules les capitales sont la.
     expect(shown(dots)).toEqual([false, true, false]);
     mocks.cameras[0].position.set(0, 0, 2.2);
     tick(0);
@@ -352,7 +353,7 @@ describe('names', () => {
 
 describe('pick', () => {
   it('finds the nearest visible place under the pointer', () => {
-    // Two places: one right under the pointer (client 110, 70 = canvas 100, 50 = the middle), one far away.
+    // Deux lieux : un juste sous le pointeur (client 110, 70 = canvas 100, 50 = milieu), un loin.
     scene.setPlaces(buffersOf([0, 0, 1.006, 0, 1, 0]));
     mocks.cameras[0].position.set(0, 0, 2.2);
     mocks.project = (vector) => (vector.z > 0.5 ? new mocks.FakeVector3(0, 0, 0) : new mocks.FakeVector3(0.9, 0.9, 0));

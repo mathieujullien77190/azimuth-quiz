@@ -24,7 +24,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Status only, no tab is tappable: the active one says whose turn it is. */
+/** Statut seulement, aucun onglet n'est cliquable : l'actif indique a qui est le tour. */
 export const TurnByTurn: Story = {
   parameters: source(turnByTurnCode),
   decorators: [localizedArgs((t) => ({ activeLabel: (name: string) => t.game.playerTurn(name) }))],

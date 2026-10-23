@@ -1,26 +1,21 @@
-/** What the "one guess per turn" rule reads from a turn-based room (Indices). */
+/** Ce que la regle "une proposition par tour" lit dans une room au tour par tour (Indices). */
 type TurnGuessState = {
   turnUid: string | null;
   wrongGuessUid: string | null;
-  /** How many clues/hints were out when the last wrong guess was made; null when none was made this round (and for a
-   * room made before the rule existed: no restriction). */
+  /** Indices sortis a la derniere erreur ; null si aucune cette manche (ou room d'avant la regle : pas de restriction). */
   wrongGuessHints: number | null;
 };
 
 /**
- * Whether the player holding the turn has already made their guess this turn. A turn ends when a hint is revealed (which
- * passes the hand), so "this turn" is "while the number of revealed hints is still the one at the wrong guess": it falls
- * back to false by itself the moment a hint is revealed, and the turn coming back to the same player later is a new turn.
- * The only thing left to the player in the meantime is to reveal a hint.
+ * Le detenteur du tour a-t-il deja propose ? Un indice devoile passe la main : tant que le nombre d'indices est celui
+ * de l'erreur, oui ; des qu'un indice sort, retombe a faux.
  */
 export const hasGuessedThisTurn = ({ turnUid, wrongGuessUid, wrongGuessHints }: TurnGuessState, hintsRevealed: number): boolean =>
   turnUid !== null && wrongGuessUid === turnUid && wrongGuessHints !== null && wrongGuessHints === hintsRevealed;
 
 /**
- * Whether a miss is still worth announcing ("X se trompe — perd N points."): only until a hint is revealed after it, which
- * passes the hand and ends the miss's turn, so the message goes away on every device at that moment. `wrongGuessHints` is
- * the number of hints that were out when the miss was written; null (no miss this round, or a room made before the rule
- * existed) keeps the older behaviour, where only the turn and round guards clear the message.
+ * Une erreur est-elle encore a annoncer ("X se trompe...") ? Jusqu'a ce qu'un indice sorte apres elle.
+ * `null` (pas d'erreur, ou room d'avant la regle) : seuls les gardes tour/manche l'effacent.
  */
 export const missIsFresh = (wrongGuessHints: number | null, hintsRevealed: number): boolean =>
   wrongGuessHints === null || wrongGuessHints === hintsRevealed;

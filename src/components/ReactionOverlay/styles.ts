@@ -8,7 +8,7 @@ export const createStyles = ({ colors, typography }: Theme) =>
     overlay: {
       ...StyleSheet.absoluteFill,
     },
-    // One bubble: placed at the bottom-middle of the overlay, then carried up by its own transform.
+    // Une bulle : posee en bas au milieu de l'overlay, puis portee vers le haut par son propre transform.
     bubble: {
       position: 'absolute',
       left: 0,

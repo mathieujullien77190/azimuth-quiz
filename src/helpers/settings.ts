@@ -4,12 +4,11 @@ import type { Category, Difficulty, GameSettings } from '@/types';
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
-/** Rebuilds valid settings from stored data (potentially outdated or corrupted). */
+/** Reconstruit des reglages valides depuis des donnees stockees (possiblement perimees ou corrompues). */
 export const sanitizeSettings = (raw: unknown): GameSettings => {
   if (!isRecord(raw)) return DEFAULT_SETTINGS;
 
-  // The name is a string. Settings saved when several players shared a device carried a `playerNames`
-  // list: its first entry is this player.
+  // Anciens reglages multi-joueurs : `playerNames`, dont le premier est ce joueur.
   const legacyName = Array.isArray(raw.playerNames) ? raw.playerNames[0] : undefined;
   const savedName = typeof raw.playerName === 'string' ? raw.playerName : legacyName;
   const playerName = typeof savedName === 'string' ? savedName : DEFAULT_SETTINGS.playerName;
@@ -19,8 +18,7 @@ export const sanitizeSettings = (raw: unknown): GameSettings => {
     ? raw.categories.filter((category): category is Category => validCategories.includes(category as Category))
     : [];
 
-  // A single difficulty. Settings saved before that carried a `difficulties` list: its first valid
-  // entry is kept.
+  // Anciens reglages : liste `difficulties`, on garde la premiere valide.
   const validDifficulties = DIFFICULTIES.map((entry) => entry.id);
   const isDifficulty = (value: unknown): value is Difficulty => validDifficulties.includes(value as Difficulty);
   const difficulty = isDifficulty(raw.difficulty)

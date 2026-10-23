@@ -1,8 +1,8 @@
 export type NoticeOverlayProps = {
-  /** `null` hides the overlay entirely. */
+  /** `null` masque l'overlay. */
   message: string | null;
-  /** Tapping the overlay. Unused while `loading`: a wait ends by itself, a tap does nothing. */
+  /** Tap sur l'overlay. Ignore pendant `loading` : l'attente se termine seule. */
   onDismiss?: () => void;
-  /** A light spinner above the message: for a wait ("Préparation de la partie…"), not a dead end. */
+  /** Spinner clair au-dessus du message : une attente, pas une impasse. */
   loading?: boolean;
 };

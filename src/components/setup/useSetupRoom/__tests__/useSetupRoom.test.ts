@@ -14,10 +14,10 @@ import { useSetupRoom } from '../useSetupRoom';
 
 const mockPush = jest.fn();
 const mockDismissTo = jest.fn();
-// A stable router object, like the real hook's: a fresh one per render would re-run effects.
+// Router stable, comme le vrai hook : un neuf a chaque rendu relancerait les effets.
 const mockRouter = { push: mockPush, dismissTo: mockDismissTo };
 jest.mock('expo-router', () => ({ useRouter: () => mockRouter }));
-// Connection-loss detection has its own tests (`useRoomPresence.test.ts`).
+// La detection de coupure a ses propres tests (`useRoomPresence.test.ts`).
 jest.mock('@/helpers/useRoomPresence', () => ({ useRoomPresence: jest.fn() }));
 
 type Settings = { playerName: string; rounds: number };
@@ -356,7 +356,7 @@ describe('useSetupRoom — the default name', () => {
     await joinRoom(ctx);
     expect(joinRoomPresence).toHaveBeenLastCalledWith('tabofuna', 'Zoé');
 
-    // Somebody else got "Zoé" first: the placeholder moves on and the registration is retried.
+    // Quelqu'un a pris « Zoe » avant : le placeholder avance et l'inscription est retentee.
     await ctx.emitPlayers({ host: player('Zoé') }, 'host');
     await flush();
     expect(joinRoomPresence).toHaveBeenLastCalledWith('tabofuna', 'Max');
@@ -410,10 +410,10 @@ describe('useSetupRoom — the previous game', () => {
     await joinRoom(ctx);
     await expect(loadLastJoinedRoom()).resolves.toBe('tabofuna');
 
-    // Leaving it goes back to an empty field (the room would be joined again at once otherwise)...
+    // Quitter revient a un champ vide (sinon la room serait rejointe aussitot)...
     await act(async () => ctx.result.current.party.onChooseJoin());
     expect(ctx.result.current.party.joinCode).toBe('');
-    // ...and so does picking another choice and then Join: the code is offered again, and joined.
+    // ...et pareil en choisissant un autre choix puis Rejoindre : le code est repropose, et rejoint.
     await act(async () => ctx.result.current.party.onChooseSolo());
     await act(async () => ctx.result.current.party.onChooseJoin());
     await flush();
@@ -448,7 +448,7 @@ describe('useSetupRoom — the previous game', () => {
     await joinRoom(ctx);
     expect(ctx.result.current.party.joinStatus).toBe('invalid');
 
-    // The room shows up in the meantime: the same code, checked again, now connects.
+    // La room apparait entre-temps : le meme code, reverifie, connecte maintenant.
     roomExists.mockImplementation(() => Promise.resolve(true));
     await act(async () => ctx.result.current.party.onChooseJoin());
     await flush();
@@ -655,7 +655,7 @@ describe('useSetupRoom — starting the game', () => {
     expect(run).toHaveBeenCalledWith('tabofuna');
     expect(ctx.result.current.starting).toBe(true);
     expect(ctx.result.current.overlayLoading).toBe(true);
-    // The splash is not dismissable by tapping.
+    // Le splash ne se ferme pas d'un tap.
     await act(async () => ctx.result.current.dismissOverlay());
     expect(ctx.result.current.overlayLoading).toBe(true);
   });
@@ -723,7 +723,7 @@ describe('useSetupRoom — starting the game', () => {
     expect(ctx.adapter.createRoom).toHaveBeenCalledWith({ rounds: 5 });
     expect(ctx.result.current.party.roomCode).toBeNull();
     expect(ctx.result.current.connectedRoomCode).toBe('tabofuna');
-    // Not before this device shows up in the room.
+    // Pas avant que cet appareil apparaisse dans la room.
     expect(run).not.toHaveBeenCalled();
 
     await ctx.emitPlayers({ zoe: player('Zoe') }, 'zoe');
@@ -761,7 +761,7 @@ describe('useSetupRoom — starting the game', () => {
 
   it('reuses the silent room instead of creating a second one when choosing to host afterwards', async () => {
     const ctx = await setup();
-    // First start attempt leaves a silent room behind (its deferred run never fires: no player yet).
+    // Le premier essai laisse une room cachee (son run differe ne part jamais : pas encore de joueur).
     await act(async () => ctx.result.current.startOnlineGame(jest.fn()));
     await flush();
     await act(async () => ctx.result.current.party.onChooseHost());
@@ -775,19 +775,19 @@ describe('useSetupRoom — starting the game', () => {
 describe('useSetupRoom — the player name is shared across the 3 games', () => {
   it('shows this game’s own settings before the shared name has hydrated (no blank flash)', async () => {
     usePlayerName.setState({ playerName: '', ready: false });
-    const { result } = await setup(); // SETTINGS.playerName is 'Zoe'
+    const { result } = await setup(); // SETTINGS.playerName vaut 'Zoe'
     expect(result.current.party.soloName).toBe('Zoe');
   });
 
   it('once hydrated, shows the shared name even if it differs from this game’s own settings', async () => {
     usePlayerName.setState({ playerName: 'Max', ready: true });
-    const { result } = await setup(); // SETTINGS.playerName is 'Zoe'
+    const { result } = await setup(); // SETTINGS.playerName vaut 'Zoe'
     expect(result.current.party.soloName).toBe('Max');
   });
 
   it('adopts the shared name into this game’s own settings, the first time it hydrates with one', async () => {
     usePlayerName.setState({ playerName: 'Max', ready: true });
-    const { updateSettings } = await setup(); // SETTINGS.playerName is 'Zoe'
+    const { updateSettings } = await setup(); // SETTINGS.playerName vaut 'Zoe'
     await flush();
     expect(updateSettings).toHaveBeenCalledWith({ playerName: 'Max' });
   });
@@ -801,7 +801,7 @@ describe('useSetupRoom — the player name is shared across the 3 games', () => 
 
   it('migrates this game’s own name (e.g. Compass, persisted on disk) into the shared store when that was still empty', async () => {
     usePlayerName.setState({ playerName: '', ready: true });
-    await setup(); // SETTINGS.playerName is 'Zoe'
+    await setup(); // SETTINGS.playerName vaut 'Zoe'
     await flush();
     expect(usePlayerName.getState().playerName).toBe('Zoe');
     expect(await AsyncStorage.getItem(PLAYER_NAME_STORAGE_KEY)).toBe('Zoe');

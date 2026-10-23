@@ -25,19 +25,16 @@ export const RoundResult = ({ record, players, totals, answered, localIndex, onK
   const [showScoringInfo, setShowScoringInfo] = useState(false);
   const pending = answered !== undefined;
 
-  // Online only: a player who quits mid-reveal shrinks `players` (live) while `record.results`
-  // (fixed once the round is confirmed) keeps its original count — drop whichever entries no
-  // longer have a matching player instead of crashing on `player.name` below.
+  // En ligne : un joueur parti pendant le reveal retrecit `players` mais pas `record.results` ; on ecarte
+  // les entrees sans joueur.
   const entries = record.results
     .map((result, index) => ({ result, player: players[index], index }))
     .filter(
       (entry): entry is { result: (typeof record.results)[number]; player: Player; index: number } =>
         entry.player !== undefined,
     );
-  // Players are ranked by points on the round (best first) — unless
-  // pending: there's no official score yet to rank by, so this device's own entry goes first
-  // instead (easiest to find while everyone else trickles in), the rest kept in their given
-  // (arrival) order.
+  // Classement par points de la manche ; en attente (pas de score officiel), l'entree de cet appareil passe
+  // en premier, le reste dans l'ordre d'arrivee.
   const ranked = pending
     ? localIndex === undefined
       ? entries

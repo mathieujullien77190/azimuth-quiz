@@ -1,28 +1,27 @@
 import type { RoomPlayers, RoomReaction } from '../firebase/roomApi';
 
-// Type-only import of `firebase/roomApi`: erased at compile time, so this folder never pulls
-// `firebase/firestore` in at runtime — each game's store passes its own subscription functions in
-// (`games/<game>/firebase/room.ts`), which is where the Firestore dependency actually lives (and
-// what Jest mocks out).
+// Import de type seul : efface a la compilation, ce dossier ne tire pas `firebase/firestore` a l'execution
+// (chaque store recoit ses abonnements de `games/<game>/firebase/room.ts`, que Jest mocke).
 
 export type RoomStoreActions = {
-  /** Idempotent: a no-op if already connected to this exact code. Opens the room's three
-   * Firestore subscriptions (players, settings, game) once and shares them across every screen
-   * that reads this store — the setup screen is the only owner of this lifecycle (see
-   * `useSetupRoom`'s connect/disconnect effect); the online game screen only ever reads. */
+  /**
+   * Idempotent. Ouvre les trois abonnements (joueurs, reglages, jeu) partages par tous les ecrans ; seul l'ecran de preparation
+   * possede ce cycle (`useSetupRoom`), l'ecran de jeu lit seulement.
+   */
   connect: (code: string) => void;
-  /** Tears down the three listeners and resets to defaults. */
+  /** Ferme les trois listeners et remet les defauts. */
   disconnect: () => void;
-  /** Set by `useRoomPresence` when a connection was lost — this device's own, or the host's (for a
-   * joiner): the game is over for this device, screens show a notice and head home. Reset on
-   * connect/disconnect. */
+  /**
+   * Pose par `useRoomPresence` a la perte de connexion (la sienne, ou celle de l'hote pour un joiner) : la partie est finie,
+   * les ecrans notifient et rentrent. Remis a zero a connect/disconnect.
+   */
   markConnectionLost: () => void;
-  /** Call right before removing this device's own presence on purpose (a joiner quitting from the
-   * online game screen): otherwise that looks, from Firestore's point of view, identical to the
-   * host kicking them (their uid was present, now it's not), and the setup screen's own listener
-   * would show them a "you were kicked" notice for leaving by their own choice. */
+  /**
+   * A appeler juste avant de retirer sa propre presence volontairement : sinon l'ecran de preparation l'interprete comme
+   * une expulsion et affiche la notice "expulse".
+   */
   markVoluntaryLeave: () => void;
-  /** Reads and clears the flag `markVoluntaryLeave` sets. */
+  /** Lit et efface le drapeau pose par `markVoluntaryLeave`. */
   consumeVoluntaryLeave: () => boolean;
 };
 
@@ -30,18 +29,13 @@ export type RoomStoreData<Settings, GameState> = {
   code: string | null;
   players: RoomPlayers;
   hostUid: string | null;
-  /** False once the room doc has been seen to exist and then disappeared (the host deleted it) —
-   * stays true while the room has simply never loaded yet, so a screen can tell "gone" apart from
-   * "still connecting". */
+  /** Faux quand la room a existe puis disparu (hote parti) ; reste vrai tant qu'elle n'a pas charge. */
   roomExists: boolean;
   roomSettings: Settings | null;
   gameState: GameState;
-  /** The last emoji anyone sent to the room, or null (see `useRoomReactions`). */
+  /** Dernier emoji envoye a la room, ou null (`useRoomReactions`). */
   reaction: RoomReaction | null;
-  /** Not resolved here: the setup screen's own `joinRoomPresence` call already resolves this
-   * device's uid (the same one `getLocalUid` would — same underlying anonymous auth session) as
-   * a side effect of registering presence, and pushes it in via `setState` — no need for a second,
-   * redundant resolution here for the online game screen to then just read back out. */
+  /** Non resolu ici : le `joinRoomPresence` de l'ecran de preparation le resout deja (meme session anonyme) et le pousse via `setState`. */
   localUid: string | null;
   connectionLost: boolean;
 };
@@ -64,7 +58,7 @@ export type RoomStoreConfig<Settings, GameState> = {
   subscribeToRoomGame: (code: string, onUpdate: (state: GameState) => void) => () => void;
 };
 
-/** What a screen needs to read from (and, for quitting, poke at) a game's room store. */
+/** Ce qu'un ecran lit dans le store de room d'un jeu (et pour quitter). */
 export type RoomStoreHook<Settings, GameState> = {
   <U>(selector: (state: RoomStoreState<Settings, GameState>) => U): U;
   getState: () => RoomStoreState<Settings, GameState>;

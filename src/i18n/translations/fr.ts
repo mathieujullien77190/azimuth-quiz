@@ -109,8 +109,7 @@ export const fr: Translations = {
     previousStep: 'Précédent',
     playerTurn: (name) => `À ${name} de jouer`,
     youAreAt: (name) => `Vous êtes à ${name}`,
-    /** Shown once this device has submitted, while other online players haven't yet
-     * (`OnlineGameScreen`) — nothing to do but wait, so it replaces the footer's Valider button. */
+    /** Une fois soumis, en attendant les autres : remplace le bouton Valider du footer. */
     waitingForOthers: 'En attente des autres joueurs…',
   },
   placeCard: {

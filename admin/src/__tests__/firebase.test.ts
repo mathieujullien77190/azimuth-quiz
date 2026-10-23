@@ -4,7 +4,7 @@ const h = vi.hoisted(() => {
   const app = { name: 'app' };
   const auth = { name: 'auth' };
   const db = { name: 'db' };
-  // Recorded here: `clearMocks` wipes `vi.fn()` calls before each test, and the module runs once at import.
+  // Enregistre ici : `clearMocks` vide les appels avant chaque test et le module ne s'execute qu'a l'import.
   const calls = { app: [] as unknown[], auth: [] as unknown[], db: [] as unknown[][] };
   return {
     app,

@@ -2,7 +2,7 @@ export type GameCardProps = {
   icon: string;
   title: string;
   tagline: string;
-  /** Upper bound of the "1 to N players" line. */
+  /** Borne haute de la ligne "1 a N joueurs". */
   maxPlayers: number;
   ctaLabel: string;
   onPress: () => void;

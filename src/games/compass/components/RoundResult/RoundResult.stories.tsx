@@ -22,8 +22,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Every score here comes from the real `scoreRound`/`applyBestBonus` helpers fed three plausible
- * guesses (one near-perfect, one overshooting, one wide off) — not invented numbers. */
+/** Les scores viennent des vrais `scoreRound`/`applyBestBonus`, pas de chiffres inventes. */
 export const SurfaceMode: Story = {
   parameters: source(surfaceModeCode),
   args: {

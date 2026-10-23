@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-/** A flag that switches itself back off after `durationMs` (a notice that closes by itself): `show`
- * raises it, `hide` drops it early (a tap). */
+/** Drapeau qui retombe seul apres `durationMs` : `show` le leve, `hide` le baisse avant (un tap). */
 export const useTransientFlag = (durationMs = 2000) => {
   const [visible, setVisible] = useState(false);
 

@@ -6,9 +6,8 @@ import { buildTicks, cardinalPoints, polarToPoint } from './helpers';
 import type { CompassFaceProps } from './types';
 
 /**
- * The dial's static geometry: background circle, ticks, cardinal labels — everything that
- * doesn't depend on `bearing`. Memoized (and its own `useMemo` on top, belt-and-suspenders) so
- * dragging the needle (see `Compass.tsx`) doesn't rebuild these 72 ticks + 4 labels every frame.
+ * Geometrie statique du cadran (cercle, graduations, lettres) : ne depend pas de `bearing`, donc memoisee
+ * pour ne pas reconstruire les 72 graduations a chaque frame de drag.
  */
 export const CompassFace = memo(function CompassFace({ size, colors, typography, westLabel }: CompassFaceProps) {
   const center = size / 2;

@@ -1,5 +1,4 @@
-/** Splits the display into pages: 900+ editable cards (each with its `<select>`/`<input>`)
- * in the DOM at once is sluggish — mounting just one page at a time is plenty. */
+/** Decoupe l'affichage : monter 900+ cartes editables d'un coup est lent, une page a la fois suffit. */
 export const Pagination = ({ page, totalPages, onChange }: { page: number; totalPages: number; onChange: (page: number) => void }) => {
   if (totalPages <= 1) return null;
 

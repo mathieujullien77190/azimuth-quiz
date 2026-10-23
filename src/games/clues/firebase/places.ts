@@ -10,19 +10,15 @@ import { drawFromGroups, storedTiers } from '@/firebase/groupedDraw';
 import { loadCluesCounts } from '../helpers/clueCounts';
 import { loadClueCursors, saveClueCursors } from '../helpers/clueCursors';
 
-// Not re-exported from `helpers/index.ts`'s barrel, same reason as `room.ts`: `firebase/firestore` is
-// ESM-only and crashes Jest for every test that imports the barrel for something unrelated.
+// Hors barrel de `helpers/index.ts` comme `room.ts` : `firebase/firestore` est ESM seul et fait planter Jest.
 
 /**
- * Draws the game's places from Firestore, the same way Compass does (see `drawFromGroups`): Clues places are
- * numbered inside their group (`clues.category` x `difficulty`, field `clues.n`), sizes in `meta/cluesCounts`,
- * cursors per group on the device, the selected categories sharing the rounds as evenly as possible. A place
- * comes back complete (country, personality, wordplay — see `cluesFromDoc`): a round reads nothing
- * else, and the host writes it into the room for the joiners. In English a French place is bumped one tier
- * (`effectiveDifficulty`), so the tier below is read too and filtered afterwards.
+ * Tire les lieux depuis Firestore comme Compass (voir `drawFromGroups`) : numerotes par groupe
+ * (`clues.category` x `difficulty`, champ `clues.n`), tailles dans `meta/cluesCounts`, curseurs sur l'appareil.
+ * Le lieu revient complet (voir `cluesFromDoc`) : une manche ne lit rien d'autre.
+ * En anglais un lieu francais monte d'un cran (`effectiveDifficulty`) : on lit aussi le cran du dessous puis on filtre.
  *
- * No fallback on the bundled list: rejects when Firestore fails or when fewer than `rounds` matching
- * places exist at all — the host's start flow shows a notice and nothing is started (cursors untouched).
+ * Aucun repli : rejette si Firestore echoue ou s'il y a moins de lieux que de manches (curseurs intacts).
  */
 export const fetchClueRoundPlaces = async (settings: ClueSettings, language: Language): Promise<CluePlace[]> => {
   const { categories, difficulty, rounds } = settings;

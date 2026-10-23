@@ -29,8 +29,8 @@ export const SettingsScreen = ({ onBack }: SettingsScreenProps) => {
   const languages: Language[] = ['fr', 'en'];
   const themeIds: ThemeId[] = ['night', 'day'];
 
-  // Clears storage AND resets the in-memory contexts to defaults: otherwise the app would keep
-  // the old values (Compass settings, language, theme) until it's relaunched.
+  // Vide le stockage ET remet les contextes en memoire par defaut, sinon l'app garde les anciennes valeurs
+  // (reglages Compass, langue, theme) jusqu'au relancement.
   const onClearData = () => {
     clearAppData();
     resetSettings();

@@ -53,7 +53,7 @@ describe('ReactionOverlay', () => {
     expect(getByText('🔥')).toBeTruthy();
     expect(getByText('👍')).toBeTruthy();
 
-    // The first one finishes while the second one is still on its way up.
+    // La premiere finit pendant que la seconde monte encore.
     await act(() => jest.advanceTimersByTime(RISE_MS / 2 + 1));
     expect(queryByText('🔥')).toBeNull();
     expect(getByText('👍')).toBeTruthy();

@@ -10,11 +10,8 @@ import type { NoticeOverlayProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * Full-screen "the room is gone" splash (host deleted it, you were kicked...) - fixed near-black
- * backdrop rather than a themed one, since it reads the same in both themes and this is exactly
- * the kind of screen where the theme itself might be about to disappear from under it. Tappable:
- * dismisses early instead of only ever waiting out a caller's own auto-dismiss timeout. With
- * `loading`, a light spinner turns above the message (a wait, not a dead end).
+ * Plein ecran « room disparue » (hote parti, expulsion...). Fond quasi noir fixe plutot que themed : lisible dans
+ * les deux themes. Un tap ferme avant le delai. Avec `loading`, un spinner clair tourne au-dessus du message.
  */
 export const NoticeOverlay = ({ message, onDismiss, loading = false }: NoticeOverlayProps) => {
   const styles = useThemedStyles(createStyles);

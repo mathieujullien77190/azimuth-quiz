@@ -13,9 +13,9 @@ import type { GameHeaderProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * The in-round header shared by every game — dumb. Top row: the quit cross and the room code on the
- * left, this device's name and points on the right. Then "Manche 3 / 10 · difficulty" (`RoundCounter`, `DifficultyBadge`) aligned left, the
- * players' tabs when `players` is given and, in travel mode, the `location` line.
+ * En-tete de manche commun aux jeux (dumb). Ligne du haut : croix de sortie et code de la room a gauche, nom et
+ * points de cet appareil a droite. Dessous : "Manche 3 / 10 · difficulte" (`RoundCounter`, `DifficultyBadge`),
+ * les onglets joueurs si `players` est donne et, en mode voyage, la ligne `location`.
  */
 export const GameHeader = ({
   onQuit,

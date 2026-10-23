@@ -1,10 +1,10 @@
 export type HelicopterIdleFrame = {
   bobY: number;
-  /** Main rotor rotation, in degrees [0, 360). */
+  /** Rotation du rotor, en degres [0, 360). */
   rotorAngleDeg: number;
-  /** Tail anti-collision light. */
+  /** Feu anticollision de queue. */
   blinkOpacity: number;
-  /** Rotation of the gear hanging on the rope, in degrees: goes round continuously. */
+  /** Rotation de l'engrenage suspendu, en degres (continue). */
   gearDeg: number;
 };
 

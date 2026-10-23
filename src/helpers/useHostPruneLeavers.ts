@@ -3,21 +3,15 @@ import { useEffect } from 'react';
 
 import type { RoomPlayers } from '../firebase/roomApi';
 
-/** The per-player maps a game keeps in its round state (each game has some of them, none has all). */
+/** Maps par joueur de l'etat de manche (chaque jeu en a certaines, aucun toutes). */
 const PLAYER_KEYED_FIELDS = ['guesses', 'scores', 'totalScores'] as const;
 
-/** Round data each field still holds for players who aren't in the room any more, by field. */
+/** Donnees de manche encore presentes par champ pour des joueurs partis. */
 export type StaleRoomData = Record<string, string[]>;
 
 /**
- * Host-only clean-up: when a player leaves (quits, is kicked...), whatever they left in the round data —
- * their guess, their score, their running total — goes with them. Coming back, they are a brand-new
- * player: no points, no answer, last in the arrival order. Only the host can erase other players'
- * entries, and every device sees the same room, so it is the host that does it, whichever way the
- * player left.
- *
- * Waits until this device knows who it is *and* is listed among the players: before that the players
- * list can be empty for a moment, which would read as "everybody left".
+ * Hote seul : quand un joueur part, ses donnees de manche (reponse, score, total) partent avec lui ; s'il revient,
+ * c'est un nouveau joueur. Attend de se connaitre dans la liste : avant, elle peut etre vide et lire "tous partis".
  */
 export const useHostPruneLeavers = (
   isHost: boolean,

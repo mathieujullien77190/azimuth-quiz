@@ -63,7 +63,7 @@ const gameState = (overrides: Partial<ClueRoomGameState> = {}): ClueRoomGameStat
   ...overrides,
 });
 
-/** Two players, `host` (this device unless said otherwise) then `guest`; it is the host's turn. */
+/** Deux joueurs, `host` (cet appareil sauf indication) puis `guest` ; c'est le tour de l'hote. */
 const setup = async (state: Partial<StoreState> = {}) => {
   useClueRoomStore.setState({
     code: 'tabofuna',
@@ -342,15 +342,15 @@ describe('useOnlineClueGame — guessing', () => {
     expect(result.current.guessedThisTurn).toBe(false);
     await act(async () => result.current.setGuessText('Rome'));
     await act(async () => result.current.submitGuess());
-    // Locked at once, before the room's update comes back: a second tap cannot send a second guess.
+    // Verrou immediat, avant le retour de la room : un 2e tap n'envoie pas une 2e proposition.
     expect(result.current.guessedThisTurn).toBe(true);
     await act(async () => result.current.setGuessText('Madrid'));
     await act(async () => result.current.submitGuess());
     expect(reportClueRoomWrong).toHaveBeenCalledTimes(1);
-    // The room confirms the miss: still locked while no clue is revealed.
+    // La room confirme l'erreur : toujours verrouille tant qu'aucun indice n'est devoile.
     await setGame({ wrongGuessUid: 'host', wrongGuessSeq: 1, wrongGuessHints: 0 });
     expect(result.current.guessedThisTurn).toBe(true);
-    // A clue is revealed (the turn passes, then comes back to the same player): a fresh turn, a fresh guess.
+    // Un indice sort (le tour passe puis revient au meme joueur) : nouveau tour, nouvelle proposition.
     await setGame({ wrongGuessUid: 'host', wrongGuessSeq: 1, wrongGuessHints: 0, revealedClueIds: ['population'] });
     expect(result.current.guessedThisTurn).toBe(false);
   });
@@ -403,8 +403,7 @@ describe('useOnlineClueGame — who missed, shown to everyone', () => {
   });
 
   it('does not carry a miss over into a new round, even if the same player is first again', async () => {
-    // wrongGuessSeq is never reset between rounds (the host's own scoring relies on that, see
-    // useHostTurnScoring) — the baseline captured at this round's start is what tells the two apart.
+    // `wrongGuessSeq` n'est jamais remis a zero entre manches (l'hote s'y appuie) : la base prise au debut de manche les distingue.
     const { result } = await setup({ gameState: gameState({ wrongGuessUid: 'host', wrongGuessSeq: 3 }) });
     expect(result.current.wrongGuesserName).toBeNull();
     await setGame({ roundIndex: 1, wrongGuessUid: 'host', wrongGuessSeq: 3 });
@@ -426,14 +425,13 @@ describe('useOnlineClueGame — who missed, shown to everyone', () => {
     expect(giveUpClueRoom).toHaveBeenCalledWith('tabofuna');
 
     await unmount();
-    // Still the host, but not the turn-holder this time — the Firestore rules let the host write
-    // any field regardless of `turnUid` (see `giveUp`'s own comment), so this must still work.
+    // Toujours l'hote mais pas le tour : les regles l'autorisent a ecrire tout champ (voir `giveUp`), ca doit marcher.
     const hostNotTurnHolder = await setup({ gameState: gameState({ turnUid: 'guest' }) });
     await act(async () => hostNotTurnHolder.result.current.giveUp());
     expect(giveUpClueRoom).toHaveBeenCalledTimes(2);
     await hostNotTurnHolder.unmount();
 
-    // The turn-holder, but not the host: no longer enough on its own.
+    // Detenteur du tour sans etre l'hote : ne suffit plus.
     const guestTurnHolder = await setup({ localUid: 'guest', gameState: gameState({ turnUid: 'guest' }) });
     await act(async () => guestTurnHolder.result.current.giveUp());
     expect(giveUpClueRoom).toHaveBeenCalledTimes(2);

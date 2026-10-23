@@ -34,7 +34,7 @@ const setup = async ({ me, players, screen = 'game' }: { me: string; players: Ro
   return { store, api };
 };
 
-/** Advances time in 10s steps (the check period), so every interval gets to run in order. */
+/** Avance par pas de 10 s (la periode de controle) pour que chaque intervalle tourne dans l'ordre. */
 const advance = async (seconds: number) => {
   for (let elapsed = 0; elapsed < seconds; elapsed += 10) await act(async () => jest.advanceTimersByTime(10 * SEC));
 };
@@ -119,7 +119,7 @@ describe('useRoomPresence — losing a connection', () => {
       removeRoomPlayer: jest.fn(() => Promise.resolve()),
     };
     await renderHook(() => useRoomPresence(store, api, 'room'));
-    // The joiner keeps beating, only this device's own writes never come back.
+    // Le joiner continue son heartbeat, seules les ecritures de cet appareil ne reviennent jamais.
     for (let second = 10; second <= 110; second += 10) {
       await advance(10);
       await act(async () => store.setState({ players: { host: player('Zoé'), max: player('Max', second) } }));
@@ -134,7 +134,7 @@ describe('useRoomPresence — losing a connection', () => {
       players: { host: player('Zoé', 1), max: player('Max') },
     });
     await advance(20);
-    // The whole app was frozen for 5 minutes: no timer ran meanwhile.
+    // Appli gelee 5 minutes : aucun timer n'a tourne.
     jest.setSystemTime(Date.now() + 300 * SEC);
     await advance(10);
     expect(store.getState().connectionLost).toBe(false);
@@ -178,7 +178,7 @@ describe('useRoomPresence — edge cases', () => {
       players: { host: player('Zoé'), max: player('Max', 1), eve: player('Eve', 1) },
     });
     await advance(60);
-    // Max leaves; Eve is still there and stays silent.
+    // Max part ; Eve est toujours la mais reste silencieuse.
     await act(async () => store.setState({ players: { host: player('Zoé'), eve: player('Eve', 1) } }));
     await advance(60);
     expect(api.removeRoomPlayer).toHaveBeenCalledWith('room', 'eve');

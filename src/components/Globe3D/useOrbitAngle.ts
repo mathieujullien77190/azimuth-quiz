@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-/** The angle (radians) of something that goes round once every `periodMs`, moved every `tickMs`. */
+/** Angle (radians) de ce qui fait un tour toutes les `periodMs`, deplace toutes les `tickMs`. */
 export const useOrbitAngle = (periodMs: number, tickMs: number): number => {
   const [angle, setAngle] = useState(0);
   useEffect(() => {

@@ -9,12 +9,9 @@ import {
 import type { ProgressStep } from './types';
 
 /**
- * The timed keyframes of the splash's loading bar, built to look like a real loader that gets stuck: quick jumps, a
- * creeping stretch, several stalls (the long one near two thirds, a last hesitation before the end). Each keyframe says
- * when it starts (`at`, ms from the start), where the bar goes (`to`, percent) and how long it takes (`easeMs`). They are
- * jittered a little by `random` (a launch never looks like the last one) but always keep the same shape: in time order
- * and never overlapping, `to` only ever increasing, the last one ending exactly at `minMs` on a value under 100 — the bar
- * only reaches 100 % when the splash is released, never before the app is ready.
+ * Keyframes de la barre de chargement, pour imiter un vrai chargement qui se bloque : `at` (ms depuis le debut),
+ * `to` (pourcent), `easeMs`. Legerement aleatoires (`random`) mais toujours ordonnees, sans chevauchement,
+ * `to` croissant, la derniere finissant exactement a `minMs` sous 100 % (la barre ne touche 100 % qu'a la liberation).
  */
 export const buildProgressSteps = (minMs: number, random: () => number = Math.random): ProgressStep[] => {
   const steps: ProgressStep[] = [];
@@ -23,7 +20,7 @@ export const buildProgressSteps = (minMs: number, random: () => number = Math.ra
   PROGRESS_BEATS.forEach((beat, index) => {
     const isLast = index === PROGRESS_BEATS.length - 1;
     const jitteredStart = beat.start + (random() - 0.5) * 2 * PROGRESS_JITTER_AT;
-    // A stall is never squeezed out by the jitter: a keyframe starts a little after the previous one has ended.
+    // Le hasard n'ecrase jamais un blocage : une keyframe demarre un peu apres la fin de la precedente.
     const start = Math.max(jitteredStart, previousEnd / minMs + PROGRESS_MIN_STALL);
     const at = Math.round(start * minMs);
     const to = isLast

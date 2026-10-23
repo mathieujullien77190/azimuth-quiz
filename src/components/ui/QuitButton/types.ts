@@ -1,5 +1,7 @@
-/** `base`: a cross in a circle, in the normal text color (in-game headers). `accent`: a plain cross, no
- * circle, in the accent color (setup screens). */
+/**
+ * `base` : croix dans un cercle, couleur de texte normale (headers de jeu). `accent` : croix simple, sans
+ * cercle, couleur d'accent (ecrans de setup).
+ */
 export type QuitButtonVariant = 'base' | 'accent';
 
 export type QuitButtonProps = {

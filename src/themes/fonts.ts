@@ -1,16 +1,11 @@
 /**
- * Monospace stack. Works as-is on web (react-native-web passes the string straight to CSS
- * `font-family`); on iOS/Android, RN silently ignores an unknown font name and falls back to
- * the system font (none of these fonts are bundled with the app).
+ * Pile monospace. Telle quelle sur le web ; sur iOS/Android, RN ignore une police inconnue et retombe sur celle du systeme (aucune n'est embarquee).
  */
 export const FONT_FAMILY =
   '"JetBrains Mono", ui-monospace, "Cascadia Mono", "Roboto Mono", "Droid Sans Mono", Consolas, monospace';
 
 /**
- * Prefix for any Text rendering an actual flag emoji (see `flagEmoji` in
- * helpers/flagEmoji.ts). "Twemoji Country Flags" is injected on web, only when needed,
- * by `polyfillCountryFlagEmojis()` (see app/_layout.tsx) — it fixes Chromium-on-Windows, which
- * has no system font for flag emoji and renders the two-letter code instead. Native iOS/Android
- * already render flag emoji correctly, so this is a no-op there either way.
+ * Prefixe de tout Text affichant un vrai emoji drapeau (`flagEmoji`). "Twemoji Country Flags" est injectee sur le web seulement si besoin
+ * (`polyfillCountryFlagEmojis()`) : Chromium sous Windows n'a pas de police de drapeaux et affiche le code. Sans effet en natif.
  */
 export const FLAG_FONT_FAMILY = '"Twemoji Country Flags", sans-serif';

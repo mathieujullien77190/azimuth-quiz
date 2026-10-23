@@ -58,7 +58,7 @@ describe('roundBest', () => {
   });
 
   it('ignores a result whose player has left the room', () => {
-    // Three results, two players left: the third player (best on distance) is gone.
+    // Trois resultats, deux joueurs restants : le 3e (meilleur a la distance) est parti.
     expect(roundBest(record, players.slice(0, 2), 'distancePoints')).toEqual({
       players: [players[0], players[1]],
       points: 100,

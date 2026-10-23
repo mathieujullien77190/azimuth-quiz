@@ -1,23 +1,20 @@
 import type { Codename } from '@/helpers/version';
 
 export type SplashScreenProps = {
-  /** True while the splash is wanted; once false it fades out and takes itself off the screen. */
+  /** Vrai tant que le splash est voulu ; une fois faux, il s'efface et se retire de l'ecran. */
   visible: boolean;
-  /** The line under the title (`t.app.tagline`, the one of the home screen). */
+  /** Ligne sous le titre (`t.app.tagline`, celle de l'accueil). */
   tagline: string;
   /** "Chargement…". */
   loadingLabel: string;
-  /** The version line at the bottom, "v2.65.0 - 🐦 - great-tit" (`VersionLine`: the animal's name links to its Wikipedia
-   * article). */
+  /** Ligne de version en bas, « v2.65.0 - 🐦 - great-tit » (`VersionLine` : le nom de l'animal renvoie a Wikipedia). */
   version: string;
   codename: Codename | undefined;
-  /** The splash's minimum time (ms): the loading bar's schedule is built to end right then, on a value under 100 %
-   * that stays until the splash is released. */
+  /** Temps minimum du splash (ms) : le calendrier de la barre finit alors, sous 100 %, jusqu'a la liberation. */
   fillMs: number;
-  /** Where the bar's stalls and jumps come from (`Math.random` by default): a test passes its own for a fixed look. */
+  /** Source des blocages et sauts (`Math.random` par defaut) : un test passe la sienne pour un rendu fixe. */
   random?: () => number;
 };
 
-/** One keyframe of the loading bar: it starts `at` ms after the splash appeared and takes the bar to `to` percent over
- * `easeMs`. */
+/** Une keyframe de la barre : demarre `at` ms apres l'apparition du splash et amene la barre a `to` pourcent. */
 export type ProgressStep = { at: number; to: number; easeMs: number };

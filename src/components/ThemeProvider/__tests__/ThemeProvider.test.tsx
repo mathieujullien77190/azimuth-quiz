@@ -72,7 +72,7 @@ describe('ThemeProvider', () => {
 
     await fireEvent.press(getByTestId('reset'));
     expect(getByTestId('themeId').props.children).toBe('night');
-    // Nothing is written to storage by resetThemeId (see the function's doc comment).
+    // Rien n'est ecrit en stockage par resetThemeId (voir son commentaire).
     expect(await AsyncStorage.getItem(THEME_STORAGE_KEY)).toBe('day');
   });
 
@@ -87,8 +87,7 @@ describe('ThemeProvider', () => {
       </ThemeProvider>,
     );
     await unmount();
-    // Resolves after unmount: if the `cancelled` flag didn't work, React would log a
-    // warning about a state update on an unmounted component.
+    // Resolu apres le demontage : sans le drapeau `cancelled`, React loggerait un warning de mise a jour apres demontage.
     await act(async () => {
       resolveGetItem('day');
     });

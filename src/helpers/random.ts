@@ -1,4 +1,4 @@
-/** Fisher-Yates shuffle: doesn't mutate `items`. */
+/** Melange de Fisher-Yates, sans modifier `items`. */
 export const shuffle = <T>(items: readonly T[]): T[] => {
   const result = [...items];
   for (let i = result.length - 1; i > 0; i -= 1) {

@@ -21,9 +21,9 @@ import { markFor, placeBuffers, searchTargets, visiblePlaces } from './helpers';
 import type { SearchTarget, Selection } from './types';
 
 /**
- * The Monde page: the whole world in 3D with every place (coloured by its Compass category, drawn round, star or square).
- * Clicking one opens the very same card the Places list uses, in a side panel, and an edit there is written through the
- * same functions as in that list, then the globe follows.
+ * Page Monde : le monde en 3D avec chaque lieu (couleur = categorie Boussole, rond, etoile ou carre). Un clic ouvre
+ * la meme carte que la liste Lieux dans un panneau lateral ; une edition y passe par les memes fonctions que la
+ * liste, puis le globe suit.
  */
 export const GlobeView = () => {
   const [rows, setRows] = useState<PlaceRow[] | null>(null);

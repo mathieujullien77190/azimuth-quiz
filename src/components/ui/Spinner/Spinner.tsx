@@ -4,8 +4,10 @@ import { useTheme } from '@/themes';
 
 import type { SpinnerProps } from './types';
 
-/** The little spinning indicator ("we're waiting"): shared by the loading splash and by the round
- * result while it waits for a player's answer. */
+/**
+ * Petit indicateur qui tourne (« on attend ») : partage par le splash de chargement et le resultat de manche en
+ * attente de la reponse d'un joueur.
+ */
 export const Spinner = ({ size = 'small', color }: SpinnerProps) => {
   const { colors } = useTheme();
 

@@ -3,23 +3,19 @@ import type { NativeScrollEvent, NativeSyntheticEvent, ScrollView } from 'react-
 
 import { onCapFromScroll } from './helpers';
 
-/** How long an animated scroll is given to arrive before a manual drag is believed again. */
+/** Delai laisse a un defilement anime pour arriver avant de recroire un glissement manuel. */
 const TRAVEL_MS = 800;
 
 /**
- * The heading/distance sections of a round sit one above the other in a scroll view, and the
- * footer's "Suivant"/"Précédent" button leads to the other one. `onCap` says which section the round
- * is scrolled to, so which label the button shows: set at once when the button is pressed, and kept
- * in sync when the player drags the scroll by hand.
- *
- * While the scroll the button started is on its way, the scroll events of the *departure* edge are
- * ignored: reading them straight away used to flip the label back the instant it changed (the
- * animation still starts next to the top), so it only changed for good once the scroll arrived.
+ * Les sections cap/distance sont l'une sous l'autre dans un scroll ; le bouton du pied mene a l'autre.
+ * `onCap` dit sur quelle section on est (donc le libelle) : fixe a l'appui, resynchronise quand le joueur
+ * defile a la main. Pendant le defilement du bouton, les evenements du bord de DEPART sont ignores
+ * (l'animation part pres du haut : le libelle repartait en arriere).
  */
 export const useSectionScroll = () => {
   const scrollRef = useRef<ScrollView>(null);
   const [onCap, setOnCap] = useState(false);
-  // The section a button-driven scroll is heading to, while it's still on its way.
+  // Section visee par un defilement du bouton, tant qu'il est en route.
   const targetRef = useRef<boolean | null>(null);
   const travelTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -53,7 +49,7 @@ export const useSectionScroll = () => {
     const next = onCapFromScroll(event);
     if (next === null) return;
     if (targetRef.current !== null) {
-      // Still leaving the departure edge: not the player's doing, don't flip the label back.
+      // Quitte encore le bord de depart : pas le fait du joueur, ne pas rebasculer le libelle.
       if (next !== targetRef.current) return;
       targetRef.current = null;
     }

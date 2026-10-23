@@ -1,25 +1,27 @@
 import type { RoomPlayers } from '@/games/compass/firebase/room';
 
-// A type-only import from `room.ts` is erased at compile time, so it never actually pulls in
-// `firebase/firestore` at runtime — safe for this dumb component to use for this shape alone,
-// unlike importing any of `room.ts`'s actual values/functions (see SetupScreenView's own
-// `SetupScreenPlayer`, the same trick).
+// Un import de type depuis `room.ts` est efface a la compilation : il ne tire pas `firebase/firestore` a
+// l'execution, donc sans danger pour ce composant dumb (meme astuce que `SetupScreenPlayer` de SetupScreenView).
 export type PartySectionPlayer = RoomPlayers[string];
 
 export type PartySectionProps = {
-  /** Differs per game's own translation namespace once a game other than Compass adopts online
-   * play (`t.setup.playersSection.title` today; the "online" sub-labels below stay shared). */
+  /**
+   * Propre au namespace de chaque jeu (`t.setup.playersSection.title` aujourd'hui ; les sous-libelles « en ligne »
+   * restent communs).
+   */
   title: string;
   hint?: string;
 
   soloName: string;
   soloPlaceholder: string;
   soloColor: string;
-  /** Locked once actually connected to a room (host or joiner) — renaming mid-game isn't
-   * supported, see SetupScreen's own comment on `connectedRoomCode`. */
+  /**
+   * Verrouille une fois connecte a une room (hote ou joiner) : pas de renommage en cours de partie, voir
+   * `connectedRoomCode` dans SetupScreen.
+   */
   nameEditable: boolean;
   onChangeName: (text: string) => void;
-  /** Why the name isn't accepted ("already taken"), shown under the field; null when it is. */
+  /** Pourquoi le nom est refuse (« deja pris »), affiche sous le champ ; null s'il est accepte. */
   nameError?: string | null;
 
   connectedPlayers: [string, PartySectionPlayer][];

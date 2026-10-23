@@ -6,9 +6,7 @@ import { COMPASS_CLUE_SIZE, EARTH_CLUE_SIZE, GLOBE_CLUE_SIZE } from './constants
 
 export const createStyles = ({ colors, radius, typography }: Theme) =>
   StyleSheet.create({
-    // No maxWidth cap: flexGrow needs to be free to stretch a card that ends up alone on its
-    // row (e.g. right before a `wide` card, which forces a line break) to fill that empty space,
-    // instead of leaving a half-empty row.
+    // Pas de maxWidth : flexGrow doit pouvoir etirer une carte seule sur sa ligne (avant une carte `wide`).
     card: {
       flexBasis: '48%',
       flexGrow: 1,
@@ -74,8 +72,7 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
     bodyFlag: {
       height: 78,
     },
-    // A pun sentence doesn't fit the fixed 42px
-    // every other card body has.
+    // Une phrase de jeu de mots ne tient pas dans les 42px fixes des autres corps de carte.
     bodyWordplay: {
       height: undefined,
       minHeight: 42,
@@ -87,9 +84,7 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       fontSize: fontSize.caption + 1,
       textAlign: 'center',
     },
-    // The pun's own curated difficulty (how tricky it is to get, independent from the place's own
-    // difficulty) — a plain colored dot in the header, next to the label, same spot `stageDots`
-    // would sit in (wordplay has none, single-click now).
+    // Difficulte propre au jeu de mots : simple pastille dans l'en-tete, a la place de `stageDots`.
     wordplayDifficulty: {
       fontSize: fontSize.caption,
     },
@@ -123,16 +118,14 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       fontSize: fontSize.subtitle,
       textAlign: 'center',
     },
-    // One Text per word, in a wrapping row: keeps a visible gap between words without
-    // relying on a literal space character (see the `letter` clue).
+    // Un Text par mot dans une rangee qui passe a la ligne : evite de compter sur une espace litterale.
     letterRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       justifyContent: 'center',
       gap: spacing.sm,
     },
-    // Smaller/letter-spaced sibling of statValue: the "letter" clue's text (e.g. "S__ _________")
-    // can get long for multi-word names, unlike every other clue's short value.
+    // Variante plus petite/espacee de statValue : le texte de l'indice "letter" peut etre long.
     letterValue: {
       ...typography.heading,
       color: colors.accent,

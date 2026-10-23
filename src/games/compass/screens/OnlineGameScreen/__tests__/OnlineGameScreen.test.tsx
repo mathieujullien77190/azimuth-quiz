@@ -117,7 +117,7 @@ describe('OnlineGameScreen — travel mode', () => {
   it('says where the player stands in the header and in a splash, after the first round only', async () => {
     setGame({ roomSettings: TRAVEL, gameState: gameState({ places: [ROME as never, BERLIN as never], roundIndex: 1 }) });
     const second = await renderScreen();
-    // The header line and the splash say the same sentence.
+    // Le header et le splash disent la meme phrase.
     expect(second.getAllByText(youAreAtRome)).toHaveLength(2);
 
     setGame({ roomSettings: TRAVEL, gameState: gameState({ places: [ROME as never, BERLIN as never], roundIndex: 0 }) });
@@ -224,7 +224,7 @@ describe('OnlineGameScreen — the end', () => {
     setGame({ gameState: gameState({ screen: 'end' }), records: [record], handleQuit });
     const { getByText } = await renderScreen();
     await fireEvent.press(getByText(t.endScreen.quit));
-    // The session's own quit (home, and the host takes the room down), not a bare `router.back()`.
+    // Le quit de la session (accueil, l'hote supprime la room), pas un simple `router.back()`.
     expect(handleQuit).toHaveBeenCalledTimes(1);
   });
 
@@ -237,7 +237,7 @@ describe('OnlineGameScreen — the end', () => {
 
 describe('OnlineGameScreen — after the last round', () => {
   it('shows the final standings, not the loading splash, although no round is left to load', async () => {
-    // `roundIndex` points past the rounds, so `place` is undefined: that is the end, not a wait.
+    // `roundIndex` depasse les manches, donc `place` est undefined : c'est la fin, pas une attente.
     setGame({ gameState: gameState({ screen: 'end', roundIndex: 2 }), place: undefined, records: [record] });
     const { getByText, queryByText } = await renderScreen();
     expect(queryByText(t.game.loading)).toBeNull();
@@ -313,7 +313,7 @@ describe('OnlineGameScreen — revealed', () => {
   });
 
   it('does not crash when a player who never answered comes back during the reveal', async () => {
-    // Zoé and Max answered, the round was scored without Eve; Eve is back in the room now.
+    // Zoe et Max ont repondu, manche notee sans Eve ; Eve est revenue dans la room.
     revealed({ onlinePlayers: [ZOE, MAX, EVE], totals: [850, 300, 0] });
     const { getByText } = await renderScreen();
     expect(getByText(t.game.next)).toBeTruthy();

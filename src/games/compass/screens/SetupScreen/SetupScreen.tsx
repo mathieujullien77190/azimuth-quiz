@@ -11,14 +11,14 @@ import type { SetupScreenProps } from './types';
 import { useOnlineRoom } from './useOnlineRoom';
 
 /**
- * Smart container: owns `useSettings()`/`useOnlineRoom()`, resolves every readOnly-gated action
- * into an already-decided callback, and maps everything onto `SetupScreenView` (pure rendering).
+ * Container smart : `useSettings()`/`useOnlineRoom()`, actions deja decidees (readOnly), puis
+ * `SetupScreenView` (rendu pur).
  */
 export const SetupScreen = ({ onBack }: SetupScreenProps) => {
   const { settings, ready, updateSettings } = useSettings();
   const room = useOnlineRoom(settings, updateSettings);
-  // The group sizes (`meta/compassCounts`, loaded at launch): how many places the selected categories offer at
-  // this difficulty. `null` until they are there — the start button is not held back for that.
+  // Tailles des groupes (`meta/compassCounts`) : combien de lieux offrent les categories choisies a cette
+  // difficulte ; `null` tant qu'absentes, sans retenir le bouton.
   const [counts, setCounts] = useState<CompassCounts | null>(null);
   useEffect(() => {
     loadCompassCounts()

@@ -1,13 +1,13 @@
 import type { Theme } from '@/types';
 
 export type ColorPaletteProps = {
-  /** The themes to compare, one column each; both of the app's by default. */
+  /** Themes a comparer, une colonne chacun ; les deux de l'app par defaut. */
   themes?: Theme[];
 };
 
-/** One row of the recap: where the color lives in a `Theme`, and what it is used for. */
+/** Une ligne du recap : ou vit la couleur dans un `Theme`, et son usage. */
 export type ColorToken = {
-  /** Path in the theme, as written in code (`colors.accent`). */
+  /** Chemin dans le theme (`colors.accent`). */
   name: string;
   get: (theme: Theme) => string;
   description: { fr: string; en: string };

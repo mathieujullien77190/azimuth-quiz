@@ -8,9 +8,9 @@ import { sharedDefine, sharedResolve } from './vite.shared';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
-// The admin's unit tests (the game's own tests run with Jest from the repo root, which ignores `admin/`). Vitest reads
-// the Vite recipe of the admin (`import.meta.env`, the `@/` alias to `../src`, react-native-web), so the code is tested
-// as it is built. Coverage must stay at 100 %: `npm run test:coverage`.
+// Tests unitaires de l'admin (ceux du jeu tournent avec Jest a la racine, qui ignore `admin/`). Vitest reprend la
+// recette Vite de l'admin (`import.meta.env`, alias `@/` vers `../src`, react-native-web) : le code est teste tel que
+// build. Couverture a 100 % : `npm run test:coverage`.
 export default defineConfig({
   envDir: path.resolve(rootDir, '..'),
   envPrefix: ['VITE_', 'EXPO_PUBLIC_'],

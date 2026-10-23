@@ -9,39 +9,29 @@ import { OnlineClueGameScreenView } from './OnlineClueGameScreenView';
 import type { OnlineClueGameScreenProps } from './types';
 import { useOnlineClueGame } from './useOnlineClueGame';
 
-/** How long the "it's not your turn" notice stays up before closing by itself. */
+/** Duree d'affichage de la notice "pas ton tour" avant fermeture automatique. */
 const NOT_YOUR_TURN_NOTICE_MS = 4000;
 
-/**
- * Online counterpart to `ClueGameScreen`: one phone = one player, one shared board revealed turn
- * by turn instead of Compass' "everyone answers independently, then reveal". Smart container:
- * `useOnlineClueGame()` + every derived label, mapped onto `OnlineClueGameScreenView` (pure
- * rendering).
- */
+/** Pendant en ligne de `ClueGameScreen` : un telephone = un joueur, un plateau partage devoile tour a tour. Container smart de `OnlineClueGameScreenView`. */
 export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps) => {
   const t = useTranslation();
   const game = useOnlineClueGame(code, onQuit);
-  // Tapping a clue when it isn't your turn: a short notice, closing by itself or on a tap.
+  // Indice touche hors de son tour : notice courte, fermee seule ou au tap.
   const notYourTurn = useTransientFlag(NOT_YOUR_TURN_NOTICE_MS);
 
-  // The host just quit: the store is already reset, and this screen is only on its way out. Not the
-  // "loading" splash below — that one is for a room that hasn't delivered its state yet.
+  // L'hote vient de quitter : store deja remis a zero, l'ecran n'est plus qu'en sortie (different du splash "chargement").
   if (!game.connected) return null;
 
-  // Whoever loses the connection leaves the game — host included (see `useRoomPresence`).
+  // Qui perd la connexion quitte la partie, hote compris (voir `useRoomPresence`).
   if (game.connectionLost) return <RoomDeletedScreen message={t.setup.online.connectionLostNotice} />;
 
-  // The host deleting the room is no early return: a joiner keeps seeing the round it was in, under the
-  // "the host left" notice `useSetupRoom` shows (it also sends the joiner home, on a tap or after a
-  // couple of seconds) — the last state the room delivered is still in the store.
+  // Room supprimee par l'hote : pas de early return, le joiner garde la manche sous la notice de `useSetupRoom` (dernier etat encore dans le store).
 
   const { localUid, onlinePlayers, roundPlayers, isHost, roomSettings, gameState, place } = game;
 
-  // The final standings come first: once the last round is over `roundIndex` points past the rounds, so
-  // there is no round left to load — reading that as "not ready yet" showed the loading splash instead.
+  // Le classement final d'abord : apres la derniere manche `roundIndex` depasse les manches, le lire comme "pas pret" montrerait le splash.
   if (gameState.screen === 'end') {
-    // The score is a countdown you win (see `remainingScore`): the HIGHEST total wins, same as the
-    // local game's own `finished` screen.
+    // Le score est un compte a rebours qu'on gagne : le total le plus HAUT gagne.
     return (
       <>
         <FinalStandings
@@ -69,7 +59,7 @@ export const OnlineClueGameScreen = ({ code, onQuit }: OnlineClueGameScreenProps
   }
 
   const myName = onlinePlayers.find((p) => p.uid === localUid)?.name ?? '';
-  // The tabs follow the round's order (`roundPlayers`), so the turn index is read on that list.
+  // Les onglets suivent l'ordre de la manche (`roundPlayers`) : l'index du tour se lit sur cette liste.
   const turnIndex = roundPlayers.findIndex((p) => p.uid === gameState.turnUid);
   const turnPlayerName = roundPlayers[turnIndex]?.name ?? '';
   const winnerName =

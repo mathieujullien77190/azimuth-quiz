@@ -62,7 +62,7 @@ describe('useHostPruneLeavers', () => {
     const unknown = await setup({ localUid: null, gameState: { totalScores: { eve: 30 } } });
     expect(unknown.prune).not.toHaveBeenCalled();
     await unknown.unmount();
-    // The players list not loaded yet (empty) would otherwise read as "everybody left".
+    // Liste de joueurs pas encore chargee (vide) : sinon lue comme "tout le monde est parti".
     const notListed = await setup({ players: {}, gameState: { totalScores: { host: 30 } } });
     expect(notListed.prune).not.toHaveBeenCalled();
   });

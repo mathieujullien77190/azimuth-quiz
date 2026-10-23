@@ -9,10 +9,8 @@ import { useRoomReactions } from './useRoomReactions';
 import type { StaleRoomData } from './useHostPruneLeavers';
 
 /**
- * What every game's online screen needs about the room it's in, identical for all of them: the
- * live room state read from the game's shared store (never connected/disconnected here — the setup
- * screen owns that lifecycle, see `useSetupRoom`), who's the host, the arrival-ordered players, the
- * "room deleted" redirect, and `handleQuit`. `roomApi` is the game's own Firestore helpers.
+ * Ce dont tout ecran de jeu en ligne a besoin sur sa room : etat du store partage (connexion geree par le setup,
+ * voir `useSetupRoom`), hote, joueurs en ordre d'arrivee, redirection "room supprimee", `handleQuit`.
  */
 export const useOnlineRoomSession = <Settings, GameState extends { screen: string }>(
   store: RoomStoreHook<Settings, GameState>,
@@ -33,26 +31,22 @@ export const useOnlineRoomSession = <Settings, GameState extends { screen: strin
   const hostUid = store((s) => s.hostUid);
   const roomExists = store((s) => s.roomExists);
   const connectionLost = store((s) => s.connectionLost);
-  // False once this device has left the room's store (the host quitting: see `handleQuit`).
+  // Faux une fois l'appareil sorti du store (l'hote qui quitte : voir `handleQuit`).
   const connected = store((s) => s.code !== null);
   const roomSettings = store((s) => s.roomSettings);
   const gameState = store((s) => s.gameState);
   const roomReaction = store((s) => s.reaction);
 
-  // Once the room itself has disappeared (the host quit/deleted it — see `handleQuit` below),
-  // every other device freezes on the round it was in, under a "the host left" notice (shown by
-  // `useSetupRoom`, which also sends it home on a tap) instead of carrying on with whatever stale
-  // state its last snapshot left behind — this is the fallback if that hasn't: straight to the home
-  // screen, not just "back" (the setup screen would still show this same, now-gone room).
+  // Room disparue (l'hote l'a supprimee) : la notice "l'hote a quitte" est geree par `useSetupRoom` ; repli
+  // direct vers l'accueil, pas un simple retour (le setup montrerait la room morte).
   useEffect(() => {
     if (roomExists && !connectionLost) return;
     const timeout = setTimeout(() => router.dismissTo('/'), 2000);
     return () => clearTimeout(timeout);
   }, [roomExists, connectionLost, router]);
 
-  // The room went back to its lobby (the host's "replay", see `handleReplay`): every game screen steps off, back to
-  // the setup screen underneath, which stays mounted and now shows everyone again. Never while disconnected: the
-  // store's reset state is also `'options'`, and that path (the host quitting) already goes home by itself.
+  // Room revenue au salon ("Rejouer", `handleReplay`) : on recule vers le setup reste monte. Jamais deconnecte :
+  // l'etat reinitialise du store est aussi `'options'`, et l'hote qui quitte rentre deja seul.
   const onQuitRef = useRef(onQuit);
   useEffect(() => {
     onQuitRef.current = onQuit;
@@ -62,33 +56,21 @@ export const useOnlineRoomSession = <Settings, GameState extends { screen: strin
     if (backInLobby) onQuitRef.current();
   }, [backInLobby]);
 
-  // The footer's emojis, and the one received (any player's, mine included) shown over the screen.
+  // Emojis du footer et reaction recue (toutes, la mienne comprise) affichee sur l'ecran.
   const reactions = useRoomReactions(roomReaction, players, roomApi.sendReaction, code);
 
   const onlinePlayers = onlinePlayersFrom(players);
   const isHost = localUid !== null && localUid === hostUid;
 
-  // Whoever left takes their answer, score and total with them (see `useHostPruneLeavers`).
+  // Qui part emporte sa reponse, son score et son total (voir `useHostPruneLeavers`).
   const { pruneRoomPlayerData } = roomApi;
   const prune = useCallback((stale: StaleRoomData) => pruneRoomPlayerData(code, stale), [pruneRoomPlayerData, code]);
   useHostPruneLeavers(isHost, localUid, players, gameState, prune);
 
-  // Host: quitting takes the whole room down with it (everyone else sees the room-deleted notice
-  // above) — there's no "pass the host" concept here, and there's nothing left to go "back" to
-  // (the setup screen would still be sitting on this same, now-deleted room, since `push`ing to
-  // the game route never popped it off the stack), so home directly rather than `onQuit` — with
-  // `dismissTo`, which pops the game *and* that setup screen: a plain `replace('/')` only swapped
-  // the game route, leaving the old setup instance mounted (and, with its old room's state, reacting
-  // to the next game's room in the shared store — the "preparation" splash coming back after a
-  // second quit). Also
-  // disconnects the shared store right here rather than leaving it to that same setup screen's own
-  // connect/disconnect effect: that effect only reacts to its `connectedRoomCode` changing, which
-  // it never will on its own — without this, the store stays parked on the now-deleted room (stale
-  // `code`/`gameState.screen`), and its own "go to the game once the host starts a round" effect
-  // fires again the next time that stale screen re-renders, right back into a room that no longer
-  // exists. A joiner just drops its own presence instead, so it doesn't keep blocking the round
-  // for everyone else — going back to the setup screen still makes sense there, the room is still
-  // very much alive.
+  // Hote : quitter supprime la room ; retour direct a l'accueil avec `dismissTo`, qui depile jeu ET setup (un
+  // `replace` laissait l'ancien setup monte, qui reagissait a la room suivante). Deconnecte aussi le store ici : sinon
+  // son `code`/`screen` perime relance l'effet "aller au jeu" vers une room inexistante. Un joiner retire
+  // seulement sa presence (pour ne pas bloquer la manche) et revient au setup, la room vivant toujours.
   const handleQuit = () => {
     if (isHost) {
       roomApi.deleteRoom(code).catch(reporting('room.deleteOnQuit', { kind: 'background', room: code }));
@@ -97,17 +79,14 @@ export const useOnlineRoomSession = <Settings, GameState extends { screen: strin
       return;
     }
     if (localUid !== null) {
-      // Marked *before* the write goes out: the setup screen's own "was I kicked?" listener reacts
-      // to the same players update this produces, and can't otherwise tell "I just quit" apart
-      // from "the host removed me" — both look identical in Firestore (present, then not).
+      // Marque AVANT l'ecriture : le setup ecoute le meme update et ne distinguerait pas "j'ai quitte" de "expulse".
       store.getState().markVoluntaryLeave();
       roomApi.removeRoomPlayer(code, localUid).catch(reporting('room.leaveOnQuit', { kind: 'background', room: code }));
     }
     onQuit();
   };
 
-  // "Rejouer": the host sends the whole room back to its lobby (the effect above then moves every device, itself
-  // included, back to the setup screen); a joiner can't write the room, so it just goes back there and waits.
+  // "Rejouer" : l'hote remet la room au salon (l'effet ci-dessus y ramene chaque appareil) ; un joiner y retourne seul.
   const handleReplay = () => {
     if (isHost) roomApi.restartRoom(code).catch(reporting('room.restart', { room: code }));
     else onQuit();

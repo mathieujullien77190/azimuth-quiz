@@ -17,17 +17,15 @@ import {
 import EarthSection from '..';
 import type { EarthMark } from '../types';
 
-// A nearby mark: the ideal zoom climbs well above 1 (lots of room available relative
-// to a very small offset), to exercise the +/- buttons without having to click them first.
+// Repere proche : le zoom ideal depasse 1, pour tester +/- sans cliquer.
 const nearMark: EarthMark = { bearing: 90, distanceKm: 5, color: '#EF4444' };
-// A very far mark (the other side of the Earth): forces the ideal zoom back down to 1, the only
-// tier where the satellite can appear.
+// Repere tres lointain : zoom ideal ramene a 1, seul palier ou le satellite apparait.
 const farMark: EarthMark = { bearing: 90, distanceKm: EARTH_RADIUS_KM * Math.PI, color: '#16A34A' };
 
 describe('EarthSection — marks rendering', () => {
   it('renders without zoom controls by default', async () => {
     const { queryByText } = await render(<EarthSection marks={[nearMark]} size={240} />);
-    // No zoomControls -> no +/- buttons.
+    // Sans zoomControls : pas de boutons +/-.
     expect(queryByText('−')).toBeNull();
     expect(queryByText('+')).toBeNull();
   });
@@ -106,7 +104,7 @@ describe('EarthSection — 3D globe', () => {
     const { getByLabelText, getByText, queryByLabelText, queryByText } = await render(
       <EarthSection allowSatellite={false} marks={[farMark]} origin={PARIS} size={240} zoomControls />,
     );
-    // The globe zooms by itself (and puts itself back north), continuously: not by the Earth's ladder of zoom steps.
+    // Le globe zoome seul (et se remet au nord), en continu : pas par paliers.
     expect(getByLabelText(ZOOM_IN_HINT)).toBeTruthy();
     expect(getByLabelText(RESET_HINT)).toBeTruthy();
 
@@ -153,12 +151,12 @@ describe('EarthSection — satellite', () => {
     );
     expect(startMock).toHaveBeenCalledTimes(1);
 
-    // Simulates the (natural) end of the first turn: the manual loop must restart a timing.
+    // Fin naturelle du 1er tour : la boucle manuelle doit relancer un timing.
     const onFinished = startMock.mock.calls[0][0] as (result: { finished: boolean }) => void;
     await act(() => onFinished({ finished: true }));
     expect(startMock).toHaveBeenCalledTimes(2);
 
-    // A "not finished" (interrupted) callback must not restart the loop.
+    // Un callback "non termine" (interrompu) ne doit pas relancer la boucle.
     const onFinished2 = startMock.mock.calls[1][0] as (result: { finished: boolean }) => void;
     await act(() => onFinished2({ finished: false }));
     expect(startMock).toHaveBeenCalledTimes(2);
@@ -171,7 +169,7 @@ describe('EarthSection — satellite', () => {
     const onFinished = startMock.mock.calls[callsBeforeUnmount - 1][0] as (result: { finished: boolean }) => void;
     await unmount();
     await act(() => onFinished({ finished: true }));
-    // `cancelled` prevents any new spin() after unmount.
+    // `cancelled` empeche tout nouveau spin() apres le demontage.
     expect(startMock).toHaveBeenCalledTimes(callsBeforeUnmount);
   });
 

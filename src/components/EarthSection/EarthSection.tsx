@@ -27,16 +27,11 @@ import type { EarthMark, EarthSectionProps, Point } from './types';
 import { createStyles } from './styles';
 
 /**
- * The Earth seen from the side, the player at the very top. Each answer starts from the side of
- * its heading (heading west = left, heading east = right) and draws as an arc following the circle
- * (surface distance).
- * The circle zooms continuously on its apex so nearby markers stay legible: the shorter
- * `marks`' distances are, the higher the "ideal" zoom (`fitZoom`) climbs, among `ZOOM_STEPS`.
- * On reveal (`zoomControls`), +/- buttons allow moving away from that ideal: you can
- * always go back down to 1 (the whole Earth) or up to the last tier. A different `key`
- * on every round (caller side) remounts the component and resets that choice to the ideal.
- * The true answer (isTruth) only draws as its circled point: no arc, so as to
- * not drown players' answers under its own lines.
+ * La Terre vue de profil, le joueur tout en haut. Chaque reponse part du cote de son cap
+ * (ouest = gauche, est = droite) et trace un arc le long du cercle (distance de surface).
+ * Le zoom suit `fitZoom` sur les `marks`, parmi `ZOOM_STEPS` ; avec `zoomControls`, +/- permettent
+ * de s'en ecarter. Une `key` differente par manche (cote appelant) remet le choix a l'ideal.
+ * La vraie reponse (isTruth) n'est qu'un point entoure, sans arc.
  */
 export const EarthSection = ({
   size,
@@ -60,7 +55,7 @@ export const EarthSection = ({
   const idealZoom = fitZoom(offsets, size * AVAILABLE_X_RATIO, height - player.y - BOTTOM_MARGIN);
   const idealIndex = ZOOM_STEPS.indexOf(idealZoom as (typeof ZOOM_STEPS)[number]);
 
-  // null = no manual choice: follows the ideal. As soon as +/- is touched, starts from its index.
+  // null = pas de choix manuel : suit l'ideal. Au premier +/-, part de son index.
   const [manualIndex, setManualIndex] = useState<number | null>(null);
   const stepIndex = manualIndex ?? idealIndex;
   const zoom = ZOOM_STEPS[stepIndex];
@@ -68,22 +63,18 @@ export const EarthSection = ({
   const radius = baseRadius * zoom;
   const center: Point = { x: player.x, y: player.y + radius };
 
-  // The 3D globe is offered whatever the zoom, as soon as the caller gave the starting point (without it there is nothing to
-  // place on a globe), and it is what is shown first: `null` = no choice made yet, which means the globe.
+  // Globe 3D propose a tout zoom des que l'appelant donne le depart, et montre en premier (`null` = pas encore choisi).
   const [globe, setGlobe] = useState<boolean | null>(null);
   const canFlip = origin !== undefined;
   const globeOrigin = canFlip && (globe ?? true) ? origin : undefined;
 
-  // Orbiting satellite, just for fun: only when `allowSatellite` (Compass reveal,
-  // or the always-revealed mini-Earth of Clues' "Distance" clue), zoomed out to
-  // the real scale (zoom 1, otherwise off-screen or grotesque).
+  // Satellite pour le fun : seulement avec `allowSatellite`, a l'echelle reelle (zoom 1).
   const showSatellite = allowSatellite && zoom === 1 && globeOrigin === undefined && isDark;
   const satelliteAngle = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!showSatellite) return undefined;
-    // Animated.loop() sometimes crashes after a single turn on react-native-web's JS driver
-    // (the one used here, since useNativeDriver isn't available on web): so we loop by hand,
-    // restarting a timing from 0 on every `finished`, rather than relying on `loop()`.
+    // Animated.loop() plante parfois apres un tour avec le driver JS de react-native-web :
+    // on boucle a la main, en relancant un timing a chaque `finished`.
     let cancelled = false;
     const spin = () => {
       satelliteAngle.setValue(0);
@@ -103,8 +94,7 @@ export const EarthSection = ({
     };
   }, [showSatellite, satelliteAngle]);
 
-  // Joke on clicking the satellite: stays shown until it's clicked again (see the
-  // Pressable below), no automatic disappearance.
+  // Blague au clic sur le satellite : reste affichee jusqu'au clic suivant.
   const [showQuip, setShowQuip] = useState(false);
 
   const mark = (item: EarthMark, key: string) => {
@@ -212,15 +202,13 @@ export const EarthSection = ({
               },
             ]}
           >
-            {/* No accessibilityRole="button" here: EarthSection can already be inside a real
-            button (the "Distance" clue card), and web doesn't accept a nested <button>. */}
+            {/* Pas d'accessibilityRole="button" : EarthSection peut etre dans un vrai bouton
+            (indice "Distance"), et le web refuse un <button> imbrique. */}
             <Pressable hitSlop={10} onPress={() => setShowQuip((v) => !v)}>
               <Text style={styles.satelliteEmoji}>{SATELLITE_EMOJI}</Text>
             </Pressable>
             {showQuip && (
-              // Counter-rotates relative to the parent to stay legible regardless of the
-              // orbit angle at the moment of the click (same idea as the emoji's former
-              // rotation, reused here for the text instead of the satellite itself).
+              // Contre-rotation par rapport au parent pour rester lisible quel que soit l'angle d'orbite.
               <Animated.View
                 pointerEvents="none"
                 style={[

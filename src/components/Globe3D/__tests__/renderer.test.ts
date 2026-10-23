@@ -3,7 +3,7 @@ import { WebGLRenderer } from 'three';
 
 import { createRenderer } from '../renderer';
 
-// The real renderer would go looking for a graphics card: all that matters here is what it is handed.
+// Le vrai renderer irait chercher une carte graphique : seul compte ce qu'on lui remet.
 jest.mock('three', () => ({
   ...jest.requireActual('three'),
   WebGLRenderer: jest.fn(() => ({ setSize: jest.fn() })),
@@ -12,7 +12,7 @@ jest.mock('three', () => ({
 const context = (overrides: Record<string, unknown> = {}) =>
   ({ drawingBufferWidth: 300, drawingBufferHeight: 200, ...overrides }) as unknown as ExpoWebGLRenderingContext;
 
-/** What the renderer was built with. */
+/** Ce avec quoi le renderer a ete construit. */
 const optionsOf = () => jest.mocked(WebGLRenderer).mock.calls[0][0]!;
 
 beforeEach(() => jest.clearAllMocks());
@@ -35,7 +35,7 @@ describe('createRenderer', () => {
     expect(canvas.clientHeight).toBe(200);
     expect(canvas.style).toEqual({});
     expect(canvas.getContext()).toBe(gl);
-    // three.js listens for the canvas losing its context: the stand-in takes the calls and does nothing.
+    // three.js ecoute la perte de contexte du canvas : le faux canvas prend les appels et ne fait rien.
     expect(canvas.addEventListener('webglcontextlost', () => {})).toBeUndefined();
     expect(canvas.removeEventListener('webglcontextlost', () => {})).toBeUndefined();
   });

@@ -8,9 +8,7 @@ import { useClueSettings } from '@/settings';
 
 import ClueSetupScreen from '..';
 
-// `firebase/room.ts` pulls in `firebase/firestore`, which is ESM-only and crashes Jest the moment
-// anything requires it transitively — mocked out here since these tests exercise the setup UI,
-// not real Firestore calls. Same mock shape as Compass' own `SetupScreen.test.tsx`.
+// `firebase/room.ts` importe `firebase/firestore` (ESM seul, fait planter Jest) : mocke, on teste l'UI.
 jest.mock('@/games/clues/firebase/room', () => ({
   ROOM_MAX_PLAYERS: 10,
   createRoom: jest.fn(),
@@ -29,12 +27,11 @@ jest.mock('@/games/clues/firebase/room', () => ({
   updateRoomSettings: jest.fn(() => Promise.resolve()),
 }));
 
-// The group sizes and the place draw come from Firestore (ESM-only, crashes Jest): mocked, like the room.
+// Tailles de groupes et tirage viennent de Firestore (ESM seul) : mockes, comme la room.
 jest.mock('@/games/clues/helpers/clueCounts', () => ({ loadCluesCounts: jest.fn() }));
 jest.mock('@/games/clues/firebase/places', () => ({ fetchClueRoundPlaces: jest.fn() }));
 
-// `useClueSettings` is a module-level Zustand store (no more Provider to remount fresh per
-// test) — reset explicitly so a chip pressed in one test doesn't leak into the next.
+// `useClueSettings` est un store Zustand de module : remis a zero pour qu'un test ne fuie pas dans le suivant.
 beforeEach(() => {
   useClueSettings.setState({ settings: DEFAULT_CLUE_SETTINGS });
   jest.mocked(loadCluesCounts).mockResolvedValue({
@@ -44,15 +41,13 @@ beforeEach(() => {
   });
 });
 
-// `useClueRoomStore` is also a module-level singleton — reset the same way as Compass' own
-// `useRoomStore` in its `SetupScreen.test.tsx`.
+// `useClueRoomStore` est aussi un singleton : meme remise a zero.
 const initialRoomState = useClueRoomStore.getState();
 beforeEach(() => {
   useClueRoomStore.setState(initialRoomState, true);
 });
 
-/** Section (Card) containing a given title: used to resolve ambiguities between labels shared
- * across sections (e.g. "5" is both a possible round count and something else). */
+/** Section (Card) portant un titre : leve les ambiguites entre libelles partages (ex. "5"). */
 const section = (getByText: (text: string) => Parameters<typeof within>[0], title: string) =>
   within(getByText(title).parent!.parent!);
 
@@ -65,7 +60,7 @@ describe('ClueSetupScreen', () => {
   it('renders the solo name field and selects the default difficulty/rounds chips', async () => {
     const { getByText, getByPlaceholderText } = await renderScreen();
 
-    expect(getByPlaceholderText(/./)).toBeTruthy(); // solo player's name field, empty by default
+    expect(getByPlaceholderText(/./)).toBeTruthy(); // champ du nom du joueur solo, vide par defaut
 
     expect(getByText('Facile').parent?.props.accessibilityState.selected).toBe(true);
 
@@ -147,8 +142,7 @@ describe('ClueSetupScreen', () => {
     expect(rounds.getByText('5').parent?.props.accessibilityState.selected).toBe(false);
   });
 
-  // No local single-device game: playing alone hosts a room nobody joins — created behind the
-  // scenes, never shown (no code, the chips keep saying Solo).
+  // Pas de partie locale : jouer seul heberge une room que personne ne rejoint, creee en coulisses (pas de code, les chips disent Solo).
   it('solo: hosts a hidden room when "Lancer la partie" is pressed', async () => {
     (createRoom as jest.Mock).mockResolvedValue('tabofuna');
     const { getByText, queryByText } = await renderScreen();

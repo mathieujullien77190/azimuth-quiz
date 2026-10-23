@@ -3,10 +3,7 @@ import { Platform, type ViewStyle } from 'react-native';
 
 const STYLE_ID = 'azimuthquiz-no-select';
 
-/**
- * On the web, dragging a finger/mouse across the compass or the sliders selects text.
- * Selection is disabled everywhere except input fields (player names). No effect on mobile.
- */
+/** Sur le web, glisser sur la boussole ou les curseurs selectionne du texte : desactive sauf dans les champs. Sans effet sur mobile. */
 export const disableTextSelection = (): void => {
   if (Platform.OS !== 'web' || typeof document === 'undefined' || document.getElementById(STYLE_ID) !== null) return;
 
@@ -20,11 +17,8 @@ export const disableTextSelection = (): void => {
 };
 
 /**
- * Chromium on Windows has no system font that renders flag emoji as flags — it shows the raw
- * two-letter country code instead. `country-flag-emoji-polyfill` injects a small (78kb) webfont
- * ("Twemoji Country Flags", see `FLAG_FONT_FAMILY` in themes/fonts.ts) covering just those
- * codepoints, and only when the browser actually needs it — a no-op everywhere else, including
- * native iOS/Android, which already render flag emoji correctly.
+ * Chromium sous Windows n'a pas de police pour les drapeaux emoji (il affiche le code a 2 lettres) : le polyfill
+ * injecte une petite webfont ("Twemoji Country Flags", `FLAG_FONT_FAMILY`) seulement si besoin.
  */
 export const polyfillFlagEmoji = (): void => {
   if (Platform.OS !== 'web' || typeof document === 'undefined') return;
@@ -32,9 +26,8 @@ export const polyfillFlagEmoji = (): void => {
 };
 
 /**
- * A view that takes the touch for itself on the web: the page neither scrolls nor zooms under a finger that is dragging
- * what is inside it — the 3D globe one turns, for instance. `touchAction` is a CSS property react-native-web passes
- * through, hence the cast; on a phone there is no page to scroll, and react-native would warn about the unknown style.
+ * Vue qui garde le toucher sur le web (la page ne defile ni ne zoome sous le doigt, ex. le globe 3D). `touchAction`
+ * est du CSS passe par react-native-web, d'ou le cast ; sur mobile react-native avertirait du style inconnu.
  */
 export const noPageScroll = (): ViewStyle | undefined =>
   Platform.OS === 'web' ? ({ touchAction: 'none' } as unknown as ViewStyle) : undefined;

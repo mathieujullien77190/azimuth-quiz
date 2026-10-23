@@ -6,7 +6,7 @@ import { AuthGate } from './components/AuthGate';
 import { dataRevision, startJournalSync, subscribeRevision } from './data';
 import { hrefOf, PAGES, pageFromPath, type PageId } from './pages';
 
-// One chunk per page: a page's code is only downloaded when it is opened.
+// Un chunk par page : son code n'est telecharge qu'a l'ouverture.
 const PlacesView = lazy(() => import('./views/PlacesView').then((m) => ({ default: m.PlacesView })));
 const CountriesView = lazy(() => import('./views/CountriesView').then((m) => ({ default: m.CountriesView })));
 const GlobeView = lazy(() => import('./views/GlobeView').then((m) => ({ default: m.GlobeView })));
@@ -17,7 +17,6 @@ const FeedbackView = lazy(() => import('./views/FeedbackView').then((m) => ({ de
 
 const AdminApp = () => {
   const [tab, setTab] = useState<PageId>(() => pageFromPath(window.location.pathname));
-  // Back/forward move between the pages already visited.
   useEffect(() => {
     const onPopState = () => setTab(pageFromPath(window.location.pathname));
     window.addEventListener('popstate', onPopState);
@@ -27,17 +26,16 @@ const AdminApp = () => {
     const label = PAGES.find((page) => page.id === tab)!.label;
     document.title = `Azimuth Quiz — Admin · ${label}`;
   }, [tab]);
-  /** Changes page without reloading, and puts its URL in the address bar (`/admin/` stays as it is on the first page). */
+  /** Change de page sans recharger et met son URL dans la barre (`/admin/` reste tel quel sur la premiere). */
   const goTo = (id: PageId) => {
     if (id === tab) return;
     window.history.pushState(null, '', hrefOf(id));
     setTab(id);
   };
-  // Somebody else's change landed in the local copy: the views remount to show it.
+  // Un changement venu d'ailleurs est arrive dans la copie locale : les vues se remontent.
   const revision = useSyncExternalStore(subscribeRevision, dataRevision);
   useEffect(() => startJournalSync(), []);
-  // Same Chromium-on-Windows flag-emoji fallback as the game itself (see helpers/web.ts) —
-  // needed here too since the flag badge below uses the same font/emoji.
+  // Meme repli drapeau Chromium/Windows que le jeu (voir helpers/web.ts), pour le badge ci-dessous.
   useEffect(() => {
     polyfillCountryFlagEmojis();
   }, []);
@@ -60,7 +58,7 @@ const AdminApp = () => {
                 className="chip game-chip"
                 aria-pressed={tab === id}
                 onClick={(event) => {
-                  // Ctrl/Cmd/middle click keep the browser's own behaviour (a new tab on the page's real URL).
+                  // Ctrl/Cmd/clic milieu gardent le comportement du navigateur (nouvel onglet).
                   if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
                   event.preventDefault();
                   goTo(id);
@@ -70,7 +68,7 @@ const AdminApp = () => {
               </a>
             ))}
           </div>
-          {/* Narrow screens: the chips collapse into one select (see `.tabs-select` in styles.css). */}
+          {/* Etroit : les puces se replient en un select (voir `.tabs-select` dans styles.css). */}
           <select
             className="field-select tabs-select"
             aria-label="Page"

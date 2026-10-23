@@ -116,7 +116,7 @@ describe('ClueCard — revealed content per clue', () => {
 
   it('bearing: renders nothing when bearingDeg is missing', async () => {
     const { toJSON } = await renderCard({ clueId: 'bearing', state: 'revealed' });
-    // The card still renders (icon/anim), but the clue body is empty (null).
+    // La carte s'affiche (icone/anim) mais le corps de l'indice est vide (null).
     expect(toJSON()).toBeTruthy();
   });
 

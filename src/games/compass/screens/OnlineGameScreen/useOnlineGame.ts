@@ -23,21 +23,17 @@ import { DEFAULT_BEARING } from './constants';
 import { buildRoundRecord } from './helpers';
 
 /**
- * All the online-game business logic behind `OnlineGameScreen` — the room session (state, host,
- * players, quit) is the shared `useOnlineRoomSession`; this owns this device's answer draft and
- * the locally-accumulated round history, and exposes already-resolved actions. The container
- * still computes the JSX-ready shapes (`earthMarks`, formatted labels...), same split as
- * `useGame`/`GameScreen.tsx`.
+ * Logique metier de `OnlineGameScreen` : la session de room est `useOnlineRoomSession` commun ; ici le
+ * brouillon de reponse et l'historique local des manches, avec des actions deja resolues. Le container
+ * calcule les formes pour le JSX, comme `useGame`/`GameScreen.tsx`.
  */
 export const useOnlineGame = (code: string, onQuit: () => void) => {
   const { localUid, players, connectionLost, connected, roomSettings, gameState, onlinePlayers, isHost, handleQuit, handleReplay, reactions } =
     useOnlineRoomSession(useRoomStore, { deleteRoom, restartRoom, sendReaction, removeRoomPlayer, pruneRoomPlayerData }, code, onQuit);
   const place = gameState.places[gameState.roundIndex];
 
-  // This device's own in-progress answer — reset at the top of every round. Adjusted during
-  // render rather than in an effect (React's own recommended pattern for "reset state when a
-  // value changes": https://react.dev/reference/react/useState#storing-information-from-previous-renders)
-  // — an effect here would mean an extra, avoidable render pass on every round change.
+  // Reponse en cours de cet appareil, remise a zero a chaque manche. Ajustee au rendu plutot qu'en effet
+  // (evite un rendu de plus).
   const [bearing, setBearingState] = useState(DEFAULT_BEARING);
   const [distanceKm, setDistanceKmState] = useState(DEFAULT_DISTANCE_KM);
   const [bearingTouched, setBearingTouched] = useState(false);
@@ -59,9 +55,8 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
     setDistanceTouched(true);
   };
 
-  // Every device accumulates the rounds it's actually seen revealed, in the exact shape
-  // `RoundResult`/`EndScreen` expect — the room only ever keeps the *current* round's
-  // guesses/scores, not a running history, so this is the only copy of it anywhere.
+  // Chaque appareil accumule les manches vues au reveal, dans la forme attendue par
+  // `RoundResult`/`EndScreen` : la room ne garde que la manche courante, c'est la seule copie.
   const [records, setRecords] = useState<RoundRecord[]>([]);
   const lastRecordedRoundRef = useRef(-1);
   useEffect(() => {
@@ -73,10 +68,9 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState.screen, gameState.scores, gameState.roundIndex, gameState.guesses, place]);
 
-  // Host-only: once every connected player has answered, score the round (against the host's own
-  // origin — see SetupScreen's `startOnlineGame`) and move everyone to the reveal screen. Guarded
-  // by a ref (not state) so a burst of snapshots while `screen` is still 'game' can't fire this
-  // more than once for the same round.
+  // Hote seul : une fois tout le monde repondu, note la manche (contre l'origine de l'hote, voir
+  // `startOnlineGame`) et passe au reveal. Garde par une ref (pas un etat) : une rafale de snapshots ne
+  // doit pas le declencher deux fois.
   const finishedRoundRef = useRef(-1);
   useEffect(() => {
     const origin = originForRound(gameState, roomSettings?.travel);
@@ -105,10 +99,8 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
     finishRoomRound(code, scores, totalScores).catch(reporting('compass.finishRound', { kind: 'background', room: code }));
   }, [isHost, gameState, roomSettings?.travel, onlinePlayers, place, code]);
 
-  // Keyed by uid (not derived from `records`' array position): the host writes this to the room
-  // after every round (see `finishRoomRound`), so it survives a kick reshuffling `onlinePlayers`'
-  // order/length mid-game, or a device joining late with no local `records` history of its own —
-  // either of which used to desync a `records`-derived total from the real running score.
+  // Indexe par uid, pas par position dans `records` : l'hote l'ecrit dans la room apres chaque manche, donc
+  // il survit a une expulsion qui reordonne `onlinePlayers` ou a un arrivant tardif sans historique.
   const totals = onlinePlayers.map(({ uid }) => gameState.totalScores[uid] ?? 0);
   const myIndex = onlinePlayers.findIndex((p) => p.uid === localUid);
 
@@ -118,8 +110,7 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
     await submitRoomGuess(code, localUid, guess).catch(reporting('compass.submitGuess', { room: code }));
   };
 
-  // Host only: expels a player from the room mid-game — never yourself (nothing to hand the host
-  // role to, see `handleQuit`'s own comment).
+  // Hote seul : expulse un joueur en cours de partie, jamais soi-meme (voir `handleQuit`).
   const kickPlayer = isHost
     ? (index: number) => {
         const uid = onlinePlayers[index]?.uid;
@@ -127,7 +118,8 @@ export const useOnlineGame = (code: string, onQuit: () => void) => {
       }
     : undefined;
 
-  // Dev mode: once the host has moved on from a round (or the game is over), a device with the dev code is asked how hard that round's place was.
+  // Mode dev : une fois l'hote passe a la suite (ou partie finie), un appareil avec le code dev est
+  // interroge sur la difficulte du lieu.
   const devFeedback = useDevFeedback({
     game: 'compass',
     roundIndex: gameState.roundIndex,

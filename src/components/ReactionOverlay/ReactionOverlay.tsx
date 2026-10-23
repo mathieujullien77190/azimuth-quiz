@@ -12,11 +12,13 @@ import { createStyles } from './styles';
 
 const WOBBLE = wobbleCurve();
 
-/** One emoji rising like a bubble in water, from the bottom of the overlay to its top, drifting left and right, fading
- * in then out, its sender's name under it travelling along. Runs its own course, then asks to be removed. */
+/**
+ * Un emoji qui monte comme une bulle du bas au haut de l'overlay, en oscillant et en fondu, avec le nom de
+ * l'envoyeur dessous. Joue sa course puis demande son retrait.
+ */
 const ReactionBubble = ({ reaction, travel, onDone }: ReactionBubbleProps) => {
   const styles = useThemedStyles(createStyles);
-  // State rather than a ref: the value is read while rendering (the interpolations below).
+  // State plutot que ref : la valeur est lue au rendu (interpolations ci-dessous).
   const [progress] = useState(() => new Animated.Value(0));
   const { seq } = reaction;
 
@@ -61,17 +63,16 @@ const ReactionBubble = ({ reaction, travel, onDone }: ReactionBubbleProps) => {
 };
 
 /**
- * The reactions received from the room, over the whole screen — dumb: each new `reaction` (told apart by its `seq`) is a
- * bubble that rises from the bottom, above the footer, up to the top of the screen, and goes. Several in a row each run
- * their own course instead of replacing one another. Never catches a touch (`pointerEvents="none"`): the game stays
- * playable under it.
+ * Reactions recues de la room, sur tout l'ecran : chaque nouvelle `reaction` (distinguee par `seq`) est une bulle
+ * qui monte du bas (au-dessus du footer) puis disparait. Plusieurs d'affilee ne se remplacent pas. Ne capte jamais
+ * le toucher (`pointerEvents="none"`) : le jeu reste jouable dessous.
  */
 export const ReactionOverlay = ({ reaction }: ReactionOverlayProps) => {
   const styles = useThemedStyles(createStyles);
   const [height, setHeight] = useState(0);
   const [lastSeq, setLastSeq] = useState<number | null>(reaction?.seq ?? null);
   const [bubbles, setBubbles] = useState<ReactionBubbleProps['reaction'][]>(reaction === null ? [] : [reaction]);
-  // Derived while rendering, like the hook that feeds it: the bubble exists in the very render that got the reaction.
+  // Derive au rendu, comme le hook qui l'alimente : la bulle existe dans le rendu qui recoit la reaction.
   if (reaction !== null && reaction.seq !== lastSeq) {
     setLastSeq(reaction.seq);
     setBubbles([...bubbles, reaction]);

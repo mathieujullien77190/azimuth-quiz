@@ -37,10 +37,10 @@ const RootLayout = () => {
   useEffect(hydrateSettings, []);
   useEffect(hydratePlayerName, []);
   useEffect(hydrateDevCode, []);
-  // Compass group sizes (`meta/compassCounts`): read now so a game finds them already loaded.
+  // Tailles des groupes (`meta/*Counts`) lues des maintenant : un jeu les trouve deja chargees.
   useEffect(preloadCompassCounts, []);
   useEffect(preloadCluesCounts, []);
-  // Failed writes are recorded in the `errors` collection (see `helpers/reportError.ts`).
+  // Les ecritures en echec vont dans la collection `errors` (voir `helpers/reportError.ts`).
   useEffect(() => {
     setErrorReporter(writeErrorRecord);
     return () => setErrorReporter(null);

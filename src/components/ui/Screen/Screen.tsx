@@ -11,9 +11,9 @@ export const Screen = ({ children, header, footer, overlay, scrollRef, onScroll 
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Edge to edge, the keyboard no longer pushes the layout up by itself (Android's `adjustResize` is gone): the
-          header, the body and the footer shrink above it instead, so a field being typed in, and the footer's own
-          buttons, are never left behind the keyboard. The overlay stays out of it, over everything. */}
+      {/* Bord a bord, le clavier ne pousse plus la mise en page (`adjustResize` d'Android a disparu) : header, corps et
+          footer se reduisent au-dessus de lui, donc un champ en saisie et les boutons du footer ne passent jamais derriere
+          le clavier. L'overlay reste hors de ca, par-dessus tout. */}
       <KeyboardAvoidingView behavior="padding" style={styles.keyboardAvoiding}>
         {header}
         <ScrollView

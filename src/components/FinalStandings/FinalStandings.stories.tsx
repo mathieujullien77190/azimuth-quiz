@@ -24,7 +24,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Ranked best first, with the winner announced as a banner once there's more than one player. */
+/** Classe du meilleur au moins bon ; le vainqueur est annonce en banniere des qu'il y a plusieurs joueurs. */
 export const Multiplayer: Story = {
   parameters: source(multiplayerCode),
   args: {
@@ -36,7 +36,7 @@ export const Multiplayer: Story = {
   },
 };
 
-/** From the fourth place on there is no medal: the rank shows as a number. */
+/** Des la 4e place, plus de medaille : le rang s'affiche en chiffre. */
 export const FourPlayers: Story = {
   name: 'Four players',
   parameters: source(fourPlayersCode),
@@ -61,7 +61,7 @@ export const Tie: Story = {
   },
 };
 
-/** Alone in the room: no winner banner, just the score. */
+/** Seul dans la room : pas de banniere de vainqueur, juste le score. */
 export const Solo: Story = {
   parameters: source(soloCode),
   args: { entries: [{ name: 'Zoé', total: 1250 }] },

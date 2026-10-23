@@ -3,17 +3,15 @@ import type { Player, RoundRecord } from '@/types';
 export type RoundResultProps = {
   record: RoundRecord;
   players: Player[];
-  /** Each player's cumulative score, previous rounds + this one (same order as `players`). */
+  /** Score cumule de chaque joueur, manche comprise (ordre de `players`). */
   totals: number[];
-  /** Online play only, while waiting for the round to be scored: one flag per player (same order
-   * as `players`/`record.results`). Blanks the truth row and swaps every player's per-category
-   * value/points for a raw guess (if that player has answered) or "?" (points always, since no
-   * player's score is official yet) — no sorting by score either, since there isn't one yet. */
+  /**
+   * En ligne, en attente du score : un indicateur par joueur. Masque la verite et montre la reponse brute
+   * ou "?", sans tri.
+   */
   answered?: boolean[];
-  /** Online play only, while pending: this device's own index into `players`/`record.results` —
-   * pinned first (there's no ranking yet to sort by), and never shown its own `onKick` button. */
+  /** En ligne, en attente : index de cet appareil, affiche en premier et sans bouton `onKick`. */
   localIndex?: number;
-  /** Online play, host only: shows a full-word expel button below each OTHER player's score
-   * (index into `players`/`record.results`, same order) to remove them from the room mid-game. */
+  /** En ligne, hote seul : bouton d'expulsion sous le score des AUTRES joueurs (index de `players`). */
   onKick?: (index: number) => void;
 };

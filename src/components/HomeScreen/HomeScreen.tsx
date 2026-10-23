@@ -19,7 +19,7 @@ export const HomeScreen = () => {
   return (
     <Screen>
       <AppTitle tagline={t.app.tagline}>
-        {/* The mascot (UFO by night, helicopter by day — see MascotButton) is the settings button, fixed at the top right. */}
+        {/* La mascotte (OVNI la nuit, helicoptere le jour — voir MascotButton) est le bouton reglages, fixe en haut a droite. */}
         <View style={styles.mascotButton}>
           <MascotButton accessibilityLabel={t.home.settingsButtonLabel} onPress={() => router.push('/settings')} />
         </View>

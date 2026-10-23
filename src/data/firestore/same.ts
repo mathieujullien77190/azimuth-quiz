@@ -1,5 +1,4 @@
-/** `value` as JSON with every object's keys sorted: Firestore hands maps back in alphabetical order, while
- * the code that builds a copy lists its fields in its own order — comparing the two must not care. */
+/** JSON a cles triees : Firestore rend les maps par ordre alphabetique, pas dans l'ordre du code qui construit la copie. */
 const stable = (value: unknown): string =>
   JSON.stringify(value, (_key, each: unknown) =>
     each && typeof each === 'object' && !Array.isArray(each)
@@ -7,5 +6,5 @@ const stable = (value: unknown): string =>
       : each,
   );
 
-/** Deep equality of two plain JSON values, whatever the order of their object keys. */
+/** Egalite profonde de deux JSON, quel que soit l'ordre des cles. */
 export const sameJson = (a: unknown, b: unknown): boolean => stable(a) === stable(b);

@@ -9,10 +9,9 @@ import type { ReactionBarProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * The emoji reactions control of a game's screen — dumb: one small round button floating just above the footer, at the
- * bottom-right corner (it positions itself against the footer it is a child of, and takes no room in it), and the column
- * of emojis it opens upward from it (shown and hidden at once, no animation), against the right edge of the screen. A tap on an emoji calls `onPick` with it and the column STAYS open (several
- * reactions in a row); only the round button closes it. What `onPick` does (sending it to the room, the cooldown) is the caller's.
+ * Controle des reactions emoji d'un ecran de jeu : bouton rond flottant au-dessus du footer (positionne contre
+ * lui, sans prendre de place) et colonne d'emojis qui s'ouvre vers le haut, sans animation. Un emoji appelle
+ * `onPick` et la colonne RESTE ouverte ; seul le bouton la ferme. Ce que fait `onPick` revient a l'appelant.
  */
 export const ReactionBar = ({ emojis, onPick, labelFor, toggleLabel }: ReactionBarProps) => {
   const styles = useThemedStyles(createStyles);

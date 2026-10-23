@@ -7,10 +7,9 @@ import { ADMIN_EMAILS, auth } from '../../firebase';
 type Phase = 'auth' | 'loading' | 'ready';
 
 /**
- * Google sign-in, restricted to `ADMIN_EMAILS`, then loads every collection into memory (`loadData`)
- * before rendering `children` — so the views can read the data synchronously. The real gate is
- * `firestore.rules` (`isAdmin()`): a visitor with another account would see nothing writable anyway.
- * An anonymous session (the game shares this origin on GitHub Pages) counts as signed out.
+ * Connexion Google limitee a `ADMIN_EMAILS`, puis charge toutes les collections en memoire (`loadData`) avant de
+ * rendre `children`, pour que les vues lisent en synchrone. La vraie barriere est `firestore.rules`. Une session
+ * anonyme (le jeu partage cette origine) compte comme deconnectee.
  */
 export const AuthGate = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null | undefined>(undefined);

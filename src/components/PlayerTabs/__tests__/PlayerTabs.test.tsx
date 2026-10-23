@@ -10,8 +10,8 @@ const players: Player[] = [
   { name: 'Max', color: '#16A34A' },
 ];
 
-// `useWindowDimensions` reads from the real `Dimensions` module (mocking the hook itself doesn't
-// reach components in other files — see `RoundResult.test.tsx` for the same technique).
+// `useWindowDimensions` lit le vrai `Dimensions` (mocker le hook n'atteint pas les autres fichiers, voir
+// `RoundResult.test.tsx`).
 const originalWindow = Dimensions.get('window');
 const setWindowWidth = (width: number) => act(async () => Dimensions.set({ window: { ...originalWindow, width } }));
 

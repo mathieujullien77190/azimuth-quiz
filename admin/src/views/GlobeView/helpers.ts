@@ -36,8 +36,10 @@ import type {
 const toRadians = (degrees: number): number => (degrees * Math.PI) / 180;
 const toDegrees = (radians: number): number => (radians * 180) / Math.PI;
 
-/** Where a place is in the scene (unit sphere, same layout as the game's own 3D globe): the y axis is the poles,
- * longitude 0 faces +z. */
+/**
+ * Position d'un lieu dans la scene (sphere unite, meme repere que le globe 3D du jeu) : l'axe y est les poles,
+ * longitude 0 face a +z.
+ */
 export const toVector = (lon: number, lat: number, altitude = 1): Vec3 => {
   const latitude = toRadians(lat);
   const longitude = toRadians(lon);
@@ -48,7 +50,7 @@ export const toVector = (lon: number, lat: number, altitude = 1): Vec3 => {
   ];
 };
 
-/** The rings of the world's land outline (`M lon lat L lon lat ... Z` per ring). */
+/** Anneaux du contour des terres (`M lon lat L lon lat ... Z` par anneau). */
 export const parseRings = (path: string): LonLat[][] =>
   path
     .split('M')
@@ -63,7 +65,7 @@ export const parseRings = (path: string): LonLat[][] =>
         }),
     );
 
-/** The line segments (pairs of ends, as a flat list of coordinates) of closed rings, ready for a three.js buffer. */
+/** Segments (paires d'extremites, liste plate de coordonnees) d'anneaux fermes, prets pour un buffer three.js. */
 export const segmentsOf = (rings: readonly (readonly LonLat[])[], altitude: number): number[] =>
   rings.flatMap((ring) =>
     ring.flatMap(([lon, lat], index) => {
@@ -72,7 +74,7 @@ export const segmentsOf = (rings: readonly (readonly LonLat[])[], altitude: numb
     }),
   );
 
-/** The index of the visible point nearest to (x, y) within `radius` pixels, or null. */
+/** Indice du point visible le plus proche de (x, y) dans `radius` pixels, ou null. */
 export const nearestPoint = (points: readonly ProjectedPoint[], x: number, y: number, radius: number): number | null => {
   let best: number | null = null;
   let bestDistance = radius;
@@ -87,24 +89,25 @@ export const nearestPoint = (points: readonly ProjectedPoint[], x: number, y: nu
   return best;
 };
 
-/** `#rrggbb` as the number three.js takes. */
 export const hexNumber = (css: string): number => parseInt(css.slice(1), 16);
 
-/** `#rrggbb` as three 0-1 floats, for a colour buffer. */
+/** `#rrggbb` en trois flottants 0-1, pour un buffer de couleurs. */
 export const hexFloats = (css: string): [number, number, number] => {
   const value = hexNumber(css);
   return [((value >> 16) & 255) / 255, ((value >> 8) & 255) / 255, (value & 255) / 255];
 };
 
-/** The colour of a place's dot: its Compass category's, grey for a place that is only in Clues. */
+/** Couleur du point d'un lieu : celle de sa categorie Boussole, gris s'il n'est que dans Indices. */
 export const placeColor = (category: Category | null): string =>
   category === null ? NEUTRAL_PLACE_COLOR : CATEGORY_COLORS[category];
 
 export const categoryOf = (row: PlaceRow): Category | null => row.compass?.category ?? null;
 export const difficultyOf = (row: PlaceRow): Difficulty => (row.compass ?? row.clues)!.difficulty;
 
-/** The places that pass the category and difficulty filters (a place only in Clues has no category: the category
- * chips do not apply to it). */
+/**
+ * Lieux passant les filtres categorie et difficulte (un lieu seulement dans Indices n'a pas de categorie : les puces
+ * ne s'y appliquent pas).
+ */
 export const visiblePlaces = (
   rows: readonly PlaceRow[],
   categories: ReadonlySet<Category>,
@@ -117,14 +120,18 @@ export const visiblePlaces = (
 
 export const PLACE_SHAPES: readonly PlaceShape[] = ['round', 'star', 'square'];
 
-/** The shape of a place's dot: round for the cities (also the French ones), a star for the capitals, a square for
- * everything else (mountains, landmarks, nature, kids, and a place that is only in Clues). */
+/**
+ * Forme du point : rond pour les villes (francaises aussi), etoile pour les capitales, carre pour le reste
+ * (montagnes, monuments, nature, enfants, lieu seulement dans Indices).
+ */
 export const placeShape = (category: Category | null): PlaceShape => {
   if (category === 'cities' || category === 'citiesFr') return 'round';
   return category === 'capital' ? 'star' : 'square';
 };
 
-/** The dots of the places for the scene: every position in order (for picking), and the dots split by shape. */
+/**
+ * Points des lieux pour la scene : toutes les positions dans l'ordre (pour le choix) et les points separes par forme.
+ */
 export const placeBuffers = (rows: readonly PlaceRow[], altitude: number): PlaceBuffers => {
   const shapes: PlaceBuffers['shapes'] = {
     round: { positions: [], colors: [] },
@@ -146,7 +153,7 @@ export const placeBuffers = (rows: readonly PlaceRow[], altitude: number): Place
   return { positions, kinds, shapes };
 };
 
-/** What `drawShape` needs of a canvas context (so that it can be tested without a canvas). */
+/** Ce que `drawShape` demande a un contexte canvas (pour le tester sans canvas). */
 export type ShapeContext = {
   fillStyle: string | CanvasGradient | CanvasPattern;
   beginPath: () => void;
@@ -157,8 +164,10 @@ export type ShapeContext = {
   fill: () => void;
 };
 
-/** Paints a white round dot or 5-branch star filling a `size` x `size` picture (the dot's colour comes from the
- * vertices, the picture only cuts the shape out). */
+/**
+ * Peint un point rond blanc ou une etoile a 5 branches remplissant une image `size` x `size` (la couleur vient des
+ * sommets, l'image ne fait que la decoupe).
+ */
 export const drawShape = (context: ShapeContext, shape: 'round' | 'star', size: number): void => {
   const middle = size / 2;
   context.fillStyle = '#ffffff';
@@ -179,7 +188,7 @@ export const drawShape = (context: ShapeContext, shape: 'round' | 'star', size: 
   context.fill();
 };
 
-/** What the search box finds: the places whose name or country matches, the first ones. */
+/** Resultats de la recherche : lieux dont le nom ou le pays correspond, les premiers. */
 export const searchTargets = (query: string, rows: readonly PlaceRow[]): SearchTarget[] => {
   const q = query.trim().toLowerCase();
   if (q === '') return [];
@@ -197,7 +206,7 @@ export const searchTargets = (query: string, rows: readonly PlaceRow[]): SearchT
     .slice(0, SEARCH_RESULTS);
 };
 
-/** `count` points scattered over a sphere of `radius` (a small seeded generator: the same sky every time). */
+/** `count` points sur une sphere de `radius` (petit generateur a graine : meme ciel a chaque fois). */
 export const starPositions = (count: number, radius: number, seed: number): number[] => {
   let state = seed >>> 0;
   const random = (): number => {
@@ -214,7 +223,6 @@ export const starPositions = (count: number, radius: number, seed: number): numb
   }).flat();
 };
 
-/** What is drawn brighter for a selected / hovered place: its dot. */
 export const markFor = (target: Selection | null, rows: readonly PlaceRow[]): Mark => {
   if (target === null) return null;
   const row = rows.find((entry) => entry.key === target.id);
@@ -223,15 +231,17 @@ export const markFor = (target: Selection | null, rows: readonly PlaceRow[]): Ma
     : null;
 };
 
-/** Whether the dots of this shape are drawn (and pickable) with the camera `distance` from the middle: the capitals
- * from further away than the others (see CAPITALS_MAX_DISTANCE). */
+/**
+ * Les points de cette forme sont-ils dessines (et choisissables) a la distance `distance` ; les capitales de plus
+ * loin que les autres (voir CAPITALS_MAX_DISTANCE).
+ */
 export const shapeShownAt = (shape: PlaceShape, distance: number): boolean =>
   distance <= (shape === 'star' ? CAPITALS_MAX_DISTANCE : POINTS_MAX_DISTANCE);
 
-/** Whether the permanent names are drawn with the camera `distance` from the middle. */
+/** Les noms permanents sont-ils dessines a la distance `distance`. */
 export const labelsShownAt = (distance: number): boolean => distance <= LABELS_MAX_DISTANCE;
 
-/** The room a name takes written to the right of its dot at (x, y). */
+/** Place d'un nom ecrit a droite de son point en (x, y). */
 export const labelBox = (point: { x: number; y: number }, name: string): LabelBox => ({
   left: point.x,
   right: point.x + LABEL_OFFSET_PX + name.length * LABEL_CHAR_PX,
@@ -246,9 +256,9 @@ const touches = (a: LabelBox, b: LabelBox): boolean =>
   a.bottom + LABEL_GAP_PX > b.top;
 
 /**
- * Which names to write, and where: among the places in sight (on the near side of the globe, inside the canvas), the
- * capitals first then the ones closest to the middle of the canvas, as many as fit — each name takes a box to the
- * right of its dot (see `labelBox`), and a name whose box would touch one already kept is dropped — up to `max`.
+ * Quels noms ecrire, et ou : parmi les lieux en vue (face visible, dans le canvas), capitales d'abord puis les plus
+ * proches du centre, autant qu'il en tient, jusqu'a `max` ; chaque nom prend une boite a droite de son point (voir
+ * `labelBox`), un nom dont la boite toucherait un nom garde est ecarte.
  */
 export const selectLabels = (
   points: readonly ProjectedPoint[],
@@ -280,14 +290,18 @@ export const selectLabels = (
   return kept;
 };
 
-/** How many names may be written with the camera `distance` from the middle: MAX_LABELS where they begin to show,
- * more and more the closer one gets, up to MAX_LABELS_CLOSE at the closest. */
+/**
+ * Nombre de noms permis a la distance `distance` : MAX_LABELS a l'apparition, de plus en plus en s'approchant,
+ * jusqu'a MAX_LABELS_CLOSE au plus pres.
+ */
 export const maxLabelsAt = (distance: number): number => {
   const closeness = (LABELS_MAX_DISTANCE - distance) / (LABELS_MAX_DISTANCE - MIN_DISTANCE);
   return Math.round(MAX_LABELS + Math.max(0, Math.min(1, closeness)) * (MAX_LABELS_CLOSE - MAX_LABELS));
 };
 
-/** How fast a drag turns the globe at this camera `distance`: in proportion to how far the camera is above the ground
- * (the same drag covers less ground the closer one is), within ROTATE_SPEED and MIN_ROTATE_SPEED. */
+/**
+ * Vitesse de rotation au glisse a cette distance : proportionnelle a la hauteur de la camera au-dessus du sol (meme
+ * geste = moins de terrain de pres), entre ROTATE_SPEED et MIN_ROTATE_SPEED.
+ */
 export const rotateSpeedAt = (distance: number): number =>
   Math.max(MIN_ROTATE_SPEED, Math.min(ROTATE_SPEED, (ROTATE_SPEED * (distance - 1)) / (CAMERA_DISTANCE - 1)));

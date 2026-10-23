@@ -4,12 +4,8 @@ import type { Language, Translations } from '@/i18n';
 import { translations } from '@/i18n/translations';
 
 /**
- * Story `args` that carry text ("Difficulté", "Jouer"...) are computed once, when the file loads —
- * so they can't follow the toolbar's language on their own. This decorator rebuilds them from the
- * current language on every render: give it the same `build` function that produced the story's
- * initial `args` (with `translations.fr`). `build` also receives the story's current args, to
- * re-text something nested without losing its handlers (a list of options, say), and the language code
- * (for what depends on it beyond the texts: country names on a board...).
+ * Les `args` de story qui portent du texte sont calcules au chargement et ne suivent pas la langue de la barre d'outils :
+ * ce decorateur les reconstruit a chaque rendu avec la meme fonction `build` (args courants et code de langue en parametres).
  *
  * ```tsx
  * const args = (t: Translations) => ({ title: t.setup.difficultyTitle });

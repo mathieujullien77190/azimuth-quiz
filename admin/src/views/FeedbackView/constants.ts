@@ -1,7 +1,7 @@
 import type { Difficulty } from '@/types';
 
-/** The difficulties from easiest to hardest: the order votes are listed in. */
+/** Difficultes de la plus facile a la plus dure : ordre d'affichage des votes. */
 export const DIFFICULTY_ORDER: Difficulty[] = ['easy', 'intermediate', 'hard'];
 
-/** The most documents one batch deletes (Firestore's own cap). */
+/** Maximum de documents supprimes par lot (plafond Firestore). */
 export const BATCH_SIZE = 500;

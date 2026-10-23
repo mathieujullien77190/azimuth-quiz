@@ -17,20 +17,20 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The default: small, in the app's accent color. */
+/** Par defaut : petit, couleur d'accent de l'app. */
 export const SmallAccent: Story = {
   name: 'Small, accent',
   parameters: source(smallAccentCode),
 };
 
-/** In the color of the player being waited for (the round result, before their answer is in). */
+/** Couleur du joueur attendu (resultat de manche, avant sa reponse). */
 export const PlayerColor: Story = {
   name: 'Small, player color',
   parameters: source(playerColorCode),
   args: { color: PLAYER_COLORS[1], size: 'small' },
 };
 
-/** Large and light grey, on the notice splash's dark backdrop ("Préparation de la partie…"). */
+/** Grand et gris clair, sur le fond sombre du splash de notice. */
 export const LargeLight: Story = {
   name: 'Large, light (on dark)',
   parameters: source(largeLightCode),

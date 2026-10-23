@@ -26,9 +26,7 @@ export const CompassDial = memo(function CompassDial({ size, needles, truthBeari
   const needleHalfWidth = radius * NEEDLE_HALF_WIDTH_RATIO;
   const knobRadius = radius * KNOB_RADIUS_RATIO;
 
-  // The solution is a needle like any other — same shape, same size, only its color (`colors.truth`)
-  // differs — and comes last so it is drawn on top of every player needle, never partly hidden
-  // under an overlapping one.
+  // La solution est une aiguille comme les autres, dessinee en dernier pour ne jamais etre cachee.
   const drawnNeedles = truthBearing === null ? needles : [...needles, { bearing: truthBearing, color: colors.truth }];
 
   return (

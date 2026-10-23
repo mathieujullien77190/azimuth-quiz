@@ -14,7 +14,7 @@ import { sanitizeSettings } from './settings';
 const isLanguage = (value: unknown): value is Language => value === 'fr' || value === 'en';
 const isThemeId = (value: unknown): value is ThemeId => value === 'night' || value === 'day';
 
-/** System language if English is detected, French by default otherwise (only languages supported). */
+/** Langue du systeme si anglais detecte, sinon francais (seules langues gerees). */
 export const systemLanguage = (): Language => (getLocales()[0]?.languageCode === 'en' ? 'en' : 'fr');
 
 export const loadSettings = async (): Promise<GameSettings> => {
@@ -30,7 +30,7 @@ export const saveSettings = async (settings: GameSettings): Promise<void> => {
   try {
     await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   } catch {
-    // Settings not saved: not critical.
+    // Reglages non sauves : sans gravite.
   }
 };
 
@@ -47,7 +47,7 @@ export const saveLanguage = async (language: Language): Promise<void> => {
   try {
     await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, language);
   } catch {
-    // Language not saved: not critical, French will be used as the default again.
+    // Langue non sauvee : sans gravite, retour au francais.
   }
 };
 
@@ -64,12 +64,11 @@ export const saveThemeId = async (themeId: ThemeId): Promise<void> => {
   try {
     await AsyncStorage.setItem(THEME_STORAGE_KEY, themeId);
   } catch {
-    // Theme not saved: not critical, Night will be used as the default again.
+    // Theme non sauve : sans gravite, retour a Nuit.
   }
 };
 
-/** Last name typed in any game's setup — `null` until one has been (see `useSetupRoom`'s prefill,
- * the only reader/writer of this key). */
+/** Dernier nom tape dans le setup d'un jeu ; `null` tant qu'aucun (seul lecteur/ecrivain : prefill de `useSetupRoom`). */
 export const loadDevCode = async (): Promise<string | null> => {
   try {
     return await AsyncStorage.getItem(DEV_CODE_STORAGE_KEY);
@@ -82,7 +81,7 @@ export const saveDevCode = async (code: string): Promise<void> => {
   try {
     await AsyncStorage.setItem(DEV_CODE_STORAGE_KEY, code);
   } catch {
-    // Not saved: typed again next time, not critical.
+    // Non sauve : a retaper, sans gravite.
   }
 };
 
@@ -98,13 +97,12 @@ export const savePlayerName = async (name: string): Promise<void> => {
   try {
     await AsyncStorage.setItem(PLAYER_NAME_STORAGE_KEY, name);
   } catch {
-    // Not saved: at worst the other games don't get it prefilled, not critical.
+    // Non sauve : au pire les autres jeux ne le prefillent pas.
   }
 };
 
-/** Clears everything the app saves on the device: Compass settings, language, theme, the shared player
- * name, Clues' and Compass' place cursors (+ a possible "best score" left over from an earlier version).
- * Clues' own settings aren't persisted in the first place (reset every launch). */
+/** Efface tout ce que l'app sauve sur l'appareil : reglages Compass, langue, theme, nom partage, curseurs de lieux,
+ * ancien "meilleur score". Les reglages Clues ne sont pas persistes. */
 export const clearAppData = async (): Promise<void> => {
   clearClueCursors();
   clearCompassCursors();
@@ -118,6 +116,6 @@ export const clearAppData = async (): Promise<void> => {
       DEV_CODE_STORAGE_KEY,
     ]);
   } catch {
-    // Nothing to do: at worst the old data sticks around, not critical.
+    // Au pire les anciennes donnees restent, sans gravite.
   }
 };

@@ -10,8 +10,7 @@ import { source } from '@/storybook/source';
 import guessingCode from './Guessing.source.md?raw';
 import revealedCode from './Revealed.source.md?raw';
 
-/** Named (capitalized) so eslint's rules-of-hooks recognizes it as a component and allows the
- * `useState` below — an inline arrow assigned to a story's `render` doesn't qualify. */
+/** Nomme (majuscule) pour que la regle des hooks autorise le `useState`. */
 const InteractiveDemo = (args: CompassProps) => {
   const [bearing, setBearing] = useState(args.needles?.[0]?.bearing ?? 0);
   return (
@@ -35,10 +34,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Click or drag anywhere on the dial to set the needle's bearing — same interaction as the real
- * game (the compass itself doesn't care whether the input was a touch, a drag or a single click).
- * Local state in the story, not the component — `Compass` stays fully controlled by its caller —
- * and shows up in the Actions panel below, `onChange` wrapped in `fn()`. */
+/** Clic ou glisser sur le cadran pour regler le cap ; etat local a la story (`Compass` reste controle). */
 export const Guessing: Story = {
   parameters: source(guessingCode),
   args: { needles: [{ bearing: 42, color: SAMPLE_PLAYERS[0].color }], onChange: fn(), size: 140 },

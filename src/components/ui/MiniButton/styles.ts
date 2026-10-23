@@ -4,8 +4,7 @@ import type { Theme } from '@/types';
 
 export const createStyles = ({ colors, radius, typography }: Theme) =>
   StyleSheet.create({
-    // Small pill: outlined, transparent-ish surface. Only the border and text color tell the
-    // variants apart.
+    // Petite pilule : contour, surface quasi transparente. Seuls la bordure et la couleur du texte la distinguent.
     button: {
       alignSelf: 'center',
       paddingVertical: 6,

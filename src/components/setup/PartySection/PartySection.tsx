@@ -13,10 +13,9 @@ import type { PartySectionProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * Compass' own "Partie" section: solo name, or host/join a room — dumb, lifted straight out of
- * `SetupScreenView`. The online sub-labels (`t.setup.online.*`) are read directly since they're
- * already shared regardless of which game ends up using this; only `title`/`hint` are props,
- * since those live in each game's own translation namespace.
+ * Section « Partie » : nom solo, ou heberger/rejoindre une room (dumb), sortie de `SetupScreenView`. Les
+ * sous-libelles en ligne (`t.setup.online.*`) sont lus directement (communs a tous les jeux) ; seuls
+ * `title`/`hint` sont des props (namespace propre a chaque jeu).
  */
 export const PartySection = ({
   title,
@@ -72,8 +71,7 @@ export const PartySection = ({
         {nameError !== null && <Text style={styles.error}>{nameError}</Text>}
         {connectedPlayers.map(([uid, player]) => {
           if (uid === localUid) return null;
-          // Falls back to the first palette color for the brief moment before the host's own
-          // color-sync effect has assigned a real one.
+          // Repli sur la premiere couleur de la palette le temps que l'effet de l'hote en assigne une vraie.
           const color = player.color ?? colors.danger;
           const displayName = uid === hostUid ? t.setup.online.hostBadge(player.name) : player.name;
           return (
@@ -107,9 +105,8 @@ export const PartySection = ({
         <Chip label={t.setup.online.solo} onPress={onChooseSolo} selected={onlineChoice === null} />
         <Chip label={t.setup.online.host} onPress={onChooseHost} selected={onlineChoice === 'host'} />
         {joinStatus === 'valid' ? (
-          // Connected: the code field is locked (see the comment below), so this is the only way
-          // back to a fresh, editable one — `onChooseJoin` (not `onChooseSolo`) so this stays on
-          // "Join" rather than dropping back to solo.
+          // Connecte : le champ code est verrouille, c'est donc le seul retour vers un code frais et editable. Utilise
+          // `onChooseJoin` (pas `onChooseSolo`) pour rester sur « Rejoindre ».
           <Chip label={t.setup.online.leave} onPress={onChooseJoin} selected />
         ) : (
           <Chip label={t.setup.online.join} onPress={onChooseJoin} selected={onlineChoice === 'join'} />
@@ -133,11 +130,9 @@ export const PartySection = ({
       )}
       {onlineChoice === 'join' && (
         <>
-          {/* Locked once joined, like the name field above: `connectedRoomCode` is derived
-              straight from this text, so editing it further after a successful join would
-              silently disconnect the room (read as a spurious "kicked" notice) and unlock the
-              name/options fields again. The chip above turns into "Leave" at that point, the
-              only way back to a fresh, editable code. */}
+          {/* Verrouille une fois rejoint, comme le champ nom : `connectedRoomCode` derive directement de ce texte, donc
+              l'editer apres la jonction deconnecterait la room (lu comme une expulsion) et deverrouillerait nom et options.
+              La puce devient « Quitter », seul retour vers un code editable. */}
           <TextInput
             autoCapitalize="none"
             editable={joinStatus !== 'valid'}

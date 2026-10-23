@@ -4,28 +4,20 @@ import { personalityFor } from '@/games/clues/helpers/personality';
 import { wordplayFor } from '@/games/clues/helpers/wordplay';
 import type { ClueCategory, ClueId, CluePlace } from '@/types';
 
-/** Clues that reveal in 2 clicks: tier/symbol/day-night on the 1st, exact value on the 2nd
- * (distance/elevation/population/currency/localTime); letter: first letter alone, then every
- * letter with the real per-word length. `wordplay` is a single click (the pun, once) — not here. */
+/** Indices en 2 clics (palier/symbole/jour-nuit puis valeur exacte) ; `letter` : 1re lettre seule puis toutes. `wordplay` : un seul clic. */
 const TWO_STAGE_CLUE_IDS = new Set(['distance', 'globe', 'elevation', 'population', 'currency', 'localTime', 'letter']);
-/** Clues that reveal in 3 clicks. */
+/** Indices en 3 clics. */
 const THREE_STAGE_CLUE_IDS = new Set(['emoji', 'flagColors']);
 
-/** A French city (`citiesFr`) never varies on these: same time zone, almost never the capital,
- * same flag/currency/phone code as every other French place — unlike `capital` (world capitals,
- * these genuinely vary) or `cities` (foreign cities, ditto), where the very same clue ids do
- * distinguish one place from another. Dropped from `cluesFor` for that category only. */
+/** Un indice `citiesFr` ne varie pas sur ceux-ci (meme fuseau, meme drapeau/devise/indicatif...) : retires de `cluesFor` pour cette categorie seulement. */
 const CITIES_FR_EXCLUDED_CLUE_IDS = new Set<ClueId>(['localTime', 'isCapital', 'flagColors', 'currency', 'phoneCode']);
 
-/** Which of the 3 Clues categories `place` falls into — capital first, then French city, then plain city
- * (stored on the place, see `CluePlace.category`). Exported for `cluesFor`'s own category check. */
+/** Categorie Indices de `place` : capitale, puis ville francaise, puis ville simple (voir `CluePlace.category`). */
 export const placeCategory = (place: Pick<CluePlace, 'category'>): ClueCategory => place.category;
 
 /**
- * The clue ids actually offered for `place`, in `CLUE_ORDER`'s order: a `citiesFr` place drops
- * the ones that never vary for a French city (`CITIES_FR_EXCLUDED_CLUE_IDS`), and any place
- * without a curated `personality`/`wordplay` (see `personalityFor`/`wordplayFor`) drops that one
- * too — never an empty, unclickable card for a fact/pun that simply isn't there.
+ * Ids d'indices offerts pour `place`, dans l'ordre de `CLUE_ORDER` : retire ceux d'une ville `citiesFr`
+ * et `personality`/`wordplay` sans curation (jamais de carte vide).
  */
 export const cluesFor = (place: CluePlace): ClueId[] => {
   const categoryIds =
@@ -37,31 +29,22 @@ export const cluesFor = (place: CluePlace): ClueId[] => {
   });
 };
 
-/** How many clicks one `clueId` takes to reveal everything. */
+/** Nombre de clics pour tout devoiler d'un `clueId`. */
 const clueStageCount = (clueId: ClueId): number => {
   if (THREE_STAGE_CLUE_IDS.has(clueId)) return 3;
   if (TWO_STAGE_CLUE_IDS.has(clueId)) return 2;
   return 1;
 };
 
-/** Total number of possible clues in a round for `place` if all were taken, counted multiple
- * times for the ones that reveal in stages (see `clueStageCount`) — used as the base for
- * `maxScoreForRound`. Place-dependent: which clue ids `cluesFor(place)` even offers
- * (a `citiesFr` place has fewer). */
+/** Nombre total d'indices possibles pour `place` (etapes comptees), base de `maxScoreForRound`. */
 export const totalRevealCount = (place: CluePlace): number =>
   cluesFor(place).reduce((total, clueId) => total + clueStageCount(clueId), 0);
 
-/** Round's starting score: `totalReveals` rounded up to the nearest ten (e.g. 26 possible
- * clues -> 30), a round number rather than depending on the exact current clues. Goes down
- * by 1 for each clue picked (they all have the same "cost" now): finding it fast (few clues
- * used) leaves a higher — and thus more won — remaining score. */
+/** Score de depart : `totalReveals` arrondi a la dizaine superieure (ex. 26 -> 30), moins 1 par indice choisi. */
 export const maxScoreForRound = (totalReveals: number): number => Math.ceil(totalReveals / 10) * 10;
 
-/** The round's current countdown score, from `revealedClueIds` and `place` alone — shared by the
- * local game and the online host's own scoring effect (`useOnlineClueGame`), so both compute the
- * exact same number from the exact same input. `vowels` isn't a normal clue (see its own doc
- * comment in `types/index.ts`): it's excluded from the linear countdown and instead drops the
- * round straight to 1, if it was still above that. */
+/** Score restant de la manche, depuis `revealedClueIds` et `place` seuls : meme calcul pour l'hote en ligne et le jeu local.
+ * `vowels` sort du decompte lineaire et ramene la manche a 1 s'il restait plus (voir `types/index.ts`). */
 export const remainingScore = (revealedClueIds: ClueId[], place: CluePlace): number => {
   const maxScore = maxScoreForRound(totalRevealCount(place));
   const vowelsRevealed = revealedClueIds.includes('vowels');
@@ -69,10 +52,7 @@ export const remainingScore = (revealedClueIds: ClueId[], place: CluePlace): num
   return vowelsRevealed ? Math.min(countdownRemaining, 1) : countdownRemaining;
 };
 
-/** Normalizes a place name for comparison ("I type the city" mode): lowercased, accents,
- * spaces and punctuation (apostrophes, hyphens...) all dropped outright — not just collapsed —
- * so "N'Djamena", "N Djamena" and "Ndjamena" all compare equal regardless of which separator
- * (or none) the player used. */
+/** Normalise un nom pour la comparaison : minuscules, sans accents ni espaces ni ponctuation ("N'Djamena" = "Ndjamena"). */
 export const normalizePlaceGuess = (value: string): string =>
   value
     .normalize('NFD')
@@ -80,17 +60,12 @@ export const normalizePlaceGuess = (value: string): string =>
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]+/gu, '');
 
-/** Total number of letter slots across every group of a name skeleton (letters only, word
- * separators excluded) — the cap on how many letters can be typed once the "letter" clue's 3rd
- * click (the real per-word length) is known, see `overlayTypedLetters`. */
+/** Nombre de cases-lettres d'un squelette (separateurs exclus) : plafond de saisie, voir `overlayTypedLetters`. */
 export const skeletonLetterCount = (groups: NameSkeletonSlot[][]): number =>
   groups.reduce((total, group) => total + group.filter((slot) => slot !== HYPHEN_SLOT).length, 0);
 
-/** Live-fills a name skeleton with what's been typed so far, once the real shape is known (the
- * "letter" clue's 3rd click): each slot shows the typed letter at its position once typed that
- * far, falling back to whatever the clue itself revealed (or a blank) before that. Typed
- * characters are consumed positionally across every slot, revealed or not — the player types the
- * whole name from the start, not just its hidden parts. */
+/** Remplit le squelette avec la saisie une fois la forme connue (3e clic de `letter`) ; la saisie est consommee
+ * par position sur toutes les cases, devoilees ou non : on tape le nom entier. */
 export const overlayTypedLetters = (groups: NameSkeletonSlot[][], typed: string): NameSkeletonSlot[][] => {
   const typedLetters = [...typed.replace(/[^\p{L}]/gu, '')];
   let index = 0;
@@ -104,6 +79,5 @@ export const overlayTypedLetters = (groups: NameSkeletonSlot[][], typed: string)
   );
 };
 
-/** Turns raw typed text into the box-group shape of a name skeleton (see the shared implementation): used before the real
- * shape is known at all, so what's being typed still reads as boxed letters. */
+/** Transforme une saisie brute en groupes de cases (voir l'implementation partagee) tant que la forme reelle est inconnue. */
 export { typedSkeleton } from '@/components/TypedAnswer/helpers';

@@ -5,9 +5,10 @@ import { DeleteX } from '../../components/DeleteX';
 import { EditableValue } from '../../components/EditableValue';
 import { Pagination, pageCount, paginate } from '../../components/Pagination';
 
-/** One job, its two translations editable in place. Delete only
- * shows once nothing uses it any more (see `deleteJob`'s own doc comment) — same "only appears
- * when it would actually do something" convention, here "only when it's safe". */
+/**
+ * Un metier, ses deux traductions editables sur place. Supprimer n'apparait que si plus rien ne l'utilise (voir
+ * `deleteJob`).
+ */
 const Row = ({
   row,
   onSaveFr,
@@ -33,10 +34,11 @@ const Row = ({
   </tr>
 );
 
-/** A new entry needs both texts at once (unlike a rename), so it's its own small form rather than
- * the single-field `EditableValue` "+ Ajouter…" pattern `WordplayEditor` uses — "Ajouter" stays
- * disabled until both are filled in. The code itself is generated (`addJob`), never typed by
- * hand: it's an opaque lookup key, not something worth curating. */
+/**
+ * Une nouvelle entree a besoin des deux textes d'un coup (contrairement a un renommage) : petit formulaire a part
+ * plutot que le "+ Ajouter..." d'`EditableValue`. "Ajouter" reste desactive tant que tout n'est pas rempli. Le code
+ * est genere (`addJob`), jamais saisi : cle opaque.
+ */
 const AddRow = ({ onAdd }: { onAdd: (fr: string, en: string) => void }) => {
   const [fr, setFr] = useState('');
   const [en, setEn] = useState('');
@@ -66,17 +68,15 @@ const AddRow = ({ onAdd }: { onAdd: (fr: string, en: string) => void }) => {
 };
 
 /**
- * Every curated job (`data/personalityJobs.json`), flat and searchable, add/rename/delete —
- * the shared vocabulary behind `PersonalityEditor`: that editor
- * only ever picks one existing job for one place; this sweeps the whole shared vocabulary at
- * once (renaming "chanteuse" here changes it everywhere it's tagged, adding one here makes it
- * pickable from every place's `PersonalityEditor` select right away).
+ * Tous les metiers cures, a plat et recherchables, ajout/renommage/suppression : le vocabulaire commun derriere
+ * `PersonalityEditor`. Renommer ici change partout ou le metier est pose ; en ajouter un le rend aussitot
+ * choisissable dans chaque lieu.
  */
 export const JobsView = () => {
   const [rows, setRows] = useState<JobRow[]>(allJobRows);
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
-  // Which job + field last saved, for a brief "✓" next to it.
+  // Metier + champ sauves en dernier, pour un bref "✓" a cote.
   const [savedField, setSavedField] = useState<{ code: string; field: 'fr' | 'en' } | null>(null);
 
   const visibleRows = useMemo(() => filterJobRows(rows, query), [rows, query]);

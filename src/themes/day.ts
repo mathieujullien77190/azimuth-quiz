@@ -2,8 +2,7 @@ import type { Theme } from '@/types';
 
 import { FONT_FAMILY } from './fonts';
 
-/** Warm sand + dusty steel blue: a soft daytime palette. The sky blue, orange and wine tried before were all too
- * strong or too flashy; a muted blue accent stays readable as text on sand, and distinct from `danger` and `success`. */
+/** Sable chaud + bleu acier poussiere : palette de jour douce ; un accent bleu sourd reste lisible sur le sable et distinct de `danger`/`success`. */
 export const day: Theme = {
   id: 'day',
   name: 'Jour',
@@ -13,8 +12,7 @@ export const day: Theme = {
     background: '#F3EEE3',
     surface: '#FFFFFF',
     surfaceHigh: '#FAF7F0',
-    // Clearly darker than surfaceHigh and the compass face (both near-white sands): card outlines and the
-    // compass's minor degree ticks (see CompassDial) would be nearly invisible with a paler border.
+    // Nettement plus sombre que surfaceHigh et la face de la boussole : sinon bordures de cartes et graduations (CompassDial) presque invisibles.
     border: '#C2B8A3',
     text: '#22262B',
     textMuted: '#5F6670',
@@ -22,8 +20,7 @@ export const day: Theme = {
     accentDark: '#3E6A96',
     title: '#22262B',
     onAccent: '#FFFFFF',
-    // The true-answer arrow/point uses the accent color by day (was Night's purple, which read
-    // as an unrelated third color against the sand/blue Day palette).
+    // Le point/fleche de la vraie reponse prend l'accent le jour (le violet de Night jurait avec sable/bleu).
     truth: '#5B88B4',
     danger: '#DC2626',
     success: '#16A34A',

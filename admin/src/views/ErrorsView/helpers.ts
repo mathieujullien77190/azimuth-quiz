@@ -1,9 +1,9 @@
 import type { ErrorGroup, ErrorRow } from './types';
 
-/** The most errors kept on screen: the newest 200 are read at first, live ones are added on top. */
+/** Maximum d'erreurs gardees a l'ecran : les 200 dernieres au depart, les nouvelles s'ajoutent dessus. */
 export const MAX_ROWS = 500;
 
-/** Groups by (action, code), most frequent first (a held-back repeat counts as an occurrence in `repeats`). */
+/** Regroupe par (action, code), plus frequent d'abord (une repetition retenue compte dans `repeats`). */
 export const groupErrors = (rows: ErrorRow[]): ErrorGroup[] => {
   const groups = new Map<string, ErrorGroup>();
   for (const row of rows) {

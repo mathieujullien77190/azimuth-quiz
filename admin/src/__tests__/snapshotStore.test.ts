@@ -10,7 +10,7 @@ type Request = {
   onupgradeneeded?: () => void;
 };
 
-/** A tiny IndexedDB: one database, one object store, requests answered asynchronously like the real thing. */
+/** Mini IndexedDB : une base, un store, requetes asynchrones comme la vraie. */
 const installFakeIndexedDb = ({ failOpen = false, failTransaction = false } = {}) => {
   const stored = new Map<string, unknown>();
   let created = false;

@@ -1,4 +1,4 @@
 export type NoOneFoundTextProps = {
-  /** Current round's players, in any order — only the count and, in solo, the one name matter. */
+  /** Joueurs de la manche, dans n'importe quel ordre : seuls comptent leur nombre et, en solo, l'unique nom. */
   players: string[];
 };

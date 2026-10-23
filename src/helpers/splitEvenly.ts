@@ -1,11 +1,8 @@
 import { shuffle } from './random';
 
 /**
- * Splits `total` items over buckets as evenly as possible, no bucket getting more than its capacity:
- * one item at a time to each open bucket in turn, in a random order, so 5 items over 6 buckets is
- * 1-1-1-1-1-0 (which one gets nothing is random) and 5 over 2 is 3-2 or 2-3. A bucket that is full
- * drops out and the others share what is left. Gives fewer than `total` only when all the buckets
- * together cannot hold it.
+ * Repartit `total` elements sur des seaux au plus egalement, sans depasser leur capacite : un a la fois,
+ * dans un ordre aleatoire (5 sur 6 = 1-1-1-1-1-0). Un seau plein sort. Rend moins que `total` si tout est plein.
  */
 export const splitEvenly = (total: number, capacities: readonly number[]): number[] => {
   const counts = capacities.map(() => 0);

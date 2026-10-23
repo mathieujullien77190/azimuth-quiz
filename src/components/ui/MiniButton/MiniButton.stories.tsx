@@ -17,13 +17,13 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The default: outlined in the accent color — a secondary action ("how are points computed"). */
+/** Par defaut : contour de la couleur d'accent, action secondaire (« comment sont calcules les points »). */
 export const Accent: Story = {
   parameters: source(accentCode),
   args: { label: 'Comment les points sont calculés', variant: 'accent' },
 };
 
-/** Red, for a destructive action: the host expelling a player. */
+/** Rouge, pour une action destructive : l'hote qui expulse un joueur. */
 export const Danger: Story = {
   parameters: source(dangerCode),
   args: { label: 'Expulser', variant: 'danger' },

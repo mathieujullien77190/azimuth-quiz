@@ -14,7 +14,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The round's difficulty: its emoji and its label, in the toolbar's language. */
+/** Difficulte de la manche : emoji et libelle, dans la langue de la barre d'outils. */
 export const Easy: Story = {
   parameters: source(defaultCode),
   args: { difficulty: 'easy' },

@@ -11,8 +11,8 @@ import headerAndFooterCode from './HeaderAndFooter.source.md?raw';
 const meta = {
   title: 'UI/Screen',
   component: Screen,
-  // `Screen` reserves its own full height via flex:1 (SafeAreaView -> ScrollView): it needs a real
-  // flex-column ancestor with a fixed height, or it collapses to 0 in a plain block box.
+  // `Screen` reserve toute sa hauteur via flex:1 (SafeAreaView -> ScrollView) : il lui faut un parent flex colonne
+  // a hauteur fixe, sinon il s'effondre a 0 dans une boite bloc.
   decorators: [
     (Story) => (
       <div style={{ height: 420, display: 'flex' }}>

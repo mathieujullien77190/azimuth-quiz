@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 
 export type AppTitleProps = {
-  /** The line under the title ("Pas de GPS, que de l’instinct."). */
+  /** Ligne sous le titre. */
   tagline: string;
-  /** Laid over the header, positioned by the caller (the home screen's mascot button, fixed at the top right). */
+  /** Superpose a l'en-tete, positionne par l'appelant (bouton mascotte de l'accueil). */
   children?: ReactNode;
 };

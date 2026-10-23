@@ -8,8 +8,8 @@ import type { RoundsRecapProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * Compass' round-by-round recap: one row per round, and for each criterion (the heading, the distance)
- * who was best that round and with how many points — dumb, the caller works the winners out.
+ * Recap manche par manche : meilleur de chaque critere et ses points. Dumb, l'appelant calcule les
+ * gagnants.
  */
 export const RoundsRecap = ({ title, columns, rows }: RoundsRecapProps) => {
   const styles = useThemedStyles(createStyles);

@@ -1,7 +1,7 @@
 import { DIFFICULTY_ORDER } from './constants';
 import type { FeedbackRow, FeedbackTarget } from './types';
 
-/** Counts the opinions per place (the newest opinion gives the difficulty the data had), most voted targets first. */
+/** Compte les avis par lieu (le plus recent donne la difficulte des donnees), cibles les plus votees d'abord. */
 export const groupFeedback = (rows: FeedbackRow[]): FeedbackTarget[] => {
   const byTarget = new Map<string, FeedbackTarget & { lastAt: number }>();
   for (const row of rows) {
@@ -41,10 +41,10 @@ const subject = (target: FeedbackTarget): string =>
 const tally = (target: FeedbackTarget): string =>
   `${target.total} ${votesWord(target.total)} : ${DIFFICULTY_ORDER.map((difficulty) => `${target.votes[difficulty]} ${difficulty}`).join(', ')}`;
 
-/** Whether the data already says what the players say (a tie that includes it counts as right). */
+/** Les donnees disent-elles deja ce que disent les joueurs (une egalite qui les inclut compte comme juste) ? */
 export const isAlreadyRight = (target: FeedbackTarget): boolean => target.winners.includes(target.currentDifficulty);
 
-/** The one-line instruction for a target whose difficulty should change, written for an AI that edits the data. */
+/** Consigne d'une ligne pour une cible dont la difficulte doit changer, ecrite pour une IA qui edite les donnees. */
 export const directiveFor = (target: FeedbackTarget): string => {
   const wanted = target.winners.join(' ou ');
   const tie = target.winners.length > 1 ? 'égalité, à toi de trancher ; ' : '';
@@ -54,8 +54,8 @@ export const directiveFor = (target: FeedbackTarget): string => {
 const ALREADY_RIGHT_TITLE = 'Déjà corrects (rien à changer) :';
 
 /**
- * The whole opinion list as text, for the page's read-only box: first the directives (one line per place whose
- * difficulty the players want changed), then, apart, the ones the players agree with the data on.
+ * Toute la liste d'avis en texte pour la zone en lecture seule : d'abord les consignes (une ligne par lieu a
+ * changer), puis, a part, ceux ou les joueurs sont d'accord avec les donnees.
  */
 export const feedbackText = (rows: FeedbackRow[]): string => {
   const targets = groupFeedback(rows);

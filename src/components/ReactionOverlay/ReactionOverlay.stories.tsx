@@ -11,8 +11,10 @@ import defaultCode from './Default.source.md?raw';
 
 const EMOJIS = ['🤔', '🥰', '😡', '😱'];
 
-/** Named (capitalized) so eslint's rules-of-hooks allows the `useState`. A button sends a reaction (a new `seq` each time):
- * several in a row rise side by side, each on its own course. */
+/**
+ * Nomme (majuscule) pour que rules-of-hooks accepte le `useState`. Un bouton envoie une reaction (nouveau `seq`
+ * a chaque fois) : plusieurs d'affilee montent cote a cote.
+ */
 const InteractiveDemo = () => {
   const [reaction, setReaction] = useState<ReactionOverlayProps['reaction']>(null);
   return (
@@ -45,8 +47,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A received reaction: the emoji rises from the bottom of the screen (above the footer) to the top like a bubble in
- * water, swaying a few pixels, fading in then out, its sender's name under it. Never catches a touch. */
+/**
+ * Reaction recue : l'emoji monte du bas au haut de l'ecran comme une bulle, en oscillant et en fondu, avec le nom
+ * de l'envoyeur dessous. Ne capte jamais le toucher.
+ */
 export const Default: Story = {
   parameters: source(defaultCode),
   args: { reaction: null },

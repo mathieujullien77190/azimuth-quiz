@@ -22,8 +22,7 @@ describe('localTimeFor', () => {
   it('reflects the timezone offset (same instant, different zones differ or wrap by 24h)', () => {
     const paris = localTimeFor('Europe/Paris');
     const tokyo = localTimeFor('Asia/Tokyo');
-    // Both are valid times; Paris and Tokyo have an offset so they're rarely equal,
-    // but we don't assert an equality/inequality that depends on when the test runs.
+    // Deux heures valides ; pas d'egalite assertee entre villes, elle depend du moment du test.
     expect(paris).toMatch(/^\d{2}h\d{2}$/);
     expect(tokyo).toMatch(/^\d{2}h\d{2}$/);
   });

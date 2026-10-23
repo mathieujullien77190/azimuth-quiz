@@ -10,12 +10,12 @@ import type { DifficultyBadgeProps } from './types';
 
 import { createStyles } from './styles';
 
-/** "🟡 MOYEN": the round's difficulty, as its emoji and label, in every game's header. */
+/** "🟡 MOYEN" : difficulte de la manche, dans l'en-tete de chaque jeu. */
 export const DifficultyBadge = memo(function DifficultyBadge({ difficulty }: DifficultyBadgeProps) {
   const styles = useThemedStyles(createStyles);
   const { isDark } = useTheme();
   const t = useTranslation();
-  // DIFFICULTIES lists every Difficulty value, so the lookup always finds a match.
+  // DIFFICULTIES liste toutes les valeurs, donc la recherche trouve toujours.
   const emoji = difficultyEmoji(
     DIFFICULTIES.find((entry) => entry.id === difficulty)!,
     isDark,

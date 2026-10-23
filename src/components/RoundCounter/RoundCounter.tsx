@@ -9,7 +9,7 @@ import type { RoundCounterProps } from './types';
 
 import { createStyles } from './styles';
 
-/** "MANCHE 3 / 10": where the game is, in every game's header. */
+/** « MANCHE 3 / 10 » : ou en est la partie, dans le header de chaque jeu. */
 export const RoundCounter = memo(function RoundCounter({ roundNumber, totalRounds }: RoundCounterProps) {
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();

@@ -8,11 +8,8 @@ import type { FooterNavProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * "Suivant"/"Precedent" (one shown at a time, whichever section the round is scrolled to) next
- * to "Valider" — shared by `GameScreen` and `OnlineGameScreen`, whose guess phase footers are
- * otherwise identical. Both halves are exactly 50% of the row's width (`stepFlex`/`validateFlex`
- * are both `flex: 1`). `onCap` is controlled by the parent rather than local state: it must also
- * follow the player manually dragging the scroll, not just a press on this button.
+ * "Suivant"/"Precedent" a cote de "Valider", partage par `GameScreen` et `OnlineGameScreen`. `onCap` est
+ * controle par le parent : il doit aussi suivre un defilement a la main.
  */
 export const FooterNav = ({ onCap, onGoToCap, onGoToDistance, validateDisabled, onValidate }: FooterNavProps) => {
   const styles = useThemedStyles(createStyles);

@@ -51,7 +51,7 @@ const gameState = (overrides: Partial<RoomGameState> = {}): RoomGameState => ({
 
 const setRoom = (state: Partial<ReturnType<typeof useRoomStore.getState>>) => useRoomStore.setState(state);
 
-/** Two players, `host` (this device unless said otherwise) then `guest`. */
+/** Deux joueurs, `host` (cet appareil sauf indication) puis `guest`. */
 const setup = async (state: Partial<ReturnType<typeof useRoomStore.getState>> = {}) => {
   setRoom({
     code: 'tabofuna',
@@ -194,7 +194,7 @@ describe('useOnlineGame — the round history', () => {
     expect(result.current.records[0].place).toEqual(PARIS);
     expect(result.current.records[0].results).toHaveLength(2);
 
-    // Same round again (a fresh snapshot): not recorded twice.
+    // Meme manche a nouveau (snapshot neuf) : pas enregistree deux fois.
     await act(async () => setRoom({ gameState: { ...revealed, guesses: { ...revealed.guesses } } }));
     expect(result.current.records).toHaveLength(1);
   });

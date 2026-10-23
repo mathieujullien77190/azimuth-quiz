@@ -5,17 +5,15 @@ import { Platform } from 'react-native';
 import { auth, db } from './client';
 import type { ErrorRecord } from '../helpers/reportError';
 
-/** An error is good for cleaning after 30 days (`expireAt`: the admin's "Erreurs" page deletes the expired ones). */
+/** Une erreur est nettoyable apres 30 jours (`expireAt`). */
 const RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
-/** The day as `firestore.rules` computes it from `request.time` (UTC, no zero padding): the id of the day's quota
- * documents. */
+/** Le jour tel que `firestore.rules` le calcule (UTC, sans zero de tete) : id des documents de quota. */
 export const dayKey = (date: Date): string => `${date.getUTCFullYear()}-${date.getUTCMonth() + 1}-${date.getUTCDate()}`;
 
 /**
- * Writes one error and bumps this device's and the global daily counters in the SAME batch: the rules only accept the
- * error when both counters went up by exactly one and stay under their caps (30 a day per device, 1000 a day in all), so
- * nobody can flood the collection. Nothing here goes through the admin's journal or `meta/dataVersion`.
+ * Ecrit une erreur et incremente les compteurs du jour (appareil et global) dans le MEME lot : les regles
+ * exigent +1 exact sous les plafonds (30/appareil, 1000 au total). Hors journal et `meta/dataVersion`.
  */
 export const writeErrorRecord = async (record: ErrorRecord): Promise<void> => {
   const uid = auth.currentUser?.uid;

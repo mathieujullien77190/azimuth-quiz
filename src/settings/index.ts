@@ -8,21 +8,17 @@ import type { ClueSettings, GameSettings } from '@/types';
 
 export type SettingsContextValue = {
   settings: GameSettings;
-  /** False until the saved settings have been read (defaults are returned until then). */
+  /** Faux tant que les reglages sauvegardes ne sont pas lus (defauts entre-temps). */
   ready: boolean;
   updateSettings: (patch: Partial<GameSettings>) => void;
-  /** Resets the in-memory settings to defaults without rewriting storage (used
-   * after "Clear data": otherwise the screen keeps the in-memory values until the app's
-   * next launch, even though storage is already empty). */
+  /** Remet les defauts en memoire sans toucher au stockage (apres "Effacer les donnees"). */
   resetSettings: () => void;
 };
 
-/** Compass settings — a Zustand store rather than a Context, but the same public hook shape
- * (`useSettings()` returns `{ settings, ready, updateSettings, resetSettings }`), so every
- * consumer (`SetupScreen`, `useGame`, `SettingsScreen`) is unaffected by this. Never hydrated at
- * import time (see `hydrateSettings`) — a store singleton's module evaluation must stay
- * side-effect-free, unlike a Provider's mount effect, or every test that imports this module
- * transitively (even ones mocking `@/helpers` without `loadSettings`) would crash on import. */
+/**
+ * Reglages Boussole (store Zustand). Jamais hydrate a l'import (`hydrateSettings`) : l'evaluation d'un singleton doit
+ * rester sans effet de bord, sinon tout test qui l'importe sans `loadSettings` mocke planterait.
+ */
 export const useSettings = create<SettingsContextValue>()((set) => ({
   settings: DEFAULT_SETTINGS,
   ready: false,
@@ -35,15 +31,12 @@ export const useSettings = create<SettingsContextValue>()((set) => ({
   resetSettings: () => set({ settings: DEFAULT_SETTINGS }),
 }));
 
-/** Reads the persisted settings once and flips `ready` — called once from the root layout
- * (`src/app/_layout.tsx`), replacing `SettingsProvider`'s old mount effect. */
+/** Lit les reglages sauvegardes une fois (appele par `src/app/_layout.tsx`). */
 export const hydrateSettings = (): void => {
   loadSettings().then((settings) => useSettings.setState({ settings, ready: true }));
 };
 
-/** Clues game settings: independent store, never mixed with `GameSettings` (Compass). No
- * persistence (unlike `useSettings` above) — resets to defaults on every launch, until the game
- * has more than one place pool to offer, same as before this was a plain Context. */
+/** Reglages Indices : store independant de `GameSettings`, sans persistance (defauts a chaque lancement). */
 export type ClueSettingsContextValue = {
   settings: ClueSettings;
   updateSettings: (patch: Partial<ClueSettings>) => void;
@@ -56,17 +49,15 @@ export const useClueSettings = create<ClueSettingsContextValue>()((set) => ({
 
 export type PlayerNameContextValue = {
   playerName: string;
-  /** False until the saved name has been read (see `hydratePlayerName`). */
+  /** Faux tant que le nom sauvegarde n'est pas lu (`hydratePlayerName`). */
   ready: boolean;
   setPlayerName: (name: string) => void;
 };
 
-/** The player's name, the one thing shared by the 2 games (`GameSettings`/
- * `ClueSettings` each still keep their own `playerName` field, but only as a mirror of this —
- * see `useSetupRoom`'s sync effect, which also migrates an already-persisted name (Compass, the
- * only one of the 2 to persist on its own) into this store the very first time it hydrates
- * empty). Persisted on every change (unlike a room rename, this never touches Firestore, so no
- * debounce is needed here — see `PLAYER_NAME_STORAGE_KEY`). */
+/**
+ * Nom du joueur, partage par les 2 jeux (leurs `playerName` n'en sont que le miroir, voir la synchro de `useSetupRoom`,
+ * qui y migre aussi un nom Compass deja sauve). Persiste a chaque changement, sans debounce (rien vers Firestore).
+ */
 export const usePlayerName = create<PlayerNameContextValue>()((set) => ({
   playerName: '',
   ready: false,
@@ -76,22 +67,20 @@ export const usePlayerName = create<PlayerNameContextValue>()((set) => ({
   },
 }));
 
-/** Reads the persisted name once and flips `ready` — called once from the root layout, like
- * `hydrateSettings`. */
+/** Lit le nom sauvegarde une fois (depuis le layout racine, comme `hydrateSettings`). */
 export const hydratePlayerName = (): void => {
   loadPlayerName().then((name) => usePlayerName.setState({ playerName: name ?? '', ready: true }));
 };
 
 export type DevCodeContextValue = {
-  /** What was typed in the settings' "dev" field, as typed. */
+  /** Ce qui a ete tape dans le champ "dev" des reglages. */
   devCode: string;
-  /** False until the saved code has been read (see `hydrateDevCode`). */
+  /** Faux tant que le code sauvegarde n'est pas lu (`hydrateDevCode`). */
   ready: boolean;
   setDevCode: (code: string) => void;
 };
 
-/** The dev code typed in the settings. Typing it does nothing by itself: it is only saved here, and the games read it
- * through `useDevMode` (the difficulty feedback of `useDevFeedback`). Persisted on every change. */
+/** Code dev saisi : seulement garde ici, les jeux le lisent via `useDevMode` (avis de difficulte). Persiste a chaque changement. */
 export const useDevCode = create<DevCodeContextValue>()((set) => ({
   devCode: '',
   ready: false,
@@ -101,10 +90,10 @@ export const useDevCode = create<DevCodeContextValue>()((set) => ({
   },
 }));
 
-/** Reads the saved dev code once and flips `ready` — called once from the root layout, like `hydratePlayerName`. */
+/** Lit le code dev sauvegarde une fois (depuis le layout racine). */
 export const hydrateDevCode = (): void => {
   loadDevCode().then((code) => useDevCode.setState({ devCode: code ?? '', ready: true }));
 };
 
-/** Whether this device has the dev mode on: the saved code is exactly `DEV_CODE` (spaces around it ignored). */
+/** Le mode dev est-il actif : code sauvegarde egal a `DEV_CODE` (espaces ignores). */
 export const useDevMode = (): boolean => useDevCode((state) => state.devCode.trim() === DEV_CODE);

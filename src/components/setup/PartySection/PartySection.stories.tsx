@@ -31,10 +31,10 @@ const connectedPlayers: [string, PartySectionPlayer][] = [
   [JOINER_UID, { name: 'Max', joinedAt: null, color: PLAYER_COLORS[1] }],
 ];
 
-/** Named (capitalized) so eslint's rules-of-hooks recognizes it as a component and allows the
- * `useState` below — an inline arrow assigned to a story's `render` doesn't qualify. Only the
- * solo/host/join chip, the solo name field and the join code field are wired to local state:
- * enough to click through the whole flow, without simulating a real Firestore room. */
+/**
+ * Nomme (majuscule) pour que rules-of-hooks d'eslint accepte le `useState`. Seuls la puce solo/hote/rejoindre,
+ * le nom solo et le code a rejoindre sont branches sur un state local, sans simuler de room Firestore.
+ */
 const InteractiveDemo = (args: PartySectionProps) => {
   const [onlineChoice, setOnlineChoice] = useState(args.onlineChoice);
   const [soloName, setSoloName] = useState(args.soloName);
@@ -87,8 +87,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Not connected to any room: just this device's own name field, and the Solo/Host/Join chip
- * row — clicking a chip actually switches which one is shown below. */
+/**
+ * Aucune room : juste le champ nom de cet appareil et la rangee de puces Solo/Hote/Rejoindre (un clic change ce
+ * qui est affiche dessous).
+ */
 export const Solo: Story = {
   parameters: source(soloCode),
   args: {
@@ -116,9 +118,10 @@ export const Solo: Story = {
   render: InteractiveDemo,
 };
 
-/** Hosting a room: the generated code field, plus one other connected player with the host's own
- * "kick" cross next to their name (this device is `localUid`, so it never shows a cross on its
- * own row — there isn't one here, `soloName` is that row instead). */
+/**
+ * Hebergement : champ du code genere, plus un autre joueur connecte avec la croix « expulser » de l'hote a cote
+ * de son nom (cet appareil est `localUid`, donc pas de croix sur sa propre ligne, qui est `soloName`).
+ */
 export const Hosting: Story = {
   parameters: source(hostingCode),
   args: {
@@ -134,9 +137,10 @@ export const Hosting: Story = {
   render: InteractiveDemo,
 };
 
-/** Just chose "Héberger": the room code hasn't come back from Firestore yet (a couple of seconds
- * on a slow connection), so the field shows its "creating…" placeholder with a spinner next to
- * it rather than sitting empty. */
+/**
+ * « Heberger » vient d'etre choisi : le code n'est pas encore revenu de Firestore (quelques secondes en connexion
+ * lente), le champ montre son placeholder « creation... » avec un spinner.
+ */
 export const GeneratingCode: Story = {
   parameters: source(generatingCodeCode),
   args: {
@@ -151,8 +155,10 @@ export const GeneratingCode: Story = {
   render: InteractiveDemo,
 };
 
-/** Joined someone else's room: the code field locks and the chip turns into "Leave" — every
- * other field (including this device's own name) stays visible but read-only. */
+/**
+ * Room d'un autre rejointe : le champ code se verrouille et la puce devient « Quitter » ; les autres champs
+ * (dont le nom de cet appareil) restent visibles en lecture seule.
+ */
 export const Joined: Story = {
   parameters: source(joinedCode),
   args: {
@@ -171,8 +177,10 @@ export const Joined: Story = {
   render: InteractiveDemo,
 };
 
-/** Joining under a name another player already has: the room refuses it, the field opens up again
- * with the reason under it, and typing another name tries again. */
+/**
+ * Nom deja pris par un autre joueur : la room le refuse, le champ se rouvre avec la raison dessous, et saisir un
+ * autre nom retente.
+ */
 export const NameTaken: Story = {
   name: 'Name already taken',
   parameters: source(nameTakenCode),

@@ -1,5 +1,5 @@
-// Dedicated to the Switch, not theme tokens. By day the "on" track is orange (the day accent is a blue-gray, not
-// what a switch should say "on" with) and the thumb stays colors.accent. By night the track stays colors.accent
-// (amber) and the thumb is a deep blue: the strongest contrast on amber, and it picks up the night palette.
+// Propre au Switch, pas des tokens de theme. De jour la piste « on » est orange (l'accent du jour est un gris-bleu,
+// pas une couleur d'« actif ») et le curseur reste colors.accent. De nuit la piste reste colors.accent (ambre) et le
+// curseur est bleu profond : meilleur contraste sur l'ambre, dans la palette de nuit.
 export const DAY_TRACK_ON_COLOR = '#F28C38';
 export const NIGHT_THUMB_ON_COLOR = '#1E3A8A';

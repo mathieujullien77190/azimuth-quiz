@@ -1,2 +1,2 @@
-/** The backdrop over the game, dim enough to see it through: the question never takes the game away. */
+/** Fond sur le jeu, assez leger pour le voir au travers : la question ne bloque jamais le jeu. */
 export const BACKDROP_COLOR = 'rgba(0, 0, 0, 0.6)';

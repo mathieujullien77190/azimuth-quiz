@@ -22,7 +22,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The title block shared by the home screen and the startup splash. */
+/** Bloc titre partage par l'accueil et l'ecran de demarrage. */
 export const Default: Story = {
   parameters: source(defaultCode),
   args: { tagline: translations.fr.app.tagline },

@@ -11,9 +11,8 @@ import type { CustomOriginInputsProps, OptionsSectionProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * Latitude/longitude fields controlled locally (free text while typing, including a lone "-" or
- * "3."): only pushes a number up once it actually parses and is in range, instead of the field
- * jumping back on every invalid keystroke.
+ * Champs latitude/longitude controles localement (texte libre pendant la frappe, y compris un « - » seul ou
+ * « 3. ») : un nombre n'est remonte que s'il est valide et dans les bornes, pour que le champ ne saute pas.
  */
 const CustomOriginInputs = ({ latitude, longitude, onChange, disabled }: CustomOriginInputsProps) => {
   const styles = useThemedStyles(createStyles);
@@ -64,9 +63,8 @@ const CustomOriginInputs = ({ latitude, longitude, onChange, disabled }: CustomO
 };
 
 /**
- * "Options" block shared by every game's setup — dumb: a table of on/off options (title,
- * description, value, callback), plus the optional GPS option
- * (`gps`, with its custom-origin fields) for the games that have a starting point.
+ * Bloc « Options » commun aux setups (dumb) : table d'options on/off (titre, description, valeur, callback),
+ * plus l'option GPS (`gps`, avec ses champs d'origine perso) pour les jeux qui ont un point de depart.
  */
 export const OptionsSection = ({ title, options, gps, disabled = false }: OptionsSectionProps) => (
   <Section title={title}>

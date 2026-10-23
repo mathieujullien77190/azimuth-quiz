@@ -20,9 +20,9 @@ import {
 jest.mock('@/games/clues/helpers/personality', () => ({ personalityFor: jest.fn(() => null) }));
 jest.mock('@/games/clues/helpers/wordplay', () => ({ wordplayFor: jest.fn(() => null) }));
 
-const PARIS = CLUE_PLACES.find((place) => place.name === 'Paris')!; // capital
+const PARIS = CLUE_PLACES.find((place) => place.name === 'Paris')!; // capitale
 const MARSEILLE = CLUE_PLACES.find((place) => place.name === 'Marseille')!; // citiesFr
-const NEW_YORK = CLUE_PLACES.find((place) => place.name === 'New York')!; // plain "cities"
+const NEW_YORK = CLUE_PLACES.find((place) => place.name === 'New York')!; // "cities" simple
 const CITIES_FR_EXCLUDED: ClueId[] = ['localTime', 'isCapital', 'flagColors', 'currency', 'phoneCode'];
 
 beforeEach(() => {
@@ -79,9 +79,7 @@ describe('totalRevealCount', () => {
   ];
   const THREE_STAGE: ClueId[] = ['emoji', 'flagColors'];
 
-  /** Rebuilds the expected total the same way `totalRevealCount` should, but independently (from
-   * `cluesFor`/the real per-clue stage rules), so this actually exercises the production
-   * function's own wiring rather than just mirroring its implementation line for line. */
+  /** Recalcule le total attendu independamment de `totalRevealCount` (via `cluesFor` et les etapes reelles). */
   const expectedTotal = (place: CluePlace): number =>
     cluesFor(place).reduce((total, clueId) => {
       return total + (THREE_STAGE.includes(clueId) ? 3 : TWO_STAGE.includes(clueId) ? 2 : 1);
@@ -93,7 +91,7 @@ describe('totalRevealCount', () => {
   });
 
   it('is lower for a citiesFr place, by exactly the dropped clues’ own cost', () => {
-    // localTime (2 stages) + isCapital (1) + flagColors (3) + currency (2 stages) + phoneCode (1) = 9.
+    // localTime (2 etapes) + isCapital (1) + flagColors (3) + currency (2 etapes) + phoneCode (1) = 9.
     expect(totalRevealCount(PARIS) - totalRevealCount(MARSEILLE)).toBe(9);
   });
 

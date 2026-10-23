@@ -7,10 +7,10 @@ import { smoothHeading } from './helpers';
 import type { UseHeadingResult, WebOrientationEvent } from './types';
 
 /**
- * Heading derived from a browser orientation event: `webkitCompassHeading` (Safari iOS, already
- * true north) otherwise `alpha` from an absolute event (Chrome/Android), converted from
- * trigonometric to clockwise direction. `null` if the event has nothing usable.
- */
+ /**
+  * Cap tire d'un evenement d'orientation : `webkitCompassHeading` (Safari iOS) sinon `alpha` (Chrome/Android),
+  * converti en sens horaire. `null` si rien d'exploitable.
+  */
 const readWebHeading = (event: WebOrientationEvent): number | null => {
   if (typeof event.webkitCompassHeading === 'number') return event.webkitCompassHeading;
   if (event.absolute === true && event.alpha !== null) return (360 - event.alpha) % 360;
@@ -18,15 +18,10 @@ const readWebHeading = (event: WebOrientationEvent): number | null => {
 };
 
 /**
- * Phone heading in degrees (0 = top of the screen points to north), or null if the
- * live compass is disabled / unavailable (permission denied, no sensor).
- * Uses true north; falls back to magnetic north without a position.
- *
- * On web, `expo-location` doesn't support heading (see `ExpoLocation.web.ts`): we listen
- * directly to the browser's `deviceorientation(absolute)` API. Safari iOS only allows this
- * listener after a `requestPermission()` triggered by a real user gesture — impossible
- * to request it on its own on mount. `onTouch` (called on the compass's first touch) serves
- * this request; without that (Android, or a browser without this restriction), listening starts right away.
+ * Cap du telephone en degres (0 = haut de l'ecran vers le nord), ou null si la boussole live est
+ * desactivee/indisponible. Vrai nord, repli sur le nord magnetique sans position.
+ * Web : `expo-location` ne gere pas le cap, on ecoute `deviceorientation(absolute)`. Safari iOS exige un
+ * `requestPermission()` declenche par un geste, d'ou `onTouch` (1er toucher de la boussole).
  */
 export const useHeading = (enabled: boolean): UseHeadingResult => {
   const [heading, setHeading] = useState<number | null>(null);
@@ -87,7 +82,7 @@ export const useHeading = (enabled: boolean): UseHeadingResult => {
         });
         if (cancelled) subscription.remove();
       } catch {
-        // Sensor unavailable: the compass stays oriented upward, as before.
+        // Capteur indisponible : la boussole reste orientee vers le haut.
       }
     })();
 

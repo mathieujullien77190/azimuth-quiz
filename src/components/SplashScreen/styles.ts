@@ -12,14 +12,14 @@ export const createStyles = ({ colors, isDark, typography }: Theme) =>
       zIndex: 1000,
       backgroundColor: colors.background,
     },
-    // The same padding as a `Screen` (safe area + its content padding), so that the title block, drawn first, sits at
-    // exactly the position it has on the home screen.
+    // Meme padding qu'un `Screen` (zone de securite + contenu), pour que le titre soit exactement a sa position
+    // de l'accueil.
     layout: {
       flex: 1,
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
     },
-    // What is under the title: the dial in the middle of the room left, the footer at the bottom.
+    // Sous le titre : le cadran au milieu de la place restante, le pied en bas.
     body: {
       flex: 1,
       alignItems: 'center',
@@ -50,7 +50,7 @@ export const createStyles = ({ colors, isDark, typography }: Theme) =>
       borderRadius: 4,
       backgroundColor: isDark ? colors.accent : colors.accentDark,
     },
-    // The "loading" label and, beside it, the bar's percentage.
+    // Libelle « chargement » et, a cote, pourcentage de la barre.
     loadingRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -62,7 +62,7 @@ export const createStyles = ({ colors, isDark, typography }: Theme) =>
       fontSize: fontSize.caption,
       letterSpacing: 3,
     },
-    // The whole version line, never cut: centred, readable, and free to wrap onto a second line on a narrow phone.
+    // Ligne de version entiere, jamais coupee : centree, lisible, elle peut passer sur 2 lignes sur petit telephone.
     version: {
       ...typography.body,
       color: colors.textMuted,

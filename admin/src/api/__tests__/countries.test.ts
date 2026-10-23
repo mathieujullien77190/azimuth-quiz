@@ -23,7 +23,7 @@ const full: CountryDoc = {
   phoneCode: '+33',
 };
 
-/** What a document written when Silhouette still existed carries on top of the country data. */
+/** Ce que porte un document ecrit du temps de Silhouette en plus des donnees du pays. */
 const withSilhouetteLeftovers = { ...full, borders: ['ES'], ring: 'abc', difficulty: 'easy', n: 3, neighbors: [] };
 
 const recordOf = (overrides: Partial<CountryRecord> = {}): CountryRecord => ({

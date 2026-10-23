@@ -1,3 +1,3 @@
-/** How tall a card is at least (px): big, and fixed — the cards no longer stretch with the screen, the home screen puts the
- * pair at the bottom (a card taller than this only when its own content needs it). */
+/** Hauteur minimale d'une carte (px) : grande et fixe, l'accueil pose les deux cartes en bas (plus haute
+ * seulement si son contenu l'exige). */
 export const CARD_MIN_HEIGHT = 236;

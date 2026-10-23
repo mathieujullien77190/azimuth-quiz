@@ -1,4 +1,3 @@
-// Below this screen width, the round recap's fonts shrink (the detail
-// "+104+100=204" etc. would overflow otherwise on small phones).
+// Sous cette largeur, les polices du recap reduisent (sinon "+104+100=204" deborde).
 export const COMPACT_MAX_WIDTH = 450;
 export const COMPACT_FONT_SCALE = 0.85;

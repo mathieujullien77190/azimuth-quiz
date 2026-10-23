@@ -1,5 +1,5 @@
 export type RoundCounterProps = {
-  /** The round being played, from 1. */
+  /** Manche en cours, a partir de 1. */
   roundNumber: number;
   totalRounds: number;
 };

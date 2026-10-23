@@ -9,8 +9,7 @@ import dayCode from './Day.source.md?raw';
 import defaultCode from './Default.source.md?raw';
 import nightCode from './Night.source.md?raw';
 
-/** Renders the story in one theme whatever the toolbar says — on that theme's own background, so the
- * palette is seen the way a screen of that theme shows it. */
+/** Rend la story dans un seul theme, sur le fond de ce theme, quel que soit celui de la barre d'outils. */
 const pinnedTo = (themeId: ThemeId): Decorator => {
   const PinnedTheme: Decorator = (Story) => (
     <ThemeSettingsContext.Provider
@@ -45,20 +44,19 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Night and Day side by side. Switch the toolbar's theme or language: the highlighted column, the
- * texts and the panel around the table follow. */
+/** Night et Day cote a cote ; la colonne mise en avant suit le theme de la barre d'outils. */
 export const Default: Story = {
   parameters: source(defaultCode),
 };
 
-/** Night on its own, drawn in Night. */
+/** Night seul. */
 export const Night: Story = {
   parameters: source(nightCode),
   args: { themes: [THEMES.night] },
   decorators: [pinnedTo('night')],
 };
 
-/** Day on its own, drawn in Day. */
+/** Day seul. */
 export const Day: Story = {
   parameters: source(dayCode),
   args: { themes: [THEMES.day] },

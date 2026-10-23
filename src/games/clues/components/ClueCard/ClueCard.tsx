@@ -18,15 +18,13 @@ import { dayNightEmoji, elevationTierEmoji, localTimeFor, populationTier, vowels
 import type { ClueCardProps } from './types';
 import { createStyles } from './styles';
 
-/** Increasing diameters for the 5 dots of the population gauge (see `populationTier`). */
+/** Diametres croissants des 5 points de la jauge de population (voir `populationTier`). */
 const POPULATION_DOT_SIZES = [6, 10, 14, 18, 22];
 
-/** Clues that always span the full width of the grid, locked or revealed (bigger visual, and
- * avoids relying on react-native-web's more forgiving flexbox to fit the compass/Earth). */
+/** Indices toujours pleine largeur (verrouilles ou devoiles), sans compter sur le flexbox tolerant de react-native-web. */
 const WIDE_CLUE_IDS = new Set(['bearing', 'distance', 'globe', 'wordplay']);
 
-/** "1/2", "2/3"... above multi-click clues — `undefined` for single-click clues
- * (no badge in that case, see the call site in the component). */
+/** "1/2", "2/3"... au-dessus des indices a plusieurs clics ; `undefined` pour un seul clic (pas de badge). */
 const multiStageProgress = (
   clueId: ClueCardProps['clueId'],
   stages: {
@@ -45,8 +43,7 @@ const multiStageProgress = (
     case 'emoji':
       return { stage: Math.min(stages.emojiStage ?? 1, 3), max: 3 };
     case 'flagColors':
-      // Always exactly 3, regardless of how many colors the flag actually has: 1 color, then
-      // every color, then the actual flag.
+      // Toujours 3 clics, quel que soit le nombre de couleurs : 1 couleur, toutes, puis le vrai drapeau.
       return { stage: Math.min(stages.flagStage ?? 1, 3), max: 3 };
     case 'distance':
       return { stage: Math.min(stages.distanceStage ?? 1, 2), max: 2 };
@@ -205,8 +202,7 @@ const revealedBody = (
     case 'flagColors': {
       const allColors = place.flagColors;
       const stage = flagStage ?? 1;
-      // 1st click: one color. 2nd click: every color, however many the flag actually has. 3rd
-      // click: swaps the swatches for the actual flag (see CluesGameScreen).
+      // 1er clic : une couleur. 2e : toutes. 3e : le vrai drapeau a la place des pastilles.
       if (stage >= 3) return <Text style={styles.flagEmoji}>{flagEmoji(place.code)}</Text>;
       const visibleColors = stage >= 2 ? allColors : allColors.slice(0, 1);
       return (
@@ -245,14 +241,14 @@ const revealedBody = (
       ) : null;
     }
     case 'globe':
-      // The answer on a globe, turned with a finger: the starting point, and the place as a circled point (no route).
+      // Globe tourne au doigt : le depart et le lieu entoure (pas de trajet).
       return origin !== undefined && bearingDeg !== undefined && distanceKm !== undefined ? (
         <Globe3D
           equator
           greenwich
           land={(globeStage ?? 1) >= 2}
-          // The card itself is what the taps are for (one more stage of the clue): the globe is not turned here, and
-          // the OpenGL surface is painted with the card's own color rather than letting the card show through it.
+          // Les taps vont a la carte (etape suivante de l'indice) : le globe ne tourne pas ici.
+          // La surface OpenGL est peinte de la couleur de la carte, sinon elle ne serait pas transparente.
           backgroundColor={colors.surfaceHigh}
           draggable={false}
           satellite={false}
@@ -320,9 +316,7 @@ export const ClueCard = ({
           populationStage,
         })
       : undefined;
-  // Plain colored dot (🟢/🟠/🔴), how tricky THIS pun is — never gates whether the clue is
-  // offered, purely informational, shown locked (next to the padlock) and revealed (see
-  // `wordplayFor`'s own doc comment).
+  // Pastille de couleur (🟢/🟠/🔴) : difficulte du jeu de mots, purement informative (voir `wordplayFor`).
   const wordplayEntry = clueId === 'wordplay' ? wordplayFor(place) : null;
   const wordplayDifficultyEmoji =
     wordplayEntry === null

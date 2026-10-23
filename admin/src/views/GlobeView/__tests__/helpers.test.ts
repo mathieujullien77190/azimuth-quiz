@@ -91,7 +91,7 @@ describe('parseRings / segmentsOf', () => {
   it('makes one segment per edge of a closed ring: two ends of three coordinates each', () => {
     const segments = segmentsOf([square(0, 0, 10)], 1);
     expect(segments).toHaveLength(4 * 6);
-    // The last edge goes back to the first point.
+    // La derniere arete revient au premier point.
     expect(segments.slice(-3)).toEqual([...toVector(0, 0, 1)]);
   });
 });
@@ -175,7 +175,7 @@ describe('level of detail', () => {
     expect(shapeShownAt('star', CAPITALS_MAX_DISTANCE + 0.1)).toBe(false);
     expect(shapeShownAt('round', POINTS_MAX_DISTANCE)).toBe(true);
     expect(shapeShownAt('square', POINTS_MAX_DISTANCE + 0.1)).toBe(false);
-    // Between the two thresholds only the capitals are there.
+    // Entre les deux seuils, seules les capitales sont la.
     const between = (CAPITALS_MAX_DISTANCE + POINTS_MAX_DISTANCE) / 2;
     expect([shapeShownAt('star', between), shapeShownAt('round', between)]).toEqual([true, false]);
     expect(labelsShownAt(LABELS_MAX_DISTANCE)).toBe(true);

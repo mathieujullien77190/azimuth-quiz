@@ -39,11 +39,12 @@ const adapter: SetupRoomAdapter<GameSettings, RoomSettings> = {
   updateRoomPlayerColors,
 };
 
-/** Compass' side of the online setup: the room lifecycle is `useSetupRoom`'s (shared with Clues),
- * only what "Lancer la partie" writes is specific — the host's own GPS/custom position, never a
- * joiner's, is the shared reference every guess gets scored against (see `startRoomGame`), and the
- * whole game's places are drawn upfront by the host from Firestore (`fetchRandomPlaces`, no fallback:
- * a failure rejects and `useSetupRoom` shows the "couldn't start" notice). */
+/**
+ * Cote Compass de la room en ligne : le cycle de vie est `useSetupRoom` (commun avec Clues) ; seul ce que
+ * "Lancer la partie" ecrit est propre : le GPS/position de l'hote (jamais un joiner) sert de reference, et
+ * l'hote tire tous les lieux (`fetchRandomPlaces`, sans repli : l'echec rejette et `useSetupRoom` affiche
+ * la notice).
+ */
 export const useOnlineRoom = (settings: GameSettings, updateSettings: (patch: Partial<GameSettings>) => void) => {
   const t = useTranslation();
   const { language } = useLanguage();
@@ -58,9 +59,9 @@ export const useOnlineRoom = (settings: GameSettings, updateSettings: (patch: Pa
             coordinates: { latitude: settings.customLatitude, longitude: settings.customLongitude },
             isDevicePosition: false,
           };
-      // Drawn from Firestore, no fallback: a failure rejects, and the shared start flow shows a notice.
+      // Tire dans Firestore sans repli : l'echec rejette, le flux commun affiche une notice.
       const drawn = await fetchRandomPlaces(settings, language);
-      // Travel mode starts each round from the previous place: no place twice in a row.
+      // Mode voyage : chaque manche part du lieu precedent, pas de lieu deux fois de suite.
       const places = settings.travel ? separateRepeats(drawn) : drawn;
       await startRoomGame(code, { origin, places });
     });

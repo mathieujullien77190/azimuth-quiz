@@ -11,8 +11,8 @@ export const createStyles = (_theme: Theme) =>
       top: spacing.sm,
       right: spacing.lg,
     },
-    // The two big cards, stacked and pushed to the BOTTOM of the screen (the title block stays at the top, where the splash
-    // draws it too): the free height is between them. The Screen's bottom safe area and padding apply as for any screen.
+    // Les deux grandes cartes, empilees et poussees en BAS de l'ecran (le bloc titre reste en haut, ou le splash le
+    // dessine aussi) : la hauteur libre est entre eux. Zone de securite basse et padding du Screen comme pour tout ecran.
     games: {
       flexGrow: 1,
       justifyContent: 'flex-end',

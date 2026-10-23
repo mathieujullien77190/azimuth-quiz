@@ -22,7 +22,7 @@ const setup = async (initial: Props = {}) =>
     { initialProps: initial },
   );
 
-/** Round 0 reaches its reveal, then the host moves on to round 1. */
+/** La manche 0 atteint son reveal, puis l'hote passe a la manche 1. */
 const moveOn = async (ctx: Awaited<ReturnType<typeof setup>>, props: Props = {}, endedTarget: DevFeedbackTarget | null = target) => {
   await ctx.rerender({ roundIndex: 0, roundOver: true, target: endedTarget ?? undefined });
   await ctx.rerender({ roundIndex: 1, roundOver: false, target: next, ...props });
@@ -73,7 +73,7 @@ describe('useDevFeedback', () => {
       suggestedDifficulty: 'hard',
     });
     expect(ctx.result.current.question).toBeNull();
-    // Still the same round (the new round's own state moving): not asked twice.
+    // Meme manche (seul son propre etat bouge) : pas redemande.
     await ctx.rerender({ roundIndex: 3, roundOver: false, target: next });
     expect(ctx.result.current.question).toBeNull();
   });
@@ -90,7 +90,7 @@ describe('useDevFeedback', () => {
     const ctx = await setup();
     await moveOn(ctx);
     expect(ctx.result.current.question).toBe('Le lieu Chutes Victoria était-il…');
-    // Round 1 ends before the answer: the question about round 0 is gone (never over a reveal), round 1 is asked next.
+    // La manche 1 finit sans reponse : la question sur la manche 0 disparait (jamais par-dessus un reveal), puis celle de la manche 1.
     await ctx.rerender({ roundIndex: 1, roundOver: true, target: next });
     expect(ctx.result.current.question).toBeNull();
     await ctx.rerender({ roundIndex: 2, roundOver: false, target: target });
@@ -100,7 +100,7 @@ describe('useDevFeedback', () => {
   it('asks about the last round on the final standings, even if the round still looks over', async () => {
     const ctx = await setup({ roundIndex: 4 });
     await ctx.rerender({ roundIndex: 4, roundOver: true });
-    // The end: the round counter points past the last round and the verdict may still be there.
+    // Fin : le compteur depasse la derniere manche alors que le verdict peut rester.
     await ctx.rerender({ roundIndex: 5, roundOver: true, gameOver: true, target: undefined });
     expect(ctx.result.current.question).toBe('Le lieu Chutes Victoria était-il…');
     await act(async () => ctx.result.current.dismiss());
@@ -114,7 +114,7 @@ describe('useDevFeedback', () => {
     expect(ctx.result.current.question).toBe('Le lieu Chutes Victoria était-il…');
     await act(async () => ctx.result.current.dismiss());
 
-    // A new game: the counter is back at 0, nothing stale is asked, and a dismissal of the old game does not linger.
+    // Nouvelle partie : compteur a 0, rien de perime n'est demande, un refus ancien ne persiste pas.
     await ctx.rerender({ roundIndex: 0, roundOver: false, target });
     expect(ctx.result.current.question).toBeNull();
     await ctx.rerender({ roundIndex: 0, roundOver: true });

@@ -4,15 +4,12 @@ import type { Difficulty, CluePlace, Place } from '@/types';
 
 import { applyPlaceChange, data, putPlace } from '../data';
 
-/** A place card: the common identity, plus each game's data when this place is in it
- * (either one can be absent). `key` is the short code the `places/{key}` documents are indexed by
- * (e.g. `"par"` for Paris) — opaque, so anything shown to the admin pairs it with the human
- * identity. */
+/** Fiche d'un lieu : l'identite commune plus les donnees de chaque jeu auquel il appartient. */
 export type PlaceRow = {
   key: string;
   name: string;
   code: string;
-  /** The country's French name, as the place carries it (its code when it carries none). */
+  /** Nom francais du pays tel que le lieu le porte (son code a defaut). */
   country: string;
   coordinates: { latitude: number; longitude: number };
   compass: Place | null;
@@ -37,16 +34,15 @@ const rowOf = (key: string, doc: PlaceDoc): PlaceRow => ({
   clues: cluesOf(key, doc),
 });
 
-/** Reads the in-memory copy of Firestore (see `data.ts`): kept `async` so call sites don't care. */
+/** Lit la copie en memoire de Firestore (voir `data.ts`) ; `async` pour que les appelants n'en dependent pas. */
 export const fetchPlaces = async (): Promise<PlaceRow[]> =>
   Object.entries(data().places)
     .map(([key, doc]) => rowOf(key, doc))
     .sort((a, b) => a.name.localeCompare(b.name, 'fr'));
 
 export type CompassPatch = Partial<Pick<Place, 'category' | 'description'>>;
-// Position/elevation/timezone/airport code/phone code/currency are all read-only in the admin:
-// they come from real-world data (geography, IANA zones, ISO codes), not editorial judgment like
-// category/difficulty/description — editing them here would be too easy to get subtly wrong.
+// Position, altitude, fuseau, aeroport, indicatifs, devise : lecture seule dans l'admin, ce sont des donnees du monde
+// reel (geographie, IANA, ISO) et pas du jugement editorial ; les editer ici serait trop facile a rater.
 export type CluesPatch = Partial<Pick<CluePlace, 'population' | 'climateEmoji' | 'emojis'>>;
 
 export const saveCompass = async (row: PlaceRow, patch: CompassPatch): Promise<Place> => {
@@ -66,8 +62,7 @@ export const saveClues = async (row: PlaceRow, patch: CluesPatch): Promise<ClueP
   return cluesOf(row.key, next)!;
 };
 
-/** Difficulty is shared between the two games, so it's stored once at the place level rather than
- * once per game. */
+/** La difficulte est commune aux deux jeux : stockee une fois au niveau du lieu. */
 export const saveDifficulty = async (
   row: PlaceRow,
   difficulty: Difficulty,

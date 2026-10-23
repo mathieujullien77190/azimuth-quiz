@@ -1,10 +1,7 @@
 import { DEFAULT_SETTINGS } from '@/games/compass/constants';
 import type { Category, Difficulty, GameSettings } from '@/types';
 
-/**
- * "Kids" category: only easy places by construction. Checking it therefore forces the
- * difficulty to Easy.
- */
+/** Categorie "Kids" : lieux faciles par construction, donc la cocher force la difficulte a Easy. */
 export const toggleCategoryFilter = (
   settings: Pick<GameSettings, 'categories' | 'difficulty'>,
   category: Category,
@@ -17,9 +14,8 @@ export const toggleCategoryFilter = (
 };
 
 /**
- * Difficulty: a single choice (radio) — clicking a chip selects it. Choosing anything other than Easy makes
- * no sense for "Kids" (designed to be easy by nature): rather than leaving it in an
- * inconsistent state, we uncheck it.
+ * Difficulte : choix unique (radio). Autre chose qu'Easy n'a pas de sens pour "Kids" : on la decoche plutot
+ * que de laisser un etat incoherent.
  */
 export const selectDifficultyFilter = (
   settings: Pick<GameSettings, 'categories' | 'difficulty'>,

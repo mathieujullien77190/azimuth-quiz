@@ -1,33 +1,30 @@
 import type { Coordinates } from '@/types';
 
-/** An answer to draw on the Earth, as an arc following the surface. */
+/** Une reponse a dessiner sur la Terre, en arc le long de la surface. */
 export type EarthMark = {
   bearing: number;
-  /** Surface distance (arc length). */
+  /** Distance de surface (longueur d'arc). */
   distanceKm: number;
   color: string;
-  /** Other players' answers while the current player is answering: faded out. */
+  /** Reponses des autres joueurs pendant que le joueur courant repond : estompees. */
   opacity?: number;
-  /** True answer: circled, and triggers the zoom. */
+  /** Vraie reponse : entouree, et declenche le zoom. */
   isTruth?: boolean;
 };
 
 export type EarthSectionProps = {
   size: number;
-  /** The starting point of the answers. When given, the Earth can be switched to a 3D globe
-   * (`Globe3D`) where each answer is its constant-heading route: without it there is nothing to place on a map. */
+  /** Point de depart des reponses. Si donne, la Terre peut passer en globe 3D (`Globe3D`) ou chaque reponse est
+   * sa route a cap constant : sans lui, rien a placer sur une carte. */
   origin?: Coordinates;
   marks: EarthMark[];
-  /** Shows the +/- buttons (reveal): starts from the ideal zoom, goes down to 1 (whole Earth). */
+  /** Affiche les boutons +/- (revelation) : part du zoom ideal, descend jusqu'a 1 (Terre entiere). */
   zoomControls?: boolean;
-  /** Allows the orbiting satellite at zoom 1 (see further below) independently of the +/- buttons:
-   * by default follows `zoomControls` (unchanged Compass behavior), but a caller without
-   * zoom buttons (the mini-Earth of the Clues game's "Distance" clue, always "revealed") can
-   * enable it explicitly without the buttons. */
+  /** Autorise le satellite au zoom 1 independamment des boutons +/- : suit `zoomControls` par defaut, mais la
+   * mini-Terre de l'indice "Distance" (Indices, toujours "revelee", sans boutons) peut l'activer seule. */
   allowSatellite?: boolean;
-  /** Forces all marks to the same side (1 = right), instead of the real side of their `bearing`:
-   * for the Clues game's "Distance" clue, which must only reveal the distance, not the direction
-   * (a fixed side for everyone rather than the true heading avoids giving away the heading for free). */
+  /** Force toutes les marques du meme cote (1 = droite) au lieu du cote reel de leur `bearing` : l'indice
+   * "Distance" ne doit reveler que la distance, pas la direction. */
   forceSide?: Side;
 };
 
@@ -36,5 +33,5 @@ export type Point = {
   y: number;
 };
 
-/** 1 = right (heading east), -1 = left (heading west). */
+/** 1 = droite (cap est), -1 = gauche (cap ouest). */
 export type Side = 1 | -1;

@@ -1,7 +1,7 @@
 import { en } from '../en';
 import { fr } from '../fr';
 
-/** Key paths ("a.b.c") to pinpoint exactly where fr/en diverge on failure. */
+/** Chemins de cles ("a.b.c") pour localiser ou fr/en divergent. */
 const keyPaths = (value: unknown, prefix = ''): string[] => {
   if (typeof value === 'function' || Array.isArray(value) || value === null || typeof value !== 'object') {
     return [prefix];
@@ -11,8 +11,7 @@ const keyPaths = (value: unknown, prefix = ''): string[] => {
   );
 };
 
-/** Calls every translation function with dummy arguments (coverage + checks it
- * returns a non-empty string without throwing), and checks every non-empty array. */
+/** Appelle chaque fonction de traduction avec des arguments factices (couverture) et verifie un texte non vide. */
 const walk = (value: unknown, path: string): void => {
   if (typeof value === 'function') {
     const result = (value as (...args: unknown[]) => string)('X', 42);

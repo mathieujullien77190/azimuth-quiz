@@ -3,13 +3,12 @@ import { useEffect, useState } from 'react';
 import { TRAVEL_NOTICE_MS } from './constants';
 
 /**
- * The "Vous êtes à Téhéran" splash opening a travel-mode round: shown once per round (`roundIndex`, not the place's
- * name — the same place can come back), gone by itself after `TRAVEL_NOTICE_MS` or on a tap, and not shown again
- * when that same round moves on to its reveal. `message` is undefined whenever there is nothing to say (first
- * round, no travel mode, the screen is not ready, the final standings), which also keeps the timer from running.
+ * Splash "Vous etes a ..." d'ouverture de manche en mode voyage : une fois par manche (`roundIndex`, pas le
+ * nom : le lieu peut revenir), disparait apres `TRAVEL_NOTICE_MS` ou au tap, pas re-affiche au reveal.
+ * `message` est undefined quand il n'y a rien a dire (le timer ne tourne alors pas).
  */
 export const useTravelNotice = (roundIndex: number, message: string | undefined) => {
-  // The round whose splash is over: the splash is up while this is not the current round.
+  // Manche dont le splash est fini : il est affiche tant que ce n'est pas la manche courante.
   const [doneRound, setDoneRound] = useState<number | null>(null);
   const visible = message !== undefined && doneRound !== roundIndex;
 

@@ -23,8 +23,10 @@ const run = async <T>(mode: IDBTransactionMode, action: (store: IDBObjectStore) 
   }
 };
 
-/** The admin's local copy of the Firestore data (IndexedDB: too big for localStorage). Both calls
- * swallow failures (private window, blocked storage): the admin then just reads Firestore every time. */
+/**
+ * Copie locale des donnees Firestore (IndexedDB : trop gros pour localStorage). Les deux appels avalent les echecs
+ * (fenetre privee, stockage bloque) : l'admin relit alors Firestore a chaque fois.
+ */
 export const readSnapshot = async <T>(): Promise<T | null> => {
   try {
     return ((await run('readonly', (store) => store.get(KEY))) as T | undefined) ?? null;
@@ -37,6 +39,6 @@ export const writeSnapshot = async (value: unknown): Promise<void> => {
   try {
     await run('readwrite', (store) => store.put(value, KEY));
   } catch {
-    // Storage unavailable: nothing to keep, the next load reads Firestore again.
+    // Stockage indisponible : rien a garder, le prochain chargement relit Firestore.
   }
 };

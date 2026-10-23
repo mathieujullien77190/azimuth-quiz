@@ -45,7 +45,7 @@ export const createStyles = ({ colors, typography }: Theme) =>
       justifyContent: 'center',
       alignItems: 'center',
     },
-    // Bottom right of the drawing, one above the other ("+" on top: the buttons come minus first, hence the reverse).
+    // En bas a droite du dessin, l'un au-dessus de l'autre ("+" en haut : les boutons arrivent moins d'abord, d'ou le reverse).
     zoomControls: {
       position: 'absolute',
       right: 0,
@@ -72,8 +72,8 @@ export const createStyles = ({ colors, typography }: Theme) =>
     svgWrap: {
       position: 'relative',
     },
-    // Sizeless anchor point at the center of the Earth: the rotation then translateY that
-    // follow place the satellite in orbit, without affecting its own centering position.
+    // Point d'ancrage sans taille au centre de la Terre : la rotation puis le translateY qui suivent
+    // placent le satellite en orbite sans toucher a son propre centrage.
     satelliteAnchor: {
       position: 'absolute',
       width: 0,
@@ -89,8 +89,7 @@ export const createStyles = ({ colors, typography }: Theme) =>
       textAlignVertical: 'center',
       transform: [{ rotate: '-35deg' }],
     },
-    // Counter-rotates relative to the orbit (see satelliteAngle) to stay legible regardless
-    // of the satellite's angle at the moment of the click, rather than rotating with it.
+    // Contre-rotation par rapport a l'orbite (voir satelliteAngle) pour rester lisible quel que soit l'angle.
     quipWrap: {
       position: 'absolute',
       left: 14,

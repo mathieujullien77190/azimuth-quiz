@@ -38,8 +38,8 @@ export const UfoButton = ({ onPress, accessibilityLabel }: UfoButtonProps) => {
   const { bobY, blinkOpacityA, blinkOpacityB, gearDeg } = ufoIdleFrame(elapsedMs);
   const rimRx = SIZE / 2;
   const rimRy = SIZE / 7;
-  // In the group's local frame (origin = the saucer's center): the beam starts under the rim and
-  // widens down past the gear, fading out to nothing at the bottom, and the gear sits in it.
+  // Repere local (origine = centre de la soucoupe) : le faisceau part sous le bord et s'elargit en s'estompant,
+  // l'engrenage est dedans.
   const coneTop = rimRy * 2;
   const gearY = coneTop + SIZE * GEAR_OFFSET_Y;
   const gearR = SIZE * 0.17;

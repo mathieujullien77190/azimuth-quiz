@@ -5,17 +5,17 @@ export type SetupScreenProps = {
   onBack: () => void;
 };
 
-/** Pure rendering, no hooks with side effects (no `@/settings`, `@/games/compass/firebase/room`,
- * `@/store/compassRoomStore`) — every value here is already resolved, every callback already
- * decides its own business logic (e.g. the readOnly-while-joined gate) before this component
- * ever sees it. */
+/**
+ * Rendu pur, aucun hook a effet (pas de `@/settings`, `@/games/compass/firebase/room`,
+ * `@/store/compassRoomStore`) : valeurs et callbacks deja resolus (ex. garde readOnly en joiner).
+ */
 export type SetupScreenViewProps = {
   settings: GameSettings;
   ready: boolean;
-  /** How many places the selected categories offer; `null` while the group sizes are still loading. */
+  /** Nombre de lieux offerts par les categories choisies ; `null` pendant le chargement des tailles. */
   available: number | null;
 
-  /** Solo / host / join block, shared with every other game's setup (`useSetupRoom`). */
+  /** Bloc solo / hote / join commun aux jeux (`useSetupRoom`). */
   party: SetupPartyProps;
 
   readOnly: boolean;

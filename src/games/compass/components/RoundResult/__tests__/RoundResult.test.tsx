@@ -6,8 +6,7 @@ import type { Place, Player, RoundRecord } from '@/types';
 
 import RoundResult from '..';
 
-// `useWindowDimensions` reads from the real `Dimensions` module (mocking the hook itself doesn't
-// reach RoundResult from this file — mutating the shared Dimensions singleton does).
+// `useWindowDimensions` lit le vrai module `Dimensions` : on modifie son singleton.
 const originalWindow = Dimensions.get('window');
 const setWindowWidth = (width: number) => act(async () => Dimensions.set({ window: { ...originalWindow, width } }));
 
@@ -53,9 +52,9 @@ const soloPlayers: Player[] = [{ name: 'Zoé', color: '#EF4444' }];
 const multiRecord: RoundRecord = {
   place,
   results: [
-    // Zoé: fewer points on the round -> ranked second despite player order.
+    // Zoe : moins de points -> 2e malgre l'ordre des joueurs.
     { guess: { bearing: 80, distanceKm: 950 }, score: { ...scoreFixture, total: 500, targetGapKm: 300 } },
-    // Max: the most points of the round -> ranked first.
+    // Max : le plus de points -> 1er.
     {
       guess: { bearing: 95, distanceKm: 1010 },
       score: { ...scoreFixture, total: 900, distanceBonus: 100, targetGapKm: 40 },
@@ -143,7 +142,7 @@ describe('RoundResult — score bonus colouring', () => {
     const { getAllByText, queryByText } = await render(
       <RoundResult players={soloPlayers} record={exactDistanceRecord} totals={[850]} />,
     );
-    // Exact on both axes: PERFECT on the heading row and on the distance row, no km gap.
+    // Exact sur les deux axes : PERFECT au cap et a la distance, aucun ecart en km.
     expect(getAllByText('PERFECT')).toHaveLength(2);
     expect(queryByText(/^\(.*km\)$/)).toBeNull();
   });
@@ -202,14 +201,14 @@ describe('RoundResult — waiting for the other players (online, pending)', () =
 
   it('shows "?" instead of every official points value and round total', async () => {
     const { getAllByText } = await renderPending([true, true]);
-    // 2 players x (direction points + distance points + round total).
+    // 2 joueurs x (points cap + points distance + total manche).
     expect(getAllByText('?')).toHaveLength(6);
   });
 
   it('marks an answered player with a check; a silent one shows "?" instead of their guess', async () => {
     const { getAllByText } = await renderPending([true, false]);
     expect(getAllByText('✓')).toHaveLength(1);
-    // The 6 pending points/totals, plus the silent player direction and distance.
+    // Les 6 points/totaux en attente, plus cap et distance du joueur silencieux.
     expect(getAllByText('?')).toHaveLength(8);
   });
 

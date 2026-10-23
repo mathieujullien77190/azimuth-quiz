@@ -15,7 +15,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Alone, it names the player instead of the generic "nobody" — there's no one else it could be. */
+/** Seul, il nomme le joueur au lieu du « personne » generique : il n'y a personne d'autre. */
 export const Solo: Story = {
   parameters: source(soloCode),
   args: { players: ['Zoé'] },

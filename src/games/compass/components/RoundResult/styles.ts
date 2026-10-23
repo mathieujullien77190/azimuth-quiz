@@ -31,7 +31,7 @@ export const createStyles = ({ colors, radius, typography }: Theme, compact: boo
       color: colors.text,
       fontSize: fontSize.subtitle * scale,
     },
-    // Spacing around the `MiniButton`s (scoring info, kick) — the button itself carries none.
+    // Espacement autour des `MiniButton` (le bouton n'en porte pas).
     miniButtonSpacing: {
       marginTop: spacing.md,
     },
@@ -57,8 +57,7 @@ export const createStyles = ({ colors, radius, typography }: Theme, compact: boo
       fontSize: fontSize.caption * scale,
       width: 90,
     },
-    // Same style as a player's answer value (rowValue): the truth doesn't need to
-    // stand out by color or size, only its place at the very top of the block signals it.
+    // Meme style que la valeur d'une reponse : la verite se repere a sa place tout en haut.
     truthValue: {
       ...typography.body,
       color: colors.text,
@@ -103,7 +102,6 @@ export const createStyles = ({ colors, radius, typography }: Theme, compact: boo
       color: colors.accent,
       fontSize: fontSize.title * scale,
     },
-    // Round score, below the detail rows: same size/weight as rowPoints, in white.
     roundTotalRow: {
       flexDirection: 'row',
       justifyContent: 'flex-end',

@@ -11,13 +11,15 @@ import type { Field } from './types';
 
 export type CountryCardProps = {
   row: CountryRecord;
-  /** The little "saving / saved / error" flag of one field of this country (see `useCountryEditing`). */
+  /** Petit drapeau "enregistrement / ok / erreur" d'un champ du pays (voir `useCountryEditing`). */
   saveFlagFor: (row: CountryRecord, field: Field) => ReactNode;
   onChange: (row: CountryRecord, field: Field, patch: CountryPatch) => void;
 };
 
-/** One country and everything about it that can be edited (names, currency, phone code, flag colours): what a place
- * carries a copy of, so a change here is written to the country and to all its places (see `useCountryEditing`). */
+/**
+ * Un pays et tout ce qui s'y edite ; ses lieux en portent une copie, donc un changement est ecrit sur le pays et sur
+ * tous ses lieux (voir `useCountryEditing`).
+ */
 export const CountryCard = ({ row, saveFlagFor, onChange }: CountryCardProps) => {
   return (
     <div className="place-card">

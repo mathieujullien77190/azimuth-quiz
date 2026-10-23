@@ -1,13 +1,8 @@
 import type { JournalChange } from './types';
 
-/**
- * The admin keeps a local copy of the data; every write it makes adds an entry to the `journal` collection
- * (same batch as the data, see `admin/src/data.ts`). A sync then reads the entries newer than its last one and
- * re-reads only the documents they name, instead of the whole database. Pure helpers, the admin does the reads.
- */
+/** Chaque ecriture de l'admin ajoute une entree `journal` (meme lot) : une synchro ne relit que les documents nommes. Pur. */
 
-/** The documents to re-read for `entries` (oldest first): each document once, with its LAST operation —
- * written then deleted is a delete, deleted then written is a write. */
+/** Documents a relire pour `entries` (plus ancienne d'abord) : chacun une fois, avec sa DERNIERE operation. */
 export const collapseJournal = (entries: JournalChange[][]): JournalChange[] => {
   const last = new Map<string, JournalChange>();
   for (const change of entries.flat()) last.set(`${change.c}/${change.id}`, change);

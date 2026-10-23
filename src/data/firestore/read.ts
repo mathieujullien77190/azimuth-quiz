@@ -3,7 +3,6 @@ import type { CluePlace, Place } from '@/types';
 import { cluesCategory } from './numbering';
 import type { CompassDoc, PlaceDoc } from './types';
 
-/** `Place` (Compass) from its document. */
 export const compassFromDoc = (doc: PlaceDoc & { compass: CompassDoc }, key?: string): Place => ({
   ...(key !== undefined && { key }),
   name: doc.name,
@@ -17,9 +16,7 @@ export const compassFromDoc = (doc: PlaceDoc & { compass: CompassDoc }, key?: st
   ...(doc.compass.wikiEn !== undefined && { wikiEn: doc.compass.wikiEn }),
 });
 
-/** `CluePlace` from its document — everything a round shows comes from the document itself: the country (name,
- * flag colors, currency, phone code) is the copy the place carries (`doc.country`), the personality carries its
- * job label. */
+/** `CluePlace` depuis son seul document : pays et libelle du metier sont les copies qu'il porte. */
 export const cluesFromDoc = (key: string, doc: PlaceDoc & { clues: NonNullable<PlaceDoc['clues']> }): CluePlace => {
   const { country } = doc;
   const { personality, wordplay } = doc;

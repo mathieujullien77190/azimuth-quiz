@@ -7,9 +7,7 @@ import type { TypedAnswerProps } from './types';
 
 import { createStyles } from './styles';
 
-/**
- * An answer drawn as boxed letters, the way Clues shows it while it is typed — dumb: it only draws the groups it is given.
- */
+/** Reponse en lettres encadrees, comme Indices l'affiche pendant la saisie. Ne fait que dessiner les groupes donnes. */
 export const TypedAnswer = ({ groups }: TypedAnswerProps) => {
   const styles = useThemedStyles(createStyles);
 

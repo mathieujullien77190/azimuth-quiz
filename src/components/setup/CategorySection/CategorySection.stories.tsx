@@ -18,15 +18,16 @@ import readOnlyCode from './ReadOnly.source.md?raw';
 
 const t = translations.fr;
 
-/** Title and "N places available" hint, in the toolbar's language. */
+/** Titre et indice « N lieux disponibles », dans la langue de la barre d'outils. */
 const categoryText = (available: number) => (texts: Translations) => ({
   title: texts.setup.categoriesTitle,
   hint: texts.setup.categoriesAvailability(available),
 });
 
-/** Named (capitalized) so eslint's rules-of-hooks recognizes it as a component and allows the
- * `useState` below — an inline arrow assigned to a story's `render` doesn't qualify. Clicking a
- * chip toggles it in/out of `selected`; `CategorySection` itself stays fully controlled. */
+/**
+ * Nomme (majuscule) pour que rules-of-hooks d'eslint accepte le `useState`. Un clic sur une puce l'ajoute ou la
+ * retire de `selected` ; `CategorySection` reste controle.
+ */
 const InteractiveDemo = (args: CategorySectionProps) => {
   const [selected, setSelected] = useState<Category[]>(args.selected);
   return (
@@ -58,7 +59,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Compass' full pool of categories. */
+/** Pool complet de categories de Compass. */
 export const Compass: Story = {
   parameters: source(compassCode),
   decorators: [localizedArgs(categoryText(120))],
@@ -70,7 +71,7 @@ export const Compass: Story = {
   },
 };
 
-/** Clues' own subset: city-only categories. */
+/** Sous-ensemble propre a Indices : categories de villes seulement. */
 export const Clues: Story = {
   parameters: source(cluesCode),
   decorators: [localizedArgs(categoryText(42))],

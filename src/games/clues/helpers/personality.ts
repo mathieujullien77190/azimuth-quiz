@@ -1,14 +1,9 @@
 import type { CluePlace } from '@/types';
 
-/** A real, Wikipedia-documented person tied to a place (born there, or overwhelmingly identified
- * with it) — `description` is a short one/two-word tag (a profession, e.g. "footballeur"), absent
- * when there's nothing short and safe to add. Curated by hand in the admin
- * (`places/{id}.personality`, its job label copied from the shared vocabulary): there's no heuristic to fall back on here, a place either has
- * a curated entry or it doesn't, nothing is ever invented. */
+/** Personne reelle documentee sur Wikipedia, liee au lieu ; `description` = etiquette courte (ex. "footballeur"), absente
+ * si rien de sur a ajouter. Curee a la main dans l'admin (`places/{id}.personality`) : rien n'est jamais invente. */
 export type PersonalityEntry = { name: string; description: string | null };
 
-/** `place`'s curated personality, or `null` when none was found (or curated yet) — a place with
- * `null` here never offers the `personality` clue at all (see `cluesFor`), rather than showing an
- * empty or made-up card. */
+/** Personnalite curee de `place`, ou `null` : alors l'indice `personality` n'est jamais offert (voir `cluesFor`). */
 export const personalityFor = (place: Pick<CluePlace, 'personality'>): PersonalityEntry | null =>
   place.personality ?? null;

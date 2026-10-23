@@ -41,7 +41,7 @@ describe('RoundsRecap', () => {
     const { toJSON } = await render(<RoundsRecap {...props} />);
     const json = JSON.stringify(toJSON());
     expect(json).toContain('#EF4444');
-    // Only Zoé's cell has a color: a single dot.
+    // Seule la cellule de Zoe a une couleur : un seul point.
     expect(json.match(/"borderRadius":6/g)).toHaveLength(1);
   });
 

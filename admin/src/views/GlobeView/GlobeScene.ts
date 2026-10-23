@@ -60,15 +60,19 @@ import {
 } from './helpers';
 import type { LabelPoint, Mark, PickResult, PlaceBuffers, PlaceShape, ProjectedPoint, Vec3 } from './types';
 
-/** What the page asks of the 3D scene: every drawing decision is taken outside (see `helpers.ts`), this only owns
- * the three.js objects, the camera and the loop that draws them. */
+/**
+ * Ce que la page demande a la scene : toutes les decisions de dessin sont prises dehors (voir `helpers.ts`), la scene
+ * ne possede que les objets three.js, la camera et la boucle.
+ */
 export type GlobeScene = {
   setPlaces: (buffers: PlaceBuffers) => void;
-  /** The names to write (one per place, in the places' order) and who to tell, whenever they change, which ones to
-   * draw and where (empty when zoomed out): see `selectLabels`. */
+  /**
+   * Noms a ecrire (un par lieu, dans l'ordre) et qui prevenir, a chaque changement, des noms a dessiner et de leur
+   * place (vide en dezoome) : voir `selectLabels`.
+   */
   setLabels: (names: string[], listener: (labels: LabelPoint[]) => void) => void;
   setMarks: (selected: Mark, hovered: Mark) => void;
-  /** What is under a pointer position (client pixels): the nearest place. */
+  /** Ce qu'il y a sous une position du pointeur (pixels client) : le lieu le plus proche. */
   pick: (clientX: number, clientY: number) => PickResult;
   flyTo: (lon: number, lat: number) => void;
   resetView: () => void;
@@ -86,8 +90,10 @@ const geometryOf = (positions: readonly number[], colors?: readonly number[]): B
   return geometry;
 };
 
-/** The picture a round or star dot is cut from (drawn once, white: the vertices give the colour), or null for the
- * square, which needs none — and when there is no canvas to draw it on. */
+/**
+ * Image dans laquelle se decoupe un point rond ou etoile (dessinee une fois, en blanc : les sommets donnent la
+ * couleur), ou null pour le carre, ou sans canvas.
+ */
 const spriteOf = (shape: PlaceShape): CanvasTexture | null => {
   if (shape === 'square') return null;
   const picture = document.createElement('canvas');
@@ -99,7 +105,6 @@ const spriteOf = (shape: PlaceShape): CanvasTexture | null => {
   return new CanvasTexture(picture);
 };
 
-/** Where the camera sits to look at (lon, lat) from `distance`. */
 const cameraSpot = (lon: number, lat: number, distance: number): Vec3 => toVector(lon, lat, distance);
 
 export const createGlobeScene = (canvas: HTMLCanvasElement): GlobeScene => {
@@ -112,15 +117,14 @@ export const createGlobeScene = (canvas: HTMLCanvasElement): GlobeScene => {
   renderer.setClearColor(0x050914);
 
   const controls = new OrbitControls(camera, canvas);
-  // No inertia: the globe stops the moment the pointer does.
+  // Sans inertie : le globe s'arrete des que le pointeur s'arrete.
   controls.enableDamping = false;
   controls.enablePan = false;
   controls.minDistance = MIN_DISTANCE;
   controls.maxDistance = MAX_DISTANCE;
   controls.rotateSpeed = rotateSpeedAt(CAMERA_DISTANCE);
 
-  // The sea, the land's own outline and the stars: the whole decor. No light (the sea is a flat colour) and nothing
-  // else in the sky.
+  // Mer, contour des terres et etoiles : tout le decor. Pas de lumiere (mer en aplat), rien d'autre dans le ciel.
   const sea = new Mesh(new SphereGeometry(GLOBE_RADIUS, 96, 48), new MeshBasicMaterial({ color: SEA_COLOR }));
   const land = new LineSegments(
     geometryOf(segmentsOf(parseRings(GLOBE_LAND_PATH), LAND_ALTITUDE)),
@@ -145,7 +149,7 @@ export const createGlobeScene = (canvas: HTMLCanvasElement): GlobeScene => {
   let labelSignature = '';
   let size = { width: 1, height: 1 };
 
-  /** Puts `next` in the slot's place, handing what was there back to the graphics card. */
+  /** Met `next` a la place du slot et rend l'ancien a la carte graphique. */
   const replace = (slot: Slot, next: Drawn | null) => {
     if (slot.object) {
       scene.remove(slot.object);
@@ -186,7 +190,7 @@ export const createGlobeScene = (canvas: HTMLCanvasElement): GlobeScene => {
       from[1] + (to[1] - from[1]) * eased,
       from[2] + (to[2] - from[2]) * eased,
     ];
-    // The straight line between the two spots dips through the globe: its length follows the distances instead.
+    // La ligne droite entre les deux points passe dans le globe : la longueur suit les distances.
     const distance = Math.hypot(...from) + (Math.hypot(...to) - Math.hypot(...from)) * eased;
     const scale = distance / Math.hypot(...mixed);
     camera.position.set(mixed[0] * scale, mixed[1] * scale, mixed[2] * scale);
@@ -195,7 +199,7 @@ export const createGlobeScene = (canvas: HTMLCanvasElement): GlobeScene => {
 
   const distanceOf = (): number => Math.hypot(camera.position.x, camera.position.y, camera.position.z);
 
-  /** Level of detail: which shapes are drawn depends on how far the camera is (see CAPITALS_MAX_DISTANCE). */
+  /** Niveau de detail : les formes dessinees dependent de la distance de la camera (voir CAPITALS_MAX_DISTANCE). */
   const applyDetail = () => {
     const distance = distanceOf();
     PLACE_SHAPES.forEach((shape, index) => {
@@ -232,8 +236,10 @@ export const createGlobeScene = (canvas: HTMLCanvasElement): GlobeScene => {
   };
   const positionOf = (): Vec3 => [camera.position.x, camera.position.y, camera.position.z];
 
-  /** Flat `x, y, z` positions as points on the screen (px, in the canvas), each with whether it is in sight: on the
-   * camera's side of its own horizon plane, and wanted by `wanted` (its index among the points). */
+  /**
+   * Positions `x, y, z` a plat projetees en points d'ecran (px, dans le canvas), chacun avec sa visibilite : cote
+   * camera de son plan d'horizon et voulu par `wanted` (son indice parmi les points).
+   */
   const projectFlat = (
     flat: readonly number[],
     wanted: (index: number) => boolean,

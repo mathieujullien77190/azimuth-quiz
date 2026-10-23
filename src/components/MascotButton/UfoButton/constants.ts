@@ -1,25 +1,23 @@
-// Button size (saucer + dome), in px.
+// Taille du bouton (soucoupe + dome), en px.
 export const SIZE = 40;
-// Animation refresh rate.
+// Cadence de rafraichissement de l'animation.
 export const TICK_MS = 50;
 
-// Continuous vertical bobbing.
+// Flottement vertical continu.
 export const BOB_AMPLITUDE = 3;
 export const BOB_PERIOD_MS = 2200;
-// Blinking of the rim lights.
+// Clignotement des feux du bord.
 export const BLINK_PERIOD_MS = 500;
 
-// "Frosted glass" dome: translucent blue with a highlight, rather than a theme color.
+// Dome en « verre depoli » : bleu translucide avec reflet, hors tokens de theme.
 export const DOME_COLOR = '#8FD8FF';
 export const DOME_HIGHLIGHT_COLOR = '#FFFFFF';
 
-// Light cone under the saucer: translucent, same tint as the dome.
-// (opacity at the top of the beam: it fades to 0 at the bottom).
+// Cone de lumiere sous la soucoupe, meme teinte que le dome (opacite en haut, 0 en bas).
 export const CONE_OPACITY = 0.4;
-// Half-width of the beam at its top and at its bottom, as a fraction of the saucer's radius (1 = the
-// button's full width: the canvas clips anything wider).
+// Demi-largeur du faisceau en haut et en bas, en fraction du rayon (1 = largeur du bouton, le canvas coupe au-dela).
 export const CONE_TOP_RATIO = 0.4;
 export const CONE_BOTTOM_RATIO = 0.98;
 export const CONE_GRADIENT_ID = 'ufo-light-cone';
-// Where the gear sits under the cone's top, as a fraction of SIZE.
+// Position de l'engrenage sous le haut du cone, en fraction de SIZE.
 export const GEAR_OFFSET_Y = 0.55;

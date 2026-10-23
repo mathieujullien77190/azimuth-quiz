@@ -2,10 +2,10 @@ import type { ExpoWebGLRenderingContext } from 'expo-gl';
 import { WebGLRenderer } from 'three';
 
 /**
- * On a phone, the context of `expo-gl` is a WebGL 2 one that ALSO answers `instanceof WebGLRenderingContext` (its class
- * chain goes through the WebGL 1 class), which three.js reads as "this is WebGL 1" and refuses with "WebGL 1 is not
- * supported since r163". So the WebGL 1 class is hidden while the renderer is built (it is only looked at there), then put
- * back exactly as it was.
+ * Sur telephone, le contexte d'`expo-gl` est un WebGL 2 qui repond AUSSI a `instanceof WebGLRenderingContext` (sa
+ * chaine de classes passe par WebGL 1) : three.js le lit comme "WebGL 1" et refuse ("WebGL 1 is not supported since
+ * r163"). On cache donc la classe WebGL 1 pendant la construction du renderer (seul moment ou elle est regardee),
+ * puis on la remet exactement comme elle etait.
  */
 const withoutWebGL1Class = <T>(build: () => T): T => {
   const scope = globalThis as { WebGLRenderingContext?: unknown };
@@ -21,12 +21,11 @@ const withoutWebGL1Class = <T>(build: () => T): T => {
 };
 
 /**
- * The three.js renderer drawing into the surface `expo-gl` just handed us.
+ * Le renderer three.js qui dessine dans la surface qu'`expo-gl` vient de remettre.
  *
- * three.js wants a canvas, and on a phone there is no DOM to give it: it only ever reads its size and asks it for the
- * context we already have, so a stand-in object is enough (on the web, `expo-gl` does hand out a real canvas, and that
- * one is used as is). Kept on its own, away from the component, so that the tests can stand in for the whole graphics
- * card.
+ * three.js veut un canvas, et sur telephone il n'y a pas de DOM : il ne lit que sa taille et lui demande le contexte
+ * qu'on a deja, donc un faux objet suffit (sur le web, `expo-gl` donne un vrai canvas, utilise tel quel). A part du
+ * composant pour que les tests remplacent toute la carte graphique.
  */
 export const createRenderer = (gl: ExpoWebGLRenderingContext): WebGLRenderer => {
   const width = gl.drawingBufferWidth;
@@ -51,7 +50,7 @@ export const createRenderer = (gl: ExpoWebGLRenderingContext): WebGLRenderer => 
         context: gl as unknown as WebGL2RenderingContext,
       }),
   );
-  // `false`: the size is the surface's own, in real pixels — there is no style to keep in step with it.
+  // `false` : la taille est celle de la surface, en vrais pixels — pas de style a tenir synchronise.
   renderer.setSize(width, height, false);
   return renderer;
 };

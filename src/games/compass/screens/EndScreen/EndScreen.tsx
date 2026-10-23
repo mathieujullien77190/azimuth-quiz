@@ -7,7 +7,7 @@ import { roundBest } from './helpers';
 import type { RoundBest } from './helpers';
 import type { EndScreenProps } from './types';
 
-/** How a round's best player shows in the recap: their name and points, or just the points when alone. */
+/** Meilleur d'une manche dans le recap : nom et points, ou les points seuls en solo. */
 const bestCell = (best: RoundBest | null, alone: boolean): RecapCell => {
   if (best === null) return { text: '–' };
   if (alone) return { text: `+${best.points}` };
@@ -19,9 +19,8 @@ const bestCell = (best: RoundBest | null, alone: boolean): RecapCell => {
 };
 
 /**
- * Compass' end of game: the shared `FinalStandings` (scores, medals, winner) with this game's own extras
- * under it — the round-by-round recap of who was best at the heading and at the distance (the points won
- * when playing alone), and the shared replay/leave buttons.
+ * Fin de partie Compass : `FinalStandings` commun, puis le recap par manche du meilleur au cap et a la
+ * distance, et les boutons rejouer/quitter.
  */
 export const EndScreen = ({ players, records, totals, localName, onReplay, onQuit }: EndScreenProps) => {
   const t = useTranslation();

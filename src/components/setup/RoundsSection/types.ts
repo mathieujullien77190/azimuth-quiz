@@ -1,5 +1,5 @@
 export type RoundsSectionProps = {
-  /** Currently selected round count — one of `ROUND_OPTIONS` (see `@/data`). */
+  /** Nombre de manches choisi : l'une des `ROUND_OPTIONS` (voir `@/data`). */
   rounds: number;
   onSelect: (rounds: number) => void;
   disabled?: boolean;

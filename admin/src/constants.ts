@@ -17,8 +17,8 @@ export const CATEGORY_EMOJIS: Record<Category, string> = Object.fromEntries(
   CATEGORIES.map((c) => [c.id, c.emoji]),
 ) as Record<Category, string>;
 
-// citiesFr uses a distinctly different hue from cities (warm orange vs. cool blue) so a French
-// city can never be mistaken for a "regular" one at a glance.
+// citiesFr a une teinte nettement differente de cities (orange chaud / bleu froid) pour ne jamais confondre une ville
+// francaise avec une autre.
 export const CATEGORY_COLORS: Record<Category, string> = {
   cities: '#60A5FA',
   capital: '#FBBF24',

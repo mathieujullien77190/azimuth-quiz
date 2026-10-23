@@ -10,18 +10,14 @@ import { loadCompassCounts } from '../helpers/compassCounts';
 import { loadCompassCursors, saveCompassCursors } from '../helpers/compassCursors';
 import { effectiveDifficulty } from '../helpers/places';
 
-// Not re-exported from `helpers/index.ts`'s barrel, same reason as `room.ts`: `firebase/firestore` is
-// ESM-only and crashes Jest for every test that imports the barrel for something unrelated.
+// Hors barrel de `helpers/index.ts` comme `room.ts` : `firebase/firestore` est ESM seul et plante Jest.
 
 /**
- * Draws the game's places from Firestore (see `drawFromGroups`): Compass places are numbered inside their
- * group (`compass.category` x `difficulty`, field `n`), sizes in `meta/compassCounts`, cursors per group on
- * the device. The difficulty is filtered by the query itself (it selects the groups); only in English, where a
- * French place is bumped one tier (`effectiveDifficulty`), the tier below is read too, with some slack, and
- * filtered afterwards. Only the host draws (the places are then written into the room), joiners never query.
- *
- * No fallback on the bundled list: rejects when Firestore fails or when fewer than `rounds` matching
- * places exist at all — the host's start flow shows a notice and nothing is started (cursors untouched).
+ * Tire les lieux de la partie dans Firestore (voir `drawFromGroups`) : numerotes par groupe
+ * (`compass.category` x `difficulty`, champ `n`), tailles dans `meta/compassCounts`, curseurs par groupe
+ * sur l'appareil. En anglais seulement, un lieu francais est releve d'un cran (`effectiveDifficulty`) : on
+ * lit aussi le palier du dessous et on refiltre. Seul l'hote tire. Pas de repli : rejette si Firestore
+ * echoue ou s'il y a moins de `rounds` lieux.
  */
 export const fetchRandomPlaces = async (settings: GameSettings, language: Language): Promise<Place[]> => {
   const { categories, difficulty, rounds } = settings;

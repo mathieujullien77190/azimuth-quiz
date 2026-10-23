@@ -84,7 +84,7 @@ describe('SplashScreen', () => {
       const view = await render(themed('night'));
       const first = steps[0];
       const second = steps[1];
-      // Just after the first jump has landed and well before the next keyframe starts.
+      // Juste apres le premier saut et bien avant le keyframe suivant.
       await act(async () => jest.advanceTimersByTime(first.at + first.easeMs + 20));
       const landed = percentOf(view);
       expect(landed).toBeGreaterThan(0);
@@ -104,7 +104,7 @@ describe('SplashScreen', () => {
       const last = steps[steps.length - 1];
       expect(previous).toBe(Math.round(last.to));
       expect(previous).toBeLessThan(100);
-      // Not ready yet after the minimum time: it waits there.
+      // Pas pret apres le temps minimum : il attend la.
       await act(async () => jest.advanceTimersByTime(3000));
       expect(percentOf(view)).toBe(previous);
     });

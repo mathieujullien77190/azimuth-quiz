@@ -5,14 +5,11 @@ import type { CompassCounts } from '@/data/firestore/types';
 
 import { db } from './client';
 
-// Not re-exported from `helpers/index.ts`'s barrel, same reason as `room.ts`: `firebase/firestore` is
-// ESM-only and crashes Jest for every test that imports the barrel for something unrelated.
+// Hors du barrel de `helpers/index.ts` : `firebase/firestore` est ESM seul et fait planter Jest.
 
 /**
- * Loader of one game's group sizes (`meta/compassCounts`, `meta/cluesCounts`): read once and shared, the app
- * starts the read at launch (`preload`) so a game finds it already there. An absent document reads as no
- * places at all. A failed read is not kept, the next call tries again. Sizes only change when the admin edits
- * places: read again at the next launch.
+ * Charge les tailles de groupes d'un jeu (`meta/compassCounts`, `meta/cluesCounts`) : lues une fois et partagees,
+ * un echec n'est pas garde. Elles ne changent que si l'admin edite les lieux : relues au lancement suivant.
  */
 export const createGroupCounts = <C = CompassCounts>(source: { collection: string; id: string }) => {
   let loading: Promise<C> | null = null;
@@ -29,12 +26,11 @@ export const createGroupCounts = <C = CompassCounts>(source: { collection: strin
 
   return {
     load,
-    /** Starts the read without waiting for it (app launch). A failure here is silent: starting a game
-     * reads again and reports it. */
+    /** Lance la lecture sans l'attendre (lancement) ; un echec est silencieux, le demarrage relit. */
     preload: (): void => {
       load().catch(reporting('draw.preloadCounts', { kind: 'background' }));
     },
-    /** Forgets the shared read (the next call reads Firestore again). */
+    /** Oublie la lecture partagee. */
     clear: (): void => {
       loading = null;
     },

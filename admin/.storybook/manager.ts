@@ -2,15 +2,14 @@ import { GLOBALS_UPDATED, SET_CONFIG, SET_GLOBALS } from 'storybook/internal/cor
 import { addons } from 'storybook/manager-api';
 import { create } from 'storybook/theming/create';
 
-// Storybook's own chrome (sidebar, toolbar, panels) — a separate bundle from the previews, so no `@/`
-// alias here: the app's themes are imported by relative path (they hold only colors and strings, no
+// Chrome de Storybook : bundle a part des previews, donc pas d'alias `@/` (themes importes en relatif, sans
 // react-native).
 import { day } from '../../src/themes/day';
 import { FONT_FAMILY } from '../../src/themes/fonts';
 import { night } from '../../src/themes/night';
 import type { Theme } from '../../src/types';
 
-/** Storybook's UI theme built from one of the app's own themes, so the chrome matches the preview. */
+/** Theme Storybook tire d'un theme de l'app, pour que le chrome suive la preview. */
 const storybookTheme = (theme: Theme) =>
   create({
     base: theme.isDark ? 'dark' : 'light',
@@ -34,13 +33,10 @@ const storybookTheme = (theme: Theme) =>
 
 const THEMES = { night: storybookTheme(night), day: storybookTheme(day) };
 
-// Night until the toolbar says otherwise (the preview's `initialGlobals` starts on night too).
+// Nuit tant que la barre d'outils n'a rien dit.
 addons.setConfig({ theme: THEMES.night });
 
-/**
- * Follows the toolbar's `theme` switch (see `preview.tsx`'s `globalTypes`): Night or Day for the
- * preview also flips Storybook's own UI.
- */
+/** Suit le choix `theme` de la barre d'outils (voir `globalTypes` de `preview.tsx`). */
 addons.register('azimuth/theme-sync', (api) => {
   const apply = (globals: { theme?: string } | undefined) =>
     api.setOptions({ theme: globals?.theme === 'day' ? THEMES.day : THEMES.night });
@@ -48,8 +44,7 @@ addons.register('azimuth/theme-sync', (api) => {
   apply(api.getGlobals());
 
   const channel = addons.getChannel();
-  // The preview announces its config once it loads, and the manager answers by resetting the options to
-  // the initial ones (Night, see `setConfig` above): re-apply the toolbar's choice right after.
+  // La preview remet les options a l'initial au chargement : on reapplique le choix de la barre d'outils.
   channel.on(SET_CONFIG, () => apply(api.getGlobals()));
   channel.on(SET_GLOBALS, ({ globals }: { globals?: { theme?: string } }) => apply(globals));
   channel.on(

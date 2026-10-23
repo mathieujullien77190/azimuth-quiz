@@ -22,7 +22,7 @@ describe('HomeScreen — content', () => {
 
   it('stacks the two cards at the bottom of the screen', async () => {
     const { getByText } = await render(<HomeScreen />);
-    // Going up from the first card, the stack of both cards is the first container pushed to the end.
+    // En remontant depuis la 1re carte, la pile des deux cartes est le 1er conteneur pousse en fin.
     let node = getByText('Boussole').parent;
     while (node && StyleSheet.flatten(node.props.style)?.justifyContent !== 'flex-end') node = node.parent;
     expect(node).not.toBeNull();

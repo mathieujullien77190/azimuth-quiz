@@ -1,11 +1,8 @@
 import { useState } from 'react';
 
 /**
- * This device's in-progress answer text and its "you got it wrong" banner, for the turn-based online
- * games (Clues) — both start over whenever the round or the turn-holder changes. Reset
- * while rendering (React's own pattern for "reset state when a value changes":
- * https://react.dev/reference/react/useState#storing-information-from-previous-renders) rather than
- * in an effect, which would mean an extra, avoidable render pass.
+ * Brouillon de reponse et banniere "rate" de cet appareil (jeux au tour par tour), remis a zero quand la manche
+ * ou le detenteur du tour change. Reinitialise au rendu (https://react.dev/reference/react/useState#storing-information-from-previous-renders), sans effet.
  */
 export const useGuessDraft = (roundIndex: number, turnUid: string | null) => {
   const [guessText, setGuessText] = useState('');

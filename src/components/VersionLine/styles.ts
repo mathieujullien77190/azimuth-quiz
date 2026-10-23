@@ -4,8 +4,8 @@ import type { Theme } from '@/types';
 
 export const createStyles = ({ colors, isDark }: Theme) =>
   StyleSheet.create({
-    // The animal's name is a link: the accent colour (the dark one on the light theme, where the bright one is too pale
-    // on sand) and underlined, inside the caller's own line.
+    // Le nom de l'animal est un lien : couleur d'accent (la foncee en theme clair, la vive etant trop pale sur le
+    // sable) et souligne, dans la ligne de l'appelant.
     link: {
       color: isDark ? colors.accent : colors.accentDark,
       textDecorationLine: 'underline',

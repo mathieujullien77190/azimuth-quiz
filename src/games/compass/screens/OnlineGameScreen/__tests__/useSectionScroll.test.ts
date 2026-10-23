@@ -3,7 +3,7 @@ import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 import { useSectionScroll } from '../useSectionScroll';
 
-/** A scroll event `offsetY` px from the top of a 1000px-tall content in a 600px viewport. */
+/** Evenement de defilement a `offsetY` px du haut d'un contenu de 1000px dans une vue de 600px. */
 const scrollEvent = (offsetY: number) =>
   ({
     nativeEvent: {
@@ -49,13 +49,13 @@ describe('useSectionScroll', () => {
     const { result } = await setup();
     await act(async () => result.current.goToCap());
 
-    // The animation starts next to the top: those events must not undo the press.
+    // L'animation demarre pres du haut : ces evenements ne doivent pas annuler l'appui.
     await act(async () => result.current.handleScroll(scrollEvent(AT_TOP)));
     expect(result.current.onCap).toBe(true);
     await act(async () => result.current.handleScroll(scrollEvent(MIDDLE)));
     expect(result.current.onCap).toBe(true);
 
-    // Arrived: the label stays, and the player is believed again from then on.
+    // Arrive : le libelle reste, et le joueur est de nouveau cru.
     await act(async () => result.current.handleScroll(scrollEvent(AT_BOTTOM)));
     expect(result.current.onCap).toBe(true);
     await act(async () => result.current.handleScroll(scrollEvent(AT_TOP)));
@@ -76,7 +76,7 @@ describe('useSectionScroll', () => {
     const { result } = await setup();
     await act(async () => result.current.goToCap());
     await act(async () => jest.advanceTimersByTime(900));
-    // Nothing to scroll to (short content, say): the player dragging back to the top counts.
+    // Rien a defiler (contenu court) : le joueur qui remonte en haut compte.
     await act(async () => result.current.handleScroll(scrollEvent(AT_TOP)));
     expect(result.current.onCap).toBe(false);
   });

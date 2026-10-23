@@ -1,8 +1,9 @@
 import type { RoomStoreActions, RoomStoreConfig, RoomStoreData, RoomStoreState } from './types';
 
-/** The room store's actions. The Firestore listeners `connect` currently owns, whether the room has
- * ever been seen to exist yet (to tell "the room was just deleted" apart from "hasn't loaded yet")
- * and the voluntary-leave flag are non-reactive closure fields rather than store state. */
+/**
+ * Actions du store de room. Les listeners Firestore de `connect`, le fait que la room ait deja existe et le drapeau
+ * de depart volontaire sont des champs de fermeture non reactifs, pas de l'etat.
+ */
 export const createRoomActions = <Settings, GameState>(
   { defaultGameState, subscribeToRoomPlayers, subscribeToRoomSettings, subscribeToRoomGame }: RoomStoreConfig<
     Settings,

@@ -11,9 +11,8 @@ import type { DifficultySectionProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * Difficulty picker (`DIFFICULTIES`, shared across all 3 games) — dumb: the emoji/label come from
- * `@/data`/`@/i18n`'s `setup.difficulties`, already the same across every game's translations.
- * Only `title`/`hint` are props, since those differ per game's own translation namespace.
+ * Choix de la difficulte (`DIFFICULTIES`, commune aux 3 jeux), dumb : emoji et libelle viennent de
+ * `setup.difficulties` (`@/data`, `@/i18n`). Seuls `title`/`hint` sont des props (namespace propre a chaque jeu).
  */
 export const DifficultySection = ({ title, hint, selected, onSelect, disabled = false }: DifficultySectionProps) => {
   const styles = useThemedStyles(createStyles);

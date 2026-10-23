@@ -14,7 +14,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Where the game is: "Manche 3 / 10" (or "Round 3 / 10", following the toolbar's language). */
+/** Ou en est la partie : « Manche 3 / 10 » (ou « Round 3 / 10 » selon la langue de la barre d'outils). */
 export const Default: Story = {
   parameters: source(defaultCode),
   args: { roundNumber: 3, totalRounds: 10 },

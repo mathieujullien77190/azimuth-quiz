@@ -1,9 +1,9 @@
 export type UfoIdleFrame = {
   bobY: number;
-  /** Two blink phases alternating (one high while the other is low). */
+  /** Deux phases de clignotement alternees. */
   blinkOpacityA: number;
   blinkOpacityB: number;
-  /** Rotation of the gear under the light cone, in degrees: goes round continuously. */
+  /** Rotation de l'engrenage sous le cone, en degres (continue). */
   gearDeg: number;
 };
 

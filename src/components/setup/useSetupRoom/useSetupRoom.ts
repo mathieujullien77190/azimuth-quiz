@@ -13,15 +13,13 @@ import { usePlayerName } from '@/settings';
 
 import type { SetupPartyProps, SetupRoomAdapter } from './types';
 
-/** How long the name field must stay still before a rename is sent to the room. */
+/** Delai d'immobilite du champ nom avant d'envoyer un renommage a la room. */
 const NAME_SYNC_DELAY_MS = 600;
 
 /**
- * All the online-room business logic behind a game's setup screen, identical for every game —
- * state, every Firestore effect, derived values and already-resolved actions. Each game plugs its
- * own collection/store in through `adapter` (see `SetupRoomAdapter`); the container calls this and
- * hands `party` straight to `SetupScreenShell`, nothing here renders anything. Only starting the
- * game differs per game: see `startOnlineGame`.
+ * Toute la logique de room en ligne derriere l'ecran de setup d'un jeu, identique pour tous : etat, effets
+ * Firestore, valeurs derivees et actions deja resolues. Chaque jeu branche sa collection/son store via `adapter`
+ * (voir `SetupRoomAdapter`) ; le container passe `party` tel quel a `SetupScreenShell`, rien ici ne rend.
  */
 export const useSetupRoom = <S extends { playerName: string }, R extends Partial<S>>(
   adapter: SetupRoomAdapter<S, R>,
@@ -31,23 +29,17 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
   const { store } = adapter;
   const router = useRouter();
   const t = useTranslation();
-  // The player's name is the one thing shared by the 3 games (see `usePlayerName`'s own doc
-  // comment): every game's setup reads and writes this same store instead of its own
-  // `settings.playerName` directly, so renaming in one game is immediately the name everywhere
-  // else too. Before it has hydrated, this game's own settings avoid a blank flash (it may
-  // already have a name — Compass persists its own settings on disk); the one-time sync effect
-  // below then reconciles the two, in whichever direction actually has something to give.
+  // Le nom est la seule chose partagee par les 3 jeux (voir `usePlayerName`) : chaque setup lit/ecrit ce store.
+  // Avant son hydratation, les reglages du jeu evitent un flash vide (Compass peut deja avoir un nom sur disque) ;
+  // l'effet de synchro ci-dessous reconcilie ensuite les deux.
   const sharedPlayerName = usePlayerName((s) => s.playerName);
   const playerNameReady = usePlayerName((s) => s.ready);
   const setSharedPlayerName = usePlayerName((s) => s.setPlayerName);
   const soloName = playerNameReady ? sharedPlayerName : settings.playerName;
 
-  // Runs exactly once, the first time the shared name has hydrated: if it already holds a name
-  // (typed in some other game, this session or an earlier one), this game's own settings adopt
-  // it; otherwise, if THIS game's settings already had one (only ever possible for Compass, the
-  // only one of the 3 that persists on its own), that one seeds the shared store instead — a
-  // one-time migration for players who had a Compass name before this existed. Never runs again,
-  // so it never fights with `onChangeName` below.
+  // Une seule fois, a la premiere hydratation du nom partage : s'il a deja un nom, les reglages du jeu l'adoptent ;
+  // sinon, si les reglages du jeu en avaient un (Compass seulement), il alimente le store partage (migration).
+  // Ne rejoue jamais, donc ne lutte pas avec `onChangeName`.
   const syncedPlayerNameRef = useRef(false);
   useEffect(() => {
     if (!playerNameReady || syncedPlayerNameRef.current) return;
@@ -60,30 +52,22 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playerNameReady]);
 
-  // Host/join is purely local UI state, not a saved preference — a fresh host/join happens
-  // every time this screen is opened. Joining shows every setting section read-only (mirroring
-  // the host's live settings via `roomSettings` below) rather than hiding them.
-  //
-  // There is no local, single-device game: playing alone is hosting a room nobody else joins. "Solo"
-  // (`onlineChoice === null`) just doesn't show it — `hostedSilently` is the room `startOnlineGame`
-  // creates behind the scenes when "Lancer la partie" is pressed, hosted exactly like a visible one
-  // (`mode`) but never shown to the player (no code, the chips keep saying Solo).
+  // Hote/joiner est un etat d'UI local, pas une preference : on repart de zero a chaque ouverture. Rejoindre
+  // montre les sections en lecture seule (reflet de `roomSettings`) au lieu de les masquer.
   const [onlineChoice, setOnlineChoice] = useState<'host' | 'join' | null>(null);
   const [hostedSilently, setHostedSilently] = useState(false);
   const mode = hostedSilently ? 'host' : onlineChoice;
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState('');
   const [joinStatus, setJoinStatus] = useState<'idle' | 'valid' | 'invalid'>('idle');
-  // Bumped when "Join" is pressed again with a code already in the field: that code is checked again (the room may
-  // exist by now), which the unchanged text alone would not trigger.
+  // Incremente quand « Rejoindre » est rappuye avec un code deja saisi : il est reverifie (la room existe peut-etre
+  // maintenant), ce que le texte inchange ne declencherait pas.
   const [joinAttempt, setJoinAttempt] = useState(0);
   const readOnly = mode === 'join';
 
-  // Leaving host mode (Solo or switching to Join) takes the room down with it, same as
-  // `handleQuit` mid-game: there's no "pass the host" concept, and otherwise the room stays
-  // orphaned in Firestore forever (`removeRoomPlayer` on the way out, below, only ever drops this
-  // device's own presence — a leftover doc with no host is what let a joiner "reconnect" to a
-  // room its creator had already walked away from).
+  // Quitter le mode hote (Solo ou Rejoindre) supprime la room, comme `handleQuit` en partie : pas de transfert
+  // d'hote, et sinon elle reste orpheline dans Firestore (`removeRoomPlayer` plus bas ne retire que la presence de
+  // cet appareil : une room sans hote a deja laisse un joiner « se reconnecter » a une room abandonnee).
   const leaveHostedRoom = () => {
     if (mode === 'host' && roomCode !== null) adapter.deleteRoom(roomCode).catch(reporting('setup.deleteRoom', { kind: 'background', room: roomCode }));
   };
@@ -102,7 +86,7 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
   };
 
   const chooseHost = () => {
-    // A room is already up (solo's, after a failed start): show it instead of making a second one.
+    // Une room existe deja (celle du solo, apres un lancement rate) : la montrer plutot qu'en creer une seconde.
     if (hostedSilently) {
       setOnlineChoice('host');
       setHostedSilently(false);
@@ -118,29 +102,28 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     setOnlineChoice('join');
     setHostedSilently(false);
     setRoomCode(null);
-    // Pressed again while already on "Join", not connected: the code in the field is checked again, not wiped.
+    // Rappuye sur « Rejoindre » sans etre connecte : le code saisi est reverifie, pas efface.
     if (onlineChoice === 'join' && joinStatus !== 'valid') {
       setJoinStatus('idle');
       setJoinAttempt((attempt) => attempt + 1);
       return;
     }
-    // Coming from another choice, the previous room's code is offered; from "Join" itself once connected (the "Leave"
-    // chip) the field starts over, empty, or it would join the same room again at once.
+    // Depuis un autre choix, le code de la room precedente est propose ; depuis « Rejoindre » connecte (puce
+    // « Quitter »), le champ repart vide, sinon il rejoindrait aussitot la meme room.
     setJoinCode(onlineChoice === 'join' ? '' : (previousCode ?? ''));
     setJoinStatus('idle');
   };
 
-  // Host: every settings change gets pushed to the room so joiners watching it stay in sync.
-  // Swallows a failure (e.g. this room got deleted from under it — `deletePreviousRoomsByHost`)
-  // rather than let an unhandled rejection crash the screen with a raw Firestore error: nothing
-  // reads this promise's result, so there's nothing useful to do with the error here anyway.
+  // Hote : chaque changement de reglage est pousse dans la room pour que les joiners restent synchro. L'echec est
+  // avale (ex. room supprimee par `deletePreviousRoomsByHost`) : personne ne lit cette promesse, et une rejection
+  // non geree ferait planter l'ecran.
   useEffect(() => {
     if (mode !== 'host' || roomCode === null) return;
     adapter.updateRoomSettings(roomCode, adapter.roomSettingsFrom(settings)).catch(reporting('setup.updateSettings', { room: roomCode }));
   }, [adapter, mode, roomCode, settings]);
 
-  // The room this device joined last: picking "Join" fills the code field with it (connecting at once if that room is
-  // still there, else saying the code is invalid, like any typed code). Editable like any other.
+  // Derniere room rejointe par cet appareil : « Rejoindre » remplit le code avec (connexion immediate si elle existe
+  // encore, sinon code invalide comme n'importe quel code saisi). Editable.
   const [previousCode, setPreviousCode] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -154,12 +137,9 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     };
   }, [adapter]);
 
-  // Join: once a well-formed code is typed, a one-shot check decides whether it's valid — checked
-  // against the room code's own consonant+vowel shape, not just its length, so a typo never fires
-  // a Firestore lookup (and the "code not found" message) for something that could never be a real
-  // code. Applying the host's settings to this device's own, once actually connected, is a
-  // separate effect below (mirroring the store's `roomSettings`) — not folded in here, so
-  // there's only ever one `subscribeToRoomSettings` open per room.
+  // Rejoindre : un code bien forme declenche une verification unique, contre la forme consonne+voyelle du code (pas
+  // seulement sa longueur), pour qu'une coquille ne lance pas de lecture Firestore ni « code introuvable ».
+  // Appliquer les reglages de l'hote est un effet separe plus bas (reflet de `roomSettings`).
   useEffect(() => {
     if (mode !== 'join') return;
     const code = joinCode.trim().toLowerCase();
@@ -183,31 +163,24 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     };
   }, [adapter, mode, joinCode, joinAttempt]);
 
-  // Code this device is currently connected to (as host or as a validated joiner) — null while
-  // just browsing the host/join chips with nothing confirmed yet.
+  // Code auquel cet appareil est connecte (hote ou joiner valide) ; null tant qu'on parcourt juste les puces.
   const connectedRoomCode =
     mode === 'host' ? roomCode : mode === 'join' && joinStatus === 'valid' ? joinCode.trim().toLowerCase() : null;
 
-  // "Lancer la partie": each game decides what to write (origin, places, first turn...) in `run`,
-  // this only owns the connected-room guard and the `starting` loading state covering the gap
-  // in between (GPS resolution, then the Firestore write/round-trip) — reset only on failure,
-  // since success is followed by leaving this screen entirely. Every device (host included)
-  // then reacts to the room's `screen` turning `'game'` (effect below) and navigates itself.
-  //
-  // Solo has no room yet: one is created here, silently, and `run` waits (`pendingRun`, fired by the
-  // effect below) until it's connected and this device is registered in it — `run` may need the
-  // room's own state (who's first in arrival order...), which only exists once that's the case.
+  // Ceci ne gere que la garde « room connectee » et l'etat `starting` couvrant l'intervalle (GPS puis aller-retour
+  // Firestore), remis a faux seulement en cas d'echec (le succes quitte l'ecran). Chaque appareil (hote compris)
+  // reagit ensuite au `screen` de la room passant a `'game'` (effet plus bas) et navigue seul.
   const [starting, setStarting] = useState(false);
   const pendingRunRef = useRef<((code: string) => Promise<void>) | null>(null);
-  // A start that failed (`run` rejected: places not found, no network...) writes nothing to the room —
-  // it stays in its lobby — so the button just retries; `startFailed` only drives the notice.
+  // Un lancement rate (`run` rejete : lieux introuvables, pas de reseau...) n'ecrit rien dans la room, qui reste
+  // au salon : le bouton relance simplement ; `startFailed` ne pilote que la notice.
   const [startFailed, setStartFailed] = useState(false);
   const startOnlineGame = async (run: (code: string) => Promise<void>) => {
     setStartFailed(false);
     if (connectedRoomCode !== null) {
       setStarting(true);
       await run(connectedRoomCode).catch((error) => {
-        // The notice only says the start failed; the cause (places not found, a refused write, no network...) is logged.
+        // La notice dit seulement que le lancement a echoue ; la cause est loggee.
         reporting('setup.startGame', { kind: 'background', room: connectedRoomCode })(error);
         setStarting(false);
         setStartFailed(true);
@@ -232,24 +205,22 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     return () => clearTimeout(timeout);
   }, [startFailed]);
 
-  // Shared with the game's online screen, which only ever reads it — this screen alone owns the
-  // connect/disconnect lifecycle, since it's always the one that establishes a room before anyone
-  // can navigate to the game route.
+  // Partage avec l'ecran de jeu en ligne, qui ne fait que le lire : cet ecran seul gere connexion/deconnexion,
+  // car il etablit toujours la room avant toute navigation vers le jeu.
   const players = store((s) => s.players);
   const hostUid = store((s) => s.hostUid);
   const localUid = store((s) => s.localUid);
-  // What this player is called if they type nothing: the first default name nobody else in the room has.
+  // Nom du joueur s'il ne tape rien : le premier nom par defaut qu'aucun autre joueur de la room n'a.
   const soloPlaceholder = freePlaceholder(NAME_PLACEHOLDERS, players, localUid);
   const roomSettings = store((s) => s.roomSettings);
   const roomScreen = store((s) => s.gameState.screen);
-  // The game screen took over (the room left its lobby): the start is done. This screen stays
-  // mounted underneath it, and its loading splash is a modal that would otherwise stay on top of the
-  // game — hence the reset, done while rendering (React's pattern for state derived from a value
-  // that changed) rather than in an effect.
+  // L'ecran de jeu a pris le relais (la room a quitte le salon) : le lancement est fini. Cet ecran reste monte
+  // dessous et son splash modal resterait sinon par-dessus le jeu, d'ou la remise a zero au rendu (pattern React
+  // de state derive) plutot qu'en effet.
   if (starting && roomScreen !== 'options') setStarting(false);
   const connectionLost = store((s) => s.connectionLost);
-  // Connection-loss detection for the whole life of the room (this screen stays mounted under the
-  // game screen): see `useRoomPresence`. Whoever loses the connection just leaves the game.
+  // Detection de coupure pour toute la vie de la room (cet ecran reste monte sous le jeu) : voir `useRoomPresence`.
+  // Qui perd la connexion quitte la partie.
   useRoomPresence(store, adapter, connectedRoomCode);
   useEffect(() => {
     if (connectedRoomCode === null) return;
@@ -257,8 +228,7 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     return () => store.getState().disconnect();
   }, [connectedRoomCode, store]);
 
-  // Solo's deferred "Lancer la partie" (see `startOnlineGame`): fires once the silent room is
-  // connected and this device shows up in it.
+  // Connecte et cet appareil present dans la room.
   useEffect(() => {
     const run = pendingRunRef.current;
     if (run === null || connectedRoomCode === null || localUid === null || !(localUid in players)) return;
@@ -270,20 +240,17 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     });
   }, [connectedRoomCode, localUid, players]);
 
-  // Mirrors the host's settings onto this device's own, for a joiner (read-only display) — the
-  // single `subscribeToRoomSettings` opened by `connect()` above already keeps `roomSettings`
-  // current, this just applies it whenever it changes.
+  // Pour un joiner, reflete les reglages de l'hote sur les siens (affichage en lecture seule) : l'unique
+  // `subscribeToRoomSettings` ouvert par `connect()` tient `roomSettings` a jour, ceci l'applique a chaque changement.
   useEffect(() => {
     if (mode !== 'join' || roomSettings === null) return;
     updateSettings(roomSettings);
   }, [mode, roomSettings, updateSettings]);
 
-  // Registers this device in the room's connected-players list, for both host and joiner, and
-  // renames it there when the name changes. The rename waits for the typing to stop: a write per
-  // keystroke would also pass through every half-typed name. A name another player already has is
-  // refused (`nameTaken`): the field opens up again, with the reason under it, and typing another
-  // name retries. Any other failure (e.g. this room was just deleted from under it — see the cleanup
-  // effect right below) is swallowed instead of an unhandled rejection crashing the screen.
+  // Inscrit cet appareil dans la liste des joueurs (hote et joiner) et le renomme quand le nom change. Le
+  // renommage attend la fin de la frappe (sinon chaque touche ecrirait un nom a moitie tape). Un nom deja pris est
+  // refuse (`nameTaken`) : le champ se rouvre avec la raison, retaper retente. Tout autre echec (ex. room
+  // supprimee, voir le nettoyage juste dessous) est avale.
   const [nameTaken, setNameTaken] = useState(false);
   const roomName = useDebouncedValue(soloName, NAME_SYNC_DELAY_MS);
   useEffect(() => {
@@ -297,13 +264,10 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
       .catch((error) => setNameTaken(isNameTakenError(error)));
   }, [adapter, connectedRoomCode, roomName, soloPlaceholder, store]);
 
-  // Leaves the *previous* room when switching to a different one (or leaving this screen) —
-  // otherwise it stays parked there forever, still listing a host nobody will ever come back to.
-  // The host deletes the room outright, same as `handleQuit` mid-game; a joiner just drops its own
-  // presence, so it doesn't keep blocking the room for everyone else. Deliberately its own effect:
-  // it must only fire on an actual room change. Swallowed: this fires for a joiner right after the
-  // "room deleted" reset too, by which point the room is already gone and Firestore's rules reject
-  // the write on a nonexistent doc as "permission denied" — nothing to do, we're leaving anyway.
+  // Quitte la room *precedente* au changement de room (ou en quittant l'ecran), sinon elle reste listee avec un
+  // hote qui ne reviendra pas. L'hote supprime la room comme `handleQuit` ; un joiner retire seulement sa presence.
+  // Effet separe expres : il ne doit se declencher que sur un vrai changement de room. Echec avale : apres le reset
+  // « room supprimee » d'un joiner, la room n'existe plus et les regles refusent l'ecriture (permission denied).
   useEffect(() => {
     if (connectedRoomCode === null || localUid === null) return;
     const isHostOfThisRoom = localUid === hostUid;
@@ -311,7 +275,7 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
       if (isHostOfThisRoom) adapter.deleteRoom(connectedRoomCode).catch(reporting('setup.deleteRoom', { kind: 'background', room: connectedRoomCode }));
       else {
         const report = reporting('setup.leaveRoom', { kind: 'background', room: connectedRoomCode });
-        // `permission-denied` here is the room already being gone (the host left first): nothing to leave, not an error.
+        // `permission-denied` ici = room deja disparue (l'hote est parti avant) : rien a quitter, pas une erreur.
         adapter.removeRoomPlayer(connectedRoomCode, localUid).catch((error) => {
           if ((error as { code?: unknown } | null)?.code !== 'permission-denied') report(error);
         });
@@ -319,22 +283,16 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     };
   }, [adapter, connectedRoomCode, localUid, hostUid]);
 
-  // Two ways of getting disconnected — subscribed directly to the store (not a `useEffect` reading
-  // its already-selected values: setting state straight from a dependency-array-driven effect is
-  // "derived state", the anti-pattern `react-hooks/set-state-in-effect` flags; a genuine external
-  // subscription callback isn't). Once we've seen our own uid in `players`, its later absence means
-  // the host used `removeRoomPlayer` on us (never mistaken for "haven't joined yet", which only
-  // ever goes the other way — absent → present); and the room itself disappearing (the host
-  // started a new one — `deletePreviousRoomsByHost`) is its own case, only shown to a joiner,
-  // since the host is the one causing it.
+  // Deux facons d'etre deconnecte, abonnees directement au store (pas un `useEffect` qui lit des valeurs deja
+  // selectionnees : ce serait un state derive, l'anti-pattern de `react-hooks/set-state-in-effect`). Une fois notre
+  // uid vu dans `players`, son absence veut dire que l'hote nous a retire (`removeRoomPlayer`) ; la room qui
+  // disparait (nouvelle room de l'hote, `deletePreviousRoomsByHost`) est un cas a part, montre au joiner seulement.
   const [disconnectReason, setDisconnectReason] = useState<'kicked' | 'deleted' | null>(null);
-  // Auto-dismissed below, but also drops back out of the room afterwards — there's nothing left
-  // to stay connected to.
+  // Auto-ferme plus bas, mais quitte aussi la room ensuite : plus rien a quoi rester connecte.
   const dismissDisconnectNotice = useCallback(() => {
     setDisconnectReason(null);
-    // The game screen is open on top of this one (this screen stays mounted under it): leaving the
-    // room means going all the way home. Only resetting here would tear the room's state down from
-    // under the game screen, with nothing left to send it home.
+    // L'ecran de jeu est ouvert par-dessus (celui-ci reste monte dessous) : quitter la room = rentrer a l'accueil.
+    // Un simple reset detruirait l'etat de la room sous l'ecran de jeu sans rien pour le renvoyer a l'accueil.
     if (store.getState().gameState.screen !== 'options') router.dismissTo('/');
     resetChoice();
   }, [resetChoice, router, store]);
@@ -349,22 +307,18 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
       if (state.localUid === null) return;
       if (state.localUid in state.players) hasBeenPresent = true;
       else if (hasBeenPresent) {
-        // Quitting on purpose (the online screen's own handleQuit, non-host branch) removes this
-        // device's own presence exactly the same way a real kick would — `consumeVoluntaryLeave`
-        // is how it tells the two apart. No notice either way, just the same reset a dismissed
-        // one leaves behind, since there's nothing to leave lingering in.
+        // Quitter volontairement (`handleQuit` de l'ecran en ligne, branche joiner) retire la presence comme une
+        // expulsion ; `consumeVoluntaryLeave` les distingue. Pas de notice, juste le meme reset qu'une notice fermee.
         if (store.getState().consumeVoluntaryLeave()) dismissDisconnectNotice();
         else setDisconnectReason('kicked');
       }
     });
   }, [connectedRoomCode, dismissDisconnectNotice, mode, store]);
 
-  // The host starting the game flips `screen` to 'game' for every connected device — host
-  // included, its own subscription above sees the same change — so this single effect moves
-  // everyone across, rather than the host navigating itself separately.
-  // Once per game: `roomScreen` keeps changing while it is played ('game', 'reveal', 'game'... 'end'), and a
-  // `push` per change stacked a NEW game screen on top each time — the one on top at the end had seen none of
-  // the rounds (empty recap), and "Accueil" only popped it to the previous one instead of going home.
+  // L'hote qui lance passe `screen` a 'game' pour tous les appareils (hote compris, via son abonnement) : cet
+  // unique effet y emmene tout le monde. Une fois par partie : `roomScreen` change pendant la partie ('game',
+  // 'reveal'... 'end'), et un `push` par changement empilait un NOUVEL ecran de jeu (recap vide, « Accueil » ne
+  // faisait que depiler).
   const gameOpenedRef = useRef(false);
   useEffect(() => {
     if (roomScreen === 'options' || connectedRoomCode === null) {
@@ -382,24 +336,20 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     return () => clearTimeout(timeout);
   }, [disconnectReason, connectionLost, dismissDisconnectNotice]);
 
-  // Guarded on `connectedRoomCode` rather than reset to `{}` on leaving it: stale entries from
-  // the last room just never render once disconnected. Also guarded on `localUid`: the players
-  // snapshot can arrive before `joinRoomPresence` has resolved our own uid (it's a separate,
-  // unsequenced effect), and without it we can't tell our own entry apart from everyone else's —
-  // better to show nothing for a moment than to flash ourselves twice.
+  // Garde sur `connectedRoomCode` plutot que remis a `{}` en partant : les entrees perimees ne s'affichent jamais
+  // hors connexion. Garde aussi sur `localUid` : le snapshot des joueurs peut arriver avant que `joinRoomPresence`
+  // resolve notre uid, et on ne distinguerait plus notre entree des autres (mieux vaut rien que nous voir en double).
   const connectedPlayers =
     connectedRoomCode === null || localUid === null ? [] : playersByArrival(players).slice(0, adapter.maxPlayers);
   const isHost = localUid !== null && localUid === hostUid;
-  // Solo play keeps the fixed local-multiplayer red — once connected, this device's own badge
-  // reflects whatever color the host assigned it too, same as everyone else's.
+  // Solo garde le rouge fixe du multijoueur local ; une fois connecte, le badge prend la couleur assignee par l'hote.
   const soloColor =
     connectedRoomCode !== null && localUid !== null
       ? (players[localUid]?.color ?? adapter.colors[0])
       : PLAYER_COLORS[0];
 
-  // Host-only: whenever who's connected changes (join/leave/kick), recompute everyone's color
-  // from scratch by arrival order and write it back — joiners never compute their own colors,
-  // they just read whatever's stored, so every device always agrees.
+  // Hote : a chaque changement de joueurs connectes (arrivee, depart, expulsion), recalcule toutes les couleurs
+  // par ordre d'arrivee et les ecrit ; les joiners ne calculent rien et lisent, donc tous les appareils concordent.
   useEffect(() => {
     if (!isHost || connectedRoomCode === null) return;
     const colorByUid: Record<string, string> = {};
@@ -410,8 +360,8 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     adapter.updateRoomPlayerColors(connectedRoomCode, colorByUid).catch(reporting('setup.updateColors', { room: connectedRoomCode }));
   }, [adapter, isHost, connectedRoomCode, players]);
 
-  // Read-only sections still react to a tap/toggle, but only to explain why nothing happened —
-  // auto-dismissed a couple seconds later.
+  // Les sections en lecture seule reagissent a un tap/toggle, seulement pour expliquer pourquoi rien ne se passe :
+  // auto-ferme quelques secondes apres.
   const [readOnlyNotice, setReadOnlyNotice] = useState(false);
   useEffect(() => {
     if (!readOnlyNotice) return;
@@ -419,8 +369,8 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     return () => clearTimeout(timeout);
   }, [readOnlyNotice]);
   const notifyReadOnly = () => setReadOnlyNotice(true);
-  // "Préparation de la partie…" (a spinner, `overlayLoading`) covers the setup while the game is
-  // being started, unless a disconnect notice takes precedence.
+  // « Preparation de la partie... » (spinner, `overlayLoading`) couvre le setup pendant le lancement, sauf si une
+  // notice de deconnexion prime.
   const overlayLoading = starting && !connectionLost && disconnectReason === null;
   const overlayMessage = connectionLost
     ? t.setup.online.connectionLostNotice
@@ -435,9 +385,8 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
             : readOnlyNotice
               ? t.setup.readOnlyNotice
               : null;
-  // Tapping the notice dismisses whichever one is showing early, instead of only ever waiting
-  // out its own 2s auto-dismiss timeout above. The loading splash isn't dismissable: it goes away
-  // by itself once the game screen takes over.
+  // Un tap sur la notice ferme celle qui s'affiche avant son auto-fermeture de 2 s. Le splash de chargement ne se
+  // ferme pas : il part seul quand l'ecran de jeu prend le relais.
   const dismissOverlay = () => {
     if (overlayLoading) return;
     if (disconnectReason !== null || connectionLost) dismissDisconnectNotice();
@@ -449,8 +398,8 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     soloName,
     soloPlaceholder,
     soloColor,
-    // Free while alone or hosting (the new name reaches the room, see `roomName` above); locked once
-    // connected as a joiner — unless the name was refused, and has to be changed.
+    // Libre seul ou en hote (le nouveau nom part dans la room, voir `roomName`) ; verrouille en joiner connecte,
+    // sauf si le nom a ete refuse et doit changer.
     nameEditable: connectedRoomCode === null || mode === 'host' || nameTaken,
     nameError: nameTaken && connectedRoomCode !== null ? t.setup.online.nameTaken : null,
     onChangeName: (text) => {
@@ -472,9 +421,8 @@ export const useSetupRoom = <S extends { playerName: string }, R extends Partial
     roomCode: hostedSilently ? null : roomCode,
     joinCode,
     onJoinCodeChange: setJoinCode,
-    // Pre-resolved rather than making the dumb view import `isValidRoomCode` itself: that pulls in
-    // `room.ts`, which imports `firebase/firestore` at module scope — fine for the container,
-    // but exactly what a dumb view must never transitively depend on.
+    // Resolu ici pour que la vue dumb n'importe pas `isValidRoomCode` : cela tire `room.ts`, qui importe
+    // `firebase/firestore` au niveau module, ce qu'une vue dumb ne doit jamais dependre de.
     joinCodeIsValid: adapter.isValidRoomCode(joinCode.trim().toLowerCase()),
     joinStatus,
   };

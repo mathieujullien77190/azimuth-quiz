@@ -1,12 +1,12 @@
 export type ReactionOverlayProps = {
-  /** The latest reaction received, or null for none yet: each new one (a new `seq`) starts a bubble of its own. */
+  /** Derniere reaction recue, ou null : chaque nouvelle (nouveau `seq`) lance sa propre bulle. */
   reaction: { emoji: string; name: string | null; seq: number } | null;
 };
 
 export type ReactionBubbleProps = {
   reaction: { emoji: string; name: string | null; seq: number };
-  /** How far up (px) the bubble rises: from its start to the top of the overlay. */
+  /** Hauteur de montee (px), du depart au haut de l'overlay. */
   travel: number;
-  /** Called once the bubble has risen out of sight, with its own `seq`: stable, so the bubble is never restarted. */
+  /** Appelee quand la bulle est sortie de l'ecran, avec son `seq` : stable, donc la bulle n'est jamais relancee. */
   onDone: (seq: number) => void;
 };

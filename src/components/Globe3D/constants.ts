@@ -1,65 +1,64 @@
 export const CAPTION_GLOBE = 'Globe 3D';
-/** Points of a route: smooth to the eye even for a half-turn of the Earth. */
+/** Points d'une route : lisse a l'oeil meme pour un demi-tour de Terre. */
 export const ROUTE_STEPS = 64;
-/** Degrees between two points of the equator and of the Greenwich meridian (smooth to the eye at this step). */
+/** Degres entre deux points de l'equateur et du meridien de Greenwich (lisse a l'oeil a ce pas). */
 export const GUIDE_STEP = 5;
 
-// --- The scene ---
-// The globe is a sphere of radius 1 around the middle of the scene: every size below is in those units.
-/** How round the ball is: enough segments for a smooth outline even zoomed all the way in. */
+// --- La scene ---
+// Le globe est une sphere de rayon 1 autour du milieu de la scene : toute taille ci-dessous est dans cette unite.
+/** Rondeur de la boule : assez de segments pour un contour lisse meme tout zoome. */
 export const SPHERE_SEGMENTS = 144;
-/** How round the shell the continents are painted on is. It carries the land/sea mask as a picture, so the detail of
- * the coast comes from the mask, not from this grid — but it has to be *fine*, not just round: a sphere drawn with
- * flats has a belly that dips below its own radius, by `1 - cos(180 / segments)`, and the shell would sink under the
- * sea there (and be hidden by it) unless `LAND_FILL_ALTITUDE` clears that dip. At 192 the dip is 0.00013. */
+/** Rondeur de la coque ou sont peints les continents. Elle porte le masque terre/mer en image, donc le detail de
+ * la cote vient du masque, pas de cette grille — mais elle doit etre *fine* : une sphere a facettes creuse sous son
+ * rayon de `1 - cos(180 / segments)` et la coque disparaitrait sous la mer sauf si `LAND_FILL_ALTITUDE` couvre ce
+ * creux. A 192, il vaut 0.00013. */
 export const LAND_FILL_SEGMENTS = 192;
-/** How strongly the continents are painted, over the colour the coastline is drawn in: enough to tell land from sea at
- * a glance, little enough for the coastline over it to stay the sharp edge. */
+/** Force de la peinture des continents, par-dessus la couleur de la cote : assez pour distinguer terre et mer,
+ * assez peu pour que la cote reste le trait net. */
 export const LAND_FILL_OPACITY = 0.38;
-/** What is drawn on the ground is pushed out a hair, in this order, so that each layer wins its pixels over the one
- * below instead of flickering against it. The painted shell must clear the dip of its own flats (see
- * `LAND_FILL_SEGMENTS`), and the coastline must in turn clear the shell's own highest point, or the paint would hide
- * the line meant to sit on top of it. */
+/** Ce qui est dessine sur le sol est pousse d'un poil, dans cet ordre, pour que chaque couche gagne ses pixels sur
+ * la precedente sans scintiller. La coque doit passer le creux de ses facettes (voir `LAND_FILL_SEGMENTS`), et la
+ * cote doit passer le sommet de la coque, sinon la peinture cache le trait. */
 export const LAND_FILL_ALTITUDE = 1.0008;
 export const LAND_ALTITUDE = 1.0016;
 export const GUIDE_ALTITUDE = 1.0022;
 export const ROUTE_ALTITUDE = 1.004;
 export const MARK_ALTITUDE = 1.006;
-/** An answer's route is a tube, not a line: WebGL ignores the width of a line on most devices. Thinner than the dots
- * are wide, and divided by the zoom (see `buildRoutes`) so that it keeps this width on screen all the way in. */
+/** Une route est un tube, pas une ligne : WebGL ignore l'epaisseur des lignes sur la plupart des appareils.
+ * Plus fin que les pastilles, et divise par le zoom (voir `buildRoutes`) pour garder cette largeur a l'ecran. */
 export const ROUTE_THICKNESS = 0.01;
 export const ROUTE_SIDES = 6;
-/** The dots: the starting point, the end of an answer, the north pole. */
+/** Les pastilles : point de depart, fin d'une reponse, pole nord. */
 export const ORIGIN_DOT = 0.03;
 export const MARK_DOT = 0.026;
 export const POLE_DOT = 0.02;
 export const DOT_SEGMENTS = 16;
-/** The ring around the true answer. */
+/** L'anneau autour de la vraie reponse. */
 export const TRUTH_RING = 0.06;
 export const TRUTH_RING_THICKNESS = 0.009;
-/** Dashes of the equator and of the Greenwich meridian. */
+/** Pointilles de l'equateur et du meridien de Greenwich. */
 export const GUIDE_DASH = 0.05;
 export const GUIDE_GAP = 0.035;
-/** How much light the ball gets from every side, and from the lamp that follows the camera (so the same side always
- * catches the light, however the globe is turned), and where that lamp is: up and to the left, as in the 2D view. */
+/** Lumiere recue par la boule de partout, et de la lampe qui suit la camera (le meme cote prend toujours la
+ * lumiere, quelle que soit la rotation), et position de la lampe : en haut a gauche, comme en 2D. */
 export const AMBIENT_LIGHT = 0.6;
 export const HEADLIGHT = 0.8;
 export const HEADLIGHT_POSITION: [number, number, number] = [-0.6, 0.8, 1];
-/** How far the camera stands from the middle of the globe. The ball (radius 1) is between `DISTANCE - 1` and
- * `DISTANCE + 1`, so this is what the depth range is cut around. */
+/** Distance de la camera au centre du globe. La boule (rayon 1) est entre `DISTANCE - 1` et `DISTANCE + 1` :
+ * la plage de profondeur est coupee autour. */
 export const CAMERA_DISTANCE = 4;
 export const CAMERA_NEAR = CAMERA_DISTANCE - 1.5;
 export const CAMERA_FAR = CAMERA_DISTANCE + 1.5;
 
-// --- Turning and zooming ---
-/** The globe cannot be tipped past this latitude: the poles stay out of the middle, the view never flips over. */
+// --- Rotation et zoom ---
+/** On ne penche pas le globe au-dela de cette latitude : les poles restent hors du milieu, la vue ne se retourne jamais. */
 export const MAX_CENTER_LATITUDE = 85;
-/** Zoom 1 = the whole ball fits the drawing. */
+/** Zoom 1 = toute la boule tient dans le dessin. */
 export const MIN_ZOOM = 1;
 export const MAX_ZOOM = 14;
-/** One press on + or − multiplies (or divides) the zoom by this. */
+/** Un appui sur + ou − multiplie (ou divise) le zoom par ceci. */
 export const ZOOM_STEP = 1.4;
-/** Buttons: zoom, and back to the starting view (north up, everything in sight). */
+/** Boutons : zoom, et retour a la vue de depart (nord en haut, tout en vue). */
 export const ZOOM_IN_LABEL = '+';
 export const ZOOM_OUT_LABEL = '−';
 export const RESET_LABEL = 'N';
@@ -67,18 +66,18 @@ export const ZOOM_IN_HINT = 'Zoomer';
 export const ZOOM_OUT_HINT = 'Dézoomer';
 export const RESET_HINT = 'Remettre le globe au nord';
 
-// --- The drawing ---
-/** Space kept around the globe so its outline is not cut by the edge of the drawing. */
+// --- Le dessin ---
+/** Marge autour du globe pour que son contour ne soit pas coupe par le bord du dessin. */
 export const GLOBE_MARGIN = 3;
-/** Room kept above the origin for its label. */
+/** Place gardee au-dessus de l'origine pour son label. */
 export const LABEL_OFFSET = 11;
-/** The satellite flies this much higher than the ground, as a share of the globe's radius: it is seen beyond the outline. */
+/** Le satellite vole a cette hauteur au-dessus du sol, en part du rayon : on le voit au-dela du contour. */
 export const ORBIT_RATIO = 1.12;
-/** One full turn round the Earth, and how often the satellite is moved while it flies. */
+/** Un tour complet de la Terre, et frequence de deplacement du satellite en vol. */
 export const ORBIT_MS = 24000;
 export const ORBIT_TICK_MS = 50;
-/** The sea by day: the sand of the app's own day background (#F3EEE3), against a white backdrop (the globe's `background`
- * is the day theme's `surface`, white), which is what makes the ball stand out. */
+/** La mer le jour : le sable du fond jour de l'app (#F3EEE3), sur fond blanc (le `background` du globe est le
+ * `surface` du theme jour) : c'est ce qui fait ressortir la boule. */
 export const DAY_SEA_COLOR = '#F3EEE3';
-/** The continents by day: a lighter blue than the accent's (#5B88B4), whose own blue then draws their coast. */
+/** Les continents le jour : un bleu plus clair que l'accent (#5B88B4), dont le bleu trace alors la cote. */
 export const DAY_LAND_COLOR = '#B5CCE4';

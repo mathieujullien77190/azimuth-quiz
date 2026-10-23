@@ -37,9 +37,8 @@ const toRow = (snapshot: QueryDocumentSnapshot): ErrorRow => {
 };
 
 /**
- * What failed in the game, as the devices reported it (`reportError`). The newest 200 are read once, then a listener on
- * "newer than the latest one shown" adds the new ones by itself: nothing to refresh, and only the new documents are read.
- * Reads Firestore directly: these errors never go through the data copy or the journal.
+ * Erreurs du jeu telles que les appareils les rapportent (`reportError`) : les 200 dernieres lues une fois, puis un
+ * ecouteur. Lit Firestore directement, hors copie de donnees et journal.
  */
 export const ErrorsView = () => {
   const [rows, setRows] = useState<ErrorRow[] | null>(null);
@@ -80,7 +79,7 @@ export const ErrorsView = () => {
     setRows((current) => current!.filter((r) => r.id !== row.id));
   };
 
-  /** The errors past their `expireAt` (30 days): a TTL policy would do it by itself but needs Firebase billing. */
+  /** Erreurs passees leur `expireAt` (30 jours) : un TTL le ferait seul mais exige la facturation Firebase. */
   const cleanExpired = async () => {
     setCleaning(true);
     try {

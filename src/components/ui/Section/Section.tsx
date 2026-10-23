@@ -6,7 +6,7 @@ import type { SectionProps } from './types';
 
 import { createStyles } from './styles';
 
-/** Titled card: groups the fields of a single subject. */
+/** Carte titree : regroupe les champs d'un meme sujet. */
 export const Section = ({ title, hint, children }: SectionProps) => {
   const styles = useThemedStyles(createStyles);
 

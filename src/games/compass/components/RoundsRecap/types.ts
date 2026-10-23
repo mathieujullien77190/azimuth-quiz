@@ -1,9 +1,9 @@
-/** One cell of the recap: who was best, and with how many points. */
+/** Une cellule : le meilleur et ses points. */
 export type RecapCell = {
   text: string;
-  /** Secondary text under `text` ("+350"). */
+  /** Texte secondaire sous `text` ("+350"). */
   detail?: string;
-  /** Dot before `text`: the color of the player named there. */
+  /** Point avant `text` : couleur du joueur nomme. */
   color?: string;
 };
 
@@ -11,8 +11,6 @@ export type RecapRow = { label: string; cells: RecapCell[] };
 
 export type RoundsRecapProps = {
   title: string;
-  /** One column per criterion ("Direction", "Distance"). */
   columns: string[];
-  /** One row per round. */
   rows: RecapRow[];
 };

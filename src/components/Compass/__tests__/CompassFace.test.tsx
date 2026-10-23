@@ -10,9 +10,8 @@ import * as helpers from '../helpers';
 
 const baseProps = { size: 100, colors: night.colors, typography: night.typography, westLabel: 'O' };
 
-// CompassFace only renders bare SVG primitives (no own <Svg> root, see CompassDial): wrap it the
-// same way CompassDial does, otherwise react-native-svg can't resolve color props into the
-// native ARGB payload format the other assertions below rely on.
+// CompassFace ne rend que des primitives SVG (pas de <Svg> racine) : l'envelopper comme CompassDial,
+// sinon react-native-svg ne resout pas les couleurs en ARGB.
 const renderFace = (props: typeof baseProps) =>
   render(
     <Svg>
@@ -49,7 +48,7 @@ describe('CompassFace', () => {
     expect(buildTicksSpy).toHaveBeenCalledTimes(1);
     expect(cardinalPointsSpy).toHaveBeenCalledTimes(1);
 
-    // Same size/westLabel, only colors reference changes: the memoized geometry is untouched.
+    // Memes size/westLabel, seule la reference des couleurs change : la geometrie memoisee est intacte.
     await rerender(
       <Svg>
         <CompassFace {...baseProps} colors={{ ...night.colors }} />

@@ -4,10 +4,8 @@ import { GEAR_ICON_CENTER, GEAR_ICON_PATH, GEAR_ICON_RADIUS } from './constants'
 import type { GearIconProps } from './types';
 
 /**
- * The settings gear (react-icons' `DiAptana`, as a react-native-svg path): drawn around the origin
- * of the SVG group it is in, `radius` px from center to teeth, turned by `angleDeg` around its own
- * center. The mascot buttons (saucer, helicopter) hang it under themselves and feed `angleDeg`
- * from `gearAngleDeg`.
+ * Engrenage des reglages (`DiAptana` de react-icons, en path react-native-svg), dessine autour de l'origine du
+ * groupe SVG et tourne de `angleDeg` autour de son centre.
  */
 export const GearIcon = ({ radius, color, angleDeg }: GearIconProps) => (
   <G transform={`rotate(${angleDeg})`}>

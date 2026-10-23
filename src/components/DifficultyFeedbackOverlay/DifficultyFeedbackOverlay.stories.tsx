@@ -10,7 +10,7 @@ import type { DifficultyFeedbackOverlayProps } from './types';
 import { source } from '@/storybook/source';
 import defaultCode from './Default.source.md?raw';
 
-/** Named (capitalized) so the rules of hooks allow the `useState`; mocks the game screen the question sits on. */
+/** Nomme (majuscule) pour le `useState` ; simule l'ecran de jeu sous la question. */
 const InteractiveDemo = (args: DifficultyFeedbackOverlayProps) => {
   const [question, setQuestion] = useState(args.question);
   return (
@@ -42,7 +42,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The dev mode's question after a round: three answers; a tap beside them closes it without a word. */
+/** Question du mode dev apres une manche : trois reponses ; un tap a cote ferme sans rien envoyer. */
 export const Default: Story = {
   parameters: source(defaultCode),
   args: { question: 'Le lieu Paris était-il…', onChoose: fn(), onDismiss: fn() },

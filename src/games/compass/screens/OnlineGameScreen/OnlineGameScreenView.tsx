@@ -21,9 +21,8 @@ import type { OnlineGameScreenViewProps } from './types';
 import { createStyles } from './OnlineGameScreenView.styles';
 
 /**
- * One `Screen`/`ScrollView` for both the answer phase and the submitted-or-revealed phase — see
- * this prop type's own comment for why they're no longer two separate components. Pure rendering,
- * no hooks with side effects.
+ * Un seul `Screen`/`ScrollView` pour la phase reponse et la phase envoye/reveal (voir le type des props).
+ * Rendu pur.
  */
 export const OnlineGameScreenView = ({
   scrollRef,
@@ -71,7 +70,7 @@ export const OnlineGameScreenView = ({
   const styles = useThemedStyles(createStyles);
   const t = useTranslation();
 
-  // Nothing to show a non-host once the round is confirmed: it waits for the host's "next round".
+  // Rien a montrer a un non-hote une fois la manche confirmee : il attend le "manche suivante" de l'hote.
   const footerContent = record ? (
     confirmed ? (
       isHost && <Button label={isLastRound ? t.game.last : t.game.next} onPress={onNextRound ?? (() => {})} />
@@ -136,7 +135,7 @@ export const OnlineGameScreenView = ({
 
       <Card style={styles.earthCard}>
         <View style={styles.earthCenter}>
-          {/* The 3D globe is for the solution only: no `origin`, no switch, while the players are still answering. */}
+          {/* Globe 3D pour la solution seulement : pas d'`origin` ni de bascule pendant les reponses. */}
           <EarthSection
             marks={earthMarks}
             origin={record === undefined ? undefined : origin}
@@ -155,8 +154,7 @@ export const OnlineGameScreenView = ({
         )}
       </Card>
 
-      {/* Always here, at the bottom, whether pending or confirmed — never above the compass/Earth,
-          so the layout doesn't jump around as the round goes from waiting to revealed. */}
+      {/* Toujours en bas, en attente ou confirme : sinon la mise en page saute au passage a la solution. */}
       {record && players !== undefined && totals !== undefined && localIndex !== undefined && (
         <RoundResult
           answered={answered}

@@ -1,7 +1,7 @@
 export type GearIconProps = {
-  /** Outer radius (tooth tips), in px. */
+  /** Rayon exterieur (pointes des dents), en px. */
   radius: number;
   color: string;
-  /** Rotation around the gear's own center, in degrees. */
+  /** Rotation autour du centre de l'engrenage, en degres. */
   angleDeg: number;
 };

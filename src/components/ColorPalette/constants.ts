@@ -2,7 +2,7 @@ import type { ThemeId } from '@/types';
 
 import type { ColorToken } from './types';
 
-/** Every color a theme defines, in the order a designer reads them: canvas, text, accent, feedback. */
+/** Chaque couleur d'un theme, dans l'ordre de lecture d'un designer. */
 export const COLOR_TOKENS: ColorToken[] = [
   {
     name: 'colors.background',

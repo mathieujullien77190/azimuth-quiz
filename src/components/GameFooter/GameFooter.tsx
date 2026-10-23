@@ -11,9 +11,9 @@ import type { GameFooterProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * The in-round footer shared by every game — dumb: just the panel (background, top border, padding)
- * around its `children` (and, in a room with other players, the round emoji-reactions button floating just above it: out of its flow, the footer's own content keeps its whole layout and width), the counterpart of `GameHeader` at the bottom of the screen. Where it sits
- * is the caller's: the `footer` of a `Screen`.
+ * Footer de manche commun aux jeux (dumb) : le panneau (fond, bord haut, padding) autour de ses `children`,
+ * avec le bouton de reactions flottant au-dessus (hors flux) dans une room a plusieurs. Contrepartie de
+ * `GameHeader` ; sa place est le `footer` d'un `Screen`, c'est a l'appelant de la choisir.
  */
 export const GameFooter = ({ children, onReact }: GameFooterProps) => {
   const styles = useThemedStyles(createStyles);

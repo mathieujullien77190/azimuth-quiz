@@ -2,9 +2,8 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// Client-side config, not a secret — Firestore access is gated by security rules, not by hiding
-// these values (they ship in every bundle regardless, web or native). `EXPO_PUBLIC_*` vars are
-// inlined at build time by Expo (works for both `expo start` and `expo export --platform web`).
+// Config cote client, pas un secret : l'acces est protege par les regles Firestore.
+// `EXPO_PUBLIC_*` est injecte a la compilation par Expo (start et export web).
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,

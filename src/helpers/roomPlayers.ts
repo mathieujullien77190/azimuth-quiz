@@ -2,46 +2,35 @@ import { ROOM_PLAYER_COLORS } from '@/data';
 
 import type { RoomPlayer, RoomPlayers } from '../firebase/roomApi';
 
-// Type-only import of `roomBase`: erased at compile time, so this stays free of `firebase/firestore`
-// at runtime (see `roomBase.ts`'s own note) — safe for any screen or test to import.
+// Import de type seul : efface a la compilation, donc sans `firebase/firestore` a l'execution.
 
-/** One connected player, in the stable arrival order used everywhere in an online game screen
- * (scores, turn order, results...) — built once from the room's `players` map. */
+/** Un joueur connecte, dans l'ordre d'arrivee stable, construit depuis la map `players` de la room. */
 export type OnlinePlayer = {
   uid: string;
   name: string;
   color: string;
 };
 
-/** Connected players in arrival order. A brand-new entry reads back as `joinedAt: null` on the
- * device that just wrote it, until its `serverTimestamp()` round-trips — sorted last (its real
- * arrival slot), not first, so a joiner never briefly jumps to the top of its own list. */
+/** Joueurs connectes en ordre d'arrivee. Une entree toute neuve vaut `joinedAt: null` tant que `serverTimestamp()`
+ * n'est pas revenu : triee en dernier pour ne pas sauter en tete. */
 export const playersByArrival = (players: RoomPlayers): [string, RoomPlayer][] =>
   Object.entries(players).sort(
     ([, a], [, b]) => (a.joinedAt?.toMillis() ?? Infinity) - (b.joinedAt?.toMillis() ?? Infinity),
   );
 
 /**
- * The playing order of round `roundIndex` (0-based) in a turn-based game: arrival order rotated by
- * the round number, so the first to arrive doesn't open every single round — round 0 starts with
- * the first player, round 1 with the second, and it wraps around. Every device derives it from the
- * round number alone, so nothing more has to be agreed on in Firestore.
- *
- * It is the same ring of players in the same direction, only entered at another place: who plays
- * after whom within a round stays `nextPlayerUid`'s business.
+ * Ordre de jeu de la manche `roundIndex` (0-based) : ordre d'arrivee decale du numero de manche, en anneau.
+ * Chaque appareil le deduit seul ; l'ordre dans une manche reste celui de `nextPlayerUid`.
  */
 export const playersForRound = (players: OnlinePlayer[], roundIndex: number): OnlinePlayer[] =>
   players.map((_, index) => players[(index + roundIndex) % players.length]);
 
-/** Who plays after `uid`, in arrival order, wrapping around to the first player after the last one —
- * `undefined` with nobody in the room. A `uid` that isn't listed hands over to the first player. */
+/** Joueur apres `uid` en ordre d'arrivee, en bouclant ; `undefined` si la room est vide, le 1er si `uid` est inconnu. */
 export const nextPlayerUid = (players: OnlinePlayer[], uid: string | null): string | undefined =>
   players[(players.findIndex((player) => player.uid === uid) + 1) % players.length]?.uid;
 
-/** Stable player order for a room: arrival order (same as the setup screen's connected-players
- * list), so scores/turns/results index consistently across every device without agreeing on
- * anything beyond what's already in Firestore. Falls back to the first palette color for the
- * brief moment before the host's own color-sync effect has assigned a real one. */
+/** Ordre stable des joueurs (arrivee, comme le salon) pour indexer scores/tours sur tous les appareils.
+ * Premiere couleur de la palette tant que l'hote n'a pas attribue la vraie. */
 export const onlinePlayersFrom = (players: RoomPlayers): OnlinePlayer[] =>
   playersByArrival(players).map(([uid, player]) => ({
     uid,

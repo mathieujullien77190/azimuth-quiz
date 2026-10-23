@@ -1,6 +1,7 @@
-/** The admin's pages: one static URL each (`/admin/places`, `/admin/countries`...), so a page can be opened or bookmarked
- * directly. `/admin/` itself is the first one. The production build writes one `index.html` per `path` (see
- * `vite.config.ts`): GitHub Pages has no fallback to the app's single page. */
+/**
+ * Pages de l'admin : une URL statique chacune (`/admin/places`, `/admin/countries`...) pour les ouvrir ou les mettre
+ * en favori. `/admin/` est la premiere. Le build ecrit un `index.html` par `path` (voir `vite.config.ts`).
+ */
 export const PAGES = [
   { id: 'places', path: 'places', label: 'Lieux' },
   { id: 'countries', path: 'countries', label: 'Pays' },

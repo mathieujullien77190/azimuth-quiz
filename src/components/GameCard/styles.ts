@@ -6,7 +6,7 @@ import { CARD_MIN_HEIGHT } from './constants';
 
 export const createStyles = ({ colors, radius, typography }: Theme) =>
   StyleSheet.create({
-    // Big, and of a fixed size: the home screen puts the two cards at the bottom of the screen, they do not stretch.
+    // Grande et de taille fixe : l'accueil pose les deux cartes en bas de l'ecran, elles ne s'etirent pas.
     card: {
       minHeight: CARD_MIN_HEIGHT,
       padding: spacing.lg,

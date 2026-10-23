@@ -11,7 +11,7 @@ import { fetchClueRoundPlaces } from '../places';
 type Filter = { field: string; op: string; value: unknown };
 type Composite = { type: 'and' | 'or'; filters: (Filter | Composite)[] };
 
-/** The `and(...)` clauses of a query's filter: an `or` of them, or a lone one. */
+/** Les clauses `and(...)` du filtre d'une requete : un `or` de clauses, ou une seule. */
 const clausesOf = (filter: Filter | Composite): Filter[][] =>
   'type' in filter && filter.type === 'or'
     ? filter.filters.map((clause) => (clause as Composite).filters as Filter[])
@@ -29,9 +29,7 @@ jest.mock('firebase/firestore', () => ({
 }));
 jest.mock('@/firebase/client', () => ({ db: {} }));
 
-/** A fake `places` collection: `groups['capital|easy'][n - 1]` is the Clues place numbered `n` in that group,
- * stored the way the admin writes it (country copy, job label in the
- * personality). */
+/** Fausse collection `places` : `groups['capital|easy'][n - 1]` est le lieu numero `n` du groupe, stocke comme l'ecrit l'admin. */
 const installDb = (groups: Record<string, string[]>, countsOverride?: CompassCounts | null) => {
   const counts: CompassCounts = {};
   for (const [id, names] of Object.entries(groups)) {
@@ -81,7 +79,7 @@ const installDb = (groups: Record<string, string[]>, countsOverride?: CompassCou
         };
       });
     });
-    // Firestore caps the values of one query's `or`/`in` at 30 in total.
+    // Firestore limite a 30 le total des valeurs d'un `or`/`in`.
     expect(docs.length).toBeLessThanOrEqual(30);
     return { docs };
   }) as never);
@@ -112,7 +110,7 @@ describe('fetchClueRoundPlaces', () => {
 
     expect(places).toHaveLength(3);
     expect(new Set(names(places).map((name) => name[0]))).toEqual(new Set(['C', 'K', 'F']));
-    // The sizes were read once, then every place with ONE query (an `or` of one clause per group).
+    // Tailles lues une fois, puis tous les lieux en UNE requete (un `or` d'une clause par groupe).
     expect(getDoc).toHaveBeenCalledTimes(1);
     expect(getDocs).toHaveBeenCalledTimes(1);
     expect(places[0]).toMatchObject({
@@ -133,7 +131,7 @@ describe('fetchClueRoundPlaces', () => {
     const first = names(await fetchClueRoundPlaces(game, 'fr'));
     const second = names(await fetchClueRoundPlaces(game, 'fr'));
 
-    // 6 places, 3 per game, no repeat until the group has been gone through.
+    // 6 lieux, 3 par jeu, sans repetition tant que le groupe n'est pas parcouru.
     expect(new Set([...first, ...second]).size).toBe(6);
     expect(Object.keys(await loadClueCursors())).toEqual(['cities|easy']);
   });
@@ -144,7 +142,7 @@ describe('fetchClueRoundPlaces', () => {
     await expect(
       fetchClueRoundPlaces({ ...settings, categories: ['cities'], difficulty: 'intermediate', rounds: 3 }, 'en'),
     ).resolves.toHaveLength(3);
-    // The stored tiers read: the requested one and the one below.
+    // Paliers stockes lus : celui demande et celui du dessous.
     const tiers = jest
       .mocked(getDocs)
       .mock.calls.flatMap(([filter]) => clausesOf(filter as unknown as Filter | Composite))

@@ -14,8 +14,8 @@ jest.mock('@/games/clues/helpers/wordplay', () => ({
   wordplayFor: jest.fn(() => null),
 }));
 
-const place: CluePlace = CLUE_PLACES.find((p) => p.name === 'Paris')!; // capital, no citiesFr filtering
-const frenchCity: CluePlace = CLUE_PLACES.find((p) => p.name === 'Marseille')!; // citiesFr: fewer clues
+const place: CluePlace = CLUE_PLACES.find((p) => p.name === 'Paris')!; // capitale, pas de filtrage citiesFr
+const frenchCity: CluePlace = CLUE_PLACES.find((p) => p.name === 'Marseille')!; // citiesFr : moins d'indices
 
 const baseProps = {
   place,

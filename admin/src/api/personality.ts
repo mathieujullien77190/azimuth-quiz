@@ -4,8 +4,7 @@ import { withJobLabel } from '@/data/firestore/denormalizeClues';
 
 import { applyJobChange, data, putJob, putPlace, removeJob } from '../data';
 
-/** All curatable job codes, French label first — the select's options, alphabetical by French text
- * so a curator can scan/find one by eye. */
+/** Codes de metiers curables, libelle francais d'abord : options du select, triees par texte francais. */
 export const jobOptions = (): { code: string; fr: string }[] =>
   Object.entries(data().jobs)
     .map(([code, { fr }]) => ({ code, fr }))
@@ -13,17 +12,18 @@ export const jobOptions = (): { code: string; fr: string }[] =>
 
 export type PersonalityDraft = { name: string; jobCode: string | null };
 
-/** `place`'s curated personality to edit — unlike the game's own resolved `CluePlace.personality`,
- * the admin needs the raw job code back to preselect it in the job `<select>`. No curated entry yet
- * -> both fields start blank. */
+/**
+ * Personnalite curee de `place` a editer ; l'admin a besoin du code metier brut pour preselectionner le `<select>`.
+ */
 export const personalityDraftFor = (place: Pick<CluePlace, 'key'>): PersonalityDraft => {
   const { personality } = data().places[place.key];
   return personality ? { name: personality.name, jobCode: personality.jobCode } : { name: '', jobCode: null };
 };
 
-/** The name field was edited — clearing it back to empty removes the place's curated entry
- * entirely: the game only offers the `personality` clue when the place HAS an entry at all, so a
- * blank name would leak through as an empty card rather than just not being offered. */
+/**
+ * Vider le nom retire toute l'entree : le jeu offre l'indice `personality` des qu'il y a une entree, un nom vide
+ * donnerait une carte vide.
+ */
 export const savePersonalityName = async (
   place: Pick<CluePlace, 'name' | 'code' | 'key'>,
   draft: PersonalityDraft,
@@ -55,17 +55,18 @@ export const savePersonalityJob = async (
   return { ...draft, jobCode: next };
 };
 
-// --- The shared job dictionary itself (`personalityJobs`) — add/rename/delete an entry, rather ------
-// than edit a single place's tag.
+// --- Dictionnaire commun des metiers (`personalityJobs`) : ajout/renommage/suppression d'une entree, pas le tag d'un
+// lieu ---
 
 export type JobRow = { code: string; fr: string; en: string; examples: string[] };
 
-/** How many example place names to keep per job (just enough context to judge a rename/delete —
- * not an exhaustive list). */
+/** Exemples de noms de lieux gardes par metier (juste assez pour juger un renommage/une suppression). */
 const MAX_JOB_EXAMPLES = 4;
 
-/** `fr` -> a lowercase, accent-stripped, letters-only 3-letter code (`"chanteuse"` -> `"cha"`) — a
- * starting point, not guaranteed free yet (see `freeJobCode`). */
+/**
+ * `fr` -> code de 3 lettres minuscules sans accents (`"chanteuse"` -> `"cha"`) ; point de depart, pas forcement libre
+ * (voir `freeJobCode`).
+ */
 const codeFromFr = (fr: string): string =>
   fr
     .toLowerCase()
@@ -74,8 +75,7 @@ const codeFromFr = (fr: string): string =>
     .replace(/[^a-z]/g, '')
     .slice(0, 3) || 'job';
 
-/** The first code starting with `base` that isn't already taken — `base` itself if it's free,
- * else `base` + "2", "3"... */
+/** Premier code commencant par `base` encore libre : `base`, sinon `base` + "2", "3"... */
 const freeJobCode = (base: string): string => {
   const jobs = data().jobs;
   let candidate = base;
@@ -83,8 +83,7 @@ const freeJobCode = (base: string): string => {
   return candidate;
 };
 
-/** Every curated job, its two translations, and which places currently use it. Alphabetical by
- * French text. */
+/** Chaque metier cure, ses deux traductions et les lieux qui l'utilisent, tries par texte francais. */
 export const allJobRows = (): JobRow[] => {
   const examplesByCode = new Map<string, string[]>();
   for (const { personality } of Object.values(data().places)) {
@@ -98,7 +97,6 @@ export const allJobRows = (): JobRow[] => {
     .sort((a, b) => a.fr.localeCompare(b.fr, 'fr'));
 };
 
-/** Matches a job's French or English text. */
 export const filterJobRows = (rows: JobRow[], query: string): JobRow[] => {
   const q = query.trim().toLowerCase();
   if (q === '') return rows;
@@ -121,9 +119,10 @@ export const saveJobEn = async (job: JobRow, next: string): Promise<JobRow> => {
   return { ...job, en: next };
 };
 
-/** Only meaningful (and only ever called by the view) when `job.examples` is empty — deleting a
- * code still referenced by a place would leave its personality pointing at nothing, so `JobsView`
- * hides the delete action otherwise rather than let that happen. */
+/**
+ * Appelee seulement quand `job.examples` est vide : supprimer un code encore utilise laisserait une personnalite sans
+ * metier, donc `JobsView` masque l'action sinon.
+ */
 export const deleteJob = async (job: JobRow): Promise<void> => {
   await removeJob(job.code);
 };

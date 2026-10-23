@@ -3,5 +3,5 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach } from 'vitest';
 
-// Vitest runs without globals: Testing Library cannot register its own cleanup, so unmount after every test here.
+// Vitest sans globals : Testing Library ne peut pas enregistrer son nettoyage, on demonte apres chaque test ici.
 afterEach(cleanup);

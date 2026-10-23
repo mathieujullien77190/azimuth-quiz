@@ -1,8 +1,10 @@
 import type { PartySectionProps } from '@/components/setup/PartySection';
 import type { RoomPlayers } from '@/firebase/roomApi';
 
-/** The slice of a game's own room store (`useRoomStore`/`useClueRoomStore`) the setup flow needs —
- * both stores expose these fields, only their `gameState` shape differs beyond `screen`. */
+/**
+ * Partie du store de room d'un jeu (`useRoomStore`/`useClueRoomStore`) dont le setup a besoin : les deux
+ * stores l'exposent, seule la forme de `gameState` differe au-dela de `screen`.
+ */
 export type SetupRoomStoreState<R> = {
   players: RoomPlayers;
   hostUid: string | null;
@@ -24,12 +26,14 @@ export type SetupRoomStore<R> = {
   subscribe: (listener: (state: SetupRoomStoreState<R>) => void) => () => void;
 };
 
-/** Everything game-specific about "an online room" — each game has its own Firestore collection and
- * store (see `games/<game>/firebase/room.ts`), the setup flow on top of them is identical. `S` is the
- * game's full settings, `R` what the room shares with joiners (everything except `playerName`). */
+/**
+ * Tout ce qui est propre a un jeu dans « une room en ligne » : chaque jeu a sa collection Firestore et son
+ * store (voir `games/<game>/firebase/room.ts`), le setup au-dessus est identique. `S` = reglages complets du
+ * jeu, `R` = ce que la room partage avec les joiners (tout sauf `playerName`).
+ */
 export type SetupRoomAdapter<S, R> = {
   store: SetupRoomStore<R>;
-  /** Route both host and joiner are sent to once the host starts the game. */
+  /** Route ou l'hote et les joiners sont envoyes quand l'hote lance la partie. */
   gamePath: '/online-game' | '/clues-online-game';
   colors: readonly string[];
   maxPlayers: number;
@@ -45,6 +49,8 @@ export type SetupRoomAdapter<S, R> = {
   updateRoomPlayerColors: (code: string, colorByUid: Record<string, string>) => Promise<void>;
 };
 
-/** What `PartySection` needs beyond its title/hint (shared translations, read by the shell) —
- * resolved by `useSetupRoom`. */
+/**
+ * Ce dont `PartySection` a besoin en plus de title/hint (traductions communes, lues par le shell), resolu par
+ * `useSetupRoom`.
+ */
 export type SetupPartyProps = Omit<PartySectionProps, 'title' | 'hint'>;

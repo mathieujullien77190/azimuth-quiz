@@ -2,11 +2,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { COMPASS_CURSORS_STORAGE_KEY } from '@/games/compass/constants';
 
-// The module caches in module-level variables: each test gets a fresh copy (same approach as `clueHistory.test.ts`).
+// Le module cache dans des variables : chaque test en a une copie neuve (comme `clueHistory.test.ts`).
 const freshModule = () => {
   let mod!: typeof import('../compassCursors');
   jest.isolateModules(() => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.isolateModules needs a synchronous require, not a dynamic import()
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.isolateModules exige un require synchrone, pas un import() dynamique
     mod = require('../compassCursors');
   });
   return mod;

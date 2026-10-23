@@ -2,8 +2,10 @@ import { versionParts } from '@/helpers/version';
 
 import appConfig from '../../../../app.json';
 
-/** The version of the app in the admin's header, "v2.65.0 - 🐦 - great-tit", the animal's name being a link to its English
- * Wikipedia article (the same pieces as the game's own version line, see `versionParts`). */
+/**
+ * Version de l'app dans l'en-tete de l'admin ; le nom de l'animal est un lien vers son article Wikipedia anglais
+ * (memes morceaux que `versionParts`).
+ */
 export const AppVersion = () => {
   const { prefix, name, wiki } = versionParts(appConfig.expo.version, appConfig.expo.extra.codename);
   return (

@@ -10,27 +10,27 @@ import { createRenderer } from './renderer';
 import type { GlobeRoutes, GlobeScene } from './types';
 
 type GlobeView = GlobeScene & {
-  /** The answers' routes, rebuilt by the caller whenever the zoom changes their thickness. */
+  /** Les routes des reponses, reconstruites par l'appelant quand le zoom change leur epaisseur. */
   routes: GlobeRoutes;
-  /** The place shown in the middle of the drawing: the camera stands right above it. */
+  /** Le lieu montre au milieu du dessin : la camera est juste au-dessus. */
   center: Coordinates;
-  /** Half of what the drawing shows, in globe radii: 1 = the ball exactly fills it, less = zoomed in. */
+  /** Moitie de ce que montre le dessin, en rayons de globe : 1 = la boule le remplit, moins = zoome. */
   halfExtent: number;
-  /** What the dots are scaled by so that they keep the size they have on screen unzoomed: 1 / zoom. */
+  /** Echelle des pastilles pour garder leur taille d'ecran non zoomee : 1 / zoom. */
   markScale: number;
-  /** Painted around the ball (an OpenGL surface cannot be see-through everywhere, see `Globe3DProps`). */
+  /** Peint autour de la boule (une surface OpenGL n'est pas transparente partout, voir `Globe3DProps`). */
   background: string;
 };
 
-/** The surface `expo-gl` handed over, and the renderer drawing into it. */
+/** La surface remise par `expo-gl`, et le renderer qui dessine dedans. */
 type Target = { gl: ExpoWebGLRenderingContext; renderer: WebGLRenderer };
 
 /**
- * Draws the globe into the surface `expo-gl` hands over, and keeps it up to date.
+ * Dessine le globe dans la surface remise par `expo-gl` et le tient a jour.
  *
- * Nothing moves inside the ball, so there is no render loop: one drawing when the surface arrives, then one more every
- * time something it shows changes (the globe is turned, zoomed, an answer or the theme changes). A phone left on the
- * solution screen draws nothing at all, where a 60-per-second loop would have kept the chip warm for a still image.
+ * Rien ne bouge dans la boule, donc pas de boucle : un dessin a l'arrivee de la surface, puis un a chaque changement
+ * de ce qu'elle montre (tourner, zoomer, reponse ou theme). Un telephone laisse sur l'ecran solution ne dessine rien,
+ * alors qu'une boucle a 60 par seconde chaufferait la puce pour une image fixe.
  */
 export const useGlobeRenderer = ({
   scene,
@@ -44,28 +44,28 @@ export const useGlobeRenderer = ({
 }: GlobeView) => {
   const [target, setTarget] = useState<Target | null>(null);
 
-  // The graphics card keeps the surface it was given until it is told otherwise.
+  // La carte graphique garde la surface donnee tant qu'on ne la libere pas.
   useEffect(() => () => target?.renderer.dispose(), [target]);
 
   useEffect(() => {
     if (target === null) return undefined;
-    // A camera per drawing: nothing moves in between, and setting one up is cheap next to the ball itself. Looking at
-    // the middle of the globe from right above `center`, with north up — the globe is only ever turned sideways and
-    // tipped, never rolled (see `dragCenter`), which is what keeps the "⌖ N" button honest.
+    // Une camera par dessin : rien ne bouge entre deux, et la creer coute peu devant la boule. Elle regarde le milieu
+    // du globe depuis juste au-dessus de `center`, nord en haut — le globe est tourne de cote et penche, jamais roule
+    // (voir `dragCenter`), ce qui garde "⌖ N" juste.
     const camera = new OrthographicCamera(-halfExtent, halfExtent, halfExtent, -halfExtent, CAMERA_NEAR, CAMERA_FAR);
     camera.position.set(...scenePoint(center, CAMERA_DISTANCE));
     camera.lookAt(0, 0, 0);
-    // The lamp hangs on the camera (so the same side of the ball always catches the light), and the camera hangs in
-    // the scene — without which a light attached to it would light nothing.
+    // La lampe est accrochee a la camera (le meme cote prend toujours la lumiere), et la camera a la scene —
+    // sans quoi une lumiere qui lui est attachee n'eclairerait rien.
     camera.add(headlight);
     scene.add(camera);
     scene.add(routes);
-    // The dots keep their size on screen rather than growing with the ball they sit on.
+    // Les pastilles gardent leur taille d'ecran au lieu de grossir avec la boule.
     screenSized.forEach((mark) => mark.scale.setScalar(markScale));
 
     target.renderer.setClearColor(background, 1);
     target.renderer.render(scene, camera);
-    // Tells the surface its drawing is ready to be shown.
+    // Dit a la surface que le dessin est pret a etre montre.
     target.gl.endFrameEXP();
 
     return () => {

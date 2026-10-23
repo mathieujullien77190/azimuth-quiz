@@ -9,10 +9,9 @@ import type { VersionLineProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * The version line — dumb: "v2.65.0 - 🐦 - great-tit" where the animal's name is a link to its English Wikipedia
- * article. The splash screen and the About section draw it with their own text style; the plain text of the same line is
- * `versionLabel`, both built from `versionParts`. A version without a codename is just its number. It is one `Text`, so it
- * wraps instead of being cut on a narrow screen.
+ * Ligne de version : « v2.65.0 - 🐦 - great-tit », le nom de l'animal etant un lien vers son article Wikipedia
+ * anglais. Le splash et A propos la dessinent avec leur style ; le texte brut est `versionLabel` (tous deux
+ * issus de `versionParts`). Sans codename : juste le numero. Un seul `Text` : elle passe a la ligne au lieu d'etre coupee.
  */
 export const VersionLine = ({ version, codename, style }: VersionLineProps) => {
   const styles = useThemedStyles(createStyles);

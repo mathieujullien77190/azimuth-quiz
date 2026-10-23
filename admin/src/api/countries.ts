@@ -3,7 +3,7 @@ import type { ClueFlagColorRow } from '@/types';
 
 import { applyCountryChange, data } from '../data';
 
-/** A country as the admin lists and edits it: the data Indices shows (its places carry a copy of it). */
+/** Un pays tel que l'admin le liste et l'edite (ses lieux en portent une copie). */
 export type CountryRecord = {
   code: string;
   fr: string;
@@ -24,7 +24,7 @@ const recordOf = (code: string, doc: CountryDoc): CountryRecord => ({
   phoneCode: doc.phoneCode ?? null,
 });
 
-/** Reads the in-memory copy of Firestore (see `data.ts`): kept `async` so call sites don't care. */
+/** Lit la copie en memoire de Firestore (voir `data.ts`) ; `async` pour que les appelants n'en dependent pas. */
 export const fetchCountries = async (): Promise<CountryRecord[]> =>
   Object.entries(data().countries).map(([code, doc]) => recordOf(code, doc));
 
@@ -34,11 +34,11 @@ export type CountryPatch = Partial<
 
 export const saveCountry = async (row: CountryRecord, patch: CountryPatch): Promise<CountryRecord> => {
   const { flag, fr, en, currency, currencySymbol, phoneCode } = patch;
-  // The stored document is the starting point: whatever else it carries (the fields Silhouette left) is written back as is.
+  // Le document stocke sert de base : ses autres champs (restes de Silhouette) sont reecrits tels quels.
   const doc = { ...data().countries[row.code] };
   if (fr !== undefined) doc.fr = fr;
   if (en !== undefined) doc.en = en;
-  // An emptied optional field is removed from the document rather than stored blank.
+  // Un champ optionnel vide est retire du document, pas stocke vide.
   const setOrDrop = (field: 'currency' | 'currencySymbol' | 'phoneCode', value: string | null | undefined) => {
     if (value === undefined) return;
     if (value) doc[field] = value;
@@ -51,7 +51,7 @@ export const saveCountry = async (row: CountryRecord, patch: CountryPatch): Prom
     if (flag && flag.length > 0) doc.flag = flag.map(([id, hex, percent]) => ({ id, hex, percent }));
     else delete doc.flag;
   }
-  // The country and every copy of it (its places) are written together.
+  // Le pays et toutes ses copies (ses lieux) sont ecrits ensemble.
   await applyCountryChange(row.code, doc);
   return { ...row, ...patch };
 };

@@ -23,12 +23,10 @@ jest.mock('@/settings', () => {
   const actual = jest.requireActual('@/settings');
   return { ...actual, useSettings: jest.fn() };
 });
-// `firebase/room.ts` pulls in `firebase/firestore`, which is ESM-only and crashes Jest the moment
-// anything requires it transitively — mocked out here since these tests exercise the setup UI,
-// not real Firestore calls.
-// Same reason: `firestorePlaces.ts` imports `firebase/firestore` too.
+// `firebase/room.ts` charge `firebase/firestore` (ESM seul, plante Jest) : mocke, ces tests visent l'UI.
+// Meme raison : `firestorePlaces.ts` importe `firebase/firestore`.
 jest.mock('@/games/compass/firebase/places', () => ({ fetchRandomPlaces: jest.fn() }));
-// The group sizes come from Firestore too.
+// Les tailles de groupes viennent aussi de Firestore.
 jest.mock('@/games/compass/helpers/compassCounts', () => ({ loadCompassCounts: jest.fn() }));
 jest.mock('@/games/compass/firebase/room', () => ({
   ROOM_MAX_PLAYERS: 10,
@@ -36,17 +34,16 @@ jest.mock('@/games/compass/firebase/room', () => ({
   deleteRoom: jest.fn(() => Promise.resolve()),
   isValidRoomCode: jest.fn((code: string) => code.length === 8),
   joinRoomPresence: jest.fn(() => Promise.resolve('local-uid')),
-  // These default to a resolved promise (not bare `jest.fn()`, which returns `undefined`) since
-  // the component chains `.catch(() => {})` on all of them — swallowing a room-deleted-under-us
-  // permission error is the whole point of that, see SetupScreen.tsx.
+  // Promesse resolue par defaut (pas `jest.fn()` nu) car le composant enchaine `.catch(() => {})` : avaler
+  // l'erreur de permission d'une room supprimee est le but, voir SetupScreen.tsx.
   removeRoomPlayer: jest.fn(() => Promise.resolve()),
   roomExists: jest.fn(() => Promise.resolve(false)),
   sendHeartbeat: jest.fn(() => Promise.resolve()),
   roomSettingsFrom: jest.fn((settings) => settings),
   subscribeToRoomPlayers: jest.fn(() => jest.fn()),
   subscribeToRoomSettings: jest.fn(() => jest.fn()),
-  // Not otherwise used by SetupScreen itself — pulled in transitively through `compassRoomStore.ts`
-  // (the shared connect/disconnect store), which also subscribes to the room's game state.
+  // Inutilise par SetupScreen, tire via `compassRoomStore.ts` (store connect/disconnect commun) qui
+  // s'abonne a l'etat de jeu.
   subscribeToRoomGame: jest.fn(() => jest.fn()),
   updateRoomPlayerColors: jest.fn(() => Promise.resolve()),
   updateRoomSettings: jest.fn(() => Promise.resolve()),
@@ -62,8 +59,8 @@ const mockedSubscribeToRoomSettings = subscribeToRoomSettings as jest.Mock;
 const mockedUpdateRoomPlayerColors = updateRoomPlayerColors as jest.Mock;
 const mockedUpdateRoomSettings = updateRoomSettings as jest.Mock;
 
-// `useRoomStore` is a module-level singleton shared with `OnlineGameScreen` (unlike the old
-// per-component `useState` it replaces), so its state survives across tests unless reset.
+// `useRoomStore` est un singleton de module partage avec `OnlineGameScreen` : son etat survit aux tests
+// sans reinitialisation.
 const initialRoomState = useRoomStore.getState();
 beforeEach(() => {
   AsyncStorage.clear();
@@ -164,19 +161,16 @@ describe('SetupScreen — host/join a game', () => {
     const { getByText, findByPlaceholderText, updateSettings } = await renderSetup();
     await fireEvent.press(getByText('Rejoindre'));
     fireEvent.changeText(await findByPlaceholderText('Code de la partie'), 'tabofuna');
-    // Now the shared room store's own subscription (opened by `connect()` once the code
-    // validates), not one this screen opens itself — see SetupScreen's join-validation effect.
-    // The latest matching call, not just any call ever made with this code: `subscribeToRoomPlayers`
-    // being 'tabofuna' too is what `latestOnPlayers` above guards against; mocks are never reset
-    // between tests, and 'tabofuna' is also used by other (host) tests in this file.
+    // Abonnement du store de room commun (ouvert par `connect()` apres validation du code), pas par
+    // l'ecran. Dernier appel correspondant : 'tabofuna' sert aussi dans d'autres tests et les mocks ne sont
+    // jamais reinitialises.
     await waitFor(() => expect(mockedSubscribeToRoomSettings).toHaveBeenCalledWith('tabofuna', expect.any(Function)));
     const settingsCalls = mockedSubscribeToRoomSettings.mock.calls.filter(([code]) => code === 'tabofuna');
     const onRoomSettings = settingsCalls[settingsCalls.length - 1][1];
     await act(async () => onRoomSettings({ ...DEFAULT_SETTINGS, rounds: 15 }));
     expect(updateSettings).toHaveBeenCalledWith(expect.objectContaining({ rounds: 15 }));
-    // Lets the join-valid presence/players effects (also triggered by the same state update)
-    // settle before the test ends — otherwise they can fire late, into the next test, and steal
-    // its `subscribeToRoomPlayers` mock capture.
+    // Laisse se stabiliser les effets presence/joueurs du join avant la fin du test, sinon ils partent tard
+    // et volent la capture du mock suivant.
     await waitFor(() => expect(mockedJoinRoomPresence).toHaveBeenCalled());
   });
 
@@ -217,7 +211,7 @@ describe('SetupScreen — host/join a game', () => {
     });
     await waitFor(() => expect(getByDisplayValue('Max')).toBeTruthy());
     expect(getByDisplayValue('Max').props.editable).toBe(false);
-    // The host's own entry isn't duplicated as a read-only row below its own editable one.
+    // L'entree de l'hote n'est pas dupliquee en ligne lecture seule sous la sienne editable.
     expect(queryByText('Zoé')).toBeNull();
   });
 
@@ -238,9 +232,8 @@ describe('SetupScreen — host/join a game', () => {
     await fireEvent.press(getByText('Rejoindre'));
     fireEvent.changeText(await findByPlaceholderText('Code de la partie'), 'tabofuna');
     await waitFor(() => expect(mockedSubscribeToRoomPlayers).toHaveBeenCalledWith('tabofuna', expect.any(Function)));
-    // Reads the callback straight from the mock's own call log instead of a shared indirection
-    // object — immune to a stale leftover component from another test also calling this same
-    // mock and clobbering a captured reference.
+    // Lit le callback dans le journal d'appels du mock, pas via un objet partage : insensible a un
+    // composant residuel d'un autre test.
     const calls = mockedSubscribeToRoomPlayers.mock.calls.filter(([code]) => code === 'tabofuna');
     const onPlayers = calls[calls.length - 1][1];
 
@@ -291,9 +284,8 @@ describe('SetupScreen — host/join a game', () => {
     expect(mockedRemoveRoomPlayer).toHaveBeenCalledWith('rooma', 'host');
   });
 
-  // Reads the callback straight from the mock's own call log rather than a shared indirection
-  // object — immune to `localUid` resolving asynchronously and re-triggering the players-
-  // subscribe effect (a fresh `subscribeToRoomPlayers` call) between setup and use.
+  // Lit le callback dans le journal du mock : insensible a `localUid` resolu en asynchrone qui relance
+  // l'abonnement joueurs.
   const latestOnPlayers = (code: string) => {
     const calls = mockedSubscribeToRoomPlayers.mock.calls.filter(([callCode]) => callCode === code);
     return calls[calls.length - 1][1];
@@ -301,8 +293,8 @@ describe('SetupScreen — host/join a game', () => {
 
   it('reflects this device’s own host-assigned color on its own badge once connected', async () => {
     mockedRoomExists.mockResolvedValue(true);
-    // Explicit rather than relying on the default mock — an earlier test in this file may have
-    // left `joinRoomPresence` resolving to a different uid (mocks are never reset between tests).
+    // Explicite : un test precedent a pu laisser `joinRoomPresence` sur un autre uid (mocks jamais
+    // reinitialises).
     mockedJoinRoomPresence.mockResolvedValue('local-uid');
     const { getByText, getByLabelText, findByPlaceholderText } = await renderSetup({ playerName: 'Zoé' });
     await fireEvent.press(getByText('Rejoindre'));
@@ -310,7 +302,7 @@ describe('SetupScreen — host/join a game', () => {
     await waitFor(() => expect(mockedSubscribeToRoomPlayers).toHaveBeenCalledWith('coloreja', expect.any(Function)));
     const onPlayers = latestOnPlayers('coloreja');
 
-    // 'local-uid' is the default `joinRoomPresence` mock resolves to — this device's own uid.
+    // 'local-uid' : uid de cet appareil, valeur par defaut du mock `joinRoomPresence`.
     await act(async () =>
       onPlayers(
         {
@@ -330,9 +322,8 @@ describe('SetupScreen — host/join a game', () => {
   });
 
   it('has the host recompute and write everyone’s color whenever the connected-players list changes', async () => {
-    // A code no other test in this file uses — `latestOnPlayers` disambiguates by code, but only
-    // within *this* code's own call history, so it can't be tricked by another test's lingering
-    // component (mocks here are never reset between tests) also using the common 'tabofuna'.
+    // Code unique : `latestOnPlayers` distingue par code, mais un composant residuel d'un autre test avec
+    // 'tabofuna' le tromperait.
     mockedCreateRoom.mockResolvedValue('batiroko');
     mockedJoinRoomPresence.mockResolvedValue('host');
     const { getByText, findByDisplayValue } = await renderSetup({ playerName: 'Zoé' });
@@ -363,20 +354,17 @@ describe('SetupScreen — host/join a game', () => {
     await waitFor(() => expect(mockedSubscribeToRoomPlayers).toHaveBeenCalledWith('nodilipa', expect.any(Function)));
     const onPlayers = latestOnPlayers('nodilipa');
 
-    // Async `act` — the resulting state update needs a microtask tick to flush in this
-    // environment; the sync form leaves the assertion below looking at the pre-update render.
+    // `act` async : la maj d'etat a besoin d'un tick de microtache dans cet environnement.
     await act(async () => onPlayers({ host: { name: 'Zoé', joinedAt: { toMillis: () => 1 } } }, 'host', true));
     await act(async () => onPlayers({}, undefined, false));
     expect(getByText('L’hôte a supprimé la partie.')).toBeTruthy();
 
-    // The room is gone by now, so the leave-cleanup this same reset triggers (connectedRoomCode
-    // going back to null) will hit it and get rejected — must not crash the screen with an
-    // unhandled rejection, the original bug report this test guards against.
+    // La room n'existe plus : le nettoyage au depart (connectedRoomCode -> null) sera rejete ; il ne doit
+    // pas crasher l'ecran (bug que ce test garde).
     mockedRemoveRoomPlayer.mockRejectedValueOnce(new Error('permission-denied'));
 
-    // Real 2s wait for the auto-dismiss timeout rather than fake timers — a second fake-timers
-    // switch in this same file destabilizes the react-test-renderer act() environment for every
-    // test that runs after it.
+    // Vraie attente de 2 s pour l'auto-fermeture : un 2e passage en fake timers destabilise `act()` pour
+    // les tests suivants.
     await waitFor(() => expect(queryByText('L’hôte a supprimé la partie.')).toBeNull(), { timeout: 3000 });
     expect(getByText('Lancer la partie')).toBeTruthy();
   }, 10000);
@@ -385,7 +373,7 @@ describe('SetupScreen — host/join a game', () => {
 describe('SetupScreen — categories / difficulty / rounds / mode', () => {
   it('toggles a category filter', async () => {
     const { getByText, updateSettings } = await renderSetup();
-    // Mountains is already selected by default: clicking it deselects it.
+    // Mountains est selectionne par defaut : un clic le deselectionne.
     await fireEvent.press(getByText('Montagnes'));
     expect(updateSettings).toHaveBeenCalledWith({
       categories: DEFAULT_SETTINGS.categories.filter((category) => category !== 'mountains'),
@@ -489,8 +477,8 @@ describe('SetupScreen — custom origin inputs', () => {
 });
 
 describe('SetupScreen — start/back', () => {
-  // No local single-device game: playing alone hosts a room nobody joins — created behind the
-  // scenes, never shown (no code, the chips keep saying Solo).
+  // Pas de partie locale : jouer seul heberge une room que personne ne rejoint, creee en coulisses, jamais
+  // montree.
   it('solo: hosts a hidden room when pressed and enabled', async () => {
     mockedCreateRoom.mockClear();
     mockedCreateRoom.mockResolvedValue('tabofuna');

@@ -1,15 +1,9 @@
 /**
- * Regenerates `src/components/Globe3D/globeLand.ts`, the world's outline the 3D globe is decorated with.
+ * Regenere `globeLand.ts` et `globeMask.ts` (contours du globe 3D) depuis `world-atlas` (Natural Earth, 50m par defaut).
+ * Hors build : asset decoratif genere a la main puis commite.
  *
- * Source: `world-atlas` (Natural Earth, merged land), 50m by default — ten times finer than the 110m the globe used to
- * show, which looked visibly cut into straight bits once zoomed in. Antarctica is left out (the globe never looks that
- * far south, and its coast is the longest ring of the lot), rings too small to be a dot are dropped, and what is left
- * is simplified (Douglas-Peucker, in degrees) then rounded, which is where most of the weight goes.
- *
- * Not part of the build: a decorative asset, generated once and committed. Run it by hand when the look has to change:
- *
- *   node scripts/globe-land.mjs                            # the committed settings
- *   node scripts/globe-land.mjs --dry                      # what a few tolerances would weigh, writes nothing
+ *   node scripts/globe-land.mjs                            # reglages commites
+ *   node scripts/globe-land.mjs --dry                      # poids de quelques tolerances, n'ecrit rien
  *   node scripts/globe-land.mjs --resolution 10m --tolerance 0.04
  */
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -18,18 +12,15 @@ import { feature } from 'topojson-client';
 
 const require = createRequire(import.meta.url);
 
-/** Degrees of latitude/longitude under which a bend of the coast is dropped. At the highest zoom the globe shows about
- * 0.1 degree per pixel, so this is already finer than the screen. */
+/** Degres sous lesquels un coude de cote est supprime (deja plus fin que l'ecran au zoom max : ~0,1 deg/pixel). */
 const TOLERANCE = 0.04;
-/** A ring is dropped unless it is at least this wide or tall (in degrees): islands smaller than a dot. */
+/** Un anneau plus petit (en degres) que ceci est supprime : ce serait moins qu'un point. */
 const MIN_RING_SPAN = 0.25;
-/** Everything whose northernmost point is south of this is Antarctica (and the sub-antarctic islands): left out. */
+/** Tout ce dont le point le plus au nord est au sud de ceci (Antarctique, iles subantarctiques) est exclu. */
 const ANTARCTIC_LATITUDE = -55;
-/** Decimals kept per coordinate: about a kilometre, under what the highest zoom can show. */
+/** Decimales gardees (~1 km, sous ce que le zoom max montre). */
 const DECIMALS = 2;
-/** Size of the land/sea mask the continents are coloured in with (`globeMask.ts`), in pixels of an equirectangular
- * map: 2048 columns = 0.18 degree, about two pixels at the highest zoom — close enough to hide under the coastline
- * drawn over it. Rows go from the south pole up, which is how a three.js `DataTexture` is read. */
+/** Taille du masque terre/mer (`globeMask.ts`), equirectangulaire. Lignes du pole sud vers le nord (sens d'une `DataTexture`). */
 const MASK_WIDTH = 2048;
 const MASK_HEIGHT = 1024;
 
@@ -41,16 +32,16 @@ const argument = (name, fallback) => {
 const resolution = argument('resolution', '50m');
 const dryRun = process.argv.includes('--dry');
 
-/** The outer ring of every land polygon, as [lon, lat] pairs. */
+/** L'anneau exterieur de chaque polygone de terre, en paires [lon, lat]. */
 const landRings = () => {
   const topology = JSON.parse(readFileSync(require.resolve('world-atlas/land-' + resolution + '.json'), 'utf8'));
   const land = feature(topology, topology.objects.land);
-  // A land object can come back as a single geometry or as a collection of them, depending on the file.
+  // Selon le fichier, `land` est une geometrie seule ou une collection.
   const geometries = land.type === 'FeatureCollection' ? land.features.map((entry) => entry.geometry) : [land.geometry];
   const polygons = geometries.flatMap((geometry) =>
     geometry.type === 'MultiPolygon' ? geometry.coordinates : [geometry.coordinates],
   );
-  // [0] = the outer ring; a lake inside a continent is not a coast the globe needs.
+  // [0] = anneau exterieur : un lac interieur n'est pas une cote utile.
   return polygons.map((polygon) => polygon[0]);
 };
 
@@ -64,7 +55,6 @@ const spanOf = (ring) => {
   };
 };
 
-/** How far a point lies off the line between two others (Douglas-Peucker's own measure). */
 const offLine = (point, from, to) => {
   const dx = to[0] - from[0];
   const dy = to[1] - from[1];
@@ -73,7 +63,7 @@ const offLine = (point, from, to) => {
   return Math.abs(dy * (point[0] - from[0]) - dx * (point[1] - from[1])) / length;
 };
 
-/** Douglas-Peucker: keeps the bends that stand out by more than `tolerance`, drops the rest. */
+/** Douglas-Peucker : garde les coudes qui depassent `tolerance`. */
 const simplify = (points, tolerance) => {
   if (points.length < 3) return points;
   let farthest = 0;
@@ -94,7 +84,6 @@ const simplify = (points, tolerance) => {
 
 const round = (value) => Number(value.toFixed(DECIMALS));
 
-/** The `M lon lat L lon lat ... Z` path the globe reads (`parseRings`), and what it weighs. */
 const buildPath = (tolerance) => {
   const rings = landRings()
     .filter((ring) => {
@@ -103,7 +92,7 @@ const buildPath = (tolerance) => {
     })
     .map((ring) => {
       const simplified = simplify(ring, tolerance).map((point) => [round(point[0]), round(point[1])]);
-      // Rounding can leave the same point twice in a row, and a ring of two points has no shape to draw.
+      // L'arrondi peut doubler un point ; un anneau de 2 points ne se dessine pas.
       return simplified.filter(
         (point, index) =>
           index === 0 || point[0] !== simplified[index - 1][0] || point[1] !== simplified[index - 1][1],
@@ -117,19 +106,12 @@ const buildPath = (tolerance) => {
   return { path, rings, points: rings.reduce((total, ring) => total + ring.length, 0) };
 };
 
-/**
- * The land as a run-length mask of `MASK_WIDTH` x `MASK_HEIGHT` pixels: the lengths of the stretches of sea and land
- * met while reading the map row by row (south to north, west to east), starting with sea. A scanline fill: every row is
- * cut by the coastlines it crosses, and what lies between an odd and an even crossing is land (the even-odd rule, which
- * also handles an island inside a bay).
- */
+/** Masque RLE terre/mer (premiere course = mer), par remplissage de lignes et regle pair-impair (gere une ile dans une baie). */
 const buildMask = (rings) => {
   const edges = [];
   for (const ring of rings) {
-    // A ring is not cut at the date line (Russia, Fiji...): it jumps from +180 to -180 and back. Followed the short way
-    // at each jump (the longitude going on past 180 instead of wrapping), the ring is a plain closed shape again, which
-    // a scan reads right; it then sits one turn of the world to the side of where it belongs, so it is also laid
-    // down one turn either way, and whatever falls in the map comes from one of the three.
+    // Un anneau saute de +180 a -180 a la ligne de changement de date (Russie, Fiji...) : on deroule la longitude
+    // pour le refermer, puis on le pose aussi a +-360 car il peut etre decale d'un tour.
     const open = [ring[0][0]];
     for (let index = 1; index < ring.length; index += 1) {
       const jump = ring[index][0] - ring[index - 1][0];
@@ -139,7 +121,7 @@ const buildMask = (rings) => {
     for (const shift of [-360, 0, 360]) {
       for (let index = 0; index < ring.length; index += 1) {
         const next = (index + 1) % ring.length;
-        // A horizontal edge never crosses a row of the scan: it would only count twice.
+        // Une arete horizontale ne coupe jamais une ligne (elle compterait deux fois).
         if (ring[index][1] === ring[next][1]) continue;
         edges.push([open[index] + shift, ring[index][1], open[next] + shift, ring[next][1]]);
       }

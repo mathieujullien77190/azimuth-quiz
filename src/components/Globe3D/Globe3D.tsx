@@ -35,19 +35,17 @@ import type { Fingers, Globe3DProps } from './types';
 import { useGlobeRenderer } from './useGlobeRenderer';
 import { useOrbitAngle } from './useOrbitAngle';
 
-/** The north pole, as a place like any other: what the "N" label is pinned to. */
+/** Le pole nord, comme un lieu quelconque : ce a quoi le label "N" est accroche. */
 const NORTH_POLE: Coordinates = { latitude: 90, longitude: 0 };
 
 /**
- * The Earth as a real ball, drawn with three.js on an OpenGL surface (`expo-gl`) and turned with a finger: the world's
- * outline, the starting point and each answer's route — the way it goes holding its heading all along (rhumb line) —
- * laid on the sphere. What passes behind the globe is hidden by the globe itself, which is the whole point of drawing
- * it in 3D.
+ * La Terre en vraie boule, dessinee avec three.js sur une surface OpenGL (`expo-gl`) et tournee au doigt : contour du
+ * monde, point de depart et route de chaque reponse (cap tenu tout du long, loxodromie). Ce qui passe derriere la
+ * boule est cache par la boule elle-meme, tout l'interet du 3D.
  *
- * It opens on the side of the Earth where the starting point and the answers are, north up. A finger turns it, two
- * fingers zoom, and the "⌖ N" button puts it back where it started. The labels ("toi", "N") and the satellite are
- * plain views laid over the canvas, placed by the same projection as the camera's (`screenPoint`), so they keep the
- * app's own font.
+ * S'ouvre sur la face ou sont le depart et les reponses, nord en haut. Un doigt tourne, deux zooment, "⌖ N" remet
+ * la vue de depart. Les labels ("toi", "N") et le satellite sont des vues posees par-dessus le canvas, placees par la
+ * meme projection que la camera (`screenPoint`) pour garder la police de l'app.
  */
 export const Globe3D = ({
   size,
@@ -65,17 +63,17 @@ export const Globe3D = ({
   const { colors, compass, isDark } = useTheme();
   const styles = useThemedStyles(createStyles);
   const [showQuip, setShowQuip] = useState(false);
-  // Room around the globe for the satellite, which flies above it.
+  // Marge autour du globe pour le satellite qui le survole.
   const baseRadius = (size / 2 - GLOBE_MARGIN) / ORBIT_RATIO;
   const cx = size / 2;
   const cy = size / 2;
 
-  // The answers are usually built inline by the caller, so a fresh array every render: what the globe is rebuilt on is
-  // what they say, not which array says it (rebuilding the ball and its coastlines per render would be a waste).
+  // Les reponses sont souvent construites en ligne par l'appelant (nouveau tableau a chaque rendu) : on reconstruit
+  // le globe sur leur contenu, pas sur l'identite du tableau.
   const marksKey = marks
     .map((item) => `${item.bearing}/${item.distanceKm}/${item.color}/${item.isTruth === true}/${item.opacity ?? 1}`)
     .join('|');
-  // Where the globe opens, and where the "⌖ N" button puts it back: the side where everything is.
+  // Ou le globe s'ouvre et ou "⌖ N" le remet : la face ou est tout le monde.
   const home = useMemo(
     () => centerOn([origin, ...marks.map((item) => rhumbDestination(origin, item.bearing, item.distanceKm))]),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `marksKey` stands for `marks`, see above.
@@ -89,8 +87,8 @@ export const Globe3D = ({
     () =>
       isDark
         ? {
-            // By night the sea is the ball's own colour; the continents are painted over it in the colour of their own
-            // coast (a map's way of telling land from sea), with that coast drawn as a line on top.
+            // Nuit : la mer est la couleur de la boule, les continents sont peints par-dessus de la couleur de leur cote,
+            // trace en ligne au-dessus.
             globe: compass.faceInner,
             land: colors.textMuted,
             fill: colors.textMuted,
@@ -101,8 +99,8 @@ export const Globe3D = ({
             pole: colors.text,
           }
         : {
-            // By day the sea is the sand of the app's background, on a white backdrop so the ball shows, and the
-            // continents are a light blue, in full, with the accent blue for their coast.
+            // Jour : la mer est le sable du fond de l'app, sur fond blanc pour faire ressortir la boule ; continents en
+            // bleu clair plein, cote en bleu d'accent.
             globe: DAY_SEA_COLOR,
             land: colors.accent,
             fill: DAY_LAND_COLOR,
@@ -128,14 +126,14 @@ export const Globe3D = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `marksKey` stands for `marks`, see above.
     [origin.latitude, origin.longitude, marksKey, showLand, equator, greenwich, north, sceneColors],
   );
-  // The answers' routes are built apart from the ball: a tube cannot be thinned by scaling it, so the zoom rebuilds
-  // them (and them alone) to keep them the width they have on screen unzoomed, like the dots.
+  // Les routes sont construites a part de la boule : l'epaisseur d'un tube ne se change pas par mise a l'echelle,
+  // donc le zoom les reconstruit (elles seules) pour garder leur largeur a l'ecran, comme les pastilles.
   const routes = useMemo(
     () => buildRoutes(origin, marks, ROUTE_THICKNESS / zoom),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `marksKey` stands for `marks`, see above.
     [origin.latitude, origin.longitude, marksKey, zoom],
   );
-  // The graphics card keeps every ball ever built until it is told otherwise.
+  // La carte graphique garde chaque boule construite tant qu'on ne la libere pas.
   useEffect(() => () => disposeScene(view.scene), [view]);
   useEffect(() => () => disposeScene(routes), [routes]);
 
@@ -145,24 +143,22 @@ export const Globe3D = ({
     center,
     halfExtent: size / (2 * radius),
     markScale: 1 / zoom,
-    // The backdrop of the drawing: the screen's own background by night, white by day (the sea is the sand colour).
+    // Fond du dessin : le fond de l'ecran la nuit, blanc le jour (la mer est couleur sable).
     background: backgroundColor ?? (isDark ? colors.background : colors.surface),
   });
 
-  // One finger turns the globe (the surface follows the finger), two fingers zoom.
+  // Un doigt tourne le globe (la surface suit le doigt), deux doigts zooment.
   //
-  // Everything is measured from where the fingers are *now* against where they were at the previous move, never from
-  // what a gesture has added up so far: a gesture then carries nothing over from the one before it, and a stray move
-  // reported once the finger is already gone (the web does that on release) cannot send the globe back where it
-  // started. `null` = no finger on the glass.
+  // Tout se mesure depuis la position actuelle des doigts contre leur position au move precedent, jamais depuis le
+  // cumul du geste : rien ne se reporte d'un geste a l'autre, et un move parasite apres le lache (le web en envoie
+  // un) ne ramene pas le globe au depart. `null` = aucun doigt.
   const last = useRef<Fingers | null>(null);
   const pan = useMemo(
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
-        // The gesture belongs to the globe until the finger is lifted: neither the page under it (scrolling while one
-        // turns the globe) nor a native view around it takes it away.
+        // Le geste reste au globe jusqu'au lache : ni la page dessous (defilement) ni une vue native autour ne le reprend.
         onPanResponderTerminationRequest: () => false,
         onShouldBlockNativeResponder: () => true,
         onPanResponderGrant: (event) => {
@@ -191,8 +187,8 @@ export const Globe3D = ({
     [radius],
   );
 
-  // The satellite goes right round the ball along its equator — over the ball and then behind it (see `orbitPoint`).
-  // Only unzoomed: it would fly off the drawing.
+  // Le satellite fait le tour de la boule sur son equateur (devant puis derriere, voir `orbitPoint`), seulement
+  // sans zoom : sinon il sortirait du dessin.
   const angle = useOrbitAngle(ORBIT_MS, ORBIT_TICK_MS);
   const satellite =
     !withSatellite || !isDark || zoom !== MIN_ZOOM ? undefined : orbitPoint(angle, center, cx, cy, radius, ORBIT_RATIO);
@@ -203,7 +199,7 @@ export const Globe3D = ({
   return (
     <View
       accessibilityLabel={CAPTION_GLOBE}
-      // On the web the browser would scroll the page under the finger that turns the globe (`noPageScroll`).
+      // Web : sans ca, le navigateur defile la page sous le doigt qui tourne le globe (`noPageScroll`).
       style={[styles.wrap, { width: size, height: size }, noPageScroll()]}
       {...(draggable ? pan.panHandlers : {})}
     >
@@ -220,7 +216,7 @@ export const Globe3D = ({
 
       {satellite?.visible === true && (
         <View style={[styles.satellite, { left: satellite.x - 10, top: satellite.y - 10 }]}>
-          {/* Like the satellite of the Earth view: a tap shows a joke, a second one hides it. */}
+          {/* Comme le satellite de la vue Terre : un tap affiche une blague, un second la masque. */}
           <Pressable hitSlop={10} onPress={() => setShowQuip((value) => !value)}>
             <Text style={styles.satelliteEmoji}>{SATELLITE_EMOJI}</Text>
           </Pressable>

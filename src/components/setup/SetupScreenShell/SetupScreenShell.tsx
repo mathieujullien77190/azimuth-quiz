@@ -13,9 +13,8 @@ import type { SetupScreenShellProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * Everything every game's setup screen has in common — dumb: notice overlay, the icon + title with a close cross at the far right, the
- * solo/host/join `PartySection`, then the game's own sections as `children`, then "start" (hidden
- * for a joiner, only the host launches) and "back".
+ * Tout ce que les ecrans de setup ont en commun (dumb) : overlay de notice, icone + titre avec croix a droite,
+ * `PartySection` solo/hote/rejoindre, sections du jeu en `children`, puis « Lancer » (masque pour un joiner) et « Retour ».
  */
 export const SetupScreenShell = ({
   title,

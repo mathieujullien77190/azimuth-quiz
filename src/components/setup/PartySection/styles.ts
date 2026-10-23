@@ -17,8 +17,7 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       alignItems: 'center',
       gap: spacing.sm + 2,
     },
-    // Input container: positions the initials within it, never as a sibling that could
-    // push the row off-screen.
+    // Conteneur du champ : positionne les initiales dedans, jamais en frere qui pourrait pousser la rangee hors ecran.
     inputWrap: {
       flex: 1,
       justifyContent: 'center',
@@ -35,8 +34,8 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       color: colors.text,
       fontSize: fontSize.body,
     },
-    // Same as `input`, but leaves room on the right for both the initials badge and the host's
-    // "Kick" mini button next to it (see `removeButton`), instead of just the badge.
+    // Comme `input`, mais laisse de la place a droite pour le badge d'initiales ET le mini bouton « Expulser »
+    // (voir `removeButton`).
     inputWithRemove: {
       paddingRight: 128,
     },
@@ -55,8 +54,7 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       ...typography.label,
       fontSize: fontSize.caption,
     },
-    // Sits just left of `initials` (same absolute-right positioning scheme), inside the same
-    // input box, rather than as a separate element outside it.
+    // A gauche de `initials` (meme positionnement absolu a droite), dans la meme boite de champ.
     removeButton: {
       position: 'absolute',
       right: spacing.xs + 2 + 28 + spacing.sm,
@@ -88,8 +86,8 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       color: colors.text,
       fontSize: fontSize.body,
     },
-    // Room code still generating: the field's own placeholder already says so in words, this is
-    // just the spinning affordance next to it — same spot the joiner's initials badge sits in.
+    // Code de room en cours de generation : le placeholder du champ le dit deja, ceci n'est que le spinner a cote,
+    // a la place du badge d'initiales du joiner.
     coordSpinner: {
       position: 'absolute',
       right: spacing.md,

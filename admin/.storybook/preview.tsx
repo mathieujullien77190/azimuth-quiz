@@ -8,20 +8,14 @@ import type { Language } from '@/i18n';
 import { THEMES, ThemeSettingsContext } from '@/themes';
 import type { ThemeId } from '@/types';
 
-// The app does this once at startup (`src/app/_layout.tsx`): without it Chromium on Windows shows a
-// flag emoji as its two-letter code ("JP") instead of the flag. Storybook doesn't go through the
-// app's root layout, so the flag webfont (`FLAG_FONT_FAMILY`) has to be loaded here too.
+// Chromium sous Windows affiche un emoji drapeau en deux lettres sans la webfont (`FLAG_FONT_FAMILY`) : a charger ici
+// aussi, Storybook ne passe pas par le layout racine.
 polyfillFlagEmoji();
 
 const THEME_IDS: ThemeId[] = ['night', 'day'];
 const LANGUAGES: Language[] = ['fr', 'en'];
 
-/**
- * The toolbar's theme and language, provided to every story the way the app's own providers do
- * (`ThemeProvider`, `LanguageProvider`) — minus their storage, which a story has no use for. A story
- * that pins one of them on purpose (`MascotButton`, `GameFooter` by day...) wraps itself in its own
- * `ThemeSettingsContext.Provider`, which wins over this one.
- */
+/** Theme et langue de la barre d'outils, fournis a chaque story comme le font les providers de l'app. */
 const AppContexts = ({
   themeId,
   language,
@@ -53,7 +47,6 @@ const AppContexts = ({
 };
 
 const preview: Preview = {
-  // The two toolbar switches: `theme` (the app's Night / Day) and `locale` (its French / English).
   globalTypes: {
     theme: {
       description: 'Theme',
@@ -85,14 +78,12 @@ const preview: Preview = {
     (Story, context) => {
       const themeId = THEME_IDS.includes(context.globals.theme) ? (context.globals.theme as ThemeId) : 'night';
       const language = LANGUAGES.includes(context.globals.locale) ? (context.globals.locale as Language) : 'fr';
-      // The app's own themes are both tinted (night blue, day sky blue): a white canvas behind every
-      // story clashes with all of them, so the preview iframe takes the current theme's background.
+      // Les deux themes sont teintes : un fond blanc jure, l'iframe prend le fond du theme.
       const background = THEMES[themeId].colors.background;
       return (
         <>
           <style>{`html, body, #storybook-root { background: ${background}; min-height: 100%; }`}</style>
-          {/* `ui/Screen`'s `SafeAreaView` throws ("No safe area value available") without a
-              `SafeAreaProvider` above it. */}
+          {/* `ui/Screen` jette sans safe area provider ("No safe area value available"). */}
           <SafeAreaProvider
             initialMetrics={{
               frame: { x: 0, y: 0, width: 1024, height: 768 },
@@ -108,8 +99,7 @@ const preview: Preview = {
     },
   ],
   parameters: {
-    // The app's own components first, then each game's, and the two generic families — the setup
-    // sections and the UI primitives — at the bottom of the sidebar.
+    // Ordre du menu : composants de l'app, puis ceux de chaque jeu, puis les familles generiques (setup, UI) en bas.
     options: {
       storySort: { order: ['Common', 'Compass', 'Clues', 'Setup', 'UI'] },
     },

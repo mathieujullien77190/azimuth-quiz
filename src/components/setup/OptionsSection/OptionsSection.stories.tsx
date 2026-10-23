@@ -15,7 +15,7 @@ import readOnlyCode from './ReadOnly.source.md?raw';
 
 const t = translations.fr;
 
-/** Title/description of every option and of the GPS block, by id, in the toolbar's language. */
+/** Titre/description de chaque option et du bloc GPS, par id, dans la langue de la barre d'outils. */
 const optionTexts = (texts: Translations): Record<string, { title: string; description?: string }> => ({
   startWithFirstLetter: {
     title: texts.cluesSetup.toggles.startWithFirstLetter.label,
@@ -31,7 +31,7 @@ const optionTexts = (texts: Translations): Record<string, { title: string; descr
   },
 });
 
-/** Re-texts a story's section title, its options and its GPS block, keeping their handlers. */
+/** Retraduit le titre d'une story, ses options et son bloc GPS, en gardant les handlers. */
 const localizedTexts =
   (title: (texts: Translations) => string) => (texts: Translations, args: Record<string, unknown>) => {
     const options = (args.options as OptionsSectionProps['options']).map((option) => ({
@@ -54,10 +54,10 @@ const localizedTexts =
 const cluesOptionsTitle = (texts: Translations) => texts.cluesSetup.optionsTitle;
 const compassOptionsTitle = (texts: Translations) => texts.setup.optionsTitle;
 
-/** Named (capitalized) so eslint's rules-of-hooks recognizes it as a component and allows the
- * `useState` below — an inline arrow assigned to a story's `render` doesn't qualify. Every toggle
- * (options + GPS) and the custom origin are wired to local state so the whole block is clickable;
- * `OptionsSection` itself stays fully controlled by its caller. */
+/**
+ * Nomme (majuscule) pour que rules-of-hooks d'eslint accepte le `useState`. Options, GPS et origine perso sont
+ * branches sur un state local pour tout cliquer ; `OptionsSection` reste controle par son appelant.
+ */
 const InteractiveDemo = (args: OptionsSectionProps) => {
   const [values, setValues] = useState<Record<string, boolean>>(
     Object.fromEntries(args.options.map((option) => [option.id, option.value])),
@@ -128,7 +128,7 @@ const gpsOption = {
   onChangeCustomOrigin: fn(),
 };
 
-/** Clues' own block: one plain option, no GPS. */
+/** Bloc propre a Indices : une option simple, pas de GPS. */
 export const WithoutGps: Story = {
   parameters: source(withoutGpsCode),
   decorators: [localizedArgs(localizedTexts(cluesOptionsTitle))],
@@ -146,8 +146,10 @@ export const WithoutGps: Story = {
   },
 };
 
-/** Compass' own block: several options plus the GPS one — switch "Utiliser ma position" off to
- * reveal the custom latitude/longitude fields. */
+/**
+ * Bloc propre a Compass : plusieurs options plus le GPS. Desactiver « Utiliser ma position » revele les champs
+ * latitude/longitude perso.
+ */
 export const WithGps: Story = {
   parameters: source(withGpsCode),
   decorators: [localizedArgs(localizedTexts(compassOptionsTitle))],

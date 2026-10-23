@@ -1,20 +1,20 @@
-// Button size (fuselage + rotor span), in px.
+// Taille du bouton (fuselage + rotor), en px.
 export const SIZE = 40;
-// Animation refresh rate.
+// Cadence de rafraichissement de l'animation.
 export const TICK_MS = 50;
 
-// Continuous vertical bobbing.
+// Flottement vertical continu.
 export const BOB_AMPLITUDE = 3;
 export const BOB_PERIOD_MS = 2200;
-// Blinking anti-collision light (tail).
+// Feu anticollision clignotant (queue).
 export const BLINK_PERIOD_MS = 500;
-// Main rotor: one full turn every ROTOR_PERIOD_MS (fast — it's meant to read as a blur).
+// Rotor : un tour par ROTOR_PERIOD_MS (rapide, il doit faire un flou).
 export const ROTOR_PERIOD_MS = 260;
 
-// Cockpit bubble: translucent blue with a highlight, rather than a theme color.
+// Bulle du cockpit : bleu translucide avec reflet, hors tokens de theme.
 export const COCKPIT_COLOR = '#8FD8FF';
 export const COCKPIT_HIGHLIGHT_COLOR = '#FFFFFF';
 
-// Rope hanging under the fuselage, ending on the gear (same gear as the saucer's).
+// Corde sous le fuselage, terminee par l'engrenage (le meme que la soucoupe).
 export const ROPE_LENGTH_RATIO = 0.4;
 export const GEAR_RADIUS_RATIO = 0.285;

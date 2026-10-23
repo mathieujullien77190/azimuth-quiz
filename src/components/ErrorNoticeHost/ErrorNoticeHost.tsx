@@ -8,8 +8,8 @@ import NoticeOverlay from '@/components/NoticeOverlay';
 import { NOTICE_DURATION_MS } from './constants';
 
 /**
- * The notice a failed game action shows (`reportError` with the `game` kind): mounted once at the root, it disappears on
- * tap or by itself after a few seconds.
+ * Notice d'une action de jeu echouee (`reportError`, kind `game`) : montee une fois a la racine,
+ * elle disparait au tap ou seule apres quelques secondes.
  */
 export const ErrorNoticeHost = () => {
   const t = useTranslation();

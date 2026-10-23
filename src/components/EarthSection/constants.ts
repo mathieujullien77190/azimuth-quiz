@@ -1,26 +1,25 @@
 export const EARTH_RADIUS_RATIO = 0.36;
-/** Player's vertical position (circle's apex at scale 1), as a share of the size. */
+/** Position verticale du joueur (sommet du cercle a l'echelle 1), en part de la taille. */
 export const PLAYER_Y_RATIO = 0.21;
 export const HEIGHT_RATIO = 0.98;
-/** Share of the width / height where answers can extend once zoomed. */
+/** Part de la largeur / hauteur ou les reponses peuvent s'etendre une fois zoome. */
 export const AVAILABLE_X_RATIO = 0.44;
 export const BOTTOM_MARGIN = 18;
 
-/** Possible zooms on the circle (1 = real scale). */
+/** Zooms possibles sur le cercle (1 = echelle reelle). */
 export const ZOOM_STEPS = [1, 1.5, 2, 3, 4, 6, 8, 12, 20, 30] as const;
 export const MAX_ZOOM = 30;
 
 export const CAPTION_SURFACE = 'La Terre';
-/** Labels of the switch between the Earth seen from the side and the 3D globe (the one it leads to). */
+/** Libelles du bouton Terre de profil / globe 3D (celui vers lequel il mene). */
 export const SWITCH_TO_EARTH = '2D';
 export const SWITCH_TO_GLOBE = '3D';
 export const PLAYER_LABEL = 'toi';
 
-// Orbiting satellite, just for fun: on reveal, and only zoomed out to the real scale (zoom 1 = the whole Earth visible, otherwise it would be
-// off-screen or grotesquely close). A plane by day instead (see EarthSection), same orbit.
+// Satellite pour le fun, a la revelation et seulement a l'echelle reelle (zoom 1) : sinon hors ecran ou
+// grotesquement proche. Un avion le jour (voir EarthSection), meme orbite.
 export const SATELLITE_EMOJI = '🛰️';
 export const SATELLITE_ORBIT_MS = 28000;
 export const SATELLITE_CLEARANCE = 46;
-/** Joke on clicking the satellite (see `EarthSection`): hides itself after this delay, or
- * immediately if clicked again. */
+/** Blague au clic sur le satellite (voir `EarthSection`) : disparait apres ce delai, ou au clic suivant. */
 export const SATELLITE_QUIP = 'La Terre est-elle ronde ? 🤔';

@@ -17,9 +17,8 @@ import { roundDistance } from './distanceScale';
 const curve = (ratio: number): number => Math.max(0, Math.min(1, ratio)) ** SCORE_CURVE_EXPONENT;
 
 /**
- * Scores an answer. Direction (heading) and distance are two independent axes, each capped at
- * MAX_DIRECTION_POINTS / MAX_DISTANCE_POINTS: a perfect heading gives the full 500 direction
- * points regardless of the chosen distance, and vice versa.
+ * Note une reponse. Cap et distance sont deux axes independants, plafonnes a MAX_DIRECTION_POINTS /
+ * MAX_DISTANCE_POINTS.
  */
 export const scoreRound = (origin: Coordinates, place: Place, guess: Guess): RoundScore => {
   const trueBearing = bearingDeg(origin, place.coordinates);
@@ -33,9 +32,8 @@ export const scoreRound = (origin: Coordinates, place: Place, guess: Guess): Rou
   const distancePoints = Math.round(
     MAX_DISTANCE_POINTS * curve(1 - distanceError / Math.log(DISTANCE_TOLERANCE_RATIO)),
   );
-  // Exact bonus at the slider's own precision: the bigger the true distance, the coarser the
-  // step it can actually be set to (see `roundDistance`), so "exact" means landing on the
-  // closest reachable step, not matching the true value bit-for-bit.
+  // Bonus exact a la precision du curseur : plus la distance est grande, plus le pas est grossier (voir
+  // `roundDistance`), donc "exact" = pas atteignable le plus proche.
   const distanceExactBonus =
     roundDistance(trueSurfaceDistanceKm, MAX_SURFACE_DISTANCE_KM) === guess.distanceKm ? EXACT_DISTANCE_BONUS : 0;
 
@@ -56,12 +54,10 @@ export const scoreRound = (origin: Coordinates, place: Place, guess: Guess): Rou
 };
 
 /**
- * Bonus for the best of the round, on each category separately: 1/5 of the category's max for the player(s) with the
- * smallest heading error (`directionBonus`) and for the player(s) whose answer lands closest to the place, the 🎯
- * gap `targetGapKm` (`distanceBonus`), ties included. Only makes sense with several players — solo, `results` has a
- * single element and no one can stand out, so no bonus. Compares the raw errors (`directionError`/`targetGapKm`), not
- * the points: those are capped at 0 as soon as you're out of tolerance, so two players both out of tolerance would
- * otherwise be tied and both "the closest".
+ * Bonus du meilleur de la manche, par categorie : 1/5 du max pour le(s) plus petit ecart de cap
+ * (`directionBonus`) et le(s) plus proche(s) du lieu (`targetGapKm`, `distanceBonus`), egalites comprises.
+ * Seulement a plusieurs. Compare les ecarts bruts, pas les points (plafonnes a 0 hors tolerance : deux
+ * joueurs hors tolerance seraient a egalite).
  */
 export const applyBestBonus = (results: PlayerResult[]): PlayerResult[] => {
   if (results.length < 2) return results;

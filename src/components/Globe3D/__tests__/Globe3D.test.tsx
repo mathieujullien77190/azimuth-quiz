@@ -9,8 +9,8 @@ import { ThemeSettingsContext } from '@/themes';
 import { CAPTION_GLOBE, ORBIT_MS, RESET_HINT, ZOOM_IN_HINT, ZOOM_OUT_HINT, ZOOM_STEP } from '../constants';
 import Globe3D from '..';
 
-// The OpenGL surface, and the graphics card behind it: the globe is drawn for real everywhere else (see `scene.test.ts`),
-// here only what the component asks of the surface matters.
+// Surface OpenGL et carte graphique derriere : le globe est dessine pour de vrai ailleurs (voir `scene.test.ts`),
+// ici seul compte ce que le composant demande a la surface.
 jest.mock('expo-gl', () => {
   /* eslint-disable @typescript-eslint/no-require-imports -- a jest.mock factory runs before the imports it would use */
   const React = require('react');
@@ -20,7 +20,7 @@ jest.mock('expo-gl', () => {
   return {
     __context: context,
     GLView: ({ onContextCreate, ...props }: { onContextCreate: (gl: unknown) => void }) => {
-      // The surface arrives just after the first drawing, as on a device.
+      // La surface arrive juste apres le premier dessin, comme sur un appareil.
       React.useEffect(() => onContextCreate(context), [onContextCreate]);
       return React.createElement(View, props);
     },
@@ -44,22 +44,22 @@ const PARIS = { latitude: 48.8566, longitude: 2.3522 };
 const answer: EarthMark = { bearing: 261.4, distanceKm: 6079, color: '#EF4444' };
 
 type PanConfig = Parameters<typeof PanResponder.create>[0];
-/** One finger, at that place on the screen. */
+/** Un doigt, a cet endroit de l'ecran. */
 const finger = (x: number, y: number) =>
   ({ nativeEvent: { pageX: x, pageY: y, touches: [{ pageX: x, pageY: y }] } }) as never;
-/** Two fingers, that far apart. */
+/** Deux doigts, a cet ecartement. */
 const pinch = (gap: number) =>
   ({
     nativeEvent: { pageX: 0, pageY: 0, touches: [{ pageX: 0, pageY: 0 }, { pageX: 0, pageY: gap }] },
   }) as never;
-/** How many fingers the gesture says are on the glass; 0 = a stray move once they are gone. */
+/** Nombre de doigts que le geste dit etre sur la vitre ; 0 = move parasite apres le lache. */
 const touching = (count: number) => ({ numberActiveTouches: count }) as never;
 
-/** How many "N" are on screen. The pole's label and the "back to north" button both say so, so the pole is there
- * when there are two of them (one with the buttons hidden). */
+/** Nombre de "N" a l'ecran : le label du pole et le bouton "retour au nord" en portent un chacun,
+ * donc deux = le pole est la (un seul quand les boutons sont masques). */
 const northLabels = (queryAllByText: (text: string) => unknown[]) => queryAllByText('N').length;
 
-/** Renders the globe and hands over the touch handlers it just set up. */
+/** Rend le globe et remet les handlers tactiles qu'il vient de poser. */
 const renderGlobe = async (props: Partial<React.ComponentProps<typeof Globe3D>> = {}) => {
   const createSpy = jest.spyOn(PanResponder, 'create');
   const screen = await render(<Globe3D marks={[answer]} origin={PARIS} size={240} {...props} />);
@@ -96,7 +96,7 @@ describe('Globe3D', () => {
 
   it('can be left without a pole, and without answers', async () => {
     const { queryAllByText, queryByText } = await renderGlobe({ marks: [], north: false });
-    // Only the button's own "N" is left.
+    // Il ne reste que le "N" du bouton.
     expect(northLabels(queryAllByText)).toBe(1);
     expect(queryByText(PLAYER_LABEL)).toBeTruthy();
   });
@@ -115,14 +115,14 @@ describe('Globe3D — turning it with a finger', () => {
     const drawings = renderer.render.mock.calls.length;
 
     await act(() => config.onPanResponderGrant?.(finger(0, 0), touching(1)));
-    // Each move is the step since the previous one, so the globe follows the finger without adding it up twice.
+    // Chaque move est le pas depuis le precedent : le globe suit le doigt sans cumuler deux fois.
     await act(() => config.onPanResponderMove?.(finger(10, -1000), touching(1)));
     await act(() => config.onPanResponderMove?.(finger(20, -2000), touching(1)));
     expect(queryByText(PLAYER_LABEL)).toBeNull();
     expect(northLabels(queryAllByText)).toBe(1);
     expect(renderer.render.mock.calls.length).toBeGreaterThan(drawings);
 
-    // Tipping the other way brings the starting point back.
+    // Pencher dans l'autre sens ramene le point de depart.
     await act(() => config.onPanResponderMove?.(finger(20, 2000), touching(1)));
     expect(queryByText(PLAYER_LABEL)).toBeTruthy();
   });
@@ -133,17 +133,17 @@ describe('Globe3D — turning it with a finger', () => {
     await act(() => config.onPanResponderMove?.(finger(0, -2000), touching(1)));
     expect(queryByText(PLAYER_LABEL)).toBeNull();
 
-    // Letting go, then touching down far from there: the globe must not jump by the gap between the two places.
+    // Lacher puis retoucher loin de la : le globe ne doit pas sauter de l'ecart entre les deux endroits.
     await act(() => config.onPanResponderRelease?.(finger(0, -2000), touching(0)));
     await act(() => config.onPanResponderGrant?.(finger(0, 500), touching(1)));
     await act(() => config.onPanResponderMove?.(finger(0, 510), touching(1)));
     expect(queryByText(PLAYER_LABEL)).toBeNull();
 
-    // The web reports one last move once the finger is already gone: it used to send the globe back where it started.
+    // Le web envoie un dernier move apres le lache : il ramenait le globe au depart.
     await act(() => config.onPanResponderMove?.(finger(0, 4000), touching(0)));
     expect(queryByText(PLAYER_LABEL)).toBeNull();
 
-    // A gesture cut short (a scroll taking over) leaves nothing behind either.
+    // Un geste interrompu (un defilement qui prend la main) ne laisse rien non plus.
     await act(() => config.onPanResponderTerminate?.(finger(0, 510), touching(0)));
     await act(() => config.onPanResponderMove?.(finger(0, 9000), touching(1)));
     expect(queryByText(PLAYER_LABEL)).toBeNull();
@@ -164,14 +164,14 @@ describe('Globe3D — turning it with a finger', () => {
 });
 
 describe('Globe3D — zooming', () => {
-  /** The satellite only flies over the unzoomed globe: it says whether the zoom moved. */
+  /** Le satellite ne survole que le globe sans zoom : dit si le zoom a bouge. */
   const zoomed = (queryByText: (text: string) => unknown) => queryByText('🛰️') === null;
 
   it('zooms in and out with two fingers', async () => {
     const { config, queryByText } = await renderGlobe();
     await act(() => config.onPanResponderGrant?.(pinch(100), touching(2)));
     await act(() => config.onPanResponderMove?.(pinch(100), touching(2)));
-    // Fingers that have not moved apart yet change nothing.
+    // Des doigts pas encore ecartes ne changent rien.
     expect(zoomed(queryByText)).toBe(false);
     await act(() => config.onPanResponderMove?.(pinch(300), touching(2)));
     expect(zoomed(queryByText)).toBe(true);
@@ -183,7 +183,7 @@ describe('Globe3D — zooming', () => {
   it('only measures the gap on the move a second finger lands, then zooms', async () => {
     const { config, queryByText } = await renderGlobe();
     await act(() => config.onPanResponderGrant?.(finger(0, 0), touching(1)));
-    // Nothing to compare that first gap with: the zoom must not jump the moment the second finger touches down.
+    // Rien a comparer a ce premier ecart : le zoom ne doit pas sauter des que le 2e doigt touche.
     await act(() => config.onPanResponderMove?.(pinch(100), touching(2)));
     expect(zoomed(queryByText)).toBe(false);
     await act(() => config.onPanResponderMove?.(pinch(300), touching(2)));
@@ -194,7 +194,7 @@ describe('Globe3D — zooming', () => {
     const { config, queryByText } = await renderGlobe();
     await act(() => config.onPanResponderGrant?.(pinch(100), touching(2)));
     await act(() => config.onPanResponderMove?.(pinch(100), touching(2)));
-    // Only the fingers spreading counted so far: lifting one and carrying on turns from where the last one is.
+    // Seul l'ecartement compte : lever un doigt et continuer tourne depuis le dernier.
     await act(() => config.onPanResponderMove?.(finger(0, 0), touching(1)));
     expect(queryByText(PLAYER_LABEL)).toBeTruthy();
   });
@@ -218,8 +218,8 @@ describe('Globe3D — zooming', () => {
 
   it('shrinks the dots back to their screen size as it zooms in', async () => {
     const { getByLabelText } = await renderGlobe();
-    // The scene is built for real here (only the graphics card is stood in for), so the globe handed over is the
-    // very one that would be drawn.
+    // La scene est construite pour de vrai (seule la carte graphique est simulee) : le globe remis est celui qui
+    // serait dessine.
     const dotScale = () => {
       const drawn = renderer.render.mock.calls[renderer.render.mock.calls.length - 1][0] as {
         children: { geometry?: { type: string }; scale: { x: number } }[];

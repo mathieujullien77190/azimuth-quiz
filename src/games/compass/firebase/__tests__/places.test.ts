@@ -11,7 +11,7 @@ import { fetchRandomPlaces } from '../places';
 type Filter = { field: string; op: string; value: unknown };
 type Composite = { type: 'and' | 'or'; filters: (Filter | Composite)[] };
 
-/** The `and(...)` clauses of a query's filter: an `or` of them, or a lone one. */
+/** Les clauses `and(...)` du filtre d'une requete : un `or` d'elles, ou une seule. */
 const clausesOf = (filter: Filter | Composite): Filter[][] =>
   'type' in filter && filter.type === 'or'
     ? filter.filters.map((clause) => (clause as Composite).filters as Filter[])
@@ -31,7 +31,7 @@ jest.mock('@/firebase/client', () => ({ db: {} }));
 
 type Fake = { name: string; code: string; latitude: number; longitude: number };
 
-/** A fake `places` collection: `groups['cities|easy'][n - 1]` is the place numbered `n` in that group. */
+/** Fausse collection `places` : `groups['cities|easy'][n - 1]` est le lieu numero `n` du groupe. */
 const installDb = (groups: Record<string, Fake[]>, countsOverride?: CompassCounts | null) => {
   const counts: CompassCounts = {};
   for (const [id, places] of Object.entries(groups)) {
@@ -51,7 +51,7 @@ const installDb = (groups: Record<string, Fake[]>, countsOverride?: CompassCount
         return { id: `${category}${difficulty}${n}`, data: (): PlaceDoc => ({ ...place, difficulty, n, compass: { category } }) };
       });
     });
-    // Firestore caps the values of one query's `or`/`in` at 30 in total.
+    // Firestore plafonne a 30 les valeurs d'un `or`/`in` par requete.
     expect(docs.length).toBeLessThanOrEqual(30);
     return { docs };
   }) as never);
@@ -79,7 +79,7 @@ const queriedNumbers = () =>
     .flatMap((filters) => filters.filter((entry) => entry.field === 'n').flatMap((entry) => entry.value as number[]));
 
 let randomSpy: jest.SpyInstance | undefined;
-/** Makes Math.random return these values in turn (then again from the first): the draw is then predictable. */
+/** Fait renvoyer ces valeurs a Math.random tour a tour (puis en boucle) : tirage previsible. */
 const useRandom = (...values: number[]) => {
   let index = 0;
   randomSpy = jest.spyOn(Math, 'random').mockImplementation(() => values[index++ % values.length]);
@@ -87,7 +87,7 @@ const useRandom = (...values: number[]) => {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  // The draw logs what it receives from Firestore: keep the test output clean.
+  // Le tirage loggue ce que Firestore renvoie : on garde la sortie des tests propre.
   jest.spyOn(console, 'log').mockImplementation(() => {});
   clearCompassCursors();
   clearCompassCounts();
@@ -111,14 +111,14 @@ describe('fetchRandomPlaces', () => {
     const places = await fetchRandomPlaces(settings, 'fr');
 
     expect(places).toHaveLength(3);
-    // Each place knows its document id (the dev mode's difficulty opinions point at it).
+    // Chaque lieu connait l'id de son document (les avis du mode dev y renvoient).
     expect(places.every((place) => typeof place.key === 'string' && place.key.length > 0)).toBe(true);
     expect(new Set(names(places)).size).toBe(3);
     expect(names(places).every((name) => name.startsWith('C') || name.startsWith('K'))).toBe(true);
-    // Several groups, yet a single query (an `or` of one clause per group) brings every document back.
+    // Plusieurs groupes, une seule requete (un `or` par groupe) ramene tous les documents.
     expect(getDocs).toHaveBeenCalledTimes(1);
     expect(getDoc).toHaveBeenCalledTimes(1);
-    // French: every position taken is kept, so exactly the 3 rounds are read (3 reads).
+    // Francais : toutes les positions prises sont gardees, donc exactement 3 lectures.
     expect(queriedNumbers()).toHaveLength(3);
   });
 
@@ -127,12 +127,12 @@ describe('fetchRandomPlaces', () => {
     const game = { ...settings, categories: ['cities' as Category] };
 
     useRandom(0.5);
-    // Random start: floor(0.5 x 10) = position 5 -> the 6th, 7th and 8th places.
+    // Depart aleatoire : floor(0.5 x 10) = position 5 -> 6e, 7e et 8e lieux.
     expect(names(await fetchRandomPlaces(game, 'fr')).sort()).toEqual(['C5', 'C6', 'C7']);
     expect(await loadCompassCursors()).toEqual({ 'cities|easy': 8 });
     randomSpy?.mockRestore();
 
-    // Next game: the following places, wrapping from the end (9th, 10th, then the 1st).
+    // Partie suivante : les lieux suivants, en bouclant (9e, 10e, puis 1er).
     expect(names(await fetchRandomPlaces(game, 'fr')).sort()).toEqual(['C0', 'C8', 'C9']);
     expect(await loadCompassCursors()).toEqual({ 'cities|easy': 1 });
   });
@@ -165,7 +165,7 @@ describe('fetchRandomPlaces', () => {
     installDb({ 'cities|easy': far(10, 'C'), 'capital|easy': far(10, 'K') });
     saveCompassCursors({ 'cities|easy': 0, 'capital|easy': 5 });
 
-    // 0.1 x 20 lands in the first group, 0.9 x 20 in the second: they alternate.
+    // 0.1 x 20 tombe dans le 1er groupe, 0.9 x 20 dans le 2e : ils alternent.
     useRandom(0.1, 0.9);
     const places = await fetchRandomPlaces({ ...settings, rounds: 4 }, 'fr');
 
@@ -195,19 +195,19 @@ describe('fetchRandomPlaces', () => {
       'en',
     );
 
-    // 5 intermediate + the 3 French "easy" places (bumped to intermediate in English): exactly the 8 rounds.
+    // 5 intermediaires + les 3 lieux francais "easy" (releves en anglais) : exactement 8 manches.
     expect(names(places).sort()).toEqual(['FR0', 'FR1', 'FR2', 'I0', 'I1', 'I2', 'I3', 'I4']);
   });
 
   it('takes more places in a second pass when the first one was mostly filtered out', async () => {
     installDb({
       'cities|intermediate': far(5, 'I'),
-      // The 3 French places come last: the first pass (24 places) misses them.
+      // Les 3 lieux francais viennent en dernier : le 1er passage (24 lieux) les rate.
       'cities|easy': [...far(37, 'E'), ...far(3, 'FR', 'FR')],
     });
     saveCompassCursors({ 'cities|intermediate': 0, 'cities|easy': 0 });
 
-    // Random 0 always picks the first group with places left: the 5 intermediate ones, then the easy ones.
+    // Random 0 prend toujours le 1er groupe non epuise : les 5 intermediaires, puis les faciles.
     useRandom(0);
     const places = await fetchRandomPlaces(
       { ...settings, categories: ['cities'], difficulty: 'intermediate', rounds: 8 },
@@ -216,7 +216,8 @@ describe('fetchRandomPlaces', () => {
 
     expect(names(places).sort()).toEqual(['FR0', 'FR1', 'FR2', 'I0', 'I1', 'I2', 'I3', 'I4']);
     expect(getDocs).toHaveBeenCalledTimes(2);
-    // Every place taken counts as gone through, also the ones read and dropped: both groups went round once.
+    // Tout lieu pris compte comme parcouru, aussi ceux lus puis ecartes : les deux groupes ont fait un
+    // tour.
     expect(await loadCompassCursors()).toEqual({ 'cities|intermediate': 0, 'cities|easy': 0 });
   });
 
@@ -236,7 +237,7 @@ describe('fetchRandomPlaces', () => {
   it('rejects, cursors untouched, when the whole pool is read and too few places match', async () => {
     installDb({ 'cities|easy': far(10, 'E') });
 
-    // English, intermediate: the pool includes the tier below, but no place there is French.
+    // Anglais, intermediaire : le pool inclut le palier inferieur, mais aucun lieu n'y est francais.
     await expect(
       fetchRandomPlaces({ ...settings, categories: ['cities'], difficulty: 'intermediate' }, 'en'),
     ).rejects.toThrow('Not enough places');

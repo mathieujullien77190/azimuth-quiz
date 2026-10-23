@@ -10,10 +10,9 @@ import { useThemeSettings } from '@/themes';
 import { BOOT_BACKGROUND, SPLASH_CODENAME, SPLASH_VERSION_NUMBER } from './constants';
 
 /**
- * The startup splash, over the whole app (mounted once in the root layout, inside the providers): smart — it knows
- * when the app is ready (the saved theme, language, settings, name and dev code have all been read), keeps the splash up
- * for at least `SPLASH_MIN_MS` even if nothing was left to load, and drops it at `SPLASH_MAX_MS` whatever happens.
- * Until the saved theme is known it only paints the boot colour, since the splash cannot tell night from day yet.
+ * Splash de demarrage sur toute l'app (monte une fois dans le layout racine, dans les providers). Il sait quand
+ * l'app est prete (theme, langue, reglages, nom et code dev lus), garde le splash au moins `SPLASH_MIN_MS` et le
+ * retire a `SPLASH_MAX_MS` quoi qu'il arrive. Tant que le theme n'est pas connu, il ne peint que la couleur de demarrage.
  */
 export const StartupSplash = () => {
   const t = useTranslation();

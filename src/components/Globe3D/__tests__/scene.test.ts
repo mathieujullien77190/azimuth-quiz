@@ -44,7 +44,7 @@ const build = (overrides: Partial<GlobeSceneInput> = {}) =>
     ...overrides,
   });
 
-/** Every object of the scene, the scene itself left out. */
+/** Chaque objet de la scene, la scene elle-meme exclue. */
 const objects = (root: Object3D): Object3D[] => {
   const found: Object3D[] = [];
   root.traverse((object) => {
@@ -55,16 +55,16 @@ const objects = (root: Object3D): Object3D[] => {
 
 const meshes = (root: Object3D): Mesh[] => objects(root).filter((object): object is Mesh => object instanceof Mesh);
 const lines = (root: Object3D): Line[] => objects(root).filter((object): object is Line => object instanceof Line);
-/** How far a mesh sits from the middle of the globe (the ball has radius 1). */
+/** Distance d'un maillage au centre du globe (la boule a un rayon de 1). */
 const altitudeOf = (mesh: Mesh): number => mesh.position.length();
 
 describe('buildGlobeScene', () => {
   it('is a bare ball, lit from every side, with the starting point on it', () => {
     const { scene, headlight } = build();
-    // The ball, and the dot of the starting point.
+    // La boule, et la pastille du point de depart.
     expect(meshes(scene)).toHaveLength(2);
     expect(lines(scene)).toHaveLength(0);
-    // The lamp is handed back rather than added: the camera carries it (see `useGlobeRenderer`).
+    // La lampe est rendue a part plutot qu'ajoutee : la camera la porte (voir `useGlobeRenderer`).
     expect(headlight.parent).toBeNull();
     expect(scene.children).toContain(scene.children.find((child) => child.type === 'AmbientLight'));
   });
@@ -97,11 +97,11 @@ describe('buildGlobeScene', () => {
     };
     expect(picture.width).toBe(GLOBE_MASK.width);
     expect(picture.height).toBe(GLOBE_MASK.height);
-    // See-through over the sea, so the ball's own colour shows there.
+    // Transparent sur la mer, pour que la couleur de la boule y apparaisse.
     expect(painted.material).toMatchObject({ transparent: true, depthWrite: false });
 
-    // Land is opaque, sea is not: the middle of Africa against the middle of the Pacific, read off the picture the
-    // way the shell reads it (u from the date line eastwards, v from the south pole up).
+    // Terre opaque, mer non : le milieu de l'Afrique contre le milieu du Pacifique, lus dans l'image comme la lit la
+    // coque (u depuis la ligne de date vers l'est, v depuis le pole sud).
     const alphaAt = (latitude: number, longitude: number) => {
       const column = Math.floor(((longitude + 180) / 360) * GLOBE_MASK.width);
       const row = Math.floor(((latitude + 90) / 180) * GLOBE_MASK.height);
@@ -135,8 +135,8 @@ describe('buildGlobeScene', () => {
     const painted = meshes(scene).find((mesh) => (mesh.material as MeshLambertMaterial).map != null)!;
     const positions = painted.geometry.getAttribute('position');
     const corners = painted.geometry.getIndex()!;
-    // A sphere drawn with flats dips below its own radius in the middle of each flat. The shell is painted over the
-    // ball and must stay outside it there too, or the sea hides the continents — which is exactly what happened.
+    // Une sphere a facettes passe sous son rayon au milieu de chaque facette. La coque peinte doit rester au-dessus,
+    // sinon la mer cache les continents (c'est deja arrive).
     let lowest = Infinity;
     for (let corner = 0; corner < corners.count; corner += 3) {
       const triangle = [0, 1, 2].map((offset) => corners.getX(corner + offset));
@@ -156,11 +156,11 @@ describe('buildGlobeScene', () => {
   it('draws the whole world as one object, above the ball', () => {
     const { scene } = build({ land: true });
     const world = lines(scene);
-    // One object for every coast: what the graphics card gets is a single draw, however detailed the outline is.
+    // Un seul objet pour toutes les cotes : un seul dessin pour la carte graphique, quel que soit le detail du contour.
     expect(world).toHaveLength(1);
     expect(world[0].type).toBe('LineSegments');
     const positions = world[0].geometry.getAttribute('position');
-    // Pairs of ends, thousands of them, all sitting a hair above the ground.
+    // Des paires d'extremites, des milliers, toutes un poil au-dessus du sol.
     expect(positions.count).toBeGreaterThan(10000);
     expect(positions.count % 2).toBe(0);
     expect(Math.hypot(positions.getX(0), positions.getY(0), positions.getZ(0))).toBeGreaterThan(1);
@@ -177,19 +177,19 @@ describe('buildGlobeScene', () => {
     const guides = lines(scene);
     expect(guides.map((line) => line.type)).toEqual(['LineLoop', 'Line']);
     expect(guides.every((line) => line.material instanceof LineDashedMaterial)).toBe(true);
-    // Dashes are measured along the line: without its own lengths it would come out solid.
+    // Les pointilles se mesurent le long de la ligne : sans ses longueurs propres, elle serait pleine.
     expect(guides[0].geometry.getAttribute('lineDistance')).toBeTruthy();
   });
 
   it('gives a guess its end point and the true answer a circled one, the routes being built apart', () => {
     const guess = meshes(build({ marks: [ANSWER] }).scene);
     const truth = meshes(build({ marks: [{ ...ANSWER, isTruth: true }] }).scene);
-    // The ball, the starting point and the end point.
+    // La boule, le point de depart et le point d'arrivee.
     expect(guess).toHaveLength(3);
-    // The same, plus the ring around the true answer.
+    // Pareil, plus l'anneau autour de la vraie reponse.
     expect(truth).toHaveLength(4);
     expect(truth.some((mesh) => mesh.geometry.type === 'TorusGeometry')).toBe(true);
-    // No route in the scene itself: the zoom owns how thick those are (see `buildRoutes`).
+    // Aucune route dans la scene : le zoom en gere l'epaisseur (voir `buildRoutes`).
     expect([...guess, ...truth].some((mesh) => mesh.geometry.type === 'TubeGeometry')).toBe(false);
   });
 
@@ -200,7 +200,7 @@ describe('buildGlobeScene', () => {
     expect(ring.position.x).toBeCloseTo(x, 6);
     expect(ring.position.y).toBeCloseTo(y, 6);
     expect(ring.position.z).toBeCloseTo(z, 6);
-    // Turned to face the middle of the globe: the ring lies on the ground instead of standing up on its edge.
+    // Tourne vers le milieu du globe : l'anneau est couche sur le sol au lieu d'etre debout sur la tranche.
     expect((ring.geometry as TorusGeometry).parameters.radius).toBe(TRUTH_RING);
     expect(ring.getWorldDirection(ring.position.clone()).length()).toBeCloseTo(1, 6);
   });
@@ -209,7 +209,7 @@ describe('buildGlobeScene', () => {
 
   it('hands back the dots and the rings as what must keep its size on screen, and nothing else', () => {
     const { scene, screenSized } = build({ land: true, marks: [{ ...ANSWER, isTruth: true }], north: true });
-    // The starting point, the answer's own dot, its ring and the pole — not the ball, the painted land or a route.
+    // Le point de depart, la pastille de la reponse, son anneau et le pole — pas la boule, les terres peintes ni une route.
     expect(screenSized).toHaveLength(4);
     expect(screenSized.every((mark) => meshes(scene).includes(mark))).toBe(true);
     expect(screenSized.some((mark) => mark.geometry.type === 'TubeGeometry')).toBe(false);
@@ -272,7 +272,7 @@ describe('disposeScene', () => {
     expect(geometries.length).toBeGreaterThan(3);
     expect(geometries.every((spy) => spy.mock.calls.length > 0)).toBe(true);
     expect(materials.every((spy) => spy.mock.calls.length > 0)).toBe(true);
-    // The light has neither, and must not stop the others from being handed back.
+    // La lumiere n'a ni geometrie ni materiau, et ne doit pas empecher de rendre les autres.
     expect(scene.children).toHaveLength(0);
   });
 

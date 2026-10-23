@@ -3,29 +3,27 @@ import { EARTH_RADIUS_KM } from '@/data';
 import { MAX_ZOOM, ZOOM_STEPS } from './constants';
 import type { EarthMark, Point, Side } from './types';
 
-/** Side of the diagram: a westward heading (270° +/- 90°) goes left, otherwise right. */
+/** Cote du schema : un cap vers l'ouest (270° +/- 90°) va a gauche, sinon a droite. */
 export const sideOf = (bearing: number): Side => (Math.sin((bearing * Math.PI) / 180) < 0 ? -1 : 1);
 
-/** Point on the circle at `angle` radians from the apex (the player); positive angle = right, negative = left. */
+/** Point du cercle a `angle` radians du sommet (le joueur) ; angle positif = droite, negatif = gauche. */
 export const surfacePoint = (center: Point, radius: number, angle: number): Point => ({
   x: center.x + radius * Math.sin(angle),
   y: center.y - radius * Math.cos(angle),
 });
 
-/** Central angle corresponding to a distance measured along the surface. A route holding its heading all the way
- * (see `helpers/geo`) can be longer than half a turn of the Earth: it then stops at the far point of the profile. */
+/** Angle au centre d'une distance de surface. Une route a cap constant (voir `helpers/geo`) peut depasser un
+ * demi-tour de Terre : elle s'arrete alors au point le plus eloigne du profil. */
 export const surfaceAngle = (distanceKm: number): number => Math.min(Math.PI, distanceKm / EARTH_RADIUS_KM);
 
-/** Circle arc from the apex to `angle` radians, on the `side` side (`d` attribute of a <Path>). */
+/** Arc de cercle du sommet a `angle` radians, du cote `side` (attribut `d` d'un <Path>). */
 export const arcPath = (center: Point, radius: number, angle: number, side: Side): string => {
   const start = surfacePoint(center, radius, 0);
   const end = surfacePoint(center, radius, side * angle);
   return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${angle > Math.PI ? 1 : 0} ${side === 1 ? 1 : 0} ${end.x} ${end.y}`;
 };
 
-/**
- * Endpoint of an answer on the circle, where its arc (surface distance) ends.
- */
+/** Point d'arrivee d'une reponse sur le cercle (fin de son arc). */
 export const markEnd = (
   item: Pick<EarthMark, 'bearing' | 'distanceKm'>,
   center: Point,
@@ -34,8 +32,8 @@ export const markEnd = (
 ): Point => surfacePoint(center, radius, (forceSide ?? sideOf(item.bearing)) * surfaceAngle(item.distanceKm));
 
 /**
- * Highest zoom (among ZOOM_STEPS) that keeps all endpoints within the visible zone.
- * `offsets`: endpoints relative to the player, at scale 1.
+ * Plus grand zoom (parmi ZOOM_STEPS) qui garde tous les points dans la zone visible.
+ * `offsets` : points relatifs au joueur, a l'echelle 1.
  */
 export const fitZoom = (offsets: Point[], availableX: number, availableY: number): number => {
   const maxX = Math.max(1e-6, ...offsets.map((offset) => Math.abs(offset.x)));

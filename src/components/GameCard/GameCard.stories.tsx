@@ -11,7 +11,7 @@ import cluesCode from './Clues.source.md?raw';
 
 const t = translations.fr;
 
-/** The card's texts, in the toolbar's language. */
+/** Textes de la carte, dans la langue de la barre d'outils. */
 const textArgs = (game: 'compass' | 'clues') => (texts: Translations) => ({
   ctaLabel: texts.home.games[game].cta,
   tagline: texts.home.games[game].tagline,

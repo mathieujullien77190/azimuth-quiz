@@ -1,9 +1,9 @@
 export type ReactionBarProps = {
-  /** The emojis offered, in order, in the column the toggle opens. */
+  /** Emojis proposes, dans l'ordre, dans la colonne. */
   emojis: readonly string[];
   onPick: (emoji: string) => void;
-  /** The accessibility label of an emoji's button ("Send 👍"). */
+  /** Libelle d'accessibilite du bouton d'un emoji (« Envoyer 👍 »). */
   labelFor: (emoji: string) => string;
-  /** The accessibility label of the round button that opens and closes the column ("Reactions"). */
+  /** Libelle d'accessibilite du bouton rond qui ouvre/ferme la colonne (« Reactions »). */
   toggleLabel: string;
 };

@@ -1,9 +1,8 @@
 import type { RoomPlayers } from '../firebase/roomApi';
 
-// Kept out of `roomBase.ts` (which imports `firebase/firestore`, and so can't be required by a Jest
-// test or a pure screen hook): this is only about names and errors.
+// Hors `roomBase.ts` (qui importe `firebase/firestore`, inutilisable dans un test Jest ou un hook pur).
 
-/** The `code` of the error `joinRoomPresence` throws when the name is already someone else's. */
+/** `code` de l'erreur de `joinRoomPresence` quand le nom est deja pris. */
 const NAME_TAKEN_CODE = 'name-taken';
 
 export const nameTakenError = (): Error =>
@@ -14,16 +13,12 @@ export const isNameTakenError = (error: unknown): boolean =>
 
 const normalized = (name: string): string => name.trim().toLowerCase();
 
-/** Whether another player of the room already has this name — compared without caring about case or
- * the spaces around it ("Zoé " is "zoé"). `uid` is this player's own entry, which never counts (renaming
- * to the name one already has is fine). */
+/** Un autre joueur a-t-il deja ce nom (casse et espaces autour ignores) ? `uid` = soi, jamais compte. */
 export const isNameTaken = (name: string, players: RoomPlayers, uid: string): boolean =>
   Object.entries(players).some(
     ([otherUid, player]) => otherUid !== uid && normalized(player.name) === normalized(name),
   );
 
-/** The first of `placeholders` that no other player of the room has — what a player who typed no name
- * is called. `uid` is this player's own entry, which never counts (it keeps the name it already got).
- * Falls back to the first one if they are all taken. */
+/** Premier de `placeholders` libre, pour qui n'a pas tape de nom (`uid` = soi, ignore) ; le premier si tous pris. */
 export const freePlaceholder = (placeholders: readonly string[], players: RoomPlayers, uid: string | null): string =>
   placeholders.find((placeholder) => !isNameTaken(placeholder, players, uid ?? '')) ?? placeholders[0];

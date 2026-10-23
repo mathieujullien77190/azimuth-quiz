@@ -23,24 +23,20 @@ import type { Needle, OnlineGameScreenProps } from './types';
 import { useOnlineGame } from './useOnlineGame';
 
 /**
- * Online counterpart to `GameScreen`: one phone = one player (no turn-passing, no `PlayerTabs`),
- * guesses submitted to Firestore instead of scored locally. The host's own device runs the exact
- * same "answer, submit" flow as everyone else here — it just also happens to own the scoring
- * effect (inside `useOnlineGame`), since the room's security rules only let the host write
- * `scores`/`screen`. Smart container: `useOnlineGame()` + every derived array/label, mapped onto
- * `OnlineAnswerView`/`OnlineResultsView` (pure rendering).
+ * Pendant en ligne de `GameScreen` : un telephone = un joueur, reponses envoyees a Firestore. L'hote fait
+ * le meme parcours mais possede aussi le scoring (dans `useOnlineGame`, les regles reservent
+ * `scores`/`screen` a l'hote). Container smart : hook + libelles, rendu par les vues.
  */
 export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   const { colors } = useTheme();
   const t = useTranslation();
   const game = useOnlineGame(code, onQuit);
 
-  // The "Suivant"/"Précédent" scroll nav — kept above every early return below so the hook order
-  // never depends on which phase we're in.
+  // Navigation de defilement au-dessus des early returns : l'ordre des hooks ne depend pas de la phase.
   const { scrollRef, onCap, goToCap, goToDistance, handleScroll } = useSectionScroll();
 
-  // Travel mode, from round 2: the splash saying where the player stands (and the header line, below), only once the
-  // round is really on screen — not while loading, nor on the final standings. Above the early returns: hook order.
+  // Mode voyage des le tour 2 : splash du lieu, seulement quand la manche est vraiment a l'ecran. Au-dessus
+  // des early returns (ordre des hooks).
   const roundShown =
     game.gameState.screen !== 'end' &&
     game.localUid !== null &&
@@ -51,13 +47,9 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   const travelLocation = travelPlace === undefined ? undefined : t.game.youAreAt(travelPlace.name);
   const { travelNotice, dismissTravelNotice } = useTravelNotice(game.gameState.roundIndex, travelLocation);
 
-  // The final standings, frozen the first time they're reached: "Accueil" only navigates back
-  // (`router.back()`, see the route) rather than disconnecting, so the room's live subscriptions
-  // stay open and reactive for as long as this screen is still fading out — without this, a
-  // trailing update (another player also leaving...) could visibly reorder/pop a row mid-fade.
-  // Captured while rendering (React's "reset/derive state from a prop" pattern, same one
-  // `useGuessDraft` uses) rather than in an effect, so there's no gap where the live values would
-  // flash before the freeze takes hold.
+  // Classement final fige a la 1re arrivee : "Accueil" fait seulement `router.back()`, les abonnements
+  // restent ouverts pendant le fondu, et une maj tardive pourrait reordonner une ligne. Capture au rendu
+  // (comme `useGuessDraft`) et non en effet, sans trou ou les valeurs vives flashent.
   const [frozenEnd, setFrozenEnd] = useState<{
     players: OnlinePlayer[];
     records: RoundRecord[];
@@ -67,24 +59,22 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
     setFrozenEnd({ players: game.onlinePlayers, records: game.records, totals: game.totals });
   }
 
-  // The host just quit: the store is already reset, and this screen is only on its way out. Not the
-  // "loading" splash below — that one is for a room that hasn't delivered its state yet.
+  // L'hote vient de quitter : le store est deja reinitialise, l'ecran sort. Pas le splash "chargement"
+  // (room sans etat).
   if (!game.connected) return null;
 
-  // Whoever loses the connection leaves the game — host included (see `useRoomPresence`).
+  // Qui perd la connexion quitte la partie, hote compris (voir `useRoomPresence`).
   if (game.connectionLost) return <RoomDeletedScreen message={t.setup.online.connectionLostNotice} />;
 
-  // The host deleting the room is no early return: a joiner keeps seeing the round it was in, under the
-  // "the host left" notice `useSetupRoom` shows (it also sends the joiner home, on a tap or after a
-  // couple of seconds) — the last state the room delivered is still in the store.
+  // La suppression de la room par l'hote n'est pas un early return : le joiner garde sa manche sous la
+  // notice "l'hote a quitte" de `useSetupRoom` (qui le renvoie a l'accueil) ; le dernier etat est encore
+  // dans le store.
 
   const { localUid, players, onlinePlayers, isHost, roomSettings, gameState, place, totals, myIndex } = game;
 
-  // The final standings come first: once the last round is over `roundIndex` points past the rounds, so
-  // there is no round left to load — reading that as "not ready yet" showed the loading splash instead.
-  // `frozenEnd` is still null on this very first render reaching 'end' (the `setFrozenEnd` call above
-  // only takes effect from the next render on) — the live values are identical at this instant, so
-  // falling back to them here is not a second source of truth, just this one render's gap.
+  // Le classement final passe d'abord : a la fin `roundIndex` depasse les manches, ce n'est pas "pas pret"
+  // (sinon splash de chargement). `frozenEnd` est encore null au tout 1er rendu en 'end' : les valeurs
+  // vives sont identiques, le repli n'est pas une 2e source de verite.
   if (gameState.screen === 'end') {
     const end = frozenEnd ?? { players: onlinePlayers, records: game.records, totals };
     const endLocalName = end.players.find((player) => player.uid === localUid)?.name ?? '';
@@ -107,7 +97,7 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
     );
   }
 
-  // Where this round is played from: the room's starting point, or the previous place in travel mode.
+  // Depart de la manche : point de la room, ou lieu precedent en mode voyage.
   const roundOrigin = originForRound(gameState, roomSettings?.travel);
   if (localUid === null || roomSettings === null || place === undefined || roundOrigin === null) {
     return <NoticeOverlay loading message={t.game.loading} />;
@@ -115,20 +105,14 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
   const maxDistanceKm = MAX_SURFACE_DISTANCE_KM;
   const myColor = players[localUid]?.color ?? PLAYER_COLORS[0];
 
-  // Once this device has submitted, it moves to the *exact same* results-style screen as the
-  // official reveal — just with a live, partial version of it: whichever players have answered so
-  // far (their needle/mark), the true heading/distance (computed client-side from `origin`/
-  // `place`, already known to everyone — no need to wait on the host's `finishRoomRound`
-  // round-trip) once the round is fully answered, and a `RoundResult` already in its `pending`
-  // shape (see that component) rather than no scores at all — a "waiting" footer stands in for
-  // the host's "next round" button until `gameState.screen` actually flips to `'reveal'`.
+  // Une fois envoye, cet appareil passe au meme ecran que le reveal officiel, en version partielle :
+  // reponses deja arrivees, vrai cap/distance calcules en local, `RoundResult` en forme `pending`, et un
+  // pied "attente" jusqu'a ce que `gameState.screen` passe a 'reveal'.
   const submitted = gameState.screen === 'game' && gameState.guesses[localUid] !== undefined;
   const showResults = gameState.screen === 'reveal' || submitted;
 
-  // Everything below feeds one `OnlineGameScreenView` (single `Screen`/`ScrollView`, see its own
-  // comment): the results-only values default to `undefined`/empty while still answering, so the
-  // view's `record` discriminant is the only thing switching between the two layouts — never a
-  // full component swap, which used to reset the native scroll position on submit.
+  // Tout alimente une seule `OnlineGameScreenView` : `record` bascule entre les deux mises en page sans
+  // remplacer le composant (ce qui reinitialisait le defilement natif).
   let record: RoundRecord | undefined;
   let extraNeedles: Needle[] = [];
   let truthBearing: number | null = null;
@@ -139,10 +123,9 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
 
   if (showResults) {
     const revealed = gameState.screen === 'reveal';
-    // The revealed round is read from the room itself (`guesses` and `scores`, both keyed by uid),
-    // never from a record stored when the reveal first arrived: that one is indexed by the players
-    // *at that moment*, so a player who left before answering and came back — or joined late — no
-    // longer lined up with it.
+    // La manche revelee est lue dans la room (`guesses`, `scores` par uid), pas dans un enregistrement
+    // indexe sur les joueurs d'alors : un joueur parti puis revenu, ou arrive en retard, ne s'alignerait
+    // plus.
     if (revealed && gameState.scores === null) {
       return <NoticeOverlay loading message={t.game.loading} />;
     }
@@ -174,8 +157,8 @@ export const OnlineGameScreen = ({ code, onQuit }: OnlineGameScreenProps) => {
     record = buildRoundRecord(place, onlinePlayers, gameState.guesses, gameState.scores ?? {});
   }
 
-  // Answer phase's own Earth mark: only this device's own guess, shown regardless of phase (the
-  // view ignores it once `record` is set).
+  // Marque Terre de la phase reponse : seulement la reponse de cet appareil (ignoree par la vue une fois
+  // `record` defini).
   const answerEarthMarks: EarthMark[] = [{ bearing: game.bearing, distanceKm: game.distanceKm, color: myColor }];
 
   return (

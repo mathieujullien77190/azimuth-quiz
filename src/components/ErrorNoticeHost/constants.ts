@@ -1,2 +1,2 @@
-/** How long the notice stays when nobody taps it. */
+/** Duree d'affichage si personne ne tape. */
 export const NOTICE_DURATION_MS = 4000;

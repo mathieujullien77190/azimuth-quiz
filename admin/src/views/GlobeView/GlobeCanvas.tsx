@@ -8,23 +8,23 @@ export type GlobeHit = Selection & { x: number; y: number };
 
 export type GlobeCanvasProps = {
   placeBuffers: PlaceBuffers;
-  /** The key of each place of placeBuffers, in the same order: what a picked dot means. */
+  /** Cle de chaque lieu de placeBuffers, meme ordre : ce que designe un point choisi. */
   placeKeys: string[];
-  /** The name of each place of placeBuffers, in the same order: written next to its dot once zoomed in. */
+  /** Nom de chaque lieu de placeBuffers, meme ordre : ecrit pres du point une fois zoome. */
   placeNames: string[];
   selectedMark: Mark;
   hoveredMark: Mark;
-  /** A request to fly to a spot (a new token = a new flight, even to the same spot). */
+  /** Demande de vol vers un point (nouveau token = nouveau vol, meme vers le meme point). */
   fly: { lon: number; lat: number; token: number } | null;
-  /** Bumped by the reset button. */
+  /** Incremente par le bouton de reinitialisation. */
   resetToken: number;
   onHover: (hit: GlobeHit | null) => void;
   onSelect: (hit: Selection | null) => void;
 };
 
 /**
- * The 3D globe on a canvas: creates the scene once, keeps it in step with what the page draws, and turns the pointer
- * into hovers and clicks on a place. All the drawing is in GlobeScene, all the maths in helpers.ts.
+ * Globe 3D sur canvas : cree la scene une fois, la tient a jour de ce que dessine la page et transforme le pointeur
+ * en survols et clics sur un lieu. Tout le dessin est dans GlobeScene, tous les calculs dans helpers.ts.
  */
 export const GlobeCanvas = ({
   placeBuffers,
@@ -66,7 +66,6 @@ export const GlobeCanvas = ({
     if (resetToken > 0) sceneRef.current!.resetView();
   }, [resetToken]);
 
-  /** The place at a pointer position, if there is one close enough. */
   const hitAt = (clientX: number, clientY: number): GlobeHit | null => {
     const picked = sceneRef.current!.pick(clientX, clientY);
     return picked.place === null ? null : { kind: 'place', id: placeKeys[picked.place], x: picked.x, y: picked.y };

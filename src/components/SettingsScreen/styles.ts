@@ -34,7 +34,7 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       color: colors.text,
       fontSize: fontSize.body,
     },
-    // The dev code, under the about section: just the word "code" and its field, nothing to explain it.
+    // Code dev sous la section a propos : juste le mot « code » et son champ, rien a expliquer.
     devRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -47,7 +47,7 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       ...typography.label,
       color: colors.textMuted,
       fontSize: fontSize.caption,
-      // The label style is upper case: the version line reads as the splash's does, "v2.64.1 - 🦥 - brown-throated-sloth".
+      // Le style du libelle est en majuscules : la ligne de version se lit comme celle du splash, « v2.64.1 - 🦥 - brown-throated-sloth ».
       textTransform: 'none',
     },
   });

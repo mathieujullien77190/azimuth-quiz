@@ -5,8 +5,7 @@ import type { Category, Place } from '@/types';
 export const categoryEmoji = (category: Category): string =>
   CATEGORIES.find((candidate) => candidate.id === category)?.emoji ?? '📍';
 
-/** Full Wikipedia URL for the current language, falling back to the other language if only that
- * one is filled in for this place (better than no link at all). `undefined` if neither is. */
+/** URL Wikipedia dans la langue courante, a defaut dans l'autre ; `undefined` si aucune. */
 export const wikiUrl = (place: Pick<Place, 'wikiEn' | 'wikiFr'>, language: Language): string | undefined => {
   const preferredSlug = language === 'fr' ? place.wikiFr : place.wikiEn;
   if (preferredSlug !== undefined) return `https://${language}.wikipedia.org/wiki/${preferredSlug}`;

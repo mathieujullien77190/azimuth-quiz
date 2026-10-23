@@ -35,7 +35,7 @@ describe('useTravelNotice', () => {
     await rerender({ roundIndex: 1, message: 'Vous êtes à Rome' });
     expect(result.current.travelNotice).toBeNull();
 
-    // The next round: a place with the same name still gets its own splash (it is keyed by the round).
+    // Manche suivante : un lieu de meme nom a son propre splash (cle sur la manche).
     await rerender({ roundIndex: 2, message: 'Vous êtes à Rome' });
     expect(result.current.travelNotice).toBe('Vous êtes à Rome');
   });

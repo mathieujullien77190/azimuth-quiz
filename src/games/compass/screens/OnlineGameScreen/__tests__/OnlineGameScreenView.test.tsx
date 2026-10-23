@@ -9,7 +9,7 @@ import type { OnlineGameScreenViewProps } from '../types';
 
 const t = translations.fr;
 
-// The real slider is a `PanResponder` surface: a pressable stands in, reporting the middle.
+// Le vrai curseur est un `PanResponder` : un pressable le remplace, qui renvoie le milieu.
 jest.mock('@/components/ui/SliderTrack', () => ({
   __esModule: true,
   default: ({ onRatioChange }: { onRatioChange: (ratio: number) => void }) => {
@@ -93,7 +93,7 @@ describe('OnlineGameScreenView — answering', () => {
 });
 
 describe('OnlineGameScreenView — the 3D globe', () => {
-  // A far answer: the Earth is at its real scale, where the switch can show.
+  // Reponse lointaine : la Terre a sa vraie echelle, ou la bascule s'affiche.
   const far = [{ bearing: 90, distanceKm: 20000, color: '#EF4444' }];
 
   it('is not offered while the players are still answering', async () => {

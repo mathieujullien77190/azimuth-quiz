@@ -35,8 +35,11 @@ const args = {
   fillMs: 5000,
 };
 
-/** The startup splash by night: the needle of the compass swings, the bar jumps and stalls like a real loader over the minimum time (5 s), the
- * "loading" label breathes. Each story forces the theme (rather than the toolbar) so both draw side by side. */
+/**
+ * Splash de demarrage de nuit : l'aiguille oscille, la barre avance par a-coups et se bloque comme un vrai
+ * chargement sur le temps minimum (5 s), le libelle « chargement » respire. Chaque story force le theme pour
+ * afficher les deux cote a cote.
+ */
 export const Night: Story = {
   parameters: source(nightCode),
   args,
@@ -51,7 +54,7 @@ export const Night: Story = {
   ],
 };
 
-/** The same by day, for a player whose saved theme is the light one: sand background, white dial, blue title and bar. */
+/** Le meme de jour (theme clair sauvegarde) : fond sable, cadran blanc, titre et barre bleus. */
 export const Day: Story = {
   parameters: source(dayCode),
   args,

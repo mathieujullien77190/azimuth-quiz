@@ -43,22 +43,20 @@ import { db } from './firebase';
 import { readSnapshot, writeSnapshot } from './snapshotStore';
 
 /**
- * The admin's copy of the game data. Kept in memory for synchronous reads by the views, and mirrored
- * in IndexedDB (`snapshotStore`) so opening the admin costs no Firestore read at all: it only
- * reads Firestore on the very first load or when the "Synchroniser" button asks for it (`syncData`).
- * Every write goes to Firestore first, then updates this copy and its stored mirror — Firestore stays
- * the source of truth. The whole thing is ~2.8k small documents.
+ * Copie admin des donnees du jeu : en memoire pour des lectures synchrones, miroir dans IndexedDB (`snapshotStore`)
+ * pour ne lire Firestore qu'au premier chargement ou via "Synchroniser" (`syncData`). Toute ecriture va d'abord a
+ * Firestore, qui reste la source de verite.
  */
 type Cache = {
   places: Record<string, PlaceDoc>;
-  /** Read tolerantly: documents still carry fields of the removed Silhouette, which are neither read nor dropped. */
+  /** Lu avec tolerance : les documents portent encore des champs de Silhouette, ni lus ni retires. */
   countries: Record<string, CountryDoc>;
   jobs: Record<string, JobDoc>;
-  /** `meta/compassCounts`: size of every Compass group, see `numbering.ts`. */
+  /** `meta/compassCounts` : taille de chaque groupe Boussole (voir `numbering.ts`). */
   compassCounts: CompassCounts;
-  /** `meta/compassCounts.shuffled`: kept as it is when the numbering is maintained (see `applyPlaceChange`). */
+  /** `meta/compassCounts.shuffled` : garde tel quel quand la numerotation est maintenue (voir `applyPlaceChange`). */
   compassShuffled: boolean;
-  /** `meta/cluesCounts`, same for the Clues groups (`clues.category` x difficulty). */
+  /** `meta/cluesCounts`, idem pour les groupes Indices. */
   cluesCounts: CompassCounts;
   cluesShuffled: boolean;
 };
@@ -92,7 +90,10 @@ const fetchAll = async (): Promise<Cache> => {
   };
 };
 
-/** `journalAt`: ms of the newest journal entry the copy already includes (`null`: unknown, only a full sync fits). */
+/**
+ * `journalAt` : ms de la derniere entree du journal deja dans la copie (`null` : inconnu, seule une synchro complete
+ * convient).
+ */
 type Snapshot = { cache: Cache; syncedAt: number; journalAt?: number | null };
 
 let syncedAt = 0;
@@ -106,15 +107,15 @@ const persist = () => {
   }, 300);
 };
 
-/** Newest journal entry's time (ms), 0 when the journal is empty. */
 const newestJournalAt = async (): Promise<number> => {
   const { docs } = await getDocs(query(collection(db, JOURNAL_COLLECTION), orderBy('at', 'desc'), limit(1)));
   return docs.length === 0 ? 0 : (docs[0].data().at as Timestamp).toMillis();
 };
 
-/** Reads Firestore in full (~2.8k reads) and replaces the local copy. The journal's newest entry is read BEFORE
- * the data: a write landing meanwhile is then in the copy AND seen again by the next incremental sync (harmless),
- * never missed. */
+/**
+ * Lit tout Firestore (~2,8k lectures) et remplace la copie. La derniere entree du journal est lue AVANT les donnees :
+ * une ecriture entre-temps est dans la copie ET revue par la synchro incrementale (sans effet), jamais ratee.
+ */
 const syncData = async (): Promise<void> => {
   const newest = await newestJournalAt();
   cache = await fetchAll();
@@ -123,13 +124,13 @@ const syncData = async (): Promise<void> => {
   await writeSnapshot({ cache, syncedAt, journalAt } satisfies Snapshot);
 };
 
-/** More changed documents than this and a full read is about as cheap: the journal listener falls back to it. */
+/** Au-dela, une lecture complete coute autant : l'ecouteur du journal s'y rabat. */
 const MAX_INCREMENTAL = 1000;
 
-/** The journal entries being handled, one after the other. */
+/** Entrees du journal en cours de traitement, l'une apres l'autre. */
 let queue: Promise<void> = Promise.resolve();
 
-/** Journal entries this admin wrote itself (their documents are already in the local copy). */
+/** Entrees ecrites par cet admin (leurs documents sont deja dans la copie). */
 const ownEntryIds = new Set<string>();
 
 const newEntryRef = () => {
@@ -138,11 +139,10 @@ const newEntryRef = () => {
   return ref;
 };
 
-/** Bumped each time a change made by someone else lands in the local copy (views remount on it). */
+/** Incremente quand un changement d'ailleurs arrive dans la copie (les vues se remontent). */
 let revision = 0;
 const revisionListeners = new Set<() => void>();
 
-/** For `useSyncExternalStore`. */
 export const subscribeRevision = (listener: () => void): (() => void) => {
   revisionListeners.add(listener);
   return () => revisionListeners.delete(listener);
@@ -155,8 +155,10 @@ const notifyRevision = () => {
   for (const listener of revisionListeners) listener();
 };
 
-/** Re-reads the documents `changes` names (a deletion needs no read) and puts them in the local copy. A change to a
- * collection the admin no longer knows (an old journal entry) is skipped. */
+/**
+ * Relit les documents nommes par `changes` (une suppression n'en demande pas). Un changement sur une collection
+ * inconnue (vieille entree) est ignore.
+ */
 const applyChanges = async (current: Cache, changes: JournalChange[]): Promise<void> => {
   await Promise.all(
     changes
@@ -179,9 +181,9 @@ const applyChanges = async (current: Cache, changes: JournalChange[]): Promise<v
 };
 
 /**
- * Listens to the journal (entries newer than the local copy's position) and keeps the copy up to date: each new
- * entry names the documents somebody changed, only those are re-read. Changes made by this admin are skipped (already
- * in the copy); when something from elsewhere landed, the views are told (`subscribeRevision`). Returns the unsubscribe function.
+ * Ecoute le journal (entrees plus recentes que la copie) et ne relit que les documents nommes. Ignore les changements
+ * de cet admin ; avertit les vues quand un changement d'ailleurs arrive (`subscribeRevision`). Rend la fonction de
+ * desabonnement.
  */
 export const startJournalSync = (): (() => void) =>
   onSnapshot(
@@ -189,7 +191,6 @@ export const startJournalSync = (): (() => void) =>
     (snapshot) => {
       const added = snapshot.docChanges().filter((change) => change.type === 'added');
       if (added.length === 0) return;
-      // Entries are handled one after the other, in order.
       queue = queue.then(async () => {
         const foreign = added.filter((change) => !ownEntryIds.has(change.doc.id)).map((change) => change.doc);
         const times = added.map((change) => change.doc.data().at as Timestamp | null).filter((at) => at !== null);
@@ -207,37 +208,39 @@ export const startJournalSync = (): (() => void) =>
     (error) => console.error('[journal]', error),
   );
 
-/** Sets `record[id]` to `value`, or removes it when there is no document. */
 const assign = <T>(record: Record<string, T>, id: string, value: T | undefined): void => {
   if (value === undefined) delete record[id];
   else record[id] = value;
 };
 
-/** Local copy if there is one (no Firestore read), else a first full sync. */
+/** Copie locale si elle existe (aucune lecture Firestore), sinon une premiere synchro complete. */
 export const loadData = async (): Promise<void> => {
   const snapshot = await readSnapshot<Snapshot>();
   if (snapshot) {
-    // A copy saved before the silhouettes moved into the countries still carries the old `contours` key: dropped. One
-    // saved while the countries were out of the admin has no `countries`: one full read.
+    // Une copie d'avant le deplacement des silhouettes dans les pays porte encore la cle `contours` : retiree. Une
+    // copie d'avant `countries` n'en a pas : une lecture complete.
     const current: Cache & { contours?: unknown } = { ...snapshot.cache };
     delete current.contours;
     cache = current;
     syncedAt = snapshot.syncedAt;
     journalAt = snapshot.journalAt ?? null;
-    // A copy older than the journal has no position in it: one full read, then the journal takes over.
+    // Une copie anterieure au journal n'y a pas de position : une lecture complete, puis le journal prend le relais.
     if (journalAt === null || !current.countries) await syncData();
     return;
   }
   await syncData();
 };
 
-/** The loaded data — `AuthGate` renders nothing that reads it before `loadData` resolved. */
+/** Donnees chargees ; `AuthGate` ne rend rien qui les lise avant la fin de `loadData`. */
 export const data = (): Cache => {
   if (!cache) throw new Error('Données non chargées');
   return cache;
 };
 
-/** Writes one document (`null`: deletes it) through the same path as every other write: data version and journal included. */
+/**
+ * Ecrit un document (`null` : le supprime) par le meme chemin que toute ecriture : version des donnees et journal
+ * inclus.
+ */
 const putDoc = (collectionName: keyof typeof COLLECTIONS, id: string, value: object | null): Promise<void> =>
   commitInBatches(
     [(batch) => (value ? batch.set(doc(db, collectionName, id), value) : batch.delete(doc(db, collectionName, id)))],
@@ -266,9 +269,10 @@ const BATCH_SIZE = 400;
 
 const versionBump = { version: increment(1), updatedAt: Date.now() };
 
-/** Runs `operations` in batches of at most `BATCH_SIZE` (Firestore's cap is 500 per batch), each batch
- * atomic; the data version is bumped and the journal entry listing `changes` written in the last one, so an
- * entry is only ever visible once all the data it names is. */
+/**
+ * Execute `operations` par lots d'au plus `BATCH_SIZE` (plafond Firestore : 500), chaque lot atomique ; version et
+ * entree de journal sont ecrites dans le dernier, donc une entree n'est visible qu'une fois toutes ses donnees.
+ */
 const commitInBatches = async (
   operations: ((batch: WriteBatch) => void)[],
   changes: JournalChange[],
@@ -285,12 +289,11 @@ const commitInBatches = async (
   }
 };
 
-// --- Copies kept in sync with their source --------------------------------------------------------------------
+// --- Copies tenues a jour avec leur source --------------------------------------------------------------------
 
 /**
- * Writes `next` as `countries/{code}` and rewrites, in the same run of batches, every copy of it: the `country` of each of
- * its places (see `planCountryChange`). `next` starts from the stored document, so the fields this admin does not own
- * (what Silhouette left on it) are written back untouched.
+ * Ecrit `next` en `countries/{code}` et reecrit, dans les memes lots, chaque copie : le `country` de ses lieux (voir
+ * `planCountryChange`). `next` part du document stocke, donc les champs que l'admin ne gere pas sont conserves.
  */
 export const applyCountryChange = async (code: string, next: CountryDoc): Promise<void> => {
   const plan = planCountryChange(code, next, data().places);
@@ -313,7 +316,9 @@ export const applyCountryChange = async (code: string, next: CountryDoc): Promis
   persist();
 };
 
-/** Writes job `code` as `personalityJobs/{code}` and copies its label into every personality tagged with it. */
+/**
+ * Ecrit le metier `code` en `personalityJobs/{code}` et recopie son libelle dans chaque personnalite qui l'utilise.
+ */
 export const applyJobChange = async (code: string, job: JobDoc): Promise<void> => {
   const plan = planJobChange(code, job, data().places);
   await commitInBatches(
@@ -335,13 +340,13 @@ export const applyJobChange = async (code: string, job: JobDoc): Promise<void> =
   persist();
 };
 
-// --- Editing places ----------------------------------------------------------------------------------------------
+// --- Edition des lieux ----------------------------------------------------------------------------------------------
 
 /**
- * Writes `next` as the new `places/{key}` document (`null` = delete it) and keeps both numberings dense in
- * the SAME batch (see `planRegroup`): the place leaving a group frees its number for that group's last
- * place, the one joining a group goes last, `meta/compassCounts` and `meta/cluesCounts` follow. The Clues
- * category is derived from the Compass one, so a Compass category change also regroups the Clues numbering.
+ * Ecrit `next` en `places/{key}` (`null` = supprime) et garde les deux numerotations denses dans le MEME lot (voir
+ * `planRegroup`) : le lieu qui quitte un groupe cede son numero au dernier, celui qui arrive passe dernier,
+ * `meta/compassCounts` et `meta/cluesCounts` suivent. La categorie Indices derive de la Boussole : changer celle-ci
+ * regroupe aussi Indices.
  */
 export const applyPlaceChange = async (key: string, next: PlaceDoc | null): Promise<void> => {
   const { places, compassCounts, cluesCounts } = data();

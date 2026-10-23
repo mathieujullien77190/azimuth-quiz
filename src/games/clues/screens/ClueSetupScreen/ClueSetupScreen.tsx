@@ -10,17 +10,12 @@ import { ClueSetupScreenView } from './ClueSetupScreenView';
 import type { ClueSetupScreenProps } from './types';
 import { useOnlineClueRoom } from './useOnlineClueRoom';
 
-/**
- * Smart container: owns `useClueSettings()`/`useOnlineClueRoom()`, resolves every readOnly-gated
- * action into an already-decided callback, and maps everything onto `ClueSetupScreenView` (pure
- * rendering) — same split as Compass' own `SetupScreen`/`SetupScreenView`.
- */
+/** Container smart : appelle `useClueSettings()`/`useOnlineClueRoom()`, decide les callbacks (readOnly...) et alimente `ClueSetupScreenView` (rendu pur). */
 export const ClueSetupScreen = ({ onBack }: ClueSetupScreenProps) => {
   const { settings, updateSettings } = useClueSettings();
   const room = useOnlineClueRoom(settings, updateSettings);
 
-  // The group sizes (`meta/cluesCounts`, loaded at launch): how many places the selected categories offer at
-  // this difficulty. `null` until they are there — the start button is not held back for that.
+  // Tailles des groupes (`meta/cluesCounts`) : nombre de lieux offerts par la selection ; `null` tant qu'elles ne sont pas la (le bouton n'attend pas).
   const [counts, setCounts] = useState<CompassCounts | null>(null);
   useEffect(() => {
     loadCluesCounts()

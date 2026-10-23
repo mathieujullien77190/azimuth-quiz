@@ -3,8 +3,9 @@ import type { CluePlace, Difficulty } from '@/types';
 
 import { data, putPlace } from '../data';
 
-/** `place`'s wordplay entry to edit — the admin always has something to start typing into: an
- * empty sentence until curated by hand, defaulting to 'intermediate' difficulty. */
+/**
+ * Jeu de mots a editer pour `place` : phrase vide tant qu'il n'est pas cure, difficulte 'intermediate' par defaut.
+ */
 export const wordplayEntryFor = (place: Pick<CluePlace, 'key'>): WordplayEntry =>
   data().places[place.key].wordplay ?? { sentence: '', difficulty: 'intermediate' };
 

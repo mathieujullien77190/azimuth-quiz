@@ -4,7 +4,7 @@ import type { Theme } from '@/types';
 
 export const createStyles = ({ colors, radius, typography }: Theme) =>
   StyleSheet.create({
-    // Without this, the horizontal ScrollView stretches to fill the Screen's remaining height.
+    // Sans ca, le ScrollView horizontal s'etire sur la hauteur restante du Screen.
     scroll: {
       flexGrow: 0,
       flexShrink: 0,
@@ -17,8 +17,7 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       paddingTop: spacing.sm,
       paddingBottom: spacing.sm + 2,
     },
-    // Only the gap tightens on a narrow screen: the side padding stays `spacing.lg`, the same as the
-    // rest of the header (cross, round line...), so the tabs line up with them on a phone too.
+    // Seul l'ecart se resserre sur petit ecran : le padding lateral reste `spacing.lg`, aligne sur le reste du header.
     rowCompact: {
       gap: spacing.xs + 2,
     },

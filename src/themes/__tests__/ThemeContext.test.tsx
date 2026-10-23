@@ -12,9 +12,7 @@ describe('THEMES', () => {
   });
 });
 
-// No <ThemeProvider> here on purpose: exercises the context's default value (used by any
-// component rendered outside one, which should never happen in the real app but must still be
-// a harmless, non-crashing default — same reasoning as LanguageContext's).
+// Pas de <ThemeProvider> volontairement : teste la valeur par defaut du contexte (hors provider), qui doit rester inoffensive.
 const Probe = () => {
   const { themeId, ready, setThemeId, resetThemeId } = useThemeSettings();
   const theme = useTheme();
@@ -45,7 +43,7 @@ describe('default context value (no Provider)', () => {
     const { getByTestId } = await render(<Probe />);
     await fireEvent.press(getByTestId('setDay'));
     await fireEvent.press(getByTestId('reset'));
-    // Still Night: the default context's setters don't actually change anything.
+    // Toujours Night : les setters par defaut ne changent rien.
     expect(getByTestId('themeId').props.children).toBe('night');
   });
 });

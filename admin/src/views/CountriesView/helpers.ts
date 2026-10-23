@@ -9,7 +9,7 @@ export const sortCountries = (rows: CountryRecord[], key: SortKey, dir: 1 | -1):
 
 export const continentOf = (code: string): Continent => CONTINENT_OF[code] ?? 'other';
 
-/** `continent` `null` = all of them. */
+/** `continent` `null` = tous. */
 export const filterCountries = (rows: CountryRecord[], query: string, continent: Continent | null = null): CountryRecord[] => {
   const q = query.trim().toLowerCase();
   const byContinent = continent === null ? rows : rows.filter((row) => continentOf(row.code) === continent);

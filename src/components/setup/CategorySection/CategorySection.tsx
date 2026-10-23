@@ -9,9 +9,8 @@ import type { CategorySectionProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * Category picker — dumb: the label comes from `@/i18n`'s `setup.categories`, already shared
- * across every game's translations. `categories` (which ids/emoji this game's pool actually
- * offers) and `title`/`hint` (own translation namespace) are the only per-game props.
+ * Choix des categories (dumb) : les libelles viennent de `setup.categories` (`@/i18n`), communs aux jeux.
+ * Seuls `categories` (ids/emojis du pool du jeu) et `title`/`hint` (namespace propre) varient par jeu.
  */
 export const CategorySection = ({
   title,

@@ -42,7 +42,7 @@ const setGame = (overrides: Record<string, unknown> = {}) => {
   mockGame = {
     localUid: 'zoe',
     onlinePlayers: [ZOE, MAX],
-    // The round's playing order, rotated by the round number in the hook (`playersForRound`).
+    // Ordre de jeu de la manche, decale par le numero de manche dans le hook (`playersForRound`).
     roundPlayers: [ZOE, MAX],
     isHost: true,
     connectionLost: false,
@@ -279,7 +279,7 @@ describe("OnlineClueGameScreen — somebody else's turn", () => {
     const { getAllByText, queryByText } = await renderScreen();
     await fireEvent.press(getAllByText('🔒')[0]);
     expect(queryByText(t.cluesGame.notYourTurn('Max'))).toBeTruthy();
-    // Still there after the usual 2 s: it stays up for 4.
+    // Toujours la apres les 2 s habituelles : elle reste 4 s.
     await act(async () => jest.advanceTimersByTime(3900));
     expect(queryByText(t.cluesGame.notYourTurn('Max'))).toBeTruthy();
     await act(async () => jest.advanceTimersByTime(200));

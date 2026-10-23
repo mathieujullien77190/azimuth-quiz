@@ -1,12 +1,12 @@
 import type { Player, RoundRecord, RoundScore } from '@/types';
 
-/** Who scored the most in one round on one criterion, and how much. */
+/** Qui a le plus marque sur un critere pendant une manche, et combien. */
 export type RoundBest = { players: Player[]; points: number };
 
 /**
- * Best player(s) of a round on `directionPoints` or `distancePoints` — everybody on the top score when
- * several tie. `null` when nobody scored on it. Only players still in the room count: online, a round
- * can hold more `results` than there are players left, and `players[index]` is then missing.
+ * Meilleur(s) d'une manche sur `directionPoints` ou `distancePoints`, tous les ex aequo ; `null` si
+ * personne ne marque. Seuls les joueurs encore presents comptent (en ligne, `results` peut depasser
+ * `players`).
  */
 export const roundBest = (
   record: RoundRecord,

@@ -5,11 +5,11 @@ import type { Theme } from '@/types';
 
 export const createStyles = ({ colors, radius, typography }: Theme) =>
   StyleSheet.create({
-    // Everything but the ball itself is laid over the OpenGL surface, at the place the projection gives.
+    // Tout sauf la boule est pose sur la surface OpenGL, a l'endroit que donne la projection.
     wrap: {
       position: 'relative',
     },
-    // The origin's name, centred above its dot: a line as wide as the drawing, so centring needs no measuring.
+    // Le nom de l'origine, centre au-dessus de sa pastille : une ligne aussi large que le dessin, donc aucun calcul de centrage.
     label: {
       ...typography.heading,
       position: 'absolute',
@@ -23,7 +23,7 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       color: colors.text,
       fontSize: 11,
     },
-    // Bottom right: zoom in, zoom out, and back to the opening view.
+    // En bas a droite : zoom +, zoom −, et retour a la vue d'ouverture.
     controls: {
       position: 'absolute',
       right: spacing.xs,
@@ -47,7 +47,7 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       color: colors.text,
       fontSize: 13,
     },
-    // The satellite sits on top of the drawing, its centre at the point given by `left`/`top`.
+    // Le satellite est au-dessus du dessin, son centre au point donne par `left`/`top`.
     satellite: {
       position: 'absolute',
       width: 20,
@@ -60,7 +60,7 @@ export const createStyles = ({ colors, radius, typography }: Theme) =>
       textAlign: 'center',
       textAlignVertical: 'center',
     },
-    // Above the satellite, centred on it.
+    // Au-dessus du satellite, centre sur lui.
     quipWrap: {
       position: 'absolute',
       left: -56,

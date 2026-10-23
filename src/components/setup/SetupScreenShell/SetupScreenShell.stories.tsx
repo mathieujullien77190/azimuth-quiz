@@ -17,8 +17,8 @@ import startingCode from './Starting.source.md?raw';
 
 const t = translations.fr;
 
-// In the app all of this comes from `useSetupRoom` (Firestore room, host/join, players...): here
-// it's frozen so the shell can be looked at on its own.
+// Dans l'app tout ceci vient de `useSetupRoom` (room Firestore, hote/joiner, joueurs...) : ici c'est fige pour
+// voir le shell seul.
 const party: SetupPartyProps = {
   soloName: '',
   soloPlaceholder: 'Zoé',
@@ -41,7 +41,7 @@ const party: SetupPartyProps = {
   joinStatus: 'idle',
 };
 
-/** Every text of the frame, and the game's own sections it wraps, in the toolbar's language. */
+/** Tous les textes du cadre et les sections propres au jeu qu'il enveloppe, dans la langue de la barre d'outils. */
 const textArgs = (texts: Translations) => ({
   backLabel: texts.setup.quit,
   startLabel: texts.setup.start,
@@ -62,7 +62,7 @@ const textArgs = (texts: Translations) => ({
 const meta = {
   title: 'Setup/SetupScreenShell',
   component: SetupScreenShell,
-  // `Screen` reserves its full height (SafeAreaView -> ScrollView): it needs a fixed-height flex box.
+  // `Screen` reserve toute sa hauteur (SafeAreaView -> ScrollView) : il lui faut un parent flex a hauteur fixe.
   decorators: [
     localizedArgs(textArgs),
     (Story) => (
@@ -87,14 +87,18 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The common frame of every game's setup: title, the solo/host/join block, the game's own sections
- * as `children`, then "Lancer la partie" and "Quitter". */
+/**
+ * Cadre commun du setup de chaque jeu : titre, bloc solo/hote/rejoindre, sections du jeu en `children`, puis
+ * « Lancer la partie » et « Quitter ».
+ */
 export const Solo: Story = {
   parameters: source(soloCode),
 };
 
-/** A joiner never sees "Lancer la partie" — only the host starts the game — and the read-only
- * notice is the overlay a tap on a locked option raises. */
+/**
+ * Un joiner ne voit jamais « Lancer la partie » (seul l'hote lance) ; la notice lecture seule est l'overlay
+ * qu'affiche un tap sur une option verrouillee.
+ */
 export const Joiner: Story = {
   parameters: source(joinerCode),
   decorators: [localizedArgs((texts) => ({ overlayMessage: texts.setup.readOnlyNotice }))],
@@ -104,8 +108,10 @@ export const Joiner: Story = {
   },
 };
 
-/** "Lancer la partie" pressed: the setup stays visible and the "Préparation de la partie…" splash
- * (a spinner) covers it until the game screen takes over. */
+/**
+ * « Lancer la partie » appuye : le setup reste visible et le splash « Preparation de la partie... » (spinner)
+ * le couvre jusqu'a ce que l'ecran de jeu prenne le relais.
+ */
 export const Starting: Story = {
   parameters: source(startingCode),
   decorators: [localizedArgs((texts) => ({ overlayMessage: texts.game.loading }))],

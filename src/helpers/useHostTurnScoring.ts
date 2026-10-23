@@ -1,7 +1,7 @@
 import { reporting } from './reportError';
 import { useEffect, useRef } from 'react';
 
-/** The slice of a turn-based room's game state the host's scoring needs (Clues). */
+/** Partie de l'etat de room dont le score de l'hote a besoin (Clues). */
 type TurnScoringState = {
   roundIndex: number;
   verdict: 'correct' | 'giveUp' | null;
@@ -12,16 +12,10 @@ type TurnScoringState = {
 };
 
 /**
- * Host-only scoring for a turn-based online game — the turn-holder only ever self-reports the
- * *event* (`verdict: 'correct'`, or a bumped `wrongGuessSeq`), never a score: this is the only thing
- * that ever writes `totalScores` (see `applyScore`).
- *
- * - A correct guess adds `reward` (what's still at stake this round) to the winner's total, once per
- *   round — guarded by a ref so a burst of snapshots can't fire it twice.
- * - A miss subtracts the fixed `penalty` from whoever missed, once per `wrongGuessSeq` advance
- *   rather than per round (a round can take several misses before it ends). The ref is `null` until
- *   this effect has run once: catches up to whatever seq the room is already at on mount (a host
- *   reconnecting mid-game) without re-applying a penalty that already landed before.
+ * Score cote hote seul (seul a ecrire `totalScores`, voir `applyScore`) : le joueur n'annonce que l'evenement.
+ * - Bonne reponse : ajoute `reward` une fois par manche (garde par ref contre les rafales de snapshots).
+ * - Erreur : retire `penalty` une fois par avance de `wrongGuessSeq` (plusieurs erreurs possibles par manche) ;
+ *   la ref est `null` jusqu'au 1er passage, qui se cale sur le seq de la room (hote reconnecte) sans repenaliser.
  */
 export const useHostTurnScoring = (
   isHost: boolean,
@@ -43,9 +37,7 @@ export const useHostTurnScoring = (
   const lastAppliedWrongSeqRef = useRef<number | null>(null);
   useEffect(() => {
     if (!isHost) return;
-    // Initialized on the very first run whatever the state is — a fresh game starts with no miss
-    // yet (`wrongGuessUid` null, seq 0), and the first real miss must then count as new, not as
-    // something to "catch up" to.
+    // Initialise au 1er passage quel que soit l'etat : une partie neuve a seq 0, la 1re erreur doit compter.
     if (lastAppliedWrongSeqRef.current === null) {
       lastAppliedWrongSeqRef.current = wrongGuessSeq;
       return;

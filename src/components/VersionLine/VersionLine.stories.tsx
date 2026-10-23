@@ -14,7 +14,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** "v2.65.0 - 🐦 - great-tit", the name linking to its English Wikipedia article. */
+/** « v2.65.0 - 🐦 - great-tit », le nom renvoyant a son article Wikipedia anglais. */
 export const Default: Story = {
   parameters: source(defaultCode),
   args: {

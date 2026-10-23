@@ -3,28 +3,27 @@ import type { ReactNode } from 'react';
 export type StandingEntry = {
   name: string;
   total: number;
-  /** The player's color: a dot before the name. */
+  /** Couleur du joueur : un point avant le nom. */
   color?: string;
 };
 
 export type FinalStandingsProps = {
-  /** Screen title ("Classement final"). */
+  /** Titre de l'ecran ("Classement final"). */
   title: string;
-  /** Every player's final total, in any order — ranked here, best first. */
+  /** Total final de chaque joueur, dans le desordre : classes ici, meilleur d'abord. */
   entries: StandingEntry[];
-  /** This device's own player name (names are unique within a room) — the winner banner says
-   * "Vous gagnez !" instead of naming them, same treatment as Clues' own round-winner banner.
-   * Omitted (e.g. a name-less sample in Storybook) always names the winner instead. */
+  /** Nom du joueur de cet appareil (unique dans une room) : la banniere dit "Vous gagnez !" au lieu de le nommer.
+   * Omis (ex. exemple sans nom dans Storybook) : nomme toujours le vainqueur. */
   localName?: string;
-  /** What the game adds under the scores (Compass' rank card and round-by-round recap...). */
+  /** Ce que le jeu ajoute sous les scores (carte de rang et recap manche par manche de Boussole...). */
   children?: ReactNode;
-  /** "Rejouer": back to the lobby with every player still in the room. */
+  /** "Rejouer" : retour au salon avec tous les joueurs restes dans la room. */
   onReplay: () => void;
-  /** "Quitter": leaves the game, for the home screen. */
+  /** "Quitter" : quitte la partie, vers l'accueil. */
   onQuit: () => void;
 };
 
 export type RankedEntry = StandingEntry & {
-  /** 1 = first; tied players share the same rank. */
+  /** 1 = premier ; les ex aequo partagent le meme rang. */
   rank: number;
 };

@@ -9,9 +9,8 @@ import type { ColorPaletteProps } from './types';
 import { createStyles } from './styles';
 
 /**
- * Every color of the app's themes side by side — one column per theme, a swatch and its hex value for
- * each token, with what it is used for. The theme the app (or Storybook's toolbar) is showing right
- * now is the highlighted column. Dumb: reads only the themes it is given.
+ * Toutes les couleurs des themes cote a cote (une colonne par theme : pastille, hex, usage).
+ * Le theme courant est mis en avant. Dumb.
  */
 export const ColorPalette = ({ themes = Object.values(THEMES) }: ColorPaletteProps) => {
   const styles = useThemedStyles(createStyles);
